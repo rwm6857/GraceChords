@@ -1,23 +1,23 @@
-// src/utils/pdf.js
 import { jsPDF } from 'jspdf';
 import { ensureFontsEmbedded } from './fonts';
 
-// Estimate if 1 column likely fits a page
+/** Heuristic to decide if one column likely fits a page */
 function estimateOnePage(song, opt) {
   const lines = song.lyricsBlocks.reduce((n, b) => n + b.lines.length, 0);
   const perLine = (opt.chordSizePt + opt.lyricSizePt) * 1.35;
   const header = 64;
   const margin = opt.margin || 36;
-  const pageH = 792; // letter height in pt
+  const pageH = 792; // US Letter height (pt)
   const total = header + lines * perLine + margin;
-  return total < (pageH - margin * 2);
+  return total < pageH - margin * 2;
 }
 
-// Paint one song into an existing jsPDF doc
+/** Draw a single song into an existing jsPDF doc */
 function drawSongIntoDoc(doc, song, opt) {
+  const { lyricFamily = 'Helvetica', chordFamily = 'Courier' } = opt;
+
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-
   const margin = opt.margin ?? 36;
   const contentW = pageW - margin * 2;
   const gutter = 18;
@@ -27,11 +27,11 @@ function drawSongIntoDoc(doc, song, opt) {
   const colW = columnCount === 2 ? (contentW - gutter) / 2 : contentW;
 
   // Header
-  doc.setFont(opt.lyricFamily, 'bold');
+  doc.setFont(lyricFamily, 'bold');
   doc.setFontSize(18);
   doc.text(opt.title || song.title, margin, margin);
 
-  doc.setFont(opt.lyricFamily, 'normal');
+  doc.setFont(lyricFamily, 'normal');
   doc.setFontSize(11);
   const sub = `Key: ${opt.key || song.key || '—'}${opt.tags ? '  •  ' + opt.tags : ''}`;
   doc.text(sub, margin, margin + 16);
@@ -39,7 +39,7 @@ function drawSongIntoDoc(doc, song, opt) {
   // Footer (page number)
   function footer() {
     const pageNum = doc.internal.getNumberOfPages();
-    doc.setFont(opt.lyricFamily, 'normal');
+    doc.setFont(lyricFamily, 'normal');
     doc.setFontSize(10);
     doc.text(String(pageNum), pageW / 2, pageH - 16, { align: 'center' });
   }
@@ -84,7 +84,7 @@ function drawSongIntoDoc(doc, song, opt) {
 
   function drawChordLyricPair(chords, lyric) {
     if (chords && chords.trim()) {
-      doc.setFont(opt.chordFamily, 'bold');
+      doc.setFont(chordFamily, 'bold');
       doc.setFontSize(opt.chordSizePt);
       const lines = wrapText(chords, colW);
       lines.forEach((ln) => {
@@ -92,7 +92,7 @@ function drawSongIntoDoc(doc, song, opt) {
         y += opt.chordSizePt + lineGap / 2;
       });
     }
-    doc.setFont(opt.lyricFamily, 'normal');
+    doc.setFont(lyricFamily, 'normal');
     doc.setFontSize(opt.lyricSizePt);
     const linesL = wrapText(lyric, colW);
     linesL.forEach((ln) => {
@@ -104,9 +104,9 @@ function drawSongIntoDoc(doc, song, opt) {
   song.lyricsBlocks.forEach((block) => {
     const sec = (block.section || '').trim();
     if (sec) {
-      doc.setFont(opt.lyricFamily, 'bold');
+      doc.setFont(lyricFamily, 'bold');
       doc.setFontSize(12);
-      ensureSpace(14 + 8);
+      ensureSpace(22);
       doc.text(sec, x, y);
       y += 14;
     }
@@ -119,7 +119,7 @@ function drawSongIntoDoc(doc, song, opt) {
   });
 }
 
-// Build a single-song doc (async for font embedding)
+/** Build a single-song doc (async for font embedding) */
 export async function songToPdfDoc(song, options) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
@@ -140,7 +140,7 @@ export async function songToPdfDoc(song, options) {
     opt.lyricFamily = options?.lyricFont || families.lyricFamily || 'Helvetica';
     opt.chordFamily = options?.chordFont || families.chordFamily || 'Courier';
   } catch {
-    // fall back silently to built-ins
+    // keep fallbacks
   }
 
   drawSongIntoDoc(doc, song, opt);
@@ -172,7 +172,7 @@ export async function downloadMultiSongPdf(songs, options) {
   } catch {}
 
   songs.forEach((song, idx) => {
-    if (idx > 0) doc.addPage();
+    if (idx) doc.addPage();
     drawSongIntoDoc(doc, song, {
       ...base,
       title: song.title,
@@ -180,5 +180,6 @@ export async function downloadMultiSongPdf(songs, options) {
       tags: (song.tags || []).join(', '),
     });
   });
+
   doc.save('Songbook_Selection.pdf');
 }
