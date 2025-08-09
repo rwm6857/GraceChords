@@ -39,3 +39,23 @@ body{font-family:Arial,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'
   .container{flex-direction:column}
   .sidebar{width:100%}
 }
+
+/* Keep the header controls clickable above any media/iframes */
+.songview .header {
+  position: relative;
+  z-index: 10;
+  background: #fff;  /* avoids any overlap translucency */
+}
+
+/* Ensure the media area sits below the header in stacking order */
+.media {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+}
+
+/* Make sure the iframe doesn’t float over other areas */
+.media iframe {
+  display: block;
+}
+

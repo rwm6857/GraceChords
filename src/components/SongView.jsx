@@ -22,26 +22,33 @@ export default function SongView({ initialSongs }){
 
   if(!song) return <div className="container"><p>Song not found. <Link to='/'>Back</Link></p></div>
 
-  function handleDownload(){
+  async function handleDownload() {
+  try {
     const songInKey = {
       ...song,
       key: toKey,
-      lyricsBlocks: song.lyricsBlocks.map(b=>({
+      lyricsBlocks: song.lyricsBlocks.map(b => ({
         ...b,
-        lines: b.lines.map(l=>({
+        lines: b.lines.map(l => ({
           text: l.text,
-          chords: transposeChordLine(l.chords || '', steps)
-        }))
-      }))
-    }
-    downloadSingleSongPdf(songInKey, {
-      lyricFont: settings.lyricFontFamily,
-      chordFont: settings.chordFontFamily,
+          chords: transposeChordLine(l.chords || '', steps),
+        })),
+      })),
+    };
+
+    await downloadSingleSongPdf(songInKey, {
+      // optional family names if you added TTFs and fonts.js registers them:
+      // lyricFont: 'NotoSans',
+      // chordFont: 'NotoSansMono-Bold',
       lyricSizePt: settings.lyricFontSizePt,
       chordSizePt: settings.chordFontSizePt,
-      columns: settings.columns
-    })
+      columns: settings.columns,
+    });
+  } catch (e) {
+    alert('PDF export failed. See console for details.');
+    console.error(e);
   }
+}
 
   return (
     <div className="container songview">
@@ -61,7 +68,7 @@ export default function SongView({ initialSongs }){
               ))}
             </select>
           </label>
-          <button onClick={handleDownload}>Download PDF</button>
+          <button type="button" onClick={handleDownload}>Download PDF</button>
         </div>
       </div>
 
