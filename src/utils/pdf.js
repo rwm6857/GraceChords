@@ -1,17 +1,19 @@
+// src/utils/pdf.js
 import { jsPDF } from 'jspdf';
 import { ensureFontsEmbedded } from './fonts';
 
-// Heuristic used by painter
+// Estimate if 1 column likely fits a page
 function estimateOnePage(song, opt) {
   const lines = song.lyricsBlocks.reduce((n, b) => n + b.lines.length, 0);
   const perLine = (opt.chordSizePt + opt.lyricSizePt) * 1.35;
   const header = 64;
   const margin = opt.margin || 36;
-  const pageH = 792;
+  const pageH = 792; // letter height in pt
   const total = header + lines * perLine + margin;
   return total < (pageH - margin * 2);
 }
 
+// Paint one song into an existing jsPDF doc
 function drawSongIntoDoc(doc, song, opt) {
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -24,7 +26,7 @@ function drawSongIntoDoc(doc, song, opt) {
     opt.columns === 'auto' ? (estimateOnePage(song, opt) ? 1 : 2) : Number(opt.columns || 1);
   const colW = columnCount === 2 ? (contentW - gutter) / 2 : contentW;
 
-  // header
+  // Header
   doc.setFont(opt.lyricFamily, 'bold');
   doc.setFontSize(18);
   doc.text(opt.title || song.title, margin, margin);
@@ -34,7 +36,7 @@ function drawSongIntoDoc(doc, song, opt) {
   const sub = `Key: ${opt.key || song.key || '—'}${opt.tags ? '  •  ' + opt.tags : ''}`;
   doc.text(sub, margin, margin + 16);
 
-  // footer helper
+  // Footer (page number)
   function footer() {
     const pageNum = doc.internal.getNumberOfPages();
     doc.setFont(opt.lyricFamily, 'normal');
@@ -109,7 +111,7 @@ function drawSongIntoDoc(doc, song, opt) {
       y += 14;
     }
     block.lines.forEach((ln) => {
-      const approx = (opt.chordSizePt + opt.lyricSizePt) + 2 * lineGap + 4;
+      const approx = opt.chordSizePt + opt.lyricSizePt + 2 * lineGap + 4;
       ensureSpace(approx);
       drawChordLyricPair(ln.chords || '', ln.text || '');
     });
@@ -117,10 +119,10 @@ function drawSongIntoDoc(doc, song, opt) {
   });
 }
 
+// Build a single-song doc (async for font embedding)
 export async function songToPdfDoc(song, options) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
-  // Set defaults, then embed fonts and pick families
   const opt = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
     chordSizePt: Math.max(14, options?.chordSizePt || 16),
@@ -138,7 +140,7 @@ export async function songToPdfDoc(song, options) {
     opt.lyricFamily = options?.lyricFont || families.lyricFamily || 'Helvetica';
     opt.chordFamily = options?.chordFont || families.chordFamily || 'Courier';
   } catch {
-    // fall back silently
+    // fall back silently to built-ins
   }
 
   drawSongIntoDoc(doc, song, opt);
@@ -153,7 +155,8 @@ export async function downloadSingleSongPdf(song, options) {
 export async function downloadMultiSongPdf(songs, options) {
   if (!songs || !songs.length) return;
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  let opt = {
+
+  const base = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
     chordSizePt: Math.max(14, options?.chordSizePt || 16),
     columns: options?.columns || 'auto',
@@ -161,16 +164,17 @@ export async function downloadMultiSongPdf(songs, options) {
     lyricFamily: 'Helvetica',
     chordFamily: 'Courier',
   };
+
   try {
     const families = await ensureFontsEmbedded(doc);
-    opt.lyricFamily = options?.lyricFont || families.lyricFamily || 'Helvetica';
-    opt.chordFamily = options?.chordFont || families.chordFamily || 'Courier';
+    base.lyricFamily = options?.lyricFont || families.lyricFamily || 'Helvetica';
+    base.chordFamily = options?.chordFont || families.chordFamily || 'Courier';
   } catch {}
 
   songs.forEach((song, idx) => {
     if (idx > 0) doc.addPage();
     drawSongIntoDoc(doc, song, {
-      ...opt,
+      ...base,
       title: song.title,
       key: song.key,
       tags: (song.tags || []).join(', '),
