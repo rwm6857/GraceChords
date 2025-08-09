@@ -1,38 +1,28 @@
-React Songbook Pro (Vector PDF, Fuse Search, Transposer)
-=========================================================
+# GraceChords (ChordPro + Admin)
 
-Features
-- Song directory (fuzzy search by title/lyrics/tags via Fuse.js)
-- Song view with chords above lyrics and key transposer
-- Vector PDF export (single-song) with selectable text, bold chords, minimum 14pt
-- Adjustable lyric font size and column count (auto/1/2)
-- YouTube/MP3 media support
-- Data in `src/data/songs.json`
+## Run locally
+```bash
+npm install
+npm run dev
+```
 
-Quick start
-1. npm install
-2. npm run dev
-3. Edit songs in src/data/songs.json
-4. Download a PDF from a song page (respects transpose + font size)
+## Deploy to GitHub Pages
+1) Edit `vite.config.js` and set `base: '/<your-repo>/'` (e.g. `/GraceChords/`).
+2) `npm run build`
+3) `npm run deploy`
+4) Pages will serve at `https://<username>.github.io/<your-repo>/`
 
-Deploy to GitHub Pages
-- npm run deploy
+## Admin page
+- Visit `/#/admin` to edit songs.
+- Use ChordPro syntax: chords inline like `[G]Amazing`.
+- Click **Download bundle** to get `songs/*.chordpro` and an updated `src/data/index.json`.
+- Commit those to your repo and deploy.
 
-Notes
-- Multi-song vector PDF is planned; for now, single-song export is implemented using jsPDF text APIs.
-- If you want exact font control, ensure the fonts exist on client systems or embed custom fonts with jsPDF (advanced).
+## Offline bulk workflow
+1) Place many `.chordpro` files into `public/songs/`
+2) Run `npm run build-index`
+3) Commit `src/data/index.json` and deploy
 
-
-Embedding fonts
----------------
-1) Download free TTFs (e.g., Google Noto Sans Regular/Bold and Noto Sans Mono Bold).
-2) Put them in `public/fonts/` with these names:
-   - NotoSans-Regular.ttf
-   - NotoSans-Bold.ttf
-   - NotoSansMono-Bold.ttf
-3) PDFs will embed these at runtime. If absent, jsPDF will fall back to Helvetica/Courier.
-
-Per-song transpose in multi-PDF
--------------------------------
-- In the directory, each row has a key dropdown. Pick a key per song, check the box, then click **Download Selected PDF**.
-- The PDF will render each song in its chosen key (vector text).
+## PDF
+- Vector, selectable text via jsPDF.
+- Chords placed above exact words using text width positioning.
