@@ -68,7 +68,18 @@ export default function SongView({ initialSongs }){
               ))}
             </select>
           </label>
-          <button type="button" onClick={handleDownload}>Download PDF</button>
+          <button
+ 		 type="button"
+ 		 onClick={(e) => { 
+  		 e.preventDefault(); 
+   		 e.stopPropagation(); 
+   		 console.log('[PDF] download clicked'); 
+   		 handleDownload(); 
+ 		}}
+>
+  Download PDF
+</button>
+
         </div>
       </div>
 
