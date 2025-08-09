@@ -8,6 +8,10 @@ export default function SongView({ initialSongs }) {
   const { id } = useParams();
   const [song, setSong] = useState(null);
   const [toKey, setToKey] = useState(null);
+
+  // NEW: collapsible media state (remember per-song)
+  const [showMedia, setShowMedia] = useState(false);
+
   const { settings } = useSettings();
 
   useEffect(() => {
@@ -15,6 +19,11 @@ export default function SongView({ initialSongs }) {
     if (s) {
       setSong(s);
       setToKey(s.key || 'G');
+      // restore user preference per song (default: collapsed)
+      try {
+        const saved = localStorage.getItem(`mediaOpen:${s.id}`);
+        setShowMedia(saved === '1');
+      } catch {}
     }
   }, [id, initialSongs]);
 
@@ -30,9 +39,16 @@ export default function SongView({ initialSongs }) {
     );
   }
 
+  function toggleMedia() {
+    setShowMedia((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(`mediaOpen:${song.id}`, next ? '1' : '0'); } catch {}
+      return next;
+    });
+  }
+
   async function handleDownload() {
     try {
-      console.log('[PDF] starting');
       const songInKey = {
         ...song,
         key: toKey,
@@ -44,79 +60,68 @@ export default function SongView({ initialSongs }) {
           })),
         })),
       };
-
       await downloadSingleSongPdf(songInKey, {
-        // if you uploaded fonts and want to force them by PostScript name:
-        // lyricFont: 'NotoSans',
-        // chordFont: 'NotoSansMono-Bold',
         lyricSizePt: settings.lyricFontSizePt,
         chordSizePt: settings.chordFontSizePt,
         columns: settings.columns,
       });
-
-      console.log('[PDF] done');
     } catch (e) {
-      console.error('[PDF] failed', e);
       alert('PDF export failed: ' + (e?.message || e));
+      console.error(e);
     }
   }
 
-  return (
-    <div className="container songview">
-      <Link to="/" className="back">
-        ← Back
-      </Link>
+  const mediaCount = (song.youtube ? 1 : 0) + (song.mp3 ? 1 : 0);
 
-      <div className="header">
-        <div>
+  return (
+    <div className="songpage">
+      {/* Top header */}
+      <div className="songpage__top">
+        <Link to="/" className="back">← Back</Link>
+        <div className="songpage__titlewrap">
           <div className="song-number">{song.number ? song.number : ''}</div>
-          <h2 className="song-title-main">{song.title}</h2>
-          <div className="subtitle">
-            Key: {song.key || '—'} • Tags: {song.tags ? song.tags.join(', ') : ''}
+          <h1 className="songpage__title">{song.title}</h1>
+          <div className="songpage__meta">
+            Key: <strong>{song.key || '—'}</strong>
+            {song.tags?.length ? <> • {song.tags.join(', ')}</> : null}
           </div>
         </div>
-        <div className="controls">
-          <label>
-            Transpose to:{' '}
+      </div>
+
+      {/* Sticky toolbar */}
+      <div className="songpage__toolbar">
+        <div className="toolbar__left">
+          <label className="toolbar__field">
+            Transpose to:
             <select value={toKey} onChange={(e) => setToKey(e.target.value)}>
-              {['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((k) => (
-                <option key={k} value={k}>
-                  {k}
-                </option>
+              {['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'].map(k => (
+                <option key={k} value={k}>{k}</option>
               ))}
             </select>
           </label>
-          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownload(); }}>
+        </div>
+        <div className="toolbar__right">
+          <button
+            type="button"
+            className="btn primary"
+            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownload(); }}
+          >
             Download PDF
           </button>
         </div>
       </div>
 
-      <div className="media">
-        {song.youtube && (
-          <iframe
-            title="YouTube"
-            src={`https://www.youtube.com/embed/${song.youtube}`}
-            frameBorder="0"
-            allowFullScreen
-          ></iframe>
-        )}
-        {song.mp3 && <audio controls src={song.mp3}></audio>}
-      </div>
-
+      {/* Chord/Lyric sheet */}
       <div
-        className="chordsheet"
-        style={{
-          columnCount: settings.columns === 'auto' ? undefined : Number(settings.columns),
-        }}
+        className="songpage__sheet"
+        style={{ columnCount: settings.columns === 'auto' ? undefined : Number(settings.columns) }}
       >
         {song.lyricsBlocks.map((block, bi) => (
           <div key={bi} className="block">
             <div className="section">{block.section}</div>
             {block.lines.map((ln, li) => {
               const key = `${bi}-${li}`;
-              const chordsOrig = ln.chords || '';
-              const displayChords = transposeChordLine(chordsOrig, steps);
+              const displayChords = transposeChordLine(ln.chords || '', steps);
               return (
                 <div key={key} className="linepair">
                   <div className="chords mono" style={{ fontSize: settings.chordFontSizePt }}>
@@ -131,21 +136,57 @@ export default function SongView({ initialSongs }) {
           </div>
         ))}
       </div>
+
+      {/* Collapsible media heading + panel (bottom) */}
+      {(song.youtube || song.mp3) && (
+        <div className="songpage__mediaContainer">
+          <button
+            type="button"
+            className="btn toggle"
+            onClick={toggleMedia}
+            aria-expanded={showMedia}
+            aria-controls="mediaPanel"
+          >
+            <span className={`chev ${showMedia ? 'open' : ''}`} aria-hidden>▸</span>
+            {showMedia ? 'Hide media' : 'Show media'}
+            {mediaCount ? ` (${mediaCount})` : ''}
+          </button>
+
+          <div
+            id="mediaPanel"
+            className={`songpage__media ${showMedia ? 'open' : 'closed'}`}
+            aria-hidden={!showMedia}
+          >
+            {song.youtube && (
+              <div className="media__card">
+                <div className="media__label">Reference Video</div>
+                <div className="media__frame">
+                  <iframe
+                    title="YouTube"
+                    src={`https://www.youtube.com/embed/${song.youtube}`}
+                    frameBorder="0"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
+            {song.mp3 && (
+              <div className="media__card">
+                <div className="media__label">Audio</div>
+                <audio controls src={song.mp3} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function computeSteps(fromKey, toKey) {
   if (!fromKey || !toKey) return 0;
-  const SCALE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const norm = (k) =>
-    k &&
-    k
-      .replace('Db', 'C#')
-      .replace('Eb', 'D#')
-      .replace('Gb', 'F#')
-      .replace('Ab', 'G#')
-      .replace('Bb', 'A#');
+  const SCALE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const norm = k => k && k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#');
   const a = SCALE.indexOf(norm(fromKey));
   const b = SCALE.indexOf(norm(toKey));
   if (a === -1 || b === -1) return 0;
