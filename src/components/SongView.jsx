@@ -12,29 +12,89 @@ export default function SongView(){
   const [toKey, setToKey] = useState('C')
   const [showChords, setShowChords] = useState(true)
   const [showMedia, setShowMedia] = useState(false)
+  const [err, setErr] = useState('')
 
-  useEffect(()=>{ setEntry((indexData?.items||[]).find(x=> String(x.id)===String(id)) || null) },[id])
+  // find entry by id
+  useEffect(()=>{
+    const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
+    setEntry(it)
+  }, [id])
+
+  // load and parse chordpro, derive defaults
   useEffect(()=>{
     if(!entry) return
-    fetch(`${import.meta.env.BASE_URL}songs/${entry.filename}`).then(r=>r.text()).then(txt=>{
-      const p = parseChordPro(txt); setParsed(p)
-      const baseKey = p.meta.key || p.meta.originalkey || entry.originalKey || 'C'
-      setToKey(baseKey); try{ setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`)==='1') }catch{}
-    })
-  },[entry])
+    setErr('')
+    setParsed(null)
 
-  if(!entry || !parsed) return <div className="container"><p>Loading… <Link to="/">Back</Link></p></div>
+    // Normalize base for GitHub Pages + HashRouter
+    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+    const url = `${base}songs/${entry.filename}`
 
-  const title = parsed.meta.title || entry.title
-  const baseKey = parsed.meta.key || parsed.meta.originalkey || entry.originalKey || 'C'
+    fetch(url)
+      .then(r => {
+        if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`)
+        return r.text()
+      })
+      .then(txt => {
+        const p = parseChordPro(txt)
+        setParsed(p)
+        const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
+        setToKey(baseKey)
+        try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
+      })
+      .catch(e => {
+        console.error(e)
+        setErr(e?.message || 'Failed to load song')
+      })
+  }, [entry])
+
+  // early states
+  if(!entry){
+    return (
+      <div className="container">
+        <p>Song not found. <Link to="/">Back</Link></p>
+      </div>
+    )
+  }
+  if(err){
+    return (
+      <div className="container">
+        <p style={{color:'#b91c1c'}}>Error: {err}</p>
+        <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
+        <Link to="/">Back</Link>
+      </div>
+    )
+  }
+  if(!parsed){
+    return (
+      <div className="container">
+        <p>Loading… <Link to="/">Back</Link></p>
+      </div>
+    )
+  }
+
+  // safe accessors
+  const title = parsed?.meta?.title || entry.title
+  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = useMemo(()=> stepsBetween(baseKey, toKey), [baseKey, toKey])
-  const media = { youtube: parsed.meta.youtube||'', mp3: parsed.meta.mp3||'', pptx: parsed.meta.pptx||'' }
-  function transposePositions(arr){ return (arr||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index })) }
+  const media = {
+    youtube: parsed?.meta?.youtube || '',
+    mp3: parsed?.meta?.mp3 || '',
+    pptx: parsed?.meta?.pptx || ''
+  }
+  const safeBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : []
+
+  function transposePositions(arr){
+    return (arr || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+  }
 
   async function handleDownload(){
-    const blocks = parsed.blocks.map(b => ({
+    const blocks = safeBlocks.map(b => ({
       section: b.section,
-      lines: b.lines.map(ln => ({ plain: ln.text, chordPositions: transposePositions(ln.chords) }))
+      lines: (b.lines || []).map(ln => ({
+        plain: ln.text,
+        chordPositions: transposePositions(ln.chords)
+      }))
     }))
     await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
   }
@@ -45,7 +105,10 @@ export default function SongView(){
         <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
           <h1 className="songpage__title">{title}</h1>
-          <div className="songpage__meta">Key: <strong>{baseKey}</strong>{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
+          <div className="songpage__meta">
+            Key: <strong>{baseKey}</strong>
+            {entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}
+          </div>
         </div>
       </div>
 
@@ -61,15 +124,20 @@ export default function SongView(){
           </label>
         </div>
         <div>
-          <button className="btn primary iconbtn" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleDownload();}}><DownloadIcon /> Download PDF</button>
+          <button
+            className="btn primary iconbtn"
+            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownload() }}
+          >
+            <DownloadIcon /> Download PDF
+          </button>
         </div>
       </div>
 
       <div className="songpage__sheet">
-        {parsed.blocks.map((block, bi)=> (
+        {safeBlocks.map((block, bi)=> (
           <div key={bi}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
-            {block.lines.map((ln, li)=>{
+            {(block.lines || []).map((ln, li)=>{
               const positions = transposePositions(ln.chords)
               const mono = makeMonospaceChordLine(ln.text, positions)
               return (
@@ -87,13 +155,33 @@ export default function SongView(){
 
       {(media.youtube || media.mp3 || media.pptx) && (
         <div>
-          <button className="btn media__toggle" onClick={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}>
+          <button
+            className="btn media__toggle"
+            onClick={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
+          >
             {showMedia ? <>Hide media</> : <><MediaIcon /> Show media</>}
           </button>
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
-            {media.youtube && <div className="media__card" style={{marginTop:10}}><div className="media__label">Reference Video</div><div className="media__frame"><iframe title="YouTube" src={`https://www.youtube.com/embed/${media.youtube}`} allowFullScreen /></div></div>}
-            {media.mp3 && <div className="media__card" style={{marginTop:10}}><div className="media__label">Audio</div><audio controls src={media.mp3} /></div>}
-            {media.pptx && <div className="media__card" style={{marginTop:10}}><div className="media__label">Lyric Slides (PPTX)</div><a className="btn" href={media.pptx} download>Download PPTX</a></div>}
+            {media.youtube && (
+              <div className="media__card" style={{marginTop:10}}>
+                <div className="media__label">Reference Video</div>
+                <div className="media__frame">
+                  <iframe title="YouTube" src={`https://www.youtube.com/embed/${media.youtube}`} allowFullScreen />
+                </div>
+              </div>
+            )}
+            {media.mp3 && (
+              <div className="media__card" style={{marginTop:10}}>
+                <div className="media__label">Audio</div>
+                <audio controls src={media.mp3} />
+              </div>
+            )}
+            {media.pptx && (
+              <div className="media__card" style={{marginTop:10}}>
+                <div className="media__label">Lyric Slides (PPTX)</div>
+                <a className="btn" href={media.pptx} download>Download PPTX</a>
+              </div>
+            )}
           </div>
         </div>
       )}
