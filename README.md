@@ -1,4 +1,6 @@
-# GraceChords (ChordPro + Admin)
+# GraceChords
+
+React + Vite app for an interactive ChordPro songbook.
 
 ## Run locally
 ```bash
@@ -6,23 +8,32 @@ npm install
 npm run dev
 ```
 
-## Deploy to GitHub Pages
-1) Edit `vite.config.js` and set `base: '/<your-repo>/'` (e.g. `/GraceChords/`).
-2) `npm run build`
-3) `npm run deploy`
-4) Pages will serve at `https://<username>.github.io/<your-repo>/`
+## Build & deploy (GitHub Pages via `docs/` on main)
+```bash
+npm run build
+# commit & push -> serve from /docs
+```
+Router uses hash (`/#/…`) so it works on Pages.
 
-## Admin page
-- Visit `/#/admin` to edit songs.
-- Use ChordPro syntax: chords inline like `[G]Amazing`.
-- Click **Download bundle** to get `songs/*.chordpro` and an updated `src/data/index.json`.
-- Commit those to your repo and deploy.
+## Admin
+- Visit `/#/admin` — password **10401040**
+- Author in ChordPro; click **Download bundle** to export song + index.
+- Drop `songs/*.chordpro` into `public/songs/` and merge `src/data/index.json`, or run:
+```bash
+npm run build-index
+```
 
-## Offline bulk workflow
-1) Place many `.chordpro` files into `public/songs/`
-2) Run `npm run build-index`
-3) Commit `src/data/index.json` and deploy
+## Fonts for PDF
+Put these files into `public/fonts/`:
+- `NotoSans-Regular.ttf`
+- `NotoSans-Bold.ttf`
+- `NotoSans-Italic.ttf`
+- `NotoSans-BoldItalic.ttf`
+- `NotoSansMono-Regular.ttf`
+- `NotoSansMono-Bold.ttf`
 
-## PDF
-- Vector, selectable text via jsPDF.
-- Chords placed above exact words using text width positioning.
+## Notes
+- Home: search + tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
+- Song page: vertical layout, sticky toolbar (transpose + download), chords toggle (ON by default), collapsible media.
+- Setlist: `/setlist` lets you build/reorder sets, choose keys, export a single PDF.
+- PDFs: vector text with Noto Sans; section titles are larger than lyrics and bold; sections kept together; auto 1→2 columns if one song overflows.

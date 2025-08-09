@@ -7,12 +7,11 @@
       "filename": "amazing-grace.chordpro",
       "originalKey": "G",
       "tags": [
-        "hymn",
-        "worship"
+        "Hymn",
+        "Slow"
       ],
       "authors": "John Newton",
-      "country": "UK",
-      "number": 1
+      "country": "UK"
     },
     {
       "id": "blessed-be-your-name",
@@ -20,11 +19,22 @@
       "filename": "blessed-be-your-name.chordpro",
       "originalKey": "G",
       "tags": [
-        "modern"
+        "Fast"
       ],
       "authors": "Matt Redman",
-      "country": "UK",
-      "number": 2
+      "country": "UK"
+    },
+    {
+      "id": "build-my-life",
+      "title": "Build My Life",
+      "filename": "build-my-life.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Worship"
+      ],
+      "authors": "Brett Younker; Karl Martin; Kirby Kaple; Matt Redman; Pat Barrett",
+      "country": "US"
     }
   ]
 }
