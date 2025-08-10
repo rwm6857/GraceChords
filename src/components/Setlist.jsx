@@ -7,6 +7,7 @@ import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { downloadMultiSongPdf } from '../utils/pdf'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
+import { fetchTextCached } from '../utils/fetchCache'
 
 export default function Setlist(){
   // existing state
@@ -116,7 +117,8 @@ export default function Setlist(){
     const songs = []
     for(const sel of list){
       const s = items.find(it=> it.id===sel.id); if(!s) continue
-      const txt = await fetch(`${import.meta.env.BASE_URL}songs/${s.filename}`).then(r=>r.text())
+      const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
+      const txt = await fetchTextCached(url)
       const parsed = parseChordPro(txt)
       const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
       const steps = stepsBetween(baseKey, sel.toKey || baseKey)

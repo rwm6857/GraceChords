@@ -4,6 +4,7 @@ import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordp
 import { downloadSingleSongPdf } from '../utils/pdf'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
+import { fetchTextCached } from '../utils/fetchCache'
 
 export default function SongView(){
   const { id } = useParams()
@@ -14,18 +15,22 @@ export default function SongView(){
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
 
+  // base for local asset links on GH Pages
+  const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+
+  // locate index entry
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
     setEntry(it)
   }, [id])
 
+  // fetch + parse chordpro
   useEffect(()=>{
     if(!entry) return
     setErr('')
     setParsed(null)
-    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    fetch(`${base}songs/${entry.filename}`)
-      .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
+    const url = `${base}songs/${entry.filename}`
+    fetchTextCached(url)
       .then(txt => {
         const p = parseChordPro(txt); setParsed(p)
         const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
@@ -33,7 +38,45 @@ export default function SongView(){
         try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
       })
       .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
-  }, [entry])
+  }, [entry, base])
+
+  // keyboard shortcuts: c toggles chords, [ / ] transpose
+  useEffect(() => {
+    function onKey(e){
+      const tag = (e.target && e.target.tagName) || ''
+      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
+
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault()
+        setShowChords(v => !v)
+        return
+      }
+      if (e.key === '[') {
+        e.preventDefault()
+        setToKey(k => transposeSym(k, -1))
+        return
+      }
+      if (e.key === ']') {
+        e.preventDefault()
+        setToKey(k => transposeSym(k, 1))
+        return
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // prefetch neighbor songs (no await inside effect)
+  useEffect(() => {
+    if (!entry) return
+    const items = indexData?.items || []
+    const i = items.findIndex(x => x.id === entry.id)
+    const neighbors = [items[i-1], items[i+1]].filter(Boolean)
+    neighbors.forEach(n => {
+      const u = `${base}songs/${n.filename}`
+      fetchTextCached(u).catch(()=>{})
+    })
+  }, [entry?.id, base])
 
   if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -64,6 +107,13 @@ export default function SongView(){
       }))
     }))
     await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
+  }
+
+  // helpers for media URLs
+  const toHref = (p) => {
+    if (!p) return null
+    if (/^https?:\/\//i.test(p)) return p
+    return `${base}${String(p).replace(/^\/+/, '')}`
   }
 
   return (
@@ -126,26 +176,63 @@ export default function SongView(){
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 <div className="media__frame">
-                  <iframe title="YouTube" src={`https://www.youtube.com/embed/${parsed.meta.youtube}`} allowFullScreen />
+                  <LiteYouTube id={extractYouTubeId(parsed.meta.youtube)} />
                 </div>
               </div>
             )}
             {parsed.meta.mp3 && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
-                <audio controls src={parsed.meta.mp3} />
+                <audio controls src={toHref(parsed.meta.mp3)} />
               </div>
             )}
             {parsed.meta.pptx && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={parsed.meta.pptx} download>Download PPTX</a>
+                <a className="btn" href={toHref(parsed.meta.pptx)} download>Download PPTX</a>
               </div>
             )}
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+function extractYouTubeId(input){
+  if(!input) return ''
+  // if already an id
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input
+  // try to parse from URL
+  try {
+    const u = new URL(input)
+    if (u.hostname.includes('youtu.be')) return u.pathname.replace('/','')
+    if (u.searchParams.get('v')) return u.searchParams.get('v')
+    const m = u.pathname.match(/\/embed\/([^/?#]+)/)
+    if (m) return m[1]
+  } catch {}
+  return input
+}
+
+function LiteYouTube({ id }) {
+  const [ready, setReady] = React.useState(false)
+  const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+  return ready ? (
+    <iframe
+      title="YouTube video"
+      width="560" height="315"
+      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+      style={{border:0, width:'100%', aspectRatio:'16/9'}}
+    />
+  ) : (
+    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video">
+      <div className="media__frame">
+        <img src={thumb} alt="" style={{position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover'}} />
+        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
+      </div>
+    </button>
   )
 }
 
@@ -157,7 +244,6 @@ function MeasuredLine({ plain, chords, steps, showChords }){
   useEffect(()=>{
     if(!hostRef.current) return
 
-    // Ensure canvas
     if(!canvasRef.current){
       const cv = document.createElement('canvas')
       cv.width = 1; cv.height = 1
@@ -165,37 +251,28 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     }
     const ctx = canvasRef.current.getContext('2d')
 
-    // Grab computed styles from the visible lyrics node
+    // Compute styles from visible lyrics
     const lyr = hostRef.current.querySelector('.lyrics')
     const cs = window.getComputedStyle(lyr)
 
-    // Lyrics font for width measurement
+    // 1) Measure with LYRICS font (critical alignment rule)
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-
-    // Measure pixel offsets for each chord
     const offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
       sym: transposeSym(c.sym, steps)
     }))
 
-    // Get font metrics to place chords above baseline
-    // actualBoundingBoxAscent/Descent are supported in modern browsers; provide fallback.
-    const lyrM = ctx.measureText('Mg')
-    const lyrAscent = lyrM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
-
-    // Switch to chord font to estimate its ascent (for padding)
+    // 2) Estimate chord ascent with mono bold
     const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
-    const chordFontSize = cs.fontSize // keep same size as lyrics for consistent spacing
+    const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
     const gap = 4
-    const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
-    const chordTop = 0                           // chord layer sits at host top
+    const padTop = Math.ceil(chordAscent + gap)
+    const chordTop = 0
     setState({ offsets, padTop, chordTop })
-
-
   }, [plain, chords, steps, showChords])
 
   return (

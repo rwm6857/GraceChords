@@ -13,7 +13,9 @@ export default function Admin(){
       <div className="container" style={{maxWidth:480}}>
         <h2>Admin</h2>
         <p>Enter password to continue.</p>
+        <label htmlFor="adminPw" className="sr-only">Password</label>
         <input
+          id="adminPw"
           type="password"
           value={pw}
           onChange={e=> setPw(e.target.value)}
@@ -29,7 +31,19 @@ export default function Admin(){
 }
 
 function AdminPanel(){
-  const [text, setText] = useState(`{title: }\n{key: }\n{authors: }\n{country: }\n{tags: Fast, Slow, Hymn, Holiday}\n{youtube: }\n{mp3: }\n{pptx: }\n\nVerse 1\n[]`)
+  const [text, setText] = useState(
+`{title: }
+{key: }
+{authors: }
+{country: }
+{tags: Fast, Slow, Hymn, Holiday}
+{youtube: }
+{mp3: }
+{pptx: }
+
+Verse 1
+[]`
+  )
   const [meta, setMeta] = useState({})
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
 
@@ -41,6 +55,8 @@ function AdminPanel(){
     const zip = new JSZip()
     const folder = zip.folder('songs')
     folder.file(filename, text)
+
+    // minimal index entry; media links remain in the .chordpro meta
     const items = [{
       id,
       title: meta.title || 'Untitled',
@@ -50,7 +66,12 @@ function AdminPanel(){
       authors: meta.authors||'',
       country: meta.country||''
     }]
-    zip.file('src/data/index.json', JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2))
+
+    zip.file('src/data/index.json', JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      items
+    }, null, 2))
+
     const blob = await zip.generateAsync({ type:'blob' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -62,15 +83,18 @@ function AdminPanel(){
     <div className="container">
       <h2>Admin</h2>
 
+      {/* Metadata form */}
       <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
         <label>Title
-          <input value={meta.title||''}
+          <input
+            value={meta.title||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'title', e.target.value))}
           />
         </label>
 
         <label>Original Key
-          <select value={meta.key||''}
+          <select
+            value={meta.key||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'key', e.target.value))}
           >
             <option value=""></option>
@@ -79,43 +103,51 @@ function AdminPanel(){
         </label>
 
         <label>Authors
-          <input value={meta.authors||''}
+          <input
+            value={meta.authors||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'authors', e.target.value))}
           />
         </label>
 
         <label>Country
-          <input value={meta.country||''}
+          <input
+            value={meta.country||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'country', e.target.value))}
           />
         </label>
 
         <label>Tags
-          <input value={meta.tags||''}
+          <input
+            value={meta.tags||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'tags', e.target.value))}
             placeholder="Fast, Slow, Hymn, Holiday"
           />
         </label>
 
-        <label>YouTube ID
-          <input value={meta.youtube||''}
+        <label>YouTube (ID or URL)
+          <input
+            value={meta.youtube||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'youtube', e.target.value))}
+            placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/..."
           />
         </label>
 
-        <label>MP3 URL or /media/&lt;id&gt;
-          <input value={meta.mp3||''}
+        <label>MP3 (URL or /media/…)
+          <input
+            value={meta.mp3||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'mp3', e.target.value))}
           />
         </label>
 
-        <label>PPTX URL or /media/&lt;id&gt;
-          <input value={meta.pptx||''}
+        <label>PPTX (URL or /media/…)
+          <input
+            value={meta.pptx||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'pptx', e.target.value))}
           />
         </label>
       </div>
 
+      {/* Editor + Preview */}
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:10}}>
         <textarea
           value={text}
@@ -141,6 +173,7 @@ function AdminPanel(){
         </div>
       </div>
 
+      {/* Actions */}
       <div style={{display:'flex', gap:8, marginTop:10}}>
         <button className="btn primary" onClick={downloadBundle}>Download bundle</button>
         <div className="card">
@@ -157,7 +190,7 @@ function AdminPanel(){
   )
 }
 
-/** Preview line with pixel-measured chord overlay (matches Song View) */
+/** Preview line with pixel-measured chord overlay (matches Song View’s alignment rule) */
 function MeasuredPreviewLine({ plain, chords }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
@@ -175,16 +208,14 @@ function MeasuredPreviewLine({ plain, chords }){
     const lyr = hostRef.current.querySelector('.lyrics')
     const cs = window.getComputedStyle(lyr)
 
-    // Measure with lyrics font
+    // Measure with lyrics font (critical alignment rule)
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
     const offsets = (chords || []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
       sym: c.sym
     }))
 
-    const lyrM = ctx.measureText('Mg')
-    const lyrAscent = lyrM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
-    // Estimate chord ascent with chord font
+    // Estimate chord ascent with mono bold (for reserved space)
     const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
@@ -192,11 +223,9 @@ function MeasuredPreviewLine({ plain, chords }){
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
     const gap = 4
-    const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
-    const chordTop = 0                           // chord layer sits at host top
+    const padTop = Math.ceil(chordAscent + gap)
+    const chordTop = 0
     setState({ offsets, padTop, chordTop })
-
-
   }, [plain, chords])
 
   return (
