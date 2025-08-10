@@ -6,33 +6,31 @@ import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { downloadMultiSongPdf } from '../utils/pdf'
-
-// NEW: named set utilities
-import { listSets, getSet, saveSet, deleteSet, duplicateSet, newEmptySet } from '../utils/sets'
+import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 
 export default function Setlist(){
-  // --- existing state ---
+  // existing state
   const [name, setName] = useState('Untitled Set')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
   const [list, setList] = useState([])
 
-  // NEW: saved sets state
+  // named sets
   const [currentId, setCurrentId] = useState(null)
   const [savedSets, setSavedSets] = useState(() => listSets())
   const [selectedId, setSelectedId] = useState('')
 
-  // Load catalog
+  // load catalog
   useEffect(()=>{ setItems(indexData?.items || []) },[])
 
-  // One-time migration from legacy single-set storage (optional, safe)
+  // (optional) migrate legacy single-set storage if present and nothing saved yet
   useEffect(() => {
     try {
       const legacy = localStorage.getItem('setlist')
       if (!legacy) return
+      if (listSets().length > 0) return
       const s = JSON.parse(legacy)
-      const already = listSets()
-      if (already.length === 0 && (s?.name || (s?.list?.length || 0) > 0)) {
+      if ((s?.name || '') || (s?.list?.length || 0) > 0) {
         const saved = saveSet({ name: s.name || 'Imported Set', items: s.list || [] })
         setSavedSets(listSets())
         setCurrentId(saved.id)
@@ -43,14 +41,14 @@ export default function Setlist(){
     } catch {}
   }, [])
 
-  // Search
+  // search
   const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
   const results = useMemo(
     ()=> q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title)),
     [q, fuse, items]
   )
 
-  // Mutators for current list
+  // list mutators
   function addSong(s){ if(list.find(x=> x.id===s.id)) return; setList([...list, { id: s.id, toKey: s.originalKey || 'C' }]) }
   function removeSong(id){ setList(list.filter(x=> x.id!==id)) }
   function move(id, dir){
@@ -60,70 +58,60 @@ export default function Setlist(){
   }
   function changeKey(id, val){ setList(list.map(x=> x.id===id ? { ...x, toKey: val } : x)) }
 
-  // ---- Named set helpers ----
+  // quick transpose (entire set)
+  function transposeSet(delta){
+    setList(prev => prev.map(sel => {
+      const s = items.find(it=> it.id===sel.id)
+      const from = sel.toKey || s?.originalKey || 'C'
+      return { ...sel, toKey: transposeSym(from, delta) }
+    }))
+  }
+  function resetSetKeys(){
+    setList(prev => prev.map(sel => {
+      const s = items.find(it=> it.id===sel.id)
+      return { ...sel, toKey: s?.originalKey || 'C' }
+    }))
+  }
+
+  // named set helpers
   function refreshSaved(idToSelect){
     setSavedSets(listSets())
-    if (idToSelect !== undefined) setSelectedId(idToSelect || '')
+    setSelectedId(idToSelect || '')
   }
-
   function onNew(){
-    setCurrentId(null)
-    setName('Untitled Set')
-    setList([])
-    setSelectedId('')
+    setCurrentId(null); setName('Untitled Set'); setList([]); setSelectedId('')
   }
-
   function onSave(){
     const finalName = (name?.trim() || 'Untitled Set')
     const saved = saveSet({ id: currentId, name: finalName, items: list })
-    setName(saved.name)
-    setCurrentId(saved.id)
-    refreshSaved(saved.id)
+    setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
   }
-
-  function onSaveAs(){
-    const proposed = `Copy of ${name || 'Untitled Set'}`
-    const input = window.prompt('Save as…', proposed)
-    if (!input) return
-    const saved = saveSet({ id: null, name: input.trim() || proposed, items: list })
-    setName(saved.name)
-    setCurrentId(saved.id)
-    refreshSaved(saved.id)
-  }
-
   function onLoad(e){
     const id = e.target.value
     setSelectedId(id)
     if (!id) return
     const s = getSet(id)
-    if (s){
-      setCurrentId(s.id)
-      setName(s.name || 'Untitled Set')
-      setList(s.items || [])
-    }
+    if (s){ setCurrentId(s.id); setName(s.name || 'Untitled Set'); setList(s.items || []) }
   }
-
   function onDuplicate(){
-    if (!currentId) return onSaveAs()
-    const copy = duplicateSet(currentId)
-    if (copy){
-      setCurrentId(copy.id)
-      setName(copy.name)
-      setList(copy.items || [])
-      refreshSaved(copy.id)
+    if (!currentId) {
+      // no id yet -> equivalent to Save As… but per your request we keep only Save
+      const proposed = `Copy of ${name || 'Untitled Set'}`
+      const saved = saveSet({ id: null, name: proposed, items: list })
+      setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
+      return
     }
+    const copy = duplicateSet(currentId)
+    if (copy){ setCurrentId(copy.id); setName(copy.name); setList(copy.items || []); refreshSaved(copy.id) }
   }
-
   function onDelete(){
     if (!currentId) return
     if (window.confirm(`Delete set "${name}"? This cannot be undone.`)){
-      deleteSet(currentId)
-      onNew()
-      refreshSaved('')
+      deleteSet(currentId); onNew(); refreshSaved('')
     }
   }
 
-  // Export
+  // export & print
   async function exportPdf(){
     const songs = []
     for(const sel of list){
@@ -143,6 +131,7 @@ export default function Setlist(){
     }
     await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
   }
+  function onPrint(){ window.print() }
 
   return (
     <div className="container">
@@ -152,7 +141,7 @@ export default function Setlist(){
         <div />
       </div>
 
-      {/* Named sets toolbar */}
+      {/* Named sets toolbar (keep) */}
       <div className="card" style={{display:'flex', gap:8, alignItems:'center', marginTop:12}}>
         <label style={{display:'flex', alignItems:'center', gap:6}}>
           <span>Set:</span>
@@ -174,16 +163,22 @@ export default function Setlist(){
         </select>
         <button className="btn" onClick={onNew}>New</button>
         <button className="btn primary" onClick={onSave}>Save</button>
-        <button className="btn" onClick={onSaveAs}>Save As…</button>
+        {/* Save As removed per request */}
         <button className="btn" onClick={onDuplicate} disabled={!list.length}>Duplicate</button>
         <button className="btn" onClick={onDelete} disabled={!currentId}>Delete</button>
+
+        {/* Quick transpose */}
+        <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:6}}>
+          <span className="meta">Transpose:</span>
+          <button className="btn" onClick={()=> transposeSet(-1)} title="Transpose set down 1 semitone">–1</button>
+          <button className="btn" onClick={resetSetKeys} title="Reset all to originals">Reset</button>
+          <button className="btn" onClick={()=> transposeSet(1)} title="Transpose set up 1 semitone">+1</button>
+        </div>
       </div>
 
       <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
         <div>
-          <label>Setlist name
-            <input value={name} onChange={e=> setName(e.target.value)} placeholder="Sunday AM" />
-          </label>
+          {/* Removed the redundant "Setlist name" field */}
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
@@ -200,10 +195,11 @@ export default function Setlist(){
             </div>
           </div>
         </div>
+
         <div>
           <strong>Current setlist ({list.length})</strong>
           <div style={{maxHeight:360, overflow:'auto', marginTop:6}}>
-            {list.map((sel, idx)=>{
+            {list.map((sel)=>{
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null
               return (
@@ -224,7 +220,24 @@ export default function Setlist(){
           </div>
           <div style={{display:'flex', gap:8, marginTop:8}}>
             <button className="btn primary iconbtn" onClick={exportPdf}><DownloadIcon /> Export PDF</button>
+            <button className="btn" onClick={onPrint}>Print</button>
             <button className="btn" onClick={()=> setList([])}>Clear</button>
+          </div>
+
+          {/* Print-only minimal outline */}
+          <div className="print-only" style={{marginTop:16}}>
+            <h1 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h1>
+            <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
+              {list.map(sel => {
+                const s = items.find(it=> it.id===sel.id)
+                if (!s) return null
+                return (
+                  <li key={sel.id}>
+                    {s.title} — {sel.toKey || s.originalKey || '—'}
+                  </li>
+                )
+              })}
+            </ol>
           </div>
         </div>
       </div>
