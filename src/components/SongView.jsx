@@ -160,23 +160,21 @@ export default function SongView(){
             {parsed?.meta?.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
-                <div className="media__frame">
-                  {(() => {
-                    const ytId = extractYouTubeId(parsed.meta.youtube)
-                    return ytId ? (
-                      <LiteYouTube id={ytId} />
-                    ) : (
-                      <a
-                        className="btn"
-                        href={String(parsed.meta.youtube)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open on YouTube
-                      </a>
-                    )
-                  })()}
-                </div>
+                {(() => {
+                 const ytId = extractYouTubeId(parsed.meta.youtube)
+                 return ytId ? (
+                    <LiteYouTube id={ytId} />
+                  ) : (
+                    <a
+                      className="btn"
+                      href={String(parsed.meta.youtube)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                     >
+                      Open on YouTube
+                    </a>
+                   )
+                })()}
               </div>
             )}
 
