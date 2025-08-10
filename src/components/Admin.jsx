@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import JSZip from 'jszip'
-import { KEYS, parseChordPro, makeMonospaceChordLine } from '../utils/chordpro'
+import { KEYS, parseChordPro } from '../utils/chordpro'
 
 const PASSWORD = '10401040'
 
 export default function Admin(){
-  // Only the gate’s hooks live here (always same order)
   const [ok, setOk] = useState(false)
   const [pw, setPw] = useState('')
 
@@ -26,33 +25,22 @@ export default function Admin(){
       </div>
     )
   }
-
-  // After gate passes, render a separate component (its hooks start fresh and aren’t conditional)
   return <AdminPanel />
 }
 
 function AdminPanel(){
   const [text, setText] = useState(`{title: }\n{key: }\n{authors: }\n{country: }\n{tags: Fast, Slow, Hymn, Holiday}\n{youtube: }\n{mp3: }\n{pptx: }\n\nVerse 1\n[]`)
   const [meta, setMeta] = useState({})
-
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
-
-  function parseMeta(t){
-    const m = {}
-    const re = /^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}\s*$/gm
-    let x
-    while((x = re.exec(t))){ m[x[1].trim().toLowerCase()] = x[2].trim() }
-    return m
-  }
 
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
   const filename = `${id||'untitled'}.chordpro`
+  const parsed = useMemo(()=> parseChordPro(text||''), [text])
 
   async function downloadBundle(){
     const zip = new JSZip()
     const folder = zip.folder('songs')
     folder.file(filename, text)
-
     const items = [{
       id,
       title: meta.title || 'Untitled',
@@ -62,7 +50,6 @@ function AdminPanel(){
       authors: meta.authors||'',
       country: meta.country||''
     }]
-
     zip.file('src/data/index.json', JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2))
     const blob = await zip.generateAsync({ type:'blob' })
     const a = document.createElement('a')
@@ -71,8 +58,6 @@ function AdminPanel(){
     a.click()
   }
 
-  const parsed = useMemo(()=> parseChordPro(text||''), [text])
-
   return (
     <div className="container">
       <h2>Admin</h2>
@@ -80,13 +65,13 @@ function AdminPanel(){
       <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
         <label>Title
           <input value={meta.title||''}
-            onChange={e=> setText(t=> t.replace(/\{\s*title\s*:[^}]*\}/i, `{title: ${e.target.value}}`))}
+            onChange={e=> setText(t=> setOrInsertMeta(t, 'title', e.target.value))}
           />
         </label>
 
         <label>Original Key
           <select value={meta.key||''}
-            onChange={e=> setText(t=> t.replace(/\{\s*key\s*:[^}]*\}/i, `{key: ${e.target.value}}`))}
+            onChange={e=> setText(t=> setOrInsertMeta(t, 'key', e.target.value))}
           >
             <option value=""></option>
             {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
@@ -95,19 +80,19 @@ function AdminPanel(){
 
         <label>Authors
           <input value={meta.authors||''}
-            onChange={e=> setText(t=> t.replace(/\{\s*authors\s*:[^}]*\}/i, `{authors: ${e.target.value}}`))}
+            onChange={e=> setText(t=> setOrInsertMeta(t, 'authors', e.target.value))}
           />
         </label>
 
         <label>Country
           <input value={meta.country||''}
-            onChange={e=> setText(t=> t.replace(/\{\s*country\s*:[^}]*\}/i, `{country: ${e.target.value}}`))}
+            onChange={e=> setText(t=> setOrInsertMeta(t, 'country', e.target.value))}
           />
         </label>
 
         <label>Tags
           <input value={meta.tags||''}
-            onChange={e=> setText(t=> t.replace(/\{\s*tags\s*:[^}]*\}/i, `{tags: ${e.target.value}}`))}
+            onChange={e=> setText(t=> setOrInsertMeta(t, 'tags', e.target.value))}
             placeholder="Fast, Slow, Hymn, Holiday"
           />
         </label>
@@ -143,15 +128,13 @@ function AdminPanel(){
             {(parsed.blocks||[]).map((b,bi)=>(
               <div key={bi}>
                 <div className="section">{b.section ? `[${b.section}]` : ''}</div>
-                {(b.lines||[]).map((ln,li)=>{
-                  const mono = makeMonospaceChordLine(ln.text, ln.chords)
-                  return (
-                    <div key={bi+'-'+li} className="linepair">
-                      <div className="chords mono">{mono}</div>
-                      <div className="lyrics">{ln.text}</div>
-                    </div>
-                  )
-                })}
+                {(b.lines||[]).map((ln,li)=>(
+                  <MeasuredPreviewLine
+                    key={`${bi}-${li}`}
+                    plain={ln.text}
+                    chords={ln.chords || []}
+                  />
+                ))}
               </div>
             ))}
           </div>
@@ -174,13 +157,68 @@ function AdminPanel(){
   )
 }
 
+/** Preview line with pixel-measured chord overlay (matches Song View) */
+function MeasuredPreviewLine({ plain, chords }){
+  const hostRef = useRef(null)
+  const canvasRef = useRef(null)
+  const [offsets, setOffsets] = useState([])
+
+  useEffect(()=>{
+    if(!hostRef.current) return
+
+    if(!canvasRef.current){
+      const cv = document.createElement('canvas')
+      cv.width = 1; cv.height = 1
+      canvasRef.current = cv
+    }
+    const ctx = canvasRef.current.getContext('2d')
+
+    const lyr = hostRef.current.querySelector('.lyrics')
+    const cs = window.getComputedStyle(lyr)
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+
+    const arr = []
+    for(const c of chords){
+      const sub = plain.slice(0, c.index)
+      const w = ctx.measureText(sub).width
+      arr.push({ left: w, sym: c.sym })
+    }
+    setOffsets(arr)
+  }, [plain, chords])
+
+  return (
+    <div ref={hostRef} style={{position:'relative', marginBottom:10}}>
+      {offsets.length>0 && (
+        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:-2}}>
+          {offsets.map((c, i)=>(
+            <span key={i} style={{
+              position:'absolute',
+              left: `${c.left}px`,
+              fontFamily: `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontWeight: 700
+            }}>{c.sym}</span>
+          ))}
+        </div>
+      )}
+      <div className="lyrics">{plain}</div>
+    </div>
+  )
+}
+
 // Insert or update a {key: value} meta line in the ChordPro text
 function setOrInsertMeta(text, key, value){
   const re = new RegExp(`\\{\\s*${key}\\s*:[^}]*\\}`, 'i')
   if(re.test(text)) return text.replace(re, `{${key}: ${value}}`)
-  // Insert after title or at top
   if(/\{\s*title\s*:[^}]*\}/i.test(text)){
     return text.replace(/\{\s*title\s*:[^}]*\}\s*/, m => m + `\n{${key}: ${value}}\n`)
   }
   return `{${key}: ${value}}\n` + text
+}
+
+function parseMeta(t){
+  const m = {}
+  const re = /^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}\s*$/gm
+  let x
+  while((x = re.exec(t))){ m[x[1].trim().toLowerCase()] = x[2].trim() }
+  return m
 }

@@ -2,6 +2,19 @@
   "generatedAt": "",
   "items": [
     {
+      "id": "glorious-king",
+      "title": "Glorious King",
+      "filename": "glorious-king.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Nations"
+      ],
+      "authors": "",
+      "country": "Egypt"
+    },
+
+    {
       "id": "amazing-grace",
       "title": "Amazing Grace",
       "filename": "amazing-grace.chordpro",

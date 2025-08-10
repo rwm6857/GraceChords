@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { parseChordPro, makeMonospaceChordLine, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { downloadSingleSongPdf } from '../utils/pdf'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
@@ -14,26 +14,20 @@ export default function SongView(){
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
 
-  // locate entry
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
     setEntry(it)
   }, [id])
 
-  // load + parse chordpro
   useEffect(()=>{
     if(!entry) return
     setErr('')
     setParsed(null)
-
     const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    const url = `${base}songs/${entry.filename}`
-
-    fetch(url)
+    fetch(`${base}songs/${entry.filename}`)
       .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
-        const p = parseChordPro(txt)
-        setParsed(p)
+        const p = parseChordPro(txt); setParsed(p)
         const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
         setToKey(baseKey)
         try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
@@ -41,55 +35,35 @@ export default function SongView(){
       .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
   }, [entry])
 
-  // derive values (no hooks below this point!)
-  const title = parsed?.meta?.title || entry?.title || ''
-  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry?.originalKey || 'C'
-  const steps = stepsBetween(baseKey, toKey) // simple function call; not a hook
-  const media = {
-    youtube: parsed?.meta?.youtube || '',
-    mp3: parsed?.meta?.mp3 || '',
-    pptx: parsed?.meta?.pptx || ''
-  }
-  const safeBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : []
-
-  function transposePositions(arr){
-    return (arr || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
-  }
-
-  async function handleDownload(){
-    const blocks = safeBlocks.map(b => ({
-      section: b.section,
-      lines: (b.lines || []).map(ln => ({
-        plain: ln.text,
-        chordPositions: transposePositions(ln.chords)
-      }))
-    }))
-    await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
-  }
-
-  // early returns are fine now (no hooks after this)
   if(!entry){
-    return (
-      <div className="container">
-        <p>Song not found. <Link to="/">Back</Link></p>
-      </div>
-    )
+    return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
   }
   if(err){
     return (
       <div className="container">
         <p style={{color:'#b91c1c'}}>Error: {err}</p>
-        <p>Make sure <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
+        <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
         <Link to="/">Back</Link>
       </div>
     )
   }
   if(!parsed){
-    return (
-      <div className="container">
-        <p>Loading… <Link to="/">Back</Link></p>
-      </div>
-    )
+    return <div className="container"><p>Loading… <Link to="/">Back</Link></p></div>
+  }
+
+  const title = parsed?.meta?.title || entry.title
+  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
+  const steps = stepsBetween(baseKey, toKey)
+
+  async function handleDownload(){
+    const blocks = (parsed.blocks || []).map(b => ({
+      section: b.section,
+      lines: (b.lines || []).map(ln => ({
+        plain: ln.text,
+        chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+      }))
+    }))
+    await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
   }
 
   return (
@@ -98,10 +72,7 @@ export default function SongView(){
         <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
           <h1 className="songpage__title">{title}</h1>
-          <div className="songpage__meta">
-            Key: <strong>{baseKey}</strong>
-            {entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}
-          </div>
+          <div className="songpage__meta">Key: <strong>{baseKey}</strong>{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
         </div>
       </div>
 
@@ -124,26 +95,25 @@ export default function SongView(){
       </div>
 
       <div className="songpage__sheet">
-        {safeBlocks.map((block, bi)=> (
+        {(parsed.blocks || []).map((block, bi)=> (
           <div key={bi}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
-            {(block.lines || []).map((ln, li)=>{
-              const positions = transposePositions(ln.chords)
-              const mono = makeMonospaceChordLine(ln.text, positions)
-              return (
-                <div key={`${bi}-${li}`} className="linepair">
-                  {showChords && <div className="chords mono">{mono}</div>}
-                  <div className="lyrics">{ln.text}</div>
-                </div>
-              )
-            })}
+            {(block.lines || []).map((ln, li)=> (
+              <MeasuredLine
+                key={`${bi}-${li}`}
+                plain={ln.text}
+                chords={ln.chords || []}
+                steps={steps}
+                showChords={showChords}
+              />
+            ))}
           </div>
         ))}
       </div>
 
       <div className="divider" />
 
-      {(media.youtube || media.mp3 || media.pptx) && (
+      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || parsed?.meta?.pptx) && (
         <div>
           <button
             className="btn media__toggle"
@@ -152,29 +122,77 @@ export default function SongView(){
             {showMedia ? <>Hide media</> : <><MediaIcon /> Show media</>}
           </button>
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
-            {media.youtube && (
+            {parsed.meta.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 <div className="media__frame">
-                  <iframe title="YouTube" src={`https://www.youtube.com/embed/${media.youtube}`} allowFullScreen />
+                  <iframe title="YouTube" src={`https://www.youtube.com/embed/${parsed.meta.youtube}`} allowFullScreen />
                 </div>
               </div>
             )}
-            {media.mp3 && (
+            {parsed.meta.mp3 && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
-                <audio controls src={media.mp3} />
+                <audio controls src={parsed.meta.mp3} />
               </div>
             )}
-            {media.pptx && (
+            {parsed.meta.pptx && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={media.pptx} download>Download PPTX</a>
+                <a className="btn" href={parsed.meta.pptx} download>Download PPTX</a>
               </div>
             )}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function MeasuredLine({ plain, chords, steps, showChords }){
+  const hostRef = useRef(null)
+  const canvasRef = useRef(null)
+  const [offsets, setOffsets] = useState([])
+
+  useEffect(()=>{
+    if(!showChords){ setOffsets([]); return }
+    if(!hostRef.current) return
+
+    if(!canvasRef.current){
+      const cv = document.createElement('canvas')
+      cv.width = 1; cv.height = 1
+      canvasRef.current = cv
+    }
+    const ctx = canvasRef.current.getContext('2d')
+
+    const lyr = hostRef.current.querySelector('.lyrics')
+    const cs = window.getComputedStyle(lyr)
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+
+    const arr = []
+    for(const c of chords){
+      const sub = plain.slice(0, c.index)
+      const w = ctx.measureText(sub).width
+      arr.push({ left: w, sym: transposeSym(c.sym, steps) })
+    }
+    setOffsets(arr)
+  }, [plain, chords, steps, showChords])
+
+  return (
+    <div ref={hostRef} style={{position:'relative', marginBottom:10}}>
+      {showChords && offsets.length>0 && (
+        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:-2}}>
+          {offsets.map((c, i)=>(
+            <span key={i} style={{
+              position:'absolute',
+              left: `${c.left}px`,
+              fontFamily: `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontWeight: 700
+            }}>{c.sym}</span>
+          ))}
+        </div>
+      )}
+      <div className="lyrics">{plain}</div>
     </div>
   )
 }
