@@ -4,11 +4,19 @@ import { SetlistIcon, Sun, Moon } from './Icons'
 import { currentTheme, toggleTheme } from '../utils/theme'
 
 export default function NavBar(){
-  const [, setBump] = React.useState(0) // local rerender after toggle
+  const [, setBump] = React.useState(0)
   const isDark = (currentTheme() === 'dark')
   const { pathname, hash } = useLocation()
   const path = (hash && hash.replace('#','')) || pathname
   const isActive = (p) => path === p
+
+  function onToggleClick(e){
+    // In case a refactor ever nests this again, guard against navigation
+    e.stopPropagation()
+    e.preventDefault()
+    toggleTheme()
+    setBump(x => x + 1)
+  }
 
   return (
     <>
@@ -19,18 +27,21 @@ export default function NavBar(){
           <div className="topnav__links">
             <Link to="/" className={`topnav__link ${isActive('/') ? 'active':''}`}>Home</Link>
             <Link to="/setlist" className={`topnav__link ${isActive('/setlist') ? 'active':''}`}>
-              <span style={{display:'inline-flex',alignItems:'center',gap:6}}><SetlistIcon /> Setlist</span>
-			<button
-             className="iconbtn"
-             aria-label="Toggle dark mode"
-             aria-pressed={isDark}
-             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-             onClick={() => { toggleTheme(); setBump(x => x + 1) }}
-             style={{ marginLeft: 8 }}
-           >
-             {isDark ? <Sun /> : <Moon />}
-           </button>
-			</Link>
+              <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
+                <SetlistIcon /> Setlist
+              </span>
+            </Link>
+            {/* Toggle lives OUTSIDE links */}
+            <button
+              className="iconbtn"
+              aria-label="Toggle dark mode"
+              aria-pressed={isDark}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              onClick={onToggleClick}
+              style={{ marginLeft: 8 }}
+            >
+              {isDark ? <Sun /> : <Moon />}
+            </button>
           </div>
         </div>
       </nav>
