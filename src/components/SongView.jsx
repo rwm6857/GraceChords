@@ -1,3 +1,4 @@
+// src/components/SongView.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
@@ -6,31 +7,6 @@ import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 
-// --- helpers ---------------------------------------------------------------
-function extractYouTubeId(input) {
-  if (!input) return ''
-  // Already an 11-char ID?
-  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input
-  try {
-    const u = new URL(input, 'https://youtube.com')
-    // youtu.be/<id>
-    const mShort = u.hostname.includes('youtu.be') && u.pathname.slice(1).match(/^([a-zA-Z0-9_-]{11})/)
-    if (mShort) return mShort[1]
-    // youtube.com/watch?v=<id>
-    const v = u.searchParams.get('v')
-    if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v
-  } catch {}
-  return ''
-}
-
-function resolveMedia(url) {
-  if (!url) return ''
-  if (/^https?:\/\//i.test(url)) return url
-  const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-  return url.startsWith('/') ? base + url.replace(/^\//, '') : base + url
-}
-
-// --- component -------------------------------------------------------------
 export default function SongView(){
   const { id } = useParams()
   const [entry, setEntry] = useState(null)
@@ -40,13 +16,13 @@ export default function SongView(){
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
 
-  // find index entry
+  // find the index item
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
     setEntry(it)
   }, [id])
 
-  // load chordpro text & parse
+  // load & parse chordpro
   useEffect(()=>{
     if(!entry) return
     setErr('')
@@ -63,17 +39,35 @@ export default function SongView(){
       .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
   }, [entry])
 
-  // prefetch neighbor songs (simple heuristic)
+  // prefetch neighbor songs (no await here)
   useEffect(() => {
     if (!entry) return
     const items = indexData?.items || []
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
+    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
     neighbors.forEach(n => {
-      const url = `${(import.meta.env.BASE_URL || '/').replace(/\/+$/, '')}/songs/${n.filename}`
+      const url = `${base}songs/${n.filename}`
       fetchTextCached(url).catch(()=>{})
     })
   }, [entry?.id])
+
+  // keyboard shortcuts: c toggle chords, [ down, ] up
+  useEffect(() => {
+    function onKey(e){
+      const tag = (e.target && e.target.tagName) || ''
+      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault()
+        setShowChords(v => !v)
+        return
+      }
+      if (e.key === '[') { e.preventDefault(); setToKey(k => transposeSym(k, -1)) }
+      if (e.key === ']') { e.preventDefault(); setToKey(k => transposeSym(k, +1)) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -105,40 +99,6 @@ export default function SongView(){
     }))
     await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
   }
-
-  // keyboard shortcuts: c = toggle chords, [ / ] transpose
-  useEffect(() => {
-    function onKey(e){
-      const tag = (e.target && e.target.tagName) || ''
-      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
-
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault()
-        setShowChords(v => !v)
-        return
-      }
-      if (e.key === '[') { // down
-        e.preventDefault()
-        setToKey(k => {
-          const i = Math.max(0, KEYS.indexOf(k))
-          return KEYS[(i - 1 + KEYS.length) % KEYS.length]
-        })
-      }
-      if (e.key === ']') { // up
-        e.preventDefault()
-        setToKey(k => {
-          const i = Math.max(0, KEYS.indexOf(k))
-          return KEYS[(i + 1) % KEYS.length]
-        })
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
-  const youTubeId = extractYouTubeId(parsed.meta.youtube)
-  const mp3Src = resolveMedia(parsed.meta.mp3)
-  const pptxHref = resolveMedia(parsed.meta.pptx)
 
   return (
     <div className="container">
@@ -187,7 +147,7 @@ export default function SongView(){
 
       <div className="divider" />
 
-      {(youTubeId || mp3Src || pptxHref) && (
+      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || parsed?.meta?.pptx) && (
         <div>
           <button
             className="btn media__toggle"
@@ -195,25 +155,42 @@ export default function SongView(){
           >
             {showMedia ? <>Hide media</> : <><MediaIcon /> Show media</>}
           </button>
+
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
-            {youTubeId && (
+            {parsed?.meta?.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 <div className="media__frame">
-                  <LiteYouTube id={youTubeId} />
+                  {(() => {
+                    const ytId = extractYouTubeId(parsed.meta.youtube)
+                    return ytId ? (
+                      <LiteYouTube id={ytId} />
+                    ) : (
+                      <a
+                        className="btn"
+                        href={String(parsed.meta.youtube)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open on YouTube
+                      </a>
+                    )
+                  })()}
                 </div>
               </div>
             )}
-            {mp3Src && (
+
+            {parsed?.meta?.mp3 && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
-                <audio controls src={mp3Src} />
+                <audio controls src={parsed.meta.mp3} />
               </div>
             )}
-            {pptxHref && (
+
+            {parsed?.meta?.pptx && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={pptxHref} download>Download PPTX</a>
+                <a className="btn" href={parsed.meta.pptx} download>Download PPTX</a>
               </div>
             )}
           </div>
@@ -221,6 +198,36 @@ export default function SongView(){
       )}
     </div>
   )
+}
+
+/* ---------- Helpers ---------- */
+
+function extractYouTubeId(input = '') {
+  const s = String(input).trim()
+  const ID = /^[a-zA-Z0-9_-]{11}$/
+  if (ID.test(s)) return s
+
+  try {
+    const u = new URL(s)
+    const host = u.hostname.replace(/^www\./, '')
+    // youtu.be/<id>
+    if (host === 'youtu.be') {
+      const id = u.pathname.split('/').filter(Boolean)[0]
+      if (ID.test(id)) return id
+    }
+    // youtube.com
+    if (host.endsWith('youtube.com')) {
+      // /watch?v=<id>
+      const v = u.searchParams.get('v')
+      if (ID.test(v)) return v
+      // /embed/<id>  /shorts/<id>  /live/<id>
+      const parts = u.pathname.split('/').filter(Boolean)
+      const ix = parts.findIndex(p => ['embed', 'shorts', 'live'].includes(p))
+      if (ix >= 0 && ID.test(parts[ix + 1])) return parts[ix + 1]
+    }
+  } catch { /* not a URL */ }
+
+  return null
 }
 
 function LiteYouTube({ id }) {
@@ -236,10 +243,10 @@ function LiteYouTube({ id }) {
       style={{border:0, width:'100%', aspectRatio:'16/9'}}
     />
   ) : (
-    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video" style={{width:'100%'}}>
+    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video" style={{ padding: 0, width:'100%' }}>
       <div className="media__frame">
-        <img src={thumb} alt="" style={{position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover'}} />
-        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'48px'}}>▶</div>
+        <img src={thumb} alt="" style={{position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover'}} loading="lazy" />
+        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
       </div>
     </button>
   )
@@ -253,6 +260,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
   useEffect(()=>{
     if(!hostRef.current) return
 
+    // Ensure canvas
     if(!canvasRef.current){
       const cv = document.createElement('canvas')
       cv.width = 1; cv.height = 1
@@ -260,25 +268,30 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     }
     const ctx = canvasRef.current.getContext('2d')
 
-    // measure using the LYRICS font (critical alignment rule)
+    // Grab computed styles from the visible lyrics node
     const lyr = hostRef.current.querySelector('.lyrics')
     const cs = window.getComputedStyle(lyr)
+
+    // Lyrics font for width measurement
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
 
+    // Measure pixel offsets for each chord
     const offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
       sym: transposeSym(c.sym, steps)
     }))
 
-    // compute ascent for padding using chord mono/bold
+    // Estimate chord ascent to reserve vertical space
     const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
-    const chordFontSize = cs.fontSize
+    const chordFontSize = cs.fontSize // match lyric size
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
     const gap = 4
-    setState({ offsets, padTop: Math.ceil(chordAscent + gap), chordTop: 0 })
+    const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
+    const chordTop = 0                           // chord layer sits at host top
+    setState({ offsets, padTop, chordTop })
   }, [plain, chords, steps, showChords])
 
   return (
