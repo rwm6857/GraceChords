@@ -26,6 +26,83 @@ input,select{ padding:8px 10px; border:1px solid var(--line); border-radius:8px;
 .topnav__link{ padding:6px 10px; border-radius:8px; color:#334155 } .topnav__link:hover{ background:#f1f5f9 }
 .topnav__link.active{ background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe }
 .lyrics { line-height: 1.35; }
+
+/* ===== Theme tokens ===== */
+:root {
+  --bg: #ffffff;
+  --text: #111213;
+  --muted: #5b616a;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --btn: #f3f4f6;
+  --btn-text: #111213;
+  --primary: #2563eb;
+  --primary-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0f14;
+  --text: #e6e7ea;
+  --muted: #a0a4ab;
+  --card: #111821;
+  --border: #232b37;
+  --btn: #1f2937;
+  --btn-text: #e6e7ea;
+  --primary: #3b82f6;
+  --primary-text: #0b0f14;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topnav { background: var(--card); border-bottom: 1px solid var(--border); }
+.card { background: var(--card); border: 1px solid var(--border); }
+.meta { color: var(--muted); }
+
+input, select, textarea {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn {
+  background: var(--btn);
+  color: var(--btn-text);
+  border: 1px solid var(--border);
+}
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+.iconbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 6px;
+  background: var(--btn); border: 1px solid var(--border);
+}
+
+/* ===== Setlist toolbar responsiveness ===== */
+.card.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap; /* key for mobile wrapping */
+}
+
+@media (max-width: 640px) {
+  .card.toolbar > * { width: 100%; }
+  .card.toolbar label { width: 100%; }
+  .card.toolbar select { width: 100%; }
+  .card.toolbar .btn { width: calc(50% - 4px); } /* two per row */
+  .card.toolbar .btn.primary { width: 100%; }    /* Save gets full row */
+  .card.toolbar .meta { width: auto; }
+}
+
+
+
 /* --- Print rules --- */
 @media print {
   nav, .topnav, .back, .tagbar, .iconbtn, .btn, select, input, textarea {
@@ -37,5 +114,4 @@ input,select{ padding:8px 10px; border:1px solid var(--line); border-radius:8px;
 }
 /* By default hide print-only content */
 .print-only { display: none; }
-
 

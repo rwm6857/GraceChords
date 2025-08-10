@@ -142,7 +142,7 @@ export default function Setlist(){
       </div>
 
       {/* Named sets toolbar (keep) */}
-      <div className="card" style={{display:'flex', gap:8, alignItems:'center', marginTop:12}}>
+      <div className="card toolbar" style={{marginTop:12}}>
         <label style={{display:'flex', alignItems:'center', gap:6}}>
           <span>Set:</span>
           <input

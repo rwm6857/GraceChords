@@ -10,3 +10,18 @@ export const SetlistIcon = (p)=> <S {...p}><path d="M8 6h13"/><path d="M8 12h13"
 export const ArrowUp = (p)=> <S {...p}><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></S>
 export const ArrowDown = (p)=> <S {...p}><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></S>
 export const RemoveIcon = (p)=> <S {...p}><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></S>
+
+export const Sun = (props) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" {...props}>
+    <circle cx="12" cy="12" r="4" stroke="currentColor" fill="none" strokeWidth="2"/>
+    <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+      stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
+
+export const Moon = (props) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" {...props}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+      stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
