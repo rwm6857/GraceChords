@@ -1,108 +1,333 @@
 import { jsPDF } from 'jspdf'
 import { ensureFontsEmbedded } from './fonts'
 
-function drawSongIntoDoc(doc, song, opt){
-  const lFam = String(opt.lyricFamily || 'Helvetica')
-  const cFam = String(opt.chordFamily || 'Courier')
-  const pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight()
-  const margin = opt.margin ?? 36, contentW = pageW - margin*2, gutter = 18
-  let x = margin, y = margin + 54
-  const colW = opt.columns===2 ? (contentW - gutter)/2 : contentW
+/** -----------------------------------------------------------------------
+ *  Helpers & adapters
+ *  -------------------------------------------------------------------- */
 
-  // Header
-  doc.setFont(lFam,'bold'); doc.setFontSize(Math.max(22, opt.lyricSizePt + 6))
-  doc.text(opt.title || song.title, x, margin + 24)
-  doc.setFont(lFam,'italic'); doc.setFontSize(Math.max(12, opt.lyricSizePt - 2))
-  doc.text(`Key: ${opt.key || song.key || '—'}`, x, margin + 40)
-
-  const lineGap = 4
-  const sectionSize = Math.max(opt.lyricSizePt + 2, 16) // larger than lyrics
-
-  function widthOf(text){ return doc.getTextWidth(text || '') }
-  function nextColumnOrPage(){
-    if(opt.columns===2 && x===margin){ x = margin + colW + gutter; y = margin + 54 }
-    else { doc.addPage(); x = margin; y = margin + 54 }
+/** Normalize input to the shape your renderer already uses:
+ *  { title, key, lyricsBlocks: [{ section?: string, lines: [{ plain, chordPositions:[{index,sym}] }] }] }
+ */
+function normalizeSongInput(input) {
+  if (input?.lyricsBlocks) {
+    return {
+      title: input.title || 'Untitled',
+      key: input.key || input.originalKey || 'C',
+      lyricsBlocks: input.lyricsBlocks
+    }
   }
-  function sectionHeight(block){
-    let h=0; if(block.section) h += (sectionSize + 4)
-    for(const ln of block.lines){
-      if(ln.chordPositions?.length) h += opt.chordSizePt + lineGap/2
-      h += opt.lyricSizePt + lineGap
+  // Adapter for parsed structures like: { title, originalKey, blocks:[ {type:'section'|'line', header?, lyrics?, chords?:[{index,sym}]} ] }
+  if (Array.isArray(input?.blocks)) {
+    const out = []
+    let cur = { lines: [] }
+    for (const b of input.blocks) {
+      if (b.type === 'section') {
+        if (cur.lines.length) out.push(cur)
+        cur = { section: b.header, lines: [] }
+      } else if (b.type === 'line') {
+        cur.lines.push({
+          plain: b.lyrics || b.text || '',
+          chordPositions: (b.chords || []).map(c => ({ index: c.index ?? 0, sym: c.sym }))
+        })
+      }
+    }
+    if (cur.lines.length) out.push(cur)
+    return {
+      title: input.title || 'Untitled',
+      key: input.key || input.originalKey || 'C',
+      lyricsBlocks: out
+    }
+  }
+  // Fallback (empty)
+  return {
+    title: input?.title || 'Untitled',
+    key: input?.key || input?.originalKey || 'C',
+    lyricsBlocks: []
+  }
+}
+
+/** Create a lyrics-width measurer bound to a jsPDF doc + font settings */
+function makeLyricMeasurer(doc, lyricFamily, lyricPt) {
+  return (text) => {
+    // Ensure measurement matches how lyrics are drawn
+    doc.setFont(lyricFamily, 'normal')
+    doc.setFontSize(lyricPt)
+    return doc.getTextWidth(text || '')
+  }
+}
+
+/** -----------------------------------------------------------------------
+ *  PURE LAYOUT (source of truth)
+ *  Computes pages/columns/blocks and chord X offsets from lyrics widths.
+ *  No drawing here.
+ *  -------------------------------------------------------------------- */
+
+const DEFAULT_LAYOUT_OPT = {
+  lyricSizePt: 16,
+  chordSizePt: 16,
+  margin: 36,
+  gutter: 18,
+  headerOffsetY: 54, // space below header before content
+  columns: 1,
+  pageWidth: 612,     // Letter pt (jsPDF default ~ 612x792) – we’ll read from doc in runtime path
+  pageHeight: 792,
+  lyricFamily: 'Helvetica',
+  chordFamily: 'Courier',
+  title: 'Untitled',
+  key: 'C'
+}
+
+/**
+ * computeLayout(songIn, opt, measureLyric)
+ * - songIn: { title, key, lyricsBlocks:[{section?, lines:[{plain, chordPositions:[{index,sym}]}]}] }
+ * - opt: see DEFAULT_LAYOUT_OPT
+ * - measureLyric: (text) => width in pt, MUST match lyrics font used for PDF
+ *
+ * Returns:
+ * {
+ *   pages: [
+ *     { columns: [
+ *       { x, yStart, blocks: [
+ *           { type:'section', header:'VERSE' },
+ *           { type:'line', lyrics:'...', chords:[{ x, sym }, ...] }
+ *       ] }
+ *     ] }
+ *   ]
+ * }
+ */
+export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
+  const song = normalizeSongInput(songIn)
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
+  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
+  const lineGap = 4
+
+  const margin = o.margin
+  const contentW = o.pageWidth - margin * 2
+  const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
+
+  // Header metrics (same as draw path)
+  const headerTitlePt = Math.max(22, o.lyricSizePt + 6)
+  const headerKeyPt   = Math.max(12, o.lyricSizePt - 2)
+  const contentStartY = margin + o.headerOffsetY
+
+  const pages = []
+  let page = { columns: [] }
+  pages.push(page)
+
+  // initialize columns on each page
+  function newPage() {
+    page = { columns: [] }
+    pages.push(page)
+  }
+
+  function makeColumns() {
+    const firstCol = { x: margin, yStart: contentStartY, blocks: [] }
+    page.columns.push(firstCol)
+    if (o.columns === 2) {
+      const secondCol = { x: margin + colW + o.gutter, yStart: contentStartY, blocks: [] }
+      page.columns.push(secondCol)
+    }
+  }
+  if (page.columns.length === 0) makeColumns()
+
+  let colIdx = 0
+  let cursorY = contentStartY
+
+  function currentCol() {
+    return page.columns[colIdx]
+  }
+
+  function advanceColumnOrPage() {
+    if (o.columns === 2 && colIdx === 0) {
+      colIdx = 1
+      cursorY = contentStartY
+    } else {
+      // next page
+      newPage()
+      makeColumns()
+      colIdx = 0
+      cursorY = contentStartY
+    }
+  }
+
+  function sectionHeight(block) {
+    let h = 0
+    if (block.section) h += (sectionSize + 4)
+    for (const ln of block.lines) {
+      if (ln.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+      h += o.lyricSizePt + lineGap
     }
     return h + 4
   }
-  function drawLine(plain, chordPositions){
-  // 1) Measure offsets with the LYRICS font/size
-  doc.setFont(lFam, 'normal')
-  doc.setFontSize(opt.lyricSizePt)
-  const offsets = (chordPositions || []).map(c => ({
-    sym: c.sym,
-    x: x + doc.getTextWidth(plain.slice(0, c.index))
-  }))
 
-  // 2) Draw chords with the CHORD font/size, using the measured offsets
-  if(offsets.length){
-    doc.setFont(cFam, 'bold')
-    doc.setFontSize(opt.chordSizePt)
-    for(const c of offsets){
-      doc.text(c.sym, c.x, y)
-    }
-    // vertical gap between chord line and lyric line
-    y += opt.chordSizePt + lineGap/2
-  }
-
-  // 3) Draw the lyric line
-  doc.setFont(lFam, 'normal')
-  doc.setFontSize(opt.lyricSizePt)
-  doc.text(plain, x, y)
-  y += opt.lyricSizePt + lineGap
-}
-
-
-  for(const block of song.lyricsBlocks){
+  // Build blocks with chord X positions relative to column x
+  for (const block of song.lyricsBlocks) {
     const need = sectionHeight(block)
-    if(y + need > pageH - margin) nextColumnOrPage()
-    if(block.section){
-      doc.setFont(lFam,'bold'); doc.setFontSize(sectionSize)
-      doc.text(`[${String(block.section).toUpperCase()}]`, x, y)
-      y += sectionSize + 4
+    if (cursorY + need > o.pageHeight - margin) {
+      advanceColumnOrPage()
     }
-    for(const ln of block.lines){
-      drawLine(ln.plain || ln.text || '', ln.chordPositions || [])
+    const col = currentCol()
+
+    if (block.section) {
+      col.blocks.push({ type: 'section', header: String(block.section).toUpperCase() })
+      cursorY += sectionSize + 4
     }
-    y += 4
+
+    for (const ln of block.lines) {
+      const plain = ln.plain || ln.text || ''
+      const chordPositions = ln.chordPositions || []
+
+      // 1) Measure offsets with the LYRICS font/size (must match draw)
+      const chords = chordPositions.map(c => ({
+        sym: c.sym,
+        x: measureLyric(plain.slice(0, c.index)) // relative to column start
+      }))
+
+      // 2) Push the line block
+      col.blocks.push({
+        type: 'line',
+        lyrics: plain,
+        chords
+      })
+
+      // 3) Advance Y (we track for pagination only; y is not stored in blocks)
+      if (chords.length) {
+        cursorY += o.chordSizePt + lineGap / 2
+      }
+      cursorY += o.lyricSizePt + lineGap
+    }
+
+    cursorY += 4
   }
+
+  return { pages }
 }
 
-export async function songToPdfDoc(song, options){
-  const doc = new jsPDF({ unit:'pt', format:'letter' })
+/** -----------------------------------------------------------------------
+ *  DRAWING (consumes computeLayout)
+ *  -------------------------------------------------------------------- */
+
+function drawSongIntoDoc(doc, songIn, opt) {
+  const lFam = String(opt.lyricFamily || 'Helvetica')
+  const cFam = String(opt.chordFamily || 'Courier')
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+  const o = {
+    ...DEFAULT_LAYOUT_OPT,
+    ...opt,
+    pageWidth: pageW,
+    pageHeight: pageH
+  }
+
+  const margin = o.margin
+  const contentW = pageW - margin * 2
+  const gutter = o.gutter
+  const colW = o.columns === 2 ? (contentW - gutter) / 2 : contentW
+
+  // Header
+  const headerTitlePt = Math.max(22, o.lyricSizePt + 6)
+  const headerKeyPt   = Math.max(12, o.lyricSizePt - 2)
+  doc.setFont(lFam, 'bold');   doc.setFontSize(headerTitlePt)
+  doc.text(o.title, margin, margin + 24)
+  doc.setFont(lFam, 'italic'); doc.setFontSize(headerKeyPt)
+  doc.text(`Key: ${o.key || '—'}`, margin, margin + 40)
+
+  // Layout using the SAME measurement path
+  const measure = makeLyricMeasurer(doc, lFam, o.lyricSizePt)
+  const layout = computeLayout(songIn, o, measure)
+
+  const lineGap = 4
+  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
+  const contentStartY = margin + o.headerOffsetY
+
+  // Iterate pages/columns/blocks and draw
+  layout.pages.forEach((p, pIdx) => {
+    if (pIdx > 0) doc.addPage()
+    p.columns.forEach((col, cIdx) => {
+      let x = col.x
+      let y = contentStartY
+      for (const b of col.blocks) {
+        if (b.type === 'section') {
+          doc.setFont(lFam, 'bold'); doc.setFontSize(sectionSize)
+          doc.text(`[${b.header}]`, x, y)
+          y += sectionSize + 4
+        } else if (b.type === 'line') {
+          // Draw chords at x + chord.x (precomputed from lyrics widths)
+          if (b.chords?.length) {
+            doc.setFont(cFam, 'bold'); doc.setFontSize(o.chordSizePt)
+            for (const c of b.chords) {
+              doc.text(c.sym, x + c.x, y)
+            }
+            y += o.chordSizePt + lineGap / 2
+          }
+          // Draw lyric line
+          doc.setFont(lFam, 'normal'); doc.setFontSize(o.lyricSizePt)
+          doc.text(b.lyrics, x, y)
+          y += o.lyricSizePt + lineGap
+        }
+      }
+    })
+  })
+}
+
+/** -----------------------------------------------------------------------
+ *  PUBLIC PDF APIS (unchanged behavior)
+ *  -------------------------------------------------------------------- */
+
+export async function songToPdfDoc(song, options) {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
   const opt = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
     chordSizePt: Math.max(14, options?.chordSizePt || 16),
     columns: options?.columns || 1,
-    title: options?.title || song.title,
-    key: options?.key || song.key,
+    title: options?.title || (song.title || 'Untitled'),
+    key: options?.key || (song.key || 'C'),
     margin: 36,
     lyricFamily: 'Helvetica',
-    chordFamily: 'Courier'
+    chordFamily: 'Courier',
+    pageWidth: pageW,
+    pageHeight: pageH
   }
-  try{ const f = await ensureFontsEmbedded(doc); opt.lyricFamily = f.lyricFamily || opt.lyricFamily; opt.chordFamily = f.chordFamily || opt.chordFamily }catch{}
-  drawSongIntoDoc(doc, song, opt)
+  try {
+    const f = await ensureFontsEmbedded(doc)
+    opt.lyricFamily = f.lyricFamily || opt.lyricFamily
+    opt.chordFamily = f.chordFamily || opt.chordFamily
+  } catch {}
+  drawSongIntoDoc(doc, normalizeSongInput(song), opt)
   return doc
 }
 
-export async function downloadSingleSongPdf(song, options){
-  const d1 = await songToPdfDoc(song, { ...options, columns: 1 })
-  if(d1.internal.getNumberOfPages() > 1){
-    const d2 = await songToPdfDoc(song, { ...options, columns: 2 })
-    d2.save(`${song.title.replace(/\s+/g,'_')}.pdf`)
-  } else {
-    d1.save(`${song.title.replace(/\s+/g,'_')}.pdf`)
+export async function downloadSingleSongPdf(song, options) {
+  // Decide columns like before, but use layout pages length instead of drawing twice.
+  const probeDoc = new jsPDF({ unit: 'pt', format: 'letter' })
+  const pageW = probeDoc.internal.pageSize.getWidth()
+  const pageH = probeDoc.internal.pageSize.getHeight()
+  const opt1 = {
+    lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
+    chordSizePt: Math.max(14, options?.chordSizePt || 16),
+    columns: 1,
+    title: options?.title || (song.title || 'Untitled'),
+    key: options?.key || (song.key || 'C'),
+    margin: 36,
+    lyricFamily: 'Helvetica',
+    chordFamily: 'Courier',
+    pageWidth: pageW,
+    pageHeight: pageH
   }
+  // Measuring with default fonts is fine for page count decision.
+  const layout1 = computeLayout(normalizeSongInput(song), opt1, makeLyricMeasurer(probeDoc, opt1.lyricFamily, opt1.lyricSizePt))
+  const needsTwoCols = layout1.pages.length > 1
+
+  const finalDoc = await songToPdfDoc(song, { ...options, columns: needsTwoCols ? 2 : 1 })
+  finalDoc.save(`${(song.title || 'Untitled').replace(/\s+/g, '_')}.pdf`)
 }
 
-export async function downloadMultiSongPdf(songs, options){
-  const doc = new jsPDF({ unit:'pt', format:'letter' })
+export async function downloadMultiSongPdf(songs, options) {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
   const f = await ensureFontsEmbedded(doc)
   const baseOpt = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
@@ -110,13 +335,54 @@ export async function downloadMultiSongPdf(songs, options){
     columns: 1,
     margin: 36,
     lyricFamily: f.lyricFamily || 'Helvetica',
-    chordFamily: f.chordFamily || 'Courier'
+    chordFamily: f.chordFamily || 'Courier',
+    pageWidth: pageW,
+    pageHeight: pageH
   }
   let first = true
-  for(const s of songs){
-    if(!first) doc.addPage()
+  for (const s of songs) {
+    if (!first) doc.addPage()
     first = false
-    drawSongIntoDoc(doc, { title: s.title, key: s.key, lyricsBlocks: s.lyricsBlocks }, { ...baseOpt, title: s.title, key: s.key })
+    const songNorm = normalizeSongInput({ title: s.title, key: s.key, lyricsBlocks: s.lyricsBlocks })
+    drawSongIntoDoc(doc, songNorm, { ...baseOpt, title: s.title, key: s.key })
   }
   doc.save('GraceChords_Selection.pdf')
+}
+
+/** -----------------------------------------------------------------------
+ *  TEST-ONLY METRICS (pure snapshot; no drawing)
+ *  These mirror layout math exactly.
+ *  -------------------------------------------------------------------- */
+export function getLayoutMetrics(input, opts) {
+  // Use a tiny jsPDF purely for measurement so we match production widths.
+  const probe = new jsPDF({ unit: 'pt', format: 'letter' })
+  const pageW = probe.internal.pageSize.getWidth()
+  const pageH = probe.internal.pageSize.getHeight()
+  const o = {
+    ...DEFAULT_LAYOUT_OPT,
+    ...opts,
+    pageWidth: pageW,
+    pageHeight: pageH
+  }
+  // We do NOT embed fonts during tests by default. Helvetica metrics are deterministic and sufficient to catch algorithm regressions.
+  const measure = makeLyricMeasurer(probe, o.lyricFamily, o.lyricSizePt)
+  const layout = computeLayout(input, o, measure)
+
+  // Normalize for snapshots (round chord x to 2 decimals)
+  return layout.pages.map((page, pIdx) => ({
+    p: pIdx,
+    cols: page.columns.map((col, cIdx) => ({
+      c: cIdx,
+      blocks: col.blocks.map(b => ({
+        t: b.type,
+        h: b.type === 'section' ? b.header || null : null,
+        line: b.type === 'line'
+          ? {
+              text: b.lyrics,
+              chords: (b.chords || []).map(ch => ({ x: Number(ch.x.toFixed(2)), s: ch.sym }))
+            }
+          : null
+      }))
+    }))
+  }))
 }
