@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { parseChordPro, makeMonospaceChordLine, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { downloadSingleSongPdf } from '../utils/pdf'
@@ -14,27 +14,23 @@ export default function SongView(){
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
 
-  // find entry by id
+  // locate entry
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
     setEntry(it)
   }, [id])
 
-  // load and parse chordpro, derive defaults
+  // load + parse chordpro
   useEffect(()=>{
     if(!entry) return
     setErr('')
     setParsed(null)
 
-    // Normalize base for GitHub Pages + HashRouter
     const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
     const url = `${base}songs/${entry.filename}`
 
     fetch(url)
-      .then(r => {
-        if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`)
-        return r.text()
-      })
+      .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
         const p = parseChordPro(txt)
         setParsed(p)
@@ -42,41 +38,13 @@ export default function SongView(){
         setToKey(baseKey)
         try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
       })
-      .catch(e => {
-        console.error(e)
-        setErr(e?.message || 'Failed to load song')
-      })
+      .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
   }, [entry])
 
-  // early states
-  if(!entry){
-    return (
-      <div className="container">
-        <p>Song not found. <Link to="/">Back</Link></p>
-      </div>
-    )
-  }
-  if(err){
-    return (
-      <div className="container">
-        <p style={{color:'#b91c1c'}}>Error: {err}</p>
-        <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
-        <Link to="/">Back</Link>
-      </div>
-    )
-  }
-  if(!parsed){
-    return (
-      <div className="container">
-        <p>Loading… <Link to="/">Back</Link></p>
-      </div>
-    )
-  }
-
-  // safe accessors
-  const title = parsed?.meta?.title || entry.title
-  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
-  const steps = useMemo(()=> stepsBetween(baseKey, toKey), [baseKey, toKey])
+  // derive values (no hooks below this point!)
+  const title = parsed?.meta?.title || entry?.title || ''
+  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry?.originalKey || 'C'
+  const steps = stepsBetween(baseKey, toKey) // simple function call; not a hook
   const media = {
     youtube: parsed?.meta?.youtube || '',
     mp3: parsed?.meta?.mp3 || '',
@@ -97,6 +65,31 @@ export default function SongView(){
       }))
     }))
     await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
+  }
+
+  // early returns are fine now (no hooks after this)
+  if(!entry){
+    return (
+      <div className="container">
+        <p>Song not found. <Link to="/">Back</Link></p>
+      </div>
+    )
+  }
+  if(err){
+    return (
+      <div className="container">
+        <p style={{color:'#b91c1c'}}>Error: {err}</p>
+        <p>Make sure <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
+        <Link to="/">Back</Link>
+      </div>
+    )
+  }
+  if(!parsed){
+    return (
+      <div className="container">
+        <p>Loading… <Link to="/">Back</Link></p>
+      </div>
+    )
   }
 
   return (
@@ -124,10 +117,7 @@ export default function SongView(){
           </label>
         </div>
         <div>
-          <button
-            className="btn primary iconbtn"
-            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownload() }}
-          >
+          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownload() }}>
             <DownloadIcon /> Download PDF
           </button>
         </div>
