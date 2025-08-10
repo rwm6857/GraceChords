@@ -1,10 +1,14 @@
-import { jsPDF } from 'jspdf'
+// import { jsPDF } from 'jspdf'
 import { ensureFontsEmbedded } from './fonts'
 
 /** -----------------------------------------------------------------------
  *  Helpers & adapters
  *  -------------------------------------------------------------------- */
 
+async function newPDF() {
+  const { jsPDF } = await import('jspdf')
+  return new jsPDF({ unit:'pt', format:'letter' })
+}
 /** Normalize input to the shape your renderer already uses:
  *  { title, key, lyricsBlocks: [{ section?: string, lines: [{ plain, chordPositions:[{index,sym}] }] }] }
  */
@@ -274,28 +278,24 @@ function drawSongIntoDoc(doc, songIn, opt) {
  *  PUBLIC PDF APIS (unchanged behavior)
  *  -------------------------------------------------------------------- */
 
-export async function songToPdfDoc(song, options) {
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
-  const pageW = doc.internal.pageSize.getWidth()
-  const pageH = doc.internal.pageSize.getHeight()
+export async function songToPdfDoc(song, options){
+  const doc = await newPDF()
   const opt = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
     chordSizePt: Math.max(14, options?.chordSizePt || 16),
     columns: options?.columns || 1,
-    title: options?.title || (song.title || 'Untitled'),
-    key: options?.key || (song.key || 'C'),
+    title: options?.title || song.title,
+    key: options?.key || song.key,
     margin: 36,
     lyricFamily: 'Helvetica',
-    chordFamily: 'Courier',
-    pageWidth: pageW,
-    pageHeight: pageH
+    chordFamily: 'Courier'
   }
-  try {
+  try{
     const f = await ensureFontsEmbedded(doc)
     opt.lyricFamily = f.lyricFamily || opt.lyricFamily
     opt.chordFamily = f.chordFamily || opt.chordFamily
-  } catch {}
-  drawSongIntoDoc(doc, normalizeSongInput(song), opt)
+  }catch{}
+  drawSongIntoDoc(doc, song, opt)
   return doc
 }
 
@@ -324,10 +324,8 @@ export async function downloadSingleSongPdf(song, options) {
   finalDoc.save(`${(song.title || 'Untitled').replace(/\s+/g, '_')}.pdf`)
 }
 
-export async function downloadMultiSongPdf(songs, options) {
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' })
-  const pageW = doc.internal.pageSize.getWidth()
-  const pageH = doc.internal.pageSize.getHeight()
+export async function downloadMultiSongPdf(songs, options){
+  const doc = await newPDF()
   const f = await ensureFontsEmbedded(doc)
   const baseOpt = {
     lyricSizePt: Math.max(14, options?.lyricSizePt || 16),
@@ -335,20 +333,20 @@ export async function downloadMultiSongPdf(songs, options) {
     columns: 1,
     margin: 36,
     lyricFamily: f.lyricFamily || 'Helvetica',
-    chordFamily: f.chordFamily || 'Courier',
-    pageWidth: pageW,
-    pageHeight: pageH
+    chordFamily: f.chordFamily || 'Courier'
   }
   let first = true
-  for (const s of songs) {
-    if (!first) doc.addPage()
+  for(const s of songs){
+    if(!first) doc.addPage()
     first = false
-    const songNorm = normalizeSongInput({ title: s.title, key: s.key, lyricsBlocks: s.lyricsBlocks })
-    drawSongIntoDoc(doc, songNorm, { ...baseOpt, title: s.title, key: s.key })
+    drawSongIntoDoc(
+      doc,
+      { title: s.title, key: s.key, lyricsBlocks: s.lyricsBlocks },
+      { ...baseOpt, title: s.title, key: s.key }
+    )
   }
   doc.save('GraceChords_Selection.pdf')
 }
-
 /** -----------------------------------------------------------------------
  *  TEST-ONLY METRICS (pure snapshot; no drawing)
  *  These mirror layout math exactly.

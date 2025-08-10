@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import JSZip from 'jszip'
+//import JSZip from 'jszip'
 import { KEYS, parseChordPro } from '../utils/chordpro'
 
 const PASSWORD = '10401040'
@@ -52,32 +52,33 @@ Verse 1
   const parsed = useMemo(()=> parseChordPro(text||''), [text])
 
   async function downloadBundle(){
-    const zip = new JSZip()
-    const folder = zip.folder('songs')
-    folder.file(filename, text)
+  const JSZip = (await import('jszip')).default
+  const zip = new JSZip()
+  const folder = zip.folder('songs')
+  folder.file(filename, text)
 
-    // minimal index entry; media links remain in the .chordpro meta
-    const items = [{
-      id,
-      title: meta.title || 'Untitled',
-      filename,
-      originalKey: meta.key || '',
-      tags: (meta.tags||'').split(',').map(s=>s.trim()).filter(Boolean),
-      authors: meta.authors||'',
-      country: meta.country||''
-    }]
+  const items = [{
+    id,
+    title: meta.title || 'Untitled',
+    filename,
+    originalKey: meta.key || '',
+    tags: (meta.tags||'').split(',').map(s=>s.trim()).filter(Boolean),
+    authors: meta.authors||'',
+    country: meta.country||'',
+    // keep any optional media fields if you want to surface them in index
+    youtube: meta.youtube || '',
+    mp3: meta.mp3 || '',
+    pptx: meta.pptx || ''
+  }]
 
-    zip.file('src/data/index.json', JSON.stringify({
-      generatedAt: new Date().toISOString(),
-      items
-    }, null, 2))
+  zip.file('src/data/index.json', JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2))
+  const blob = await zip.generateAsync({ type:'blob' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'song_data_bundle.zip'
+  a.click()
+}
 
-    const blob = await zip.generateAsync({ type:'blob' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = 'song_data_bundle.zip'
-    a.click()
-  }
 
   return (
     <div className="container">
