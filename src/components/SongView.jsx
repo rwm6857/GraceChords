@@ -6,6 +6,31 @@ import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 
+// --- helpers ---------------------------------------------------------------
+function extractYouTubeId(input) {
+  if (!input) return ''
+  // Already an 11-char ID?
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input
+  try {
+    const u = new URL(input, 'https://youtube.com')
+    // youtu.be/<id>
+    const mShort = u.hostname.includes('youtu.be') && u.pathname.slice(1).match(/^([a-zA-Z0-9_-]{11})/)
+    if (mShort) return mShort[1]
+    // youtube.com/watch?v=<id>
+    const v = u.searchParams.get('v')
+    if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v
+  } catch {}
+  return ''
+}
+
+function resolveMedia(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+  return url.startsWith('/') ? base + url.replace(/^\//, '') : base + url
+}
+
+// --- component -------------------------------------------------------------
 export default function SongView(){
   const { id } = useParams()
   const [entry, setEntry] = useState(null)
@@ -15,22 +40,20 @@ export default function SongView(){
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
 
-  // base for local asset links on GH Pages
-  const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-
-  // locate index entry
+  // find index entry
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
     setEntry(it)
   }, [id])
 
-  // fetch + parse chordpro
+  // load chordpro text & parse
   useEffect(()=>{
     if(!entry) return
     setErr('')
     setParsed(null)
-    const url = `${base}songs/${entry.filename}`
-    fetchTextCached(url)
+    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+    fetch(`${base}songs/${entry.filename}`)
+      .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
         const p = parseChordPro(txt); setParsed(p)
         const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
@@ -38,45 +61,19 @@ export default function SongView(){
         try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
       })
       .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
-  }, [entry, base])
+  }, [entry])
 
-  // keyboard shortcuts: c toggles chords, [ / ] transpose
-  useEffect(() => {
-    function onKey(e){
-      const tag = (e.target && e.target.tagName) || ''
-      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
-
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault()
-        setShowChords(v => !v)
-        return
-      }
-      if (e.key === '[') {
-        e.preventDefault()
-        setToKey(k => transposeSym(k, -1))
-        return
-      }
-      if (e.key === ']') {
-        e.preventDefault()
-        setToKey(k => transposeSym(k, 1))
-        return
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
-  // prefetch neighbor songs (no await inside effect)
+  // prefetch neighbor songs (simple heuristic)
   useEffect(() => {
     if (!entry) return
     const items = indexData?.items || []
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
     neighbors.forEach(n => {
-      const u = `${base}songs/${n.filename}`
-      fetchTextCached(u).catch(()=>{})
+      const url = `${(import.meta.env.BASE_URL || '/').replace(/\/+$/, '')}/songs/${n.filename}`
+      fetchTextCached(url).catch(()=>{})
     })
-  }, [entry?.id, base])
+  }, [entry?.id])
 
   if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -109,12 +106,39 @@ export default function SongView(){
     await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
   }
 
-  // helpers for media URLs
-  const toHref = (p) => {
-    if (!p) return null
-    if (/^https?:\/\//i.test(p)) return p
-    return `${base}${String(p).replace(/^\/+/, '')}`
-  }
+  // keyboard shortcuts: c = toggle chords, [ / ] transpose
+  useEffect(() => {
+    function onKey(e){
+      const tag = (e.target && e.target.tagName) || ''
+      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
+
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault()
+        setShowChords(v => !v)
+        return
+      }
+      if (e.key === '[') { // down
+        e.preventDefault()
+        setToKey(k => {
+          const i = Math.max(0, KEYS.indexOf(k))
+          return KEYS[(i - 1 + KEYS.length) % KEYS.length]
+        })
+      }
+      if (e.key === ']') { // up
+        e.preventDefault()
+        setToKey(k => {
+          const i = Math.max(0, KEYS.indexOf(k))
+          return KEYS[(i + 1) % KEYS.length]
+        })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const youTubeId = extractYouTubeId(parsed.meta.youtube)
+  const mp3Src = resolveMedia(parsed.meta.mp3)
+  const pptxHref = resolveMedia(parsed.meta.pptx)
 
   return (
     <div className="container">
@@ -163,7 +187,7 @@ export default function SongView(){
 
       <div className="divider" />
 
-      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || parsed?.meta?.pptx) && (
+      {(youTubeId || mp3Src || pptxHref) && (
         <div>
           <button
             className="btn media__toggle"
@@ -172,24 +196,24 @@ export default function SongView(){
             {showMedia ? <>Hide media</> : <><MediaIcon /> Show media</>}
           </button>
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
-            {parsed.meta.youtube && (
+            {youTubeId && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 <div className="media__frame">
-                  <LiteYouTube id={extractYouTubeId(parsed.meta.youtube)} />
+                  <LiteYouTube id={youTubeId} />
                 </div>
               </div>
             )}
-            {parsed.meta.mp3 && (
+            {mp3Src && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
-                <audio controls src={toHref(parsed.meta.mp3)} />
+                <audio controls src={mp3Src} />
               </div>
             )}
-            {parsed.meta.pptx && (
+            {pptxHref && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={toHref(parsed.meta.pptx)} download>Download PPTX</a>
+                <a className="btn" href={pptxHref} download>Download PPTX</a>
               </div>
             )}
           </div>
@@ -197,21 +221,6 @@ export default function SongView(){
       )}
     </div>
   )
-}
-
-function extractYouTubeId(input){
-  if(!input) return ''
-  // if already an id
-  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input
-  // try to parse from URL
-  try {
-    const u = new URL(input)
-    if (u.hostname.includes('youtu.be')) return u.pathname.replace('/','')
-    if (u.searchParams.get('v')) return u.searchParams.get('v')
-    const m = u.pathname.match(/\/embed\/([^/?#]+)/)
-    if (m) return m[1]
-  } catch {}
-  return input
 }
 
 function LiteYouTube({ id }) {
@@ -227,10 +236,10 @@ function LiteYouTube({ id }) {
       style={{border:0, width:'100%', aspectRatio:'16/9'}}
     />
   ) : (
-    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video">
+    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video" style={{width:'100%'}}>
       <div className="media__frame">
         <img src={thumb} alt="" style={{position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover'}} />
-        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
+        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'48px'}}>▶</div>
       </div>
     </button>
   )
@@ -251,18 +260,17 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     }
     const ctx = canvasRef.current.getContext('2d')
 
-    // Compute styles from visible lyrics
+    // measure using the LYRICS font (critical alignment rule)
     const lyr = hostRef.current.querySelector('.lyrics')
     const cs = window.getComputedStyle(lyr)
-
-    // 1) Measure with LYRICS font (critical alignment rule)
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+
     const offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
       sym: transposeSym(c.sym, steps)
     }))
 
-    // 2) Estimate chord ascent with mono bold
+    // compute ascent for padding using chord mono/bold
     const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
@@ -270,9 +278,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
     const gap = 4
-    const padTop = Math.ceil(chordAscent + gap)
-    const chordTop = 0
-    setState({ offsets, padTop, chordTop })
+    setState({ offsets, padTop: Math.ceil(chordAscent + gap), chordTop: 0 })
   }, [plain, chords, steps, showChords])
 
   return (
