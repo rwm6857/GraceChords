@@ -25,3 +25,5 @@ input,select{ padding:8px 10px; border:1px solid var(--line); border-radius:8px;
 .topnav__links{ display:flex; gap:12px }
 .topnav__link{ padding:6px 10px; border-radius:8px; color:#334155 } .topnav__link:hover{ background:#f1f5f9 }
 .topnav__link.active{ background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe }
+.lyrics { line-height: 1.35; }
+

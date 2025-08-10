@@ -161,11 +161,10 @@ function AdminPanel(){
 function MeasuredPreviewLine({ plain, chords }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
-  const [offsets, setOffsets] = useState([])
+  const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
 
   useEffect(()=>{
     if(!hostRef.current) return
-
     if(!canvasRef.current){
       const cv = document.createElement('canvas')
       cv.width = 1; cv.height = 1
@@ -175,22 +174,35 @@ function MeasuredPreviewLine({ plain, chords }){
 
     const lyr = hostRef.current.querySelector('.lyrics')
     const cs = window.getComputedStyle(lyr)
-    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
 
-    const arr = []
-    for(const c of chords){
-      const sub = plain.slice(0, c.index)
-      const w = ctx.measureText(sub).width
-      arr.push({ left: w, sym: c.sym })
-    }
-    setOffsets(arr)
+    // Measure with lyrics font
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    const offsets = (chords || []).map(c => ({
+      left: ctx.measureText(plain.slice(0, c.index)).width,
+      sym: c.sym
+    }))
+
+    const lyrM = ctx.measureText('Mg')
+    const lyrAscent = lyrM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
+    // Estimate chord ascent with chord font
+    const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFontSize = cs.fontSize
+    ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+    const chordM = ctx.measureText('Mg')
+    const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
+
+    const gap = 4
+    const padTop = Math.ceil(chordAscent + gap)
+    const chordTop = -Math.ceil(lyrAscent + gap)
+
+    setState({ offsets, padTop, chordTop })
   }, [plain, chords])
 
   return (
-    <div ref={hostRef} style={{position:'relative', marginBottom:10}}>
-      {offsets.length>0 && (
-        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:-2}}>
-          {offsets.map((c, i)=>(
+    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: state.padTop}}>
+      {state.offsets.length>0 && (
+        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
+          {state.offsets.map((c, i)=>(
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,

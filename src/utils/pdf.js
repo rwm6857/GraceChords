@@ -32,18 +32,32 @@ function drawSongIntoDoc(doc, song, opt){
     return h + 4
   }
   function drawLine(plain, chordPositions){
-    if(chordPositions?.length){
-      doc.setFont(cFam,'bold'); doc.setFontSize(opt.chordSizePt)
-      for(const c of chordPositions){
-        const off = widthOf(plain.slice(0, c.index))
-        doc.text(c.sym, x + off, y)
-      }
-      y += opt.chordSizePt + lineGap/2
+  // 1) Measure offsets with the LYRICS font/size
+  doc.setFont(lFam, 'normal')
+  doc.setFontSize(opt.lyricSizePt)
+  const offsets = (chordPositions || []).map(c => ({
+    sym: c.sym,
+    x: x + doc.getTextWidth(plain.slice(0, c.index))
+  }))
+
+  // 2) Draw chords with the CHORD font/size, using the measured offsets
+  if(offsets.length){
+    doc.setFont(cFam, 'bold')
+    doc.setFontSize(opt.chordSizePt)
+    for(const c of offsets){
+      doc.text(c.sym, c.x, y)
     }
-    doc.setFont(lFam,'normal'); doc.setFontSize(opt.lyricSizePt)
-    doc.text(plain, x, y)
-    y += opt.lyricSizePt + lineGap
+    // vertical gap between chord line and lyric line
+    y += opt.chordSizePt + lineGap/2
   }
+
+  // 3) Draw the lyric line
+  doc.setFont(lFam, 'normal')
+  doc.setFontSize(opt.lyricSizePt)
+  doc.text(plain, x, y)
+  y += opt.lyricSizePt + lineGap
+}
+
 
   for(const block of song.lyricsBlocks){
     const need = sectionHeight(block)
