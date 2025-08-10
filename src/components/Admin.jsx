@@ -192,9 +192,10 @@ function MeasuredPreviewLine({ plain, chords }){
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
     const gap = 4
-    const padTop = Math.ceil(chordAscent + gap)     // space above lyrics
-    const chordTop = -Math.ceil(chordAscent + gap)  // chord baseline = -gap above lyric baseline
+    const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
+    const chordTop = 0                           // chord layer sits at host top
     setState({ offsets, padTop, chordTop })
+
 
   }, [plain, chords])
 
