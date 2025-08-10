@@ -190,11 +190,11 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
-    const gap = 4 // small visual gap between chords and the top of lyrics
-    const padTop = Math.ceil(chordAscent + gap) // push lyrics down to make room
-    const chordTop = -Math.ceil(lyrAscent + gap) // position chords above lyric baseline
-
+    const gap = 4
+    const padTop = Math.ceil(chordAscent + gap)     // space above lyrics
+    const chordTop = -Math.ceil(chordAscent + gap)  // chord baseline = -gap above lyric baseline
     setState({ offsets, padTop, chordTop })
+
   }, [plain, chords, steps, showChords])
 
   return (
