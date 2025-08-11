@@ -9,8 +9,8 @@ describe('Routing smoke', () => {
         <App />
       </HashRouter>
     )
-    // The search input uses a placeholder, not an aria-label.
-    expect(await screen.findByPlaceholderText(/search by title or tag/i)).toBeInTheDocument()
+    // Query by the associated <label for="search">Search</label>
+	expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
   })
 
   test('setlist route renders', async () => {

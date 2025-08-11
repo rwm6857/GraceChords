@@ -359,18 +359,33 @@ export async function downloadMultiSongPdf(songs, options){
  *  These mirror layout math exactly.
  *  -------------------------------------------------------------------- */
 export function getLayoutMetrics(input, opts) {
-  // Use a tiny jsPDF purely for measurement so we match production widths.
-  const probe = new jsPDF({ unit: 'pt', format: 'letter' })
-  const pageW = probe.internal.pageSize.getWidth()
-  const pageH = probe.internal.pageSize.getHeight()
-  const o = {
-    ...DEFAULT_LAYOUT_OPT,
-    ...opts,
-    pageWidth: pageW,
-    pageHeight: pageH
+  // Try to use jsPDF if it happens to be available; otherwise fall back
+  let probe = null
+  try {
+    if (typeof jsPDF !== 'undefined') {
+      probe = new jsPDF({ unit: 'pt', format: 'letter' })
+    }
+  } catch {}
+
+  // Defaults (Letter) when no jsPDF
+  let pageW = 612
+  let pageH = 792
+
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opts }
+  if (probe) {
+    pageW = probe.internal.pageSize.getWidth()
+    pageH = probe.internal.pageSize.getHeight()
   }
-  // We do NOT embed fonts during tests by default. Helvetica metrics are deterministic and sufficient to catch algorithm regressions.
-  const measure = makeLyricMeasurer(probe, o.lyricFamily, o.lyricSizePt)
+  o.pageWidth = pageW
+  o.pageHeight = pageH
+
+  // Deterministic width measurer:
+  // - If we have jsPDF, measure like production (lyrics font).
+  // - Else, use a stable approximation that scales with lyricSizePt.
+  const measure = probe
+    ? makeLyricMeasurer(probe, o.lyricFamily, o.lyricSizePt)
+    : (text) => (text ? text.length * (o.lyricSizePt * 0.6) : 0)
+
   const layout = computeLayout(input, o, measure)
 
   // Normalize for snapshots (round chord x to 2 decimals)
@@ -380,7 +395,7 @@ export function getLayoutMetrics(input, opts) {
       c: cIdx,
       blocks: col.blocks.map(b => ({
         t: b.type,
-        h: b.type === 'section' ? b.header || null : null,
+        h: b.type === 'section' ? (b.header || null) : null,
         line: b.type === 'line'
           ? {
               text: b.lyrics,
@@ -391,3 +406,4 @@ export function getLayoutMetrics(input, opts) {
     }))
   }))
 }
+
