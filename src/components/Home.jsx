@@ -116,24 +116,6 @@ export default function Home(){
     return list
   }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode])
 
-  // -------- Selection for bundle/export (checkboxes) --------
-  const [selected, setSelected] = useState({}) // {id: { toKey }}
-  const isSelected = (id) => !!selected[id]
-  function toggleSelect(s){
-    setSelected(prev => isSelected(s.id)
-      ? Object.fromEntries(Object.entries(prev).filter(([k]) => k !== String(s.id)))
-      : { ...prev, [s.id]: { toKey: s.originalKey || 'C' } }
-    )
-  }
-  function setKeyFor(id, key){
-    setSelected(prev => ({ ...prev, [id]: { ...(prev[id]||{}), toKey: key } }))
-  }
-  function selectAll(){
-    const next = {}
-    for (const s of results) next[s.id] = { toKey: s.originalKey || 'C' }
-    setSelected(next)
-  }
-  function clearAll(){ setSelected({}) }
 
   // UI helpers
   function toggleTag(t){
@@ -192,45 +174,22 @@ export default function Home(){
               onClick={()=> setTagMode('all')}
               title="Match songs with all selected tags"
             >All</button>
-
-            <button className="btn" onClick={selectAll}>Select All</button>
-            <button className="btn" onClick={clearAll}>Clear</button>
           </div>
         </div>
       </div>
 
-      {/* Results grid */}
+      {/* Results grid (directory only) */}
       <div className="grid" style={{marginTop:10}}>
         {results.map(s => {
-          const sel = selected[s.id]
           return (
             <div key={s.id} className="card">
               <div className="row">
-                <div style={{display:'flex', alignItems:'center', gap:10}}>
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${s.title}`}
-                    checked={isSelected(s.id)}
-                    onChange={()=> toggleSelect(s)}
-                  />
-                  <div>
-                    <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
-                    <div className="meta">
-                      {s.originalKey || '—'}
-                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
-                    </div>
+                <div>
+                  <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
+                  <div className="meta">
+                    {s.originalKey || '—'}
+                    {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
                   </div>
-                </div>
-
-                <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                  <select
-                    value={sel?.toKey || s.originalKey || 'C'}
-                    onChange={e => setKeyFor(s.id, e.target.value)}
-                    disabled={!isSelected(s.id)}
-                    title={isSelected(s.id) ? 'Key for selection' : 'Select the song first'}
-                  >
-                    {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
                 </div>
               </div>
             </div>

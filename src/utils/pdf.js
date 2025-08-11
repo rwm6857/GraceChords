@@ -320,8 +320,8 @@ export async function songToPdfDoc(song, options){
 }
 
 export async function downloadSingleSongPdf(song, options) {
-  // Decide columns like before, but use layout pages length instead of drawing twice.
-  const probeDoc = new jsPDF({ unit: 'pt', format: 'letter' })
+  // Decide columns like before, but use a lazily-loaded jsPDF instance for probing.
+  const probeDoc = await newPDF()
   const pageW = probeDoc.internal.pageSize.getWidth()
   const pageH = probeDoc.internal.pageSize.getHeight()
   const opt1 = {
