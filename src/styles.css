@@ -110,8 +110,12 @@ input,select,textarea{
   box-shadow:0 1px 2px rgba(0,0,0,.03);
   margin-top:12px;
 }
-
-.section{ font-weight:700; color:#334155; margin:8px 0 4px } /* keep your section tint */
+.section {
+  font-weight: 700;          /* bold */
+  margin-top: 0.85em;        /* just shy of a line */
+  margin-bottom: 0.25em;     /* small gap before the first lyric line */
+  letter-spacing: 0.02em;    /* subtle readability boost (optional) */
+}
 .linepair{ margin:2px 0 10px }
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono', monospace; white-space: pre }
 
