@@ -115,6 +115,127 @@ const DEFAULT_LAYOUT_OPT = {
   key: 'C'
 }
 
+// Safety against kissing the right gutter
+const RIGHT_SAFETY = 6;     // pt
+// How "tight" a 2-col line may be before we reject it for readability
+const TIGHT_RATIO_2COL = 0.92;
+
+/**
+ * Pure width check using provided measurers (lyrics/chords).
+ * Respects the alignment invariant: chord X measured in lyrics font; chords drawn in mono bold.
+ */
+function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeasureChordAt){
+  const margin = oBase.margin;
+  const contentW = oBase.pageWidth - margin * 2;
+  const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW;
+  const limit = colW - RIGHT_SAFETY;
+
+  const measureLyric = makeMeasureLyricAt(size);
+  const measureChord = makeMeasureChordAt(size);
+
+  for (const block of (song.lyricsBlocks || [])) {
+    for (const ln of (block.lines || [])) {
+      const plain = ln.plain || ln.text || '';
+      if (measureLyric(plain) > limit) return true;
+      for (const c of (ln.chordPositions || [])) {
+        const x = measureLyric(plain.slice(0, c.index || 0));
+        const cw = measureChord(c.sym || '');
+        if (x + cw > limit) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** How close the widest line/chord right-edge is to the column edge (0..1). */
+function maxWidthRatio(song, columns, size, oBase, makeMeasureLyricAt, makeMeasureChordAt){
+  const margin = oBase.margin;
+  const contentW = oBase.pageWidth - margin * 2;
+  const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW;
+
+  const measureLyric = makeMeasureLyricAt(size);
+  const measureChord = makeMeasureChordAt(size);
+
+  let maxR = 0;
+  for (const block of (song.lyricsBlocks || [])) {
+    for (const ln of (block.lines || [])) {
+      const plain = ln.plain || ln.text || '';
+      maxR = Math.max(maxR, (measureLyric(plain) || 0) / colW);
+      for (const c of (ln.chordPositions || [])) {
+        const x = measureLyric(plain.slice(0, c.index || 0));
+        const cw = measureChord(c.sym || '');
+        maxR = Math.max(maxR, (x + cw) / colW);
+      }
+    }
+  }
+  return maxR;
+}
+
+/**
+ * Core planner (pure): implements your priority rules.
+ * - Size-first search 16→12
+ * - For each size: try 1-col, then 2-col (2-col must not be "tight")
+ * - Fallback at 12pt: choose fewest pages; then width OK; then prefer 1-col
+ */
+function choosePlanPure(songNorm, oBase, makeMeasureLyricAt, makeMeasureChordAt){
+  const minSize = 12;
+  const maxSize = 16;
+
+  // Ensure section labels are promoted to headers (safety net)
+  const song = { ...songNorm, lyricsBlocks: (songNorm.lyricsBlocks || []).map(b => {
+    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
+      const first = b.lines[0];
+      const txt = first?.plain || first?.text || '';
+      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0;
+      if (!hasChords && isSectionLabel(txt)) {
+        return { section: txt.trim(), lines: b.lines.slice(1) };
+      }
+    }
+    return b;
+  })};
+
+  // Helper to evaluate a plan
+  const evalPlan = (cols, size) => {
+    const widthOk = !widthOverflows(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt);
+    const measureLyric = makeMeasureLyricAt(size);
+    const layout = computeLayout(song, { ...oBase, columns: cols, lyricSizePt: size, chordSizePt: size }, measureLyric);
+    const heightOk = (layout.pages.length <= 1);
+    const tight = cols === 2 && maxWidthRatio(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL;
+    return { widthOk, heightOk, tight, layout };
+  };
+
+  // Size-first search: 16 → 12; try 1-col then 2-col
+  for (let size = maxSize; size >= minSize; size--) {
+    // 1 column
+    {
+      const r = evalPlan(1, size);
+      if (r.widthOk && r.heightOk) {
+        return { columns: 1, lyricSizePt: size, chordSizePt: size, layout: r.layout };
+      }
+    }
+    // 2 columns (must not be "tight")
+    {
+      const r = evalPlan(2, size);
+      if (r.widthOk && r.heightOk && !r.tight) {
+        return { columns: 2, lyricSizePt: size, chordSizePt: size, layout: r.layout };
+      }
+    }
+  }
+
+  // Fallback at 12pt: fewest pages; then width OK; then prefer 1-col
+  const size = minSize;
+  const plans = [1,2].map(cols => ({ cols, ...evalPlan(cols, size) }));
+  plans.sort((a,b) => {
+    if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length;
+    if (a.widthOk !== b.widthOk) return (a.widthOk ? -1 : 1);
+    if (a.cols !== b.cols) return (a.cols === 1 ? -1 : 1);
+    return 0;
+  });
+  const best = plans[0];
+  return { columns: best.cols, lyricSizePt: size, chordSizePt: size, layout: best.layout };
+}
+
+
 /* -----------------------------------------------------------
  * PURE LAYOUT (two-pass; no drawing)
  * - measures with lyrics font only
@@ -311,77 +432,29 @@ function drawSongIntoDoc(doc, songIn, opt) {
  * Fit planner (width + height; shrink-to-fit ≥12pt)
  * --------------------------------------------------------- */
 async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
-  const pageW = doc.internal.pageSize.getWidth()
-  const pageH = doc.internal.pageSize.getHeight()
-  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, pageWidth: pageW, pageHeight: pageH }
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, pageWidth: pageW, pageHeight: pageH };
 
-  let fams = {}
+  let fams = {};
   try { fams = await ensureFontsEmbedded(doc) } catch {}
-  const lyricFamily = fams.lyricFamily || oBase.lyricFamily || 'Helvetica'
-  const chordFamily = fams.chordFamily || oBase.chordFamily || 'Courier'
+  const lyricFamily = fams.lyricFamily || oBase.lyricFamily || 'Helvetica';
+  const chordFamily = fams.chordFamily || oBase.chordFamily || 'Courier';
 
   const makeMeasureLyricAt = (pt) => (text) => {
-    doc.setFont(lyricFamily, 'normal'); doc.setFontSize(pt)
-    return doc.getTextWidth(text || '')
-  }
+    doc.setFont(lyricFamily, 'normal'); doc.setFontSize(pt);
+    return doc.getTextWidth(text || '');
+  };
   const makeMeasureChordAt = (pt) => (text) => {
-    doc.setFont(chordFamily, 'bold'); doc.setFontSize(pt)
-    return doc.getTextWidth(text || '')
-  }
+    doc.setFont(chordFamily, 'bold'); doc.setFontSize(pt);
+    return doc.getTextWidth(text || '');
+  };
 
-  const overflowsWidth = (song, columns, size) => {
-    const margin = oBase.margin
-    const contentW = pageW - margin * 2
-    const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW
-    const RIGHT_SAFETY = 2 // pts; avoid kissing the gutter
-	const measureLyric = makeMeasureLyricAt(size)
-    const measureChord = makeMeasureChordAt(size)
-    for (const block of (song.lyricsBlocks || [])) {
-      for (const ln of (block.lines || [])) {
-        const plain = ln.plain || ln.text || ''
-        const lyrW = measureLyric(plain)
-        if (lyrW > (colW - RIGHT_SAFETY)) return true
-        const cps = ln.chordPositions || []
-        for (const c of cps) {
-          const x = measureLyric(plain.slice(0, c.index || 0))
-          const cw = measureChord(c.sym || '')
-          if (x + cw > (colW - RIGHT_SAFETY)) return true
-        }
-      }
-    }
-    return false
-  }
-
-  const startSize = Math.max(12, Math.round(baseOpt?.lyricSizePt || 16))
-  const minSize = 12
-
-  // Prefer 2 columns first (height saver), then 1 column (width saver)
-  for (let size = startSize; size >= minSize; size--) {
-    for (const cols of [2, 1]) {
-      const o = { ...oBase, lyricFamily, chordFamily, columns: cols, lyricSizePt: size, chordSizePt: size }
-      const measure = makeLyricMeasurer(doc, lyricFamily, size)
-      const layout = computeLayout(songIn, o, measure)
-      const widthOk = !overflowsWidth(songIn, cols, size)
-      const heightOk = layout.pages.length <= 1
-      if (widthOk && heightOk) {
-        return { columns: cols, lyricSizePt: size, chordSizePt: size, lyricFamily, chordFamily, layout }
-      }
-    }
-  }
-
-  // Fallback: 12pt, choose plan with fewer pages (penalize width overflow)
-  const size = minSize
-  let best = null
-  for (const cols of [2, 1]) {
-    const o = { ...oBase, lyricFamily, chordFamily, columns: cols, lyricSizePt: size, chordSizePt: size }
-    const measure = makeLyricMeasurer(doc, lyricFamily, size)
-    const layout = computeLayout(songIn, o, measure)
-    const widthOk = !overflowsWidth(songIn, cols, size)
-    const score = layout.pages.length + (widthOk ? 0 : 0.5)
-    if (!best || score < best.score) best = { plan: { columns: cols, lyricSizePt: size, chordSizePt: size, lyricFamily, chordFamily, layout }, score }
-  }
-  return best.plan
+  const songNorm = normalizeSongInput(songIn);
+  const pick = choosePlanPure(songNorm, { ...oBase, lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt);
+  return { columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, lyricFamily, chordFamily, layout: pick.layout };
 }
+
 
 /* -----------------------------------------------------------
  * PUBLIC APIS
@@ -469,3 +542,22 @@ export function getLayoutMetrics(input, opts) {
     }))
   }))
 }
+
+// Test-only: pure planner with deterministic measurers (no jsPDF)
+export function planForTest(input, opts){
+  const song = normalizeSongInput(input);
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opts };
+  // Letter
+  o.pageWidth = 612; o.pageHeight = 792;
+
+  const makeMeasureLyricAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0);
+  const makeMeasureChordAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0);
+
+  const pick = choosePlanPure(song, o, makeMeasureLyricAt, makeMeasureChordAt);
+  return {
+    columns: pick.columns,
+    size: pick.lyricSizePt,
+    pages: pick.layout.pages.length
+  };
+}
+
