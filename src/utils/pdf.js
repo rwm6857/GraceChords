@@ -119,6 +119,7 @@ const DEFAULT_LAYOUT_OPT = {
 const RIGHT_SAFETY = 6;     // pt
 // How "tight" a 2-col line may be before we reject it for readability
 const TIGHT_RATIO_2COL = 0.92;
+const TIGHT_RATIO_2COL_AT_12 = 0.86; // be stricter at the minimum size
 
 /**
  * Pure width check using provided measurers (lyrics/chords).
@@ -216,7 +217,9 @@ function choosePlanPure(songNorm, oBase, makeMeasureLyricAt, makeMeasureChordAt)
     // 2 columns (must not be "tight")
     {
       const r = evalPlan(2, size);
-      if (r.widthOk && r.heightOk && !r.tight) {
+      const tooTightAt12 = (size === 12) &&
+         (maxWidthRatio(song, 2, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL_AT_12);
+      if (r.widthOk && r.heightOk && !r.tight && !tooTightAt12) {
         return { columns: 2, lyricSizePt: size, chordSizePt: size, layout: r.layout };
       }
     }
@@ -452,6 +455,14 @@ async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
 
   const songNorm = normalizeSongInput(songIn);
   const pick = choosePlanPure(songNorm, { ...oBase, lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt);
+  if (pick.columns === 2 && pick.lyricSizePt === 12) {
+    const ratio = maxWidthRatio(songNorm, 2, 12, oBase, makeMeasureLyricAt, makeMeasureChordAt);
+    if (ratio >= TIGHT_RATIO_2COL_AT_12) {
+      const measureLyric12 = makeLyricMeasurer(doc, lyricFamily, 12);
+      const layout1 = computeLayout(songNorm, { ...oBase, columns: 1, lyricSizePt: 12, chordSizePt: 12 }, measureLyric12);
+      return { columns: 1, lyricSizePt: 12, chordSizePt: 12, lyricFamily, chordFamily, layout: layout1 };
+    }
+  }
   return { columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, lyricFamily, chordFamily, layout: pick.layout };
 }
 
