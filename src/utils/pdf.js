@@ -102,27 +102,21 @@ const DEFAULT_LAYOUT_OPT = {
 export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
   const song = normalizeSongInput(songIn)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
-  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
   const lineGap = 4
+  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
 
   const margin = o.margin
+  const pageH = o.pageHeight
   const contentW = o.pageWidth - margin * 2
   const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
 
-  // Header metrics (same as draw path)
-  const headerTitlePt = Math.max(22, o.lyricSizePt + 6)
-  const headerKeyPt   = Math.max(12, o.lyricSizePt - 2)
+  // Header metrics (mirror draw path)
   const contentStartY = margin + o.headerOffsetY
+  const contentBottomY = pageH - margin
 
   const pages = []
   let page = { columns: [] }
   pages.push(page)
-
-  // initialize columns on each page
-  function newPage() {
-    page = { columns: [] }
-    pages.push(page)
-  }
 
   function makeColumns() {
     const firstCol = { x: margin, yStart: contentStartY, blocks: [] }
@@ -132,21 +126,21 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
       page.columns.push(secondCol)
     }
   }
+  function newPage() {
+    page = { columns: [] }
+    pages.push(page)
+  }
   if (page.columns.length === 0) makeColumns()
 
   let colIdx = 0
   let cursorY = contentStartY
 
-  function currentCol() {
-    return page.columns[colIdx]
-  }
-
-  function advanceColumnOrPage() {
+  const curCol = () => page.columns[colIdx]
+  const advanceColOrPage = () => {
     if (o.columns === 2 && colIdx === 0) {
       colIdx = 1
       cursorY = contentStartY
     } else {
-      // next page
       newPage()
       makeColumns()
       colIdx = 0
@@ -154,58 +148,84 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
     }
   }
 
-  function sectionHeight(block) {
+  const measureBlockHeight = (block, fromLine = 0, toLineExclusive = (block.lines?.length ?? 0)) => {
     let h = 0
-    if (block.section) h += (sectionSize + 4)
-    for (const ln of block.lines) {
-      if (ln.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+    const hasHeader = !!block.section && fromLine === 0
+    if (hasHeader) h += sectionSize + 4
+    for (let i = fromLine; i < toLineExclusive; i++) {
+      const ln = block.lines[i]
+      if (ln?.chordPositions?.length) h += o.chordSizePt + lineGap / 2
       h += o.lyricSizePt + lineGap
     }
-    return h + 4
+    return h + 4 // block bottom padding
   }
 
-  // Build blocks with chord X positions relative to column x
+  // Emit helpers
+  const pushSection = (col, header) => col.blocks.push({ type: 'section', header: String(header).toUpperCase() })
+  const pushLine = (col, plain, chordPositions) => {
+    const chords = (chordPositions || []).map(c => ({
+      sym: c.sym,
+      x: measureLyric(plain.slice(0, c.index || 0))
+    }))
+    col.blocks.push({ type: 'line', lyrics: plain, chords })
+  }
+
   for (const block of song.lyricsBlocks) {
-    const need = sectionHeight(block)
-    if (cursorY + need > o.pageHeight - margin) {
-      advanceColumnOrPage()
-    }
-    const col = currentCol()
+    const lines = block.lines || []
+    let start = 0
+    while (start < lines.length) {
+      // Determine the largest slice [start, end) that can fit in current column
+      // but keep header attached to its first line.
+      const col = curCol()
 
-    if (block.section) {
-      col.blocks.push({ type: 'section', header: String(block.section).toUpperCase() })
-      cursorY += sectionSize + 4
-    }
-
-    for (const ln of block.lines) {
-      const plain = ln.plain || ln.text || ''
-      const chordPositions = ln.chordPositions || []
-
-      // 1) Measure offsets with the LYRICS font/size (must match draw)
-      const chords = chordPositions.map(c => ({
-        sym: c.sym,
-        x: measureLyric(plain.slice(0, c.index)) // relative to column start
-      }))
-
-      // 2) Push the line block
-      col.blocks.push({
-        type: 'line',
-        lyrics: plain,
-        chords
-      })
-
-      // 3) Advance Y (we track for pagination only; y is not stored in blocks)
-      if (chords.length) {
-        cursorY += o.chordSizePt + lineGap / 2
+      // If nothing has been placed yet from this block and header exists, include it in height
+      const minSliceH = measureBlockHeight(block, start, Math.min(start + 1, lines.length))
+      if (cursorY + minSliceH > contentBottomY) {
+        // Not even the header+first line fits -> advance column/page
+        advanceColOrPage()
+        continue
       }
-      cursorY += o.lyricSizePt + lineGap
-    }
 
-    cursorY += 4
+      // Try to fit as many lines as possible
+      let end = start + 1
+      while (end <= lines.length) {
+        const h = measureBlockHeight(block, start, end)
+        if (cursorY + h > contentBottomY) break
+        end++
+      }
+      end = Math.max(end - 1, start + 1) // at least one line (with header if start==0)
+
+      // Emit this slice
+      if (start === 0 && block.section) {
+        pushSection(col, block.section)
+        cursorY += sectionSize + 4
+      }
+      for (let i = start; i < end; i++) {
+        const ln = lines[i]
+        const plain = ln.plain || ln.text || ''
+        const chordPositions = ln.chordPositions || []
+
+        if (chordPositions.length) {
+          // reserve chord row height in cursorY, but we only store blocks (y computed at draw time)
+          // chords x were measured using lyrics widths
+        }
+        pushLine(col, plain, chordPositions)
+        if (chordPositions.length) cursorY += o.chordSizePt + lineGap / 2
+        cursorY += o.lyricSizePt + lineGap
+      }
+      cursorY += 4 // bottom padding for this slice
+
+      // If we didn’t consume the whole block, advance to next column/page and continue
+      start = end
+      if (start < lines.length) {
+        advanceColOrPage()
+      }
+    }
   }
 
   return { pages }
 }
+
 
 /** -----------------------------------------------------------------------
  *  DRAWING (consumes computeLayout)
