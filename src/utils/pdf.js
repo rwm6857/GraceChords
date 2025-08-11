@@ -309,6 +309,24 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
     return h + 4
   }
 
+   // Heights
+   const blockHeight = (block) => {
+     let h = 0
+     if (block.section) h += sectionTopPad + sectionSize + 4
+     for (const ln of (block.lines || [])) {
+       if (ln?.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+       h += o.lyricSizePt + lineGap
+     }
+     return h + 4
+   }
+   const lineHeight = (ln) => {
+     let h = 0
+     if (ln?.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+     h += o.lyricSizePt + lineGap
+     return h
+   }
+ 
+
   const pushSection = (col, header) => col.blocks.push({ type: 'section', header: String(header) })
   const pushLine = (col, plain, chordPositions) => {
     const chords = (chordPositions || []).map(c => ({
@@ -318,44 +336,69 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
     col.blocks.push({ type: 'line', lyrics: plain, chords })
   }
 
-  for (const block of song.lyricsBlocks) {
-    const lines = block.lines || []
-    let start = 0
-    while (start < lines.length) {
-      const minSliceH = measureBlockHeight(block, start, Math.min(start + 1, lines.length))
-      if (cursorY + minSliceH > contentBottomY) { advanceColOrPage(); continue }
-
-      let end = start + 1
-      while (end <= lines.length) {
-        const h = measureBlockHeight(block, start, end)
-        if (cursorY + h > contentBottomY) break
-        end++
-      }
-      end = Math.max(end - 1, start + 1)
-
-      const col = curCol()
-      if (start === 0 && block.section) {
-        cursorY += sectionTopPad
-        pushSection(col, block.section)
-        cursorY += sectionSize + 4
-      }
-      for (let i = start; i < end; i++) {
-        const ln = lines[i]
-        const plain = ln.plain || ln.text || ''
-        const chordPositions = ln.chordPositions || []
-        pushLine(col, plain, chordPositions)
-        if (chordPositions.length) cursorY += o.chordSizePt + lineGap / 2
-        cursorY += o.lyricSizePt + lineGap
-      }
-      cursorY += 4
-
-      start = end
-      if (start < lines.length) advanceColOrPage()
-    }
-  }
-
-  return { pages }
-}
+   for (const block of song.lyricsBlocks) {
+     const need = blockHeight(block)
+     const avail = contentBottomY - cursorY
+     const fullColAvail = contentBottomY - contentStartY
+ 
+     // 1) If whole section fits here, place intact
+     if (need <= avail) {
+       const col = curCol()
+       if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+       for (const ln of (block.lines || [])) {
+         const plain = ln.plain || ln.text || ''
+         const cps = ln.chordPositions || []
+         pushLine(col, plain, cps)
+         cursorY += lineHeight(ln)
+       }
+       cursorY += 4
+       continue
+     }
+ 
+     // 2) If it fits in a fresh column/page, move wholesale (do NOT split)
+     if (need <= fullColAvail) {
+       advanceColOrPage()
+       const col = curCol()
+       if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+       for (const ln of (block.lines || [])) {
+         const plain = ln.plain || ln.text || ''
+         const cps = ln.chordPositions || []
+         pushLine(col, plain, cps)
+         cursorY += lineHeight(ln)
+       }
+       cursorY += 4
+       continue
+     }
+ 
+     // 3) Oversized section (cannot fit in a full column at this size) → split at line boundaries,
+     //    but keep header with the first line, and never leave header stranded.
+     let i = 0
+     while (i < (block.lines || []).length) {
+       // Ensure there is room for header + at least one line; otherwise advance
+       const firstLineH = lineHeight(block.lines[i])
+       const minHeadSlice = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4 + firstLineH) : firstLineH
+       if (cursorY + minHeadSlice > contentBottomY) { advanceColOrPage() }
+ 
+       const col = curCol()
+       if (i === 0 && block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+ 
+       // Fill as many lines as fit
+       while (i < block.lines.length) {
+         const h = lineHeight(block.lines[i])
+         if (cursorY + h > contentBottomY) break
+         const ln = block.lines[i]
+         const plain = ln.plain || ln.text || ''
+         const cps = ln.chordPositions || []
+         pushLine(col, plain, cps)
+         cursorY += h
+         i++
+       }
+       cursorY += 4
+       if (i < block.lines.length) advanceColOrPage()
+     }
+   }
+   return { pages }
+ }
 
 /* -----------------------------------------------------------
  * DRAWING (consumes computeLayout)
