@@ -127,7 +127,7 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
   const song = normalizeSongInput(songIn)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
   const lineGap = 4
-  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
+  const sectionSize = o.lyricSizePt
   const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
 
   const margin = o.margin
@@ -246,7 +246,7 @@ function drawSongIntoDoc(doc, songIn, opt) {
   const layout = computeLayout(songIn, o, measure)
 
   const lineGap = 4
-  const sectionSize = Math.max(o.lyricSizePt + 2, 16)
+  const sectionSize = o.lyricSizePt
   const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
   const contentStartY = margin + o.headerOffsetY
 
