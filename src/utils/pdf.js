@@ -1,6 +1,11 @@
 // src/utils/pdf.js
 import { ensureFontsEmbedded } from './fonts'
 
+// Debug switch: open DevTools and run localStorage.setItem('pdfDebug','1') to see guides
+const PDF_DEBUG = typeof window !== 'undefined'
+  && (() => { try { return localStorage.getItem('pdfDebug') === '1' } catch { return false } })()
+
+
 /* -----------------------------------------------------------
  * Lazy jsPDF
  * --------------------------------------------------------- */
@@ -256,9 +261,28 @@ function drawSongIntoDoc(doc, songIn, opt) {
   const sectionSize = o.lyricSizePt
   const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
   const contentStartY = margin + o.headerOffsetY
+  const contentW = pageW - margin * 2
+  const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
 
   layout.pages.forEach((p, pIdx) => {
     if (pIdx > 0) doc.addPage()
+     // Debug overlay: draw column boxes + plan footer
+     if (PDF_DEBUG) {
+       doc.setDrawColor(180)
+       // Column 1 box
+       doc.rect(margin, contentStartY, colW, pageH - margin - contentStartY)
+       if (o.columns === 2) {
+         // Column 2 box
+         doc.rect(margin + colW + o.gutter, contentStartY, colW, pageH - margin - contentStartY)
+       }
+       // Footer with chosen plan
+       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
+       doc.text(
+         `Plan: ${o.columns} col • size ${o.lyricSizePt}pt • family ${o.lyricFamily}/${o.chordFamily}`,
+         margin,
+         pageH - (margin * 0.6)
+       )
+     }
     p.columns.forEach((col) => {
       let x = col.x
       let y = contentStartY
@@ -309,18 +333,19 @@ async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
     const margin = oBase.margin
     const contentW = pageW - margin * 2
     const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW
-    const measureLyric = makeMeasureLyricAt(size)
+    const RIGHT_SAFETY = 2 // pts; avoid kissing the gutter
+	const measureLyric = makeMeasureLyricAt(size)
     const measureChord = makeMeasureChordAt(size)
     for (const block of (song.lyricsBlocks || [])) {
       for (const ln of (block.lines || [])) {
         const plain = ln.plain || ln.text || ''
         const lyrW = measureLyric(plain)
-        if (lyrW > colW) return true
+        if (lyrW > (colW - RIGHT_SAFETY)) return true
         const cps = ln.chordPositions || []
         for (const c of cps) {
           const x = measureLyric(plain.slice(0, c.index || 0))
           const cw = measureChord(c.sym || '')
-          if (x + cw > colW) return true
+          if (x + cw > (colW - RIGHT_SAFETY)) return true
         }
       }
     }
