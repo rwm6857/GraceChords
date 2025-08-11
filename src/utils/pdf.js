@@ -1,54 +1,59 @@
 // src/utils/pdf.js
 import { ensureFontsEmbedded } from './fonts'
 
-/** -----------------------------------------------------------------------
- *  Lightweight jsPDF loader (keeps it out of the main bundle)
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * Lazy jsPDF
+ * --------------------------------------------------------- */
 async function newPDF() {
   const { jsPDF } = await import('jspdf')
   return new jsPDF({ unit: 'pt', format: 'letter' })
 }
 
-/** -----------------------------------------------------------------------
- *  Input normalization
- *  -------------------------------------------------------------------- */
-// Replace existing normalizeSongInput with this version:
+/* -----------------------------------------------------------
+ * Helpers
+ * --------------------------------------------------------- */
+function isSectionLabel(text = '') {
+  return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i
+    .test(String(text).trim())
+}
 
+/** Create a lyrics-width measurer bound to a jsPDF doc + font settings */
+function makeLyricMeasurer(doc, lyricFamily, lyricPt) {
+  return (text) => {
+    doc.setFont(lyricFamily, 'normal')
+    doc.setFontSize(lyricPt)
+    return doc.getTextWidth(text || '')
+  }
+}
+
+/* -----------------------------------------------------------
+ * Input normalization
+ * --------------------------------------------------------- */
 function normalizeSongInput(input) {
-  // Helper: "Verse", "Verse 1", "Chorus", "Bridge", "Tag", etc.
-  const SECTION_RE = /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i
-  const isSectionLabel = (s) => SECTION_RE.test(String(s || '').trim())
-
-  // Given lyricsBlocks, re-chunk lines into proper sectioned blocks when labels are plain lines
   const injectSectionsFromLines = (blocks) => {
     const out = []
     let cur = null
     const flush = () => { if (cur && cur.lines.length) out.push(cur); cur = null }
 
     for (const b of (blocks || [])) {
-      if (b.section) {            // already a proper sectioned block, keep as-is
-        flush()
-        out.push(b)
-        continue
-      }
+      if (b.section) { flush(); out.push(b); continue }
       for (const ln of (b.lines || [])) {
         const txt = ln.plain || ln.text || ''
         const hasChords = !!(ln.chordPositions && ln.chordPositions.length)
         if (!hasChords && isSectionLabel(txt)) {
           flush()
-          cur = { section: txt.trim(), lines: [] } // start a new section; do NOT keep the label line as lyrics
+          cur = { section: txt.trim(), lines: [] }
         } else {
-          if (!cur) cur = { lines: [] }           // unsectioned preamble
+          if (!cur) cur = { lines: [] }
           cur.lines.push(ln)
         }
       }
     }
     flush()
-    // If nothing matched, fall back to original
     return out.length ? out : (blocks || [])
   }
 
-  // Case 1: already in lyricsBlocks shape
+  // Already normalized
   if (input?.lyricsBlocks) {
     return {
       title: input.title || 'Untitled',
@@ -57,7 +62,7 @@ function normalizeSongInput(input) {
     }
   }
 
-  // Case 2: parsed "blocks" shape (section/line)
+  // From parsed "blocks"
   if (Array.isArray(input?.blocks)) {
     const out = []
     let cur = { lines: [] }
@@ -80,7 +85,6 @@ function normalizeSongInput(input) {
     }
   }
 
-  // Fallback
   return {
     title: input?.title || 'Untitled',
     key: input?.key || input?.originalKey || 'C',
@@ -88,19 +92,9 @@ function normalizeSongInput(input) {
   }
 }
 
-
-/** Create a lyrics-width measurer bound to a jsPDF doc + font settings */
-function makeLyricMeasurer(doc, lyricFamily, lyricPt) {
-  return (text) => {
-    doc.setFont(lyricFamily, 'normal')
-    doc.setFontSize(lyricPt)
-    return doc.getTextWidth(text || '')
-  }
-}
-
-/** -----------------------------------------------------------------------
- *  Pure layout config
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * Layout config
+ * --------------------------------------------------------- */
 const DEFAULT_LAYOUT_OPT = {
   lyricSizePt: 16,
   chordSizePt: 16,
@@ -116,13 +110,13 @@ const DEFAULT_LAYOUT_OPT = {
   key: 'C'
 }
 
-/** -----------------------------------------------------------------------
- *  PURE LAYOUT (two-pass; no drawing)
- *  - measures with lyrics font only
- *  - splits only at line boundaries
- *  - never orphans section header from first line
- *  - adds generous top pad above headers
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * PURE LAYOUT (two-pass; no drawing)
+ * - measures with lyrics font only
+ * - splits only at line boundaries
+ * - never orphans section header from first line
+ * - bold headings, same size as lyrics, with top padding
+ * --------------------------------------------------------- */
 export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
   const song = normalizeSongInput(songIn)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
@@ -153,6 +147,19 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
   function newPage() { page = { columns: [] }; pages.push(page) }
   if (page.columns.length === 0) makeColumns()
 
+  // Fallback: if a block’s first line is a label with no chords, promote it to a section header
+  song.lyricsBlocks = (song.lyricsBlocks || []).map(b => {
+    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
+      const first = b.lines[0]
+      const txt = first?.plain || first?.text || ''
+      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0
+      if (!hasChords && isSectionLabel(txt)) {
+        return { section: txt.trim(), lines: b.lines.slice(1) }
+      }
+    }
+    return b
+  })
+
   let colIdx = 0
   let cursorY = contentStartY
   const curCol = () => page.columns[colIdx]
@@ -173,7 +180,7 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
     return h + 4
   }
 
-  const pushSection = (col, header) => col.blocks.push({ type: 'section', header: String(header).toUpperCase() })
+  const pushSection = (col, header) => col.blocks.push({ type: 'section', header: String(header) })
   const pushLine = (col, plain, chordPositions) => {
     const chords = (chordPositions || []).map(c => ({
       sym: c.sym,
@@ -221,9 +228,9 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
   return { pages }
 }
 
-/** -----------------------------------------------------------------------
- *  DRAWING (consumes computeLayout)
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * DRAWING (consumes computeLayout)
+ * --------------------------------------------------------- */
 function drawSongIntoDoc(doc, songIn, opt) {
   const lFam = String(opt.lyricFamily || 'Helvetica')
   const cFam = String(opt.chordFamily || 'Courier')
@@ -276,9 +283,9 @@ function drawSongIntoDoc(doc, songIn, opt) {
   })
 }
 
-/** -----------------------------------------------------------------------
- *  Fit planner (width-aware + height-aware, shrink-to-fit ≥12pt)
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * Fit planner (width + height; shrink-to-fit ≥12pt)
+ * --------------------------------------------------------- */
 async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -323,6 +330,7 @@ async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
   const startSize = Math.max(12, Math.round(baseOpt?.lyricSizePt || 16))
   const minSize = 12
 
+  // Prefer 2 columns first (height saver), then 1 column (width saver)
   for (let size = startSize; size >= minSize; size--) {
     for (const cols of [2, 1]) {
       const o = { ...oBase, lyricFamily, chordFamily, columns: cols, lyricSizePt: size, chordSizePt: size }
@@ -350,9 +358,9 @@ async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
   return best.plan
 }
 
-/** -----------------------------------------------------------------------
- *  PUBLIC APIS
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * PUBLIC APIS
+ * --------------------------------------------------------- */
 export async function songToPdfDoc(song, options){
   const doc = await newPDF()
   let fams = {}
@@ -410,19 +418,15 @@ export async function downloadMultiSongPdf(songs, options){
   doc.save('GraceChords_Selection.pdf')
 }
 
-/** -----------------------------------------------------------------------
- *  TEST-ONLY METRICS (sync; no jsPDF dependency)
- *  -------------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * TEST METRICS (sync; no jsPDF)
+ * --------------------------------------------------------- */
 export function getLayoutMetrics(input, opts) {
   const o = { ...DEFAULT_LAYOUT_OPT, ...opts }
-  // Letter defaults for tests
   o.pageWidth = 612
   o.pageHeight = 792
-
-  // Deterministic, doc-free measurer (approximate but stable)
   const measure = (text) => (text ? text.length * (o.lyricSizePt * 0.6) : 0)
   const layout = computeLayout(normalizeSongInput(input), o, measure)
-
   return layout.pages.map((page, pIdx) => ({
     p: pIdx,
     cols: page.columns.map((col, cIdx) => ({
