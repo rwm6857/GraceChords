@@ -12,14 +12,52 @@ async function newPDF() {
 /** -----------------------------------------------------------------------
  *  Input normalization
  *  -------------------------------------------------------------------- */
+// Replace existing normalizeSongInput with this version:
+
 function normalizeSongInput(input) {
+  // Helper: "Verse", "Verse 1", "Chorus", "Bridge", "Tag", etc.
+  const SECTION_RE = /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i
+  const isSectionLabel = (s) => SECTION_RE.test(String(s || '').trim())
+
+  // Given lyricsBlocks, re-chunk lines into proper sectioned blocks when labels are plain lines
+  const injectSectionsFromLines = (blocks) => {
+    const out = []
+    let cur = null
+    const flush = () => { if (cur && cur.lines.length) out.push(cur); cur = null }
+
+    for (const b of (blocks || [])) {
+      if (b.section) {            // already a proper sectioned block, keep as-is
+        flush()
+        out.push(b)
+        continue
+      }
+      for (const ln of (b.lines || [])) {
+        const txt = ln.plain || ln.text || ''
+        const hasChords = !!(ln.chordPositions && ln.chordPositions.length)
+        if (!hasChords && isSectionLabel(txt)) {
+          flush()
+          cur = { section: txt.trim(), lines: [] } // start a new section; do NOT keep the label line as lyrics
+        } else {
+          if (!cur) cur = { lines: [] }           // unsectioned preamble
+          cur.lines.push(ln)
+        }
+      }
+    }
+    flush()
+    // If nothing matched, fall back to original
+    return out.length ? out : (blocks || [])
+  }
+
+  // Case 1: already in lyricsBlocks shape
   if (input?.lyricsBlocks) {
     return {
       title: input.title || 'Untitled',
       key: input.key || input.originalKey || 'C',
-      lyricsBlocks: input.lyricsBlocks
+      lyricsBlocks: injectSectionsFromLines(input.lyricsBlocks)
     }
   }
+
+  // Case 2: parsed "blocks" shape (section/line)
   if (Array.isArray(input?.blocks)) {
     const out = []
     let cur = { lines: [] }
@@ -38,15 +76,18 @@ function normalizeSongInput(input) {
     return {
       title: input.title || 'Untitled',
       key: input.key || input.originalKey || 'C',
-      lyricsBlocks: out
+      lyricsBlocks: injectSectionsFromLines(out)
     }
   }
+
+  // Fallback
   return {
     title: input?.title || 'Untitled',
     key: input?.key || input?.originalKey || 'C',
     lyricsBlocks: []
   }
 }
+
 
 /** Create a lyrics-width measurer bound to a jsPDF doc + font settings */
 function makeLyricMeasurer(doc, lyricFamily, lyricPt) {

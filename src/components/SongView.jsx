@@ -132,15 +132,23 @@ export default function SongView(){
         {(parsed.blocks || []).map((block, bi)=> (
           <div key={bi}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
-            {(block.lines || []).map((ln, li)=> (
-              <MeasuredLine
-                key={`${bi}-${li}`}
-                plain={ln.text}
-                chords={ln.chords || []}
-                steps={steps}
-                showChords={showChords}
-              />
-            ))}
+			{(block.lines || []).map((ln, li) => {
+				const key = `${bi}-${li}`
+				const plain = ln.text || ''
+				const hasChords = !!(ln.chords && ln.chords.length)
+				if (!hasChords && isSectionLabel(plain)) {
+					return <div key={key} className="section">[{plain.toUpperCase()}]</div>
+				}
+				return (
+					<MeasuredLine
+						key={key}
+						plain={plain}
+						chords={ln.chords || []}
+						steps={steps}
+						showChords={showChords}
+					/>
+				)
+			})}
           </div>
         ))}
       </div>
@@ -249,6 +257,12 @@ function LiteYouTube({ id }) {
     </button>
   )
 }
+
+function isSectionLabel(text = '') {
+  const s = String(text).trim()
+  return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i.test(s)
+}
+
 
 function MeasuredLine({ plain, chords, steps, showChords }){
   const hostRef = useRef(null)
