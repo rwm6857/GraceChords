@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { downloadMultiSongPdf } from '../utils/pdf'
+import { showToast } from '../utils/toast'
 
 export default function Bundle(){
   const navigate = useNavigate()
@@ -24,21 +25,28 @@ export default function Bundle(){
     try{
       const songs = []
       for(const it of entries){
-        const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
-        const text = await fetch(`${import.meta.env.BASE_URL}songs/${it.filename}`).then(r=>r.text())
-        const parsed = parseChordPro(text)
-        const baseKey = parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C'
-        const steps = stepsBetween(baseKey, toKey)
-        const blocks = parsed.blocks.map(b => ({
-          section: b.section,
-          lines: b.lines.map(ln => ({
-            plain: ln.text,
-            chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+        try {
+          const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
+          const res = await fetch(`${import.meta.env.BASE_URL}songs/${it.filename}`)
+          if(!res.ok) throw new Error(`Missing file ${it.filename}`)
+          const text = await res.text()
+          const parsed = parseChordPro(text)
+          const baseKey = parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C'
+          const steps = stepsBetween(baseKey, toKey)
+          const blocks = parsed.blocks.map(b => ({
+            section: b.section,
+            lines: b.lines.map(ln => ({
+              plain: ln.text,
+              chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+            }))
           }))
-        }))
-        songs.push({ title: parsed.meta.title || it.title, key: toKey, lyricsBlocks: blocks })
+          songs.push({ title: parsed.meta.title || it.title, key: toKey, lyricsBlocks: blocks })
+        } catch(err){
+          console.error(err)
+          showToast(`Failed to process ${it.filename}`)
+        }
       }
-      await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+      if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
     } finally { setLoading(false) }
   }
 
