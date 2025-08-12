@@ -2,11 +2,15 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
-import { downloadSingleSongPdf, planSongLayout } from '../utils/pdf'
-import { downloadSingleSongJpg, ensureCanvasFonts } from '../utils/image'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
+
+// Lazy-loaded heavy modules
+let pdfLibPromise
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+let imageLibPromise
+const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
 export default function SongView(){
   const { id } = useParams()
@@ -89,24 +93,15 @@ export default function SongView(){
 
   
 
-  // JPG single-page guard (moved above early returns)
+  // JPG single-page guard – only runs once PDF/JPG libs are loaded
   useEffect(() => {
+    if (!parsed) return
+    if (!pdfLibPromise || !imageLibPromise) return
     let cancelled = false
-    async function check(){
-      if (!parsed) return
-      const song = buildSong()
-      const fonts = await ensureCanvasFonts()
-      const ctx = document.createElement('canvas').getContext('2d')
-      const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
-      const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-      const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+    async function check() {
+      const ok = await checkJpgSupport()
       if (cancelled) return
-      if (plan.layout.pages.length > 1) {
-        setJpgDisabled(true)
-        if (!jpgAlerted.current) { alert('JPG export supports single-page songs only for now.'); jpgAlerted.current = true }
-      } else {
-        setJpgDisabled(false)
-      }
+      setJpgDisabled(!ok)
     }
     check()
     return () => { cancelled = true }
@@ -144,11 +139,41 @@ if(!entry){
     }))
   })
 
+  async function checkJpgSupport(showAlert = false) {
+    const song = buildSong()
+    const [{ planSongLayout }, { ensureCanvasFonts }] = await Promise.all([
+      loadPdfLib(),
+      loadImageLib()
+    ])
+    const fonts = await ensureCanvasFonts()
+    const ctx = document.createElement('canvas').getContext('2d')
+    const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
+    const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
+    const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+    const ok = plan.layout.pages.length <= 1
+    if (!ok && showAlert && !jpgAlerted.current) {
+      alert('JPG export supports single-page songs only for now.')
+      jpgAlerted.current = true
+    }
+    return ok
+  }
+
+  function prefetchPdf() { loadPdfLib() }
+  function prefetchJpg() {
+    loadPdfLib()
+    loadImageLib()
+    if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
+  }
+
   async function handleDownloadPdf(){
+    const { downloadSingleSongPdf } = await loadPdfLib()
     await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
   }
 
   async function handleDownloadJpg(){
+    const ok = await checkJpgSupport(true)
+    if (!ok) return
+    const { downloadSingleSongJpg } = await loadImageLib()
     await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, '') })
   }
 
@@ -176,10 +201,21 @@ if(!entry){
           </label>
         </div>
         <div style={{display:'flex', gap:10}}>
-          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}>
+          <button
+            className="btn primary iconbtn"
+            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
+            onMouseEnter={prefetchPdf}
+            onFocus={prefetchPdf}
+          >
             <DownloadIcon /> Download PDF
           </button>
-          <button className="btn iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}>
+          <button
+            className="btn iconbtn"
+            disabled={jpgDisabled}
+            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
+            onMouseEnter={prefetchJpg}
+            onFocus={prefetchJpg}
+          >
             <DownloadIcon /> Download JPG
           </button>
         </div>

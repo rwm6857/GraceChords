@@ -1,27 +1,7 @@
 // src/utils/image.js
 import { planSongLayout } from './pdf'
-
-// Load fonts for Canvas2D so measurements match PDF.
-let fontsPromise = null
-export async function ensureCanvasFonts() {
-  if (fontsPromise) return fontsPromise
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/')
-  const specs = [
-    { family: 'NotoSans', weight: '400', style: 'normal', file: 'NotoSans-Regular.ttf' },
-    { family: 'NotoSans', weight: '700', style: 'normal', file: 'NotoSans-Bold.ttf' },
-    { family: 'NotoSans', weight: '400', style: 'italic', file: 'NotoSans-Italic.ttf' },
-    { family: 'NotoSans', weight: '700', style: 'italic', file: 'NotoSans-BoldItalic.ttf' },
-    { family: 'NotoSansMono', weight: '400', style: 'normal', file: 'NotoSansMono-Regular.ttf' },
-    { family: 'NotoSansMono', weight: '700', style: 'normal', file: 'NotoSansMono-Bold.ttf' }
-  ]
-  fontsPromise = Promise.all(specs.map(async (s) => {
-    const face = new FontFace(s.family, `url(${base}fonts/${s.file})`, { weight: s.weight, style: s.style })
-    const loaded = await face.load()
-    document.fonts.add(loaded)
-  })).then(() => ({ lyricFamily: 'NotoSans', chordFamily: 'NotoSansMono' }))
-    .catch(() => ({ lyricFamily: 'Helvetica', chordFamily: 'Courier' }))
-  return fontsPromise
-}
+import { ensureCanvasFonts } from './fonts'
+export { ensureCanvasFonts } from './fonts'
 
 // Render a planned layout to a Canvas2D
 export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
