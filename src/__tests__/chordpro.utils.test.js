@@ -69,6 +69,22 @@ describe('parseChordPro', () => {
 
     if (topBlocks) {
       blocks = topBlocks
+        .map(b => {
+          const arr = []
+          if (b.section) arr.push({ type: 'section', header: b.section })
+          ;(b.lines || []).forEach(ln => {
+            arr.push({
+              type: 'line',
+              lyrics: ln.plain || ln.text || '',
+              chords: (ln.chords || ln.chordPositions || []).map(c => ({
+                index: typeof c.index === 'number' ? c.index : 0,
+                sym: c.sym
+              }))
+            })
+          })
+          return arr
+        })
+        .flat()
     } else if (Array.isArray(lb)) {
       blocks = lb
         .map(b => {
@@ -125,11 +141,14 @@ describe('parseChordPro', () => {
       expect(hasSomeStructure || true).toBe(true)
     }
 
-    // Soft: if sections are present, at least one looks like VERSE
+    // Expect a section header when [VERSE] is present in the source
     const sections = blocks.filter(b => b.type === 'section')
-    if (sections.length) {
-      const hasVerse = sections.some(s => /verse/i.test(s.header || ''))
-      expect(hasVerse).toBe(true)
-    }
+    expect(sections.length).toBeGreaterThan(0)
+
+    // Verify at least one section header equals "VERSE" (case-insensitive)
+    const hasVerse = sections.some(
+      s => typeof s.header === 'string' && s.header.trim().toUpperCase() === 'VERSE'
+    )
+    expect(hasVerse).toBe(true)
   })
 })
