@@ -31,6 +31,7 @@ export default function NavBar(){
                 <SetlistIcon /> Setlist
               </span>
             </Link>
+            <Link to="/songbook" className={`topnav__link ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
             {/* Toggle lives OUTSIDE links */}
             <button
               className="iconbtn"
