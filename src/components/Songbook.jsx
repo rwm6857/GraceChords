@@ -1,9 +1,9 @@
 // src/components/Songbook.jsx
 import { useMemo, useState } from "react";
-import catalog from "../data/index.json";
-import * as pdf from "../utils/pdf"; // use whichever exporter exists
+import rawCatalog from "../data/index.json";
+import * as pdf from "../utils/pdf"; // uses downloadSongbookPdf or falls back to downloadMultiSongPdf
 
-// ---- helpers ----
+// ---------- helpers ----------
 function slugFromFile(file) {
   return file ? file.replace(/\.chordpro$/i, "") : "";
 }
@@ -27,33 +27,64 @@ function uniqSorted(arr) {
   );
 }
 
+/** Accepts array or object-shaped indexes and returns a stable array of song entries */
+function normalizeCatalog(c) {
+  if (Array.isArray(c)) return c;
+  if (c && Array.isArray(c.songs)) return c.songs;
+  if (c && typeof c === "object") {
+    // Some builds export an object map of id -> entry
+    const vals = Object.values(c).filter(
+      (v) => v && typeof v === "object" && (("title" in v) || ("file" in v))
+    );
+    if (vals.length) return vals;
+  }
+  return [];
+}
+
 export default function Songbook() {
+  // ---- normalize the catalog once ----
+  const catalog = useMemo(() => normalizeCatalog(rawCatalog).sort(byTitle), []);
+
   // -------- filters/search ----------
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("All");
   const [country, setCountry] = useState("All");
   const [author, setAuthor] = useState("All");
 
-  const tags = useMemo(
-    () => uniqSorted(catalog.flatMap((s) => (Array.isArray(s.tags) ? s.tags : s.tags ? [s.tags] : []))),
-    []
+  const tags = useMemo(() => {
+    const acc = catalog.reduce((out, s) => {
+      const t = s?.tags;
+      if (Array.isArray(t)) out.push(...t);
+      else if (t) out.push(String(t));
+      return out;
+    }, []);
+    return uniqSorted(acc);
+  }, [catalog]);
+
+  const countries = useMemo(
+    () => uniqSorted(catalog.map((s) => s.country).filter(Boolean)),
+    [catalog]
   );
-  const countries = useMemo(() => uniqSorted(catalog.map((s) => s.country).filter(Boolean)), []);
+
   const authors = useMemo(() => {
-    const arr = catalog.flatMap((s) =>
-      Array.isArray(s.authors) ? s.authors : s.authors ? [s.authors] : []
-    );
-    return uniqSorted(arr);
-  }, []);
+    const acc = catalog.reduce((out, s) => {
+      const a = s?.authors;
+      if (Array.isArray(a)) out.push(...a);
+      else if (a) out.push(String(a));
+      return out;
+    }, []);
+    return uniqSorted(acc);
+  }, [catalog]);
 
   const filteredSongs = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let arr = catalog.slice();
+    let arr = catalog;
     if (q) {
       arr = arr.filter((s) => {
         const title = (s.title || "").toLowerCase();
-        const auth = (Array.isArray(s.authors) ? s.authors.join(", ") : s.authors || "")
-          .toLowerCase();
+        const auth = (
+          Array.isArray(s.authors) ? s.authors.join(", ") : s.authors || ""
+        ).toLowerCase();
         return title.includes(q) || auth.includes(q);
       });
     }
@@ -70,8 +101,8 @@ export default function Songbook() {
         Array.isArray(s.authors) ? s.authors.includes(author) : s.authors === author
       );
     }
-    return arr.sort(byTitle);
-  }, [search, tag, country, author]);
+    return arr.slice().sort(byTitle);
+  }, [catalog, search, tag, country, author]);
 
   // -------- selection ----------
   const [selected, setSelected] = useState(() => new Set());
@@ -81,7 +112,7 @@ export default function Songbook() {
       .map((slug) => bySlug.get(slug))
       .filter(Boolean)
       .sort(byTitle);
-  }, [selected]);
+  }, [catalog, selected]);
 
   const filteredCount = filteredSongs.length;
   const selectedCount = selected.size;
@@ -124,7 +155,7 @@ export default function Songbook() {
           title: "Songbook",
           sort: "title",
           numbering: "alphabetical",
-          mode: "songbook", // hint for downloadMultiSongPdf if used
+          mode: "songbook",
         })
       );
     } finally {
@@ -144,6 +175,20 @@ export default function Songbook() {
   }
 
   // -------- render ----------
+  // Optional guard: show a friendly message if catalog couldn't load
+  if (!catalog.length) {
+    return (
+      <div className="SongbookPage">
+        <section className="SongPicker">
+          <div className="SongPickerHeader">
+            <h3>No songs found</h3>
+            <p className="Small">The song index is empty or failed to load.</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="SongbookPage">
       {/* LEFT: Picker */}
