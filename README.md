@@ -1,30 +1,48 @@
 # GraceChords
 
-React + Vite app for an interactive ChordPro songbook.
+GraceChords is a React + Vite single-page application for managing and playing a ChordPro songbook. It supports fast search, chord transposition, setlist building, and PDF exports for practice or performance.
 
-## Run locally
+## Features
+- 🔍 Instant search with tag filters
+- 🎸 Song view with key transposition, chord toggling, and single-song PDF download
+- 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export
+- 📦 Bundle download for predefined groups of songs
+- 🛠️ Admin interface for authoring songs and rebuilding the index
+- 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
+
+## Project Structure
+```
+src/            # components, hooks, utilities, tests
+public/         # ChordPro files and font assets
+scripts/        # maintenance scripts (e.g., index generation)
+docs/           # Vite build output for GitHub Pages
+```
+
+## Installation
 ```bash
 npm install
 npm run dev
 ```
 
-## Build & deploy (GitHub Pages via `docs/` on main)
+Visit `http://localhost:5173` (default Vite port) to explore the app.
+
+## Building & Deployment
+Generate the static site into `docs/` and push to the `main` branch to serve via GitHub Pages:
 ```bash
 npm run build
 # commit & push -> serve from /docs
 ```
-Router uses hash (`/#/…`) so it works on Pages.
 
-## Admin
-- Visit `/#/admin` — password **10401040**
-- Author in ChordPro; click **Download bundle** to export song + index.
-- Drop `songs/*.chordpro` into `public/songs/` and merge `src/data/index.json`, or run:
+Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
+
+## Admin & Index Generation
+Open `/#/admin` (password **10401040**) to author songs in ChordPro and download a bundle containing the song and updated index. Add files to `public/songs/` and merge `src/data/index.json`, or rebuild automatically:
 ```bash
 npm run build-index
 ```
 
-## Fonts for PDF
-Put these files into `public/fonts/`:
+## PDF Fonts
+Place the following fonts in `public/fonts/` to embed them in exported PDFs:
 - `NotoSans-Regular.ttf`
 - `NotoSans-Bold.ttf`
 - `NotoSans-Italic.ttf`
@@ -32,8 +50,11 @@ Put these files into `public/fonts/`:
 - `NotoSansMono-Regular.ttf`
 - `NotoSansMono-Bold.ttf`
 
-## Notes
-- Home: search + tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
-- Song page: vertical layout, sticky toolbar (transpose + download), chords toggle (ON by default), collapsible media.
-- Setlist: `/setlist` lets you build/reorder sets, choose keys, export a single PDF.
-- PDFs: vector text with Noto Sans; section titles are larger than lyrics and bold; sections kept together; auto 1→2 columns if one song overflows.
+## Usage Notes
+- **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
+- **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), collapsible media.
+- **Setlist**: `/setlist` lets you build/reorder sets, choose keys, and export a single PDF.
+- **PDFs**: vector text with Noto Sans; section titles are bold and larger; sections stay together; layout auto-switches to two columns when needed.
+
+## Next Steps
+Explore utilities in `src/utils` for chord transposition and PDF generation, check `scripts/buildIndex.mjs` for index creation, and extend Vitest tests to safeguard future refactors.
