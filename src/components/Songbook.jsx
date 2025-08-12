@@ -3,7 +3,10 @@ import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
-import { downloadSongbookPdf, downloadMultiSongPdf } from '../utils/pdf'
+
+// Lazy pdf exporters
+let pdfLibPromise
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 function byTitle(a, b) {
   return (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
@@ -109,6 +112,7 @@ export default function Songbook() {
     if (!selectedEntries.length) return
     setBusy(true)
     try {
+      const { downloadSongbookPdf, downloadMultiSongPdf } = await loadPdfLib()
       const songs = []
       for (const it of selectedEntries) {
         const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
@@ -136,6 +140,8 @@ export default function Songbook() {
       setBusy(false)
     }
   }
+
+  function prefetchPdf(){ loadPdfLib() }
 
   function onCoverFile(e) {
     const f = e.target.files?.[0]
@@ -300,6 +306,8 @@ export default function Songbook() {
             <button
               className="Button"
               onClick={handleExport}
+              onMouseEnter={prefetchPdf}
+              onFocus={prefetchPdf}
               disabled={!selectedEntries.length || busy}
               title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
             >

@@ -5,9 +5,12 @@ import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
-import { downloadMultiSongPdf } from '../utils/pdf'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
+
+// Lazy pdf exporter
+let pdfLibPromise
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 export default function Setlist(){
   // existing state
@@ -137,6 +140,7 @@ export default function Setlist(){
 
   // export & print
   async function exportPdf(){
+    const { downloadMultiSongPdf } = await loadPdfLib()
     const songs = []
     for(const sel of list){
       const s = items.find(it=> it.id===sel.id); if(!s) continue
@@ -156,6 +160,8 @@ export default function Setlist(){
     }
     await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
   }
+
+  function prefetchPdf(){ loadPdfLib() }
 
   async function bundlePptx(){
     setPptxProgress(`Bundling 0/${list.length}…`)
@@ -275,7 +281,12 @@ export default function Setlist(){
             })}
           </div>
           <div style={{display:'flex', gap:8, marginTop:8}}>
-            <button className="btn primary iconbtn" onClick={exportPdf}><DownloadIcon /> Export PDF</button>
+            <button
+              className="btn primary iconbtn"
+              onClick={exportPdf}
+              onMouseEnter={prefetchPdf}
+              onFocus={prefetchPdf}
+            ><DownloadIcon /> Export PDF</button>
             <button
               className="btn iconbtn"
               onClick={bundlePptx}
