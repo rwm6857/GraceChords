@@ -21,8 +21,6 @@ export default function SongView(){
   const [jpgDisabled, setJpgDisabled] = useState(false)
   const jpgAlerted = useRef(false)
 
-  const PPTX_BLOCK_HEIGHT = 40
-
   // find the index item
   useEffect(()=>{
     const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
@@ -222,9 +220,11 @@ export default function SongView(){
             {parsed?.meta?.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
-                <div style={{minHeight:PPTX_BLOCK_HEIGHT, marginBottom: hasPptx ? 10 : 0}}>
-                  {hasPptx && <a className="btn" href={pptxUrl} download>Download PPTX</a>}
-                </div>
+                {hasPptx && (
+                  <div style={{marginBottom:10}}>
+                    <a className="btn" href={pptxUrl} download>Download PPTX</a>
+                  </div>
+                )}
                 {(() => {
                  const ytId = extractYouTubeId(parsed.meta.youtube)
                  return ytId ? (
@@ -296,22 +296,27 @@ function extractYouTubeId(input = '') {
 function LiteYouTube({ id }) {
   const [ready, setReady] = React.useState(false)
   const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
-  return ready ? (
-    <iframe
-      title="YouTube video"
-      width="560" height="315"
-      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-      style={{border:0, width:'100%', aspectRatio:'16/9'}}
-    />
-  ) : (
-    <button className="media__card" onClick={() => setReady(true)} aria-label="Play video" style={{ padding: 0, width:'100%' }}>
-      <div className="media__frame">
-        <img src={thumb} alt="" style={{position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover'}} loading="lazy" />
-        <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
-      </div>
-    </button>
+  return (
+    <div className="media__frame">
+      {ready ? (
+        <iframe
+          title="YouTube video"
+          src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{position:'absolute', inset:0, width:'100%', height:'100%', border:0}}
+        />
+      ) : (
+        <button
+          onClick={() => setReady(true)}
+          aria-label="Play video"
+          style={{position:'absolute', inset:0, width:'100%', height:'100%', padding:0, border:0, background:'none', cursor:'pointer'}}
+        >
+          <img src={thumb} alt="" style={{width:'100%', height:'100%', objectFit:'cover'}} loading="lazy" />
+          <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
+        </button>
+      )}
+    </div>
   )
 }
 
