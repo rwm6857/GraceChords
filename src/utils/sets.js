@@ -20,7 +20,7 @@ function uuid() {
 
 /**
  * Set shape:
- * { id, name, items: [{ songId, key }], createdAt, updatedAt }
+ * { id, name, items: [{ id, toKey }], createdAt, updatedAt }
  */
 export function listSets() {
   const { sets } = readStore()
