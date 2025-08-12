@@ -9,9 +9,10 @@ export function parseChordPro(text){
       const tag=secMatch[1].trim();
       const bracketOnly=/^\s*\[[^\]]+\]\s*$/.test(raw);
       const chordLike=/^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?\d*(?:\/[A-G][#b]?)?$/i.test(tag);
-      if(!raw.includes('[') || (bracketOnly && !chordLike)){
-        if(current.lines.length) blocks.push(current); current={section:tag,lines:[]}; continue
-      }
+        if(!raw.includes('[') || (bracketOnly && !chordLike)){
+          // Treat lines like [VERSE] as section headers rather than chords
+          if(current.lines.length) blocks.push(current); current={section:tag,lines:[]}; continue
+        }
     }
     const { plain, chords } = extractChords(raw); current.lines.push({ text: plain, chords })
   } if(current.lines.length) blocks.push(current); return { meta, blocks }
