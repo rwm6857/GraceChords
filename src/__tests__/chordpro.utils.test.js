@@ -132,4 +132,13 @@ describe('parseChordPro', () => {
       expect(hasVerse).toBe(true)
     }
   })
+
+  it('identifies bracketed lines as sections and not chords', () => {
+    const src = `\n[VERSE]\n[G]Hello\n[CHORUS]\nWorld`;
+    const parsed = parseChordPro(src);
+    expect(parsed.blocks.map(b => b.section)).toEqual(['VERSE', 'CHORUS']);
+    const firstLine = parsed.blocks[0].lines[0];
+    expect(firstLine.text).toBe('Hello');
+    expect(firstLine.chords[0].sym).toBe('G');
+  })
 })
