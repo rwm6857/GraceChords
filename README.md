@@ -63,3 +63,19 @@ Files committed under `public/` are served directly by GitHub Pages, so adding a
 
 ## Next Steps
 Explore utilities in `src/utils` for chord transposition and PDF generation, check `scripts/buildIndex.mjs` for index creation, and extend Vitest tests to safeguard future refactors.
+
+## GitHub Wiki
+
+Author or edit Markdown pages under `public/wiki/` (e.g., `Home.md`, `_Sidebar.md`, etc.).
+Set the repo secret `WIKI_PUSH_TOKEN` (a classic PAT with `repo` scope) to allow pushes to `GraceChords.wiki`.
+Trigger sync by pushing changes under `public/wiki/**` (workflow runs) or run locally:
+
+```bash
+WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
+```
+
+If pages don’t appear, run the diagnostic:
+
+```bash
+node scripts/verifyWikiSetup.mjs
+```
