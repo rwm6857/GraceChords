@@ -146,7 +146,7 @@ export default function Home(){
               checked={lyricsOn}
               onChange={e=> setLyricsOn(e.target.checked)}
             />
-            <span className="meta">Lyrics contains</span>
+            <span className="meta">Lyrics contain</span>
           </label>
         </div>
 
