@@ -1,21 +1,27 @@
-name: Sync Wiki
+name: Wiki Sync
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
+    # Only run when wiki-related files change
     paths:
       - 'public/wiki/**'
-      - '.github/workflows/wiki-sync.yml'
       - 'scripts/syncWiki.mjs'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
 
 jobs:
   sync:
+    # Skip job entirely if there are no files under public/wiki/**
+    if: ${{ hashFiles('public/wiki/**') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - run: node scripts/syncWiki.mjs
+          node-version: '20'
+      - name: Sync to GitHub Wiki
+        run: node scripts/syncWiki.mjs
         env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
           WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
