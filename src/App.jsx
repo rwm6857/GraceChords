@@ -27,11 +27,11 @@ export default function App(){
 
 function Layout(){
   return (
-    <>
+    <div className="App">
       <NavBar />
-      <main id="main">
+      <main id="main" className="Route">
         <Outlet />
       </main>
-    </>
+    </div>
   )
 }

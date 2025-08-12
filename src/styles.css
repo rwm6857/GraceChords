@@ -41,6 +41,8 @@
 /* ========== Global ========== */
 * { box-sizing: border-box }
 html, body, #root { height: 100% }
+.App { min-height: 100dvh; display: flex; flex-direction: column; }
+.Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 html, body { background: var(--bg); color: var(--text); }
 
 body{
@@ -138,6 +140,20 @@ input,select,textarea{
 }
 .badge.active{ background:#dbeafe; border-color:#bfdbfe }
 .tagbar{ display:flex; flex-wrap:wrap; gap:8px }
+
+/* ========== Home page layout ========== */
+.HomePage{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; }
+.HomeHeader{
+  position:sticky; top:0; z-index:5;
+  background: var(--bg, #0b0b0b);
+  padding-block:0.5rem;
+}
+.HomeResults{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
 
 /* ========== Top nav ========== */
 .topnav{

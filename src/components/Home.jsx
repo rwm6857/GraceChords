@@ -9,6 +9,7 @@ export default function Home(){
 
   // -------- Search & filters --------
   const [q, setQ] = useState('')
+  const searchRef = useRef(null)
   const qLower = q.trim().toLowerCase()
   const allTags = useMemo(() => {
     const set = new Set()
@@ -117,6 +118,18 @@ export default function Home(){
   }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode])
 
 
+  useEffect(() => {
+    function onKeyDown(e){
+      if(e.key === '/' && document.activeElement !== searchRef.current){
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    searchRef.current?.focus()
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   // UI helpers
   function toggleTag(t){
     setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x!==t) : [...prev, t])
@@ -124,77 +137,82 @@ export default function Home(){
   function clearTags(){ setSelectedTags([]) }
 
   return (
-    <div className="container">
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-        <h1>GraceChords</h1>
-        {/* Removed redundant Setlist link (NavBar already has it) */}
-      </div>
-
-      <div className="card" style={{display:'grid', gap:10}}>
-        <label htmlFor="search">Search</label>
-        <div className="row" style={{gap:8, alignItems:'center'}}>
-          <input
-            id="search"
-            value={q}
-            onChange={e=> setQ(e.target.value)}
-            placeholder="Search title/tags/authors…"
-            style={{flex:1}}
-          />
-          <label className="row" style={{gap:8, alignItems:'center'}}>
-            <input
-              type="checkbox"
-              checked={lyricsOn}
-              onChange={e=> setLyricsOn(e.target.checked)}
-            />
-            <span className="meta">Lyrics contain</span>
-          </label>
+    <div className="HomePage container">
+      <div className="HomeHeader">
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <h1>GraceChords</h1>
+          {/* Removed redundant Setlist link (NavBar already has it) */}
         </div>
 
-        <div className="row">
-          {/* Tags: multi-select + Any/All */}
-          <div className="tagbar">
-            <button className={`badge ${selectedTags.length===0 ? 'active':''}`} onClick={clearTags}>All</button>
-            {allTags.map(t => (
-              <button
-                key={t}
-                className={`badge ${selectedTags.includes(t) ? 'active':''}`}
-                onClick={()=> toggleTag(t)}
-              >{t}</button>
-            ))}
+        <div className="card" style={{display:'grid', gap:10}}>
+          <label htmlFor="search">Search</label>
+          <div className="row" style={{gap:8, alignItems:'center'}}>
+            <input
+              id="search"
+              ref={searchRef}
+              value={q}
+              onChange={e=> setQ(e.target.value)}
+              placeholder="Search title/tags/authors…"
+              style={{flex:1}}
+            />
+            <label className="row" style={{gap:8, alignItems:'center'}}>
+              <input
+                type="checkbox"
+                checked={lyricsOn}
+                onChange={e=> setLyricsOn(e.target.checked)}
+              />
+              <span className="meta">Lyrics contain</span>
+            </label>
           </div>
-          <div style={{display:'flex', gap:8, alignItems:'center'}}>
-            <span className="meta">Match</span>
-            <button
-              className={`btn ${tagMode==='any' ? 'primary':''}`}
-              onClick={()=> setTagMode('any')}
-              title="Match songs with any selected tag"
-            >Any</button>
-            <button
-              className={`btn ${tagMode==='all' ? 'primary':''}`}
-              onClick={()=> setTagMode('all')}
-              title="Match songs with all selected tags"
-            >All</button>
+
+          <div className="row">
+            {/* Tags: multi-select + Any/All */}
+            <div className="tagbar">
+              <button className={`badge ${selectedTags.length===0 ? 'active':''}`} onClick={clearTags}>All</button>
+              {allTags.map(t => (
+                <button
+                  key={t}
+                  className={`badge ${selectedTags.includes(t) ? 'active':''}`}
+                  onClick={()=> toggleTag(t)}
+                >{t}</button>
+              ))}
+            </div>
+            <div style={{display:'flex', gap:8, alignItems:'center'}}>
+              <span className="meta">Match</span>
+              <button
+                className={`btn ${tagMode==='any' ? 'primary':''}`}
+                onClick={()=> setTagMode('any')}
+                title="Match songs with any selected tag"
+              >Any</button>
+              <button
+                className={`btn ${tagMode==='all' ? 'primary':''}`}
+                onClick={()=> setTagMode('all')}
+                title="Match songs with all selected tags"
+              >All</button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Results grid (directory only) */}
-      <div className="grid" style={{marginTop:10}}>
-        {results.map(s => {
-          return (
-            <div key={s.id} className="card">
-              <div className="row">
-                <div>
-                  <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
-                  <div className="meta">
-                    {s.originalKey || '—'}
-                    {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+      <div className="HomeResults" role="region" aria-label="Song results">
+        <div className="grid" style={{marginTop:10}}>
+          {results.map(s => {
+            return (
+              <div key={s.id} className="card">
+                <div className="row">
+                  <div>
+                    <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
+                    <div className="meta">
+                      {s.originalKey || '—'}
+                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )
