@@ -238,6 +238,15 @@ function choosePlanPure(songNorm, oBase, makeMeasureLyricAt, makeMeasureChordAt)
   return { columns: best.cols, lyricSizePt: size, chordSizePt: size, layout: best.layout };
 }
 
+// Public planner: returns chosen columns/sizes and full layout using provided measurers.
+// Pure and shared by PDF and image exporters.
+export function planSongLayout(songIn, opt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
+  const song = normalizeSongInput(songIn);
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...opt };
+  const pick = choosePlanPure(song, oBase, makeMeasureLyricAt, makeMeasureChordAt);
+  return { ...oBase, columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, layout: pick.layout };
+}
+
 
 /* -----------------------------------------------------------
  * PURE LAYOUT (two-pass; no drawing)
@@ -517,17 +526,8 @@ async function planFitOnOnePage(doc, songIn, baseOpt = {}) {
     return doc.getTextWidth(text || '');
   };
 
-  const songNorm = normalizeSongInput(songIn);
-  const pick = choosePlanPure(songNorm, { ...oBase, lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt);
-  if (pick.columns === 2 && pick.lyricSizePt === 12) {
-    const ratio = maxWidthRatio(songNorm, 2, 12, oBase, makeMeasureLyricAt, makeMeasureChordAt);
-    if (ratio >= TIGHT_RATIO_2COL_AT_12) {
-      const measureLyric12 = makeLyricMeasurer(doc, lyricFamily, 12);
-      const layout1 = computeLayout(songNorm, { ...oBase, columns: 1, lyricSizePt: 12, chordSizePt: 12 }, measureLyric12);
-      return { columns: 1, lyricSizePt: 12, chordSizePt: 12, lyricFamily, chordFamily, layout: layout1 };
-    }
-  }
-  return { columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, lyricFamily, chordFamily, layout: pick.layout };
+  const plan = planSongLayout(songIn, { ...oBase, lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt);
+  return plan;
 }
 
 

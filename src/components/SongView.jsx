@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
-import { downloadSingleSongPdf } from '../utils/pdf'
+import { downloadSingleSongPdf, planSongLayout } from '../utils/pdf'
+import { downloadSingleSongJpg, ensureCanvasFonts } from '../utils/image'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -17,6 +18,8 @@ export default function SongView(){
   const [err, setErr] = useState('')
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
+  const [jpgDisabled, setJpgDisabled] = useState(false)
+  const jpgAlerted = useRef(false)
 
   const PPTX_BLOCK_HEIGHT = 40
 
@@ -106,16 +109,47 @@ export default function SongView(){
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
 
-  async function handleDownload(){
-    const blocks = (parsed.blocks || []).map(b => ({
+  const buildSong = () => ({
+    title,
+    key: toKey,
+    lyricsBlocks: (parsed.blocks || []).map(b => ({
       section: b.section,
       lines: (b.lines || []).map(ln => ({
         plain: ln.text,
         chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
       }))
     }))
-    await downloadSingleSongPdf({ title, key: toKey, lyricsBlocks: blocks }, { lyricSizePt: 16, chordSizePt: 16 })
+  })
+
+  async function handleDownloadPdf(){
+    await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
   }
+
+  async function handleDownloadJpg(){
+    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, '') })
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    async function check(){
+      if (!parsed) return
+      const song = buildSong()
+      const fonts = await ensureCanvasFonts()
+      const ctx = document.createElement('canvas').getContext('2d')
+      const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
+      const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
+      const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+      if (cancelled) return
+      if (plan.layout.pages.length > 1) {
+        setJpgDisabled(true)
+        if (!jpgAlerted.current) { alert('JPG export supports single-page songs only for now.'); jpgAlerted.current = true }
+      } else {
+        setJpgDisabled(false)
+      }
+    }
+    check()
+    return () => { cancelled = true }
+  }, [parsed, toKey])
 
   return (
     <div className="container">
@@ -138,9 +172,12 @@ export default function SongView(){
             <EyeIcon /> Chords
           </label>
         </div>
-        <div>
-          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownload() }}>
+        <div style={{display:'flex', gap:10}}>
+          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}>
             <DownloadIcon /> Download PDF
+          </button>
+          <button className="btn iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}>
+            <DownloadIcon /> Download JPG
           </button>
         </div>
       </div>
