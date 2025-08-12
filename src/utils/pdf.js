@@ -370,35 +370,56 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t)=>0) {
        continue
      }
  
-     // 3) Oversized section (cannot fit in a full column at this size) → split at line boundaries,
-     //    but keep header with the first line, and never leave header stranded.
-     let i = 0
-     while (i < (block.lines || []).length) {
-       // Ensure there is room for header + at least one line; otherwise advance
-       const firstLineH = lineHeight(block.lines[i])
-       const minHeadSlice = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4 + firstLineH) : firstLineH
-       if (cursorY + minHeadSlice > contentBottomY) { advanceColOrPage() }
- 
-       const col = curCol()
-       if (i === 0 && block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
- 
-       // Fill as many lines as fit
-       while (i < block.lines.length) {
-         const h = lineHeight(block.lines[i])
-         if (cursorY + h > contentBottomY) break
-         const ln = block.lines[i]
-         const plain = ln.plain || ln.text || ''
-         const cps = ln.chordPositions || []
-         pushLine(col, plain, cps)
-         cursorY += h
-         i++
-       }
-       cursorY += 4
-       if (i < block.lines.length) advanceColOrPage()
-     }
-   }
-   return { pages }
- }
+    // 3) Oversized section (cannot fit in a full column at this size) → split at line boundaries,
+    //    but keep header with the first line, and never leave header stranded.
+    const lineHs = (block.lines || []).map(lineHeight)
+    let i = 0
+    while (i < (block.lines || []).length) {
+      const remaining = (block.lines || []).length - i
+
+      // Ensure room for header + at least one line; otherwise advance
+      const minHead = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4) : 0
+      const firstLineH = lineHs[i] || 0
+      if (cursorY + minHead + firstLineH > contentBottomY) { advanceColOrPage(); continue }
+
+      // Pre-measure how many lines fit
+      const avail = contentBottomY - cursorY - minHead
+      let fit = 0, used = 0
+      while (i + fit < lineHs.length && used + lineHs[i + fit] <= avail) {
+        used += lineHs[i + fit]
+        fit++
+      }
+
+      // Widow: if only one line fits here, break early
+      if (fit === 1 && remaining > 1) { advanceColOrPage(); continue }
+
+      // Orphan: avoid leaving a single line for next column/page
+      if (remaining - fit === 1) {
+        if (fit > 1) {
+          used -= lineHs[i + fit - 1]
+          fit--
+        } else {
+          advanceColOrPage(); continue
+        }
+      }
+
+      const col = curCol()
+      if (i === 0 && block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+
+      for (let j = 0; j < fit; j++) {
+        const ln = block.lines[i]
+        const plain = ln.plain || ln.text || ''
+        const cps = ln.chordPositions || []
+        pushLine(col, plain, cps)
+        cursorY += lineHs[i]
+        i++
+      }
+      cursorY += 4
+      if (i < (block.lines || []).length) advanceColOrPage()
+    }
+  }
+  return { pages }
+}
 
 /* -----------------------------------------------------------
  * DRAWING (consumes computeLayout)
