@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
+import { downloadSongbookPdf, downloadMultiSongPdf } from '../utils/pdf'
+import { showToast } from '../utils/toast'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -115,26 +117,33 @@ export default function Songbook() {
       const { downloadSongbookPdf, downloadMultiSongPdf } = await loadPdfLib()
       const songs = []
       for (const it of selectedEntries) {
-        const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
-        const txt = await fetchTextCached(url)
-        const parsed = parseChordPro(txt)
-        const blocks = parsed.blocks.map((b) => ({
-          section: b.section,
-          lines: (b.lines || []).map((ln) => ({
-            plain: ln.text,
-            chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
-          })),
-        }))
-        songs.push({
-          title: parsed.meta.title || it.title,
-          key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
-          lyricsBlocks: blocks,
-        })
+        try {
+          const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
+          const txt = await fetchTextCached(url)
+          const parsed = parseChordPro(txt)
+          const blocks = parsed.blocks.map((b) => ({
+            section: b.section,
+            lines: (b.lines || []).map((ln) => ({
+              plain: ln.text,
+              chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
+            })),
+          }))
+          songs.push({
+            title: parsed.meta.title || it.title,
+            key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
+            lyricsBlocks: blocks,
+          })
+        } catch(err) {
+          console.error(err)
+          showToast(`Failed to process ${it.filename}`)
+        }
       }
-      if (typeof downloadSongbookPdf === 'function') {
-        await downloadSongbookPdf(songs, { includeTOC, cover })
-      } else {
-        await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+      if (songs.length) {
+        if (typeof downloadSongbookPdf === 'function') {
+          await downloadSongbookPdf(songs, { includeTOC, cover })
+        } else {
+          await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+        }
       }
     } finally {
       setBusy(false)

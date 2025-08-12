@@ -5,6 +5,7 @@ import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordp
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
+import { showToast } from '../utils/toast'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -40,12 +41,18 @@ export default function SongView(){
     fetch(`${base}songs/${entry.filename}`)
       .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
-        const p = parseChordPro(txt); setParsed(p)
-        const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
-        setToKey(baseKey)
-        try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
+        try {
+          const p = parseChordPro(txt); setParsed(p)
+          const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
+          setToKey(baseKey)
+          try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
+        } catch(err){
+          console.error(err)
+          showToast(`Parse error in ${entry.filename}. Check ChordPro syntax.`)
+          setErr('Failed to parse song')
+        }
       })
-      .catch(e => { console.error(e); setErr(e?.message || 'Failed to load song') })
+      .catch(e => { console.error(e); showToast(`Failed to load ${entry.filename}`); setErr(e?.message || 'Failed to load song') })
   }, [entry])
 
   // prefetch neighbor songs (no await here)

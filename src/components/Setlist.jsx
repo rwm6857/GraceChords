@@ -7,6 +7,7 @@ import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
+import { showToast } from '../utils/toast'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -144,21 +145,26 @@ export default function Setlist(){
     const songs = []
     for(const sel of list){
       const s = items.find(it=> it.id===sel.id); if(!s) continue
-      const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
-      const txt = await fetchTextCached(url)
-      const parsed = parseChordPro(txt)
-      const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
-      const steps = stepsBetween(baseKey, sel.toKey || baseKey)
-      const blocks = parsed.blocks.map(b => ({
-        section: b.section,
-        lines: b.lines.map(ln => ({
-          plain: ln.text,
-          chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+      try {
+        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
+        const txt = await fetchTextCached(url)
+        const parsed = parseChordPro(txt)
+        const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
+        const steps = stepsBetween(baseKey, sel.toKey || baseKey)
+        const blocks = parsed.blocks.map(b => ({
+          section: b.section,
+          lines: b.lines.map(ln => ({
+            plain: ln.text,
+            chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+          }))
         }))
-      }))
-      songs.push({ title: parsed.meta?.title || s.title, key: sel.toKey || baseKey, lyricsBlocks: blocks })
+        songs.push({ title: parsed.meta?.title || s.title, key: sel.toKey || baseKey, lyricsBlocks: blocks })
+      } catch(err){
+        console.error(err)
+        showToast(`Failed to process ${s.filename}`)
+      }
     }
-    await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+    if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
   }
 
   function prefetchPdf(){ loadPdfLib() }
