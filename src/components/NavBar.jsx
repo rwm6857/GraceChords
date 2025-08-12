@@ -32,6 +32,14 @@ export default function NavBar(){
               </span>
             </Link>
             <Link to="/songbook" className={`topnav__link ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
+            <a
+              href="https://github.com/rwm6857/GraceChords/wiki"
+              className="topnav__link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Docs
+            </a>
             {/* Toggle lives OUTSIDE links */}
             <button
               className="iconbtn"
