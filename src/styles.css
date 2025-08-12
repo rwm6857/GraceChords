@@ -245,3 +245,79 @@ textarea:focus-visible,
   clip:rect(0,0,0,0); white-space:nowrap; border:0;
 }
 
+/* Ensure the route area can host a scrollable child */
+html, body, #root { height: 100%; }
+.App { min-height: 100dvh; display: flex; flex-direction: column; }
+.Route, .RouteRoot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+/* Songbook layout: two panes */
+.SongbookPage {
+  flex: 1 1 auto;
+  min-height: 0;              /* <-- critical: allows inner overflow */
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+}
+
+/* Left panel: header + scroll area */
+.SongPicker {
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+
+.SongPickerHeader {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg, #0b0b0b); /* use your theme var if you have one */
+  padding-block: .5rem;
+  /* optional: border-bottom for separation */
+  /* border-bottom: 1px solid var(--border, #222); */
+}
+
+.SongPickerScroll {
+  flex: 1 1 auto; min-height: 0;
+  overflow: auto;              /* <-- only this scrolls */
+  -webkit-overflow-scrolling: touch;
+  padding-right: .25rem;       /* space for the scrollbar gutter */
+}
+
+/* Two-column grid of cards on desktop; single column on small screens */
+.SongGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+@media (max-width: 1024px) {
+  .SongbookPage { grid-template-columns: 1fr; }
+  .SongGrid { grid-template-columns: 1fr; }
+}
+
+/* Card styling */
+.SongCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: .5rem;
+  padding: .75rem .8rem;
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+  background: var(--surface, rgba(255,255,255,.03)); /* light gray in light mode; tweak if needed */
+  border-radius: .75rem;       /* rounded rectangles */
+}
+
+.SongCard input[type="checkbox"] {
+  margin-top: .25rem;
+}
+
+.SongInfo { min-width: 0; }
+.SongTitle { font-weight: 600; line-height: 1.25; }
+.SongMeta  { color: var(--muted, #9aa0a6); font-size: .875rem; margin-top: .25rem; }
+
+/* Right panel (preview) just in case it also needs to scroll */
+.SongPreview {
+  min-height: 0; display: flex; flex-direction: column;
+}
+.SongPreview .PreviewScroll {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+}
+
+
