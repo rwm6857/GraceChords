@@ -1,0 +1,18 @@
+- [[Home]]
+
+- **User Guide**
+  - [[Home-Search-and-Filters]]
+  - [[SongView]]
+  - [[Slides-(PPTX)]]
+  - [[Setlists]]
+  - [[Songbook-Builder]]
+  - [[ChordPro-Guide]]
+  - [[PDF-and-Printing]]
+  - [[Admin-Tool]]
+  - [[Troubleshooting]]
+
+- **Developer Guide**
+  - [[Getting-Started]]
+  - [[Project-Structure]]
+  - [[Index-Building]]
+  - [[Contributing]]
