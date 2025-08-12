@@ -10,6 +10,7 @@ export default function Home(){
   // -------- Search & filters --------
   const [q, setQ] = useState('')
   const searchRef = useRef(null)
+  const resultsRef = useRef(null)
   const qLower = q.trim().toLowerCase()
   const allTags = useMemo(() => {
     const set = new Set()
@@ -117,6 +118,22 @@ export default function Home(){
     return list
   }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode])
 
+  function onSearchKeyDown(e){
+    if(e.key === 'Enter'){
+      e.preventDefault()
+      const c = resultsRef.current
+      if(!c) return
+      const containerRect = c.getBoundingClientRect()
+      const links = c.querySelectorAll('a')
+      for(const link of links){
+        const rect = link.getBoundingClientRect()
+        if(rect.bottom > containerRect.top && rect.top < containerRect.bottom){
+          link.click()
+          break
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     function onKeyDown(e){
@@ -152,6 +169,7 @@ export default function Home(){
               ref={searchRef}
               value={q}
               onChange={e=> setQ(e.target.value)}
+              onKeyDown={onSearchKeyDown}
               placeholder="Search title/tags/authors…"
               style={{flex:1}}
             />
@@ -195,7 +213,7 @@ export default function Home(){
       </div>
 
       {/* Results grid (directory only) */}
-      <div className="HomeResults" role="region" aria-label="Song results">
+      <div className="HomeResults" role="region" aria-label="Song results" ref={resultsRef}>
         <div className="grid" style={{marginTop:10}}>
           {results.map(s => {
             return (
