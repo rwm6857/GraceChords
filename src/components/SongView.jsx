@@ -15,6 +15,10 @@ export default function SongView(){
   const [showChords, setShowChords] = useState(true)
   const [showMedia, setShowMedia] = useState(false)
   const [err, setErr] = useState('')
+  const [hasPptx, setHasPptx] = useState(false)
+  const [pptxUrl, setPptxUrl] = useState('')
+
+  const PPTX_BLOCK_HEIGHT = 40
 
   // find the index item
   useEffect(()=>{
@@ -51,6 +55,19 @@ export default function SongView(){
       fetchTextCached(url).catch(()=>{})
     })
   }, [entry?.id])
+
+  // check for PPTX slides
+  useEffect(() => {
+    if (!entry) return
+    setHasPptx(false)
+    const slug = entry.filename.replace(/\.chordpro$/, '')
+    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+    const url = `${base}pptx/${slug}.pptx`
+    setPptxUrl(url)
+    fetch(url, { method: 'HEAD' })
+      .then(r => { if (r.ok) setHasPptx(true) })
+      .catch(()=>{})
+  }, [entry])
 
   // keyboard shortcuts: c toggle chords, [ down, ] up
   useEffect(() => {
@@ -155,7 +172,7 @@ export default function SongView(){
 
       <div className="divider" />
 
-      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || parsed?.meta?.pptx) && (
+      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || hasPptx) && (
         <div>
           <button
             className="btn media__toggle"
@@ -168,6 +185,9 @@ export default function SongView(){
             {parsed?.meta?.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
+                <div style={{minHeight:PPTX_BLOCK_HEIGHT, marginBottom: hasPptx ? 10 : 0}}>
+                  {hasPptx && <a className="btn" href={pptxUrl} download>Download PPTX</a>}
+                </div>
                 {(() => {
                  const ytId = extractYouTubeId(parsed.meta.youtube)
                  return ytId ? (
@@ -193,10 +213,10 @@ export default function SongView(){
               </div>
             )}
 
-            {parsed?.meta?.pptx && (
+            {!parsed?.meta?.youtube && hasPptx && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={parsed.meta.pptx} download>Download PPTX</a>
+                <a className="btn" href={pptxUrl} download>Download PPTX</a>
               </div>
             )}
           </div>
