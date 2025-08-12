@@ -1,8 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-//import JSZip from 'jszip'
 import { KEYS, parseChordPro } from '../utils/chordpro'
+import { downloadZip } from '../utils/zip'
 
 const PASSWORD = '10401040'
+
+const INITIAL_TEXT = `{title: }
+{key: }
+{authors: }
+{country: }
+{tags: Fast, Slow, Hymn, Holiday}
+{youtube: }
+{mp3: }
+{pptx: }
+
+Verse 1
+[]`
 
 export default function Admin(){
   const [ok, setOk] = useState(false)
@@ -31,54 +43,47 @@ export default function Admin(){
 }
 
 function AdminPanel(){
-  const [text, setText] = useState(
-`{title: }
-{key: }
-{authors: }
-{country: }
-{tags: Fast, Slow, Hymn, Holiday}
-{youtube: }
-{mp3: }
-{pptx: }
-
-Verse 1
-[]`
-  )
+  const [text, setText] = useState(INITIAL_TEXT)
   const [meta, setMeta] = useState({})
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
+
+  const [persist, setPersist] = useState(() => localStorage.getItem('adminPersist') === '1')
+  const [drafts, setDrafts] = useState(() => {
+    if(localStorage.getItem('adminPersist') === '1'){
+      try{ return JSON.parse(localStorage.getItem('adminDrafts')||'[]') }catch{}
+    }
+    return []
+  })
+  useEffect(() => {
+    if(persist){ localStorage.setItem('adminDrafts', JSON.stringify(drafts)) }
+  }, [drafts, persist])
+  useEffect(() => {
+    localStorage.setItem('adminPersist', persist ? '1' : '0')
+    if(!persist) localStorage.removeItem('adminDrafts')
+  }, [persist])
 
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
   const filename = `${id||'untitled'}.chordpro`
   const parsed = useMemo(()=> parseChordPro(text||''), [text])
 
-  async function downloadBundle(){
-  const JSZip = (await import('jszip')).default
-  const zip = new JSZip()
-  const folder = zip.folder('songs')
-  folder.file(filename, text)
-
-  const items = [{
-    id,
-    title: meta.title || 'Untitled',
-    filename,
-    originalKey: meta.key || '',
-    tags: (meta.tags||'').split(',').map(s=>s.trim()).filter(Boolean),
-    authors: meta.authors||'',
-    country: meta.country||'',
-    // keep any optional media fields if you want to surface them in index
-    youtube: meta.youtube || '',
-    mp3: meta.mp3 || '',
-    pptx: meta.pptx || ''
-  }]
-
-  zip.file('src/data/index.json', JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2))
-  const blob = await zip.generateAsync({ type:'blob' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = 'song_data_bundle.zip'
-  a.click()
-}
-
+  function addDraft(){
+    const title = meta.title || 'Untitled'
+    setDrafts(d => [...d, { title, filename, body: text }])
+    setText(INITIAL_TEXT)
+  }
+  function removeDraft(i){ setDrafts(d => d.filter((_,j)=> j!==i)) }
+  function editDraft(i){
+    const d = drafts[i]
+    if(!d) return
+    setText(d.body)
+    setDrafts(ds => ds.filter((_,j)=> j!==i))
+  }
+  async function exportDrafts(){
+    if(drafts.length===0) return
+    const files = drafts.map(d => ({ path: `songs/${d.filename}`, content: d.body }))
+    await downloadZip(files, { name: 'songs.zip' })
+    if(window.confirm('Clear drafts?')) setDrafts([])
+  }
 
   return (
     <div className="container">
@@ -174,18 +179,45 @@ Verse 1
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{display:'flex', gap:8, marginTop:10}}>
-        <button className="btn primary" onClick={downloadBundle}>Download bundle</button>
-        <div className="card">
-          <strong>Publish (docs/ Pages):</strong>
-          <ol>
-            <li>Unzip bundle.</li>
-            <li>Copy <code>songs/*.chordpro</code> to <code>public/songs/</code>.</li>
-            <li>Merge entries into <code>src/data/index.json</code> (or run <code>npm run build-index</code>).</li>
-            <li><code>npm run build</code> → outputs to <code>docs/</code>.</li>
-          </ol>
+      {/* Draft actions */}
+      <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
+        <button className="btn" onClick={addDraft}>Add to Drafts</button>
+        <button className="btn primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
+        <label style={{display:'flex', alignItems:'center', gap:4}}>
+          <input type="checkbox" checked={persist} onChange={e=> setPersist(e.target.checked)} />
+          Keep drafts in browser
+        </label>
+      </div>
+
+      {drafts.length>0 && (
+        <div className="card" style={{marginTop:10}}>
+          <strong>Drafts</strong>
+          <table style={{width:'100%', marginTop:8}}>
+            <thead><tr><th style={{textAlign:'left'}}>Title</th><th style={{textAlign:'left'}}>File</th><th></th></tr></thead>
+            <tbody>
+              {drafts.map((d,i)=>(
+                <tr key={i}>
+                  <td>{d.title}</td>
+                  <td>{d.filename}</td>
+                  <td style={{textAlign:'right'}}>
+                    <button className="btn" onClick={()=>editDraft(i)} style={{marginRight:4}}>Edit</button>
+                    <button className="btn" onClick={()=>removeDraft(i)}>Remove</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      )}
+
+      <div className="card" style={{marginTop:10}}>
+        <strong>Publish (docs/ Pages):</strong>
+        <ol>
+          <li>Unzip archive.</li>
+          <li>Copy <code>songs/*.chordpro</code> to <code>public/songs/</code>.</li>
+          <li>Merge entries into <code>src/data/index.json</code> (or run <code>npm run build-index</code>).</li>
+          <li><code>npm run build</code> → outputs to <code>docs/</code>.</li>
+        </ol>
       </div>
     </div>
   )
