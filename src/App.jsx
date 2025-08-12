@@ -5,6 +5,7 @@ import SongView from './components/SongView'
 import Admin from './components/Admin'
 import Setlist from './components/Setlist'
 import Bundle from './components/Bundle'
+import Songbook from './components/Songbook'
 import NavBar from './components/NavBar'
 import './styles.css'
 
@@ -16,6 +17,7 @@ export default function App(){
         <Route path="/song/:id" element={<SongView />} />
         <Route path="/setlist" element={<Setlist />} />
         <Route path="/bundle" element={<Bundle />} />
+        <Route path="/songbook" element={<Songbook />} />
       </Route>
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<div className="container"><h3>Not found</h3><Link to="/">Back</Link></div>} />

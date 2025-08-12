@@ -570,6 +570,95 @@ export async function downloadMultiSongPdf(songs, options){
   doc.save('GraceChords_Selection.pdf')
 }
 
+export async function downloadSongbookPdf(songs, options = {}) {
+  const doc = await newPDF();
+  let fams = {};
+  try { fams = await ensureFontsEmbedded(doc); } catch {}
+  const baseOpt = {
+    lyricSizePt: Math.max(12, options?.lyricSizePt || 16),
+    chordSizePt: Math.max(12, options?.chordSizePt || 16),
+    margin: 36,
+    lyricFamily: fams.lyricFamily || 'Helvetica',
+    chordFamily: fams.chordFamily || 'Courier',
+    columns: options?.columns === 2 ? 2 : 1
+  };
+
+  const includeTOC = !!options?.includeTOC;
+  const cover = options?.cover;
+
+  // Pre-compute layout pages for each song
+  const measure = makeLyricMeasurer(doc, baseOpt.lyricFamily, baseOpt.lyricSizePt);
+  const planned = songs.map((s) => ({
+    raw: s,
+    norm: normalizeSongInput(s),
+    layout: computeLayout(s, { ...baseOpt }, measure)
+  }));
+
+  const startPage = 1 + (cover ? 1 : 0) + (includeTOC ? 1 : 0);
+  let curPage = startPage;
+  const tocEntries = planned.map((p, i) => {
+    const entry = { num: i + 1, title: p.norm.title || 'Untitled', page: curPage };
+    p.start = curPage;
+    curPage += p.layout.pages.length;
+    return entry;
+  });
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Cover page
+  if (cover) {
+    try {
+      doc.addImage(cover, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+    } catch {}
+    if (includeTOC || planned.length) doc.addPage();
+  }
+
+  // TOC
+  if (includeTOC) {
+    const margin = baseOpt.margin;
+    doc.setFont(baseOpt.lyricFamily, 'bold');
+    doc.setFontSize(24);
+    doc.text('Table of Contents', pageW / 2, margin + 20, { align: 'center' });
+    doc.setFont(baseOpt.lyricFamily, 'normal');
+    doc.setFontSize(12);
+    let y = margin + 40;
+    const lineH = 16;
+    const right = pageW - margin;
+    tocEntries.forEach((e) => {
+      if (y > pageH - margin) { doc.addPage(); y = margin; }
+      const leftText = `${e.num} ${e.title}`;
+      doc.text(leftText, margin, y);
+      const pageStr = String(e.page);
+      const textW = doc.getTextWidth(leftText);
+      const pageWdt = doc.getTextWidth(pageStr);
+      const dotsW = right - margin - textW - pageWdt - 4;
+      if (dotsW > 0) {
+        const dot = doc.getTextWidth('.');
+        const dots = '.'.repeat(Math.max(0, Math.floor(dotsW / dot)));
+        doc.text(dots, margin + textW + 2, y);
+      }
+      doc.text(pageStr, right, y, { align: 'right' });
+      y += lineH;
+    });
+    if (planned.length) doc.addPage();
+  }
+
+  // Songs
+  planned.forEach((p, idx) => {
+    drawSongIntoDoc(doc, p.raw, {
+      ...baseOpt,
+      title: `${idx + 1}. ${p.norm.title || 'Untitled'}`,
+      key: p.norm.key || 'C',
+      columns: baseOpt.columns
+    });
+    if (idx < planned.length - 1) doc.addPage();
+  });
+
+  const name = `songbook-${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`;
+  doc.save(name);
+}
+
 /* -----------------------------------------------------------
  * TEST METRICS (sync; no jsPDF)
  * --------------------------------------------------------- */
