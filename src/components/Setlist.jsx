@@ -15,6 +15,9 @@ export default function Setlist(){
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
   const [list, setList] = useState([])
+  const [pptxMap, setPptxMap] = useState({})
+  const [pptxProgress, setPptxProgress] = useState('')
+  const pptxCount = Object.keys(pptxMap).length
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -23,6 +26,26 @@ export default function Setlist(){
 
   // load catalog
   useEffect(()=>{ setItems(indexData?.items || []) },[])
+
+  // check available PPTX files for current set
+  useEffect(() => {
+    let cancelled = false
+    async function check(){
+      const found = {}
+      for(const sel of list){
+        const s = items.find(it=> it.id===sel.id)
+        if(!s) continue
+        const url = `${import.meta.env.BASE_URL}pptx/${s.id}.pptx`
+        try{
+          const res = await fetch(url, { method: 'HEAD' })
+          if(res.ok) found[s.id] = true
+        }catch{}
+      }
+      if(!cancelled) setPptxMap(found)
+    }
+    check()
+    return () => { cancelled = true }
+  }, [list, items])
 
   // (optional) migrate legacy single-set storage if present and nothing saved yet
   useEffect(() => {
@@ -133,6 +156,37 @@ export default function Setlist(){
     }
     await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
   }
+
+  async function bundlePptx(){
+    setPptxProgress(`Bundling 0/${list.length}…`)
+    const JSZip = (await import('jszip')).default
+    const zip = new JSZip()
+    let added = 0
+    for(let i=0; i<list.length; i++){
+      const sel = list[i]
+      const s = items.find(it=> it.id===sel.id)
+      if(!s){ setPptxProgress(`Bundling ${i+1}/${list.length}…`); continue }
+      setPptxProgress(`Bundling ${i+1}/${list.length}…`)
+      if(!pptxMap[s.id]) continue
+      try{
+        const res = await fetch(`${import.meta.env.BASE_URL}pptx/${s.id}.pptx`)
+        if(!res.ok) continue
+        const blob = await res.blob()
+        added++
+        zip.file(`${String(added).padStart(2,'0')}-${s.id}.pptx`, blob)
+      }catch{}
+    }
+    if(added>0){
+      const blob = await zip.generateAsync({ type:'blob' })
+      const date = new Date().toISOString().slice(0,10).replace(/-/g,'')
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `setlist-pptx-${date}.zip`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }
+    setPptxProgress('')
+  }
   function onPrint(){ window.print() }
 
   return (
@@ -222,6 +276,14 @@ export default function Setlist(){
           </div>
           <div style={{display:'flex', gap:8, marginTop:8}}>
             <button className="btn primary iconbtn" onClick={exportPdf}><DownloadIcon /> Export PDF</button>
+            <button
+              className="btn iconbtn"
+              onClick={bundlePptx}
+              disabled={pptxCount===0 || !!pptxProgress}
+              title={pptxCount===0 ? 'No PPTX files found for this set.' : ''}
+            >
+              {pptxProgress ? pptxProgress : <><DownloadIcon /> Bundle PPTX</>}
+            </button>
             <button className="btn" onClick={onPrint}>Print</button>
             <button className="btn" onClick={()=> setList([])}>Clear</button>
           </div>
