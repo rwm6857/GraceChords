@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/wiki/**'
+      - 'public/wiki/**'
       - '.github/workflows/wiki-sync.yml'
       - 'scripts/syncWiki.mjs'
 

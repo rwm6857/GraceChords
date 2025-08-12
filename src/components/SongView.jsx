@@ -87,7 +87,32 @@ export default function SongView(){
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  if(!entry){
+  
+
+  // JPG single-page guard (moved above early returns)
+  useEffect(() => {
+    let cancelled = false
+    async function check(){
+      if (!parsed) return
+      const song = buildSong()
+      const fonts = await ensureCanvasFonts()
+      const ctx = document.createElement('canvas').getContext('2d')
+      const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
+      const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
+      const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+      if (cancelled) return
+      if (plan.layout.pages.length > 1) {
+        setJpgDisabled(true)
+        if (!jpgAlerted.current) { alert('JPG export supports single-page songs only for now.'); jpgAlerted.current = true }
+      } else {
+        setJpgDisabled(false)
+      }
+    }
+    check()
+    return () => { cancelled = true }
+  }, [parsed, toKey])
+
+if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
   }
   if(err){
@@ -127,27 +152,7 @@ export default function SongView(){
     await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, '') })
   }
 
-  useEffect(() => {
-    let cancelled = false
-    async function check(){
-      if (!parsed) return
-      const song = buildSong()
-      const fonts = await ensureCanvasFonts()
-      const ctx = document.createElement('canvas').getContext('2d')
-      const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
-      const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-      const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
-      if (cancelled) return
-      if (plan.layout.pages.length > 1) {
-        setJpgDisabled(true)
-        if (!jpgAlerted.current) { alert('JPG export supports single-page songs only for now.'); jpgAlerted.current = true }
-      } else {
-        setJpgDisabled(false)
-      }
-    }
-    check()
-    return () => { cancelled = true }
-  }, [parsed, toKey])
+  
 
   return (
     <div className="container">

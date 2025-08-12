@@ -11,7 +11,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'gracechords-wiki-'))
 
 execSync(`git clone ${repoUrl} ${tmp}`, { stdio: 'inherit' })
 
-const srcDir = path.join(process.cwd(), 'docs', 'wiki')
+const srcDir = path.join(process.cwd(), 'public', 'wiki')
 const files = (await fs.readdir(srcDir)).filter(f => f.endsWith('.md'))
 for (const file of files) {
   await fs.copyFile(path.join(srcDir, file), path.join(tmp, file))
