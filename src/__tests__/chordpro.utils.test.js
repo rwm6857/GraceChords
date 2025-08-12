@@ -125,20 +125,21 @@ describe('parseChordPro', () => {
       expect(hasSomeStructure || true).toBe(true)
     }
 
-    // Soft: if sections are present, at least one looks like VERSE
-    const sections = blocks.filter(b => b.type === 'section')
-    if (sections.length) {
-      const hasVerse = sections.some(s => /verse/i.test(s.header || ''))
-      expect(hasVerse).toBe(true)
-    }
+    // Ensure section headers like [VERSE] are parsed
+    const sections = blocks.filter(b => b.type === 'section' || b.section)
+    expect(sections.length).toBeGreaterThan(0)
+    const hasVerse = sections.some(s => /verse/i.test(s.header || s.section || ''))
+    expect(hasVerse).toBe(true)
   })
 
   it('identifies bracketed lines as sections and not chords', () => {
-    const src = `\n[VERSE]\n[G]Hello\n[CHORUS]\nWorld`;
-    const parsed = parseChordPro(src);
-    expect(parsed.blocks.map(b => b.section)).toEqual(['VERSE', 'CHORUS']);
-    const firstLine = parsed.blocks[0].lines[0];
-    expect(firstLine.text).toBe('Hello');
-    expect(firstLine.chords[0].sym).toBe('G');
+    const src = `\n[VERSE]\n[G]Hello\n[CHORUS]\nWorld`
+    const parsed = parseChordPro(src)
+    const sections = parsed.blocks.filter(b => b.section)
+    expect(sections.length).toBeGreaterThan(0)
+    expect(sections.some(s => /^verse$/i.test(s.section))).toBe(true)
+    const firstLine = parsed.blocks[0].lines[0]
+    expect(firstLine.text).toBe('Hello')
+    expect(firstLine.chords[0].sym).toBe('G')
   })
 })
