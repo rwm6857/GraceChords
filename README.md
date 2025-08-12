@@ -50,6 +50,11 @@ Place the following fonts in `public/fonts/` to embed them in exported PDFs:
 - `NotoSansMono-Regular.ttf`
 - `NotoSansMono-Bold.ttf`
 
+## PPTX Slides
+Place PowerPoint lyric decks in `public/pptx/` named after the song's file name without the `.chordpro` extension.
+For example, a song stored as `public/songs/glorious-king.chordpro` can have slides at `public/pptx/glorious-king.pptx`.
+Files committed under `public/` are served directly by GitHub Pages, so adding a PPTX is as simple as dropping it in this directory and committing.
+
 ## Usage Notes
 - **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
 - **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), collapsible media.
