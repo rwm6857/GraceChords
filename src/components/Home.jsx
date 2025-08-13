@@ -118,6 +118,9 @@ export default function Home(){
     return list
   }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode])
 
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const optionRefs = useRef([])
+
   function onSearchKeyDown(e){
     if(e.key === 'Enter'){
       e.preventDefault()
@@ -132,8 +135,43 @@ export default function Home(){
           break
         }
       }
+    } else if(e.key === 'ArrowDown') {
+      e.preventDefault()
+      if(results.length === 0) return
+      setActiveIndex(0)
+    } else if(e.key === 'ArrowUp') {
+      e.preventDefault()
+      if(results.length === 0) return
+      const last = results.length - 1
+      setActiveIndex(last)
     }
   }
+
+  function onResultsKeyDown(e){
+    if(e.key === 'ArrowDown'){
+      e.preventDefault()
+      setActiveIndex(i => Math.min(i + 1, results.length - 1))
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault()
+      setActiveIndex(i => {
+        if(i <= 0){
+          searchRef.current?.focus()
+          return -1
+        }
+        return i - 1
+      })
+    }
+  }
+
+  useEffect(() => {
+    if(activeIndex >= 0){
+      optionRefs.current[activeIndex]?.focus()
+    }
+  }, [activeIndex])
+
+  useEffect(() => {
+    setActiveIndex(-1)
+  }, [results])
 
   useEffect(() => {
     function onKeyDown(e){
@@ -152,6 +190,8 @@ export default function Home(){
     setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x!==t) : [...prev, t])
   }
   function clearTags(){ setSelectedTags([]) }
+
+  optionRefs.current = []
 
   return (
     <div className="HomePage container">
@@ -212,26 +252,38 @@ export default function Home(){
         </div>
       </div>
 
-      {/* Results grid (directory only) */}
-      <div className="HomeResults" role="region" aria-label="Song results" ref={resultsRef}>
-        <div className="grid" style={{marginTop:10}}>
-          {results.map(s => {
-            return (
-              <div key={s.id} className="card">
-                <div className="row">
-                  <div>
-                    <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
-                    <div className="meta">
-                      {s.originalKey || '—'}
-                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
-                    </div>
-                  </div>
+      {/* Results list */}
+      <ul
+        className="HomeResults grid"
+        role="listbox"
+        aria-label="Song results"
+        ref={resultsRef}
+        onKeyDown={onResultsKeyDown}
+        style={{ marginTop: 10 }}
+      >
+        {results.map((s, i) => (
+          <li
+            key={s.id}
+            role="option"
+            ref={el => (optionRefs.current[i] = el)}
+            tabIndex={i === activeIndex ? 0 : -1}
+            aria-selected={i === activeIndex}
+            className="card"
+          >
+            <div className="row">
+              <div>
+                <Link to={`/song/${s.id}`} style={{ fontWeight: 600 }}>
+                  {s.title}
+                </Link>
+                <div className="meta">
+                  {s.originalKey || '—'}
+                  {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
                 </div>
               </div>
-            )
-          })}
-        </div>
-      </div>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
