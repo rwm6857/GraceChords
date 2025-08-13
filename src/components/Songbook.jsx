@@ -157,6 +157,18 @@ export default function Songbook() {
       setCover(null)
       return
     }
+    if (f.size > 2 * 1024 * 1024) {
+      showToast('Image must be under 2 MB')
+      e.target.value = ''
+      setCover(null)
+      return
+    }
+    if (!f.type.startsWith('image/')) {
+      showToast('File must be an image')
+      e.target.value = ''
+      setCover(null)
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => setCover(String(reader.result || ''))
     reader.readAsDataURL(f)
