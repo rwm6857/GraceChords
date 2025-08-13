@@ -114,6 +114,6 @@ async function currentBranch(repoDir) {
   console.log("[wiki-sync] Done.");
 })().catch((err) => {
   console.error("[wiki-sync] ERROR:", err?.stack || err?.message || String(err));
-  // Don't fail the pipeline on a wiki hiccup by default — change to 1 if you want hard failures.
-  process.exit(0);
+  // Fail the pipeline in CI environments; otherwise, don't hard-fail on wiki hiccups.
+  process.exit(process.env.CI ? 1 : 0);
 });
