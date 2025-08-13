@@ -204,7 +204,7 @@ export default function Setlist(){
     <div className="container">
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div><Link to="/" className="back">← Back</Link></div>
-        <h2 style={{margin:0}}>Setlist Builder</h2>
+        <h1 style={{margin:0}}>Setlist Builder</h1>
         <div />
       </div>
 
@@ -306,7 +306,7 @@ export default function Setlist(){
 
           {/* Print-only minimal outline */}
           <div className="print-only" style={{marginTop:16}}>
-            <h1 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h1>
+            <h2 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h2>
             <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
               {list.map(sel => {
                 const s = items.find(it=> it.id===sel.id)

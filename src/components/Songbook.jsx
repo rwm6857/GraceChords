@@ -168,7 +168,7 @@ export default function Songbook() {
       <div className="BuilderPage">
         <section className="BuilderLeft">
           <header className="BuilderHeader">
-            <h3>No songs found</h3>
+            <h1>No songs found</h1>
             <p className="Small">The song index is empty or failed to load.</p>
           </header>
         </section>
@@ -181,6 +181,7 @@ export default function Songbook() {
       {/* LEFT: Picker */}
       <section className="BuilderLeft">
         <header className="BuilderHeader">
+          <h1 style={{ margin: 0 }}>Songbook Builder</h1>
           <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div className="Field" style={{ minWidth: 220 }}>
               <label htmlFor="sb-search">Search:</label>
