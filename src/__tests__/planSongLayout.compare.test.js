@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planSongLayout } from '../utils/pdf-plan'
+import { planSongLayout } from '../utils/pdfLayout'
 import { jsPDF } from 'jspdf'
 
 describe('planSongLayout regression', () => {

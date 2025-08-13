@@ -157,13 +157,14 @@ export default function Setlist(){
             chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
           }))
         }))
-        songs.push({ title: parsed.meta?.title || s.title, key: sel.toKey || baseKey, lyricsBlocks: blocks })
+        const slug = s.filename.replace(/\.chordpro$/, '')
+        songs.push({ title: parsed.meta?.title || s.title || slug, key: sel.toKey || baseKey, lyricsBlocks: blocks })
       } catch(err){
         console.error(err)
         showToast(`Failed to process ${s.filename}`)
       }
     }
-    if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+    if(songs.length) await downloadMultiSongPdf(songs)
   }
 
   function prefetchPdf(){ loadPdfLib() }

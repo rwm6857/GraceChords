@@ -1,5 +1,5 @@
 // src/utils/image.js
-import { planSongLayout } from './pdf-plan'
+import { chooseBestLayout } from './pdfLayout'
 import { ensureCanvasFonts } from './fonts'
 export { ensureCanvasFonts } from './fonts'
 
@@ -73,7 +73,8 @@ export async function downloadSingleSongJpg(song, options = {}) {
       measureCtx.font = `bold ${pt}px ${chordFamily}`
       return measureCtx.measureText(text || '').width
     }
-    plan = planSongLayout(song, { lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt)
+    const res = chooseBestLayout(song, { lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt)
+    plan = res.plan
   }
   if (plan.layout.pages.length > 1) {
     return { error: 'MULTI_PAGE', plan }
