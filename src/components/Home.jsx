@@ -261,7 +261,7 @@ export default function Home(){
         onKeyDown={onResultsKeyDown}
       >
         {!fuse ? <div>Loading search…</div> : (
-          <div className="HomeGrid" role="listbox">
+          <div className="HomeGrid" role="listbox" aria-label="Song results">
             {results.map((s, i) => (
               <Link
                 key={s.id}
