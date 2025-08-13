@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
-import { downloadSongbookPdf, downloadMultiSongPdf } from '../utils/pdf'
 import { showToast } from '../utils/toast'
 
 // Lazy pdf exporters

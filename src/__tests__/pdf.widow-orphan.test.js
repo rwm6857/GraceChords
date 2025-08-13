@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getLayoutMetrics } from '../utils/pdf'
+import { getLayoutMetrics } from '../utils/pdf-plan'
 
 const mkLines = (n) => Array.from({ length: n }, (_, i) => ({ plain: `line ${i+1}`, chordPositions: [] }))
 const mkSection = (label, n) => ({ section: label, lines: mkLines(n) })

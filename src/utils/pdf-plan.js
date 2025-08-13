@@ -1,0 +1,412 @@
+// src/utils/pdf-plan.js
+// Pure layout planning helpers shared by PDF and image exporters.
+
+// Detect common section labels in plain text lines
+function isSectionLabel(text = '') {
+  return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i
+    .test(String(text).trim())
+}
+
+// Normalize various song input shapes into a canonical form
+export function normalizeSongInput(input) {
+  const injectSectionsFromLines = (blocks) => {
+    const out = []
+    let cur = null
+    const flush = () => { if (cur && cur.lines.length) out.push(cur); cur = null }
+
+    for (const b of (blocks || [])) {
+      if (b.section) { flush(); out.push(b); continue }
+      for (const ln of (b.lines || [])) {
+        const txt = ln.plain || ln.text || ''
+        const hasChords = !!(ln.chordPositions && ln.chordPositions.length)
+        if (!hasChords && isSectionLabel(txt)) {
+          flush()
+          cur = { section: txt.trim(), lines: [] }
+        } else {
+          if (!cur) cur = { lines: [] }
+          cur.lines.push(ln)
+        }
+      }
+    }
+    flush()
+    return out.length ? out : (blocks || [])
+  }
+
+  // Already normalized
+  if (input?.lyricsBlocks) {
+    return {
+      title: input.title || 'Untitled',
+      key: input.key || input.originalKey || 'C',
+      lyricsBlocks: injectSectionsFromLines(input.lyricsBlocks)
+    }
+  }
+
+  // From parsed "blocks"
+  if (Array.isArray(input?.blocks)) {
+    const out = []
+    let cur = { lines: [] }
+    for (const b of input.blocks) {
+      if (b.type === 'section') {
+        if (cur.lines.length) out.push(cur)
+        cur = { section: b.header, lines: [] }
+      } else if (b.type === 'line') {
+        cur.lines.push({
+          plain: b.lyrics || b.text || '',
+          chordPositions: (b.chords || []).map(c => ({ index: c.index ?? 0, sym: c.sym }))
+        })
+      }
+    }
+    if (cur.lines.length) out.push(cur)
+    return {
+      title: input.title || 'Untitled',
+      key: input.key || input.originalKey || 'C',
+      lyricsBlocks: injectSectionsFromLines(out)
+    }
+  }
+
+  return {
+    title: input?.title || 'Untitled',
+    key: input?.key || input?.originalKey || 'C',
+    lyricsBlocks: []
+  }
+}
+
+// Default layout options used by the planner
+export const DEFAULT_LAYOUT_OPT = {
+  lyricSizePt: 16,
+  chordSizePt: 16,
+  margin: 36,
+  gutter: 18,
+  headerOffsetY: 54,
+  columns: 1,
+  pageWidth: 612,  // Letter
+  pageHeight: 792,
+  lyricFamily: 'Helvetica',
+  chordFamily: 'Courier',
+  title: 'Untitled',
+  key: 'C'
+}
+
+// Safety against kissing the right gutter
+const RIGHT_SAFETY = 6 // pt
+// How "tight" a 2-col line may be before we reject it for readability
+const TIGHT_RATIO_2COL = 0.92
+const TIGHT_RATIO_2COL_AT_12 = 0.86 // be stricter at the minimum size
+
+/**
+ * Pure width check using provided measurers (lyrics/chords).
+ * Respects the alignment invariant: chord X measured in lyrics font; chords drawn in mono bold.
+ */
+function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
+  const margin = oBase.margin
+  const contentW = oBase.pageWidth - margin * 2
+  const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW
+  const limit = colW - RIGHT_SAFETY
+
+  const measureLyric = makeMeasureLyricAt(size)
+  const measureChord = makeMeasureChordAt(size)
+
+  for (const block of (song.lyricsBlocks || [])) {
+    for (const ln of (block.lines || [])) {
+      const plain = ln.plain || ln.text || ''
+      if (measureLyric(plain) > limit) return true
+      for (const c of (ln.chordPositions || [])) {
+        const x = measureLyric(plain.slice(0, c.index || 0))
+        const cw = measureChord(c.sym || '')
+        if (x + cw > limit) return true
+      }
+    }
+  }
+  return false
+}
+
+/** How close the widest line/chord right-edge is to the column edge (0..1). */
+function maxWidthRatio(song, columns, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
+  const margin = oBase.margin
+  const contentW = oBase.pageWidth - margin * 2
+  const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW
+
+  const measureLyric = makeMeasureLyricAt(size)
+  const measureChord = makeMeasureChordAt(size)
+
+  let maxR = 0
+  for (const block of (song.lyricsBlocks || [])) {
+    for (const ln of (block.lines || [])) {
+      const plain = ln.plain || ln.text || ''
+      maxR = Math.max(maxR, (measureLyric(plain) || 0) / colW)
+      for (const c of (ln.chordPositions || [])) {
+        const x = measureLyric(plain.slice(0, c.index || 0))
+        const cw = measureChord(c.sym || '')
+        maxR = Math.max(maxR, (x + cw) / colW)
+      }
+    }
+  }
+  return maxR
+}
+
+/**
+ * Core planner (pure): implements priority rules.
+ * - Size-first search 16→12
+ * - For each size: try 1-col, then 2-col (2-col must not be "tight")
+ * - Fallback at 12pt: choose fewest pages; then width OK; then prefer 1-col
+ */
+function choosePlanPure(songNorm, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
+  const minSize = 12
+  const maxSize = 16
+
+  // Ensure section labels are promoted to headers (safety net)
+  const song = { ...songNorm, lyricsBlocks: (songNorm.lyricsBlocks || []).map(b => {
+    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
+      const first = b.lines[0]
+      const txt = first?.plain || first?.text || ''
+      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0
+      if (!hasChords && isSectionLabel(txt)) {
+        return { section: txt.trim(), lines: b.lines.slice(1) }
+      }
+    }
+    return b
+  }) }
+
+  // Helper to evaluate a plan
+  const evalPlan = (cols, size) => {
+    const widthOk = !widthOverflows(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    const measureLyric = makeMeasureLyricAt(size)
+    const layout = computeLayout(song, { ...oBase, columns: cols, lyricSizePt: size, chordSizePt: size }, measureLyric)
+    const heightOk = (layout.pages.length <= 1)
+    const tight = cols === 2 && maxWidthRatio(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL
+    return { widthOk, heightOk, tight, layout }
+  }
+
+  // Size-first search: 16 → 12; try 1-col then 2-col
+  for (let size = maxSize; size >= minSize; size--) {
+    // 1 column
+    {
+      const r = evalPlan(1, size)
+      if (r.widthOk && r.heightOk) {
+        return { columns: 1, lyricSizePt: size, chordSizePt: size, layout: r.layout }
+      }
+    }
+    // 2 columns (must not be "tight")
+    {
+      const r = evalPlan(2, size)
+      const tooTightAt12 = (size === 12) &&
+        (maxWidthRatio(song, 2, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL_AT_12)
+      if (r.widthOk && r.heightOk && !r.tight && !tooTightAt12) {
+        return { columns: 2, lyricSizePt: size, chordSizePt: size, layout: r.layout }
+      }
+    }
+  }
+
+  // Fallback at 12pt: fewest pages; then width OK; then prefer 1-col
+  const size = minSize
+  const plans = [1, 2].map(cols => ({ cols, ...evalPlan(cols, size) }))
+  plans.sort((a, b) => {
+    if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length
+    if (a.widthOk !== b.widthOk) return (a.widthOk ? -1 : 1)
+    if (a.cols !== b.cols) return (a.cols === 1 ? -1 : 1)
+    return 0
+  })
+  const best = plans[0]
+  return { columns: best.cols, lyricSizePt: size, chordSizePt: size, layout: best.layout }
+}
+
+// Public planner: returns chosen columns/sizes and full layout using provided measurers.
+// Pure and shared by PDF and image exporters.
+export function planSongLayout(songIn, opt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
+  const song = normalizeSongInput(songIn)
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...opt }
+  const pick = choosePlanPure(song, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+  return { ...oBase, columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, layout: pick.layout }
+}
+
+/* -----------------------------------------------------------
+ * PURE LAYOUT (two-pass; no drawing)
+ * - measures with lyrics font only
+ * - splits only at line boundaries
+ * - never orphans section header from first line
+ * - bold headings, same size as lyrics, with top padding
+ * --------------------------------------------------------- */
+export function computeLayout(songIn, opt = {}, measureLyric = (t) => 0) {
+  const song = normalizeSongInput(songIn)
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
+  const lineGap = 4
+  const sectionSize = o.lyricSizePt
+  const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
+
+  const margin = o.margin
+  const pageH = o.pageHeight
+  const contentW = o.pageWidth - margin * 2
+  const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
+
+  const contentStartY = margin + o.headerOffsetY
+  const contentBottomY = pageH - margin
+
+  const pages = []
+  let page = { columns: [] }
+  pages.push(page)
+
+  function makeColumns() {
+    const firstCol = { x: margin, yStart: contentStartY, blocks: [] }
+    page.columns.push(firstCol)
+    if (o.columns === 2) {
+      const secondCol = { x: margin + colW + o.gutter, yStart: contentStartY, blocks: [] }
+      page.columns.push(secondCol)
+    }
+  }
+  function newPage() { page = { columns: [] }; pages.push(page) }
+  if (page.columns.length === 0) makeColumns()
+
+  // Fallback: if a block’s first line is a label with no chords, promote it to a section header
+  song.lyricsBlocks = (song.lyricsBlocks || []).map(b => {
+    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
+      const first = b.lines[0]
+      const txt = first?.plain || first?.text || ''
+      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0
+      if (!hasChords && isSectionLabel(txt)) {
+        return { section: txt.trim(), lines: b.lines.slice(1) }
+      }
+    }
+    return b
+  })
+
+  let colIdx = 0
+  let cursorY = contentStartY
+  const curCol = () => page.columns[colIdx]
+  const advanceColOrPage = () => {
+    if (o.columns === 2 && colIdx === 0) { colIdx = 1; cursorY = contentStartY }
+    else { newPage(); makeColumns(); colIdx = 0; cursorY = contentStartY }
+  }
+
+  const measureBlockHeight = (block, fromLine = 0, toLineExclusive = (block.lines?.length ?? 0)) => {
+    let h = 0
+    const hasHeader = !!block.section && fromLine === 0
+    if (hasHeader) h += sectionTopPad + sectionSize + 4
+    for (let i = fromLine; i < toLineExclusive; i++) {
+      const ln = block.lines[i]
+      if (ln?.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+      h += o.lyricSizePt + lineGap
+    }
+    return h + 4
+  }
+
+  // Heights
+  const lineHeight = (ln) => (ln?.chordPositions?.length ? (o.chordSizePt + lineGap / 2) : 0) + o.lyricSizePt + lineGap
+
+  const pushSection = (col, header) => {
+    col.blocks.push({ type: 'section', header })
+  }
+  const pushLine = (col, lyrics, cps) => {
+    col.blocks.push({ type: 'line', lyrics, chords: cps.map(c => ({ x: measureLyric(lyrics.slice(0, c.index || 0)), sym: c.sym })) })
+  }
+
+  for (const block of (song.lyricsBlocks || [])) {
+    const blockH = measureBlockHeight(block)
+    if (cursorY + blockH <= contentBottomY) {
+      const col = curCol()
+      if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+      for (const ln of (block.lines || [])) {
+        const plain = ln.plain || ln.text || ''
+        const cps = ln.chordPositions || []
+        pushLine(col, plain, cps)
+        cursorY += lineHeight(ln)
+      }
+      cursorY += 4
+      continue
+    }
+
+    // 3) Oversized section (cannot fit in a full column at this size) → split at line boundaries,
+    //    but keep header with the first line, and never leave header stranded.
+    const lineHs = (block.lines || []).map(lineHeight)
+    let i = 0
+    while (i < (block.lines || []).length) {
+      const remaining = (block.lines || []).length - i
+
+      // Ensure room for header + at least one line; otherwise advance
+      const minHead = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4) : 0
+      const firstLineH = lineHs[i] || 0
+      if (cursorY + minHead + firstLineH > contentBottomY) { advanceColOrPage(); continue }
+
+      // Pre-measure how many lines fit
+      const avail = contentBottomY - cursorY - minHead
+      let fit = 0, used = 0
+      while (i + fit < lineHs.length && used + lineHs[i + fit] <= avail) {
+        used += lineHs[i + fit]
+        fit++
+      }
+
+      // Widow: if only one line fits here, break early
+      if (fit === 1 && remaining > 1) { advanceColOrPage(); continue }
+
+      // Orphan: avoid leaving a single line for next column/page
+      if (remaining - fit === 1) {
+        if (fit > 1) {
+          used -= lineHs[i + fit - 1]
+          fit--
+        } else {
+          advanceColOrPage(); continue
+        }
+      }
+
+      const col = curCol()
+      if (i === 0 && block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+
+      for (let j = 0; j < fit; j++) {
+        const ln = block.lines[i]
+        const plain = ln.plain || ln.text || ''
+        const cps = ln.chordPositions || []
+        pushLine(col, plain, cps)
+        cursorY += lineHs[i]
+        i++
+      }
+      cursorY += 4
+      if (i < (block.lines || []).length) advanceColOrPage()
+    }
+  }
+  return { pages }
+}
+
+/* -----------------------------------------------------------
+ * TEST HELPERS (sync; no jsPDF)
+ * --------------------------------------------------------- */
+export function getLayoutMetrics(input, opts) {
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opts }
+  o.pageWidth = 612
+  o.pageHeight = 792
+  const measure = (text) => (text ? text.length * (o.lyricSizePt * 0.6) : 0)
+  const layout = computeLayout(normalizeSongInput(input), o, measure)
+  return layout.pages.map((page, pIdx) => ({
+    p: pIdx,
+    cols: page.columns.map((col, cIdx) => ({
+      c: cIdx,
+      blocks: col.blocks.map(b => ({
+        t: b.type,
+        h: b.type === 'section' ? (b.header || null) : null,
+        line: b.type === 'line'
+          ? {
+              text: b.lyrics,
+              chords: (b.chords || []).map(ch => ({ x: Number(ch.x.toFixed(2)), s: ch.sym }))
+            }
+          : null
+      }))
+    }))
+  }))
+}
+
+// Test-only: pure planner with deterministic measurers (no jsPDF)
+export function planForTest(input, opts) {
+  const song = normalizeSongInput(input)
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opts }
+  // Letter
+  o.pageWidth = 612; o.pageHeight = 792
+
+  const makeMeasureLyricAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0)
+  const makeMeasureChordAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0)
+
+  const pick = choosePlanPure(song, o, makeMeasureLyricAt, makeMeasureChordAt)
+  return {
+    columns: pick.columns,
+    size: pick.lyricSizePt,
+    pages: pick.layout.pages.length
+  }
+}
+

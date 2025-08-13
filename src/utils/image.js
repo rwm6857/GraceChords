@@ -1,5 +1,5 @@
 // src/utils/image.js
-import { planSongLayout } from './pdf'
+import { planSongLayout } from './pdf-plan'
 import { ensureCanvasFonts } from './fonts'
 export { ensureCanvasFonts } from './fonts'
 
