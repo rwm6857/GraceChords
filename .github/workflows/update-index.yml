@@ -1,0 +1,49 @@
+name: Rebuild Song Index
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'public/songs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-index
+  cancel-in-progress: false
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Rebuild index.json
+        run: node scripts/buildIndex.mjs
+
+      - name: Commit changes (if any)
+        shell: bash
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/index.json src/data/*.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to index.json"
+            exit 0
+          fi
+          git commit -m "chore(index): rebuild song index"
+          git push

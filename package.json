@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "build-index": "node scripts/buildIndex.mjs",
+    "build:index": "node scripts/buildIndex.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run"
