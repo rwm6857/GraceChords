@@ -141,39 +141,59 @@ export default function Setlist(){
   }
 
   // export & print
-  async function exportPdf(){
-    setBusy(true)
-    try {
-      const { downloadMultiSongPdf } = await loadPdfLib()
-      const songs = []
-      for(const sel of list){
-        const s = items.find(it=> it.id===sel.id); if(!s) continue
-        try {
-          const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
-          const txt = await fetchTextCached(url)
-          const parsed = parseChordPro(txt)
-          const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
-          const steps = stepsBetween(baseKey, sel.toKey || baseKey)
-          const blocks = parsed.blocks.map(b => ({
-            section: b.section,
-            lines: b.lines.map(ln => ({
-              plain: ln.text,
-              chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
-            }))
-          }))
-        }))
-        const slug = s.filename.replace(/\.chordpro$/, '')
-        songs.push({ title: parsed.meta?.title || s.title || slug, key: sel.toKey || baseKey, lyricsBlocks: blocks })
-      } catch(err){
-        console.error(err)
-        showToast(`Failed to process ${s.filename}`)
+async function exportPdf() {
+  setBusy(true);
+  try {
+    const { downloadMultiSongPdf } = await loadPdfLib();
+    const songs = [];
+
+    for (const sel of list) {
+      const s = items.find((it) => it.id === sel.id);
+      if (!s) continue;
+
+      try {
+        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`;
+        const txt = await fetchTextCached(url);
+        const parsed = parseChordPro(txt);
+
+        const baseKey =
+          parsed.meta?.key ||
+          parsed.meta?.originalkey ||
+          s.originalKey ||
+          "C";
+
+        const steps = stepsBetween(baseKey, sel.toKey || baseKey);
+
+        const blocks = (parsed.blocks || []).map((b) => ({
+          section: b.section,
+          lines: (b.lines || []).map((ln) => ({
+            plain: ln.text,
+            chordPositions: (ln.chords || []).map((c) => ({
+              sym: transposeSym(c.sym, steps),
+              index: c.index,
+            })),
+          })),
+        }));
+
+        const slug = s.filename.replace(/\.chordpro$/i, "");
+        songs.push({
+          title: parsed.meta?.title || s.title || slug,
+          key: sel.toKey || baseKey,
+          lyricsBlocks: blocks,
+        });
+      } catch (err) {
+        console.error(err);
+        showToast(`Failed to process ${s.filename}`);
       }
-      if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
-    } finally {
-      setBusy(false)
     }
-    if(songs.length) await downloadMultiSongPdf(songs)
+
+    if (songs.length) {
+      await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 });
+    }
+  } finally {
+    setBusy(false);
   }
+}
 
   function prefetchPdf(){ loadPdfLib() }
 
