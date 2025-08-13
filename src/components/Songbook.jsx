@@ -327,7 +327,7 @@ export default function Songbook() {
 
         <div className="Hr" />
 
-        <div className="PreviewScroll">
+        <div className="PreviewScroll" role="region" aria-label="Selected songs">
           <ol className="List" style={{ listStyle: 'decimal inside' }}>
             {selectedEntries.map((s) => (
               <li key={s.id}>
