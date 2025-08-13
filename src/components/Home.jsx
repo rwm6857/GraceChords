@@ -194,7 +194,7 @@ export default function Home(){
   optionRefs.current = []
 
   return (
-    <div className="HomePage container">
+    <div className="HomePage">
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <h1>GraceChords</h1>
@@ -253,37 +253,37 @@ export default function Home(){
       </div>
 
       {/* Results list */}
-      <ul
-        className="HomeResults grid"
-        role="listbox"
+      <div
+        className="HomeResults"
+        role="region"
         aria-label="Song results"
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
-        style={{ marginTop: 10 }}
       >
-        {results.map((s, i) => (
-          <li
-            key={s.id}
-            role="option"
-            ref={el => (optionRefs.current[i] = el)}
-            tabIndex={i === activeIndex ? 0 : -1}
-            aria-selected={i === activeIndex}
-            className="card"
-          >
-            <div className="row">
-              <div>
-                <Link to={`/song/${s.id}`} style={{ fontWeight: 600 }}>
-                  {s.title}
-                </Link>
-                <div className="meta">
-                  {s.originalKey || '—'}
-                  {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+        <div className="HomeGrid" role="listbox">
+          {results.map((s, i) => (
+            <Link
+              key={s.id}
+              to={`/song/${s.id}`}
+              role="option"
+              ref={el => (optionRefs.current[i] = el)}
+              tabIndex={i === activeIndex ? 0 : -1}
+              aria-selected={i === activeIndex}
+              className="HomeCard"
+            >
+              <div className="row">
+                <div>
+                  <div style={{ fontWeight: 600 }}>{s.title}</div>
+                  <div className="meta">
+                    {s.originalKey || '—'}
+                    {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+                  </div>
                 </div>
               </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
