@@ -80,28 +80,23 @@ describe('PDF planner cases', () => {
     }
   })
 
-  it('Case 5: Long sections avoid single-line pages', () => {
-    const short = 24
-    const longSection = (label) =>
-      blockFrom(label, Array.from({ length: 82 }, () => line(short)))
-    const song = {
+  it('Case 5: chords near column limit force width-safe fallback', () => {
+    // Each line places a long chord so close to the right edge that a
+    // two-column layout at 16pt would overflow. The planner should shrink
+    // and fall back to a single column at 12pt instead.
+    const mkLine = (withChord = false) => ({
+      plain: 'x'.repeat(25),
+      chordPositions: withChord ? [{ index: 24, sym: 'Gmaj7#11b13+' }] : []
+    })
+    const mkSong = (withChord) => ({
       title: 'Case5',
       key: 'G',
-      lyricsBlocks: [longSection('Verse 1'), longSection('Verse 2')]
-    }
-    const plan = planForTest(song, {})
-    expect(plan.pages).toBeGreaterThan(1)
-    const metrics = getLayoutMetrics(song, {
-      columns: plan.columns,
-      lyricSizePt: plan.size,
-      chordSizePt: plan.size
+      lyricsBlocks: [blockFrom('Verse', Array.from({ length: 20 }, () => mkLine(withChord)))]
     })
-    metrics.forEach(page => {
-      const lineCount = page.cols.reduce(
-        (sum, col) => sum + col.blocks.filter(b => b.t === 'line').length,
-        0
-      )
-      expect(lineCount).toBeGreaterThan(1)
-    })
+
+    const plan = planForTest(mkSong(true), {})
+    expect(plan.columns).toBe(1)
+    expect(plan.size).toBe(12)
+    expect(plan.pages).toBe(1)
   })
 })
