@@ -7,7 +7,10 @@ export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
-      targets: [{ src: 'src/sw.js', dest: '' }]
+      targets: [
+        { src: 'src/sw.js', dest: '' },
+        { src: '404.html', dest: '' }
+      ]
     })
   ],
   build: { outDir: 'docs', chunkSizeWarningLimit: 1200 },
