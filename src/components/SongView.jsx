@@ -6,6 +6,7 @@ import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
+import { headOk } from '../utils/headCache'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -78,9 +79,14 @@ export default function SongView(){
     const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
     const url = `${base}pptx/${slug}.pptx`
     setPptxUrl(url)
-    fetch(url, { method: 'HEAD' })
-      .then(r => { if (r.ok) setHasPptx(true) })
-      .catch(()=>{})
+    let cancelled = false
+    async function check(){
+      const ok = await headOk(url, entry.id)
+      if (cancelled || !ok) return
+      setHasPptx(true)
+    }
+    check()
+    return () => { cancelled = true }
   }, [entry])
 
   // keyboard shortcuts: c toggle chords, [ down, ] up
