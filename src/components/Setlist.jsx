@@ -8,6 +8,7 @@ import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
+import { headOk } from '../utils/headCache'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -40,10 +41,8 @@ export default function Setlist(){
         const s = items.find(it=> it.id===sel.id)
         if(!s) continue
         const url = `${import.meta.env.BASE_URL}pptx/${s.id}.pptx`
-        try{
-          const res = await fetch(url, { method: 'HEAD' })
-          if(res.ok) found[s.id] = true
-        }catch{}
+        const ok = await headOk(url, s.id)
+        if(ok) found[s.id] = true
       }
       if(!cancelled) setPptxMap(found)
     }
