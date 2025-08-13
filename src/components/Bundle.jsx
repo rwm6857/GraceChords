@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
-import { downloadMultiSongPdf } from '../utils/pdf'
 import { showToast } from '../utils/toast'
 
 export default function Bundle(){
@@ -19,6 +18,9 @@ export default function Bundle(){
     const ids = Object.keys(selection)
     setEntries((indexData?.items||[]).filter(it=> ids.includes(it.id)))
   },[selection])
+
+  let pdfLibPromise
+  const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
   async function handleDownload(){
     setLoading(true)
@@ -46,7 +48,10 @@ export default function Bundle(){
           showToast(`Failed to process ${it.filename}`)
         }
       }
-      if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+      if(songs.length){
+        const { downloadMultiSongPdf } = await loadPdfLib()
+        await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+      }
     } finally { setLoading(false) }
   }
 

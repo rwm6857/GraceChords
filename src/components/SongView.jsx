@@ -10,6 +10,8 @@ import { showToast } from '../utils/toast'
 // Lazy-loaded heavy modules
 let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+let pdfPlanPromise
+const loadPdfPlan = () => pdfPlanPromise || (pdfPlanPromise = import('../utils/pdf-plan'))
 let imageLibPromise
 const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
@@ -149,7 +151,7 @@ if(!entry){
   async function checkJpgSupport(showAlert = false) {
     const song = buildSong()
     const [{ planSongLayout }, { ensureCanvasFonts }] = await Promise.all([
-      loadPdfLib(),
+      loadPdfPlan(),
       loadImageLib()
     ])
     const fonts = await ensureCanvasFonts()
@@ -167,7 +169,7 @@ if(!entry){
 
   function prefetchPdf() { loadPdfLib() }
   function prefetchJpg() {
-    loadPdfLib()
+    loadPdfPlan()
     loadImageLib()
     if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planForTest } from '../utils/pdf'
+import { planForTest } from '../utils/pdf-plan'
 
 // Helpers to build lines/blocks
 const line = (len, ch='x') => ({ plain: ch.repeat(len), chordPositions: [] })
