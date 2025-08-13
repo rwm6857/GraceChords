@@ -47,7 +47,7 @@ export default function SongView(){
 
   const loadPdfPlan = () => {
     if (!pdfPlanPromise) {
-      pdfPlanPromise = import('../utils/pdf-plan')
+      pdfPlanPromise = import('../utils/pdfLayout')
       setPdfPlanPromise(pdfPlanPromise)
     }
     return pdfPlanPromise
@@ -165,7 +165,8 @@ if(!entry){
     return <div className="container"><p>Loading… <Link to="/">Back</Link></p></div>
   }
 
-  const title = parsed?.meta?.title || entry.title
+  const slug = entry.filename.replace(/\.chordpro$/, '')
+  const title = parsed?.meta?.title || entry.title || slug
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
 
@@ -189,7 +190,7 @@ if(!entry){
 
   async function checkJpgSupport(showAlert = false) {
     const song = buildSong()
-    const [{ planSongLayout }, { ensureCanvasFonts }] = await Promise.all([
+    const [{ chooseBestLayout }, { ensureCanvasFonts }] = await Promise.all([
       loadPdfPlan(),
       loadImageLib()
     ])
@@ -197,9 +198,9 @@ if(!entry){
     const ctx = document.createElement('canvas').getContext('2d')
     const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
     const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-    const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
-    lastPlan.current = plan
-    const ok = plan.layout.pages.length <= 1
+    const res = chooseBestLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+    lastPlan.current = res.plan
+    const ok = res.plan.layout.pages.length <= 1
     if (!ok && showAlert && !jpgAlerted.current) {
       alert('JPG export supports single-page songs only for now.')
       jpgAlerted.current = true
@@ -216,7 +217,7 @@ if(!entry){
 
   async function handleDownloadPdf(){
     const { downloadSingleSongPdf } = await loadPdfLib()
-    const res = await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    const res = await downloadSingleSongPdf(buildSong())
     lastPlan.current = res?.plan || null
   }
 

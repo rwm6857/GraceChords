@@ -113,7 +113,7 @@ export default function Songbook() {
     if (!selectedEntries.length) return
     setBusy(true)
     try {
-      const { downloadSongbookPdf, downloadMultiSongPdf } = await loadPdfLib()
+      const { downloadSongbookPdf } = await loadPdfLib()
       const songs = []
       for (const it of selectedEntries) {
         try {
@@ -127,8 +127,9 @@ export default function Songbook() {
               chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
             })),
           }))
+          const slug = it.filename.replace(/\.chordpro$/, '')
           songs.push({
-            title: parsed.meta.title || it.title,
+            title: parsed.meta.title || it.title || slug,
             key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
             lyricsBlocks: blocks,
           })
@@ -138,11 +139,7 @@ export default function Songbook() {
         }
       }
       if (songs.length) {
-        if (typeof downloadSongbookPdf === 'function') {
-          await downloadSongbookPdf(songs, { includeTOC, cover })
-        } else {
-          await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
-        }
+        await downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl: cover })
       }
     } finally {
       setBusy(false)
