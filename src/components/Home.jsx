@@ -120,6 +120,7 @@ export default function Home(){
 
   const [activeIndex, setActiveIndex] = useState(-1)
   const optionRefs = useRef([])
+  const resetRef = useRef(false)
 
   function onSearchKeyDown(e){
     if(e.key === 'Enter'){
@@ -142,7 +143,11 @@ export default function Home(){
     } else if(e.key === 'ArrowDown') {
       e.preventDefault()
       if(results.length === 0) return
-      setActiveIndex(0)
+      if (activeIndex === 0) {
+        optionRefs.current[0]?.focus()
+      } else {
+        setActiveIndex(0)
+      }
     } else if(e.key === 'ArrowUp') {
       e.preventDefault()
       if(results.length === 0) return
@@ -168,13 +173,22 @@ export default function Home(){
   }
 
   useEffect(() => {
-    if(activeIndex >= 0){
-      optionRefs.current[activeIndex]?.focus()
+    if (activeIndex >= 0) {
+      if (resetRef.current) {
+        resetRef.current = false
+      } else {
+        optionRefs.current[activeIndex]?.focus()
+      }
     }
   }, [activeIndex])
 
   useEffect(() => {
-    setActiveIndex(-1)
+    if (results.length > 0) {
+      setActiveIndex(0)
+      resetRef.current = true
+    } else {
+      setActiveIndex(-1)
+    }
   }, [results])
 
   useEffect(() => {
@@ -260,12 +274,11 @@ export default function Home(){
       <div
         className="HomeResults"
         role="region"
-        aria-label="Song results"
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
         {!fuse ? <div>Loading search…</div> : (
-          <div className="HomeGrid" role="listbox">
+          <div className="HomeGrid" role="listbox" aria-label="Song results">
             {results.map((s, i) => (
               <Link
                 key={s.id}
@@ -274,7 +287,7 @@ export default function Home(){
                 ref={el => (optionRefs.current[i] = el)}
                 tabIndex={i === activeIndex ? 0 : -1}
                 aria-selected={i === activeIndex}
-                className="HomeCard"
+                className={`HomeCard ${i === activeIndex ? 'active' : ''}`}
               >
                 <div className="row">
                   <div>
