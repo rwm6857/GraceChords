@@ -9,6 +9,7 @@ import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/set
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
+import Busy from './Busy'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -23,6 +24,7 @@ export default function Setlist(){
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')
   const pptxCount = Object.keys(pptxMap).length
+  const [busy, setBusy] = useState(false)
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -140,30 +142,37 @@ export default function Setlist(){
 
   // export & print
   async function exportPdf(){
-    const { downloadMultiSongPdf } = await loadPdfLib()
-    const songs = []
-    for(const sel of list){
-      const s = items.find(it=> it.id===sel.id); if(!s) continue
-      try {
-        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
-        const txt = await fetchTextCached(url)
-        const parsed = parseChordPro(txt)
-        const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
-        const steps = stepsBetween(baseKey, sel.toKey || baseKey)
-        const blocks = parsed.blocks.map(b => ({
-          section: b.section,
-          lines: b.lines.map(ln => ({
-            plain: ln.text,
-            chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+    setBusy(true)
+    try {
+      const { downloadMultiSongPdf } = await loadPdfLib()
+      const songs = []
+      for(const sel of list){
+        const s = items.find(it=> it.id===sel.id); if(!s) continue
+        try {
+          const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
+          const txt = await fetchTextCached(url)
+          const parsed = parseChordPro(txt)
+          const baseKey = (parsed.meta?.key) || (parsed.meta?.originalkey) || s.originalKey || 'C'
+          const steps = stepsBetween(baseKey, sel.toKey || baseKey)
+          const blocks = parsed.blocks.map(b => ({
+            section: b.section,
+            lines: b.lines.map(ln => ({
+              plain: ln.text,
+              chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+            }))
           }))
         }))
-        songs.push({ title: parsed.meta?.title || s.title, key: sel.toKey || baseKey, lyricsBlocks: blocks })
+        const slug = s.filename.replace(/\.chordpro$/, '')
+        songs.push({ title: parsed.meta?.title || s.title || slug, key: sel.toKey || baseKey, lyricsBlocks: blocks })
       } catch(err){
         console.error(err)
         showToast(`Failed to process ${s.filename}`)
       }
+      if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+    } finally {
+      setBusy(false)
     }
-    if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+    if(songs.length) await downloadMultiSongPdf(songs)
   }
 
   function prefetchPdf(){ loadPdfLib() }
@@ -202,9 +211,10 @@ export default function Setlist(){
 
   return (
     <div className="container">
+      <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div><Link to="/" className="back">← Back</Link></div>
-        <h2 style={{margin:0}}>Setlist Builder</h2>
+        <h1 style={{margin:0}}>Setlist Builder</h1>
         <div />
       </div>
 
@@ -291,7 +301,8 @@ export default function Setlist(){
               onClick={exportPdf}
               onMouseEnter={prefetchPdf}
               onFocus={prefetchPdf}
-            ><DownloadIcon /> Export PDF</button>
+              disabled={busy}
+            >{busy ? 'Exporting…' : <><DownloadIcon /> Export PDF</>}</button>
             <button
               className="btn iconbtn"
               onClick={bundlePptx}
@@ -306,7 +317,7 @@ export default function Setlist(){
 
           {/* Print-only minimal outline */}
           <div className="print-only" style={{marginTop:16}}>
-            <h1 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h1>
+            <h2 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h2>
             <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
               {list.map(sel => {
                 const s = items.find(it=> it.id===sel.id)
