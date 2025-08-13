@@ -7,13 +7,12 @@ import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
+import Busy from './Busy'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 let pdfPlanPromise
 let imageLibPromise
-const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
 export default function SongView(){
   const { id } = useParams()
@@ -26,12 +25,31 @@ export default function SongView(){
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
+  const [pdfLibPromiseState, setPdfLibPromiseState] = useState(pdfLibPromise)
+  const [imageLibPromiseState, setImageLibPromiseState] = useState(imageLibPromise)
   const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
+  const [busy, setBusy] = useState(false)
+  const lastPlan = useRef(null)
+
+  const loadPdfLib = () => {
+    if (!pdfLibPromise) {
+      pdfLibPromise = import('../utils/pdf')
+      setPdfLibPromiseState(pdfLibPromise)
+    }
+    return pdfLibPromise
+  }
+  const loadImageLib = () => {
+    if (!imageLibPromise) {
+      imageLibPromise = import('../utils/image')
+      setImageLibPromiseState(imageLibPromise)
+    }
+    return imageLibPromise
+  }
 
   const loadPdfPlan = () => {
     if (!pdfPlanPromise) {
-      pdfPlanPromise = import('../utils/pdf-plan')
+      pdfPlanPromise = import('../utils/pdfLayout')
       setPdfPlanPromise(pdfPlanPromise)
     }
     return pdfPlanPromise
@@ -77,9 +95,12 @@ export default function SongView(){
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
     const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    neighbors.forEach(n => {
+    neighbors.forEach((n) => {
       const url = `${base}songs/${n.filename}`
-      fetchTextCached(url).catch(()=>{})
+      fetchTextCached(url).catch((err) => {
+        console.error(err)
+        showToast(`Failed to load ${n.filename}`)
+      })
     })
   }, [entry?.id])
 
@@ -123,7 +144,7 @@ export default function SongView(){
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
     if (!parsed) return
-    if (!pdfPlanPromiseState || !imageLibPromise) return
+    if (!pdfPlanPromiseState || !imageLibPromiseState) return
     let cancelled = false
     async function check() {
       const ok = await checkJpgSupport()
@@ -132,7 +153,7 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
-  }, [parsed, toKey, pdfPlanPromiseState])
+  }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
 
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -150,7 +171,8 @@ if(!entry){
     return <div className="container"><p>Loading… <Link to="/">Back</Link></p></div>
   }
 
-  const title = parsed?.meta?.title || entry.title
+  const slug = entry.filename.replace(/\.chordpro$/, '')
+  const title = parsed?.meta?.title || entry.title || slug
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
 
@@ -174,7 +196,7 @@ if(!entry){
 
   async function checkJpgSupport(showAlert = false) {
     const song = buildSong()
-    const [{ planSongLayout }, { ensureCanvasFonts }] = await Promise.all([
+    const [{ chooseBestLayout }, { ensureCanvasFonts }] = await Promise.all([
       loadPdfPlan(),
       loadImageLib()
     ])
@@ -182,8 +204,9 @@ if(!entry){
     const ctx = document.createElement('canvas').getContext('2d')
     const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
     const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-    const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
-    const ok = plan.layout.pages.length <= 1
+    const res = chooseBestLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+    lastPlan.current = res.plan
+    const ok = res.plan.layout.pages.length <= 1
     if (!ok && showAlert && !jpgAlerted.current) {
       alert('JPG export supports single-page songs only for now.')
       jpgAlerted.current = true
@@ -199,21 +222,31 @@ if(!entry){
   }
 
   async function handleDownloadPdf(){
+    setBusy(true)
+    try {
+      const { downloadSingleSongPdf } = await loadPdfLib()
+      await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    } finally {
+      setBusy(false)
+    }
     const { downloadSingleSongPdf } = await loadPdfLib()
-    await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    const res = await downloadSingleSongPdf(buildSong())
+    lastPlan.current = res?.plan || null
+
   }
 
   async function handleDownloadJpg(){
     const ok = await checkJpgSupport(true)
     if (!ok) return
     const { downloadSingleSongJpg } = await loadImageLib()
-    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, '') })
+    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, ''), plan: lastPlan.current })
   }
 
   
 
   return (
     <div className="container">
+      <Busy busy={busy} />
       <div className="songpage__top">
         <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
@@ -239,8 +272,9 @@ if(!entry){
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
+            disabled={busy}
           >
-            <DownloadIcon /> Download PDF
+            {busy ? 'Exporting…' : <><DownloadIcon /> Download PDF</>}
           </button>
           <button
             className="btn iconbtn"
@@ -338,7 +372,9 @@ if(!entry){
 /* ---------- Helpers ---------- */
 
 function extractYouTubeId(input = '') {
-  const s = String(input).trim()
+  const raw = String(input)
+  if (raw.length > 200) return null
+  const s = raw.trim()
   const ID = /^[a-zA-Z0-9_-]{11}$/
   if (ID.test(s)) return s
 
