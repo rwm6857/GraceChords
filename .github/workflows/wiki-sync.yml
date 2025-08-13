@@ -12,8 +12,6 @@ on:
 
 jobs:
   sync:
-    # Skip job entirely if there are no files under public/wiki/**
-    if: ${{ hashFiles('public/wiki/**') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,6 +19,7 @@ jobs:
         with:
           node-version: '20'
       - name: Sync to GitHub Wiki
+        if: ${{ hashFiles('public/wiki/**') != '' }}
         run: node scripts/syncWiki.mjs
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
