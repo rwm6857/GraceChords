@@ -1,11 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 
 export default function Home(){
   const items = indexData?.items || []
+
+  const [FuseLib, setFuseLib] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const mod = await import('fuse.js')
+      if (!cancelled) setFuseLib(() => mod.default)
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   // -------- Search & filters --------
   const [q, setQ] = useState('')
@@ -27,16 +36,19 @@ export default function Home(){
   const fetchingRef = useRef(new Set())
 
   // Build Fuse with tuned weights (title > tags > authors)
-  const fuse = useMemo(() => new Fuse(items, {
-    includeScore: true,
-    threshold: 0.35,
-    ignoreLocation: true,
-    keys: [
-      { name: 'title',  weight: 0.7 },
-      { name: 'tags',   weight: 0.25 },
-      { name: 'authors',weight: 0.15 }
-    ]
-  }), [items])
+  const fuse = useMemo(() => {
+    if (!FuseLib) return null
+    return new FuseLib(items, {
+      includeScore: true,
+      threshold: 0.35,
+      ignoreLocation: true,
+      keys: [
+        { name: 'title',  weight: 0.7 },
+        { name: 'tags',   weight: 0.25 },
+        { name: 'authors',weight: 0.15 }
+      ]
+    })
+  }, [FuseLib, items])
 
   function tagPass(s){
     if (!selectedTags.length) return true
@@ -76,6 +88,7 @@ export default function Home(){
 
   // Compute results (Fuse + tag filter; optionally union lyrics matches ONLY when lyricsOn)
   const results = useMemo(() => {
+    if (!fuse) return []
     let scoreMap = new Map()
     let list
 
@@ -214,23 +227,27 @@ export default function Home(){
 
       {/* Results grid (directory only) */}
       <div className="HomeResults" role="region" aria-label="Song results" ref={resultsRef}>
-        <div className="grid" style={{marginTop:10}}>
-          {results.map(s => {
-            return (
-              <div key={s.id} className="card">
-                <div className="row">
-                  <div>
-                    <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
-                    <div className="meta">
-                      {s.originalKey || '—'}
-                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+        {!fuse ? (
+          <div style={{marginTop:10}}>Loading search…</div>
+        ) : (
+          <div className="grid" style={{marginTop:10}}>
+            {results.map(s => {
+              return (
+                <div key={s.id} className="card">
+                  <div className="row">
+                    <div>
+                      <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
+                      <div className="meta">
+                        {s.originalKey || '—'}
+                        {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

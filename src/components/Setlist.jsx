@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
@@ -27,6 +26,16 @@ export default function Setlist(){
   const [currentId, setCurrentId] = useState(null)
   const [savedSets, setSavedSets] = useState(() => listSets())
   const [selectedId, setSelectedId] = useState('')
+
+  const [FuseLib, setFuseLib] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const mod = await import('fuse.js')
+      if (!cancelled) setFuseLib(() => mod.default)
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   // load catalog
   useEffect(()=>{ setItems(indexData?.items || []) },[])
@@ -70,9 +79,15 @@ export default function Setlist(){
   }, [])
 
   // search
-  const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
+  const fuse = useMemo(() => {
+    if (!FuseLib) return null
+    return new FuseLib(items, { keys: ['title','tags'], threshold:0.4 })
+  }, [FuseLib, items])
   const results = useMemo(
-    ()=> q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title)),
+    () => {
+      if (!fuse) return []
+      return q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title))
+    },
     [q, fuse, items]
   )
 
@@ -251,15 +266,19 @@ export default function Setlist(){
             <strong>Add songs</strong>
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
             <div style={{maxHeight:300, overflow:'auto', marginTop:6}}>
-              {results.map(s=> (
-                <div key={s.id} className="row" style={{padding:'6px 0'}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:600}}>{s.title}</div>
-                    <div className="meta">{s.originalKey || ''}{s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}</div>
+              {!fuse ? (
+                <div>Loading search…</div>
+              ) : (
+                results.map(s=> (
+                  <div key={s.id} className="row" style={{padding:'6px 0'}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:600}}>{s.title}</div>
+                      <div className="meta">{s.originalKey || ''}{s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}</div>
+                    </div>
+                    <button className="btn" onClick={()=> addSong(s)}>Add</button>
                   </div>
-                  <button className="btn" onClick={()=> addSong(s)}>Add</button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
