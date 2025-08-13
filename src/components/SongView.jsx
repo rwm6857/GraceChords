@@ -9,9 +9,7 @@ import { showToast } from '../utils/toast'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 let imageLibPromise
-const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
 export default function SongView(){
   const { id } = useParams()
@@ -25,6 +23,25 @@ export default function SongView(){
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
   const jpgAlerted = useRef(false)
+
+  const [pdfPromise, setPdfPromise] = useState(pdfLibPromise)
+  const [imagePromise, setImagePromise] = useState(imageLibPromise)
+
+  const loadPdfLib = () => {
+    if (!pdfLibPromise) {
+      pdfLibPromise = import('../utils/pdf')
+      setPdfPromise(pdfLibPromise)
+    }
+    return pdfLibPromise
+  }
+
+  const loadImageLib = () => {
+    if (!imageLibPromise) {
+      imageLibPromise = import('../utils/image')
+      setImagePromise(imageLibPromise)
+    }
+    return imageLibPromise
+  }
 
   // find the index item
   useEffect(()=>{
@@ -103,7 +120,7 @@ export default function SongView(){
   // JPG single-page guard – only runs once PDF/JPG libs are loaded
   useEffect(() => {
     if (!parsed) return
-    if (!pdfLibPromise || !imageLibPromise) return
+    if (!pdfPromise || !imagePromise) return
     let cancelled = false
     async function check() {
       const ok = await checkJpgSupport()
@@ -112,7 +129,7 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
-  }, [parsed, toKey])
+  }, [parsed, toKey, pdfPromise, imagePromise])
 
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -167,9 +184,9 @@ if(!entry){
 
   function prefetchPdf() { loadPdfLib() }
   function prefetchJpg() {
-    loadPdfLib()
-    loadImageLib()
-    if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
+    Promise.all([loadPdfLib(), loadImageLib()]).then(() => {
+      if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
+    })
   }
 
   async function handleDownloadPdf(){
