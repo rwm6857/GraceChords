@@ -250,7 +250,7 @@ export default function Setlist(){
             <strong>Add songs</strong>
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
             <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
-              {results.map(s=> (
+              {!fuse ? <div>Loading search…</div> : results.map(s=> (
                 <div key={s.id} className="row" style={{padding:'6px 0'}}>
                   <div style={{flex:1}}>
                     <div style={{fontWeight:600}}>{s.title}</div>
