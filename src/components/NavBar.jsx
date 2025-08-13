@@ -26,12 +26,22 @@ export default function NavBar(){
           <Link to="/" className="brand">GraceChords</Link>
           <div className="topnav__links">
             <Link to="/" className={`topnav__link ${isActive('/') ? 'active':''}`}>Home</Link>
-            <Link to="/setlist" className={`topnav__link ${isActive('/setlist') ? 'active':''}`}>
+            <Link
+              to="/setlist"
+              className={`topnav__link ${isActive('/setlist') ? 'active':''}`}
+              onMouseEnter={() => import('./Setlist')}
+            >
               <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
                 <SetlistIcon /> Setlist
               </span>
             </Link>
-            <Link to="/songbook" className={`topnav__link ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
+            <Link
+              to="/songbook"
+              className={`topnav__link ${isActive('/songbook') ? 'active':''}`}
+              onMouseEnter={() => import('./Songbook')}
+            >
+              Songbook
+            </Link>
             <a
               href="https://github.com/rwm6857/GraceChords/wiki"
               className="topnav__link"
