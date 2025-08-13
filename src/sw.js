@@ -1,27 +1,19 @@
-const CACHE_NAME = 'gracechords-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/src/data/index.json',
-  '/fonts/NotoSans-Regular.ttf',
-  '/fonts/NotoSans-Bold.ttf',
-  '/fonts/NotoSans-Italic.ttf',
-  '/fonts/NotoSans-BoldItalic.ttf',
-  '/fonts/NotoSansMono-Regular.ttf',
-  '/fonts/NotoSansMono-Bold.ttf'
-];
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
-  self.skipWaiting();
-});
+const CACHE_NAME = 'gracechords-v2';
+
+workbox.precaching.precacheAndRoute(self.__WB_MANIFEST);
+
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((k) => k.startsWith('gracechords') && k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
