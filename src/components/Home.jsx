@@ -260,29 +260,31 @@ export default function Home(){
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
-        <div className="HomeGrid" role="listbox">
-          {results.map((s, i) => (
-            <Link
-              key={s.id}
-              to={`/song/${s.id}`}
-              role="option"
-              ref={el => (optionRefs.current[i] = el)}
-              tabIndex={i === activeIndex ? 0 : -1}
-              aria-selected={i === activeIndex}
-              className="HomeCard"
-            >
-              <div className="row">
-                <div>
-                  <div style={{ fontWeight: 600 }}>{s.title}</div>
-                  <div className="meta">
-                    {s.originalKey || '—'}
-                    {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+        {!fuse ? <div>Loading search…</div> : (
+          <div className="HomeGrid" role="listbox">
+            {results.map((s, i) => (
+              <Link
+                key={s.id}
+                to={`/song/${s.id}`}
+                role="option"
+                ref={el => (optionRefs.current[i] = el)}
+                tabIndex={i === activeIndex ? 0 : -1}
+                aria-selected={i === activeIndex}
+                className="HomeCard"
+              >
+                <div className="row">
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{s.title}</div>
+                    <div className="meta">
+                      {s.originalKey || '—'}
+                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
