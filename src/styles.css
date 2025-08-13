@@ -252,56 +252,48 @@ html, body, #root { height: 100%; }
 
 /* Songbook layout: two panes */
 .SongbookPage {
-  flex: 1 1 auto;
-  min-height: 0;              /* <-- critical: allows inner overflow */
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;          /* critical for inner scrolling */
 }
 
 /* Left panel: header + scroll area */
-.SongPicker {
-  display: flex; flex-direction: column;
-  min-height: 0;
-}
+.SongPicker { display:flex; flex-direction:column; min-height:0; }
 
 .SongPickerHeader {
   position: sticky; top: 0; z-index: 5;
-  background: var(--bg, #0b0b0b); /* use your theme var if you have one */
+  background: var(--bg, Canvas);
   padding-block: .5rem;
-  /* optional: border-bottom for separation */
-  /* border-bottom: 1px solid var(--border, #222); */
 }
 
 .SongPickerScroll {
-  flex: 1 1 auto; min-height: 0;
-  overflow: auto;              /* <-- only this scrolls */
-  -webkit-overflow-scrolling: touch;
-  padding-right: .25rem;       /* space for the scrollbar gutter */
+  flex:1 1 auto; min-height:0;
+  overflow:auto; -webkit-overflow-scrolling:touch;
 }
 
 /* Two-column grid of cards on desktop; single column on small screens */
-.SongGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .75rem;
-}
+.SongGrid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.75rem; }
 
-@media (max-width: 1024px) {
-  .SongbookPage { grid-template-columns: 1fr; }
-  .SongGrid { grid-template-columns: 1fr; }
-}
+@media (max-width: 1024px) { .SongbookPage { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .SongGrid { grid-template-columns: 1fr; } }
 
 /* Card styling */
 .SongCard {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  gap: .5rem;
-  padding: .75rem .8rem;
-  border: 1px solid var(--border, rgba(255,255,255,.08));
-  background: var(--surface, rgba(255,255,255,.03)); /* light gray in light mode; tweak if needed */
-  border-radius: .75rem;       /* rounded rectangles */
+  display:grid; grid-template-columns:auto 1fr; align-items:start; gap:.5rem;
+  padding:.75rem .8rem; border-radius:.75rem;
+  border:1px solid var(--border, rgba(0,0,0,.12));
+  background: var(--surface, #f5f5f7);
+}
+@media (prefers-color-scheme: dark) {
+  .SongCard {
+    border-color: var(--border, rgba(255,255,255,.14));
+    background: var(--surface, rgba(255,255,255,.06));
+  }
 }
 
 .SongCard input[type="checkbox"] {
@@ -313,11 +305,7 @@ html, body, #root { height: 100%; }
 .SongMeta  { color: var(--muted, #9aa0a6); font-size: .875rem; margin-top: .25rem; }
 
 /* Right panel (preview) just in case it also needs to scroll */
-.SongPreview {
-  min-height: 0; display: flex; flex-direction: column;
-}
-.SongPreview .PreviewScroll {
-  flex: 1 1 auto; min-height: 0; overflow: auto;
-}
+.SongPreview { min-height:0; display:flex; flex-direction:column; }
+.PreviewScroll { flex:1 1 auto; min-height:0; overflow:auto; }
 
 
