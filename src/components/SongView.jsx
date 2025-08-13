@@ -12,7 +12,6 @@ import { headOk } from '../utils/headCache'
 let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 let pdfPlanPromise
-const loadPdfPlan = () => pdfPlanPromise || (pdfPlanPromise = import('../utils/pdf-plan'))
 let imageLibPromise
 const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
@@ -27,7 +26,16 @@ export default function SongView(){
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
+  const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
+
+  const loadPdfPlan = () => {
+    if (!pdfPlanPromise) {
+      pdfPlanPromise = import('../utils/pdf-plan')
+      setPdfPlanPromise(pdfPlanPromise)
+    }
+    return pdfPlanPromise
+  }
 
   // find the index item
   useEffect(()=>{
@@ -108,10 +116,10 @@ export default function SongView(){
 
   
 
-  // JPG single-page guard – only runs once PDF/JPG libs are loaded
+  // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
     if (!parsed) return
-    if (!pdfLibPromise || !imageLibPromise) return
+    if (!pdfPlanPromiseState || !imageLibPromise) return
     let cancelled = false
     async function check() {
       const ok = await checkJpgSupport()
@@ -120,7 +128,7 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
-  }, [parsed, toKey])
+  }, [parsed, toKey, pdfPlanPromiseState])
 
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -181,9 +189,9 @@ if(!entry){
 
   function prefetchPdf() { loadPdfLib() }
   function prefetchJpg() {
-    loadPdfPlan()
-    loadImageLib()
-    if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
+    Promise.all([loadPdfPlan(), loadImageLib()]).then(() => {
+      if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
+    })
   }
 
   async function handleDownloadPdf(){
