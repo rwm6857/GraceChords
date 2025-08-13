@@ -250,62 +250,38 @@ html, body, #root { height: 100%; }
 .App { min-height: 100dvh; display: flex; flex-direction: column; }
 .Route, .RouteRoot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
-/* Songbook layout: two panes */
-.SongbookPage {
-  max-width: 1200px;
-  margin-inline: auto;
+/* Builder layout shared by Setlist and Songbook */
+.BuilderPage {
+  max-width: var(--builder-max, 1200px);
+  margin: 0 auto;
   padding-inline: 1rem;
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 1rem;
   flex: 1 1 auto;
-  min-height: 0;          /* critical for inner scrolling */
+  min-height: 0;
 }
+@media (max-width: 1024px) { .BuilderPage { grid-template-columns: 1fr; } }
 
-/* Left panel: header + scroll area */
-.SongPicker { display:flex; flex-direction:column; min-height:0; }
+/* Left pane */
+.BuilderLeft { display: flex; flex-direction: column; min-height: 0; }
+.BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--bg, Canvas); padding: .75rem 0; }
+.BuilderScroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 
-.SongPickerHeader {
-  position: sticky; top: 0; z-index: 5;
-  background: var(--bg, Canvas);
-  padding-block: .5rem;
-}
-
-.SongPickerScroll {
-  flex:1 1 auto; min-height:0;
-  overflow:auto; -webkit-overflow-scrolling:touch;
-}
-
-/* Two-column grid of cards on desktop; single column on small screens */
-.SongGrid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.75rem; }
-
-@media (max-width: 1024px) { .SongbookPage { grid-template-columns: 1fr; } }
-@media (max-width: 1024px) { .SongGrid { grid-template-columns: 1fr; } }
-
-/* Card styling */
-.SongCard {
-  display:grid; grid-template-columns:auto 1fr; align-items:start; gap:.5rem;
-  padding:.75rem .8rem; border-radius:.75rem;
-  border:1px solid var(--border, rgba(0,0,0,.12));
-  background: var(--surface, #f5f5f7);
-}
+/* List rows */
+.BuilderList { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.BuilderRow { border: 1px solid var(--border, rgba(0,0,0,.1)); border-radius: 12px; background: var(--surface, #f8f9fb); }
+.RowMain { display: grid; grid-template-columns: auto 1fr; gap: .75rem; padding: .75rem 1rem; align-items: start; }
+.RowText { min-width: 0; }
+.RowTitle { font-weight: 600; line-height: 1.25; }
+.RowMeta  { opacity: .85; font-size: .9rem; margin-top: .125rem; }
 @media (prefers-color-scheme: dark) {
-  .SongCard {
-    border-color: var(--border, rgba(255,255,255,.14));
-    background: var(--surface, rgba(255,255,255,.06));
-  }
+  .BuilderRow { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.06); }
 }
 
-.SongCard input[type="checkbox"] {
-  margin-top: .25rem;
-}
-
-.SongInfo { min-width: 0; }
-.SongTitle { font-weight: 600; line-height: 1.25; }
-.SongMeta  { color: var(--muted, #9aa0a6); font-size: .875rem; margin-top: .25rem; }
-
-/* Right panel (preview) just in case it also needs to scroll */
-.SongPreview { min-height:0; display:flex; flex-direction:column; }
-.PreviewScroll { flex:1 1 auto; min-height:0; overflow:auto; }
+/* Right pane */
+.BuilderRight { min-height: 0; display: flex; flex-direction: column; gap: .75rem; }
+.RightSection { padding: .25rem 0; }
+.RightScroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
 
 

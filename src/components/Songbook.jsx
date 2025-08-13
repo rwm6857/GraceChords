@@ -165,22 +165,22 @@ export default function Songbook() {
   // Render
   if (items.length === 0) {
     return (
-      <div className="SongbookPage">
-        <section className="SongPicker">
-          <div className="SongPickerHeader">
+      <div className="BuilderPage">
+        <section className="BuilderLeft">
+          <header className="BuilderHeader">
             <h3>No songs found</h3>
             <p className="Small">The song index is empty or failed to load.</p>
-          </div>
+          </header>
         </section>
       </div>
     )
   }
 
   return (
-    <div className="SongbookPage">
+    <div className="BuilderPage">
       {/* LEFT: Picker */}
-      <section className="SongPicker">
-        <div className="SongPickerHeader">
+      <section className="BuilderLeft">
+        <header className="BuilderHeader">
           <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div className="Field" style={{ minWidth: 220 }}>
               <label htmlFor="sb-search">Search:</label>
@@ -239,10 +239,10 @@ export default function Songbook() {
             </div>
 
             <div className="Field" style={{ marginLeft: 'auto', gap: '.5rem' }}>
-              <button className="Button" onClick={selectAllFiltered} disabled={!filteredCount}>
+              <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
                 Select all ({filteredCount} filtered)
               </button>
-              <button className="Button" onClick={clearAll} disabled={!selectedCount}>
+              <button className="btn" onClick={clearAll} disabled={!selectedCount}>
                 Clear
               </button>
             </div>
@@ -251,12 +251,10 @@ export default function Songbook() {
           <div className="Row Small" style={{ marginTop: '.5rem' }}>
             <strong>{selectedCount}</strong> selected
           </div>
-          <div className="Hr" />
-        </div>
+        </header>
 
-        {/* Only this section scrolls; two-column grid handled by your CSS */}
-        <div className="SongPickerScroll" role="region" aria-label="Song list">
-          <div className="SongGrid">
+        <div className="BuilderScroll" role="region" aria-label="Song list">
+          <ul className="BuilderList">
             {filtered.map((s) => {
               const checked = selectedIds.has(s.id)
               const authorsLine = Array.isArray(s.authors)
@@ -264,69 +262,71 @@ export default function Songbook() {
                 : s.authors || ''
               const tagLine = Array.isArray(s.tags) ? s.tags.join(', ') : s.tags || ''
               return (
-                <label key={s.id} className="SongCard">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(e) => toggleOne(s.id, e.target.checked)}
-                    aria-label={`Select ${s.title}`}
-                  />
-                  <div className="SongInfo">
-                    <div className="SongTitle">{s.title}</div>
-                    <div className="SongMeta">
-                      {authorsLine || '—'}
-                      {tagLine ? ` • ${tagLine}` : ''}
-                      {s.country ? ` • ${s.country}` : ''}
+                <li key={s.id} className="BuilderRow">
+                  <label className="RowMain">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleOne(s.id, e.target.checked)}
+                      aria-label={`Select ${s.title}`}
+                    />
+                    <div className="RowText">
+                      <div className="RowTitle">{s.title}</div>
+                      <div className="RowMeta">
+                        {authorsLine || '—'}
+                        {tagLine ? ` • ${tagLine}` : ''}
+                        {s.country ? ` • ${s.country}` : ''}
+                      </div>
                     </div>
-                  </div>
-                </label>
+                  </label>
+                </li>
               )
             })}
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* RIGHT: Preview / Export */}
-      <aside className="SongPreview">
-        <div className="Row" style={{ justifyContent: 'space-between' }}>
-          <div className="Field">
-            <input
-              id="sb-toc"
-              type="checkbox"
-              checked={includeTOC}
-              onChange={(e) => setIncludeTOC(e.target.checked)}
-            />
-            <label htmlFor="sb-toc">Include table of contents</label>
-          </div>
+      <aside className="BuilderRight">
+        <div className="RightSection">
+          <div className="Row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <div className="Field">
+              <input
+                id="sb-toc"
+                type="checkbox"
+                checked={includeTOC}
+                onChange={(e) => setIncludeTOC(e.target.checked)}
+              />
+              <label htmlFor="sb-toc">Include table of contents</label>
+            </div>
 
-          <div className="Field">
-            <label htmlFor="sb-cover">Cover page (image):</label>
-            <input
-              id="sb-cover"
-              className="CoverInput"
-              type="file"
-              accept="image/*"
-              onChange={onCoverFile}
-            />
-          </div>
+            <div className="Field">
+              <label htmlFor="sb-cover">Cover page (image):</label>
+              <input
+                id="sb-cover"
+                className="CoverInput"
+                type="file"
+                accept="image/*"
+                onChange={onCoverFile}
+              />
+            </div>
 
-          <div className="Field" style={{ marginLeft: 'auto' }}>
-            <button
-              className="Button"
-              onClick={handleExport}
-              onMouseEnter={prefetchPdf}
-              onFocus={prefetchPdf}
-              disabled={!selectedEntries.length || busy}
-              title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
-            >
-              {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
-            </button>
+            <div className="Field" style={{ marginLeft: 'auto' }}>
+              <button
+                className="btn"
+                onClick={handleExport}
+                onMouseEnter={prefetchPdf}
+                onFocus={prefetchPdf}
+                disabled={!selectedEntries.length || busy}
+                title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
+              >
+                {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="Hr" />
-
-        <div className="PreviewScroll" role="region" aria-label="Selected songs">
+        <div className="RightSection RightScroll" role="region" aria-label="Selected songs">
           <ol className="List" style={{ listStyle: 'decimal inside' }}>
             {selectedEntries.map((s) => (
               <li key={s.id}>
