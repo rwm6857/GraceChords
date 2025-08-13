@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planForTest } from '../utils/pdf-plan'
+import { planForTest, getLayoutMetrics } from '../utils/pdf-plan'
 
 // Helpers to build lines/blocks
 const line = (len, ch='x') => ({ plain: ch.repeat(len), chordPositions: [] })
@@ -78,5 +78,30 @@ describe('PDF planner cases', () => {
     } else {
       expect(plan.pages).toBeGreaterThanOrEqual(1) // usually 2
     }
+  })
+
+  it('Case 5: Long sections avoid single-line pages', () => {
+    const short = 24
+    const longSection = (label) =>
+      blockFrom(label, Array.from({ length: 82 }, () => line(short)))
+    const song = {
+      title: 'Case5',
+      key: 'G',
+      lyricsBlocks: [longSection('Verse 1'), longSection('Verse 2')]
+    }
+    const plan = planForTest(song, {})
+    expect(plan.pages).toBeGreaterThan(1)
+    const metrics = getLayoutMetrics(song, {
+      columns: plan.columns,
+      lyricSizePt: plan.size,
+      chordSizePt: plan.size
+    })
+    metrics.forEach(page => {
+      const lineCount = page.cols.reduce(
+        (sum, col) => sum + col.blocks.filter(b => b.t === 'line').length,
+        0
+      )
+      expect(lineCount).toBeGreaterThan(1)
+    })
   })
 })
