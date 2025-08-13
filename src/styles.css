@@ -61,6 +61,11 @@ a{ color: var(--primary); text-decoration: none }
   padding:12px;
 }
 
+/* Highlight the active search result */
+.HomeResults .card.active{
+  border-color: var(--primary);
+}
+
 input,select,textarea{
   padding:8px 10px;
   border:1px solid var(--line);

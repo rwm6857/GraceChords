@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
@@ -10,7 +10,8 @@ export default function Home(){
   // -------- Search & filters --------
   const [q, setQ] = useState('')
   const searchRef = useRef(null)
-  const resultsRef = useRef(null)
+  const navigate = useNavigate()
+  const [activeIndex, setActiveIndex] = useState(0)
   const qLower = q.trim().toLowerCase()
   const allTags = useMemo(() => {
     const set = new Set()
@@ -121,19 +122,16 @@ export default function Home(){
   function onSearchKeyDown(e){
     if(e.key === 'Enter'){
       e.preventDefault()
-      const c = resultsRef.current
-      if(!c) return
-      const containerRect = c.getBoundingClientRect()
-      const links = c.querySelectorAll('a')
-      for(const link of links){
-        const rect = link.getBoundingClientRect()
-        if(rect.bottom > containerRect.top && rect.top < containerRect.bottom){
-          link.click()
-          break
-        }
+      const first = results[activeIndex]
+      if(first){
+        navigate(`/song/${first.id}`)
       }
     }
   }
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [qLower])
 
   useEffect(() => {
     function onKeyDown(e){
@@ -213,11 +211,11 @@ export default function Home(){
       </div>
 
       {/* Results grid (directory only) */}
-      <div className="HomeResults" role="region" aria-label="Song results" ref={resultsRef}>
+      <div className="HomeResults" role="region" aria-label="Song results">
         <div className="grid" style={{marginTop:10}}>
-          {results.map(s => {
+          {results.map((s, i) => {
             return (
-              <div key={s.id} className="card">
+              <div key={s.id} className={`card ${i === activeIndex ? 'active' : ''}`}>
                 <div className="row">
                   <div>
                     <Link to={`/song/${s.id}`} style={{fontWeight:600}}>{s.title}</Link>
