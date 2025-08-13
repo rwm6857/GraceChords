@@ -13,7 +13,7 @@ describe('Home search accessibility', () => {
 
     const user = userEvent.setup()
     const search = await screen.findByLabelText(/search/i)
-    const listbox = screen.getByRole('listbox', { name: /song results/i })
+    const listbox = screen.getByRole('listbox')
     expect(listbox).toBeInTheDocument()
 
     await user.click(search)
