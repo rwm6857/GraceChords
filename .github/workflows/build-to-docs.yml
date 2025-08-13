@@ -21,6 +21,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build  # writes to /docs
+        env:
+          VITE_COMMIT_SHA: ${{ github.sha }}
       # WARNING: ensure docs/CNAME and 404.html are preserved
 
       # Commit the newly built files back into /docs on main
