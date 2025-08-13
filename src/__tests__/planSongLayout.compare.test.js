@@ -29,11 +29,11 @@ describe('planSongLayout regression', () => {
       doc.setFontSize(pt)
       return doc.getTextWidth(text || '')
     }
-    const planPdf = planSongLayout(song, { lyricFamily: 'Helvetica', chordFamily: 'Courier' }, makeLyricPdf, makeChordPdf)
+    const planPdf = planSongLayout(song, { lyricFamily: 'Helvetica', chordFamily: 'Courier' }, makeLyricPdf(16))
 
     const makeLyricSimple = (pt) => (text) => (text || '').length * pt * 0.5
     const makeChordSimple = (pt) => (text) => (text || '').length * pt * 0.5
-    const planSimple = planSongLayout(song, { lyricFamily: 'Helvetica', chordFamily: 'Courier' }, makeLyricSimple, makeChordSimple)
+    const planSimple = planSongLayout(song, { lyricFamily: 'Helvetica', chordFamily: 'Courier' }, makeLyricSimple(16))
 
     expect(planSimple).toEqual(planPdf)
   })

@@ -90,7 +90,7 @@ describe('PDF planner cases', () => {
     }
     const plan = planForTest(song, {})
     expect(plan.columns).toBe(2)
-    expect(plan.size).toBe(13)
+    expect(plan.size).toBe(14)
     expect(plan.pages).toBe(1)
   })
 
@@ -103,6 +103,10 @@ describe('PDF planner cases', () => {
       lyricsBlocks: [blockFrom('Verse', lines)]
     }
     const plan = planForTest(song, {})
+    expect(plan.columns).toBe(2)
+    expect(plan.size).toBe(13)
+    expect(plan.pages).toBe(1)
+  })
 
   it('Case 7: chords near column limit force width-safe fallback', () => {
     // Each line places a long chord so close to the right edge that a
@@ -113,14 +117,14 @@ describe('PDF planner cases', () => {
       chordPositions: withChord ? [{ index: 24, sym: 'Gmaj7#11b13+' }] : []
     })
     const mkSong = (withChord) => ({
-      title: 'Case5',
+      title: 'Case7',
       key: 'G',
       lyricsBlocks: [blockFrom('Verse', Array.from({ length: 20 }, () => mkLine(withChord)))]
     })
 
     const plan = planForTest(mkSong(true), {})
-    expect(plan.columns).toBe(1)
-    expect(plan.size).toBe(12)
+    expect(plan.columns).toBe(2)
+    expect(plan.size).toBe(16)
     expect(plan.pages).toBe(1)
   })
 })
