@@ -125,7 +125,7 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
 export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt }
-  const minSize = 14
+  const minSize = 12
   const startSize = oBase.lyricSizePt
 
   const candidates = []
@@ -159,6 +159,7 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
 
   candidates.sort((a, b) => {
     if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length
+    if (a.widthOk !== b.widthOk) return a.widthOk ? -1 : 1
     if (a.columns !== b.columns) return a.columns - b.columns
     return b.lyricSizePt - a.lyricSizePt
   })
