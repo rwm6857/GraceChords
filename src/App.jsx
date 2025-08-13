@@ -24,7 +24,7 @@ export default function App(){
             <Route path="/songbook" element={<Songbook />} />
           </Route>
           <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<div className="container"><h3>Not found</h3><Link to="/">Back</Link></div>} />
+          <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>
       <Toast />

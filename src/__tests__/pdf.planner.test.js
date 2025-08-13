@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planForTest } from '../utils/pdf-plan'
+import { planForTest, getLayoutMetrics } from '../utils/pdfLayout'
 
 // Helpers to build lines/blocks
 const line = (len, ch='x') => ({ plain: ch.repeat(len), chordPositions: [] })

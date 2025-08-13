@@ -1,4 +1,4 @@
-// src/utils/pdf-plan.js
+// src/utils/pdfLayout.js
 // Pure layout planning helpers shared by PDF and image exporters.
 
 // Detect common section labels in plain text lines
@@ -89,9 +89,6 @@ export const DEFAULT_LAYOUT_OPT = {
 
 // Safety against kissing the right gutter
 const RIGHT_SAFETY = 6 // pt
-// How "tight" a 2-col line may be before we reject it for readability
-const TIGHT_RATIO_2COL = 0.92
-const TIGHT_RATIO_2COL_AT_12 = 0.86 // be stricter at the minimum size
 
 /**
  * Pure width check using provided measurers (lyrics/chords).
@@ -120,113 +117,61 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
   return false
 }
 
-/** How close the widest line/chord right-edge is to the column edge (0..1). */
-function maxWidthRatio(song, columns, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
-  const margin = oBase.margin
-  const contentW = oBase.pageWidth - margin * 2
-  const colW = columns === 2 ? (contentW - oBase.gutter) / 2 : contentW
-
-  const measureLyric = makeMeasureLyricAt(size)
-  const measureChord = makeMeasureChordAt(size)
-
-  let maxR = 0
-  for (const block of (song.lyricsBlocks || [])) {
-    for (const ln of (block.lines || [])) {
-      const plain = ln.plain || ln.text || ''
-      maxR = Math.max(maxR, (measureLyric(plain) || 0) / colW)
-      for (const c of (ln.chordPositions || [])) {
-        const x = measureLyric(plain.slice(0, c.index || 0))
-        const cw = measureChord(c.sym || '')
-        maxR = Math.max(maxR, (x + cw) / colW)
-      }
-    }
-  }
-  return maxR
-}
-
 /**
- * Core planner (pure): implements priority rules.
- * - Size-first search 16→12
- * - For each size: try 1-col, then 2-col (2-col must not be "tight")
- * - Fallback at 12pt: choose fewest pages; then width OK; then prefer 1-col
+ * Search for the best layout using planSongLayout.
+ * Tries 1→2 columns and shrinks font size down to 14pt.
+ * Returns the chosen plan and the options used.
  */
-function choosePlanPure(songNorm, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
-  const minSize = 12
-  const maxSize = 16
-
-  // Ensure section labels are promoted to headers (safety net)
-  const song = { ...songNorm, lyricsBlocks: (songNorm.lyricsBlocks || []).map(b => {
-    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
-      const first = b.lines[0]
-      const txt = first?.plain || first?.text || ''
-      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0
-      if (!hasChords && isSectionLabel(txt)) {
-        return { section: txt.trim(), lines: b.lines.slice(1) }
-      }
-    }
-    return b
-  }) }
-
-  // Helper to evaluate a plan
-  const evalPlan = (cols, size) => {
-    const widthOk = !widthOverflows(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-    const measureLyric = makeMeasureLyricAt(size)
-    const layout = computeLayout(song, { ...oBase, columns: cols, lyricSizePt: size, chordSizePt: size }, measureLyric)
-    const heightOk = (layout.pages.length <= 1)
-    const tight = cols === 2 && maxWidthRatio(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL
-    return { widthOk, heightOk, tight, layout }
-  }
-
-  // Size-first search: 16 → 12; try 1-col then 2-col
-  for (let size = maxSize; size >= minSize; size--) {
-    // 1 column
-    {
-      const r = evalPlan(1, size)
-      if (r.widthOk && r.heightOk) {
-        return { columns: 1, lyricSizePt: size, chordSizePt: size, layout: r.layout }
-      }
-    }
-    // 2 columns (must not be "tight")
-    {
-      const r = evalPlan(2, size)
-      const tooTightAt12 = (size === 12) &&
-        (maxWidthRatio(song, 2, size, oBase, makeMeasureLyricAt, makeMeasureChordAt) >= TIGHT_RATIO_2COL_AT_12)
-      if (r.widthOk && r.heightOk && !r.tight && !tooTightAt12) {
-        return { columns: 2, lyricSizePt: size, chordSizePt: size, layout: r.layout }
-      }
-    }
-  }
-
-  // Fallback at 12pt: fewest pages; then width OK; then prefer 1-col
-  const size = minSize
-  const plans = [1, 2].map(cols => ({ cols, ...evalPlan(cols, size) }))
-  plans.sort((a, b) => {
-    if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length
-    if (a.widthOk !== b.widthOk) return (a.widthOk ? -1 : 1)
-    if (a.cols !== b.cols) return (a.cols === 1 ? -1 : 1)
-    return 0
-  })
-  const best = plans[0]
-  return { columns: best.cols, lyricSizePt: size, chordSizePt: size, layout: best.layout }
-}
-
-// Public planner: returns chosen columns/sizes and full layout using provided measurers.
-// Pure and shared by PDF and image exporters.
-export function planSongLayout(songIn, opt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
+export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
-  const oBase = { ...DEFAULT_LAYOUT_OPT, ...opt }
-  const pick = choosePlanPure(song, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-  return { ...oBase, columns: pick.columns, lyricSizePt: pick.lyricSizePt, chordSizePt: pick.chordSizePt, layout: pick.layout }
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt }
+  const minSize = 14
+  const startSize = oBase.lyricSizePt
+
+  const candidates = []
+  const tryPlan = (cols, size) => {
+    const layout = planSongLayout(song, { ...oBase, columns: cols, lyricSizePt: size, chordSizePt: size }, makeMeasureLyricAt(size))
+    const widthOk = !widthOverflows(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    return { columns: cols, lyricSizePt: size, chordSizePt: size, layout, widthOk }
+  }
+
+  const initialCols = oBase.columns === 2 ? 2 : 1
+  candidates.push(tryPlan(initialCols, startSize))
+
+  let last = candidates[candidates.length - 1]
+  if (initialCols === 1 && (last.layout.pages.length > 1 || !last.widthOk)) {
+    let size = startSize
+    candidates.push(tryPlan(2, size))
+    last = candidates[candidates.length - 1]
+    while ((last.layout.pages.length > 1 || !last.widthOk) && size > minSize) {
+      size--
+      last = tryPlan(2, size)
+      candidates.push(last)
+    }
+  } else {
+    let size = startSize
+    while ((last.layout.pages.length > 1 || !last.widthOk) && size > minSize) {
+      size--
+      last = tryPlan(initialCols, size)
+      candidates.push(last)
+    }
+  }
+
+  candidates.sort((a, b) => {
+    if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length
+    if (a.columns !== b.columns) return a.columns - b.columns
+    return b.lyricSizePt - a.lyricSizePt
+  })
+
+  const best = candidates[0]
+  return {
+    plan: { ...oBase, columns: best.columns, lyricSizePt: best.lyricSizePt, chordSizePt: best.chordSizePt, layout: best.layout },
+    chosenOpts: { columns: best.columns, lyricSizePt: best.lyricSizePt, chordSizePt: best.chordSizePt }
+  }
 }
 
-/* -----------------------------------------------------------
- * PURE LAYOUT (two-pass; no drawing)
- * - measures with lyrics font only
- * - splits only at line boundaries
- * - never orphans section header from first line
- * - bold headings, same size as lyrics, with top padding
- * --------------------------------------------------------- */
-export function computeLayout(songIn, opt = {}, measureLyric = (t) => 0) {
+// Public layout function (was computeLayout). Pure; does not select sizes/columns.
+export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0) {
   const song = normalizeSongInput(songIn)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
   const lineGap = 4
@@ -314,19 +259,16 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t) => 0) {
       continue
     }
 
-    // 3) Oversized section (cannot fit in a full column at this size) → split at line boundaries,
-    //    but keep header with the first line, and never leave header stranded.
+    // Oversized section → split at line boundaries with widow/orphan checks
     const lineHs = (block.lines || []).map(lineHeight)
     let i = 0
     while (i < (block.lines || []).length) {
       const remaining = (block.lines || []).length - i
 
-      // Ensure room for header + at least one line; otherwise advance
       const minHead = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4) : 0
       const firstLineH = lineHs[i] || 0
       if (cursorY + minHead + firstLineH > contentBottomY) { advanceColOrPage(); continue }
 
-      // Pre-measure how many lines fit
       const avail = contentBottomY - cursorY - minHead
       let fit = 0, used = 0
       while (i + fit < lineHs.length && used + lineHs[i + fit] <= avail) {
@@ -334,10 +276,8 @@ export function computeLayout(songIn, opt = {}, measureLyric = (t) => 0) {
         fit++
       }
 
-      // Widow: if only one line fits here, break early
       if (fit === 1 && remaining > 1) { advanceColOrPage(); continue }
 
-      // Orphan: avoid leaving a single line for next column/page
       if (remaining - fit === 1) {
         if (fit > 1) {
           used -= lineHs[i + fit - 1]
@@ -373,7 +313,7 @@ export function getLayoutMetrics(input, opts) {
   o.pageWidth = 612
   o.pageHeight = 792
   const measure = (text) => (text ? text.length * (o.lyricSizePt * 0.6) : 0)
-  const layout = computeLayout(normalizeSongInput(input), o, measure)
+  const layout = planSongLayout(normalizeSongInput(input), o, measure)
   return layout.pages.map((page, pIdx) => ({
     p: pIdx,
     cols: page.columns.map((col, cIdx) => ({
@@ -396,17 +336,16 @@ export function getLayoutMetrics(input, opts) {
 export function planForTest(input, opts) {
   const song = normalizeSongInput(input)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opts }
-  // Letter
   o.pageWidth = 612; o.pageHeight = 792
 
   const makeMeasureLyricAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0)
   const makeMeasureChordAt = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0)
 
-  const pick = choosePlanPure(song, o, makeMeasureLyricAt, makeMeasureChordAt)
+  const { plan } = chooseBestLayout(song, o, makeMeasureLyricAt, makeMeasureChordAt)
   return {
-    columns: pick.columns,
-    size: pick.lyricSizePt,
-    pages: pick.layout.pages.length
+    columns: plan.columns,
+    size: plan.lyricSizePt,
+    pages: plan.layout.pages.length
   }
 }
 
