@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, parseChordPro } from '../utils/chordpro'
 import { downloadZip } from '../utils/zip'
 
-const PASSWORD = '10401040'
+const PASSWORD = import.meta.env.VITE_ADMIN_PW
 
 const INITIAL_TEXT = `{title: }
 {key: }

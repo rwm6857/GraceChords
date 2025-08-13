@@ -36,10 +36,14 @@ npm run build
 Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
 
 ## Admin & Index Generation
-Open `/#/admin` (password **10401040**) to author songs in ChordPro and download a bundle containing the song and updated index. Add files to `public/songs/` and merge `src/data/index.json`, or rebuild automatically:
+Set the admin password via an environment variable and open `/#/admin` to author songs in ChordPro and download a bundle containing the song and updated index. Add files to `public/songs/` and merge `src/data/index.json`, or rebuild automatically:
+
 ```bash
+VITE_ADMIN_PW=your-password # in .env
 npm run build-index
 ```
+
+Add `VITE_ADMIN_PW` to a local `.env` file for development and configure the same variable as a GitHub repository secret so builds receive it.
 
 ## PDF Fonts
 Place the following fonts in `public/fonts/` to embed them in exported PDFs:
