@@ -35,7 +35,7 @@ describe('SongView PPTX button', () => {
   test('shows PPTX download when available', async () => {
     mockFetch(true)
     render(
-      <MemoryRouter initialEntries={['/song/build-my-life']}>
+      <MemoryRouter initialEntries={['/song/abba']}>
         <Routes>
           <Route path="/song/:id" element={<SongView />} />
         </Routes>

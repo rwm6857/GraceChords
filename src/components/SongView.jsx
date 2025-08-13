@@ -89,9 +89,12 @@ export default function SongView(){
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
     const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    neighbors.forEach(n => {
+    neighbors.forEach((n) => {
       const url = `${base}songs/${n.filename}`
-      fetchTextCached(url).catch(()=>{})
+      fetchTextCached(url).catch((err) => {
+        console.error(err)
+        showToast(`Failed to load ${n.filename}`)
+      })
     })
   }, [entry?.id])
 
