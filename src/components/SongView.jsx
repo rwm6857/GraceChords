@@ -334,7 +334,9 @@ if(!entry){
 /* ---------- Helpers ---------- */
 
 function extractYouTubeId(input = '') {
-  const s = String(input).trim()
+  const raw = String(input)
+  if (raw.length > 200) return null
+  const s = raw.trim()
   const ID = /^[a-zA-Z0-9_-]{11}$/
   if (ID.test(s)) return s
 
