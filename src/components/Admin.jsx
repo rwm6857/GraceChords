@@ -23,7 +23,7 @@ export default function Admin(){
   if(!ok){
     return (
       <div className="container" style={{maxWidth:480}}>
-        <h2>Admin</h2>
+        <h1>Admin</h1>
         <p>Enter password to continue.</p>
         <label htmlFor="adminPw" className="sr-only">Password</label>
         <input
@@ -87,7 +87,7 @@ function AdminPanel(){
 
   return (
     <div className="container">
-      <h2>Admin</h2>
+      <h1>Admin</h1>
 
       {/* Metadata form */}
       <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
