@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planForTest } from '../utils/pdf-plan'
+import { planForTest, getLayoutMetrics } from '../utils/pdfLayout'
 
 // Helpers to build lines/blocks
 const line = (len, ch='x') => ({ plain: ch.repeat(len), chordPositions: [] })
@@ -103,6 +103,22 @@ describe('PDF planner cases', () => {
       lyricsBlocks: [blockFrom('Verse', lines)]
     }
     const plan = planForTest(song, {})
+
+  it('Case 7: chords near column limit force width-safe fallback', () => {
+    // Each line places a long chord so close to the right edge that a
+    // two-column layout at 16pt would overflow. The planner should shrink
+    // and fall back to a single column at 12pt instead.
+    const mkLine = (withChord = false) => ({
+      plain: 'x'.repeat(25),
+      chordPositions: withChord ? [{ index: 24, sym: 'Gmaj7#11b13+' }] : []
+    })
+    const mkSong = (withChord) => ({
+      title: 'Case5',
+      key: 'G',
+      lyricsBlocks: [blockFrom('Verse', Array.from({ length: 20 }, () => mkLine(withChord)))]
+    })
+
+    const plan = planForTest(mkSong(true), {})
     expect(plan.columns).toBe(1)
     expect(plan.size).toBe(12)
     expect(plan.pages).toBe(1)

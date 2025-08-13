@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import SongView from '../components/SongView.jsx'
+import { clearHeadCache } from '../utils/headCache.js'
 
 function mockFetch(hasPptx) {
   const chordpro = '{title:Test}\n{youtube: https://youtu.be/abcdefghijk}\n[C]Line'
@@ -30,12 +31,13 @@ describe('SongView PPTX button', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    clearHeadCache()
   })
 
   test('shows PPTX download when available', async () => {
     mockFetch(true)
     render(
-      <MemoryRouter initialEntries={['/song/build-my-life']}>
+      <MemoryRouter initialEntries={['/song/abba']}>
         <Routes>
           <Route path="/song/:id" element={<SongView />} />
         </Routes>
