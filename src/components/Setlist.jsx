@@ -250,7 +250,7 @@ export default function Setlist(){
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
-            <div style={{maxHeight:300, overflow:'auto', marginTop:6}}>
+            <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
               {results.map(s=> (
                 <div key={s.id} className="row" style={{padding:'6px 0'}}>
                   <div style={{flex:1}}>
@@ -266,7 +266,7 @@ export default function Setlist(){
 
         <div>
           <strong>Current setlist ({list.length})</strong>
-          <div style={{maxHeight:360, overflow:'auto', marginTop:6}}>
+          <div style={{minHeight:0, maxHeight:360, overflow:'auto', marginTop:6}}>
             {list.map((sel)=>{
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null
