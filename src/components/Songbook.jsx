@@ -4,6 +4,7 @@ import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
+import Busy from './Busy'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -175,6 +176,7 @@ export default function Songbook() {
 
   return (
     <div className="BuilderPage">
+      <Busy busy={busy} />
       {/* LEFT: Picker */}
       <section className="BuilderLeft">
         <header className="BuilderHeader">

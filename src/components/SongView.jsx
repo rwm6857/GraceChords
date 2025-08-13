@@ -7,6 +7,7 @@ import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
+import Busy from './Busy'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -28,6 +29,7 @@ export default function SongView(){
   const [imageLibPromiseState, setImageLibPromiseState] = useState(imageLibPromise)
   const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
+  const [busy, setBusy] = useState(false)
   const lastPlan = useRef(null)
 
   const loadPdfLib = () => {
@@ -216,9 +218,17 @@ if(!entry){
   }
 
   async function handleDownloadPdf(){
+    setBusy(true)
+    try {
+      const { downloadSingleSongPdf } = await loadPdfLib()
+      await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    } finally {
+      setBusy(false)
+    }
     const { downloadSingleSongPdf } = await loadPdfLib()
     const res = await downloadSingleSongPdf(buildSong())
     lastPlan.current = res?.plan || null
+
   }
 
   async function handleDownloadJpg(){
@@ -232,6 +242,7 @@ if(!entry){
 
   return (
     <div className="container">
+      <Busy busy={busy} />
       <div className="songpage__top">
         <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
@@ -257,8 +268,9 @@ if(!entry){
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
+            disabled={busy}
           >
-            <DownloadIcon /> Download PDF
+            {busy ? 'Exporting…' : <><DownloadIcon /> Download PDF</>}
           </button>
           <button
             className="btn iconbtn"

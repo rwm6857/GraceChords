@@ -16,6 +16,6 @@ export async function headOk(url, key) {
   }
 }
 
-export function clearHeadCache(){
+export function clearHeadCache() {
   headCache.clear()
 }
