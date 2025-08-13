@@ -135,6 +135,10 @@ export default function Home(){
           break
         }
       }
+    } else if(e.key === 'Escape') {
+      e.preventDefault()
+      setQ('')
+      searchRef.current?.focus()
     } else if(e.key === 'ArrowDown') {
       e.preventDefault()
       if(results.length === 0) return
