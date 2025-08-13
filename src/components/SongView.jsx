@@ -6,7 +6,7 @@ import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
-import { headOk } from '../utils/headCache'
+import { headOk, clearHeadCache } from '../utils/headCache'
 import Busy from './Busy'
 
 // Lazy-loaded heavy modules
@@ -74,6 +74,10 @@ export default function SongView(){
           const p = parseChordPro(txt); setParsed(p)
           const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
           setToKey(baseKey)
+          const lineCount = (p.blocks || []).reduce((s,b)=> s + (b.lines?.length || 0), 0)
+          const needsCheck = (p.blocks?.length || 0) > 1 && lineCount > 40
+          setJpgDisabled(needsCheck)
+          if (needsCheck) Promise.all([loadPdfPlan(), loadImageLib()])
           try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
         } catch(err){
           console.error(err)
@@ -115,7 +119,7 @@ export default function SongView(){
       setHasPptx(true)
     }
     check()
-    return () => { cancelled = true }
+    return () => { cancelled = true; clearHeadCache(entry.id) }
   }, [entry])
 
   // keyboard shortcuts: c toggle chords, [ down, ] up

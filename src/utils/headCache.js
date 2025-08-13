@@ -16,6 +16,6 @@ export async function headOk(url, key) {
   }
 }
 
-export function clearHeadCache() {
-  headCache.clear()
-}
+export function clearHeadCache(key) {
+  if (typeof key === 'undefined') headCache.clear()
+  else headCache.delete(key)
