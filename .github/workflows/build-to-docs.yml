@@ -21,6 +21,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build  # writes to /docs
+      # WARNING: ensure docs/CNAME and 404.html are preserved
 
       # Commit the newly built files back into /docs on main
       - name: Commit and push /docs

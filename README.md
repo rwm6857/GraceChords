@@ -32,6 +32,7 @@ Generate the static site into `docs/` and push to the `main` branch to serve via
 npm run build
 # commit & push -> serve from /docs
 ```
+Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
 
 Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
 
