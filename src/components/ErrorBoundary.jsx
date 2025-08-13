@@ -15,7 +15,7 @@ export default class ErrorBoundary extends React.Component {
     if(this.state.error){
       return (
         <div className="container" style={{padding:'2rem'}}>
-          <h2>Something went wrong.</h2>
+          <h1>Something went wrong.</h1>
           <p><a href="#" onClick={e=>{e.preventDefault(); window.location.reload();}}>Reload</a></p>
         </div>
       );

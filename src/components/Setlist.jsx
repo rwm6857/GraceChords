@@ -161,16 +161,18 @@ export default function Setlist(){
               chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
             }))
           }))
-          songs.push({ title: parsed.meta?.title || s.title, key: sel.toKey || baseKey, lyricsBlocks: blocks })
-        } catch(err){
-          console.error(err)
-          showToast(`Failed to process ${s.filename}`)
-        }
+        }))
+        const slug = s.filename.replace(/\.chordpro$/, '')
+        songs.push({ title: parsed.meta?.title || s.title || slug, key: sel.toKey || baseKey, lyricsBlocks: blocks })
+      } catch(err){
+        console.error(err)
+        showToast(`Failed to process ${s.filename}`)
       }
       if(songs.length) await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
     } finally {
       setBusy(false)
     }
+    if(songs.length) await downloadMultiSongPdf(songs)
   }
 
   function prefetchPdf(){ loadPdfLib() }
@@ -212,7 +214,7 @@ export default function Setlist(){
       <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div><Link to="/" className="back">← Back</Link></div>
-        <h2 style={{margin:0}}>Setlist Builder</h2>
+        <h1 style={{margin:0}}>Setlist Builder</h1>
         <div />
       </div>
 
@@ -315,7 +317,7 @@ export default function Setlist(){
 
           {/* Print-only minimal outline */}
           <div className="print-only" style={{marginTop:16}}>
-            <h1 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h1>
+            <h2 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h2>
             <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
               {list.map(sel => {
                 const s = items.find(it=> it.id===sel.id)
