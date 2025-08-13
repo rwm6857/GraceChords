@@ -166,6 +166,7 @@ export async function downloadSingleSongPdf(song, options) {
   const plan = await planFitOnOnePage(doc, normalizeSongInput(song), base)
   drawSongIntoDoc(doc, song, { ...base, ...plan })
   doc.save(`${(base.title).replace(/\s+/g, '_')}.pdf`)
+  return { plan }
 }
 
 export async function downloadMultiSongPdf(songs, options){
