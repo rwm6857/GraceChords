@@ -56,6 +56,7 @@ function shouldCache(request, response) {
       request.destination === 'document' ||
       request.url.includes('/assets/') ||
       request.url.includes('/src/data/') ||
+      // Cache individual song files
       request.url.includes('/songs/'))
   );
 }
