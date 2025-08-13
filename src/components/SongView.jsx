@@ -134,6 +134,12 @@ if(!entry){
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
 
+  const pptxButton = hasPptx ? (
+    <a className="btn" href={pptxUrl} download>
+      Download PPTX
+    </a>
+  ) : null
+
   const buildSong = () => ({
     title,
     key: toKey,
@@ -268,10 +274,8 @@ if(!entry){
             {parsed?.meta?.youtube && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
-                {hasPptx && (
-                  <div style={{marginBottom:10}}>
-                    <a className="btn" href={pptxUrl} download>Download PPTX</a>
-                  </div>
+                {pptxButton && (
+                  <div style={{marginBottom:10}}>{pptxButton}</div>
                 )}
                 {(() => {
                  const ytId = extractYouTubeId(parsed.meta.youtube)
@@ -298,10 +302,10 @@ if(!entry){
               </div>
             )}
 
-            {!parsed?.meta?.youtube && hasPptx && (
+            {!parsed?.meta?.youtube && pptxButton && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <a className="btn" href={pptxUrl} download>Download PPTX</a>
+                {pptxButton}
               </div>
             )}
           </div>
