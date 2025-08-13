@@ -28,6 +28,7 @@ export default function SongView(){
   const [jpgDisabled, setJpgDisabled] = useState(false)
   const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
+  const lastPlan = useRef(null)
 
   const loadPdfPlan = () => {
     if (!pdfPlanPromise) {
@@ -179,6 +180,7 @@ if(!entry){
     const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
     const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
     const plan = planSongLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
+    lastPlan.current = plan
     const ok = plan.layout.pages.length <= 1
     if (!ok && showAlert && !jpgAlerted.current) {
       alert('JPG export supports single-page songs only for now.')
@@ -196,14 +198,15 @@ if(!entry){
 
   async function handleDownloadPdf(){
     const { downloadSingleSongPdf } = await loadPdfLib()
-    await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    const res = await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+    lastPlan.current = res?.plan || null
   }
 
   async function handleDownloadJpg(){
     const ok = await checkJpgSupport(true)
     if (!ok) return
     const { downloadSingleSongJpg } = await loadImageLib()
-    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, '') })
+    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, ''), plan: lastPlan.current })
   }
 
   

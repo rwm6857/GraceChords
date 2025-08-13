@@ -60,17 +60,21 @@ export async function downloadSingleSongJpg(song, options = {}) {
   const heightIn = options.heightInches || 11
   const pxWidth = Math.round(widthIn * dpi)
   const pxHeight = Math.round(heightIn * dpi)
-  const { lyricFamily, chordFamily } = await ensureCanvasFonts()
-  const measureCtx = document.createElement('canvas').getContext('2d')
-  const makeMeasureLyricAt = (pt) => (text) => {
-    measureCtx.font = `${pt}px ${lyricFamily}`
-    return measureCtx.measureText(text || '').width
+  const fonts = await ensureCanvasFonts()
+  const { lyricFamily, chordFamily } = fonts
+  let plan = options.plan
+  if (!plan) {
+    const measureCtx = document.createElement('canvas').getContext('2d')
+    const makeMeasureLyricAt = (pt) => (text) => {
+      measureCtx.font = `${pt}px ${lyricFamily}`
+      return measureCtx.measureText(text || '').width
+    }
+    const makeMeasureChordAt = (pt) => (text) => {
+      measureCtx.font = `bold ${pt}px ${chordFamily}`
+      return measureCtx.measureText(text || '').width
+    }
+    plan = planSongLayout(song, { lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt)
   }
-  const makeMeasureChordAt = (pt) => (text) => {
-    measureCtx.font = `bold ${pt}px ${chordFamily}`
-    return measureCtx.measureText(text || '').width
-  }
-  const plan = planSongLayout(song, { lyricFamily, chordFamily }, makeMeasureLyricAt, makeMeasureChordAt)
   if (plan.layout.pages.length > 1) {
     return { error: 'MULTI_PAGE', plan }
   }
