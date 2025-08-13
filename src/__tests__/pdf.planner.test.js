@@ -80,7 +80,31 @@ describe('PDF planner cases', () => {
     }
   })
 
-  it('Case 5: chords near column limit force width-safe fallback', () => {
+  it('Case 5: Medium lines force shrink → 2-col @13, 1 page', () => {
+    const len = 30 // just within 2-col width at 13pt
+    const lines = Array.from({ length: 40 }, () => line(len))
+    const song = {
+      title: 'Case5',
+      key: 'G',
+      lyricsBlocks: [blockFrom('Verse', lines)]
+    }
+    const plan = planForTest(song, {})
+    expect(plan.columns).toBe(2)
+    expect(plan.size).toBe(13)
+    expect(plan.pages).toBe(1)
+  })
+
+  it('Case 6: Lines 1 char longer trigger 1-col @12, 1 page', () => {
+    const len = 31 // exceeds 2-col width at 13pt; 1-col fits at 12pt
+    const lines = Array.from({ length: 40 }, () => line(len))
+    const song = {
+      title: 'Case6',
+      key: 'G',
+      lyricsBlocks: [blockFrom('Verse', lines)]
+    }
+    const plan = planForTest(song, {})
+
+  it('Case 7: chords near column limit force width-safe fallback', () => {
     // Each line places a long chord so close to the right edge that a
     // two-column layout at 16pt would overflow. The planner should shrink
     // and fall back to a single column at 12pt instead.
