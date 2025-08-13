@@ -12,7 +12,7 @@ for(const filename of files){
   const text = await fs.readFile(full, 'utf8')
   const meta = parseMeta(text)
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
-  items.push({ id, title: meta.title || id || filename.replace(/\.chordpro$/,''), filename, originalKey: meta.key || '', tags: (meta.tags||'').split(',').map(s=>s.trim()).filter(Boolean), authors: meta.authors||'', country: meta.country||'' })
+    items.push({ id, title: meta.title || id || filename.replace(/\.chordpro$/,''), filename, originalKey: meta.key || '', tags: (meta.tags||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), country: meta.country||'' })
 }
 items.sort((a,b)=> a.title.localeCompare(b.title, undefined, {sensitivity:'base'}))
 await fs.mkdir(path.dirname(outFile), { recursive: true })
