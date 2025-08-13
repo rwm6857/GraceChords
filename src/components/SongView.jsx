@@ -10,10 +10,8 @@ import { headOk } from '../utils/headCache'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 let pdfPlanPromise
 let imageLibPromise
-const loadImageLib = () => imageLibPromise || (imageLibPromise = import('../utils/image'))
 
 export default function SongView(){
   const { id } = useParams()
@@ -26,8 +24,25 @@ export default function SongView(){
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
+  const [pdfLibPromiseState, setPdfLibPromiseState] = useState(pdfLibPromise)
+  const [imageLibPromiseState, setImageLibPromiseState] = useState(imageLibPromise)
   const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
+
+  const loadPdfLib = () => {
+    if (!pdfLibPromise) {
+      pdfLibPromise = import('../utils/pdf')
+      setPdfLibPromiseState(pdfLibPromise)
+    }
+    return pdfLibPromise
+  }
+  const loadImageLib = () => {
+    if (!imageLibPromise) {
+      imageLibPromise = import('../utils/image')
+      setImageLibPromiseState(imageLibPromise)
+    }
+    return imageLibPromise
+  }
 
   const loadPdfPlan = () => {
     if (!pdfPlanPromise) {
@@ -119,7 +134,7 @@ export default function SongView(){
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
     if (!parsed) return
-    if (!pdfPlanPromiseState || !imageLibPromise) return
+    if (!pdfPlanPromiseState || !imageLibPromiseState) return
     let cancelled = false
     async function check() {
       const ok = await checkJpgSupport()
@@ -128,7 +143,7 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
-  }, [parsed, toKey, pdfPlanPromiseState])
+  }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
 
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
