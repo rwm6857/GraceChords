@@ -178,77 +178,72 @@ export default function Songbook() {
   // Render
   if (items.length === 0) {
     return (
-      <div className="BuilderPage">
-        <section className="BuilderLeft">
-          <header className="BuilderHeader">
-            <h1>No songs found</h1>
-            <p className="Small">The song index is empty or failed to load.</p>
-          </header>
-        </section>
+      <div className="container">
+        <h1>No songs found</h1>
+        <p className="Small">The song index is empty or failed to load.</p>
       </div>
     )
   }
 
   return (
-    <div className="BuilderPage">
+    <div className="container">
       <Busy busy={busy} />
-
-      {/* Top row: back/blank + title + blank (mirrors Setlist visual rhythm) */}
-      <div className="TopRow">
-        <div className="TopLeft"></div>
-        <h1 className="TopTitle">Songbook Builder</h1>
-        <div className="TopRight"></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <a href="/" className="back">
+            ← Back
+          </a>
+        </div>
+        <h1 style={{ margin: 0 }}>Songbook Builder</h1>
+        <div />
       </div>
 
-      {/* Toolbar spanning both columns */}
-      <div className="card SongbookToolbar">
-        <div className="Row" style={{ gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div className="Field">
-            <input
-              id="sb-toc"
-              type="checkbox"
-              checked={includeTOC}
-              onChange={(e) => setIncludeTOC(e.target.checked)}
-            />
-            <label htmlFor="sb-toc">Include table of contents</label>
-          </div>
-
-          <div className="Field">
-            <label htmlFor="sb-cover">Cover page (image):</label>
-            <input
-              id="sb-cover"
-              className="CoverInput"
-              type="file"
-              accept="image/*"
-              onChange={onCoverFile}
-            />
-          </div>
-
-          <div className="Field" style={{ marginLeft: 'auto', gap: '.5rem' }}>
-            <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
-              Select all ({filteredCount} filtered)
-            </button>
-            <button className="btn" onClick={clearAll} disabled={!selectedCount}>
-              Clear
-            </button>
-            <button
-              className="btn primary"
-              onClick={handleExport}
-              onMouseEnter={prefetchPdf}
-              onFocus={prefetchPdf}
-              disabled={!selectedEntries.length || busy}
-              title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
-            >
-              {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
-            </button>
-          </div>
+      {/* Toolbar */}
+      <div className="card toolbar" style={{ marginTop: 12 }}>
+        <div className="Field">
+          <input
+            id="sb-toc"
+            type="checkbox"
+            checked={includeTOC}
+            onChange={(e) => setIncludeTOC(e.target.checked)}
+          />
+          <label htmlFor="sb-toc">Include table of contents</label>
+        </div>
+        <div className="Field">
+          <label htmlFor="sb-cover">Cover page (image):</label>
+          <input
+            id="sb-cover"
+            className="CoverInput"
+            type="file"
+            accept="image/*"
+            onChange={onCoverFile}
+          />
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+          <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
+            Select all ({filteredCount})
+          </button>
+          <button className="btn" onClick={clearAll} disabled={!selectedCount}>
+            Clear
+          </button>
+          <button
+            className="btn primary"
+            onClick={handleExport}
+            onMouseEnter={prefetchPdf}
+            onFocus={prefetchPdf}
+            disabled={!selectedEntries.length || busy}
+            title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
+          >
+            {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
+          </button>
         </div>
       </div>
 
-      {/* Two-pane region (left: search & list; right: live selection) */}
-      <section className="BuilderLeft">
-        <header className="BuilderHeader">
-          <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      {/* Two-pane region */}
+      <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {/* Left pane */}
+        <div className="BuilderLeft">
+          <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 8 }}>
             <div className="Field" style={{ minWidth: 220 }}>
               <label htmlFor="sb-search">Search:</label>
               <input
@@ -260,7 +255,6 @@ export default function Songbook() {
                 style={{ width: '100%' }}
               />
             </div>
-
             <div className="Field">
               <label htmlFor="sb-tag">Tag:</label>
               <select id="sb-tag" value={tag} onChange={(e) => setTag(e.target.value)}>
@@ -272,7 +266,6 @@ export default function Songbook() {
                 ))}
               </select>
             </div>
-
             <div className="Field">
               <label htmlFor="sb-country">Country:</label>
               <select
@@ -288,7 +281,6 @@ export default function Songbook() {
                 ))}
               </select>
             </div>
-
             <div className="Field">
               <label htmlFor="sb-author">Author:</label>
               <select
@@ -305,67 +297,71 @@ export default function Songbook() {
               </select>
             </div>
           </div>
-
           <div className="Row Small" style={{ marginTop: '.5rem' }}>
             <strong>{selectedCount}</strong> selected
           </div>
-        </header>
-
-        <div className="BuilderScroll gc-scroll" role="region" aria-label="Song list">
-          <div className="gc-list">
-            {filtered.map((s) => {
-              const checked = selectedIds.has(s.id)
-              const authorsLine = Array.isArray(s.authors)
-                ? s.authors.join(', ')
-                : s.authors || ''
-              const tags = Array.isArray(s.tags)
-                ? s.tags
-                : s.tags
-                ? String(s.tags)
-                    .split(',')
-                    .map((t) => t.trim())
-                : []
-              const subtitle = [authorsLine || '—', s.country]
-                .filter(Boolean)
-                .join(' • ')
-              return (
-                <SongCard
-                  key={s.id}
-                  title={s.title}
-                  subtitle={subtitle}
-                  tags={tags}
-                  leftSlot={
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => toggleOne(s.id, e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Select ${s.title}`}
-                    />
-                  }
-                  onClick={() => toggleOne(s.id, !checked)}
-                />
-              )
-            })}
+          <div className="SongList" role="region" aria-label="Song list" style={{ minHeight: 0, maxHeight: 300, overflow: 'auto', marginTop: 6 }}>
+            <div className="gc-list">
+              {filtered.map((s) => {
+                const checked = selectedIds.has(s.id)
+                const authorsLine = Array.isArray(s.authors)
+                  ? s.authors.join(', ')
+                  : s.authors || ''
+                const tags = Array.isArray(s.tags)
+                  ? s.tags
+                  : s.tags
+                  ? String(s.tags)
+                      .split(',')
+                      .map((t) => t.trim())
+                  : []
+                const subtitle = [authorsLine || '—', s.country]
+                  .filter(Boolean)
+                  .join(' • ')
+                return (
+                  <SongCard
+                    key={s.id}
+                    title={s.title}
+                    subtitle={subtitle}
+                    tags={tags}
+                    leftSlot={
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => toggleOne(s.id, e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Select ${s.title}`}
+                      />
+                    }
+                    onClick={() => toggleOne(s.id, !checked)}
+                  />
+                )
+              })}
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* RIGHT: Preview only (toolbar moved above both panes) */}
-      <aside className="BuilderRight">
-        <div className="RightSection RightScroll" role="region" aria-label="Selected songs">
-          <ol className="List" style={{ listStyle: 'decimal inside' }}>
-            {selectedEntries.map((s) => (
-              <li key={s.id}>
-                {s.title}
-                {Array.isArray(s.authors) && s.authors.length ? (
-                  <span className="Small"> — {s.authors.join(', ')}</span>
-                ) : null}
-              </li>
-            ))}
-          </ol>
+        {/* Right pane */}
+        <div className="BuilderRight">
+          <strong>Current selection ({selectedEntries.length})</strong>
+          <div
+            className="PreviewList"
+            role="region"
+            aria-label="Selected songs"
+            style={{ minHeight: 0, maxHeight: 360, overflow: 'auto', marginTop: 6 }}
+          >
+            <ol className="List" style={{ listStyle: 'decimal inside' }}>
+              {selectedEntries.map((s) => (
+                <li key={s.id}>
+                  {s.title}
+                  {Array.isArray(s.authors) && s.authors.length ? (
+                    <span className="Small"> — {s.authors.join(', ')}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-      </aside>
+      </div>
     </div>
   )
 }
