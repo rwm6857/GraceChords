@@ -1,4 +1,4 @@
-// src/utils/fonts.js
+// src/utils/pdf/fonts.js
 
 // Small in-memory cache of fetched font data
 let fontDataPromise = null

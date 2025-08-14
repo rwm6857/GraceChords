@@ -1,5 +1,6 @@
 import { ensureFontsEmbedded } from './fonts'
 import { planSongLayout, chooseBestLayout, normalizeSongInput, DEFAULT_LAYOUT_OPT } from './pdfLayout'
+import { makeMeasure } from './measure'
 
 // Debug switch: open DevTools and run localStorage.setItem('pdfDebug','1') to see guides
 const PDF_DEBUG = typeof window !== 'undefined'
@@ -20,16 +21,8 @@ function planWithDoc(doc, song, baseOpt) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, pageWidth: pageW, pageHeight: pageH }
-  const makeLyric = (pt) => (text) => {
-    doc.setFont(oBase.lyricFamily, 'normal')
-    doc.setFontSize(pt)
-    return doc.getTextWidth(text || '')
-  }
-  const makeChord = (pt) => (text) => {
-    doc.setFont(oBase.chordFamily, 'bold')
-    doc.setFontSize(pt)
-    return doc.getTextWidth(text || '')
-  }
+  const makeLyric = makeMeasure(doc, oBase.lyricFamily, 'normal')
+  const makeChord = makeMeasure(doc, oBase.chordFamily, 'bold')
   return chooseBestLayout(song, oBase, makeLyric, makeChord)
 }
 
@@ -101,7 +94,7 @@ function drawPlannedSong(doc, plan, { title, key }) {
 /* -----------------------------------------------------------
  * Exposed helpers
  * --------------------------------------------------------- */
-export { planSongLayout } from './pdfLayout'
+export { planSongLayout, chooseBestLayout } from './pdfLayout'
 
 export async function chooseBestLayoutAuto(song, baseOpt = {}) {
   const doc = await newPDF()
