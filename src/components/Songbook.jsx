@@ -5,6 +5,8 @@ import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
+import { planSongRender } from '../utils/export/planSongRender'
+import { exportPdfFromPlan } from '../utils/export/exportPdf'
 import SongCard from './ui/SongCard'
 
 // Lazy pdf exporters
@@ -115,7 +117,6 @@ export default function Songbook() {
     if (!selectedEntries.length) return
     setBusy(true)
     try {
-      const { downloadSongbookPdf } = await loadPdfLib()
       const songs = []
       for (const it of selectedEntries) {
         try {
@@ -141,14 +142,16 @@ export default function Songbook() {
         }
       }
       if (songs.length) {
-        await downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl: cover })
+        const plan = planSongRender(songs, { docTitle: 'Songbook', showChords: true })
+        const doc = await exportPdfFromPlan(plan)
+        doc.save('Songbook.pdf')
       }
     } finally {
       setBusy(false)
     }
   }
 
-  function prefetchPdf(){ loadPdfLib() }
+  function prefetchPdf() {}
 
   function onCoverFile(e) {
     const f = e.target.files?.[0]
