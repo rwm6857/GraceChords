@@ -126,7 +126,7 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
  */
 export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
-  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt }
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const SIZES = [16, 15, 14, 13, 12]
   const TRY = [
     { cols: 1, sizes: SIZES },
@@ -177,14 +177,14 @@ function tinySecondColumn(plan) {
   }
   if (currentSectionLines > 0) sectionCount++
   if (lineCount <= 5) return true
-  if (sectionCount === 1 && currentSectionLines < 4) return true
+  if (sectionCount === 1 && currentSectionLines < 3) return true
   return false
 }
 
 // Public layout function (was computeLayout). Pure; does not select sizes/columns.
 export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measureChord = (t) => 0) {
   const song = normalizeSongInput(songIn)
-  const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const lineGap = 4
   const sectionSize = o.lyricSizePt
   const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
@@ -293,10 +293,9 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
         fit++
       }
 
-      if (fit === 1 && remaining > 1) { advanceColOrPage(); continue }
-
-      if (remaining - fit === 1) {
-        if (fit > 1) {
+      if (fit < 2 && remaining > fit) { advanceColOrPage(); continue }
+         if (remaining - fit < 2 && remaining > fit) {
+              if ( fit > 2 ) {
           used -= lineHs[i + fit - 1]
           fit--
         } else {
