@@ -6,6 +6,8 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
 import SongCard from './ui/SongCard'
+import '../styles/cards.css'
+import '../styles/songbook.css'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -266,35 +268,43 @@ export default function Songbook() {
           </div>
         </header>
 
-        <div className="BuilderScroll" role="region" aria-label="Song list">
-          <ul className="BuilderList">
+        <div className="BuilderScroll gc-scroll" role="region" aria-label="Song list">
+          <div className="gc-list">
             {filtered.map((s) => {
               const checked = selectedIds.has(s.id)
               const authorsLine = Array.isArray(s.authors)
                 ? s.authors.join(', ')
                 : s.authors || ''
-              const tagLine = Array.isArray(s.tags) ? s.tags.join(', ') : s.tags || ''
-              const meta = `${authorsLine || '—'}${tagLine ? ` • ${tagLine}` : ''}${s.country ? ` • ${s.country}` : ''}`
+              const tags = Array.isArray(s.tags)
+                ? s.tags
+                : s.tags
+                ? String(s.tags)
+                    .split(',')
+                    .map((t) => t.trim())
+                : []
+              const subtitle = [authorsLine || '—', s.country]
+                .filter(Boolean)
+                .join(' • ')
               return (
-                <li key={s.id}>
-                  <SongCard
-                    leftSlot={
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => toggleOne(s.id, e.target.checked)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Select ${s.title}`}
-                      />
-                    }
-                    title={s.title}
-                    subtitle={meta}
-                    onClick={() => toggleOne(s.id, !checked)}
-                  />
-                </li>
+                <SongCard
+                  key={s.id}
+                  title={s.title}
+                  subtitle={subtitle}
+                  tags={tags}
+                  leftSlot={
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleOne(s.id, e.target.checked)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Select ${s.title}`}
+                    />
+                  }
+                  onClick={() => toggleOne(s.id, !checked)}
+                />
               )
             })}
-          </ul>
+          </div>
         </div>
       </section>
 

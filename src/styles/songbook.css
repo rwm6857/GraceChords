@@ -1,0 +1,23 @@
+.gc-scroll {
+  min-height: 0;
+  overflow: auto;
+}
+
+.gc-list {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Neutralize legacy Builder row styles */
+.BuilderRow,
+.RowMain,
+.RowText,
+.RowTitle,
+.RowMeta {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
