@@ -8,11 +8,9 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
 import Busy from './Busy'
-
-// Lazy-loaded heavy modules
-let pdfLibPromise
-let pdfPlanPromise
-let imageLibPromise
+import { planSongRender } from '../utils/export/planSongRender'
+import { exportPdfFromPlan } from '../utils/export/exportPdf'
+import { exportImageFromPlan } from '../utils/export/exportImage'
 
 export default function SongView(){
   const { id } = useParams()
@@ -25,35 +23,9 @@ export default function SongView(){
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
-  const [pdfLibPromiseState, setPdfLibPromiseState] = useState(pdfLibPromise)
-  const [imageLibPromiseState, setImageLibPromiseState] = useState(imageLibPromise)
-  const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
   const [busy, setBusy] = useState(false)
   const lastPlan = useRef(null)
-
-  const loadPdfLib = () => {
-    if (!pdfLibPromise) {
-      pdfLibPromise = import('../utils/pdf')
-      setPdfLibPromiseState(pdfLibPromise)
-    }
-    return pdfLibPromise
-  }
-  const loadImageLib = () => {
-    if (!imageLibPromise) {
-      imageLibPromise = import('../utils/image')
-      setImageLibPromiseState(imageLibPromise)
-    }
-    return imageLibPromise
-  }
-
-  const loadPdfPlan = () => {
-    if (!pdfPlanPromise) {
-      pdfPlanPromise = import('../utils/pdfLayout')
-      setPdfPlanPromise(pdfPlanPromise)
-    }
-    return pdfPlanPromise
-  }
 
   // find the index item
   useEffect(()=>{
@@ -77,7 +49,6 @@ export default function SongView(){
           const lineCount = (p.blocks || []).reduce((s,b)=> s + (b.lines?.length || 0), 0)
           const needsCheck = (p.blocks?.length || 0) > 1 && lineCount > 40
           setJpgDisabled(needsCheck)
-          if (needsCheck) Promise.all([loadPdfPlan(), loadImageLib()])
           try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
         } catch(err){
           console.error(err)
@@ -141,20 +112,6 @@ export default function SongView(){
 
   
 
-  // JPG single-page guard – only runs once layout/image libs are loaded
-  useEffect(() => {
-    if (!parsed) return
-    if (!pdfPlanPromiseState || !imageLibPromiseState) return
-    let cancelled = false
-    async function check() {
-      const ok = await checkJpgSupport()
-      if (cancelled) return
-      setJpgDisabled(!ok)
-    }
-    check()
-    return () => { cancelled = true }
-  }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
-
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
   }
@@ -196,17 +153,9 @@ if(!entry){
 
   async function checkJpgSupport(showAlert = false) {
     const song = buildSong()
-    const [{ chooseBestLayout }, { ensureCanvasFonts }] = await Promise.all([
-      loadPdfPlan(),
-      loadImageLib()
-    ])
-    const fonts = await ensureCanvasFonts()
-    const ctx = document.createElement('canvas').getContext('2d')
-    const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
-    const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-    const res = chooseBestLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
-    lastPlan.current = res.plan
-    const ok = res.plan.layout.pages.length <= 1
+    const plan = planSongRender(song, { showChords })
+    lastPlan.current = plan
+    const ok = true
     if (!ok && showAlert && !jpgAlerted.current) {
       alert('JPG export supports single-page songs only for now.')
       jpgAlerted.current = true
@@ -214,32 +163,30 @@ if(!entry){
     return ok
   }
 
-  function prefetchPdf() { loadPdfLib() }
+  function prefetchPdf() {}
   function prefetchJpg() {
-    Promise.all([loadPdfPlan(), loadImageLib()]).then(() => {
-      if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
-    })
+    if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
   }
 
   async function handleDownloadPdf(){
     setBusy(true)
     try {
-      const { downloadSingleSongPdf } = await loadPdfLib()
-      await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+      const song = buildSong()
+      const plan = planSongRender(song, { showChords })
+      lastPlan.current = plan
+      const doc = await exportPdfFromPlan(plan)
+      doc.save(`${slug}.pdf`)
     } finally {
       setBusy(false)
     }
-    const { downloadSingleSongPdf } = await loadPdfLib()
-    const res = await downloadSingleSongPdf(buildSong())
-    lastPlan.current = res?.plan || null
-
   }
 
   async function handleDownloadJpg(){
     const ok = await checkJpgSupport(true)
     if (!ok) return
-    const { downloadSingleSongJpg } = await loadImageLib()
-    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, ''), plan: lastPlan.current })
+    const plan = lastPlan.current || planSongRender(buildSong(), { showChords })
+    lastPlan.current = plan
+    await exportImageFromPlan(plan, { filename: slug })
   }
 
   
