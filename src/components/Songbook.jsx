@@ -192,10 +192,62 @@ export default function Songbook() {
   return (
     <div className="BuilderPage">
       <Busy busy={busy} />
-      {/* LEFT: Picker */}
+
+      {/* Top row: back/blank + title + blank (mirrors Setlist visual rhythm) */}
+      <div className="TopRow">
+        <div className="TopLeft"></div>
+        <h1 className="TopTitle">Songbook Builder</h1>
+        <div className="TopRight"></div>
+      </div>
+
+      {/* Toolbar spanning both columns */}
+      <div className="card SongbookToolbar">
+        <div className="Row" style={{ gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="Field">
+            <input
+              id="sb-toc"
+              type="checkbox"
+              checked={includeTOC}
+              onChange={(e) => setIncludeTOC(e.target.checked)}
+            />
+            <label htmlFor="sb-toc">Include table of contents</label>
+          </div>
+
+          <div className="Field">
+            <label htmlFor="sb-cover">Cover page (image):</label>
+            <input
+              id="sb-cover"
+              className="CoverInput"
+              type="file"
+              accept="image/*"
+              onChange={onCoverFile}
+            />
+          </div>
+
+          <div className="Field" style={{ marginLeft: 'auto', gap: '.5rem' }}>
+            <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
+              Select all ({filteredCount} filtered)
+            </button>
+            <button className="btn" onClick={clearAll} disabled={!selectedCount}>
+              Clear
+            </button>
+            <button
+              className="btn primary"
+              onClick={handleExport}
+              onMouseEnter={prefetchPdf}
+              onFocus={prefetchPdf}
+              disabled={!selectedEntries.length || busy}
+              title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
+            >
+              {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-pane region (left: search & list; right: live selection) */}
       <section className="BuilderLeft">
         <header className="BuilderHeader">
-          <h1 style={{ margin: 0 }}>Songbook Builder</h1>
           <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div className="Field" style={{ minWidth: 220 }}>
               <label htmlFor="sb-search">Search:</label>
@@ -252,15 +304,6 @@ export default function Songbook() {
                 ))}
               </select>
             </div>
-
-            <div className="Field" style={{ marginLeft: 'auto', gap: '.5rem' }}>
-              <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
-                Select all ({filteredCount} filtered)
-              </button>
-              <button className="btn" onClick={clearAll} disabled={!selectedCount}>
-                Clear
-              </button>
-            </div>
           </div>
 
           <div className="Row Small" style={{ marginTop: '.5rem' }}>
@@ -308,46 +351,8 @@ export default function Songbook() {
         </div>
       </section>
 
-      {/* RIGHT: Preview / Export */}
+      {/* RIGHT: Preview only (toolbar moved above both panes) */}
       <aside className="BuilderRight">
-        <div className="RightSection">
-          <div className="Row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <div className="Field">
-              <input
-                id="sb-toc"
-                type="checkbox"
-                checked={includeTOC}
-                onChange={(e) => setIncludeTOC(e.target.checked)}
-              />
-              <label htmlFor="sb-toc">Include table of contents</label>
-            </div>
-
-            <div className="Field">
-              <label htmlFor="sb-cover">Cover page (image):</label>
-              <input
-                id="sb-cover"
-                className="CoverInput"
-                type="file"
-                accept="image/*"
-                onChange={onCoverFile}
-              />
-            </div>
-
-            <div className="Field" style={{ marginLeft: 'auto' }}>
-              <button
-                className="btn"
-                onClick={handleExport}
-                onMouseEnter={prefetchPdf}
-                onFocus={prefetchPdf}
-                disabled={!selectedEntries.length || busy}
-                title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
-              >
-                {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div className="RightSection RightScroll" role="region" aria-label="Selected songs">
           <ol className="List" style={{ listStyle: 'decimal inside' }}>
             {selectedEntries.map((s) => (
