@@ -1,5 +1,7 @@
-// src/utils/pdfLayout.js
+// src/utils/pdf/pdfLayout.js
 // Pure layout planning helpers shared by PDF and image exporters.
+
+import { resolveChordCollisions } from './measure'
 
 // Detect common section labels in plain text lines
 function isSectionLabel(text = '') {
@@ -76,7 +78,7 @@ export const DEFAULT_LAYOUT_OPT = {
   lyricSizePt: 16,
   chordSizePt: 16,
   margin: 36,
-  gutter: 18,
+  gutter: 24,
   headerOffsetY: 54,
   columns: 1,
   pageWidth: 612,  // Letter
@@ -125,54 +127,62 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
 export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt }
-  const minSize = 12
-  const startSize = oBase.lyricSizePt
-
-  const candidates = []
-  const tryPlan = (cols, size) => {
-    const layout = planSongLayout(song, { ...oBase, columns: cols, lyricSizePt: size, chordSizePt: size }, makeMeasureLyricAt(size))
-    const widthOk = !widthOverflows(song, cols, size, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-    return { columns: cols, lyricSizePt: size, chordSizePt: size, layout, widthOk }
-  }
-
-  const initialCols = oBase.columns === 2 ? 2 : 1
-  candidates.push(tryPlan(initialCols, startSize))
-
-  let last = candidates[candidates.length - 1]
-  if (initialCols === 1 && (last.layout.pages.length > 1 || !last.widthOk)) {
-    let size = startSize
-    candidates.push(tryPlan(2, size))
-    last = candidates[candidates.length - 1]
-    while ((last.layout.pages.length > 1 || !last.widthOk) && size > minSize) {
-      size--
-      last = tryPlan(2, size)
-      candidates.push(last)
-    }
-  } else {
-    let size = startSize
-    while ((last.layout.pages.length > 1 || !last.widthOk) && size > minSize) {
-      size--
-      last = tryPlan(initialCols, size)
-      candidates.push(last)
+  const SIZES = [16, 15, 14, 13, 12]
+  const TRY = [
+    { cols: 1, sizes: SIZES },
+    { cols: 2, sizes: SIZES },
+  ]
+  for (const mode of TRY) {
+    for (const sz of mode.sizes) {
+      const layout = planSongLayout(
+        song,
+        { ...oBase, columns: mode.cols, lyricSizePt: sz, chordSizePt: sz },
+        makeMeasureLyricAt(sz),
+        makeMeasureChordAt(sz)
+      )
+      const widthOk = !widthOverflows(song, mode.cols, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+      const plan = { ...oBase, columns: mode.cols, lyricSizePt: sz, chordSizePt: sz, layout }
+      if (layout.pages.length === 1 && widthOk) {
+        if (mode.cols === 2 && tinySecondColumn(plan)) continue
+        return { plan }
+      }
     }
   }
+  const sz = 12
+  const layout = planSongLayout(
+    song,
+    { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz },
+    makeMeasureLyricAt(sz),
+    makeMeasureChordAt(sz)
+  )
+  return { plan: { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz, layout } }
+}
 
-  candidates.sort((a, b) => {
-    if (a.layout.pages.length !== b.layout.pages.length) return a.layout.pages.length - b.layout.pages.length
-    if (a.widthOk !== b.widthOk) return a.widthOk ? -1 : 1
-    if (a.columns !== b.columns) return a.columns - b.columns
-    return b.lyricSizePt - a.lyricSizePt
-  })
-
-  const best = candidates[0]
-  return {
-    plan: { ...oBase, columns: best.columns, lyricSizePt: best.lyricSizePt, chordSizePt: best.chordSizePt, layout: best.layout },
-    chosenOpts: { columns: best.columns, lyricSizePt: best.lyricSizePt, chordSizePt: best.chordSizePt }
+function tinySecondColumn(plan) {
+  if (plan.columns !== 2) return false
+  const page = plan.layout.pages[0]
+  if (!page || page.columns.length < 2) return false
+  const last = page.columns[1]
+  let lineCount = 0
+  let sectionCount = 0
+  let currentSectionLines = 0
+  for (const b of last.blocks) {
+    if (b.type === 'section') {
+      if (currentSectionLines > 0) sectionCount++
+      currentSectionLines = 0
+    } else if (b.type === 'line') {
+      currentSectionLines++
+      lineCount++
+    }
   }
+  if (currentSectionLines > 0) sectionCount++
+  if (lineCount <= 5) return true
+  if (sectionCount === 1 && currentSectionLines < 4) return true
+  return false
 }
 
 // Public layout function (was computeLayout). Pure; does not select sizes/columns.
-export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0) {
+export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measureChord = (t) => 0) {
   const song = normalizeSongInput(songIn)
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt }
   const lineGap = 4
@@ -242,7 +252,13 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0) {
     col.blocks.push({ type: 'section', header })
   }
   const pushLine = (col, lyrics, cps) => {
-    col.blocks.push({ type: 'line', lyrics, chords: cps.map(c => ({ x: measureLyric(lyrics.slice(0, c.index || 0)), sym: c.sym })) })
+    const chords = cps.map(c => ({
+      x: measureLyric(lyrics.slice(0, c.index || 0)),
+      w: measureChord(c.sym || ''),
+      sym: c.sym
+    }))
+    resolveChordCollisions(chords)
+    col.blocks.push({ type: 'line', lyrics, chords })
   }
 
   for (const block of (song.lyricsBlocks || [])) {
@@ -314,7 +330,7 @@ export function getLayoutMetrics(input, opts) {
   o.pageWidth = 612
   o.pageHeight = 792
   const measure = (text) => (text ? text.length * (o.lyricSizePt * 0.6) : 0)
-  const layout = planSongLayout(normalizeSongInput(input), o, measure)
+  const layout = planSongLayout(normalizeSongInput(input), o, measure, measure)
   return layout.pages.map((page, pIdx) => ({
     p: pIdx,
     cols: page.columns.map((col, cIdx) => ({
