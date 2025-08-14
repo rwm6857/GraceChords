@@ -294,8 +294,9 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
       }
 
       if (fit < 2 && remaining > fit) { advanceColOrPage(); continue }
-         if (remaining - fit < 2 && remaining > fit) {
-              if ( fit > 2 ) {
+
+      if (remaining - fit < 2 && remaining > fit) {
+        if (fit > 2) {
           used -= lineHs[i + fit - 1]
           fit--
         } else {
