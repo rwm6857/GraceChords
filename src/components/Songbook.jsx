@@ -5,8 +5,10 @@ import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
-import { planSongRender } from '../utils/export/planSongRender'
-import exportPdfFromPlan from '../utils/export/exportPdf'
+
+// Lazy pdf exporters
+let pdfLibPromise
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 function byTitle(a, b) {
   return (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
@@ -112,39 +114,40 @@ export default function Songbook() {
     if (!selectedEntries.length) return
     setBusy(true)
     try {
+      const { downloadSongbookPdf } = await loadPdfLib()
       const songs = []
       for (const it of selectedEntries) {
         try {
           const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
           const txt = await fetchTextCached(url)
           const parsed = parseChordPro(txt)
-          const sections = (parsed.blocks || []).map(b => ({
-            type: b.section,
-            lines: (b.lines || []).map(ln => ln.text)
+          const blocks = parsed.blocks.map((b) => ({
+            section: b.section,
+            lines: (b.lines || []).map((ln) => ({
+              plain: ln.text,
+              chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
+            })),
           }))
           const slug = it.filename.replace(/\.chordpro$/, '')
           songs.push({
-            id: it.id,
             title: parsed.meta.title || it.title || slug,
-            originalKey: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
-            sections
+            key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
+            lyricsBlocks: blocks,
           })
-        } catch (err) {
+        } catch(err) {
           console.error(err)
           showToast(`Failed to process ${it.filename}`)
         }
       }
       if (songs.length) {
-        const plan = planSongRender(songs, { baseFontPt: 12, showChords: true, docTitle: 'Songbook' })
-        const doc = await exportPdfFromPlan(plan)
-        doc.save('Songbook.pdf')
+        await downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl: cover })
       }
     } finally {
       setBusy(false)
     }
   }
 
-  function prefetchPdf(){ }
+  function prefetchPdf(){ loadPdfLib() }
 
   function onCoverFile(e) {
     const f = e.target.files?.[0]

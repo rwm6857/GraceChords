@@ -8,9 +8,6 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
 import Busy from './Busy'
-import { planSongRender } from '../utils/export/planSongRender'
-import exportPdfFromPlan from '../utils/export/exportPdf'
-import renderCanvasFromPlan from '../utils/export/exportImage'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -227,38 +224,22 @@ if(!entry){
   async function handleDownloadPdf(){
     setBusy(true)
     try {
-      const song = buildSong()
-      const planSong = {
-        id: entry?.id || 'song',
-        title: song.title,
-        originalKey: song.key,
-        sections: (song.lyricsBlocks || []).map(b => ({ type: b.section, lines: b.lines.map(l => l.plain) }))
-      }
-      const plan = planSongRender(planSong, { baseFontPt: 16, showChords, docTitle: song.title })
-      const doc = await exportPdfFromPlan(plan)
-      doc.save(`${(song.title || 'Untitled').replace(/\s+/g, '_')}.pdf`)
-      lastPlan.current = plan
+      const { downloadSingleSongPdf } = await loadPdfLib()
+      await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
     } finally {
       setBusy(false)
     }
+    const { downloadSingleSongPdf } = await loadPdfLib()
+    const res = await downloadSingleSongPdf(buildSong())
+    lastPlan.current = res?.plan || null
+
   }
 
   async function handleDownloadJpg(){
     const ok = await checkJpgSupport(true)
     if (!ok) return
-    const song = buildSong()
-    const planSong = {
-      id: entry?.id || 'song',
-      title: song.title,
-      originalKey: song.key,
-      sections: (song.lyricsBlocks || []).map(b => ({ type: b.section, lines: b.lines.map(l => l.plain) }))
-    }
-    const plan = planSongRender(planSong, { baseFontPt: 16, showChords, docTitle: song.title })
-    const canvas = await renderCanvasFromPlan(plan)
-    const link = document.createElement('a')
-    link.href = canvas.toDataURL('image/jpeg', 0.92)
-    link.download = `${(song.title || 'Untitled').replace(/\s+/g, '_')}.jpg`
-    link.click()
+    const { downloadSingleSongJpg } = await loadImageLib()
+    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, ''), plan: lastPlan.current })
   }
 
   

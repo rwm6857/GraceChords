@@ -4,14 +4,16 @@ import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
-import { parseChordPro } from '../utils/chordpro'
+import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import Busy from './Busy'
-import { planSongRender } from '../utils/export/planSongRender'
-import exportPdfFromPlan from '../utils/export/exportPdf'
+
+// Lazy pdf exporter
+let pdfLibPromise
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 export default function Setlist(){
   // existing state
@@ -140,43 +142,60 @@ export default function Setlist(){
 
   // export & print
 async function exportPdf() {
-  setBusy(true)
+  setBusy(true);
   try {
-    const songs = []
+    const { downloadMultiSongPdf } = await loadPdfLib();
+    const songs = [];
+
     for (const sel of list) {
-      const s = items.find((it) => it.id === sel.id)
-      if (!s) continue
+      const s = items.find((it) => it.id === sel.id);
+      if (!s) continue;
+
       try {
-        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`
-        const txt = await fetchTextCached(url)
-        const parsed = parseChordPro(txt)
-        const baseKey = parsed.meta?.key || parsed.meta?.originalkey || s.originalKey || 'C'
-        const sections = (parsed.blocks || []).map(b => ({
-          type: b.section,
-          lines: (b.lines || []).map(ln => ln.text)
-        }))
+        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`;
+        const txt = await fetchTextCached(url);
+        const parsed = parseChordPro(txt);
+
+        const baseKey =
+          parsed.meta?.key ||
+          parsed.meta?.originalkey ||
+          s.originalKey ||
+          "C";
+
+        const steps = stepsBetween(baseKey, sel.toKey || baseKey);
+
+        const blocks = (parsed.blocks || []).map((b) => ({
+          section: b.section,
+          lines: (b.lines || []).map((ln) => ({
+            plain: ln.text,
+            chordPositions: (ln.chords || []).map((c) => ({
+              sym: transposeSym(c.sym, steps),
+              index: c.index,
+            })),
+          })),
+        }));
+
+        const slug = s.filename.replace(/\.chordpro$/i, "");
         songs.push({
-          id: s.id,
-          title: parsed.meta?.title || s.title || s.id,
-          originalKey: sel.toKey || baseKey,
-          sections
-        })
+          title: parsed.meta?.title || s.title || slug,
+          key: sel.toKey || baseKey,
+          lyricsBlocks: blocks,
+        });
       } catch (err) {
-        console.error(err)
-        showToast(`Failed to process ${s.filename}`)
+        console.error(err);
+        showToast(`Failed to process ${s.filename}`);
       }
     }
+
     if (songs.length) {
-      const plan = planSongRender(songs, { baseFontPt: 12, showChords: true, docTitle: name })
-      const doc = await exportPdfFromPlan(plan)
-      doc.save('Setlist.pdf')
+      await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 });
     }
   } finally {
-    setBusy(false)
+    setBusy(false);
   }
 }
 
-  function prefetchPdf(){ }
+  function prefetchPdf(){ loadPdfLib() }
 
   async function bundlePptx(){
     setPptxProgress(`Bundling 0/${list.length}…`)
