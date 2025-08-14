@@ -49,7 +49,7 @@ export default function SongView(){
 
   const loadPdfPlan = () => {
     if (!pdfPlanPromise) {
-      pdfPlanPromise = import('../utils/pdfLayout')
+      pdfPlanPromise = import('../utils/pdf/pdfLayout.js')
       setPdfPlanPromise(pdfPlanPromise)
     }
     return pdfPlanPromise
