@@ -5,7 +5,6 @@ import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
-import SongCard from './ui/SongCard'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
@@ -280,81 +279,41 @@ async function exportPdf() {
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
-          <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
-            {!fuse ? (
-              <div>Loading search…</div>
-            ) : (
-              <div className="gc-list">
-                {results.map((s) => (
-                  <SongCard
-                    key={s.id}
-                    title={s.title}
-                    subtitle={s.originalKey || ''}
-                    tags={s.tags || []}
-                    rightSlot={
-                      <button className="btn" onClick={() => addSong(s)}>
-                        Add
-                      </button>
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
+              {!fuse ? <div>Loading search…</div> : results.map(s=> (
+                <div key={s.id} className="row" style={{padding:'6px 0'}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600}}>{s.title}</div>
+                    <div className="meta">{s.originalKey || ''}{s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}</div>
+                  </div>
+                  <button className="btn" onClick={()=> addSong(s)}>Add</button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div>
           <strong>Current setlist ({list.length})</strong>
           <div style={{minHeight:0, maxHeight:360, overflow:'auto', marginTop:6}}>
-            <div className="gc-list">
-              {list.map((sel) => {
-                const s = items.find((it) => it.id === sel.id)
-                if (!s) return null
-                return (
-                  <SongCard
-                    key={sel.id}
-                    title={s.title}
-                    subtitle={`Original: ${s.originalKey || '—'}`}
-                    rightSlot={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <select
-                          value={sel.toKey}
-                          onChange={(e) => changeKey(sel.id, e.target.value)}
-                        >
-                          {KEYS.map((k) => (
-                            <option key={k} value={k}>
-                              {k}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          className="btn"
-                          onClick={() => move(sel.id, 'up')}
-                          title="Move up"
-                        >
-                          <ArrowUp />
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => move(sel.id, 'down')}
-                          title="Move down"
-                        >
-                          <ArrowDown />
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => removeSong(sel.id)}
-                          title="Remove"
-                        >
-                          <RemoveIcon />
-                        </button>
-                      </div>
-                    }
-                  />
-                )
-              })}
-            </div>
+            {list.map((sel)=>{
+              const s = items.find(it=> it.id===sel.id)
+              if(!s) return null
+              return (
+                <div key={sel.id} className="row" style={{padding:'6px 0'}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600}}>{s.title}</div>
+                    <div className="meta">Original: {s.originalKey || '—'}</div>
+                  </div>
+                  <select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
+                    {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
+                  </select>
+                  <button className="btn" onClick={()=> move(sel.id,'up')} title="Move up"><ArrowUp /></button>
+                  <button className="btn" onClick={()=> move(sel.id,'down')} title="Move down"><ArrowDown /></button>
+                  <button className="btn" onClick={()=> removeSong(sel.id)} title="Remove"><RemoveIcon /></button>
+                </div>
+              )
+            })}
           </div>
           <div style={{display:'flex', gap:8, marginTop:8}}>
             <button

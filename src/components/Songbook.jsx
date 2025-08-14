@@ -5,7 +5,6 @@ import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
-import SongCard from './ui/SongCard'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -267,33 +266,35 @@ export default function Songbook() {
         </header>
 
         <div className="BuilderScroll" role="region" aria-label="Song list">
-          <div className="gc-list">
+          <ul className="BuilderList">
             {filtered.map((s) => {
               const checked = selectedIds.has(s.id)
               const authorsLine = Array.isArray(s.authors)
                 ? s.authors.join(', ')
                 : s.authors || ''
-              const tagsArr = Array.isArray(s.tags) ? s.tags : s.tags ? [s.tags] : []
-              const subtitle = `${authorsLine || '—'}${s.country ? ` • ${s.country}` : ''}`
+              const tagLine = Array.isArray(s.tags) ? s.tags.join(', ') : s.tags || ''
               return (
-                <label key={s.id} style={{ display: 'block' }}>
-                  <SongCard
-                    title={s.title}
-                    subtitle={subtitle}
-                    tags={tagsArr}
-                    leftSlot={
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => toggleOne(s.id, e.target.checked)}
-                        aria-label={`Select ${s.title}`}
-                      />
-                    }
-                  />
-                </label>
+                <li key={s.id} className="BuilderRow">
+                  <label className="RowMain">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleOne(s.id, e.target.checked)}
+                      aria-label={`Select ${s.title}`}
+                    />
+                    <div className="RowText">
+                      <div className="RowTitle">{s.title}</div>
+                      <div className="RowMeta">
+                        {authorsLine || '—'}
+                        {tagLine ? ` • ${tagLine}` : ''}
+                        {s.country ? ` • ${s.country}` : ''}
+                      </div>
+                    </div>
+                  </label>
+                </li>
               )
             })}
-          </div>
+          </ul>
         </div>
       </section>
 
