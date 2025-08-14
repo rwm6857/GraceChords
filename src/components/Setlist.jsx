@@ -10,6 +10,7 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import Busy from './Busy'
+import SongCard from './ui/SongCard'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -281,13 +282,12 @@ async function exportPdf() {
             <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
             <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
               {!fuse ? <div>Loading search…</div> : results.map(s=> (
-                <div key={s.id} className="row" style={{padding:'6px 0'}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:600}}>{s.title}</div>
-                    <div className="meta">{s.originalKey || ''}{s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}</div>
-                  </div>
-                  <button className="btn" onClick={()=> addSong(s)}>Add</button>
-                </div>
+                <SongCard
+                  key={s.id}
+                  title={s.title}
+                  subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+                  rightSlot={<button className="btn" onClick={()=> addSong(s)}>Add</button>}
+                />
               ))}
             </div>
           </div>
@@ -300,18 +300,21 @@ async function exportPdf() {
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null
               return (
-                <div key={sel.id} className="row" style={{padding:'6px 0'}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:600}}>{s.title}</div>
-                    <div className="meta">Original: {s.originalKey || '—'}</div>
-                  </div>
-                  <select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
-                    {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-                  </select>
-                  <button className="btn" onClick={()=> move(sel.id,'up')} title="Move up"><ArrowUp /></button>
-                  <button className="btn" onClick={()=> move(sel.id,'down')} title="Move down"><ArrowDown /></button>
-                  <button className="btn" onClick={()=> removeSong(sel.id)} title="Remove"><RemoveIcon /></button>
-                </div>
+                <SongCard
+                  key={sel.id}
+                  title={s.title}
+                  subtitle={`Original: ${s.originalKey || '—'}`}
+                  rightSlot={
+                    <div style={{display:'flex', alignItems:'center', gap:6}}>
+                      <select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
+                        {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
+                      </select>
+                      <button className="btn" onClick={()=> move(sel.id,'up')} title="Move up"><ArrowUp /></button>
+                      <button className="btn" onClick={()=> move(sel.id,'down')} title="Move down"><ArrowDown /></button>
+                      <button className="btn" onClick={()=> removeSong(sel.id)} title="Remove"><RemoveIcon /></button>
+                    </div>
+                  }
+                />
               )
             })}
           </div>

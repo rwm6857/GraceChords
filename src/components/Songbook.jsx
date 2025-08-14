@@ -5,6 +5,7 @@ import { parseChordPro } from '../utils/chordpro'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
+import SongCard from './ui/SongCard'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -273,24 +274,23 @@ export default function Songbook() {
                 ? s.authors.join(', ')
                 : s.authors || ''
               const tagLine = Array.isArray(s.tags) ? s.tags.join(', ') : s.tags || ''
+              const meta = `${authorsLine || '—'}${tagLine ? ` • ${tagLine}` : ''}${s.country ? ` • ${s.country}` : ''}`
               return (
-                <li key={s.id} className="BuilderRow">
-                  <label className="RowMain">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => toggleOne(s.id, e.target.checked)}
-                      aria-label={`Select ${s.title}`}
-                    />
-                    <div className="RowText">
-                      <div className="RowTitle">{s.title}</div>
-                      <div className="RowMeta">
-                        {authorsLine || '—'}
-                        {tagLine ? ` • ${tagLine}` : ''}
-                        {s.country ? ` • ${s.country}` : ''}
-                      </div>
-                    </div>
-                  </label>
+                <li key={s.id}>
+                  <SongCard
+                    leftSlot={
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => toggleOne(s.id, e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Select ${s.title}`}
+                      />
+                    }
+                    title={s.title}
+                    subtitle={meta}
+                    onClick={() => toggleOne(s.id, !checked)}
+                  />
                 </li>
               )
             })}

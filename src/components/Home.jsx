@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
+import SongCard from './ui/SongCard'
 
 export default function Home(){
   const items = indexData?.items || []
@@ -280,25 +281,18 @@ export default function Home(){
         {!fuse ? <div>Loading search…</div> : (
           <div className="HomeGrid" role="listbox" aria-label="Song results">
             {results.map((s, i) => (
-              <Link
+              <SongCard
+                as={Link}
                 key={s.id}
                 to={`/song/${s.id}`}
                 role="option"
                 ref={el => (optionRefs.current[i] = el)}
                 tabIndex={i === activeIndex ? 0 : -1}
                 aria-selected={i === activeIndex}
-                className={`HomeCard ${i === activeIndex ? 'active' : ''}`}
-              >
-                <div className="row">
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{s.title}</div>
-                    <div className="meta">
-                      {s.originalKey || '—'}
-                      {s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}
-                    </div>
-                  </div>
-                </div>
-              </Link>
+                className={i === activeIndex ? 'active' : ''}
+                title={s.title}
+                subtitle={`${s.originalKey || '—'}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+              />
             ))}
           </div>
         )}
