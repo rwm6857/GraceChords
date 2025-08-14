@@ -10,14 +10,11 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import Busy from './Busy'
-import { planSongRender } from '../utils/export/planSongRender'
-import { exportPdfFromPlan } from '../utils/export/exportPdf'
 import SongCard from './ui/SongCard'
 
 // Lazy pdf exporter
 let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
-
 
 export default function Setlist(){
   // existing state
@@ -148,6 +145,7 @@ export default function Setlist(){
 async function exportPdf() {
   setBusy(true);
   try {
+    const { downloadMultiSongPdf } = await loadPdfLib();
     const songs = [];
 
     for (const sel of list) {
@@ -191,16 +189,14 @@ async function exportPdf() {
     }
 
     if (songs.length) {
-      const plan = planSongRender(songs, { docTitle: name || 'Setlist', showChords: true })
-      const doc = await exportPdfFromPlan(plan)
-      doc.save(`${(name || 'Setlist').replace(/\s+/g, '_')}.pdf`)
+      await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 });
     }
   } finally {
     setBusy(false);
   }
 }
 
-  function prefetchPdf() {}
+  function prefetchPdf(){ loadPdfLib() }
 
   async function bundlePptx(){
     setPptxProgress(`Bundling 0/${list.length}…`)
