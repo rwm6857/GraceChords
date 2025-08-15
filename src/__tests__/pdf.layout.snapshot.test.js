@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getLayoutMetrics } from '../utils/pdfLayout'
+import { getLayoutMetrics } from '../utils/pdf/pdfLayout'
 
 // ---------- Fixtures ----------
 

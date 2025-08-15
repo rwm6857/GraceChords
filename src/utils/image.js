@@ -1,7 +1,7 @@
 // src/utils/image.js
-import { chooseBestLayout } from './pdfLayout'
-import { ensureCanvasFonts } from './fonts'
-export { ensureCanvasFonts } from './fonts'
+import { chooseBestLayout } from './pdf/pdfLayout'
+import { ensureCanvasFonts } from './pdf/fonts'
+export { ensureCanvasFonts } from './pdf/fonts'
 
 // Render a planned layout to a Canvas2D
 export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
