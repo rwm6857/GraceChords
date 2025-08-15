@@ -63,3 +63,12 @@ export async function createPR({ owner, repo, head, base, title, body }){
     body: JSON.stringify({ title, body, head, base }),
   })
 }
+
+export async function validateToken(){
+  return ghFetch('/user')
+}
+
+export async function isRepoWriteable({ owner, repo }){
+  const repoInfo = await ghFetch(`/repos/${owner}/${repo}`)
+  return !!(repoInfo?.permissions?.push)
+}

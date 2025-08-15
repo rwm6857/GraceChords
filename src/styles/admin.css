@@ -1,0 +1,12 @@
+.modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); z-index:50; }
+.modal-body { background: var(--gc-card-bg,#0f1115); color: var(--gc-card-fg,#e8ecf1);
+  border:1px solid var(--gc-card-border,#2a2f3a); border-radius:10px; padding:16px; width:min(720px, 94vw); }
+.modal-body label { display:block; margin:8px 0; }
+.modal-body input, .modal-body textarea { width:100%; }
+.alert.error { background:#2a1010; border:1px solid #a04444; color:#ffdede; padding:8px; border-radius:8px; margin:8px 0; }
+.Table { border-collapse: collapse; }
+.Table th, .Table td { border-top:1px solid var(--gc-card-border,#2a2f3a); padding:6px 8px; vertical-align: middle; }
+.Row { display:flex; align-items:center; }
+.Row.Small { font-size:0.9rem; gap:4px; }
+.btn.small { padding:4px 6px; font-size:0.8rem; }
+.spacer { flex:1 1 auto; }
