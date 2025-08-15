@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, parseChordPro } from '../utils/chordpro'
 import { downloadZip } from '../utils/zip'
+import * as GH from '../utils/github'
 
 const PASSWORD = import.meta.env.VITE_ADMIN_PW
 
@@ -88,6 +89,63 @@ function AdminPanel(){
   return (
     <div className="container">
       <h1>Admin</h1>
+
+      <div style={{display:'flex', gap:8, marginBottom:10}}>
+        <button className="btn" onClick={() => {
+          const t = prompt('Paste GitHub Personal Access Token (PAT):')
+          if(t !== null){
+            localStorage.setItem('ghToken', t.trim())
+            alert(t.trim() ? 'Token saved locally.' : 'Token cleared.')
+          }
+        }}>Set GitHub token</button>
+
+        <button className="btn primary" onClick={async () => {
+          try {
+            const files = drafts.length
+              ? drafts.map(d => ({ filename: d.filename, content: d.body, title: d.title }))
+              : [{ filename, content: text, title: meta.title || '' }]
+
+            if(!files.length){ alert('Nothing to commit.'); return }
+
+            const now = new Date()
+            const defaultBranchName = `song-upload-${now.toISOString().slice(0,19).replace(/[:T]/g,'-')}`
+            const branch = prompt('Branch name:', defaultBranchName) || defaultBranchName
+            const prTitle = prompt('PR Title:', `Add ${files.length} songs (${now.toISOString().slice(0,10)})`) || `Add ${files.length} songs`
+            const commitMsg = prompt('Commit message (per file):', 'add: <filename>') || 'add: <filename>'
+
+            const owner = 'rwm6857', repo = 'GraceChords'
+            const { default_branch, sha } = await GH.getRepoInfo({ owner, repo })
+            await GH.createBranch({ owner, repo, fromSha: sha, newBranch: branch })
+
+            for(const f of files){
+              const path = `public/songs/${f.filename}`
+              const existingSha = await GH.getFileSha({ owner, repo, path, ref: branch })
+              const msg = commitMsg.includes('<filename>') ? commitMsg.replace('<filename>', f.filename) : commitMsg
+              await GH.putFile({
+                owner, repo, branch, path,
+                contentBase64: GH.toBase64(f.content),
+                message: msg,
+                sha: existingSha,
+              })
+            }
+
+            const body = files.map(f => `- ${f.filename}${f.title ? ` — ${f.title}` : ''}`).join('\\n')
+            const pr = await GH.createPR({
+              owner, repo,
+              head: branch,
+              base: default_branch,
+              title: prTitle,
+              body,
+            })
+
+            alert(`PR #${pr.number} opened`)
+            window.open(pr.html_url, '_blank', 'noopener')
+          } catch (err) {
+            console.error(err)
+            alert(`PR failed: ${err?.message || err}`)
+          }
+        }}>Create PR</button>
+      </div>
 
       {/* Metadata form */}
       <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
