@@ -225,14 +225,11 @@ if(!entry){
     setBusy(true)
     try {
       const { downloadSingleSongPdf } = await loadPdfLib()
-      await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16, chordSizePt: 16 })
+      const res = await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16 })
+      lastPlan.current = res?.plan || null
     } finally {
       setBusy(false)
     }
-    const { downloadSingleSongPdf } = await loadPdfLib()
-    const res = await downloadSingleSongPdf(buildSong())
-    lastPlan.current = res?.plan || null
-
   }
 
   async function handleDownloadJpg(){

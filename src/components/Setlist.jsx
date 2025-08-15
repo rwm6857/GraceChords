@@ -189,7 +189,7 @@ async function exportPdf() {
     }
 
     if (songs.length) {
-      await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 });
+      await downloadMultiSongPdf(songs);
     }
   } finally {
     setBusy(false);
