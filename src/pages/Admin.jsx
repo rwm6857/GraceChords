@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, parseChordPro } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
+import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
+import { lintChordPro } from '../utils/chordpro/lint'
 import { downloadZip } from '../utils/zip'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
@@ -140,6 +142,38 @@ function AdminPanel(){
     const base = kebab(meta.id || doc.meta.title || 'untitled')
     const fname = `${base}.chordpro`
     setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '' }])
+  }
+
+  function convertAndStage(){
+    try {
+      const { text: out, docTitle, docKey } = convertToCanonicalChordPro(text, {
+        country: meta.country || '',
+        tags: meta.tags || '',
+        youtube: meta.youtube || '',
+        mp3: meta.mp3 || '',
+        pptx: meta.pptx || ''
+      })
+      const fname = suggestCanonicalFilename(docTitle)
+      setStaged(s => [...s, { filename: fname, content: out, title: docTitle, key: docKey || '' }])
+      showToast?.(`Converted & staged: ${fname}`) ?? alert(`Converted & staged: ${fname}`)
+    } catch (e) {
+      showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
+    }
+  }
+
+  function lintCurrent(){
+    try {
+      const warnings = lintChordPro(text)
+      if (!warnings.length) {
+        showToast?.('No issues found.') ?? alert('No issues found.')
+        return
+      }
+      const report = warnings.map(w => `${w.code}${w.sectionIndex!=null?` @section ${w.sectionIndex+1}`:''}${w.lineIndex!=null?`, line ${w.lineIndex+1}`:''}: ${w.message}`).join('\n')
+      console.log('[ChordPro Lint]\n' + report)
+      alert(`ChordPro Lint:\n\n${report}`)
+    } catch (e) {
+      showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
+    }
   }
   function stageDraft(i){
     const d = drafts[i]
@@ -363,8 +397,10 @@ function AdminPanel(){
 
       {/* Draft actions */}
       <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
+        <button className="btn" onClick={lintCurrent}>Lint</button>
         <button className="btn" onClick={addDraft}>Add to Drafts</button>
         <button className="btn" onClick={stageSong}>Stage Song</button>
+        <button className="btn" onClick={convertAndStage}>Convert → Stage</button>
         <button className="btn primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
         <label style={{display:'flex', alignItems:'center', gap:4}}>
           <input type="checkbox" checked={persist} onChange={e=> setPersist(e.target.checked)} />
