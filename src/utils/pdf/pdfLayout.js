@@ -13,17 +13,19 @@ export function normalizeSongInput(input) {
     const meta = {
       title: input.meta.title || input.title || 'Untitled',
       key: input.meta.key || input.key || 'C',
+      capo: input.meta.capo,
       meta: input.meta.meta,
     }
     const sections = (input.sections || []).map(sec => ({
       kind: sec.kind || 'verse',
       label: sec.label,
       lines: (sec.lines || []).map(ln => ({
-        lyrics: ln.lyrics || ln.plain || ln.text || '',
-        chords: (ln.chords || ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym }))
+        lyrics: ln.comment ? ln.comment : (ln.lyrics || ln.plain || ln.text || ''),
+        chords: (ln.chords || ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym })),
+        comment: ln.comment
       }))
     }))
-    return { meta, sections }
+    return { meta, sections, layoutHints: input.layoutHints }
   }
 
   // Legacy lyricsBlocks shape
@@ -32,14 +34,16 @@ export function normalizeSongInput(input) {
       kind: 'verse',
       label: b.section,
       lines: (b.lines || []).map(ln => ({
-        lyrics: ln.plain || ln.text || '',
-        chords: (ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym }))
+        lyrics: ln.comment ? ln.comment : (ln.plain || ln.text || ''),
+        chords: (ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym })),
+        comment: ln.comment
       }))
     }))
     return {
       meta: {
         title: input.title || 'Untitled',
-        key: input.key || input.originalKey || 'C'
+        key: input.key || input.originalKey || 'C',
+        capo: input.capo
       },
       sections
     }
@@ -139,34 +143,30 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
   const song = normalizeSongInput(songIn)
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const SIZE_STEPS = [16, 15, 14, 13, 12]
+  const prefer2 = song.layoutHints?.requestedColumns === 2
 
-  // 1) Single-page 1 column
-  for (const sz of SIZE_STEPS) {
-    const layout = planSongLayout(
-      song,
-      { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz },
-      makeMeasureLyricAt(sz),
-      makeMeasureChordAt(sz)
-    )
-    const widthOk = !widthOverflows(song, 1, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-    const plan = { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz, layout }
-    if (fitsSinglePage(plan) && widthOk) return { plan }
+  const sizeLoop = (colsFirst) => {
+    for (const sz of SIZE_STEPS) {
+      const order = colsFirst === 2 ? [2, 1] : [1, 2]
+      for (const cols of order) {
+        const layout = planSongLayout(
+          song,
+          { ...oBase, columns: cols, lyricSizePt: sz, chordSizePt: sz },
+          makeMeasureLyricAt(sz),
+          makeMeasureChordAt(sz)
+        )
+        const widthOk = !widthOverflows(song, cols, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+        const plan = { ...oBase, columns: cols, lyricSizePt: sz, chordSizePt: sz, layout }
+        if (!fitsSinglePage(plan) || !widthOk) continue
+        if (cols === 2 && isSecondColumnTiny(plan)) continue
+        return { plan }
+      }
+    }
+    return null
   }
 
-  // 2) Single-page 2 columns
-  for (const sz of SIZE_STEPS) {
-    const layout = planSongLayout(
-      song,
-      { ...oBase, columns: 2, lyricSizePt: sz, chordSizePt: sz },
-      makeMeasureLyricAt(sz),
-      makeMeasureChordAt(sz)
-    )
-    const widthOk = !widthOverflows(song, 2, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-    const plan = { ...oBase, columns: 2, lyricSizePt: sz, chordSizePt: sz, layout }
-    if (!fitsSinglePage(plan) || !widthOk) continue
-    if (isSecondColumnTiny(plan)) continue
-    return { plan }
-  }
+  const single = prefer2 ? sizeLoop(2) : sizeLoop(1)
+  if (single) return single
 
   // 3) Allow second page at minimum size, prefer 1 column
   const minSz = 12
@@ -226,6 +226,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   const lineGap = 4
   const sectionSize = o.lyricSizePt
   const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
+  const commentSize = Math.max(10, o.lyricSizePt - 2)
 
   const margin = o.margin
   const pageH = o.pageHeight
@@ -262,16 +263,27 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   const measureSectionHeight = (sec) => {
     let h = sectionTopPad + sectionSize + 4
     for (const ln of (sec.lines || [])) {
-      if (ln?.chords?.length) h += o.chordSizePt + lineGap / 2
-      h += o.lyricSizePt + lineGap
+      if (ln.comment) {
+        h += commentSize + 3
+      } else {
+        if (ln?.chords?.length) h += o.chordSizePt + lineGap / 2
+        h += o.lyricSizePt + lineGap
+      }
     }
     return h + 4
   }
 
-  const lineHeight = (ln) => (ln?.chords?.length ? (o.chordSizePt + lineGap / 2) : 0) + o.lyricSizePt + lineGap
+  const lineHeight = (ln) => {
+    if (ln.comment) return commentSize + 3
+    return (ln?.chords?.length ? (o.chordSizePt + lineGap / 2) : 0) + o.lyricSizePt + lineGap
+  }
 
   const pushSection = (col, header) => { col.blocks.push({ type: 'section', header }) }
-  const pushLine = (col, lyrics, cps) => {
+  const pushLine = (col, lyrics, cps, comment) => {
+    if (comment) {
+      col.blocks.push({ type: 'line', comment })
+      return
+    }
     const chords = cps.map(c => ({
       x: measureLyric(lyrics.slice(0, c.index || 0)),
       w: measureChord(c.sym || ''),
@@ -281,9 +293,12 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
     col.blocks.push({ type: 'line', lyrics, chords })
   }
 
-  for (const sec of (song.sections || [])) {
+  for (let i = 0; i < (song.sections || []).length; i++) {
+    const sec = song.sections[i]
     const blockH = measureSectionHeight(sec)
-    if (blockH > maxBlockH) {
+    if (song.layoutHints?.columnBreakAfter?.includes(i) && blockH <= maxBlockH && cursorY !== contentStartY) {
+      advanceColOrPage()
+    } else if (blockH > maxBlockH) {
       if (cursorY !== contentStartY || (o.columns === 2 && colIdx === 1)) advanceColOrPage()
     } else if (cursorY + blockH > contentBottomY) {
       advanceColOrPage()
@@ -294,7 +309,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
     pushSection(col, sec.label || sec.kind)
     cursorY += sectionSize + 4
     for (const ln of (sec.lines || [])) {
-      pushLine(col, ln.lyrics || '', ln.chords || [])
+      pushLine(col, ln.lyrics || '', ln.chords || [], ln.comment)
       cursorY += lineHeight(ln)
     }
     cursorY += 4

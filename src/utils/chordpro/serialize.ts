@@ -18,7 +18,8 @@ function cleanLabel(s?: string) {
 }
 
 // Insert inline chords into a plain lyric line using chord placements.
-function lineWithChords(ln: SongLine): string {
+function lineWithChords(ln: SongLine, useDirectives: boolean): string {
+  if (ln.comment) return useDirectives ? `{c: ${cleanLabel(ln.comment)}}` : ln.comment;
   if (!ln?.chords?.length) return ln.lyrics || '';
   const chars = Array.from(ln.lyrics || '');
   const byIndex = new Map<number, string[]>();
@@ -43,7 +44,7 @@ function emitSection(sec: SongSection): string {
   const label = cleanLabel(sec.label);
   const start = `{start_of_${kind}${label ? `: ${label}` : ''}}`;
   const end = `{end_of_${kind}}`;
-  const body = (sec.lines || []).map(lineWithChords).join('\n');
+  const body = (sec.lines || []).map(ln => lineWithChords(ln, true)).join('\n');
   return `${start}\n${body}\n${end}`;
 }
 
@@ -56,6 +57,11 @@ export function serializeChordPro(doc: SongDoc, opts: SerializeOpts = {}): strin
   const key = doc?.meta?.key || '';
   if (title) metaLines.push(`{title: ${cleanLabel(title)}}`);
   if (key) metaLines.push(`{key: ${cleanLabel(key)}}`);
+  if (typeof doc?.meta?.capo === 'number') metaLines.push(`{capo: ${doc.meta.capo}}`);
+  if (doc.chordDefs) {
+    for (const d of doc.chordDefs) metaLines.push(`{${d.raw}}`);
+  }
+  if (doc.layoutHints?.requestedColumns === 2) metaLines.push('{columns: 2}');
 
   const extra = doc?.meta?.meta || {};
   for (const [k, v] of Object.entries(extra)) {
@@ -64,12 +70,17 @@ export function serializeChordPro(doc: SongDoc, opts: SerializeOpts = {}): strin
   }
   const head = includeMeta ? metaLines.join('\n') : '';
 
-  const body = (doc.sections || []).map(sec => {
-    if (useDirectives) return emitSection(sec);
-    const hdr = (sec.label || sec.kind || '').trim() || 'Verse';
-    const lines = (sec.lines || []).map(lineWithChords).join('\n');
-    return `${hdr}\n${lines}`;
-  }).join('\n\n');
+  const parts: string[] = [];
+  (doc.sections || []).forEach((sec, i) => {
+    if (useDirectives) parts.push(emitSection(sec));
+    else {
+      const hdr = (sec.label || sec.kind || '').trim() || 'Verse';
+      const lines = (sec.lines || []).map(ln => lineWithChords(ln, false)).join('\n');
+      parts.push(`${hdr}\n${lines}`);
+    }
+    if (doc.layoutHints?.columnBreakAfter?.includes(i + 1)) parts.push('{column_break}');
+  });
+  const body = parts.join('\n\n');
 
   return [head, body].filter(Boolean).join('\n\n').replace(/\r\n/g, '\n');
 }

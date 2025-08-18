@@ -2,6 +2,11 @@ import { SongDoc, SongSection, SongLine, ChordPlacement } from './types';
 
 const RX_LONG_DIR = /^\{(start_of|end_of)_(verse|chorus|bridge|intro|tag|outro)(?::\s*([^}]+))?\}$/i;
 const RX_SHORT_DIR = /^\{(sov|eov|soc|eoc|sob|eob)\}$/i;
+const RX_CAPO = /^\{capo:\s*(\d+)\}$/i;
+const RX_COLUMNS = /^\{columns:\s*(\d+)\}$/i;
+const RX_COL_BREAK = /^\{column_break\}$/i;
+const RX_COMMENT = /^\{(c|comment):\s*([^}]+)\}$/i;
+const RX_DEFINE = /^\{define:\s*([^}]+)\}$/i;
 const SHORT_MAP: Record<string, { start: boolean; kind: string }> = {
   sov: { start: true,  kind: 'verse' },
   eov: { start: false, kind: 'verse' },
@@ -73,7 +78,7 @@ export function parseChordProOrLegacy(input: string): SongDoc {
     if (RX_LONG_DIR.test(t) || RX_SHORT_DIR.test(t)) { hasEnv = true; break; }
   }
 
-  const doc: SongDoc = { meta: {}, sections: [] };
+  const doc: SongDoc = { meta: {}, sections: [], layoutHints: { columnBreakAfter: [] }, chordDefs: [] };
   let cur: SongSection | null = null;
 
   const openSection = (kind: string, label?: string) => {
@@ -93,6 +98,28 @@ export function parseChordProOrLegacy(input: string): SongDoc {
       continue
     }
 
+    // specific directives
+    let m;
+    if ((m = RX_CAPO.exec(t))) { doc.meta.capo = parseInt(m[1], 10); continue; }
+    if ((m = RX_COLUMNS.exec(t))) {
+      const n = parseInt(m[1], 10);
+      doc.layoutHints!.requestedColumns = n === 2 ? 2 : 1;
+      continue;
+    }
+    if (RX_COL_BREAK.test(t)) { doc.layoutHints!.columnBreakAfter!.push(doc.sections.length); continue; }
+    if ((m = RX_COMMENT.exec(t))) {
+      const note = m[2].trim();
+      if (!cur) openSection('verse', 'Verse');
+      cur!.lines.push({ lyrics: '', chords: [], comment: note });
+      continue;
+    }
+    if ((m = RX_DEFINE.exec(t))) {
+      const body = m[1].trim();
+      const name = body.split(/\s+/)[0];
+      doc.chordDefs!.push({ name, raw: `define: ${body}` });
+      continue;
+    }
+
     // metadata lines
     const mMeta = RX_META.exec(t);
     if (mMeta && !RX_LONG_DIR.test(t) && !RX_SHORT_DIR.test(t)) {
@@ -100,6 +127,7 @@ export function parseChordProOrLegacy(input: string): SongDoc {
       const val = mMeta[2].trim();
       if (key === 'title') doc.meta.title = val;
       else if (key === 'key') doc.meta.key = val;
+      else if (key === 'capo') doc.meta.capo = parseInt(val, 10);
       else if (key === 'meta') {
         const [mk, ...rest] = val.split(/\s+/);
         if (mk) {
