@@ -61,7 +61,7 @@ function drawPlannedSong(doc, plan, { title, key }) {
       }
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
       doc.text(
-        `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • family ${plan.lyricFamily}/${plan.chordFamily}`,
+        `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'} • ${plan.lyricFamily}/${plan.chordFamily}`,
         margin,
         pageH - (margin * 0.6)
       )
