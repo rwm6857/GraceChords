@@ -108,6 +108,68 @@ export const DEFAULT_LAYOUT_OPT = {
 // Safety against kissing the right gutter
 const RIGHT_SAFETY = 6 // pt
 
+// Helper: sum content height per column
+export function columnHeights(page, lyricSizePt) {
+  const heights = []
+  const sectionTopPad = Math.round(lyricSizePt * 0.85)
+  const commentSize = Math.max(10, lyricSizePt - 2)
+  for (const col of page.columns || []) {
+    let h = 0
+    let lastType = null
+    for (const b of col.blocks || []) {
+      if (b.type === 'section') {
+        if (lastType === 'line') h += 4
+        h += sectionTopPad + lyricSizePt + 4
+        lastType = 'section'
+      } else if (b.type === 'line') {
+        if (b.comment) {
+          h += commentSize + 3
+        } else {
+          if (b.chords && b.chords.length) h += lyricSizePt + 2
+          h += lyricSizePt + 4
+        }
+        lastType = 'line'
+      }
+    }
+    if (lastType === 'line') h += 4
+    heights.push(h)
+  }
+  return heights
+}
+
+function scoreSinglePagePlan(docSize, margin, headerOffsetY, planLike) {
+  const pageH = docSize.h
+  const contentTop = margin + headerOffsetY
+  const contentH = pageH - margin - contentTop
+  const cols = planLike.columns
+  const lyricPt = planLike.lyricSizePt
+  const page = planLike.layout.pages[0]
+  const hs = columnHeights(page, lyricPt)
+  const colHeight = contentH
+
+  let balance = 1
+  if (cols === 2) {
+    const h1 = hs[0] || 0, h2 = hs[1] || 0
+    balance = 1 - (Math.abs(h1 - h2) / colHeight)
+  }
+  const totalH = (hs[0] || 0) + (hs[1] || 0)
+  const occupancy = cols === 2 ? (totalH / (2 * colHeight)) : ((hs[0] || 0) / colHeight)
+
+  let penalty = 0
+  if (cols === 2) {
+    const second = hs[1] || 0
+    const secondOcc = second / colHeight
+    if (secondOcc < 0.18) penalty += 20
+  }
+  if (occupancy > 0.98) penalty += 5
+  if (cols === 1 && occupancy < 0.45) penalty += 2
+
+  const sizeScore = lyricPt
+  const columnsBias = cols === 2 ? 2 : 0
+  const score = sizeScore * 100 + balance * 10 - penalty - columnsBias
+  return { score, occupancy, balance }
+}
+
 /**
  * Pure width check using provided measurers (lyrics/chords).
  * Respects the alignment invariant: chord X measured in lyrics font; chords drawn in mono bold.
@@ -144,31 +206,50 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const SIZE_STEPS = [16, 15, 14, 13, 12]
   const prefer2 = song.layoutHints?.requestedColumns === 2
+  const docSize = { w: oBase.pageWidth, h: oBase.pageHeight }
+  const margin = oBase.margin
+  const headerOffsetY = oBase.headerOffsetY
 
-  const sizeLoop = (colsFirst) => {
-    for (const sz of SIZE_STEPS) {
-      const order = colsFirst === 2 ? [2, 1] : [1, 2]
-      for (const cols of order) {
-        const layout = planSongLayout(
-          song,
-          { ...oBase, columns: cols, lyricSizePt: sz, chordSizePt: sz },
-          makeMeasureLyricAt(sz),
-          makeMeasureChordAt(sz)
-        )
-        const widthOk = !widthOverflows(song, cols, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-        const plan = { ...oBase, columns: cols, lyricSizePt: sz, chordSizePt: sz, layout }
-        if (!fitsSinglePage(plan) || !widthOk) continue
-        if (cols === 2 && isSecondColumnTiny(plan)) continue
-        return { plan }
-      }
+  let best = null
+  for (const pt of SIZE_STEPS) {
+    // 1 column plan
+    const layout1 = planSongLayout(
+      song,
+      { ...oBase, columns: 1, lyricSizePt: pt, chordSizePt: pt },
+      makeMeasureLyricAt(pt),
+      makeMeasureChordAt(pt)
+    )
+    const plan1 = { ...oBase, columns: 1, lyricSizePt: pt, chordSizePt: pt, layout: layout1 }
+    const widthOk1 = !widthOverflows(song, 1, pt, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    if (fitsSinglePage(plan1) && widthOk1) {
+      const s1 = scoreSinglePagePlan(docSize, margin, headerOffsetY, plan1)
+      plan1.occupancy = s1.occupancy
+      plan1.balance = s1.balance
+      best = { score: s1.score, plan: plan1 }
     }
-    return null
+
+    // 2 column plan
+    const layout2 = planSongLayout(
+      song,
+      { ...oBase, columns: 2, lyricSizePt: pt, chordSizePt: pt },
+      makeMeasureLyricAt(pt),
+      makeMeasureChordAt(pt)
+    )
+    const plan2 = { ...oBase, columns: 2, lyricSizePt: pt, chordSizePt: pt, layout: layout2 }
+    const widthOk2 = !widthOverflows(song, 2, pt, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    if (fitsSinglePage(plan2) && widthOk2) {
+      const s2 = scoreSinglePagePlan(docSize, margin, headerOffsetY, plan2)
+      let score = s2.score
+      if (prefer2) score += 0.5
+      plan2.occupancy = s2.occupancy
+      plan2.balance = s2.balance
+      if (!best || score > best.score) best = { score, plan: plan2 }
+    }
+
+    if (best) return { plan: best.plan }
   }
 
-  const single = prefer2 ? sizeLoop(2) : sizeLoop(1)
-  if (single) return single
-
-  // 3) Allow second page at minimum size, prefer 1 column
+  // Fallback: allow second page at minimum size
   const minSz = 12
   let layout = planSongLayout(
     song,
@@ -195,28 +276,6 @@ function fitsSinglePage(plan) {
 
 function fitsWithinTwoPages(plan) {
   return (plan?.layout?.pages?.length || 99) <= 2
-}
-
-function isSecondColumnTiny(plan) {
-  const p = plan?.layout?.pages?.[0]
-  if (!p || p.columns?.length !== 2) return false
-  const second = p.columns[1]
-  let lineCount = 0
-  let sectionCount = 0
-  let currentSectionLines = 0
-  for (const b of second.blocks || []) {
-    if (b.type === 'section') {
-      if (currentSectionLines > 0) sectionCount++
-      currentSectionLines = 0
-    } else if (b.type === 'line') {
-      currentSectionLines++
-      lineCount++
-    }
-  }
-  if (currentSectionLines > 0) sectionCount++
-  if (lineCount <= 5) return true
-  if (sectionCount === 1 && currentSectionLines < 3) return true
-  return false
 }
 
 // Public layout function (was computeLayout). Pure; does not select sizes/columns.
