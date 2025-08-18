@@ -1,7 +1,8 @@
 // src/components/SongView.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -71,11 +72,21 @@ export default function SongView(){
       .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
         try {
-          const p = parseChordPro(txt); setParsed(p)
+          const doc = parseChordProOrLegacy(txt)
+          const blocks = (doc.sections || []).map(sec => ({
+            section: sec.label,
+            lines: (sec.lines || []).map(ln => ({
+              text: ln.comment || ln.lyrics || '',
+              chords: ln.chords || [],
+              comment: !!ln.comment
+            }))
+          }))
+          const p = { meta: doc.meta, blocks }
+          setParsed(p)
           const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
           setToKey(baseKey)
-          const lineCount = (p.blocks || []).reduce((s,b)=> s + (b.lines?.length || 0), 0)
-          const needsCheck = (p.blocks?.length || 0) > 1 && lineCount > 40
+          const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
+          const needsCheck = blocks.length > 1 && lineCount > 40
           setJpgDisabled(needsCheck)
           if (needsCheck) Promise.all([loadPdfPlan(), loadImageLib()])
           try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
@@ -185,11 +196,13 @@ if(!entry){
   const buildSong = () => ({
     title,
     key: toKey,
+    capo: parsed?.meta?.capo,
     lyricsBlocks: (parsed.blocks || []).map(b => ({
       section: b.section,
       lines: (b.lines || []).map(ln => ({
         plain: ln.text,
-        chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+        chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index })),
+        comment: ln.comment ? ln.text : undefined
       }))
     }))
   })
@@ -248,7 +261,7 @@ if(!entry){
         <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
           <h1 className="songpage__title">{title}</h1>
-          <div className="songpage__meta">Key: <strong>{baseKey}</strong>{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
+        <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
         </div>
       </div>
 
@@ -289,23 +302,26 @@ if(!entry){
         {(parsed.blocks || []).map((block, bi)=> (
           <div key={bi}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
-			{(block.lines || []).map((ln, li) => {
-				const key = `${bi}-${li}`
-				const plain = ln.text || ''
-				const hasChords = !!(ln.chords && ln.chords.length)
-				if (!hasChords && isSectionLabel(plain)) {
-					return <div key={key} className="section">[{plain.toUpperCase()}]</div>
-				}
-				return (
-					<MeasuredLine
-						key={key}
-						plain={plain}
-						chords={ln.chords || []}
-						steps={steps}
-						showChords={showChords}
-					/>
-				)
-			})}
+                        {(block.lines || []).map((ln, li) => {
+                                const key = `${bi}-${li}`
+                                const plain = ln.text || ''
+                                if (ln.comment) {
+                                        return <div key={key} className="comment" style={{fontStyle:'italic', fontSize:'0.85em', opacity:0.75}}>{plain}</div>
+                                }
+                                const hasChords = !!(ln.chords && ln.chords.length)
+                                if (!hasChords && isSectionLabel(plain)) {
+                                        return <div key={key} className="section">[{plain.toUpperCase()}]</div>
+                                }
+                                return (
+                                        <MeasuredLine
+                                                key={key}
+                                                plain={plain}
+                                                chords={ln.chords || []}
+                                                steps={steps}
+                                                showChords={showChords}
+                                        />
+                                )
+                        })}
           </div>
         ))}
       </div>

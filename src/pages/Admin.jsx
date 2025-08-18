@@ -54,6 +54,8 @@ function AdminPanel(){
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
 
   const [saveWithDirectives, setSaveWithDirectives] = useState(true)
+  const [prefer2Col, setPrefer2Col] = useState(false)
+  const [showCapo, setShowCapo] = useState(true)
 
   const [persist, setPersist] = useState(() => localStorage.getItem('adminPersist') === '1')
   const [drafts, setDrafts] = useState(() => {
@@ -128,6 +130,12 @@ function AdminPanel(){
       mp3: meta.mp3 || doc.meta.meta?.mp3 || '',
       pptx: meta.pptx || doc.meta.meta?.pptx || '',
     }
+    if (prefer2Col) {
+      doc.layoutHints = { ...(doc.layoutHints || {}), requestedColumns: 2 }
+    }
+    if (!showCapo) {
+      doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
+    }
     const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     const base = kebab(meta.id || doc.meta.title || 'untitled')
     const fname = `${base}.chordpro`
@@ -137,6 +145,12 @@ function AdminPanel(){
     const d = drafts[i]
     if(!d) return
     const doc = parseChordProOrLegacy(d.body)
+    if (prefer2Col) {
+      doc.layoutHints = { ...(doc.layoutHints || {}), requestedColumns: 2 }
+    }
+    if (!showCapo) {
+      doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
+    }
     const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     const base = kebab(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
     const fname = `${base}.chordpro`
@@ -342,6 +356,8 @@ function AdminPanel(){
       {/* Save options */}
       <div className="Row Small" style={{gap:8, alignItems:'center', marginTop:10}}>
         <label><input type="checkbox" checked={saveWithDirectives} onChange={e=> setSaveWithDirectives(e.target.checked)} /> Save with ChordPro section directives</label>
+        <label><input type="checkbox" checked={prefer2Col} onChange={e=> setPrefer2Col(e.target.checked)} /> Prefer 2 columns</label>
+        <label><input type="checkbox" checked={showCapo} onChange={e=> setShowCapo(e.target.checked)} /> Capo in header</label>
         <label title="Always writes .chordpro extension"><input type="checkbox" checked readOnly /> Normalize to .chordpro</label>
       </div>
 

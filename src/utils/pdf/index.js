@@ -21,6 +21,9 @@ function planWithDoc(doc, song, baseOpt) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, pageWidth: pageW, pageHeight: pageH }
+  if (song?.meta?.capo && baseOpt?.showCapo !== false) {
+    oBase.headerOffsetY = (oBase.headerOffsetY || DEFAULT_LAYOUT_OPT.headerOffsetY) + 14
+  }
   const makeLyric = makeMeasure(doc, oBase.lyricFamily, 'normal')
   const makeChord = makeMeasure(doc, oBase.chordFamily, 'bold')
   return chooseBestLayout(song, oBase, makeLyric, makeChord)
@@ -29,7 +32,7 @@ function planWithDoc(doc, song, baseOpt) {
 /* -----------------------------------------------------------
  * DRAWING (consumes planned layout)
  * --------------------------------------------------------- */
-function drawPlannedSong(doc, plan, { title, key }) {
+function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
   const lFam = String(plan.lyricFamily || 'Helvetica')
   const cFam = String(plan.chordFamily || 'Courier')
   const pageW = doc.internal.pageSize.getWidth()
@@ -52,6 +55,9 @@ function drawPlannedSong(doc, plan, { title, key }) {
     doc.text(title, margin, margin + 24)
     doc.setFont(lFam, 'italic'); doc.setFontSize(headerKeyPt)
     doc.text(`Key: ${key || '—'}`, margin, margin + 40)
+    if (showCapo && typeof capo === 'number') {
+      doc.text(`Capo: ${capo}`, margin, margin + 54)
+    }
 
     if (PDF_DEBUG) {
       doc.setDrawColor(180)
@@ -77,14 +83,23 @@ function drawPlannedSong(doc, plan, { title, key }) {
           doc.text(`[${b.header}]`, x, y)
           y += sectionSize + 4
         } else if (b.type === 'line') {
-          if (b.chords?.length) {
-            doc.setFont(cFam, 'bold'); doc.setFontSize(plan.chordSizePt)
-            for (const c of b.chords) doc.text(c.sym, x + c.x, y)
-            y += plan.chordSizePt + lineGap / 2
+          if (b.comment) {
+            const pt = Math.max(10, plan.lyricSizePt - 2)
+            doc.setFont(lFam, 'italic'); doc.setFontSize(pt)
+            doc.setTextColor(120)
+            doc.text(b.comment, x, y)
+            doc.setTextColor(0)
+            y += pt + 3
+          } else {
+            if (b.chords?.length) {
+              doc.setFont(cFam, 'bold'); doc.setFontSize(plan.chordSizePt)
+              for (const c of b.chords) doc.text(c.sym, x + c.x, y)
+              y += plan.chordSizePt + lineGap / 2
+            }
+            doc.setFont(lFam, 'normal'); doc.setFontSize(plan.lyricSizePt)
+            doc.text(b.lyrics, x, y)
+            y += plan.lyricSizePt + lineGap
           }
-          doc.setFont(lFam, 'normal'); doc.setFontSize(plan.lyricSizePt)
-          doc.text(b.lyrics, x, y)
-          y += plan.lyricSizePt + lineGap
         }
       }
     })
@@ -144,12 +159,13 @@ export async function downloadSingleSongPdf(song, options) {
     lyricFamily: fams.lyricFamily || 'Helvetica',
     chordFamily: fams.chordFamily || 'Courier',
     columns: options?.columns === 2 ? 2 : 1,
+    showCapo: options?.showCapo,
   }
   const norm = normalizeSongInput(song)
   const { plan } = planWithDoc(doc, norm, base)
   const title = song.title || norm.title || 'Untitled'
   const key = song.key || norm.key || 'C'
-  drawPlannedSong(doc, plan, { title, key })
+  drawPlannedSong(doc, plan, { title, key, capo: norm.meta?.capo, showCapo: options?.showCapo !== false })
   doc.setProperties({ title: `${title} – GraceChords` })
   doc.save(`${title.replace(/\s+/g, '_')}.pdf`)
   return { plan }
@@ -169,6 +185,7 @@ export async function downloadMultiSongPdf(songs, options = {}) {
     lyricFamily: fams.lyricFamily || 'Helvetica',
     chordFamily: fams.chordFamily || 'Courier',
     columns: options?.columns === 2 ? 2 : 1,
+    showCapo: options?.showCapo,
   }
   const includeTOC = !!options?.includeTOC
   const cover = options?.coverImageDataUrl
@@ -178,11 +195,13 @@ export async function downloadMultiSongPdf(songs, options = {}) {
     const { plan } = planWithDoc(doc, norm, baseOpt)
     const title = s.title || norm.title || 'Untitled'
     const key = s.key || norm.key || 'C'
+    const capo = norm.meta?.capo
     return {
       raw: s,
       plan,
       title,
       key,
+      capo,
       num: s._songbookNum || idx + 1,
       origTitle: s._origTitle || title,
     }
@@ -236,7 +255,7 @@ export async function downloadMultiSongPdf(songs, options = {}) {
   // Songs
   planned.forEach((p, idx) => {
     if (idx > 0) doc.addPage()
-    drawPlannedSong(doc, p.plan, { title: p.title, key: p.key })
+    drawPlannedSong(doc, p.plan, { title: p.title, key: p.key, capo: p.capo, showCapo: options?.showCapo !== false })
   })
 
   doc.setProperties({ title: options?.docTitle || 'GraceChords Setlist' })
