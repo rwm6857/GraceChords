@@ -94,7 +94,7 @@ function drawPlannedSong(doc, plan, { title, key }) {
 /* -----------------------------------------------------------
  * Exposed helpers
  * --------------------------------------------------------- */
-export { planSongLayout, chooseBestLayout } from './pdfLayout'
+export { planSongLayout, chooseBestLayout, normalizeSongInput } from './pdfLayout'
 
 export async function chooseBestLayoutAuto(song, baseOpt = {}) {
   const doc = await newPDF()
