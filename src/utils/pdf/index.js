@@ -1,5 +1,5 @@
 import { ensureFontsEmbedded } from './fonts'
-import { planSongLayout, chooseBestLayout, normalizeSongInput, DEFAULT_LAYOUT_OPT } from './pdfLayout'
+import { planSongLayout, chooseBestLayout, normalizeSongInput, DEFAULT_LAYOUT_OPT, columnHeights } from './pdfLayout'
 import { makeMeasure } from './measure'
 
 // Debug switch: open DevTools and run localStorage.setItem('pdfDebug','1') to see guides
@@ -65,9 +65,23 @@ function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
       if (plan.columns === 2) {
         doc.rect(margin + colW + plan.gutter, contentStartY, colW, pageH - margin - contentStartY)
       }
+      const p0 = plan.layout.pages[0]
+      let occInfo = ''
+      if (p0) {
+        const hs = columnHeights(p0, plan.lyricSizePt)
+        const colH = pageH - margin - contentStartY
+        let occ = (hs[0] || 0) / colH
+        let bal = 1
+        if (plan.columns === 2) {
+          const total = (hs[0] || 0) + (hs[1] || 0)
+          occ = total / (2 * colH)
+          bal = 1 - (Math.abs((hs[0] || 0) - (hs[1] || 0)) / colH)
+        }
+        occInfo = ` • occ=${occ.toFixed(2)} • bal=${bal.toFixed(2)}`
+      }
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
       doc.text(
-        `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'} • ${plan.lyricFamily}/${plan.chordFamily}`,
+        `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'}${occInfo}`,
         margin,
         pageH - (margin * 0.6)
       )
