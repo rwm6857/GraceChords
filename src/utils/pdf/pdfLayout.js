@@ -4,99 +4,84 @@
 import { resolveChordCollisions } from './measure'
 import { parseChordProOrLegacy } from '../chordpro/parser'
 
-// Detect common section labels in plain text lines
-function isSectionLabel(text = '') {
-  return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i
-    .test(String(text).trim())
-}
-
-// Normalize various song input shapes into a canonical form
+// Normalize various song input shapes into { meta, sections }
 export function normalizeSongInput(input) {
-  const injectSectionsFromLines = (blocks) => {
-    const out = []
-    let cur = null
-    const flush = () => { if (cur && cur.lines.length) out.push(cur); cur = null }
+  if (!input) return { meta: { title: 'Untitled', key: 'C' }, sections: [] }
 
-    for (const b of (blocks || [])) {
-      if (b.section) { flush(); out.push(b); continue }
-      for (const ln of (b.lines || [])) {
-        const txt = ln.plain || ln.text || ''
-        const hasChords = !!(ln.chordPositions && ln.chordPositions.length)
-        if (!hasChords && isSectionLabel(txt)) {
-          flush()
-          cur = { section: txt.trim(), lines: [] }
-        } else {
-          if (!cur) cur = { lines: [] }
-          cur.lines.push(ln)
-        }
-      }
+  // Already normalized SongDoc
+  if (input.meta && Array.isArray(input.sections)) {
+    const meta = {
+      title: input.meta.title || input.title || 'Untitled',
+      key: input.meta.key || input.key || 'C',
+      meta: input.meta.meta,
     }
-    flush()
-    return out.length ? out : (blocks || [])
-  }
-
-  const fromDoc = (doc) => ({
-    title: doc.meta.title || 'Untitled',
-    key: doc.meta.key || 'C',
-    lyricsBlocks: (doc.sections || []).map(sec => ({
-      section: sec.label,
+    const sections = (input.sections || []).map(sec => ({
+      kind: sec.kind || 'verse',
+      label: sec.label,
       lines: (sec.lines || []).map(ln => ({
-        plain: ln.lyrics,
-        chordPositions: (ln.chords || []).map(c => ({ index: c.index, sym: c.sym }))
+        lyrics: ln.lyrics || ln.plain || ln.text || '',
+        chords: (ln.chords || ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym }))
       }))
     }))
-  })
+    return { meta, sections }
+  }
 
-  // Already normalized (lyricsBlocks)
-  if (input?.lyricsBlocks) {
+  // Legacy lyricsBlocks shape
+  if (input.lyricsBlocks) {
+    const sections = (input.lyricsBlocks || []).map(b => ({
+      kind: 'verse',
+      label: b.section,
+      lines: (b.lines || []).map(ln => ({
+        lyrics: ln.plain || ln.text || '',
+        chords: (ln.chordPositions || []).map(c => ({ index: c.index || 0, sym: c.sym }))
+      }))
+    }))
     return {
-      title: input.title || 'Untitled',
-      key: input.key || input.originalKey || 'C',
-      lyricsBlocks: injectSectionsFromLines(input.lyricsBlocks)
+      meta: {
+        title: input.title || 'Untitled',
+        key: input.key || input.originalKey || 'C'
+      },
+      sections
     }
   }
 
-  // SongDoc with sections
-  if (input?.sections && Array.isArray(input.sections)) {
-    return fromDoc(input)
-  }
-
-  // From parsed "blocks" (legacy)
+  // Legacy blocks
   if (Array.isArray(input?.blocks)) {
-    const out = []
-    let cur = { lines: [] }
+    const sections = []
+    let cur = { kind: 'verse', label: '', lines: [] }
     for (const b of input.blocks) {
       if (b.type === 'section') {
-        if (cur.lines.length) out.push(cur)
-        cur = { section: b.header, lines: [] }
+        if (cur.lines.length) sections.push(cur)
+        cur = { kind: 'verse', label: b.header, lines: [] }
       } else if (b.type === 'line') {
         cur.lines.push({
-          plain: b.lyrics || b.text || '',
-          chordPositions: (b.chords || []).map(c => ({ index: c.index ?? 0, sym: c.sym }))
+          lyrics: b.lyrics || b.text || '',
+          chords: (b.chords || []).map(c => ({ index: c.index || 0, sym: c.sym }))
         })
       }
     }
-    if (cur.lines.length) out.push(cur)
+    if (cur.lines.length) sections.push(cur)
     return {
-      title: input.title || 'Untitled',
-      key: input.key || input.originalKey || 'C',
-      lyricsBlocks: injectSectionsFromLines(out)
+      meta: {
+        title: input.title || 'Untitled',
+        key: input.key || input.originalKey || 'C'
+      },
+      sections
     }
   }
 
   if (typeof input === 'string') {
-    return fromDoc(parseChordProOrLegacy(input))
+    return parseChordProOrLegacy(input)
   }
 
   if (input?.body || input?.lines) {
     const text = (input.body || (Array.isArray(input.lines) ? input.lines.join('\n') : '')) + ''
-    return fromDoc(parseChordProOrLegacy(text))
+    return parseChordProOrLegacy(text)
   }
 
   return {
-    title: input?.title || 'Untitled',
-    key: input?.key || input?.originalKey || 'C',
-    lyricsBlocks: []
+    meta: { title: input.title || 'Untitled', key: input.key || input.originalKey || 'C' },
+    sections: []
   }
 }
 
@@ -106,7 +91,7 @@ export const DEFAULT_LAYOUT_OPT = {
   chordSizePt: 16,
   margin: 36,
   gutter: 24,
-  headerOffsetY: 54,
+  headerOffsetY: 40,
   columns: 1,
   pageWidth: 612,  // Letter
   pageHeight: 792,
@@ -132,11 +117,11 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
   const measureLyric = makeMeasureLyricAt(size)
   const measureChord = makeMeasureChordAt(size)
 
-  for (const block of (song.lyricsBlocks || [])) {
-    for (const ln of (block.lines || [])) {
-      const plain = ln.plain || ln.text || ''
+  for (const sec of (song.sections || [])) {
+    for (const ln of (sec.lines || [])) {
+      const plain = ln.lyrics || ''
       if (measureLyric(plain) > limit) return true
-      for (const c of (ln.chordPositions || [])) {
+      for (const c of (ln.chords || [])) {
         const x = measureLyric(plain.slice(0, c.index || 0))
         const cw = measureChord(c.sym || '')
         if (x + cw > limit) return true
@@ -249,6 +234,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
 
   const contentStartY = margin + o.headerOffsetY
   const contentBottomY = pageH - margin
+  const maxBlockH = contentBottomY - contentStartY
 
   const pages = []
   let page = { columns: [] }
@@ -265,19 +251,6 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   function newPage() { page = { columns: [] }; pages.push(page) }
   if (page.columns.length === 0) makeColumns()
 
-  // Fallback: if a block’s first line is a label with no chords, promote it to a section header
-  song.lyricsBlocks = (song.lyricsBlocks || []).map(b => {
-    if (!b?.section && Array.isArray(b?.lines) && b.lines.length) {
-      const first = b.lines[0]
-      const txt = first?.plain || first?.text || ''
-      const hasChords = Array.isArray(first?.chordPositions) && first.chordPositions.length > 0
-      if (!hasChords && isSectionLabel(txt)) {
-        return { section: txt.trim(), lines: b.lines.slice(1) }
-      }
-    }
-    return b
-  })
-
   let colIdx = 0
   let cursorY = contentStartY
   const curCol = () => page.columns[colIdx]
@@ -286,24 +259,18 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
     else { newPage(); makeColumns(); colIdx = 0; cursorY = contentStartY }
   }
 
-  const measureBlockHeight = (block, fromLine = 0, toLineExclusive = (block.lines?.length ?? 0)) => {
-    let h = 0
-    const hasHeader = !!block.section && fromLine === 0
-    if (hasHeader) h += sectionTopPad + sectionSize + 4
-    for (let i = fromLine; i < toLineExclusive; i++) {
-      const ln = block.lines[i]
-      if (ln?.chordPositions?.length) h += o.chordSizePt + lineGap / 2
+  const measureSectionHeight = (sec) => {
+    let h = sectionTopPad + sectionSize + 4
+    for (const ln of (sec.lines || [])) {
+      if (ln?.chords?.length) h += o.chordSizePt + lineGap / 2
       h += o.lyricSizePt + lineGap
     }
     return h + 4
   }
 
-  // Heights
-  const lineHeight = (ln) => (ln?.chordPositions?.length ? (o.chordSizePt + lineGap / 2) : 0) + o.lyricSizePt + lineGap
+  const lineHeight = (ln) => (ln?.chords?.length ? (o.chordSizePt + lineGap / 2) : 0) + o.lyricSizePt + lineGap
 
-  const pushSection = (col, header) => {
-    col.blocks.push({ type: 'section', header })
-  }
+  const pushSection = (col, header) => { col.blocks.push({ type: 'section', header }) }
   const pushLine = (col, lyrics, cps) => {
     const chords = cps.map(c => ({
       x: measureLyric(lyrics.slice(0, c.index || 0)),
@@ -314,82 +281,25 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
     col.blocks.push({ type: 'line', lyrics, chords })
   }
 
-  for (const block of (song.lyricsBlocks || [])) {
-    const blockH = measureBlockHeight(block)
-
-    // Fits in current column
-    if (cursorY + blockH <= contentBottomY) {
-      const col = curCol()
-      if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
-      for (const ln of (block.lines || [])) {
-        const plain = ln.plain || ln.text || ''
-        const cps = ln.chordPositions || []
-        pushLine(col, plain, cps)
-        cursorY += lineHeight(ln)
-      }
-      cursorY += 4
-      continue
-    }
-
-    // If block fits on a fresh column/page, move it intact
-    const maxBlockH = contentBottomY - contentStartY
-    if (blockH <= maxBlockH) {
+  for (const sec of (song.sections || [])) {
+    const blockH = measureSectionHeight(sec)
+    if (blockH > maxBlockH) {
+      if (cursorY !== contentStartY || (o.columns === 2 && colIdx === 1)) advanceColOrPage()
+    } else if (cursorY + blockH > contentBottomY) {
       advanceColOrPage()
-      const col = curCol()
-      if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
-      for (const ln of (block.lines || [])) {
-        const plain = ln.plain || ln.text || ''
-        const cps = ln.chordPositions || []
-        pushLine(col, plain, cps)
-        cursorY += lineHeight(ln)
-      }
-      cursorY += 4
-      continue
     }
 
-    // Truly oversized section → split at line boundaries with widow/orphan checks
-    const lineHs = (block.lines || []).map(lineHeight)
-    let i = 0
-    while (i < (block.lines || []).length) {
-      const remaining = (block.lines || []).length - i
-
-      const minHead = (i === 0 && block.section) ? (sectionTopPad + sectionSize + 4) : 0
-      const firstLineH = lineHs[i] || 0
-      if (cursorY + minHead + firstLineH > contentBottomY) { advanceColOrPage(); continue }
-
-      const avail = contentBottomY - cursorY - minHead
-      let fit = 0, used = 0
-      while (i + fit < lineHs.length && used + lineHs[i + fit] <= avail) {
-        used += lineHs[i + fit]
-        fit++
-      }
-
-      if (fit < 2 && remaining > fit) { advanceColOrPage(); continue }
-
-      if (remaining - fit < 2 && remaining > fit) {
-        if (fit > 2) {
-          used -= lineHs[i + fit - 1]
-          fit--
-        } else {
-          advanceColOrPage(); continue
-        }
-      }
-
-      const col = curCol()
-      if (block.section && cursorY === contentStartY) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
-
-      for (let j = 0; j < fit; j++) {
-        const ln = block.lines[i]
-        const plain = ln.plain || ln.text || ''
-        const cps = ln.chordPositions || []
-        pushLine(col, plain, cps)
-        cursorY += lineHs[i]
-        i++
-      }
-      cursorY += 4
-      if (i < (block.lines || []).length) advanceColOrPage()
+    const col = curCol()
+    cursorY += sectionTopPad
+    pushSection(col, sec.label || sec.kind)
+    cursorY += sectionSize + 4
+    for (const ln of (sec.lines || [])) {
+      pushLine(col, ln.lyrics || '', ln.chords || [])
+      cursorY += lineHeight(ln)
     }
+    cursorY += 4
   }
+
   return { pages }
 }
 

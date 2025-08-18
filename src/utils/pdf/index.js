@@ -105,7 +105,29 @@ export async function chooseBestLayoutAuto(song, baseOpt = {}) {
     chordFamily: fams.chordFamily || baseOpt.chordFamily || 'Courier',
     ...baseOpt,
   }
-  return planWithDoc(doc, normalizeSongInput(song), o)
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+  const fallbackMeasure = (pt) => (text) => (text ? text.length * (pt * 0.6) : 0)
+  const makeLyric = (pt) => (text) => {
+    try {
+      doc.setFont(o.lyricFamily, 'normal')
+      doc.setFontSize(pt)
+      return doc.getTextWidth(text || '')
+    } catch {
+      return fallbackMeasure(pt)(text)
+    }
+  }
+  const makeChord = (pt) => (text) => {
+    try {
+      doc.setFont(o.chordFamily, 'bold')
+      doc.setFontSize(pt)
+      return doc.getTextWidth(text || '')
+    } catch {
+      return fallbackMeasure(pt)(text)
+    }
+  }
+  const norm = normalizeSongInput(song)
+  return chooseBestLayout(norm, { ...o, pageWidth: pageW, pageHeight: pageH }, makeLyric, makeChord)
 }
 
 /* -----------------------------------------------------------
