@@ -100,7 +100,13 @@ export function parseChordProOrLegacy(input: string): SongDoc {
       const val = mMeta[2].trim();
       if (key === 'title') doc.meta.title = val;
       else if (key === 'key') doc.meta.key = val;
-      else {
+      else if (key === 'meta') {
+        const [mk, ...rest] = val.split(/\s+/);
+        if (mk) {
+          if (!doc.meta.meta) doc.meta.meta = {};
+          doc.meta.meta[mk.toLowerCase()] = rest.join(' ').trim();
+        }
+      } else {
         if (!doc.meta.meta) doc.meta.meta = {};
         doc.meta.meta[key] = val;
       }
