@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, parseChordPro } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
 import { downloadZip } from '../utils/zip'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
@@ -50,6 +52,8 @@ function AdminPanel(){
   const [text, setText] = useState(INITIAL_TEXT)
   const [meta, setMeta] = useState({})
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
+
+  const [saveWithDirectives, setSaveWithDirectives] = useState(true)
 
   const [persist, setPersist] = useState(() => localStorage.getItem('adminPersist') === '1')
   const [drafts, setDrafts] = useState(() => {
@@ -112,13 +116,31 @@ function AdminPanel(){
 
   const [staged, setStaged] = useState([])
   function stageSong(){
-    const title = meta.title || 'Untitled'
-    setStaged(s => [...s, { filename, content: text, title, key: meta.key || '' }])
+    const doc = parseChordProOrLegacy(text)
+    doc.meta.title = meta.title || doc.meta.title || ''
+    doc.meta.key = meta.key || doc.meta.key || ''
+    doc.meta.meta = {
+      ...(doc.meta.meta || {}),
+      authors: meta.authors || doc.meta.meta?.authors || '',
+      country: meta.country || doc.meta.meta?.country || '',
+      tags: meta.tags || doc.meta.meta?.tags || '',
+      youtube: meta.youtube || doc.meta.meta?.youtube || '',
+      mp3: meta.mp3 || doc.meta.meta?.mp3 || '',
+      pptx: meta.pptx || doc.meta.meta?.pptx || '',
+    }
+    const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    const base = kebab(meta.id || doc.meta.title || 'untitled')
+    const fname = `${base}.chordpro`
+    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '' }])
   }
   function stageDraft(i){
     const d = drafts[i]
     if(!d) return
-    setStaged(s => [...s, { filename: d.filename, content: d.body, title: d.title, key: '' }])
+    const doc = parseChordProOrLegacy(d.body)
+    const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    const base = kebab(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
+    const fname = `${base}.chordpro`
+    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || d.title, key: doc.meta.key || '' }])
   }
   function unstage(name){ setStaged(s => s.filter(f => f.filename !== name)) }
   function renameStaged(name, nextName){
@@ -314,7 +336,13 @@ function AdminPanel(){
               </div>
             ))}
           </div>
-        </div>
+      </div>
+      </div>
+
+      {/* Save options */}
+      <div className="Row Small" style={{gap:8, alignItems:'center', marginTop:10}}>
+        <label><input type="checkbox" checked={saveWithDirectives} onChange={e=> setSaveWithDirectives(e.target.checked)} /> Save with ChordPro section directives</label>
+        <label title="Always writes .chordpro extension"><input type="checkbox" checked readOnly /> Normalize to .chordpro</label>
       </div>
 
       {/* Draft actions */}
