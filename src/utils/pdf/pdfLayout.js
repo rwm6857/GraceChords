@@ -2,6 +2,7 @@
 // Pure layout planning helpers shared by PDF and image exporters.
 
 import { resolveChordCollisions } from './measure'
+import { parseChordProOrLegacy } from '../chordpro/parser'
 
 // Detect common section labels in plain text lines
 function isSectionLabel(text = '') {
@@ -34,7 +35,19 @@ export function normalizeSongInput(input) {
     return out.length ? out : (blocks || [])
   }
 
-  // Already normalized
+  const fromDoc = (doc) => ({
+    title: doc.meta.title || 'Untitled',
+    key: doc.meta.key || 'C',
+    lyricsBlocks: (doc.sections || []).map(sec => ({
+      section: sec.label,
+      lines: (sec.lines || []).map(ln => ({
+        plain: ln.lyrics,
+        chordPositions: (ln.chords || []).map(c => ({ index: c.index, sym: c.sym }))
+      }))
+    }))
+  })
+
+  // Already normalized (lyricsBlocks)
   if (input?.lyricsBlocks) {
     return {
       title: input.title || 'Untitled',
@@ -43,7 +56,12 @@ export function normalizeSongInput(input) {
     }
   }
 
-  // From parsed "blocks"
+  // SongDoc with sections
+  if (input?.sections && Array.isArray(input.sections)) {
+    return fromDoc(input)
+  }
+
+  // From parsed "blocks" (legacy)
   if (Array.isArray(input?.blocks)) {
     const out = []
     let cur = { lines: [] }
@@ -64,6 +82,15 @@ export function normalizeSongInput(input) {
       key: input.key || input.originalKey || 'C',
       lyricsBlocks: injectSectionsFromLines(out)
     }
+  }
+
+  if (typeof input === 'string') {
+    return fromDoc(parseChordProOrLegacy(input))
+  }
+
+  if (input?.body || input?.lines) {
+    const text = (input.body || (Array.isArray(input.lines) ? input.lines.join('\n') : '')) + ''
+    return fromDoc(parseChordProOrLegacy(text))
   }
 
   return {
