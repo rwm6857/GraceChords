@@ -123,4 +123,24 @@ describe('planner cases', () => {
     verifyNoSectionSplits(plan)
     verifyChordOrdering(plan)
   })
+
+  it('Holy Forever regression: long song → 2 cols, ~15pt, 1 page', () => {
+    const song = {
+      title: 'holy', key: 'C',
+      lyricsBlocks: [
+        section('Verse1', 7, 24, true),
+        section('Verse2', 7, 24),
+        section('Pre', 5, 24),
+        section('Chorus', 4, 24),
+        section('Bridge', 7, 24),
+        section('Tag', 3, 24)
+      ]
+    }
+    const plan = planSong(song)
+    expect(plan.columns).toBe(2)
+    expect(plan.lyricSizePt).toBeGreaterThanOrEqual(15)
+    expect(plan.layout.pages.length).toBe(1)
+    verifyNoSectionSplits(plan)
+    verifyChordOrdering(plan)
+  })
 })

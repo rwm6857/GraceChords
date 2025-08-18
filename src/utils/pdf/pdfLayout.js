@@ -121,52 +121,78 @@ function widthOverflows(song, columns, size, oBase, makeMeasureLyricAt, makeMeas
 
 /**
  * Search for the best layout using planSongLayout.
- * Tries 1→2 columns and shrinks font size down to 14pt.
- * Returns the chosen plan and the options used.
+ * Reordered ladder: exhaust all single-page options before spilling to page 2.
  */
 export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
   const song = normalizeSongInput(songIn)
   const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
-  const SIZES = [16, 15, 14, 13, 12]
-  const TRY = [
-    { cols: 1, sizes: SIZES },
-    { cols: 2, sizes: SIZES },
-  ]
-  for (const mode of TRY) {
-    for (const sz of mode.sizes) {
-      const layout = planSongLayout(
-        song,
-        { ...oBase, columns: mode.cols, lyricSizePt: sz, chordSizePt: sz },
-        makeMeasureLyricAt(sz),
-        makeMeasureChordAt(sz)
-      )
-      const widthOk = !widthOverflows(song, mode.cols, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
-      const plan = { ...oBase, columns: mode.cols, lyricSizePt: sz, chordSizePt: sz, layout }
-      if (layout.pages.length === 1 && widthOk) {
-        if (mode.cols === 2 && tinySecondColumn(plan)) continue
-        return { plan }
-      }
-    }
+  const SIZE_STEPS = [16, 15, 14, 13, 12]
+
+  // 1) Single-page 1 column
+  for (const sz of SIZE_STEPS) {
+    const layout = planSongLayout(
+      song,
+      { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz },
+      makeMeasureLyricAt(sz),
+      makeMeasureChordAt(sz)
+    )
+    const widthOk = !widthOverflows(song, 1, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    const plan = { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz, layout }
+    if (fitsSinglePage(plan) && widthOk) return { plan }
   }
-  const sz = 12
-  const layout = planSongLayout(
+
+  // 2) Single-page 2 columns
+  for (const sz of SIZE_STEPS) {
+    const layout = planSongLayout(
+      song,
+      { ...oBase, columns: 2, lyricSizePt: sz, chordSizePt: sz },
+      makeMeasureLyricAt(sz),
+      makeMeasureChordAt(sz)
+    )
+    const widthOk = !widthOverflows(song, 2, sz, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+    const plan = { ...oBase, columns: 2, lyricSizePt: sz, chordSizePt: sz, layout }
+    if (!fitsSinglePage(plan) || !widthOk) continue
+    if (isSecondColumnTiny(plan)) continue
+    return { plan }
+  }
+
+  // 3) Allow second page at minimum size, prefer 1 column
+  const minSz = 12
+  let layout = planSongLayout(
     song,
-    { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz },
-    makeMeasureLyricAt(sz),
-    makeMeasureChordAt(sz)
+    { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz },
+    makeMeasureLyricAt(minSz),
+    makeMeasureChordAt(minSz)
   )
-  return { plan: { ...oBase, columns: 1, lyricSizePt: sz, chordSizePt: sz, layout } }
+  let plan = { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz, layout }
+  if (!fitsWithinTwoPages(plan)) {
+    layout = planSongLayout(
+      song,
+      { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz },
+      makeMeasureLyricAt(minSz),
+      makeMeasureChordAt(minSz)
+    )
+    plan = { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz, layout }
+  }
+  return { plan }
 }
 
-function tinySecondColumn(plan) {
-  if (plan.columns !== 2) return false
-  const page = plan.layout.pages[0]
-  if (!page || page.columns.length < 2) return false
-  const last = page.columns[1]
+function fitsSinglePage(plan) {
+  return plan?.layout?.pages?.length === 1
+}
+
+function fitsWithinTwoPages(plan) {
+  return (plan?.layout?.pages?.length || 99) <= 2
+}
+
+function isSecondColumnTiny(plan) {
+  const p = plan?.layout?.pages?.[0]
+  if (!p || p.columns?.length !== 2) return false
+  const second = p.columns[1]
   let lineCount = 0
   let sectionCount = 0
   let currentSectionLines = 0
-  for (const b of last.blocks) {
+  for (const b of second.blocks || []) {
     if (b.type === 'section') {
       if (currentSectionLines > 0) sectionCount++
       currentSectionLines = 0
@@ -263,6 +289,8 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
 
   for (const block of (song.lyricsBlocks || [])) {
     const blockH = measureBlockHeight(block)
+
+    // Fits in current column
     if (cursorY + blockH <= contentBottomY) {
       const col = curCol()
       if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
@@ -276,7 +304,23 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
       continue
     }
 
-    // Oversized section → split at line boundaries with widow/orphan checks
+    // If block fits on a fresh column/page, move it intact
+    const maxBlockH = contentBottomY - contentStartY
+    if (blockH <= maxBlockH) {
+      advanceColOrPage()
+      const col = curCol()
+      if (block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+      for (const ln of (block.lines || [])) {
+        const plain = ln.plain || ln.text || ''
+        const cps = ln.chordPositions || []
+        pushLine(col, plain, cps)
+        cursorY += lineHeight(ln)
+      }
+      cursorY += 4
+      continue
+    }
+
+    // Truly oversized section → split at line boundaries with widow/orphan checks
     const lineHs = (block.lines || []).map(lineHeight)
     let i = 0
     while (i < (block.lines || []).length) {
@@ -305,7 +349,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
       }
 
       const col = curCol()
-      if (i === 0 && block.section) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
+      if (block.section && cursorY === contentStartY) { cursorY += sectionTopPad; pushSection(col, block.section); cursorY += sectionSize + 4 }
 
       for (let j = 0; j < fit; j++) {
         const ln = block.lines[i]
