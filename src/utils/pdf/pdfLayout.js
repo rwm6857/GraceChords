@@ -89,6 +89,10 @@ function packIntoColumns(sections, cols, colHeight, opts = {}) {
     if (s.height <= remaining) {
       placed[col].push(s.id);
       colHeights[col] += s.height;
+      if (isTraceOn()) {
+        // eslint-disable-next-line no-console
+        console.log(`[pdfPlanTrace] sec ${s.id} h=${Math.ceil(s.height)} → col ${col + 1} = ${Math.round(colHeights[col])}`);
+      }
     } else if (col + 1 < cols) {
       // move to next column and try once more
       col += 1;
@@ -96,8 +100,16 @@ function packIntoColumns(sections, cols, colHeight, opts = {}) {
       if (s.height <= remainingNext) {
         placed[col].push(s.id);
         colHeights[col] += s.height;
+        if (isTraceOn()) {
+          // eslint-disable-next-line no-console
+          console.log(`[pdfPlanTrace] sec ${s.id} h=${Math.ceil(s.height)} → col ${col + 1} = ${Math.round(colHeights[col])}`);
+        }
       } else {
         reasonRejected = `section ${s.id} needs ${Math.ceil(s.height)}pt > remaining ${Math.floor(remainingNext)}pt in col ${col + 1}`;
+        if (isTraceOn()) {
+          // eslint-disable-next-line no-console
+          console.log(`[pdfPlanTrace] REJECT ${reasonRejected}`);
+        }
         return {
           singlePage: false,
           colHeights,
@@ -109,6 +121,10 @@ function packIntoColumns(sections, cols, colHeight, opts = {}) {
       }
     } else {
       reasonRejected = `section ${s.id} needs ${Math.ceil(s.height)}pt > remaining ${Math.floor(remaining)}pt in col ${col + 1}`;
+      if (isTraceOn()) {
+        // eslint-disable-next-line no-console
+        console.log(`[pdfPlanTrace] REJECT ${reasonRejected}`);
+      }
       return {
         singlePage: false,
         colHeights,
@@ -163,6 +179,7 @@ export function chooseBestPlan({
   sections,
   measureSectionAtPt,
   pageContentHeight,
+  gutter = 24,
   hasColumnsHint = false,
   honorColumnBreaks = true,
   ptWindow = PT_WINDOW,
@@ -171,6 +188,10 @@ export function chooseBestPlan({
   const singlePage = [];
   const measureCb = measureSectionsForPt || deriveMeasureCb({ measureSectionsForPt, sections, measureSectionAtPt });
 
+  if (isTraceOn()) {
+    // eslint-disable-next-line no-console
+    console.log(`[pdfPlanTrace] contentH=${pageContentHeight} gutter=${gutter}`);
+  }
 
   for (const pt of ptWindow) {
     const colHeight = pageContentHeight; // heights already reflect pt upstream
@@ -203,8 +224,7 @@ export function chooseBestPlan({
         pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
       });
       singlePage.push({ pt, cols, pack, penalties, finalScore });
-        const why = pack.reasonRejected || (!ms ? 'no_measurements_for_pt' : 'rejected');
-        pushTrace(traceRows, { ...rowBase, penalties: '', finalScore: '', reasonRejected: why });
+      pushTrace(traceRows, { ...rowBase, penalties, finalScore, reasonRejected: '' });
     }
   }
 
@@ -352,19 +372,15 @@ export function chooseBestLayout(song, oBase, makeLyric, makeChord) {
 
   // --- 4) Use new engine to choose pt/columns (single page priority) -------
   const hasColumnsHint = !!(song?.meta?.columns === 2 || song?.hints?.columns === 2);
-  const singlePageCandidates = [];
-  for (const pt of DEFAULT_LAYOUT_OPT?.ptWindow || [16,15,14,13,12]) {
-    const ms = measureSectionsAtPt(pt);
-    for (const cols of [1, 2]) {
-      const pack = packIntoColumns(ms, cols, contentHeight, { honorColumnBreaks: true });
-      if (!pack.singlePage) continue;
-      const { penalties, finalScore } = scoreCandidate({
-        pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
-      });
-      singlePageCandidates.push({ pt, cols, pack, penalties, finalScore });
-    }
-  }
-  if (!singlePageCandidates.length) {
+  const best = chooseBestPlan({
+    measureSectionsForPt: measureSectionsAtPt,
+    pageContentHeight: contentHeight,
+    hasColumnsHint,
+    honorColumnBreaks: true,
+    gutter,
+  });
+
+  if (best.multipage) {
     // Fallback: old 12pt multipage (keep shape stable)
     const plan = {
       lyricFamily: oBase.lyricFamily || 'Helvetica',
@@ -382,8 +398,8 @@ export function chooseBestLayout(song, oBase, makeLyric, makeChord) {
     plan.layout.pages = [{ columns: [{ x: margin, blocks }] }, { columns: [{ x: margin, blocks: [] }] }];
     return { plan };
   }
-  singlePageCandidates.sort((a, b) => b.finalScore - a.finalScore);
-  const win = singlePageCandidates[0];
+
+  const win = best; // single-page winner
 
   // --- 5) Build legacy layout.pages from packed section indices -------------
   const pt = win.pt;
