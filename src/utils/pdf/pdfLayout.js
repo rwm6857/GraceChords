@@ -242,9 +242,9 @@ export function columnHeights(measuredSections, cols, colHeight, opts = {}) {
   return packIntoColumns(measuredSections, cols, colHeight, opts).colHeights;
 }
 
-// Older API alias: choose best layout given already-measured sections.
+// Older API alias (args-based): choose best layout given already-measured sections.
 // Returns a small, stable shape similar to previous code.
-export function chooseBestLayout(args) {
+export function chooseBestLayoutFromArgs(args) {
   const plan = chooseBestPlan(args);
   if (plan.multipage) return plan;
   return {
@@ -262,7 +262,7 @@ export function chooseBestLayout(args) {
 
 // Older API alias: main entry some code calls `planSongLayout`
 export function planSongLayout(args) {
-  return chooseBestLayout(args);
+  return chooseBestLayoutFromArgs(args);
 }
 
 // ============================================================================
