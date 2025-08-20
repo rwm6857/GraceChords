@@ -234,7 +234,8 @@ export async function downloadSingleSongPdf(song, options) {
     showCapo: options?.showCapo,
   }
   const norm = normalizeSongInput(song)
-  const { plan } = planWithDoc(doc, norm, base)
+  const planResult = planWithDoc(doc, norm, base)
+  const plan = (planResult && planResult.plan) ? planResult.plan : planResult
   const title = song.title || norm.title || 'Untitled'
   const key = song.key || norm.key || 'C'
   drawPlannedSong(doc, plan, { title, key, capo: norm.meta?.capo, showCapo: options?.showCapo !== false })
@@ -264,7 +265,8 @@ export async function downloadMultiSongPdf(songs, options = {}) {
 
   const planned = songs.map((s, idx) => {
     const norm = normalizeSongInput(s)
-    const { plan } = planWithDoc(doc, norm, baseOpt)
+    const planResult = planWithDoc(doc, norm, baseOpt)
+    const plan = (planResult && planResult.plan) ? planResult.plan : planResult
     const title = s.title || norm.title || 'Untitled'
     const key = s.key || norm.key || 'C'
     const capo = norm.meta?.capo
