@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { chooseBestPlan } from '../pdfLayout';
+import { chooseBestPlan } from '../../pdfLayout';
 
 // Tiny helper: parse fixture into sections separated by ChordPro section blocks.
 function parseSections(chordpro: string) {
