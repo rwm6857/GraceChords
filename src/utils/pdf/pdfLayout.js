@@ -203,8 +203,7 @@ export function chooseBestPlan({
         pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
       });
       singlePage.push({ pt, cols, pack, penalties, finalScore });
-        const why = pack.reasonRejected || (!ms ? 'no_measurements_for_pt' : 'rejected');
-        pushTrace(traceRows, { ...rowBase, penalties: '', finalScore: '', reasonRejected: why });
+      pushTrace(traceRows, { ...rowBase, penalties, finalScore });
     }
   }
 
@@ -333,7 +332,7 @@ export function chooseBestLayout(song, oBase, makeLyric, makeChord) {
             const cpt = Math.max(10, pt - 2);
             // width call warms cache; height increment approximates comment line height
             void lyricWidthAt(cpt, b.comment);
-            h += cpt + 3;
+            h += cpt;
             continue;
           }
           if (Array.isArray(b.chords) && b.chords.length) {
