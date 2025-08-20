@@ -295,27 +295,14 @@ export async function downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl
   })
 }
 
-// Ensure we pass families + size + colWidth to measurements.
-// Lyrics family: Noto Sans; Chords family: Noto Sans Mono (bold)
-export function measureSectionHeight(section, opts = {}) {
-  const {
-    pt,
-    colWidth,
-    fonts = {
-      lyricsFamily: 'Noto Sans',
-      chordsFamily: 'Noto Sans Mono'
-    },
-    columns = 1
-  } = opts;
 
-  // Your existing measurement impl likely uses jsPDF.getTextDimensions etc.
-  // This wrapper just ensures callers always supply the needed inputs.
-  // If you already take (fontFamily, size, width), keep using that path.
-  return _measureSectionHeightInternal(section, {
-    pt,
-    width: colWidth,
-    lyricsFamily: fonts.lyricsFamily,
-    chordsFamily: fonts.chordsFamily,
-    columns
+// Ensure we pass lyric/chord family & pt to measure
+export function measureSection(section, pt, families = { lyrics: 'Noto Sans', chords: 'Noto Sans Mono', chordWeight: 'bold' }) {
+  return _measureSection(section, {
+    fontSize: pt,
+    lyricFamily: families.lyrics,
+    chordFamily: families.chords,
+    chordWeight: families.chordWeight || 'bold',
   });
 }
+
