@@ -9,6 +9,28 @@ const isTraceOn = () => {
   try { return typeof window !== 'undefined' && window.localStorage?.getItem('pdfPlanTrace') === '1'; }
   catch { return false; }
 };
+
+// === Helper: derive a per-pt measurement callback from args ===================
+function deriveMeasureCb(args) {
+  if (typeof args?.measureSectionsForPt === 'function') return args.measureSectionsForPt;
+  // Back-compat: if caller provides sections + per-section measure function
+  if (Array.isArray(args?.sections) && typeof args?.measureSectionAtPt === 'function') {
+    const sections = args.sections;
+    const measureOne = args.measureSectionAtPt;
+    return (pt) => sections.map((s, i) => {
+      const m = measureOne(s, pt);
+      // normalize minimal shape we need: { id, height, type? }
+      return {
+        id: m?.id ?? s?.id ?? (i + 1),
+        height: m?.height ?? m?.h ?? 0,
+        type: m?.type ?? s?.type,
+      };
+    });
+  }
+  return null;
+}
+
+
 const pushTrace = (rows, row) => { if (isTraceOn()) rows.push(row); };
 const flushTrace = (label, rows) => {
   if (isTraceOn() && rows.length) {
@@ -34,6 +56,18 @@ function packIntoColumns(sections, cols, colHeight, opts = {}) {
   const placed = Array.from({ length: cols }, () => []);
   let col = 0;
   let reasonRejected = '';
+  // Guard: if sections are missing, treat as not-fit (let caller decide)
+  if (!Array.isArray(sections)) {
+    return {
+      singlePage: false,
+      colHeights,
+      occupancy: colHeights.map(() => 0),
+      balance: cols === 2 ? 1 : 1,
+      reasonRejected: 'no_sections_provided',
+      placed,
+    };
+  }
+
 
   const nextFitsInNextCol = (nextIdx) => {
     if (col + 1 >= cols) return false;
@@ -115,25 +149,35 @@ function scoreCandidate({ pt, cols, balance, occupancy, hasColumnsHint }) {
  * Prefer any single‑page option over multipage. Return winner + debug footer.
  *
  * @param {{
- *   measuredSections: Array<{id:number,height:number,type?:string}>,
- *   pageContentHeight: number,
+ *   measuredSections?: Array<{id:number,height:number,type?:string}>,
+ *   measureSectionsForPt?: (pt:number)=>Array<{id:number,height:number,type?:string}>,
+ *   sections?: any[],
+ *   measureSectionAtPt?: (section:any, pt:number)=>{id?:number,height:number,type?:string}, *   pageContentHeight: number,
  *   hasColumnsHint?: boolean,
  *   honorColumnBreaks?: boolean
  * }} args
  */
 export function chooseBestPlan({
   measuredSections,
+  measureSectionsForPt,
+  sections,
+  measureSectionAtPt,
   pageContentHeight,
   hasColumnsHint = false,
   honorColumnBreaks = true,
+  ptWindow = PT_WINDOW,
 }) {
   const traceRows = [];
   const singlePage = [];
+  const measureCb = measureSectionsForPt || deriveMeasureCb({ measureSectionsForPt, sections, measureSectionAtPt });
 
-  for (let pt = 16; pt >= 12; pt--) {
+
+  for (const pt of ptWindow) {
     const colHeight = pageContentHeight; // heights already reflect pt upstream
     for (const cols of [1, 2]) {
-      const pack = packIntoColumns(measuredSections, cols, colHeight, { honorColumnBreaks });
+      // Use per-pt measurements if available; fallback to provided measuredSections (static)
+      const ms = typeof measureCb === 'function' ? measureCb(pt) : measuredSections;
+      const pack = packIntoColumns(ms, cols, colHeight, { honorColumnBreaks });
       const rowBase = {
         pt, cols,
         singlePage: pack.singlePage,
@@ -149,7 +193,8 @@ export function chooseBestPlan({
         pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
       });
       singlePage.push({ pt, cols, pack, penalties, finalScore });
-      pushTrace(traceRows, { ...rowBase, penalties, finalScore: Number(finalScore.toFixed(2)) });
+        const why = pack.reasonRejected || (!ms ? 'no_measurements_for_pt' : 'rejected');
+        pushTrace(traceRows, { ...rowBase, penalties: '', finalScore: '', reasonRejected: why });
     }
   }
 
