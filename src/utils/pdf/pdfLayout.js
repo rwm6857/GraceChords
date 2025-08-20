@@ -175,8 +175,18 @@ export function chooseBestPlan({
   for (const pt of ptWindow) {
     const colHeight = pageContentHeight; // heights already reflect pt upstream
     for (const cols of [1, 2]) {
-      // Use per-pt measurements if available; fallback to provided measuredSections (static)
+      // Use per-pt measurements if available; fallback to provided measuredSections (static).
+      // If neither is available, do NOT attempt to pack — just trace and continue.
       const ms = typeof measureCb === 'function' ? measureCb(pt) : measuredSections;
+      if (!Array.isArray(ms)) {
+        pushTrace(traceRows, {
+          pt, cols, singlePage: false,
+          colHeights: [], occupancy: [], balance: 1,
+          penalties: '', finalScore: '',
+          reasonRejected: 'no_measurements_for_pt',
+        });
+        continue;
+      }
       const pack = packIntoColumns(ms, cols, colHeight, { honorColumnBreaks });
       const rowBase = {
         pt, cols,

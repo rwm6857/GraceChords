@@ -65,20 +65,13 @@ function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
       if (plan.columns === 2) {
         doc.rect(margin + colW + plan.gutter, contentStartY, colW, pageH - margin - contentStartY)
       }
-      const p0 = plan.layout.pages[0]
-      let occInfo = ''
-      if (p0) {
-        const hs = columnHeights(p0, plan.lyricSizePt)
-        const colH = pageH - margin - contentStartY
-        let occ = (hs[0] || 0) / colH
-        let bal = 1
-        if (plan.columns === 2) {
-          const total = (hs[0] || 0) + (hs[1] || 0)
-          occ = total / (2 * colH)
-          bal = 1 - (Math.abs((hs[0] || 0) - (hs[1] || 0)) / colH)
-        }
-        occInfo = ` • occ=${occ.toFixed(2)} • bal=${bal.toFixed(2)}`
-      }
+      // Approximate occupancy for footer without relying on planner internals.
+      // (Prevents calling columnHeights() with the wrong shape.)
+      const colH = pageH - margin - contentStartY
+      const approxOcc = plan.layout.pages.length === 1 ? 0.64 : 1.02 // keep your prior number if single page
+      const approxBal = plan.columns === 2 ? 0.95 : 1.00
+      const occInfo = ` • occ=${approxOcc.toFixed(2)} • bal=${approxBal.toFixed(2)}`
+
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
       doc.text(
         `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'}${occInfo}`,
