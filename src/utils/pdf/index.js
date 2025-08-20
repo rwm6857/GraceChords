@@ -66,11 +66,7 @@ function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
         doc.rect(margin + colW + plan.gutter, contentStartY, colW, pageH - margin - contentStartY)
       }
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
-      doc.text(
-        `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'} • ${plan.lyricFamily}/${plan.chordFamily}`,
-        margin,
-        pageH - (margin * 0.6)
-      )
+      doc.text(plan.debugFooter || '', margin, pageH - (margin * 0.6))
     }
 
     p.columns.forEach((col) => {
