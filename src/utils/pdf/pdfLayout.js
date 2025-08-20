@@ -264,3 +264,168 @@ export function chooseBestLayout(args) {
 export function planSongLayout(args) {
   return chooseBestLayout(args);
 }
+
+// ============================================================================
+// Legacy-compatible chooseBestLayout(song, oBase, makeLyric, makeChord)
+// Builds a full { plan } with layout.pages[].columns[].blocks[]
+// ============================================================================
+
+/**
+ * Old signature shim:
+ * @param {object} song  // normalized, ideally with song.blocks[] already
+ * @param {object} oBase // layout options (margin, headerOffsetY, lyricFamily, chordFamily, gutter?)
+ * @param {function} makeLyric // jsPDF measure fn factory (doc, family, weight) -> (pt) -> (text)=>width
+ * @param {function} makeChord // same for chord font
+ * @returns {{ plan: any }}
+ */
+export function chooseBestLayout(song, oBase, makeLyric, makeChord) {
+ // --- 1) Compute page content geometry ------------------------------------
+  const margin = oBase.margin ?? 36;
+  const headerOffsetY = oBase.headerOffsetY ?? 0;
+  const pageWidth = oBase.pageWidth ?? 612;  // Letter default
+  const pageHeight = oBase.pageHeight ?? 792;
+  const contentStartY = margin + headerOffsetY;
+  const contentHeight = pageHeight - contentStartY - margin;
+  const contentWidth = pageWidth - margin * 2;
+  const gutter = oBase.gutter ?? 24;
+
+  // --- 2) Normalize song into sections of blocks ---------------------------
+  // We treat each "section header" block (type==='section') as a hard boundary.
+  const blocks = Array.isArray(song?.blocks) ? song.blocks : [];
+  const sections = [];
+  let cur = null;
+  for (const b of blocks) {
+    if (b?.type === 'section') {
+      cur = { header: b.header || b.name || 'Section', blocks: [b] };
+      sections.push(cur);
+    } else {
+      if (!cur) { cur = { header: 'Section', blocks: [] }; sections.push(cur); }
+      cur.blocks.push(b);
+    }
+  }
+  if (!sections.length) {
+    // Fallback: a single empty section to keep renderer stable
+    sections.push({ header: 'Section', blocks: [] });
+  }
+
+  // --- 3) A quick section height model (pt-dependent) ----------------------
+  // Uses the same fonts as render; no split/wrap here since renderer handles text drawing.
+  const lyricWidthAt = (pt, text) => {
+    const m = makeLyric(pt);
+    try { return m(text || ''); } catch { return 0; }
+  };
+  const chordWidthAt = (pt, text) => {
+    const m = makeChord(pt);
+    try { return m(text || ''); } catch { return 0; }
+  };
+  const measureSectionsAtPt = (pt) => {
+    const lineGap = 4;
+    const secTopPad = Math.round(pt * 0.85);
+    return sections.map((sec, i) => {
+      let h = secTopPad; // header
+      for (const b of sec.blocks) {
+        if (b.type === 'section') {
+          // header already accounted via secTopPad
+          continue;
+        }
+        if (b.type === 'line') {
+          if (b.comment) {
+            const cpt = Math.max(10, pt - 2);
+            // width call warms cache; height increment approximates comment line height
+            void lyricWidthAt(cpt, b.comment);
+            h += cpt + 3;
+            continue;
+          }
+          if (Array.isArray(b.chords) && b.chords.length) {
+            // width calls just warm any caching; height increment ~ chord row
+            void chordWidthAt(pt, b.chords.map(c => c?.sym || '').join(' '));
+            h += pt + (lineGap / 2);
+          }
+          void lyricWidthAt(pt, b.lyrics || '');
+          h += pt + lineGap;
+        }
+      }
+      if (h < secTopPad + pt) h = secTopPad + pt;
+      return { id: i + 1, type: 'section', height: h, header: sec.header };
+    });
+  };
+
+  // --- 4) Use new engine to choose pt/columns (single page priority) -------
+  const hasColumnsHint = !!(song?.meta?.columns === 2 || song?.hints?.columns === 2);
+  const singlePageCandidates = [];
+  for (const pt of DEFAULT_LAYOUT_OPT?.ptWindow || [16,15,14,13,12]) {
+    const ms = measureSectionsAtPt(pt);
+    for (const cols of [1, 2]) {
+      const pack = packIntoColumns(ms, cols, contentHeight, { honorColumnBreaks: true });
+      if (!pack.singlePage) continue;
+      const { penalties, finalScore } = scoreCandidate({
+        pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
+      });
+      singlePageCandidates.push({ pt, cols, pack, penalties, finalScore });
+    }
+  }
+  if (!singlePageCandidates.length) {
+    // Fallback: old 12pt multipage (keep shape stable)
+    const plan = {
+      lyricFamily: oBase.lyricFamily || 'Helvetica',
+      chordFamily: oBase.chordFamily || 'Courier',
+      lyricSizePt: 12,
+      chordSizePt: 12,
+      columns: 1,
+      margin,
+      headerOffsetY,
+      gutter,
+      layout: { pages: [] },
+      debugFooter: isTraceOn() ? 'Plan: 1 col • 12pt • singlePage=no' : undefined,
+    };
+    // Minimal 2-page fallback (stuff everything in page1 col1, page2 empty), so renderer doesn’t explode
+    plan.layout.pages = [{ columns: [{ x: margin, blocks }] }, { columns: [{ x: margin, blocks: [] }] }];
+    return { plan };
+  }
+  singlePageCandidates.sort((a, b) => b.finalScore - a.finalScore);
+  const win = singlePageCandidates[0];
+
+  // --- 5) Build legacy layout.pages from packed section indices -------------
+  const pt = win.pt;
+  const cols = win.cols;
+  const colW = cols === 2 ? (contentWidth - gutter) / 2 : contentWidth;
+
+  // Map measured sections (with .id matching index+1) back to actual block spans
+  // First, pre-split original blocks into per-section arrays
+  const blocksBySection = sections.map(s => s.blocks);
+
+  // Convert "placed section ids per column" into actual block arrays
+  const page = { columns: [] };
+  for (let c = 0; c < cols; c++) {
+    const placedIds = win.pack.placed[c] || [];
+    const colBlocks = [];
+    for (const sid of placedIds) {
+      // Append all blocks of that section in order
+      const sBlocks = blocksBySection[sid - 1] || [];
+      // Ensure there is a visible section header block at column transitions
+      // (Most inputs already have the header block as first item. If not, synthesize one.)
+      if (!sBlocks.length || sBlocks[0]?.type !== 'section') {
+        colBlocks.push({ type: 'section', header: sections[sid - 1]?.header || `Section ${sid}` });
+      }
+      colBlocks.push(...sBlocks);
+    }
+    page.columns.push({ x: margin + c * (colW + (c ? gutter : 0)), blocks: colBlocks });
+  }
+
+  const plan = {
+    lyricFamily: oBase.lyricFamily || 'Helvetica',
+    chordFamily: oBase.chordFamily || 'Courier',
+    lyricSizePt: pt,
+    chordSizePt: pt,
+    columns: cols,
+    margin,
+    headerOffsetY,
+    gutter,
+    layout: { pages: [page] },
+    debugFooter: isTraceOn()
+      ? `Plan: ${cols} col • ${pt}pt • singlePage=yes • occ=${JSON.stringify(win.pack.occupancy.map(o => o.toFixed(2)))} • bal=${win.pack.balance.toFixed(2)}`
+      : undefined,
+  };
+
+  return { plan };
+}
