@@ -26,74 +26,9 @@ function planWithDoc(doc, song, baseOpt) {
   }
   const makeLyric = makeMeasure(doc, oBase.lyricFamily, 'normal')
   const makeChord = makeMeasure(doc, oBase.chordFamily, 'bold')
-
-  // --- Build per‑pt section measurement callback for the planner --------------
-  // We keep it section‑level for speed and determinism; renderer remains unchanged.
-  const pageTop = (oBase.margin || 36) + (oBase.headerOffsetY || 0)
-  const pageContentHeight = pageH - pageTop - (oBase.margin || 36)
-
-  // Normalize sections in a few common shapes; fall back to counting non‑empty lines.
-  const toSections = (sng) => {
-    if (Array.isArray(sng?.sections)) return sng.sections
-    if (Array.isArray(sng?.blocks)) {
-      // group consecutive blocks by section header if present
-      const secs = []
-      let cur = null
-      for (const b of sng.blocks) {
-        if (b.type === 'section') { cur = { header: b.header || b.name || 'Section', lines: [] }; secs.push(cur); continue }
-        if (!cur) { cur = { header: 'Section', lines: [] }; secs.push(cur) }
-        if (b.type === 'line') cur.lines.push(b)
-      }
-      return secs
-    }
-    if (typeof sng?.body === 'string') {
-      const chunks = sng.body.split(/\n\s*\n/).map(ch => ch.trim()).filter(Boolean)
-      return chunks.map((text, i) => ({
-        header: `S${i + 1}`,
-        lines: text.split(/\r?\n/).filter(l => l.trim().length),
-      }))
-    }
-    return [{ header: 'S1', lines: [] }]
-  }
-  const secs = toSections(song)
-
-  const measureSectionsForPt = (pt) => {
-    const lineGap = 4
-    const secTopPad = Math.round(pt * 0.85)
-    return secs.map((sec, idx) => {
-      // Estimate height from real text widths using jsPDF metrics.
-      // For each lyric line: possible chords line + lyric line.
-      let h = secTopPad // header pad (we draw [Header] bold before content)
-      const lines = Array.isArray(sec.lines) ? sec.lines : []
-      for (const ln of lines) {
-        // chords row (if any)
-        const chordRow = Array.isArray(ln.chords) ? ln.chords.map(c => c.sym).join(' ') : ''
-        if (chordRow) {
-          doc.setFont(oBase.chordFamily, 'bold'); doc.setFontSize(pt)
-          // width read to warm cache; we only need height increments here
-          void doc.getTextWidth(chordRow)
-          h += pt + (lineGap / 2)
-        }
-        // lyric row
-        const lyricText = typeof ln.lyrics === 'string' ? ln.lyrics : (typeof ln.text === 'string' ? ln.text : '')
-        doc.setFont(oBase.lyricFamily, 'normal'); doc.setFontSize(pt)
-        void doc.getTextWidth(lyricText)
-        h += pt + lineGap
-      }
-      // Minimum height guard to avoid zero‑height sections
-      if (h < secTopPad + pt) h = secTopPad + pt
-      return { id: idx + 1, type: 'section', height: h }
-    })
-  }
-
-  // Call new planner API with per‑pt measurements; renderer stays the same.
-  const plan = chooseBestLayout({
-    pageContentHeight,
-    hasColumnsHint: !!(song?.meta?.columns === 2 || song?.hints?.columns === 2),
-    honorColumnBreaks: true,
-    measureSectionsForPt,
-  })
-  return plan}
+  const norm = normalizeSongInput(song)
+  return chooseBestLayout(norm, oBase, makeLyric, makeChord)
+}
 
 /* -----------------------------------------------------------
  * DRAWING (consumes planned layout)
