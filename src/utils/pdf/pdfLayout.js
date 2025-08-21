@@ -2,7 +2,24 @@
 // Drop-in: telemetry + robust candidate enumeration/packing
 // NOTE: Removed import of measureSectionHeight to avoid circular import with ./index.js
 
+import { parseChordPro } from '../chordpro.js';
+
 const PT_WINDOW = [16, 15, 14, 13, 12];
+
+// Default planner options used when callers do not specify overrides.
+export const DEFAULT_LAYOUT_OPT = {
+  pageWidth: 612,      // 8.5in * 72pt
+  pageHeight: 792,     // 11in * 72pt
+  margin: 36,
+  headerOffsetY: 0,
+  gutter: 18,
+  lyricFamily: 'Helvetica',
+  chordFamily: 'Courier',
+  lyricSizePt: 16,
+  chordSizePt: 16,
+  columns: 1,
+  ptWindow: PT_WINDOW,
+};
 
 // === Trace helpers ===========================================================
 const isTraceOn = () => {
@@ -43,14 +60,14 @@ const flushTrace = (label, rows) => {
   }
 };
 
-// === Column packer (no section splitting; respect soft breaks) ===============
+// === Legacy column packer (no section splitting; respect soft breaks) ========
 /**
  * @param {Array<{id:number,type?:string,height:number,postSpacing?:number}>} sections
  * @param {number} cols
  * @param {number} colHeight     usable height of a column in points
  * @param {{honorColumnBreaks?:boolean}} opts
  */
-function packIntoColumns(sections, cols, colHeight, opts = {}) {
+function packIntoColumnsLegacy(sections, cols, colHeight, opts = {}) {
   const honorColumnBreaks = !!opts.honorColumnBreaks;
   const colHeights = new Array(cols).fill(0);
   const placed = Array.from({ length: cols }, () => []);
@@ -146,6 +163,27 @@ function scoreCandidate({ pt, cols, balance, occupancy, hasColumnsHint }) {
 // Runtime trace toggle: localStorage.setItem('pdfPlanTrace','1')
 const PDF_TRACE = typeof window !== 'undefined'
   && (() => { try { return localStorage.getItem('pdfPlanTrace') === '1' } catch { return false } })()
+
+export function normalizeSongInput(input) {
+  if (!input) return { sections: [], meta: {} };
+  if (typeof input === 'string') {
+    try {
+      const parsed = parseChordPro(input);
+      const sections = parsed.blocks.map(b => ({
+        header: b.section,
+        blocks: [
+          { type: 'section', header: b.section },
+          ...b.lines.map(ln => ({ type: 'line', lyrics: ln.text, chords: ln.chords }))
+        ]
+      }));
+      return { ...parsed.meta, sections };
+    } catch {
+      return { sections: [], meta: {} };
+    }
+  }
+  if (typeof input === 'object') return input;
+  return { sections: [], meta: {} };
+}
 
 // Packing helper: place whole sections into columns without splitting
 export function packIntoColumns(sections, cols, colHeight, { honorColumnBreaks } = {}) {
@@ -355,6 +393,7 @@ function fitsWithinTwoPages(plan) {
 // Public layout function (was computeLayout). Pure; does not select sizes/columns.
 export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measureChord = (t) => 0) {
   const song = normalizeSongInput(songIn)
+  const sections = Array.isArray(song.sections) ? song.sections : []
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const lineGap = 4
   const sectionSize = o.lyricSizePt
@@ -364,24 +403,12 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   const margin = o.margin
   const pageH = o.pageHeight
   const contentW = o.pageWidth - margin * 2
-  const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
+  const initialColW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
 
   const contentStartY = margin + o.headerOffsetY
   const contentBottomY = pageH - margin
   const maxBlockH = contentBottomY - contentStartY
 
-  const pages = []
-  let page = { columns: [] }
-  pages.push(page)
-
-  function makeColumns() {
-    const firstCol = { x: margin, yStart: contentStartY, blocks: [] }
-    page.columns.push(firstCol)
-    if (o.columns === 2) {
-      const secondCol = { x: margin + colW + o.gutter, yStart: contentStartY, blocks: [] }
-      page.columns.push(secondCol)
-    }
-  }
   if (!sections.length) {
     // Fallback: a single empty section to keep renderer stable
     sections.push({ header: 'Section', blocks: [] });
@@ -435,7 +462,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   for (const pt of DEFAULT_LAYOUT_OPT?.ptWindow || [16,15,14,13,12]) {
     const ms = measureSectionsAtPt(pt);
     for (const cols of [1, 2]) {
-      const pack = packIntoColumns(ms, cols, contentHeight, { honorColumnBreaks: true });
+      const pack = packIntoColumnsLegacy(ms, cols, contentHeight, { honorColumnBreaks: true });
       if (!pack.singlePage) continue;
       const { penalties, finalScore } = scoreCandidate({
         pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
@@ -467,7 +494,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   // --- 5) Build legacy layout.pages from packed section indices -------------
   const pt = win.pt;
   const cols = win.cols;
-  const colW = cols === 2 ? (contentWidth - gutter) / 2 : contentWidth;
+  const colW = cols === 2 ? (contentW - gutter) / 2 : contentW;
 
   // Map measured sections (with .id matching index+1) back to actual block spans
   // First, pre-split original blocks into per-section arrays
