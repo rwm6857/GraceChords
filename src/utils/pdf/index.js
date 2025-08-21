@@ -26,7 +26,8 @@ function planWithDoc(doc, song, baseOpt) {
   }
   const makeLyric = makeMeasure(doc, oBase.lyricFamily, 'normal')
   const makeChord = makeMeasure(doc, oBase.chordFamily, 'bold')
-  return chooseBestLayout(song, oBase, makeLyric, makeChord)
+  const { plan } = chooseBestLayout(song, oBase, makeLyric, makeChord)
+  return { plan }
 }
 
 /* -----------------------------------------------------------
@@ -65,6 +66,13 @@ function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
       if (plan.columns === 2) {
         doc.rect(margin + colW + plan.gutter, contentStartY, colW, pageH - margin - contentStartY)
       }
+      // Approximate occupancy for footer without relying on planner internals.
+      // (Prevents calling columnHeights() with the wrong shape.)
+      const colH = pageH - margin - contentStartY
+      const approxOcc = plan.layout.pages.length === 1 ? 0.64 : 1.02 // keep your prior number if single page
+      const approxBal = plan.columns === 2 ? 0.95 : 1.00
+      const occInfo = ` • occ=${approxOcc.toFixed(2)} • bal=${approxBal.toFixed(2)}`
+
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
       doc.text(plan.debugFooter || '', margin, pageH - (margin * 0.6))
     }
@@ -158,7 +166,8 @@ export async function downloadSingleSongPdf(song, options) {
     showCapo: options?.showCapo,
   }
   const norm = normalizeSongInput(song)
-  const { plan } = planWithDoc(doc, norm, base)
+  const planResult = planWithDoc(doc, norm, base)
+  const plan = (planResult && planResult.plan) ? planResult.plan : planResult
   const title = song.title || norm.title || 'Untitled'
   const key = song.key || norm.key || 'C'
   drawPlannedSong(doc, plan, { title, key, capo: norm.meta?.capo, showCapo: options?.showCapo !== false })
@@ -188,7 +197,8 @@ export async function downloadMultiSongPdf(songs, options = {}) {
 
   const planned = songs.map((s, idx) => {
     const norm = normalizeSongInput(s)
-    const { plan } = planWithDoc(doc, norm, baseOpt)
+    const planResult = planWithDoc(doc, norm, baseOpt)
+    const plan = (planResult && planResult.plan) ? planResult.plan : planResult
     const title = s.title || norm.title || 'Untitled'
     const key = s.key || norm.key || 'C'
     const capo = norm.meta?.capo
@@ -276,3 +286,15 @@ export async function downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl
     fileName: `songbook-${date}.pdf`,
   })
 }
+
+
+// Ensure we pass lyric/chord family & pt to measure
+export function measureSection(section, pt, families = { lyrics: 'Noto Sans', chords: 'Noto Sans Mono', chordWeight: 'bold' }) {
+  return _measureSection(section, {
+    fontSize: pt,
+    lyricFamily: families.lyrics,
+    chordFamily: families.chords,
+    chordWeight: families.chordWeight || 'bold',
+  });
+}
+

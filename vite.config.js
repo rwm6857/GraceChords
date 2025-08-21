@@ -5,7 +5,11 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 export default defineConfig({
   base: '',
   plugins: [
-    react(),
+    react({
+      // Make the React plugin handle .js files too (not just .jsx/.tsx)
+      include: [/\.jsx?$/, /\.tsx?$/], // includes .js, .jsx, .ts, .tsx
+      jsxRuntime: 'automatic',
+    }),
     viteStaticCopy({
       targets: [
         { src: 'src/sw.js', dest: '' },
