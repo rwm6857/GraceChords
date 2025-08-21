@@ -143,163 +143,243 @@ function scoreCandidate({ pt, cols, balance, occupancy, hasColumnsHint }) {
   return { penalties, finalScore };
 }
 
-// === Main planner entry =======================================================
+// Runtime trace toggle: localStorage.setItem('pdfPlanTrace','1')
+const PDF_TRACE = typeof window !== 'undefined'
+  && (() => { try { return localStorage.getItem('pdfPlanTrace') === '1' } catch { return false } })()
+
+// Packing helper: place whole sections into columns without splitting
+export function packIntoColumns(sections, cols, colHeight, { honorColumnBreaks } = {}) {
+  const placed = Array.from({ length: cols }, () => [])
+  const colHeights = Array(cols).fill(0)
+  let colIdx = 0
+
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i]
+    const h = sec.h
+    const tightH = sec.hNoPad
+    if (h > colHeight) {
+      return {
+        singlePage: false,
+        colHeights,
+        occupancy: colHeights.map(hh => hh / colHeight),
+        balance: cols === 2 ? 0 : 1,
+        placed,
+        reasonRejected: `section ${i} height ${h}pt > column ${colHeight}pt`
+      }
+    }
+
+    if (honorColumnBreaks && sec.breakBefore && colIdx < cols - 1 && colHeights[colIdx] > 0) {
+      if (h <= colHeight) colIdx++
+    }
+
+    let avail = colHeight - colHeights[colIdx]
+    if (h <= avail) {
+      placed[colIdx].push(i)
+      colHeights[colIdx] += h
+    } else if (tightH <= avail) {
+      placed[colIdx].push(i)
+      colHeights[colIdx] += tightH
+      colIdx++
+      if (colIdx >= cols && i < sections.length - 1) {
+        return {
+          singlePage: false,
+          colHeights,
+          occupancy: colHeights.map(hh => hh / colHeight),
+          balance: cols === 2 ? 1 - Math.abs(colHeights[0] - colHeights[1]) / colHeight : 1,
+          placed,
+          reasonRejected: `section ${i + 1} needs ${h}pt > remaining ${avail}pt in col ${cols}`
+        }
+      }
+    } else {
+      colIdx++
+      if (colIdx >= cols) {
+        return {
+          singlePage: false,
+          colHeights,
+          occupancy: colHeights.map(hh => hh / colHeight),
+          balance: cols === 2 ? 1 - Math.abs(colHeights[0] - colHeights[1]) / colHeight : 1,
+          placed,
+          reasonRejected: `section ${i} needs ${h}pt > remaining ${avail}pt in col ${colIdx}`
+        }
+      }
+      i-- // retry this section in next column
+      continue
+    }
+
+    if (colIdx >= cols) break
+  }
+
+  const occupancy = colHeights.map(hh => hh / colHeight)
+  const balance = cols === 2 ? 1 - Math.abs(colHeights[0] - colHeights[1]) / colHeight : 1
+  return { singlePage: true, colHeights, occupancy, balance, placed }
+}
+
 /**
- * Evaluate 16→12pt, try 1‑col & 2‑col at each size.
- * Prefer any single‑page option over multipage. Return winner + debug footer.
- *
- * @param {{
- *   measuredSections?: Array<{id:number,height:number,type?:string}>,
- *   measureSectionsForPt?: (pt:number)=>Array<{id:number,height:number,type?:string}>,
- *   sections?: any[],
- *   measureSectionAtPt?: (section:any, pt:number)=>{id?:number,height:number,type?:string}, *   pageContentHeight: number,
- *   hasColumnsHint?: boolean,
- *   honorColumnBreaks?: boolean
- * }} args
+ * Choose best layout using section packing and scoring.
+ * Public API: signature must remain stable.
  */
-export function chooseBestPlan({
-  measuredSections,
-  measureSectionsForPt,
-  sections,
-  measureSectionAtPt,
-  pageContentHeight,
-  hasColumnsHint = false,
-  honorColumnBreaks = true,
-  ptWindow = PT_WINDOW,
-}) {
-  const traceRows = [];
-  const singlePage = [];
-  const measureCb = measureSectionsForPt || deriveMeasureCb({ measureSectionsForPt, sections, measureSectionAtPt });
+export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () => () => 0, makeMeasureChordAt = () => () => 0) {
+  const song = normalizeSongInput(songIn)
+  const oBase = { ...DEFAULT_LAYOUT_OPT, ...baseOpt, gutter: DEFAULT_LAYOUT_OPT.gutter }
+  const SIZE_STEPS = [16, 15, 14, 13, 12]
+  const prefer2 = song.layoutHints?.requestedColumns === 2
 
+  const contentH = oBase.pageHeight - (oBase.margin + oBase.headerOffsetY) - oBase.margin
+  const secHeightsCache = {}
+  const breakAfter = song.layoutHints?.columnBreakAfter || []
 
-  for (const pt of ptWindow) {
-    const colHeight = pageContentHeight; // heights already reflect pt upstream
+  const sectionHeightsAt = (pt) => {
+    if (secHeightsCache[pt]) return secHeightsCache[pt]
+    const lineGap = 4
+    const secTopPad = Math.round(pt * 0.85)
+    const commentSize = Math.max(10, pt - 2)
+    const arr = (song.sections || []).map((sec, idx) => {
+      let h = secTopPad + pt
+      for (const ln of (sec.lines || [])) {
+        if (ln.comment) {
+          h += commentSize + 3
+        } else {
+          if (ln?.chords?.length) h += pt + lineGap / 2
+          h += pt + lineGap
+        }
+      }
+      if (!sec.lines?.length) h += pt
+      h += 4
+      return { h, hNoPad: h - 4, breakBefore: breakAfter.includes(idx) }
+    })
+    secHeightsCache[pt] = arr
+    if (PDF_TRACE) {
+      console.log('sectionHeights pt', pt, arr.map(s => s.h))
+    }
+    return arr
+  }
+
+  const candidates = []
+
+  for (const pt of SIZE_STEPS) {
     for (const cols of [1, 2]) {
-      // Use per-pt measurements if available; fallback to provided measuredSections (static).
-      // If neither is available, do NOT attempt to pack — just trace and continue.
-      const ms = typeof measureCb === 'function' ? measureCb(pt) : measuredSections;
-      if (!Array.isArray(ms)) {
-        pushTrace(traceRows, {
-          pt, cols, singlePage: false,
-          colHeights: [], occupancy: [], balance: 1,
-          penalties: '', finalScore: '',
-          reasonRejected: 'no_measurements_for_pt',
-        });
-        continue;
-      }
-      const pack = packIntoColumns(ms, cols, colHeight, { honorColumnBreaks });
-      const rowBase = {
-        pt, cols,
-        singlePage: pack.singlePage,
-        colHeights: pack.colHeights.map(v => Math.round(v)),
-        occupancy: pack.occupancy.map(v => Number(v.toFixed(2))),
-        balance: Number(pack.balance.toFixed(2)),
-      };
-      if (!pack.singlePage) {
-        pushTrace(traceRows, { ...rowBase, penalties: '', finalScore: '', reasonRejected: pack.reasonRejected });
-        continue;
-      }
-      const { penalties, finalScore } = scoreCandidate({
-        pt, cols, balance: pack.balance, occupancy: pack.occupancy, hasColumnsHint,
-      });
-      singlePage.push({ pt, cols, pack, penalties, finalScore });
-      pushTrace(traceRows, { ...rowBase, penalties, finalScore });
+      const sections = sectionHeightsAt(pt)
+      const pack = packIntoColumns(sections, cols, contentH, { honorColumnBreaks: true })
+      const widthOk = !widthOverflows(song, cols, pt, oBase, makeMeasureLyricAt, makeMeasureChordAt)
+      let penalties = 0
+      if (cols === 2 && Math.min(...pack.occupancy) < 0.18) penalties += 50
+      if (pack.occupancy.some(o => o > 0.98)) penalties += 5
+      if (prefer2 && cols === 2) penalties -= 3
+      const score = (pt * 100) + (pack.balance * 10) - penalties - (cols === 2 ? 2 : 0)
+      candidates.push({ pt, cols, singlePage: pack.singlePage && widthOk, colHeights: pack.colHeights, occupancy: pack.occupancy, balance: pack.balance, penalties, finalScore: score, reasonRejected: widthOk ? pack.reasonRejected : 'width overflow', placed: pack.placed })
     }
   }
 
-  if (singlePage.length) {
-    singlePage.sort((a, b) => b.finalScore - a.finalScore);
-    const win = singlePage[0];
-    flushTrace('Single‑page candidate scan (16→12pt, 1/2 columns)', traceRows);
-    const debugFooter = isTraceOn()
-      ? `Plan: ${win.cols} col • ${win.pt}pt • singlePage=yes • occ=${JSON.stringify(win.pack.occupancy.map(o => o.toFixed(2)))} • bal=${win.pack.balance.toFixed(2)}`
-      : '';
-    return { ...win, debugFooter };
+  if (PDF_TRACE) {
+    console.table(candidates.map(c => ({ pt: c.pt, cols: c.cols, singlePage: c.singlePage, colHeights: c.colHeights.map(n => Number(n.toFixed(1))), occupancy: c.occupancy.map(o => Number(o.toFixed(2))), balance: Number(c.balance.toFixed(2)), penalties: c.penalties, finalScore: Number(c.finalScore.toFixed(2)), reasonRejected: c.reasonRejected || '' })))
+    console.log('contentH', contentH, 'gutter', oBase.gutter)
   }
 
-  // Fallback: multipage at 12pt (legacy behavior)
-  flushTrace('No single‑page candidates; falling back to multi‑page 12pt', traceRows);
-  return { multipage: true, pt: 12, reason: 'no_single_page' };
+  const viable = candidates.filter(c => c.singlePage)
+  if (viable.length) {
+    const winner = viable.sort((a, b) => b.finalScore - a.finalScore)[0]
+    const occStr = winner.occupancy.map(o => o.toFixed(2)).join(',')
+    const debugFooter = `Plan: ${winner.cols} col • ${winner.pt}pt • singlePage=yes • occ=[${occStr}] • bal=${winner.balance.toFixed(2)}`
+
+    // Build legacy plan
+    const margin = oBase.margin
+    const contentW = oBase.pageWidth - margin * 2
+    const colW = winner.cols === 2 ? (contentW - oBase.gutter) / 2 : contentW
+    const measureLyric = makeMeasureLyricAt(winner.pt)
+    const measureChord = makeMeasureChordAt(winner.pt)
+    const buildCol = (x, secIdxs) => {
+      const blocks = []
+      for (const si of secIdxs) {
+        const sec = song.sections[si]
+        blocks.push({ type: 'section', header: sec.label || sec.kind })
+        for (const ln of (sec.lines || [])) {
+          if (ln.comment) {
+            blocks.push({ type: 'line', comment: ln.comment })
+          } else {
+            const chords = (ln.chords || []).map(c => ({ x: measureLyric((ln.lyrics || '').slice(0, c.index || 0)), w: measureChord(c.sym || ''), sym: c.sym }))
+            resolveChordCollisions(chords)
+            blocks.push({ type: 'line', lyrics: ln.lyrics || '', chords })
+          }
+        }
+      }
+      return { x, blocks }
+    }
+
+    const columns = [buildCol(margin, winner.placed[0] || [])]
+    if (winner.cols === 2) {
+      columns.push(buildCol(margin + colW + oBase.gutter, winner.placed[1] || []))
+    }
+    const layout = { pages: [{ columns }] }
+
+    const plan = {
+      lyricFamily: oBase.lyricFamily,
+      chordFamily: oBase.chordFamily,
+      lyricSizePt: winner.pt,
+      chordSizePt: winner.pt,
+      columns: winner.cols,
+      margin: oBase.margin,
+      headerOffsetY: oBase.headerOffsetY,
+      gutter: oBase.gutter,
+      layout,
+      debugFooter
+    }
+    return { plan }
+  }
+
+  // Fallback: legacy two-page @12pt
+  const minSz = 12
+  let layout = planSongLayout(
+    song,
+    { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz },
+    makeMeasureLyricAt(minSz),
+    makeMeasureChordAt(minSz)
+  )
+  let plan = { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz, layout }
+  if (!fitsWithinTwoPages(plan)) {
+    layout = planSongLayout(
+      song,
+      { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz },
+      makeMeasureLyricAt(minSz),
+      makeMeasureChordAt(minSz)
+    )
+    plan = { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz, layout }
+  }
+  plan.debugFooter = `Plan: ${plan.columns} col • ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length === 1 ? 'yes' : 'no'}`
+  return { plan }
 }
 
-// === Compatibility layer (exports expected by src/utils/pdf/index.js) =========
-
-// Historically expected default options:
-export const DEFAULT_LAYOUT_OPT = Object.freeze({
-  honorColumnBreaks: true,
-  hasColumnsHint: false,
-  ptWindow: PT_WINDOW.slice(), // exposed for diagnostics
-});
-
-// Normalize hook (noop for now; keeps API stable)
-export function normalizeSongInput(input) {
-  return input;
+function fitsWithinTwoPages(plan) {
+  return (plan?.layout?.pages?.length || 99) <= 2
 }
 
-// Compute column heights ad hoc (used by some callers for telemetry)
-export function columnHeights(measuredSections, cols, colHeight, opts = {}) {
-  return packIntoColumns(measuredSections, cols, colHeight, opts).colHeights;
-}
+// Public layout function (was computeLayout). Pure; does not select sizes/columns.
+export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measureChord = (t) => 0) {
+  const song = normalizeSongInput(songIn)
+  const o = { ...DEFAULT_LAYOUT_OPT, ...opt, gutter: DEFAULT_LAYOUT_OPT.gutter }
+  const lineGap = 4
+  const sectionSize = o.lyricSizePt
+  const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
+  const commentSize = Math.max(10, o.lyricSizePt - 2)
 
-// Older API alias (args-based): choose best layout given already-measured sections.
-// Returns a small, stable shape similar to previous code.
-export function chooseBestLayoutFromArgs(args) {
-  const plan = chooseBestPlan(args);
-  if (plan.multipage) return plan;
-  return {
-    pt: plan.pt,
-    cols: plan.cols,
-    singlePage: true,
-    occupancy: plan.pack.occupancy,
-    balance: plan.pack.balance,
-    debugFooter: plan.debugFooter,
-    // surfaced for downstream render
-    placed: plan.pack.placed,
-    colHeights: plan.pack.colHeights,
-  };
-}
+  const margin = o.margin
+  const pageH = o.pageHeight
+  const contentW = o.pageWidth - margin * 2
+  const colW = o.columns === 2 ? (contentW - o.gutter) / 2 : contentW
 
-// Older API alias: main entry some code calls `planSongLayout`
-export function planSongLayout(args) {
-  return chooseBestLayoutFromArgs(args);
-}
+  const contentStartY = margin + o.headerOffsetY
+  const contentBottomY = pageH - margin
+  const maxBlockH = contentBottomY - contentStartY
 
-// ============================================================================
-// Legacy-compatible chooseBestLayout(song, oBase, makeLyric, makeChord)
-// Builds a full { plan } with layout.pages[].columns[].blocks[]
-// ============================================================================
+  const pages = []
+  let page = { columns: [] }
+  pages.push(page)
 
-/**
- * Old signature shim:
- * @param {object} song  // normalized, ideally with song.blocks[] already
- * @param {object} oBase // layout options (margin, headerOffsetY, lyricFamily, chordFamily, gutter?)
- * @param {function} makeLyric // jsPDF measure fn factory (doc, family, weight) -> (pt) -> (text)=>width
- * @param {function} makeChord // same for chord font
- * @returns {{ plan: any }}
- */
-export function chooseBestLayout(song, oBase, makeLyric, makeChord) {
- // --- 1) Compute page content geometry ------------------------------------
-  const margin = oBase.margin ?? 36;
-  const headerOffsetY = oBase.headerOffsetY ?? 0;
-  const pageWidth = oBase.pageWidth ?? 612;  // Letter default
-  const pageHeight = oBase.pageHeight ?? 792;
-  const contentStartY = margin + headerOffsetY;
-  const contentHeight = pageHeight - contentStartY - margin;
-  const contentWidth = pageWidth - margin * 2;
-  const gutter = oBase.gutter ?? 24;
-
-  // --- 2) Normalize song into sections of blocks ---------------------------
-  // We treat each "section header" block (type==='section') as a hard boundary.
-  const blocks = Array.isArray(song?.blocks) ? song.blocks : [];
-  const sections = [];
-  let cur = null;
-  for (const b of blocks) {
-    if (b?.type === 'section') {
-      cur = { header: b.header || b.name || 'Section', blocks: [b] };
-      sections.push(cur);
-    } else {
-      if (!cur) { cur = { header: 'Section', blocks: [] }; sections.push(cur); }
-      cur.blocks.push(b);
+  function makeColumns() {
+    const firstCol = { x: margin, yStart: contentStartY, blocks: [] }
+    page.columns.push(firstCol)
+    if (o.columns === 2) {
+      const secondCol = { x: margin + colW + o.gutter, yStart: contentStartY, blocks: [] }
+      page.columns.push(secondCol)
     }
   }
   if (!sections.length) {

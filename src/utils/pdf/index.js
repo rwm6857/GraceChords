@@ -74,10 +74,7 @@ function drawPlannedSong(doc, plan, { title, key, capo, showCapo = true }) {
       const occInfo = ` • occ=${approxOcc.toFixed(2)} • bal=${approxBal.toFixed(2)}`
 
       doc.setFont(lFam, 'normal'); doc.setFontSize(9)
-      const footer = plan.debugFooter
-        ? plan.debugFooter
-        : `Plan: ${plan.columns} col • size ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length===1 ? 'yes' : 'no'}`
-      doc.text(footer, margin, pageH - (margin * 0.6))
+      doc.text(plan.debugFooter || '', margin, pageH - (margin * 0.6))
     }
 
     p.columns.forEach((col) => {
