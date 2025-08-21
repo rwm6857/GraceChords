@@ -3,6 +3,7 @@
 // NOTE: Removed import of measureSectionHeight to avoid circular import with ./index.js
 
 import { parseChordPro } from '../chordpro.js';
+import { resolveChordCollisions } from './measure.js';
 
 const PT_WINDOW = [16, 15, 14, 13, 12];
 
@@ -250,6 +251,36 @@ export function packIntoColumns(sections, cols, colHeight, { honorColumnBreaks }
   const occupancy = colHeights.map(hh => hh / colHeight)
   const balance = cols === 2 ? 1 - Math.abs(colHeights[0] - colHeights[1]) / colHeight : 1
   return { singlePage: true, colHeights, occupancy, balance, placed }
+}
+
+// Check if any line's lyrics or chords exceed the available column width
+function widthOverflows(song, cols, pt, oBase, makeMeasureLyricAt, makeMeasureChordAt) {
+  if (!song?.sections) return false
+  const contentW = oBase.pageWidth - oBase.margin * 2
+  const colW = cols === 2 ? (contentW - oBase.gutter) / 2 : contentW
+  const measureLyric = makeMeasureLyricAt(pt)
+  const measureChord = makeMeasureChordAt(pt)
+
+  for (const sec of song.sections) {
+    for (const ln of (sec.lines || [])) {
+      if (ln.comment) {
+        if (measureLyric(ln.comment) > colW) return true
+        continue
+      }
+      const lyrics = ln.lyrics || ''
+      let maxW = measureLyric(lyrics)
+      const chords = (ln.chords || []).map(c => ({
+        x: measureLyric(lyrics.slice(0, c.index || 0)),
+        w: measureChord(c.sym || '')
+      }))
+      resolveChordCollisions(chords)
+      for (const c of chords) {
+        if (c.x + c.w > maxW) maxW = c.x + c.w
+      }
+      if (maxW > colW) return true
+    }
+  }
+  return false
 }
 
 /**
