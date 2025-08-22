@@ -6,7 +6,6 @@ const CACHE_NAME = `gracechords-${
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/src/data/index.json',
   '/fonts/NotoSans-Regular.ttf',
   '/fonts/NotoSans-Bold.ttf',
   '/fonts/NotoSans-Italic.ttf',
@@ -17,7 +16,17 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset))).then(
+        (results) => {
+          results.forEach((result, i) => {
+            if (result.status === 'rejected') {
+              console.error(`Failed to cache ${STATIC_ASSETS[i]}`, result.reason);
+            }
+          });
+        }
+      )
+    )
   );
   self.skipWaiting();
 });
