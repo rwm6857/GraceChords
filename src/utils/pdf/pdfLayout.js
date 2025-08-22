@@ -191,13 +191,17 @@ export function normalizeSongInput(input) {
   if (typeof input === 'string') {
     try {
       const parsed = parseChordPro(input);
-      const sections = parsed.blocks.map(b => ({
-        header: b.section,
-        blocks: [
+      const sections = parsed.blocks.map(b => {
+        const lines = (b.lines || []).map(ln => ({
+          lyrics: ln.text,
+          chords: ln.chords,
+        }));
+        const blocks = [
           { type: 'section', header: b.section },
-          ...b.lines.map(ln => ({ type: 'line', lyrics: ln.text, chords: ln.chords }))
-        ]
-      }));
+          ...lines.map(ln => ({ type: 'line', lyrics: ln.lyrics, chords: ln.chords }))
+        ];
+        return { label: b.section, lines, blocks };
+      });
       return { ...parsed.meta, sections };
     } catch {
       return { sections: [], meta: {} };
@@ -206,15 +210,34 @@ export function normalizeSongInput(input) {
   if (typeof input === 'object') {
     if (Array.isArray(input?.lyricsBlocks)) {
       const { title, key, capo, layoutHints, meta, lyricsBlocks } = input;
-      const sections = lyricsBlocks.map(b => ({
-        label: b.section,
-        lines: (b.lines || []).map(ln => ({
+      const sections = lyricsBlocks.map(b => {
+        const lines = (b.lines || []).map(ln => ({
           lyrics: ln.plain,
           chords: ln.chordPositions,
           comment: ln.comment,
-        })),
-      }));
+        }));
+        const blocks = [
+          { type: 'section', header: b.section },
+          ...lines.map(ln => ln.comment
+            ? { type: 'line', comment: ln.comment }
+            : { type: 'line', lyrics: ln.lyrics, chords: ln.chords })
+        ];
+        return { label: b.section, lines, blocks };
+      });
       return { title, key, capo, layoutHints, ...(meta || {}), sections };
+    }
+    if (Array.isArray(input?.sections)) {
+      const sections = input.sections.map((s) => {
+        const lines = s.lines || [];
+        const blocks = s.blocks || [
+          { type: 'section', header: s.label || s.kind },
+          ...lines.map(ln => ln.comment
+            ? { type: 'line', comment: ln.comment }
+            : { type: 'line', lyrics: ln.lyrics, chords: ln.chords })
+        ];
+        return { ...s, lines, blocks };
+      });
+      return { ...input, sections };
     }
     return input;
   }
