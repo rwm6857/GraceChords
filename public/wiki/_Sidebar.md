@@ -6,6 +6,7 @@
   - [[Slides-(PPTX)]]
   - [[Setlists]]
   - [[Songbook-Builder]]
+  - [[Bundle]]
   - [[ChordPro-Guide]]
   - [[PDF-and-Printing]]
   - [[Admin-Tool]]
