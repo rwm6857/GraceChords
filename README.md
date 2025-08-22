@@ -69,6 +69,23 @@ Place PowerPoint lyric decks in `public/pptx/` named after the song's file name 
 For example, a song stored as `public/songs/glorious-king.chordpro` can have slides at `public/pptx/glorious-king.pptx`.
 Files committed under `public/` are served directly by GitHub Pages, so adding a PPTX is as simple as dropping it in this directory and committing.
 
+## Offline Support
+GraceChords registers a service worker to make core assets available offline. During the install event it pre-caches the app shell (`index.html`), the song index, and bundled fonts. At runtime the worker caches additional scripts, styles, fonts, documents, assets under `/assets/` or `/src/data/`, and individual song files as they are fetched.
+
+The cache name includes a commit hash from the `VITE_COMMIT_SHA` environment variable so that each deployment invalidates older caches. Set it when building to force clients to fetch the latest files, for example:
+
+```bash
+VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
+```
+
+During development you can disable the worker by commenting out its registration in `index.html` or by unregistering via the browser console:
+
+```js
+navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+```
+
+To pick up changes without a full rebuild, call `navigator.serviceWorker.getRegistration().then(r => r.update())` or clear cached data.
+
 ## Usage Notes
 - **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
 - **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), collapsible media.
