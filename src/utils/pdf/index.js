@@ -152,6 +152,10 @@ export async function chooseBestLayoutAuto(song, baseOpt = {}) {
 /* -----------------------------------------------------------
  * Single-song PDF
  * --------------------------------------------------------- */
+/**
+ * Download a single song as a PDF. The `song` object should already include
+ * `sections` or be processed with `normalizeSongInput`.
+ */
 export async function downloadSingleSongPdf(song, options) {
   const doc = await newPDF()
   let fams = {}
@@ -179,6 +183,10 @@ export async function downloadSingleSongPdf(song, options) {
 /* -----------------------------------------------------------
  * Multi-song PDF (setlists / songbooks)
  * --------------------------------------------------------- */
+/**
+ * Download multiple songs as a single PDF. Each song should be normalized via
+ * `normalizeSongInput` beforehand or already contain `sections`.
+ */
 export async function downloadMultiSongPdf(songs, options = {}) {
   const doc = await newPDF()
   let fams = {}
@@ -271,6 +279,10 @@ export async function downloadMultiSongPdf(songs, options = {}) {
 /* -----------------------------------------------------------
  * Songbook wrapper
  * --------------------------------------------------------- */
+/**
+ * Convenience wrapper around `downloadMultiSongPdf` for numbered songbooks.
+ * Songs should already be normalized.
+ */
 export async function downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl } = {}) {
   const numbered = songs.map((s, i) => ({
     ...s,

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import indexData from '../data/index.json'
 import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -193,7 +194,7 @@ if(!entry){
     </a>
   ) : null
 
-  const buildSong = () => ({
+  const buildSong = () => normalizeSongInput({
     title,
     key: toKey,
     capo: parsed?.meta?.capo,

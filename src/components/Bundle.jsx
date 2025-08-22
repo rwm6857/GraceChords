@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/toast'
 
 export default function Bundle(){
@@ -43,7 +44,12 @@ export default function Bundle(){
               chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
             }))
           }))
-          return { title: parsed.meta.title || it.title, key: toKey, lyricsBlocks: blocks }
+          return normalizeSongInput({
+            title: parsed.meta.title || it.title,
+            key: toKey,
+            capo: parsed.meta?.capo,
+            lyricsBlocks: blocks,
+          })
         })()
           .catch(err => {
             console.error(err)

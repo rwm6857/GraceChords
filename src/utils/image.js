@@ -53,7 +53,11 @@ export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
   return canvas
 }
 
-// High-level helper to download a song as JPEG
+/**
+ * High-level helper to download a song as JPEG.
+ * Song objects should already include `sections` or be processed via
+ * normalizeSongInput before calling this helper.
+ */
 export async function downloadSingleSongJpg(song, options = {}) {
   const dpi = options.dpi || 150
   const widthIn = options.widthInches || 8.5
