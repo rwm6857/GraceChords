@@ -5,6 +5,7 @@ import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
+import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
@@ -177,11 +178,13 @@ async function exportPdf() {
         }));
 
         const slug = s.filename.replace(/\.chordpro$/i, "");
-        songs.push({
+        const song = normalizeSongInput({
           title: parsed.meta?.title || s.title || slug,
           key: sel.toKey || baseKey,
+          capo: parsed.meta?.capo,
           lyricsBlocks: blocks,
         });
+        songs.push(song);
       } catch (err) {
         console.error(err);
         showToast(`Failed to process ${s.filename}`);

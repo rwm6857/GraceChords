@@ -165,6 +165,27 @@ function scoreCandidate({ pt, cols, balance, occupancy, hasColumnsHint }) {
 const PDF_TRACE = typeof window !== 'undefined'
   && (() => { try { return localStorage.getItem('pdfPlanTrace') === '1' } catch { return false } })()
 
+/**
+ * Normalize a song representation into the shape expected by PDF/image helpers.
+ *
+ * Normalized shape:
+ * {
+ *   title?: string,
+ *   key?: string,
+ *   capo?: number,
+ *   layoutHints?: { columnBreakAfter?: number[] },
+ *   sections: Array<{
+ *     label?: string,
+ *     lines: Array<{
+ *       lyrics?: string,
+ *       chords?: Array<{ sym: string, index: number }>,
+ *       comment?: string,
+ *     }>
+ *   }>
+ * }
+ *
+ * Legacy objects with `lyricsBlocks` are supported and converted.
+ */
 export function normalizeSongInput(input) {
   if (!input) return { sections: [], meta: {} };
   if (typeof input === 'string') {

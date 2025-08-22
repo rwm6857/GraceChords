@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
+import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
@@ -132,11 +133,13 @@ export default function Songbook() {
             })),
           }))
           const slug = it.filename.replace(/\.chordpro$/, '')
-          songs.push({
+          const song = normalizeSongInput({
             title: parsed.meta.title || it.title || slug,
             key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
+            capo: parsed.meta?.capo,
             lyricsBlocks: blocks,
           })
+          songs.push(song)
         } catch(err) {
           console.error(err)
           showToast(`Failed to process ${it.filename}`)
