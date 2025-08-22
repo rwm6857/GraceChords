@@ -182,7 +182,21 @@ export function normalizeSongInput(input) {
       return { sections: [], meta: {} };
     }
   }
-  if (typeof input === 'object') return input;
+  if (typeof input === 'object') {
+    if (Array.isArray(input?.lyricsBlocks)) {
+      const { title, key, capo, layoutHints, meta, lyricsBlocks } = input;
+      const sections = lyricsBlocks.map(b => ({
+        label: b.section,
+        lines: (b.lines || []).map(ln => ({
+          lyrics: ln.plain,
+          chords: ln.chordPositions,
+          comment: ln.comment,
+        })),
+      }));
+      return { title, key, capo, layoutHints, ...(meta || {}), sections };
+    }
+    return input;
+  }
   return { sections: [], meta: {} };
 }
 
