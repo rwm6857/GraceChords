@@ -500,12 +500,22 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   const gutter = o.gutter
   const contentHeight = contentBottomY - contentStartY
 
-  const makeLyric = (pt) => (typeof measureLyric === 'function' && measureLyric.length > 0)
-    ? measureLyric(pt)
-    : measureLyric
-  const makeChord = (pt) => (typeof measureChord === 'function' && measureChord.length > 0)
-    ? measureChord(pt)
-    : measureChord
+  const makeLyric = pt => {
+    if (typeof measureLyric !== 'function') return () => 0;
+    try {
+      const m = measureLyric(pt);
+      if (typeof m === 'function') return m;
+    } catch {}
+    return measureLyric;
+  };
+  const makeChord = pt => {
+    if (typeof measureChord !== 'function') return () => 0;
+    try {
+      const m = measureChord(pt);
+      if (typeof m === 'function') return m;
+    } catch {}
+    return measureChord;
+  };
 
   if (!sections.length) {
     // Fallback: a single empty section to keep renderer stable
