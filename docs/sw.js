@@ -1,6 +1,8 @@
 // Include the current commit SHA in the cache name so that each deploy
 // invalidates previously cached assets and clients fetch the latest files.
-const CACHE_NAME = `gracechords-${import.meta.env.VITE_COMMIT_SHA || 'dev'}`;
+const CACHE_NAME = `gracechords-${
+  (import.meta.env && import.meta.env.VITE_COMMIT_SHA) || 'dev'
+}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
