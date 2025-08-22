@@ -19,12 +19,21 @@ docs/           # Vite build output for GitHub Pages
 ```
 
 ## Installation
+Use Node.js 20 LTS and install dependencies with `npm ci`:
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
 Visit `http://localhost:5173` (default Vite port) to explore the app.
+
+## Testing
+Run the test suite with:
+```bash
+npm test
+```
+
+For more detail, see the [Getting Started](../../wiki/Getting-Started) and [Contributing](../../wiki/Contributing) pages.
 
 ## Building & Deployment
 Generate the static site into `docs/` and push to the `main` branch to serve via GitHub Pages:
