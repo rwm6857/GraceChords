@@ -496,7 +496,16 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
 
   const contentStartY = margin + o.headerOffsetY
   const contentBottomY = pageH - margin
-  const maxBlockH = contentBottomY - contentStartY
+  const headerOffsetY = o.headerOffsetY
+  const gutter = o.gutter
+  const contentHeight = contentBottomY - contentStartY
+
+  const makeLyric = (pt) => (typeof measureLyric === 'function' && measureLyric.length > 0)
+    ? measureLyric(pt)
+    : measureLyric
+  const makeChord = (pt) => (typeof measureChord === 'function' && measureChord.length > 0)
+    ? measureChord(pt)
+    : measureChord
 
   if (!sections.length) {
     // Fallback: a single empty section to keep renderer stable
@@ -548,7 +557,7 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   // --- 4) Use new engine to choose pt/columns (single page priority) -------
   const hasColumnsHint = !!(song?.meta?.columns === 2 || song?.hints?.columns === 2);
   const singlePageCandidates = [];
-  for (const pt of DEFAULT_LAYOUT_OPT?.ptWindow || [16,15,14,13,12]) {
+  for (const pt of o.ptWindow ?? DEFAULT_LAYOUT_OPT.ptWindow) {
     const ms = measureSectionsAtPt(pt);
     for (const cols of [1, 2]) {
       const pack = packIntoColumnsLegacy(ms, cols, contentHeight, { honorColumnBreaks: true });
@@ -562,8 +571,8 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   if (!singlePageCandidates.length) {
     // Fallback: old 12pt multipage (keep shape stable)
     const plan = {
-      lyricFamily: oBase.lyricFamily || 'Helvetica',
-      chordFamily: oBase.chordFamily || 'Courier',
+      lyricFamily: o.lyricFamily || 'Helvetica',
+      chordFamily: o.chordFamily || 'Courier',
       lyricSizePt: 12,
       chordSizePt: 12,
       columns: 1,
@@ -574,7 +583,8 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
       debugFooter: isTraceOn() ? 'Plan: 1 col • 12pt • singlePage=no' : undefined,
     };
     // Minimal 2-page fallback (stuff everything in page1 col1, page2 empty), so renderer doesn’t explode
-    plan.layout.pages = [{ columns: [{ x: margin, blocks }] }, { columns: [{ x: margin, blocks: [] }] }];
+    const flatBlocks = sections.flatMap(s => s.blocks || []);
+    plan.layout.pages = [{ columns: [{ x: margin, blocks: flatBlocks }] }, { columns: [{ x: margin, blocks: [] }] }];
     return { plan };
   }
   singlePageCandidates.sort((a, b) => b.finalScore - a.finalScore);
@@ -608,8 +618,8 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   }
 
   const plan = {
-    lyricFamily: oBase.lyricFamily || 'Helvetica',
-    chordFamily: oBase.chordFamily || 'Courier',
+    lyricFamily: o.lyricFamily || 'Helvetica',
+    chordFamily: o.chordFamily || 'Courier',
     lyricSizePt: pt,
     chordSizePt: pt,
     columns: cols,
