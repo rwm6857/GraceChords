@@ -4,8 +4,6 @@ const CACHE_NAME = `gracechords-${
   (import.meta.env && import.meta.env.VITE_COMMIT_SHA) || 'dev'
 }`;
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/fonts/NotoSans-Regular.ttf',
   '/fonts/NotoSans-Bold.ttf',
   '/fonts/NotoSans-Italic.ttf',
