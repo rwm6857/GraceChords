@@ -38,9 +38,26 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Use a network-first strategy for navigation requests to avoid serving a
+// potentially stale index.html that references outdated assets. Other requests
+// still fall back to a cache-first approach.
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+
+  // Always try the network first for navigations (HTML documents)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => {
@@ -64,7 +81,6 @@ function shouldCache(request, response) {
     (request.destination === 'script' ||
       request.destination === 'style' ||
       request.destination === 'font' ||
-      request.destination === 'document' ||
       request.url.includes('/assets/') ||
       request.url.includes('/src/data/') ||
       // Cache individual song files
