@@ -7,6 +7,19 @@ const DEBUG = (() => {
   catch { return false; }
 })();
 
+/**
+ * Draw a layout plan into a jsPDF document.
+ *
+ * The renderer assumes the plan was produced by the pdf2 planner and respects
+ * its "no-split" guarantees; sections are drawn exactly where the plan
+ * specifies without further pagination logic.
+ *
+ * @param {import("jspdf").jsPDF} doc - Target document instance.
+ * @param {string} songTitle - Song title placed in the header.
+ * @param {Array<object>} sections - Original section objects.
+ * @param {object} plan - Layout plan returned from the planner.
+ * @param {object} opts - Rendering options.
+ */
 export function renderSongInto(doc, songTitle, sections, plan, opts) {
   const map = new Map(sections.map((s) => [s.id, s]));
 

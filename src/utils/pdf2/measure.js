@@ -5,6 +5,16 @@
 const cache = new Map();
 let measurer = null;
 
+/**
+ * Lazily create and configure a hidden DOM element used for text measurement.
+ *
+ * The element mirrors the renderer's font and line height so that measured
+ * values match what will later be drawn to the PDF. Its width is updated on
+ * each call so callers can measure using different column widths.
+ *
+ * @param {number} columnWidthPt - Column width in pixels.
+ * @param {number} fontPt - Font size in points.
+ */
 function ensureMeasurer(columnWidthPt, fontPt) {
   if (!measurer) {
     measurer = document.createElement("div");
@@ -33,6 +43,20 @@ function columnWidthPt(opts) {
   return opts.maxColumns === 2 ? (usableW - gutter) / 2 : usableW;
 }
 
+/**
+ * Measure a section's rendered height in points.
+ *
+ * Measurements are cached by section ID, font size and column count. The
+ * browser reports measurements in CSS pixels, so we convert to printer points
+ * (1pt = 1/72in) assuming a 96 DPI environment. This mirrors what jsPDF uses
+ * internally and keeps planner math consistent with rendering.
+ *
+ * @param {{id: string, text: string, postSpacing?: number}} s - Section to measure.
+ * @param {number} fontPt - Font size in points.
+ * @param {object} opts - Layout options including maxColumns and margins.
+ * @returns {Promise<{id: string, height: number, postSpacing: number}>}
+ *   Section ID with measured height and optional spacing.
+ */
 export async function measureSection(s, fontPt, opts) {
   const key = `${s.id}|${fontPt}|${opts.maxColumns}`;
   if (cache.has(key)) {
@@ -45,7 +69,7 @@ export async function measureSection(s, fontPt, opts) {
   measurer.textContent = s.text || "";
   const rect = measurer.getBoundingClientRect();
 
-  // px -> pt (assuming 96dpi): 1pt = 0.75px
+  // Convert px -> pt (96 DPI assumption).
   const pxToPt = 72 / 96;
   const heightPt = rect.height * pxToPt;
 

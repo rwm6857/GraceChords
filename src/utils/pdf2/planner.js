@@ -4,6 +4,19 @@ import { measureSection } from "./measure.js";
 import { packColumns } from "./packer.js";
 import { pushTrace, flushTrace } from "./telemetry.js";
 
+/**
+ * Generate a layout plan for the provided sections.
+ *
+ * Planning is done by repeatedly measuring sections at different font sizes and
+ * attempting to greedily pack them (without splitting) into columns/pages. The
+ * first combination that fits becomes the final plan. If no size fits, we
+ * fall back to a forced multi-page layout at the smallest allowed font.
+ *
+ * @param {Array<object>} sections - Sections to lay out.
+ * @param {object} opts - Planner options including ptWindow and maxColumns.
+ * @returns {Promise<{plan: object, fontPt: number}>}
+ *   Layout plan with chosen font size.
+ */
 export async function planLayout(sections, opts) {
   const traces = [];
   const colCandidates = opts.maxColumns === 2 ? [2, 1] : [1];
