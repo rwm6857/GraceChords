@@ -5,6 +5,23 @@
 import jsPDF from "jspdf";
 import { planSong, renderSongIntoDoc } from "../pdf2/index.js";
 
+const TRACE_ON = (() => {
+  try { return typeof window !== "undefined" && window.localStorage?.getItem("pdfPlanTrace") === "1"; }
+  catch { return false; }
+})();
+
+function debugTraceSections(sections) {
+  if (!TRACE_ON) return;
+  const rows = sections.map((s) => ({ id: s.id, len: (s.text || "").length }));
+  console.table(rows);
+}
+
+function debugWarnFirstPage(plan) {
+  if (!TRACE_ON) return;
+  const count = plan.pages?.[0]?.columns?.reduce((n, c) => n + (c.sectionIds?.length || 0), 0) || 0;
+  if (count === 0) console.warn("[pdf2] first page received zero sections");
+}
+
 // --- Shared defaults ---------------------------------------------------------
 const defaultOpts = {
   ptWindow: [16, 15, 14, 13, 12],
@@ -76,9 +93,11 @@ function triggerDownload(blob, filename) {
 // Exposed: SongView single-song export
 export async function downloadSingleSongPdf(song, { lyricSizePt = 16 } = {}) {
   const sections = sectionsFromSong(song);
+  debugTraceSections(sections);
   const opts = { ...defaultOpts, ptWindow: [lyricSizePt, ...defaultOpts.ptWindow.filter(p => p !== lyricSizePt)] };
 
   const { plan, fontPt } = await planSong(sections, opts);
+  debugWarnFirstPage(plan);
 
   const doc = new jsPDF({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
   tryRegisterFonts(doc);
@@ -100,7 +119,9 @@ export async function downloadMultiSongPdf(songs = []) {
   let firstPage = true;
   for (const song of songs) {
     const sections = sectionsFromSong(song);
+    debugTraceSections(sections);
     const { plan, fontPt } = await planSong(sections, opts);
+    debugWarnFirstPage(plan);
     if (!firstPage) doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
     firstPage = false;
     renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt });
@@ -157,7 +178,9 @@ export async function downloadSongbookPdf(
   const preplans = [];
   for (let i = 0; i < songs.length; i++) {
     const sections = sectionsFromSong(songs[i]);
+    debugTraceSections(sections);
     const { plan, fontPt } = await planSong(sections, opts);
+    debugWarnFirstPage(plan);
     preplans.push({ sections, plan, fontPt });
     const pagesForSong = Math.max(1, plan.pages?.length || 1);
     songPageMap.set(titles[i], currentPage);
