@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
+  // Set base to "./" if assets fail on GH Pages
   base: '',
   plugins: [
     react({

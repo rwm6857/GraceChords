@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { planLayout } from "../planner";
-import type { Section, PlanOptions } from "../index";
+import { planLayout } from "../planner.js";
+import type { Section, PlanOptions } from "../index.js";
 
 const opts: PlanOptions = {
   ptWindow: [16, 15, 14, 13, 12],
