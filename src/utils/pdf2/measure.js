@@ -1,4 +1,6 @@
 // DOM-based measurement with caching; matches renderer's line-height & font.
+// Used only by the pdf2 engine, which currently co-exists with the legacy
+// pdf generator during migration.
 
 const cache = new Map();
 let measurer = null;

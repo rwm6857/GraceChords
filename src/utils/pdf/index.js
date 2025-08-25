@@ -1,8 +1,9 @@
 // Public PDF API used by components (SongView, Setlist, Songbook).
-// Internally delegates to the new pdf2 engine.
+// pdf2 currently runs alongside the legacy engine; this facade delegates to
+// the newer implementation while legacy code remains available elsewhere.
 
 import jsPDF from "jspdf";
-import { planSong, renderSongIntoDoc } from "../pdf2";
+import { planSong, renderSongIntoDoc } from "../pdf2/index.js";
 
 // --- Shared defaults ---------------------------------------------------------
 const defaultOpts = {
@@ -13,9 +14,9 @@ const defaultOpts = {
   gutterPt: 24,
 };
 
-// Sections builder: convert your normalized song {lyricsBlocks} into
-// simple text "sections" (no-split paragraphs).
-// We render chords inline by injecting bracketed symbols at the indexes.
+// Sections builder: convert a NormalizedSong into simple text "sections"
+// (no-split paragraphs). Chords are rendered inline by injecting
+// bracketed tokens at their positions.
 function toInlineChords(plain = "", chordPositions = []) {
   if (!Array.isArray(chordPositions) || chordPositions.length === 0) return plain;
   const chars = Array.from(plain);

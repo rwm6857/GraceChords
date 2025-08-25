@@ -1,3 +1,5 @@
+// Part of the pdf2 engine which currently co-exists with the legacy
+// renderer. This module decides layout by measuring and packing sections.
 import { measureSection } from "./measure.js";
 import { packColumns } from "./packer.js";
 import { pushTrace, flushTrace } from "./telemetry.js";

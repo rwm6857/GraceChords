@@ -1,3 +1,5 @@
+// Column packing used by pdf2. The legacy engine has its own layout
+// routines; this implementation exists alongside it during migration.
 export function packColumns(
   measured,
   { columns, pageSizePt, marginsPt, forceMultiPage }

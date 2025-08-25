@@ -1,4 +1,7 @@
 // pdf2 entry (JS). Exposes planner+renderer helpers.
+// This experimental engine currently runs alongside the legacy pdf
+// generator. The facade at src/utils/pdf/index.js chooses which engine
+// to invoke while we transition.
 
 import { planLayout } from "./planner.js";
 import { renderSongInto } from "./renderer.js";
