@@ -125,19 +125,21 @@ export async function downloadSongbookPdf(
   let pageNumber = 1;
   if (coverImageDataUrl) {
     try {
-      // Fit image centered preserving aspect ratio
-      const iw = opts.pageSizePt.w - opts.marginsPt.left - opts.marginsPt.right;
-      const ih = opts.pageSizePt.h - opts.marginsPt.top - opts.marginsPt.bottom;
-      doc.addImage(
-        coverImageDataUrl,
-        undefined, // auto-detect
-        opts.marginsPt.left,
-        opts.marginsPt.top,
-        iw,
-        ih,
-        undefined,
-        "FAST"
-      );
+      // Fit image centered while preserving aspect ratio
+      const availW = opts.pageSizePt.w - opts.marginsPt.left - opts.marginsPt.right;
+      const availH = opts.pageSizePt.h - opts.marginsPt.top - opts.marginsPt.bottom;
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = coverImageDataUrl;
+      });
+      const scale = Math.min(availW / img.width, availH / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = opts.marginsPt.left + (availW - w) / 2;
+      const y = opts.marginsPt.top + (availH - h) / 2;
+      doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, "FAST");
     } catch {/* ignore image issues */}
   } else {
     doc.setFontSize(28);
