@@ -1,5 +1,20 @@
 // Column packing used by pdf2. The legacy engine has its own layout
 // routines; this implementation exists alongside it during migration.
+/**
+ * Greedily pack measured sections into column/page buckets.
+ *
+ * Sections are never split; if a section's height exceeds the remaining space
+ * in the current column, the packer advances to the next column or page. This
+ * simple greedy strategy keeps layout deterministic and mirrors the behaviour
+ * of the legacy PDF generator.
+ *
+ * @param {Array<{id: string, height: number, postSpacing?: number}>} measured
+ *   Pre-measured section heights.
+ * @param {{columns: number, pageSizePt: {h:number}, marginsPt: object, forceMultiPage?: boolean}} opts
+ *   Layout options.
+ * @returns {{pages: Array<{columns: Array<{sectionIds: string[], height: number}>}>}|null}
+ *   Packed pages or null if content cannot fit without splitting.
+ */
 export function packColumns(
   measured,
   { columns, pageSizePt, marginsPt, forceMultiPage }
