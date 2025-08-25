@@ -1,4 +1,6 @@
 // Simple renderer that draws a prepared "plan" into a jsPDF doc.
+// Part of the pdf2 pipeline which exists next to the legacy engine during
+// the migration period.
 
 export function renderSongInto(doc, songTitle, sections, plan, opts) {
   const map = new Map(sections.map((s) => [s.id, s]));

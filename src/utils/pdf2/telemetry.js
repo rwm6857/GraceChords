@@ -1,3 +1,5 @@
+// Lightweight tracing helpers for pdf2. This lives alongside the legacy
+// engine's own debug utilities.
 const ON = () => {
   try { return window?.localStorage?.getItem("pdfPlanTrace") === "1"; } catch { return false; }
 };
