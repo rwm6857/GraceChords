@@ -73,6 +73,22 @@ function sectionsFromSong(song) {
 
 export { sectionsFromSong };
 
+function createJsPdfDoc(opts) {
+  const JsPDFCtor = (typeof window !== "undefined" && window.jsPDF) || jsPDF;
+  if (typeof JsPDFCtor !== "function") {
+    throw new Error(
+      'jsPDF is not available (window.jsPDF is undefined). Include it via <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>.'
+    );
+  }
+  try {
+    return new JsPDFCtor(opts);
+  } catch {
+    throw new Error(
+      'Failed to initialize jsPDF. Ensure the jsPDF script is correctly included.'
+    );
+  }
+}
+
 // Registers fonts if available; safe to no-op if your build already embeds Noto.
 function tryRegisterFonts(doc) {
   try {
@@ -99,7 +115,7 @@ export async function downloadSingleSongPdf(song, { lyricSizePt = 16 } = {}) {
   const { plan, fontPt } = await planSong(sections, opts);
   debugWarnFirstPage(plan);
 
-  const doc = new jsPDF({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
+  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
   tryRegisterFonts(doc);
   renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt });
 
@@ -113,7 +129,7 @@ export async function downloadMultiSongPdf(songs = []) {
   if (!Array.isArray(songs) || songs.length === 0) return;
   const opts = { ...defaultOpts };
 
-  const doc = new jsPDF({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
+  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
   tryRegisterFonts(doc);
 
   let firstPage = true;
@@ -139,7 +155,7 @@ export async function downloadSongbookPdf(
   if (!Array.isArray(songs) || songs.length === 0) return;
   const opts = { ...defaultOpts };
 
-  const doc = new jsPDF({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
+  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
   tryRegisterFonts(doc);
 
   // Cover page
