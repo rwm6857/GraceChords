@@ -54,6 +54,8 @@ function sectionsFromSong(song) {
   return out;
 }
 
+export { sectionsFromSong };
+
 // Registers fonts if available; safe to no-op if your build already embeds Noto.
 function tryRegisterFonts(doc) {
   try {
