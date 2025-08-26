@@ -12,7 +12,7 @@ let measurer = null;
  * values match what will later be drawn to the PDF. Its width is updated on
  * each call so callers can measure using different column widths.
  *
- * @param {number} columnWidthPt - Column width in pixels.
+ * @param {number} columnWidthPt - Column width in points.
  * @param {number} fontPt - Font size in points.
  */
 function ensureMeasurer(columnWidthPt, fontPt) {
@@ -31,16 +31,8 @@ function ensureMeasurer(columnWidthPt, fontPt) {
     measurer.style.width = `${columnWidthPt}px`;
   }
   measurer.style.fontSize = `${fontPt}pt`;
-  measurer.style.lineHeight = "1.25";
+  measurer.style.lineHeight = "1.15";
   measurer.style.fontFamily = `"Noto Sans", Arial, sans-serif`;
-}
-
-function columnWidthPt(opts) {
-  const { w } = opts.pageSizePt;
-  const { left, right } = opts.marginsPt;
-  const usableW = w - left - right;
-  const gutter = opts.gutterPt;
-  return opts.maxColumns === 2 ? (usableW - gutter) / 2 : usableW;
 }
 
 /**
@@ -53,18 +45,17 @@ function columnWidthPt(opts) {
  *
  * @param {{id: string, text: string, postSpacing?: number}} s - Section to measure.
  * @param {number} fontPt - Font size in points.
- * @param {object} opts - Layout options including maxColumns and margins.
+ * @param {number} columnWidthPt - Column width in points.
  * @returns {Promise<{id: string, height: number, postSpacing: number}>}
  *   Section ID with measured height and optional spacing.
  */
-export async function measureSection(s, fontPt, opts) {
-  const key = `${s.id}|${fontPt}|${opts.maxColumns}`;
+export async function measureSection(s, fontPt, columnWidthPt) {
+  const key = `${s.id}|${fontPt}|${columnWidthPt}`;
   if (cache.has(key)) {
     return { id: s.id, height: cache.get(key), postSpacing: s.postSpacing ?? 0 };
   }
 
-  const widthPt = columnWidthPt(opts);
-  ensureMeasurer(widthPt, fontPt);
+  ensureMeasurer(columnWidthPt, fontPt);
 
   measurer.textContent = s.text || "";
   const rect = measurer.getBoundingClientRect();
