@@ -5,37 +5,7 @@
 
 import { planLayout } from "./planner.js";
 import { renderSongInto } from "./renderer.js";
-import { registerPdfFonts, safeSetFont } from "./fonts.js"; // ensure local registrar
-
-/**
- * Try to register Noto fonts with jsPDF.
- * We support either location:
- *  - src/utils/pdf2/fonts.js
- *  - src/utils/pdf/fonts.js
- * If neither exists, rendering will fall back to core fonts.
- */
-async function ensurePdfFonts(doc) {
-  // Already registered in this doc? Heuristic: setFont returns without throw.
-  try {
-    doc.setFont("NotoSans", "normal");
-    return; // looks registered; skip fetching
-  } catch {}
-
-  // Prefer a local registrar if present
-  try {
-    const { registerPdfFonts } = await import("./fonts.js");
-    await registerPdfFonts(doc);
-    return;
-  } catch {}
-
-  // Fallback to the public facade registrar if present
-  try {
-    const { registerPdfFonts } = await import("../pdf/fonts.js");
-    await registerPdfFonts(doc);
-  } catch {
-    // non-fatal: renderer will use Helvetica/Courier fallbacks
-  }
-}
+import { registerPdfFonts } from "./fonts.js";
 
 /**
  * Determines a layout plan for the given song sections.
@@ -70,14 +40,9 @@ export async function planSong(sections, opts) {
  * @returns {Promise<void>}
  */
 export async function renderSongIntoDoc(doc, songTitle, sections, plan, opts) {
-  // Load/attach fonts
+  // Load/attach fonts, then choose a safe default
   await registerPdfFonts(doc);
-  try {
-    const list = doc.getFontList?.() || {};
-    console.log("jsPDF fonts now available:", Object.keys(list));
-  } catch {}
-
-  // Sanity: try to select NotoSans now so failures show early & we can fall back
   try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+  try { doc.setTextColor(0, 0, 0); } catch {}
   return renderSongInto(doc, songTitle, sections, plan, opts);
 }
