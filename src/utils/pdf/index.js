@@ -66,7 +66,29 @@ function toInlineChords(plain = "", chordPositions = []) {
 
 function sectionsFromSong(song) {
   const out = [];
-  const blocks = Array.isArray(song?.lyricsBlocks) ? song.lyricsBlocks : [];
+  let blocks = [];
+
+  // Support both legacy `lyricsBlocks` and normalized `sections` shapes.
+  if (Array.isArray(song?.lyricsBlocks)) {
+    blocks = song.lyricsBlocks.map((b) => ({
+      section: b.section,
+      lines: (b.lines || []).map((ln) => ({
+        plain: ln.plain ?? ln.lyrics ?? "",
+        chordPositions: ln.chordPositions ?? ln.chords ?? [],
+        comment: ln.comment,
+      })),
+    }));
+  } else if (Array.isArray(song?.sections)) {
+    blocks = song.sections.map((s) => ({
+      section: s.label || s.kind,
+      lines: (s.lines || []).map((ln) => ({
+        plain: ln.plain ?? ln.lyrics ?? "",
+        chordPositions: ln.chordPositions ?? ln.chords ?? [],
+        comment: ln.comment,
+      })),
+    }));
+  }
+
   let idCounter = 1;
   for (const b of blocks) {
     let buf = "";
