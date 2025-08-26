@@ -22,16 +22,16 @@ function ensureMeasurer(columnWidthPt, fontPt) {
       position: "fixed",
       left: "-10000px",
       top: "-10000px",
-      width: `${columnWidthPt}px`,
+      width: "0px",
       whiteSpace: "pre-wrap",
       visibility: "hidden",
     });
     document.body.appendChild(measurer);
   } else {
-    measurer.style.width = `${columnWidthPt}px`;
+    measurer.style.width = "0px";
   }
   measurer.style.fontSize = `${fontPt}pt`;
-  measurer.style.lineHeight = "1.15";
+  measurer.style.lineHeight = "1.25";
   measurer.style.fontFamily = `"Noto Sans", Arial, sans-serif`;
 }
 
@@ -55,8 +55,11 @@ export async function measureSection(s, fontPt, columnWidthPt) {
     return { id: s.id, height: cache.get(key), postSpacing: s.postSpacing ?? 0 };
   }
 
+  // convert column width from pt → px (96 dpi assumption)
+  const ptToPx = 96 / 72;
+  const columnWidthPx = Math.max(1, Math.round(columnWidthPt * ptToPx));
   ensureMeasurer(columnWidthPt, fontPt);
-
+  measurer.style.width = `${columnWidthPx}px`;
   measurer.textContent = s.text || "";
   const rect = measurer.getBoundingClientRect();
 
