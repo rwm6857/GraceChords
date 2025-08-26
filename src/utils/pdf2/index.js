@@ -72,6 +72,11 @@ export async function planSong(sections, opts) {
 export async function renderSongIntoDoc(doc, songTitle, sections, plan, opts) {
   // Load/attach fonts
   await registerPdfFonts(doc);
+  try {
+    const list = doc.getFontList?.() || {};
+    console.log("jsPDF fonts now available:", Object.keys(list));
+  } catch {}
+
   // Sanity: try to select NotoSans now so failures show early & we can fall back
   try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
   return renderSongInto(doc, songTitle, sections, plan, opts);
