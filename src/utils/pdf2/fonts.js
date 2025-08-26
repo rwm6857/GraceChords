@@ -1,53 +1,60 @@
-// Build-time embedded font registrar for jsPDF (Vite ?inline).
-// No network needed. Call `await registerPdfFonts(doc)` before any setFont("NotoSans", ...).
+// Robust jsPDF font registrar using Vite ?url (emits hashed asset URLs).
+// We fetch those URLs at runtime (same-origin) and convert to base64 ourselves,
+// which avoids the atob/dataURL quirks that some jsPDF builds hit.
 
-import NotoSansRegular     from "../../assets/fonts/NotoSans-Regular.ttf?inline";
-import NotoSansBold        from "../../assets/fonts/NotoSans-Bold.ttf?inline";
-import NotoSansItalic      from "../../assets/fonts/NotoSans-Italic.ttf?inline";
-import NotoSansBoldItalic  from "../../assets/fonts/NotoSans-BoldItalic.ttf?inline";
-import NotoMonoRegular     from "../../assets/fonts/NotoSansMono-Regular.ttf?inline";
-import NotoMonoBold        from "../../assets/fonts/NotoSansMono-Bold.ttf?inline";
+import NotoSansRegularURL     from "../../assets/fonts/NotoSans-Regular.ttf?url";
+import NotoSansBoldURL        from "../../assets/fonts/NotoSans-Bold.ttf?url";
+import NotoSansItalicURL      from "../../assets/fonts/NotoSans-Italic.ttf?url";
+import NotoSansBoldItalicURL  from "../../assets/fonts/NotoSans-BoldItalic.ttf?url";
+import NotoMonoRegularURL     from "../../assets/fonts/NotoSansMono-Regular.ttf?url";
+import NotoMonoBoldURL        from "../../assets/fonts/NotoSansMono-Bold.ttf?url";
 
 let registeredOnce = false;
 
-function dataUrlToBase64(dataUrl) {
-  return String(dataUrl || "").replace(/^data:.*?;base64,/, "");
+// Fetch the emitted font URL and convert to a clean base64 string.
+async function fetchUrlAsBase64(url) {
+  const res = await fetch(url, { cache: "force-cache" });
+  if (!res.ok) throw new Error(`Font fetch failed: ${url} (${res.status})`);
+  const blob = await res.blob();
+  // Use FileReader to get a data URL, then strip prefix to yield pure base64.
+  const base64 = await new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error(`FileReader failed for ${url}`));
+    fr.onload = () => resolve(String(fr.result || "").replace(/^data:.*?;base64,/, ""));
+    fr.readAsDataURL(blob);
+  });
+  return base64;
 }
 
-function fontIsRegistered(doc, family) {
+function fontFamilyExists(doc, family) {
   try {
     const list = typeof doc.getFontList === "function" ? doc.getFontList() : null;
-    // Some jsPDF builds return an object keyed by family
     return !!(list && list[family]);
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 export async function registerPdfFonts(doc) {
-  if (registeredOnce && fontIsRegistered(doc, "NotoSans")) return;
+  // If we've registered before and jsPDF still sees NotoSans, skip.
+  if (registeredOnce && fontFamilyExists(doc, "NotoSans")) return;
 
   const manifest = [
-    [NotoSansRegular,    "NotoSans-Regular.ttf",     "NotoSans",     "normal"],
-    [NotoSansBold,       "NotoSans-Bold.ttf",        "NotoSans",     "bold"],
-    [NotoSansItalic,     "NotoSans-Italic.ttf",      "NotoSans",     "italic"],
-    [NotoSansBoldItalic, "NotoSans-BoldItalic.ttf",  "NotoSans",     "bolditalic"],
-    [NotoMonoRegular,    "NotoSansMono-Regular.ttf", "NotoSansMono", "normal"],
-    [NotoMonoBold,       "NotoSansMono-Bold.ttf",    "NotoSansMono", "bold"],
+    [NotoSansRegularURL,    "NotoSans-Regular.ttf",     "NotoSans",     "normal"],
+    [NotoSansBoldURL,       "NotoSans-Bold.ttf",        "NotoSans",     "bold"],
+    [NotoSansItalicURL,     "NotoSans-Italic.ttf",      "NotoSans",     "italic"],
+    [NotoSansBoldItalicURL, "NotoSans-BoldItalic.ttf",  "NotoSans",     "bolditalic"],
+    [NotoMonoRegularURL,    "NotoSansMono-Regular.ttf", "NotoSansMono", "normal"],
+    [NotoMonoBoldURL,       "NotoSansMono-Bold.ttf",    "NotoSansMono", "bold"],
   ];
 
-  for (const [dataUrl, vfsName, family, style] of manifest) {
-    const b64 = dataUrlToBase64(dataUrl);
-    doc.addFileToVFS(vfsName, b64);
-    doc.addFont(vfsName, family, style);
+  for (const [url, vfsName, family, style] of manifest) {
+    try {
+      const b64 = await fetchUrlAsBase64(url);
+      doc.addFileToVFS(vfsName, b64);
+      doc.addFont(vfsName, family, style);
+    } catch (e) {
+      console.warn(`[pdf2/fonts] Failed to load/register ${vfsName}:`, e?.message || e);
+    }
   }
 
   registeredOnce = true;
-}
-
-/** Convenience: set font with fallback to core fonts without throwing */
-export function safeSetFont(doc, family, style) {
-  try { doc.setFont(family, style); return true; } catch {}
-  try { doc.setFont(style?.includes("mono") ? "Courier" : "Helvetica", style.includes("bold") ? "bold" : "normal"); } catch {}
-  return false;
 }
