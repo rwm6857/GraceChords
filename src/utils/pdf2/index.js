@@ -5,6 +5,7 @@
 
 import { planLayout } from "./planner.js";
 import { renderSongInto } from "./renderer.js";
+import { registerPdfFonts } from "./fonts.js"; // ensure local registrar
 
 /**
  * Try to register Noto fonts with jsPDF.
