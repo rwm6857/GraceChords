@@ -3,7 +3,7 @@
 // NOTE: Removed import of measureSectionHeight to avoid circular import with ./index.js
 
 import { parseChordPro } from '../chordpro.js';
-import { resolveChordCollisions } from './measure.js';
+import { resolveChordCollisions } from '../chords.js';
 
 const PT_WINDOW = [16, 15, 14, 13, 12];
 
