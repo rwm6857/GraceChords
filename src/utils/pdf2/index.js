@@ -5,7 +5,7 @@
 
 import { planLayout } from "./planner.js";
 import { renderSongInto } from "./renderer.js";
-import { registerPdfFonts } from "./fonts.js"; // ensure local registrar
+import { registerPdfFonts, safeSetFont } from "./fonts.js"; // ensure local registrar
 
 /**
  * Try to register Noto fonts with jsPDF.
@@ -70,6 +70,9 @@ export async function planSong(sections, opts) {
  * @returns {Promise<void>}
  */
 export async function renderSongIntoDoc(doc, songTitle, sections, plan, opts) {
-  await ensurePdfFonts(doc);
+  // Load/attach fonts
+  await registerPdfFonts(doc);
+  // Sanity: try to select NotoSans now so failures show early & we can fall back
+  safeSetFont(doc, "NotoSans", "normal");
   return renderSongInto(doc, songTitle, sections, plan, opts);
 }
