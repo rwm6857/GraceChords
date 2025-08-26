@@ -117,7 +117,7 @@ export async function downloadSingleSongPdf(song, { lyricSizePt = 16 } = {}) {
 
   const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
   tryRegisterFonts(doc);
-  renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt });
+  renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
 
   const blob = doc.output("blob");
   triggerDownload(blob, `${(song?.title || "song").replace(/[\\/:*?"<>|]+/g, "_")}.pdf`);
@@ -140,7 +140,7 @@ export async function downloadMultiSongPdf(songs = []) {
     debugWarnFirstPage(plan);
     if (!firstPage) doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
     firstPage = false;
-    renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt });
+    renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
   }
 
   const blob = doc.output("blob");
@@ -241,7 +241,8 @@ export async function downloadSongbookPdf(
     doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
     // decorate header with song number
     const numberedTitle = `${songNo}. ${title}`;
-    renderSongIntoDoc(doc, numberedTitle, sections, plan, { ...opts, fontPt });
+      const song = songs[i];
+      renderSongIntoDoc(doc, numberedTitle, sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
   }
 
   // Remove the initial implicit blank first page if jsPDF started with one and we added cover after.
