@@ -46,8 +46,8 @@ export async function planLayout(sections, opts) {
     }
   }
 
-  // Fallback at smallest pt
-  const pt = ptCandidates[ptCandidates.length - 1];
+  // Fallback per spec: 15pt, 1 column, allow spill to next page(s)
+  const pt = 15;
   const width = columnWidthPt(opts, 1);
   const measured = await Promise.all(
     sections.map((s) => measureSection(s, pt, width))
