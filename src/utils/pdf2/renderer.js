@@ -63,28 +63,28 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
     }
 
     // Header with title and optional key subtitle
-+    let headerOffsetY = 0;
-+    if (pIdx === 0) {
-+      const titleAvailW = usableW;
-+      let titlePt = 20;
-+      doc.setFontSize(titlePt);
-+      try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
-+      const titleLines = doc.splitTextToSize(String(songTitle || ""), titleAvailW);
-+      const titleY = opts.marginsPt.top - 4; // draw near top margin
-+      doc.text(titleLines, opts.marginsPt.left, titleY);
-+      headerOffsetY = titlePt * 1.2;
-+
-+      if (opts.songKey) {
-+        try { doc.setFont("NotoSans", "italic"); } catch { try { doc.setFont("Helvetica", "italic"); } catch {} }
-+        doc.setFontSize(15);
-+        const subY = titleY + titlePt * 0.9;
-+        doc.text(`Key of ${opts.songKey}`, opts.marginsPt.left, subY);
-+        headerOffsetY += 15 * 1.0;
-+      }
-+      // Reset body font
-+      try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
-+      doc.setFontSize(plan.fontPt || opts.fontPt || 12);
-+    }
+    let headerOffsetY = 0;
+    if (pIdx === 0) {
+      const titleAvailW = usableW;
+      let titlePt = 20;
+      doc.setFontSize(titlePt);
+      try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
+      const titleLines = doc.splitTextToSize(String(songTitle || ""), titleAvailW);
+      const titleY = opts.marginsPt.top - 4; // draw near top margin
+      doc.text(titleLines, opts.marginsPt.left, titleY);
+      headerOffsetY = titlePt * 1.2;
+
+      if (opts.songKey) {
+        try { doc.setFont("NotoSans", "italic"); } catch { try { doc.setFont("Helvetica", "italic"); } catch {} }
+        doc.setFontSize(15);
+        const subY = titleY + titlePt * 0.9;
+        doc.text(`Key of ${opts.songKey}`, opts.marginsPt.left, subY);
+        headerOffsetY += 15 * 1.0;
+      }
+      // Reset body font
+      try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+      doc.setFontSize(plan.fontPt || opts.fontPt || 12);
+    }
 
     // Reset font to body
     try {
