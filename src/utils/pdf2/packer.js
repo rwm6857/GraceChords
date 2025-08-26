@@ -21,39 +21,49 @@ export function packColumns(
 ) {
   const usableH = pageSizePt.h - marginsPt.top - marginsPt.bottom;
   if (usableH <= 0) {
-    return { pages: [{ columns: Array.from({ length: columns }, () => ({ sectionIds: [], height: 0 })) }] };
+    return {
+      pages: [{ columns: Array.from({ length: columns }, () => ({ sectionIds: [], height: 0 })) }],
+    };
   }
 
-  const newCols = () => Array.from({ length: columns }, () => ({ sectionIds: [], height: 0 }));
+  const newCols = () =>
+    Array.from({ length: columns }, () => ({ sectionIds: [], height: 0 }));
   const pages = [];
   let pageCols = newCols();
   let colIdx = 0;
 
+  const flushPage = () => {
+    pages.push({ columns: pageCols.map((c) => ({ ...c })) });
+  };
+
   for (const m of measured) {
     const hNeeded = m.height + (m.postSpacing ?? 0);
-
-    if (pageCols[colIdx].height + hNeeded <= usableH) {
-      pageCols[colIdx].sectionIds.push(m.id);
-      pageCols[colIdx].height += hNeeded;
-      continue;
-    }
-
-    // new column
-    colIdx++;
-    if (colIdx >= columns) {
-      // new page
-      pages.push({ columns: pageCols.map((c) => ({ ...c })) });
-      pageCols = newCols();
-      colIdx = 0;
-    }
 
     if (hNeeded > usableH && !forceMultiPage) {
       return null;
     }
+
+    if (pageCols[colIdx].height + hNeeded > usableH) {
+      if (colIdx < columns - 1) {
+        colIdx++;
+      } else {
+        if (!forceMultiPage) {
+          return null;
+        }
+        if (pageCols.some((c) => c.sectionIds.length > 0)) {
+          flushPage();
+        }
+        pageCols = newCols();
+        colIdx = 0;
+      }
+    }
+
     pageCols[colIdx].sectionIds.push(m.id);
-    pageCols[colIdx].height = hNeeded;
+    pageCols[colIdx].height += hNeeded;
   }
 
-  pages.push({ columns: pageCols.map((c) => ({ ...c })) });
+  if (pageCols.some((c) => c.sectionIds.length > 0)) {
+    flushPage();
+  }
   return { pages };
 }

@@ -4,6 +4,14 @@ import { measureSection } from "./measure.js";
 import { packColumns } from "./packer.js";
 import { pushTrace, flushTrace } from "./telemetry.js";
 
+function columnWidthPt(opts, columns) {
+  const { w } = opts.pageSizePt;
+  const { left, right } = opts.marginsPt;
+  const usableW = w - left - right;
+  const gutter = opts.gutterPt;
+  return columns === 2 ? (usableW - gutter) / 2 : usableW;
+}
+
 /**
  * Generate a layout plan for the provided sections.
  *
@@ -13,17 +21,21 @@ import { pushTrace, flushTrace } from "./telemetry.js";
  * fall back to a forced multi-page layout at the smallest allowed font.
  *
  * @param {Array<object>} sections - Sections to lay out.
- * @param {object} opts - Planner options including ptWindow and maxColumns.
+ * @param {object} opts - Planner options including maxColumns.
  * @returns {Promise<{plan: object, fontPt: number}>}
  *   Layout plan with chosen font size.
  */
 export async function planLayout(sections, opts) {
   const traces = [];
-  const colCandidates = opts.maxColumns === 2 ? [2, 1] : [1];
+  const colCandidates = opts.maxColumns === 2 ? [1, 2] : [1];
+  const ptCandidates = [15, 14, 13, 12, 11];
 
-  for (const pt of opts.ptWindow) {
-    const measured = await Promise.all(sections.map((s) => measureSection(s, pt, opts)));
+  for (const pt of ptCandidates) {
     for (const columns of colCandidates) {
+      const width = columnWidthPt(opts, columns);
+      const measured = await Promise.all(
+        sections.map((s) => measureSection(s, pt, width))
+      );
       const pack = packColumns(measured, { ...opts, columns });
       pushTrace(traces, { pt, columns, ok: !!pack });
       if (pack) {
@@ -35,8 +47,11 @@ export async function planLayout(sections, opts) {
   }
 
   // Fallback at smallest pt
-  const pt = opts.ptWindow[opts.ptWindow.length - 1];
-  const measured = await Promise.all(sections.map((s) => measureSection(s, pt, opts)));
+  const pt = ptCandidates[ptCandidates.length - 1];
+  const width = columnWidthPt(opts, 1);
+  const measured = await Promise.all(
+    sections.map((s) => measureSection(s, pt, width))
+  );
   const pack = packColumns(measured, { ...opts, columns: 1, forceMultiPage: true });
   const plan = { pages: pack.pages, fontPt: pt, telemetry: traces };
   flushTrace("[pdf2] fallback", traces);
