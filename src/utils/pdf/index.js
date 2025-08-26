@@ -1,13 +1,26 @@
 // Public PDF API used by components (SongView, Setlist, Songbook).
 // pdf2 currently runs alongside the legacy engine; this facade delegates to
-// the newer implementation while legacy code remains available elsewhere.
+// the newer implementation while keeping a fallback to the old generator.
 
 import jsPDF from "jspdf";
 import { planSong, renderSongIntoDoc } from "../pdf2/index.js";
 
+// Lazy legacy import for fallback when pdf2 isn't available
+let legacyPromise;
+async function loadLegacy() {
+  legacyPromise ||= import("./index - Copy.js");
+  return legacyPromise;
+}
+
 const TRACE_ON = (() => {
-  try { return typeof window !== "undefined" && window.localStorage?.getItem("pdfPlanTrace") === "1"; }
-  catch { return false; }
+  try {
+    return (
+      typeof window !== "undefined" &&
+      window.localStorage?.getItem("pdfPlanTrace") === "1"
+    );
+  } catch {
+    return false;
+  }
 })();
 
 function debugTraceSections(sections) {
@@ -18,7 +31,9 @@ function debugTraceSections(sections) {
 
 function debugWarnFirstPage(plan) {
   if (!TRACE_ON) return;
-  const count = plan.pages?.[0]?.columns?.reduce((n, c) => n + (c.sectionIds?.length || 0), 0) || 0;
+  const count =
+    plan.pages?.[0]?.columns?.reduce((n, c) => n + (c.sectionIds?.length || 0), 0) ||
+    0;
   if (count === 0) console.warn("[pdf2] first page received zero sections");
 }
 
@@ -40,7 +55,7 @@ function toInlineChords(plain = "", chordPositions = []) {
   const inserts = chordPositions
     .slice()
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-    .map((c) => ({ i: Math.max(0, Math.min(chars.length, c.index|0)), t: `[${c.sym}]` }));
+    .map((c) => ({ i: Math.max(0, Math.min(chars.length, c.index | 0)), t: `[${c.sym}]` }));
   // Insert from end to keep indices valid
   for (let k = inserts.length - 1; k >= 0; k--) {
     const { i, t } = inserts[k];
@@ -51,21 +66,46 @@ function toInlineChords(plain = "", chordPositions = []) {
 
 function sectionsFromSong(song) {
   const out = [];
-  const blocks = Array.isArray(song?.lyricsBlocks) ? song.lyricsBlocks : [];
+  let blocks = [];
+
+  // Support both legacy `lyricsBlocks` and normalized `sections` shapes.
+  if (Array.isArray(song?.lyricsBlocks)) {
+    blocks = song.lyricsBlocks.map((b) => ({
+      section: b.section,
+      lines: (b.lines || []).map((ln) => ({
+        plain: ln.plain ?? ln.lyrics ?? "",
+        chordPositions: ln.chordPositions ?? ln.chords ?? [],
+        comment: ln.comment,
+      })),
+    }));
+  } else if (Array.isArray(song?.sections)) {
+    blocks = song.sections.map((s) => ({
+      section: s.label || s.kind,
+      lines: (s.lines || []).map((ln) => ({
+        plain: ln.plain ?? ln.lyrics ?? "",
+        chordPositions: ln.chordPositions ?? ln.chords ?? [],
+        comment: ln.comment,
+      })),
+    }));
+  }
+
   let idCounter = 1;
   for (const b of blocks) {
     let buf = "";
     if (b?.section) buf += `[${b.section}]\n`;
-    for (const ln of (b?.lines || [])) {
+    for (const ln of b?.lines || []) {
       if (ln?.comment) {
         buf += `(${ln.comment})\n`;
         continue;
       }
-      const textWithChords = toInlineChords(ln?.plain || "", ln?.chordPositions || []);
+      const textWithChords = toInlineChords(
+        ln?.plain || "",
+        ln?.chordPositions || []
+      );
       buf += `${textWithChords}\n`;
     }
     // trim trailing newline; add a spacer line to separate sections visually
-    buf = buf.replace(/\n+$/,"");
+    buf = buf.replace(/\n+$/, "");
     out.push({ id: `s${idCounter++}`, text: buf, postSpacing: 10 });
   }
   return out;
@@ -84,7 +124,7 @@ function createJsPdfDoc(opts) {
     return new JsPDFCtor(opts);
   } catch {
     throw new Error(
-      'Failed to initialize jsPDF. Ensure the jsPDF script is correctly included.'
+      "Failed to initialize jsPDF. Ensure the jsPDF script is correctly included."
     );
   }
 }
@@ -94,7 +134,9 @@ function tryRegisterFonts(doc) {
   try {
     // If you load custom fonts elsewhere, you can set them here too.
     doc.setFont("NotoSans", "normal");
-  } catch {/* ignore */}
+  } catch {
+    /* ignore */
+  }
 }
 
 // Download helper
@@ -106,148 +148,207 @@ function triggerDownload(blob, filename) {
   URL.revokeObjectURL(a.href);
 }
 
-// Exposed: SongView single-song export
+// -----------------------------------------------------------------------------
+// Exposed helpers
+
+// SongView single-song export
 export async function downloadSingleSongPdf(song, { lyricSizePt = 16 } = {}) {
-  const sections = sectionsFromSong(song);
-  debugTraceSections(sections);
-  const opts = { ...defaultOpts, ptWindow: [lyricSizePt, ...defaultOpts.ptWindow.filter(p => p !== lyricSizePt)] };
-
-  const { plan, fontPt } = await planSong(sections, opts);
-  debugWarnFirstPage(plan);
-
-  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
-  tryRegisterFonts(doc);
-  renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
-
-  const blob = doc.output("blob");
-  triggerDownload(blob, `${(song?.title || "song").replace(/[\\/:*?"<>|]+/g, "_")}.pdf`);
-  return { plan };
-}
-
-// Exposed: Setlist multi-song export (each song starts on a new page)
-export async function downloadMultiSongPdf(songs = []) {
-  if (!Array.isArray(songs) || songs.length === 0) return;
-  const opts = { ...defaultOpts };
-
-  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
-  tryRegisterFonts(doc);
-
-  let firstPage = true;
-  for (const song of songs) {
+  try {
     const sections = sectionsFromSong(song);
     debugTraceSections(sections);
+    const opts = {
+      ...defaultOpts,
+      ptWindow: [lyricSizePt, ...defaultOpts.ptWindow.filter((p) => p !== lyricSizePt)],
+    };
+
     const { plan, fontPt } = await planSong(sections, opts);
     debugWarnFirstPage(plan);
-    if (!firstPage) doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
-    firstPage = false;
-    renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
-  }
 
-  const blob = doc.output("blob");
-  triggerDownload(blob, `setlist-${new Date().toISOString().slice(0,10)}.pdf`);
+    const doc = createJsPdfDoc({
+      unit: "pt",
+      format: [opts.pageSizePt.w, opts.pageSizePt.h],
+    });
+    tryRegisterFonts(doc);
+    renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, {
+      ...opts,
+      fontPt,
+      songKey: song?.key || song?.originalKey,
+    });
+
+    const blob = doc.output("blob");
+    triggerDownload(
+      blob,
+      `${(song?.title || "song").replace(/[\\/:*?"<>|]+/g, "_")}.pdf`
+    );
+    return { plan };
+  } catch (err) {
+    console.warn("pdf2 single-song failed; falling back to legacy", err);
+    const legacy = await loadLegacy();
+    return legacy.downloadSingleSongPdf(song, { lyricSizePt });
+  }
 }
 
-// Exposed: Songbook export (cover, TOC, numbered songs; one per page)
+// Setlist multi-song export (each song starts on a new page)
+export async function downloadMultiSongPdf(songs = []) {
+  if (!Array.isArray(songs) || songs.length === 0) return;
+  try {
+    const opts = { ...defaultOpts };
+
+    const doc = createJsPdfDoc({
+      unit: "pt",
+      format: [opts.pageSizePt.w, opts.pageSizePt.h],
+    });
+    tryRegisterFonts(doc);
+
+    let firstPage = true;
+    for (const song of songs) {
+      const sections = sectionsFromSong(song);
+      debugTraceSections(sections);
+      const { plan, fontPt } = await planSong(sections, opts);
+      debugWarnFirstPage(plan);
+      if (!firstPage) doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
+      firstPage = false;
+      renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, {
+        ...opts,
+        fontPt,
+        songKey: song?.key || song?.originalKey,
+      });
+    }
+
+    const blob = doc.output("blob");
+    triggerDownload(blob, `setlist-${new Date().toISOString().slice(0, 10)}.pdf`);
+  } catch (err) {
+    console.warn("pdf2 multi-song failed; falling back to legacy", err);
+    const legacy = await loadLegacy();
+    return legacy.downloadMultiSongPdf(songs);
+  }
+}
+
+// Songbook export (cover, TOC, numbered songs; one per page)
 export async function downloadSongbookPdf(
   songs = [],
   { includeTOC = true, coverImageDataUrl = null } = {}
 ) {
   if (!Array.isArray(songs) || songs.length === 0) return;
-  const opts = { ...defaultOpts };
+  try {
+    const opts = { ...defaultOpts };
 
-  const doc = createJsPdfDoc({ unit: "pt", format: [opts.pageSizePt.w, opts.pageSizePt.h] });
-  tryRegisterFonts(doc);
+    const doc = createJsPdfDoc({
+      unit: "pt",
+      format: [opts.pageSizePt.w, opts.pageSizePt.h],
+    });
+    tryRegisterFonts(doc);
 
-  // Cover page
-  let pageNumber = 1;
-  if (coverImageDataUrl) {
-    try {
-      // Fit image centered while preserving aspect ratio
-      const availW = opts.pageSizePt.w - opts.marginsPt.left - opts.marginsPt.right;
-      const availH = opts.pageSizePt.h - opts.marginsPt.top - opts.marginsPt.bottom;
-      const img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = coverImageDataUrl;
+    // Cover page
+    let pageNumber = 1;
+    if (coverImageDataUrl) {
+      try {
+        // Fit image centered while preserving aspect ratio
+        const availW =
+          opts.pageSizePt.w - opts.marginsPt.left - opts.marginsPt.right;
+        const availH =
+          opts.pageSizePt.h - opts.marginsPt.top - opts.marginsPt.bottom;
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.onload = () => resolve(i);
+          i.onerror = reject;
+          i.src = coverImageDataUrl;
+        });
+        const scale = Math.min(availW / img.width, availH / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        const x = opts.marginsPt.left + (availW - w) / 2;
+        const y = opts.marginsPt.top + (availH - h) / 2;
+        doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, "FAST");
+      } catch {
+        /* ignore image issues */
+      }
+    } else {
+      doc.setFontSize(28);
+      doc.text("Songbook", opts.pageSizePt.w / 2, opts.pageSizePt.h / 2, {
+        align: "center",
+        baseline: "middle",
       });
-      const scale = Math.min(availW / img.width, availH / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      const x = opts.marginsPt.left + (availW - w) / 2;
-      const y = opts.marginsPt.top + (availH - h) / 2;
-      doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, "FAST");
-    } catch {/* ignore image issues */}
-  } else {
-    doc.setFontSize(28);
-    doc.text("Songbook", opts.pageSizePt.w / 2, opts.pageSizePt.h / 2, { align: "center", baseline: "middle" });
-  }
+    }
 
-  // Build TOC first (to know page numbers)
-  const titles = songs.map((s) => String(s?.title || "Untitled"));
-  const songPageMap = new Map(); // title -> page start
-  let currentPage = pageNumber + 1; // first song page follows cover (and TOC if present)
+    // Build TOC first (to know page numbers)
+    const titles = songs.map((s) => String(s?.title || "Untitled"));
+    const songPageMap = new Map(); // title -> page start
+    let currentPage = pageNumber + 1; // first song page follows cover (and TOC if present)
 
-  if (includeTOC) currentPage++; // reserve a page for TOC
+    if (includeTOC) currentPage++; // reserve a page for TOC
 
-  // Precompute pages per song (roughly 1+ depending on plan)
-  const preplans = [];
-  for (let i = 0; i < songs.length; i++) {
-    const sections = sectionsFromSong(songs[i]);
-    debugTraceSections(sections);
-    const { plan, fontPt } = await planSong(sections, opts);
-    debugWarnFirstPage(plan);
-    preplans.push({ sections, plan, fontPt });
-    const pagesForSong = Math.max(1, plan.pages?.length || 1);
-    songPageMap.set(titles[i], currentPage);
-    currentPage += pagesForSong; // one page minimum per requirement; planner might add more
-  }
+    // Precompute pages per song
+    const preplans = [];
+    for (let i = 0; i < songs.length; i++) {
+      const sections = sectionsFromSong(songs[i]);
+      debugTraceSections(sections);
+      const { plan, fontPt } = await planSong(sections, opts);
+      debugWarnFirstPage(plan);
+      preplans.push({ sections, plan, fontPt });
+      const pagesForSong = Math.max(1, plan.pages?.length || 1);
+      songPageMap.set(titles[i], currentPage);
+      currentPage += pagesForSong;
+    }
 
-  // TOC page (simple two-column list if long)
-  if (includeTOC) {
-    doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
-    doc.setFontSize(18);
-    doc.text("Table of Contents", opts.marginsPt.left, opts.marginsPt.top);
-    doc.setFontSize(12);
+    // TOC page
+    if (includeTOC) {
+      doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
+      doc.setFontSize(18);
+      doc.text("Table of Contents", opts.marginsPt.left, opts.marginsPt.top);
+      doc.setFontSize(12);
 
-    const leftX = opts.marginsPt.left;
-    const rightX = opts.pageSizePt.w / 2 + 10;
-    const topY = opts.marginsPt.top + 24;
-    const lineH = 16;
-
-    const mid = Math.ceil(titles.length / 2);
-    let yL = topY, yR = topY;
-
-    for (let i = 0; i < titles.length; i++) {
-      const title = titles[i];
-      const pg = songPageMap.get(title);
-      const text = `${i + 1}. ${title}  ....  ${pg}`;
-      if (i < mid) {
-        doc.text(text, leftX, yL);
-        yL += lineH;
-      } else {
-        doc.text(text, rightX, yR);
-        yR += lineH;
+      const leftX = opts.marginsPt.left;
+      const rightX = opts.pageSizePt.w / 2 + 10;
+      const topY = opts.marginsPt.top + 24;
+      const lineH = 16;
+      const mid = Math.ceil(titles.length / 2);
+      let yL = topY,
+        yR = topY;
+      for (let i = 0; i < titles.length; i++) {
+        const title = titles[i];
+        const pg = songPageMap.get(title);
+        const text = `${i + 1}. ${title}  ....  ${pg}`;
+        if (i < mid) {
+          doc.text(text, leftX, yL);
+          yL += lineH;
+        } else {
+          doc.text(text, rightX, yR);
+          yR += lineH;
+        }
       }
     }
-  }
 
-  // Songs (numbered)
-  for (let i = 0; i < songs.length; i++) {
-    const songNo = i + 1;
-    const title = titles[i];
-    const { sections, plan, fontPt } = preplans[i];
-
-    doc.addPage([opts.pageSizePt.w, opts.pageSizePt.h]);
-    // decorate header with song number
-    const numberedTitle = `${songNo}. ${title}`;
+    // Songs (numbered)
+    for (let i = 0; i < songs.length; i++) {
+      const songNo = i + 1;
+      const title = titles[i];
+      const { sections, plan, fontPt } = preplans[i];
       const song = songs[i];
-      renderSongIntoDoc(doc, numberedTitle, sections, plan, { ...opts, fontPt, songKey: song?.key || song?.originalKey });
+      const numberedTitle = `${songNo}. ${title}`;
+
+      // First page with header
+      const firstPagePlan = { ...plan, pages: plan.pages.slice(0, 1) };
+      renderSongIntoDoc(doc, numberedTitle, sections, firstPagePlan, {
+        ...opts,
+        fontPt,
+        songKey: song?.key || song?.originalKey,
+      });
+
+      // Remaining pages without header/subtitle
+      if (plan.pages.length > 1) {
+        const restPlan = { ...plan, pages: plan.pages.slice(1) };
+        renderSongIntoDoc(doc, "", sections, restPlan, { ...opts, fontPt });
+      }
+    }
+
+    // jsPDF starts with one page by default; cover consumed it already.
+    const blob = doc.output("blob");
+    triggerDownload(blob, `songbook-${new Date().toISOString().slice(0, 10)}.pdf`);
+  } catch (err) {
+    console.warn("pdf2 songbook failed; falling back to legacy", err);
+    const legacy = await loadLegacy();
+    return legacy.downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl });
   }
-
-  // Remove the initial implicit blank first page if jsPDF started with one and we added cover after.
-  // (jsPDF starts with 1 page by default; we used it for cover already, so do nothing.)
-
-  const blob = doc.output("blob");
-  triggerDownload(blob, `songbook-${new Date().toISOString().slice(0,10)}.pdf`);
 }
+

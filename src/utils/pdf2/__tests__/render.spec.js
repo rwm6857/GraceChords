@@ -53,5 +53,40 @@ describe('pdf2 render', () => {
     global.URL.createObjectURL = origCreate;
     global.URL.revokeObjectURL = origRevoke;
   });
+
+  it('handles songs normalized with `sections`', async () => {
+    const song = {
+      title: 'Normalized',
+      sections: [
+        {
+          label: 'Verse',
+          lines: [
+            { lyrics: 'Hello world', chords: [{ index: 0, sym: 'C' }] },
+          ],
+        },
+      ],
+    };
+
+    const blobs = [];
+    const origCreate = global.URL.createObjectURL;
+    const origRevoke = global.URL.revokeObjectURL;
+    global.URL.createObjectURL = vi.fn((blob) => {
+      blobs.push(blob);
+      return 'blob:mock';
+    });
+    global.URL.revokeObjectURL = vi.fn();
+    const clickSpy = vi
+      .spyOn(window.HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {});
+
+    await downloadSingleSongPdf(song);
+
+    expect(blobs[0]).toBeInstanceOf(Blob);
+    expect(blobs[0].size).toBeGreaterThan(0);
+
+    clickSpy.mockRestore();
+    global.URL.createObjectURL = origCreate;
+    global.URL.revokeObjectURL = origRevoke;
+  });
 });
 
