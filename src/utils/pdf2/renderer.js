@@ -32,12 +32,29 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
   const colW = twoCols ? (usableW - (opts.gutterPt || 0)) / 2 : usableW;
 
   // Body font & color
-  try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+  let fontOk = true;
+  try { doc.setFont("NotoSans", "normal"); }
+  catch {
+    try { doc.setFont("Helvetica", "normal"); }
+    catch { fontOk = false; }
+  }
+  if (!fontOk) return;
   doc.setFontSize(bodyPt);
-  doc.setTextColor(0, 0, 0);
+  try { doc.setTextColor(0, 0, 0); } catch {}
+
+  // Probe width to ensure metrics exist; fall back if missing
+  try {
+    const probe = doc.getTextWidth("probe");
+    if (!Number.isFinite(probe) || probe <= 0) {
+      try { doc.setFont("Helvetica", "normal"); } catch {}
+    }
+  } catch {
+    try { doc.setFont("Helvetica", "normal"); } catch {}
+  }
 
   const lineH = bodyPt * 1.25;
-  const spaceW = Math.max(0.01, doc.getTextWidth(" "));
+  let spaceW = 0.01;
+  try { spaceW = Math.max(0.01, doc.getTextWidth(" ")); } catch {}
 
   const drawCol = (x, col, headerOffsetY) => {
     let y = opts.marginsPt.top + headerOffsetY;
@@ -60,7 +77,7 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
         const hdr = /^\[([^\]]+)\]$/.exec(ln.trim());
         if (hdr) {
           try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
-          doc.text(`[${hdr[1].toUpperCase()}]`, x, y);
+          try { doc.text(`[${hdr[1].toUpperCase()}]`, x, y); } catch {}
           y += lineH * 1.2;
           try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
           continue;
@@ -68,7 +85,8 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
 
         const { lyric, chords } = parseChordLine(ln);
         // Wrap lyric to column width (jsPDF measures with current font)
-        const lyricLines = doc.splitTextToSize(lyric, colW);
+        let lyricLines = [];
+        try { lyricLines = doc.splitTextToSize(lyric, colW); } catch { lyricLines = [lyric]; }
 
         let consumed = 0;
         for (const lyricLine of lyricLines) {
@@ -83,11 +101,13 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
             for (const c of lineChords) {
               const offsetInLine = c.index - start;
               const pre = lyricLine.slice(0, offsetInLine);
-              let chordX = x + doc.getTextWidth(pre);
+              let chordX = 0;
+              try { chordX = x + doc.getTextWidth(pre); } catch { chordX = x; }
               // minimal nudge to avoid overlap with previous chord
               if (chordX < lastX + spaceW) chordX = lastX + spaceW;
-              doc.text(String(c.sym), chordX, y);
-              lastX = chordX + Math.max(spaceW, doc.getTextWidth(String(c.sym)));
+              if (chordX < 0) chordX = 0;
+              try { doc.text(String(c.sym), chordX, y); } catch {}
+              try { lastX = chordX + Math.max(spaceW, doc.getTextWidth(String(c.sym))); } catch { lastX = chordX + spaceW; }
             }
             // back to body font
             try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
@@ -95,7 +115,7 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
           }
 
           // Draw the lyric line
-          doc.text(lyricLine, x, y);
+          try { doc.text(lyricLine, x, y); } catch {}
           y += lineH;
           consumed += lyricLine.length;
         }
@@ -115,16 +135,17 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
       // Title
       try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
       doc.setFontSize(20);
-      const titleLines = doc.splitTextToSize(String(songTitle || ""), usableW);
+      let titleLines = [];
+      try { titleLines = doc.splitTextToSize(String(songTitle || ""), usableW); } catch { titleLines = [String(songTitle || "")]; }
       const titleY = Math.max(14, opts.marginsPt.top - 6);
-      doc.text(titleLines, opts.marginsPt.left, titleY);
+      try { doc.text(titleLines, opts.marginsPt.left, titleY); } catch {}
       headerOffsetY += 20 * 0.9;
 
       // Subtitle
       if (opts.songKey) {
         try { doc.setFont("NotoSans", "italic"); } catch { try { doc.setFont("Helvetica", "italic"); } catch {} }
         doc.setFontSize(15);
-        doc.text(`Key of ${opts.songKey}`, opts.marginsPt.left, titleY + 18);
+        try { doc.text(`Key of ${opts.songKey}`, opts.marginsPt.left, titleY + 18); } catch {}
         headerOffsetY += 15 * 0.9;
       }
 

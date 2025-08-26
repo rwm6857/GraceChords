@@ -26,7 +26,7 @@ async function fetchUrlAsBase64(url) {
   return base64;
 }
 
-function fontFamilyExists(doc, family) {
+export function fontFamilyExists(doc, family) {
   try {
     const list = typeof doc.getFontList === "function" ? doc.getFontList() : null;
     return !!(list && list[family]);
@@ -57,4 +57,11 @@ export async function registerPdfFonts(doc) {
   }
 
   registeredOnce = true;
+
+  try {
+    if (localStorage.getItem("pdfFontTrace") === "1") {
+      const list = doc.getFontList?.() || {};
+      console.log("jsPDF font list:", Object.keys(list));
+    }
+  } catch {}
 }
