@@ -73,6 +73,6 @@ export async function renderSongIntoDoc(doc, songTitle, sections, plan, opts) {
   // Load/attach fonts
   await registerPdfFonts(doc);
   // Sanity: try to select NotoSans now so failures show early & we can fall back
-  safeSetFont(doc, "NotoSans", "normal");
+  try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
   return renderSongInto(doc, songTitle, sections, plan, opts);
 }
