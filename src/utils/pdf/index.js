@@ -4,6 +4,7 @@
 
 import jsPDF from "jspdf";
 import { planSong, renderSongIntoDoc } from "../pdf2/index.js";
+import { downloadSingleSongPdf as downloadSingleSongPdfMvp } from "../pdf_mvp/index.js";
 
 // Lazy legacy import for fallback when pdf2 isn't available
 let legacyPromise;
@@ -153,39 +154,9 @@ function triggerDownload(blob, filename) {
 
 // SongView single-song export
 export async function downloadSingleSongPdf(song, { lyricSizePt = 16 } = {}) {
-  try {
-    const sections = sectionsFromSong(song);
-    debugTraceSections(sections);
-    const opts = {
-      ...defaultOpts,
-      ptWindow: [lyricSizePt, ...defaultOpts.ptWindow.filter((p) => p !== lyricSizePt)],
-    };
-
-    const { plan, fontPt } = await planSong(sections, opts);
-    debugWarnFirstPage(plan);
-
-    const doc = createJsPdfDoc({
-      unit: "pt",
-      format: [opts.pageSizePt.w, opts.pageSizePt.h],
-    });
-    tryRegisterFonts(doc);
-    renderSongIntoDoc(doc, song?.title || "Untitled", sections, plan, {
-      ...opts,
-      fontPt,
-      songKey: song?.key || song?.originalKey,
-    });
-
-    const blob = doc.output("blob");
-    triggerDownload(
-      blob,
-      `${(song?.title || "song").replace(/[\\/:*?"<>|]+/g, "_")}.pdf`
-    );
-    return { plan };
-  } catch (err) {
-    console.warn("pdf2 single-song failed; falling back to legacy", err);
-    const legacy = await loadLegacy();
-    return legacy.downloadSingleSongPdf(song, { lyricSizePt });
-  }
+  // Route to MVP engine for single-song export per product direction.
+  // Ignores lyricSizePt and follows 15→11pt decision ladder.
+  return downloadSingleSongPdfMvp(song)
 }
 
 // Setlist multi-song export (each song starts on a new page)
@@ -351,4 +322,3 @@ export async function downloadSongbookPdf(
     return legacy.downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl });
   }
 }
-

@@ -1,0 +1,332 @@
+// Minimal, reliable PDF exporter (MVP) focused on single-song export.
+// Implements the decision ladder described by the product notes:
+// 1) Try 1 column at 15→11pt, single page.
+// 2) If not, try 2 columns at 15→11pt, single page.
+// 3) Worst case, 1 column @15pt across multiple pages.
+//
+// Constraints honored:
+// - Sections are atomic: never split across columns or pages.
+// - Title and "Key of …" on first page only.
+// - Chords on a separate line above wrapped lyric line; no overlap (min 1 space).
+// - Fonts: Noto Sans family preferred; fall back to jsPDF built-ins.
+
+import jsPDF from 'jspdf'
+import { registerPdfFonts } from '../pdf2/fonts.js'
+
+const PAGE = { w: 612, h: 792 } // Letter
+const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch
+const GUTTER = 24
+const TITLE_PT = 20
+const SUBTITLE_PT = 15
+const SIZE_WINDOW = [15, 14, 13, 12, 11]
+
+function createDoc(){
+  const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
+  return new JsPDFCtor({ unit: 'pt', format: [PAGE.w, PAGE.h] })
+}
+
+async function ensureFonts(doc){
+  await registerPdfFonts(doc)
+  try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+  try { doc.setTextColor(0,0,0) } catch {}
+}
+
+function usableWidth(){
+  return PAGE.w - MARGINS.left - MARGINS.right
+}
+
+function colWidth(columns){
+  const w = usableWidth()
+  return columns === 2 ? (w - GUTTER) / 2 : w
+}
+
+function headerHeight(){
+  // Title (20pt) and subtitle (15pt). Keep a bit of breathing room.
+  return Math.ceil(TITLE_PT * 0.9 + SUBTITLE_PT * 0.9)
+}
+
+function sectionify(song){
+  // Accept either lyricsBlocks or sections (normalized)
+  const blocks = Array.isArray(song?.lyricsBlocks)
+    ? song.lyricsBlocks.map(b => ({
+        label: b.section || '',
+        lines: (b.lines || []).map(ln => ({
+          plain: ln.plain ?? ln.lyrics ?? '',
+          chords: (ln.chordPositions ?? ln.chords ?? []).map(c => ({ sym: String(c.sym || ''), index: Math.max(0, c.index|0) })),
+          comment: ln.comment
+        }))
+      }))
+    : Array.isArray(song?.sections)
+      ? song.sections.map(s => ({
+          label: s.label || s.kind || '',
+          lines: (s.lines || []).map(ln => ({
+            plain: ln.plain ?? ln.lyrics ?? '',
+            chords: (ln.chordPositions ?? ln.chords ?? []).map(c => ({ sym: String(c.sym || ''), index: Math.max(0, c.index|0) })),
+            comment: ln.comment
+          }))
+        }))
+      : []
+  return blocks
+}
+
+function splitLyricWithChords(doc, text, chords, width){
+  let parts = []
+  try { parts = doc.splitTextToSize(String(text || ''), width) } catch { parts = [String(text || '')] }
+  const lines = []
+  let consumed = 0
+  for(const p of parts){
+    const start = consumed
+    const end = start + p.length
+    const lineChords = (chords || []).filter(c => c.index >= start && c.index < end)
+    lines.push({ lyric: p, chords: lineChords, start })
+    consumed += p.length
+  }
+  return lines
+}
+
+function measureSectionHeight(doc, section, width, bodyPt){
+  let h = 0
+  const lineH = bodyPt * 1.25
+  if (section.label) {
+    h += lineH * 1.2 // section header
+  }
+  for(const ln of section.lines || []){
+    if (ln.comment) {
+      h += lineH // comments render as a single line (italic), no chords
+      continue
+    }
+    const rows = splitLyricWithChords(doc, ln.plain || '', ln.chords || [], width)
+    for(const row of rows){
+      if ((row.chords || []).length) h += lineH // chord row
+      h += lineH // lyric row
+    }
+  }
+  // spacer between sections
+  h += 10
+  return { height: h, lineH }
+}
+
+function canPackOnePage(doc, sections, columns, bodyPt){
+  const width = colWidth(columns)
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const heights = sections.map(s => measureSectionHeight(doc, s, width, bodyPt))
+  if (columns === 1){
+    const total = heights.reduce((n, x) => n + x.height, 0)
+    return total <= availH
+  }
+  // Greedy: fill first col, then second; no section splits
+  let left = availH, right = availH
+  for(const { height } of heights){
+    if (height <= left){ left -= height; continue }
+    if (height <= right){ right -= height; continue }
+    return false
+  }
+  return true
+}
+
+function planOnePage(doc, sections, columns, bodyPt){
+  const width = colWidth(columns)
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns===2 ? [[],[]] : [[]] }], lineH: bodyPt*1.25 }
+  const cols = plan.pages[0].columns
+  let idx = 0
+  let colIdx = 0
+  let remaining = [availH, availH]
+  while(idx < sections.length){
+    const s = sections[idx]
+    const { height } = measureSectionHeight(doc, s, width, bodyPt)
+    if (height <= remaining[colIdx]){
+      cols[colIdx].push(idx)
+      remaining[colIdx] -= height
+      idx++
+    } else if (columns === 2 && colIdx === 0){
+      // try second column
+      colIdx = 1
+    } else {
+      // cannot fit
+      return null
+    }
+  }
+  return plan
+}
+
+function planMultiPage(doc, sections, bodyPt){
+  // 1 column, 15pt, page-break between sections as needed
+  const columns = 1
+  const width = colWidth(columns)
+  const availHFirst = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const availHNext = PAGE.h - MARGINS.top - MARGINS.bottom
+  const plan = { columns, fontPt: bodyPt, pages: [], lineH: bodyPt*1.25 }
+  let remaining = availHFirst
+  let page = { columns: [[]] }
+  plan.pages.push(page)
+  for(let i=0;i<sections.length;i++){
+    const { height } = measureSectionHeight(doc, sections[i], width, bodyPt)
+    if (height <= remaining){
+      page.columns[0].push(i)
+      remaining -= height
+    } else {
+      // next page
+      page = { columns: [[]] }
+      plan.pages.push(page)
+      remaining = availHNext
+      page.columns[0].push(i)
+      remaining -= height
+    }
+  }
+  return plan
+}
+
+function drawTextSafe(doc, text, x, y){
+  try { doc.text(text, x, y) } catch {}
+}
+
+function drawTitle(doc, songTitle, songKey){
+  // Title
+  try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+  doc.setFontSize(TITLE_PT)
+  const w = usableWidth()
+  let lines = []
+  try { lines = doc.splitTextToSize(String(songTitle || ''), w) } catch { lines = [String(songTitle || '')] }
+  drawTextSafe(doc, lines, MARGINS.left, MARGINS.top - 6 + TITLE_PT * 0.7)
+
+  // Subtitle
+  try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+  doc.setFontSize(SUBTITLE_PT)
+  if (songKey) drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, MARGINS.top + 18)
+
+  // Reset body font
+  try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+}
+
+function renderSection(doc, section, x, y, width, lineH){
+  let cursorY = y
+  if (section.label){
+    try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+    doc.setFontSize(Math.round(lineH/1.25))
+    drawTextSafe(doc, `[${String(section.label).toUpperCase()}]`, x, cursorY)
+    cursorY += lineH * 1.2
+    try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+  }
+
+  const bodyPt = Math.round(lineH / 1.25)
+  doc.setFontSize(bodyPt)
+
+  for(const ln of section.lines || []){
+    if (ln.comment){
+      // render italic comment
+      try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+      drawTextSafe(doc, ln.plain || '', x, cursorY)
+      try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+      cursorY += lineH
+      continue
+    }
+    const rows = splitLyricWithChords(doc, ln.plain || '', ln.chords || [], width)
+    for(const row of rows){
+      if ((row.chords || []).length){
+        // chords line above lyric, mono bold, avoid overlap
+        try { doc.setFont('NotoSansMono', 'bold') } catch { try { doc.setFont('courier', 'bold') } catch {} }
+        let lastX = -Infinity
+        let spaceW = 0.01
+        try { spaceW = Math.max(0.01, doc.getTextWidth(' ')) } catch {}
+        for(const c of row.chords){
+          const offsetInLine = c.index - (ln.plain?.length || 0) + row.lyric.length // WRONG mapping if used; recompute properly below
+        }
+        // Proper placement: compute chord position via pre substring width
+        let consumed = 0
+        for(const c of row.chords){
+          const offsetInLine = Math.min(Math.max(0, c.index - (row.start || 0)), row.lyric.length)
+          const pre = row.lyric.slice(0, offsetInLine)
+          let chordX = x
+          try { chordX = x + doc.getTextWidth(pre) } catch {}
+          if (chordX < lastX + spaceW) chordX = lastX + spaceW
+          drawTextSafe(doc, String(c.sym), chordX, cursorY)
+          try { lastX = chordX + Math.max(spaceW, doc.getTextWidth(String(c.sym))) } catch { lastX = chordX + spaceW }
+        }
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+        doc.setFontSize(bodyPt)
+        cursorY += lineH
+      }
+
+      drawTextSafe(doc, row.lyric, x, cursorY)
+      cursorY += lineH
+    }
+  }
+
+  // spacer
+  return cursorY + 10
+}
+
+function renderPlanned(doc, plan, sections, song){
+  const songTitle = song?.title || 'Untitled'
+  const songKey = song?.key || song?.originalKey || ''
+  const cols = plan.columns
+  const width = colWidth(cols)
+  const lineH = plan.lineH
+  // first page
+  drawTitle(doc, songTitle, songKey)
+  for(let p=0; p<plan.pages.length; p++){
+    if (p>0) doc.addPage([PAGE.w, PAGE.h])
+    const headerOffset = (p===0) ? headerHeight() : 0
+    const x0 = MARGINS.left
+    const x1 = MARGINS.left + width + (cols===2 ? GUTTER : 0)
+    let y0 = MARGINS.top + headerOffset
+    let y1 = MARGINS.top + headerOffset
+    const colIdxs = plan.pages[p].columns
+    for(const idx of colIdxs[0]){
+      y0 = renderSection(doc, sections[idx], x0, y0, width, lineH)
+    }
+    if (cols === 2){
+      for(const idx of colIdxs[1]){
+        y1 = renderSection(doc, sections[idx], x1, y1, width, lineH)
+      }
+    }
+  }
+}
+
+function triggerDownload(blob, filename){
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
+export async function downloadSingleSongPdf(song){
+  // Build sections
+  const sections = sectionify(song)
+  const doc = createDoc()
+  await ensureFonts(doc)
+
+  // Decision ladder
+  // 1) 1-col @15→11pt
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 1, pt)){
+      const plan = planOnePage(doc, sections, 1, pt)
+      renderPlanned(doc, plan, sections, song)
+      const blob = doc.output('blob')
+      triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
+      return { plan }
+    }
+  }
+  // 2) 2-col @15→11pt
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 2, pt)){
+      const plan = planOnePage(doc, sections, 2, pt)
+      renderPlanned(doc, plan, sections, song)
+      const blob = doc.output('blob')
+      triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
+      return { plan }
+    }
+  }
+  // 3) Fallback: multi-page 1-col @15pt
+  const pt = 15
+  doc.setFontSize(pt)
+  const plan = planMultiPage(doc, sections, pt)
+  renderPlanned(doc, plan, sections, song)
+  const blob = doc.output('blob')
+  triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
+  return { plan }
+}
