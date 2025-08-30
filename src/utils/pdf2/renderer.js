@@ -31,14 +31,10 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
   const twoCols = (plan.pages?.[0]?.columns?.length || 1) === 2;
   const colW = twoCols ? (usableW - (opts.gutterPt || 0)) / 2 : usableW;
 
-  // Body font & color
-  let fontOk = true;
+  // Body font & color — prefer Noto if registered; fall back to built-ins.
+  // jsPDF's built-in families are lowercase: 'helvetica', 'times', 'courier'.
   try { doc.setFont("NotoSans", "normal"); }
-  catch {
-    try { doc.setFont("Helvetica", "normal"); }
-    catch { fontOk = false; }
-  }
-  if (!fontOk) return;
+  catch { try { doc.setFont("helvetica", "normal"); } catch {} }
   doc.setFontSize(bodyPt);
   try { doc.setTextColor(0, 0, 0); } catch {}
 
@@ -46,10 +42,10 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
   try {
     const probe = doc.getTextWidth("probe");
     if (!Number.isFinite(probe) || probe <= 0) {
-      try { doc.setFont("Helvetica", "normal"); } catch {}
+      try { doc.setFont("helvetica", "normal"); } catch {}
     }
   } catch {
-    try { doc.setFont("Helvetica", "normal"); } catch {}
+    try { doc.setFont("helvetica", "normal"); } catch {}
   }
 
   const lineH = bodyPt * 1.25;
@@ -76,10 +72,10 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
         // Section header line like "[VERSE]"
         const hdr = /^\[([^\]]+)\]$/.exec(ln.trim());
         if (hdr) {
-          try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
+          try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("helvetica", "bold"); } catch {} }
           try { doc.text(`[${hdr[1].toUpperCase()}]`, x, y); } catch {}
           y += lineH * 1.2;
-          try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+          try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("helvetica", "normal"); } catch {} }
           continue;
         }
 
@@ -96,7 +92,7 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
           const lineChords = chords.filter(c => c.index >= start && c.index < end);
 
           if (lineChords.length) {
-            try { doc.setFont("NotoSansMono", "bold"); } catch { try { doc.setFont("Courier", "bold"); } catch {} }
+            try { doc.setFont("NotoSansMono", "bold"); } catch { try { doc.setFont("courier", "bold"); } catch {} }
             let lastX = -Infinity;
             for (const c of lineChords) {
               const offsetInLine = c.index - start;
@@ -110,7 +106,7 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
               try { lastX = chordX + Math.max(spaceW, doc.getTextWidth(String(c.sym))); } catch { lastX = chordX + spaceW; }
             }
             // back to body font
-            try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+            try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("helvetica", "normal"); } catch {} }
             y += lineH;
           }
 
@@ -133,7 +129,7 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
     let headerOffsetY = 0;
     if (pIdx === 0) {
       // Title
-      try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("Helvetica", "bold"); } catch {} }
+      try { doc.setFont("NotoSans", "bold"); } catch { try { doc.setFont("helvetica", "bold"); } catch {} }
       doc.setFontSize(20);
       let titleLines = [];
       try { titleLines = doc.splitTextToSize(String(songTitle || ""), usableW); } catch { titleLines = [String(songTitle || "")]; }
@@ -143,14 +139,14 @@ export function renderSongInto(doc, songTitle, sections, plan, opts) {
 
       // Subtitle
       if (opts.songKey) {
-        try { doc.setFont("NotoSans", "italic"); } catch { try { doc.setFont("Helvetica", "italic"); } catch {} }
+        try { doc.setFont("NotoSans", "italic"); } catch { try { doc.setFont("helvetica", "italic"); } catch {} }
         doc.setFontSize(15);
         try { doc.text(`Key of ${opts.songKey}`, opts.marginsPt.left, titleY + 18); } catch {}
         headerOffsetY += 15 * 0.9;
       }
 
       // Reset body font
-      try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+      try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("helvetica", "normal"); } catch {} }
       doc.setFontSize(bodyPt);
     }
 

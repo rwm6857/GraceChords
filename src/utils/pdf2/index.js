@@ -42,7 +42,7 @@ export async function planSong(sections, opts) {
 export async function renderSongIntoDoc(doc, songTitle, sections, plan, opts) {
   // Load/attach fonts, then choose a safe default
   await registerPdfFonts(doc);
-  try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("Helvetica", "normal"); } catch {} }
+  try { doc.setFont("NotoSans", "normal"); } catch { try { doc.setFont("helvetica", "normal"); } catch {} }
   try { doc.setTextColor(0, 0, 0); } catch {}
   return renderSongInto(doc, songTitle, sections, plan, opts);
 }
