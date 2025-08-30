@@ -19,6 +19,9 @@ const GUTTER = 24
 const TITLE_PT = 20
 const SUBTITLE_PT = 15
 const SIZE_WINDOW = [15, 14, 13, 12, 11]
+const TITLE_LINE_FACTOR = 1.15
+const SUBTITLE_LINE_FACTOR = 1.1
+const CHORD_ABOVE_GAP = 0.85
 
 function createDoc(){
   const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
@@ -40,9 +43,14 @@ function colWidth(columns){
   return columns === 2 ? (w - GUTTER) / 2 : w
 }
 
-function headerHeight(){
-  // Title (20pt) and subtitle (15pt). Keep a bit of breathing room.
-  return Math.ceil(TITLE_PT * 0.9 + SUBTITLE_PT * 0.9)
+function headerHeightFor(doc, songTitle, songKey){
+  const w = usableWidth()
+  let titleLines = []
+  try { titleLines = doc.splitTextToSize(String(songTitle || ''), w) } catch { titleLines = [String(songTitle || '')] }
+  const titleH = (Array.isArray(titleLines) ? titleLines.length : 1) * TITLE_PT * TITLE_LINE_FACTOR
+  const subH = songKey ? SUBTITLE_PT * SUBTITLE_LINE_FACTOR : 0
+  const extraGap = 6
+  return Math.ceil(titleH + subH + extraGap)
 }
 
 function sectionify(song){
@@ -97,7 +105,7 @@ function measureSectionHeight(doc, section, width, bodyPt){
     }
     const rows = splitLyricWithChords(doc, ln.plain || '', ln.chords || [], width)
     for(const row of rows){
-      if ((row.chords || []).length) h += lineH // chord row
+      if ((row.chords || []).length) h += lineH * CHORD_ABOVE_GAP // tighter chord-to-lyric gap
       h += lineH // lyric row
     }
   }
@@ -106,9 +114,9 @@ function measureSectionHeight(doc, section, width, bodyPt){
   return { height: h, lineH }
 }
 
-function canPackOnePage(doc, sections, columns, bodyPt){
+function canPackOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
-  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
   const heights = sections.map(s => measureSectionHeight(doc, s, width, bodyPt))
   if (columns === 1){
     const total = heights.reduce((n, x) => n + x.height, 0)
@@ -124,9 +132,9 @@ function canPackOnePage(doc, sections, columns, bodyPt){
   return true
 }
 
-function planOnePage(doc, sections, columns, bodyPt){
+function planOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
-  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
   const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns===2 ? [[],[]] : [[]] }], lineH: bodyPt*1.25 }
   const cols = plan.pages[0].columns
   let idx = 0
@@ -150,11 +158,11 @@ function planOnePage(doc, sections, columns, bodyPt){
   return plan
 }
 
-function planMultiPage(doc, sections, bodyPt){
+function planMultiPage(doc, sections, bodyPt, songTitle, songKey){
   // 1 column, 15pt, page-break between sections as needed
   const columns = 1
   const width = colWidth(columns)
-  const availHFirst = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeight()
+  const availHFirst = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
   const availHNext = PAGE.h - MARGINS.top - MARGINS.bottom
   const plan = { columns, fontPt: bodyPt, pages: [], lineH: bodyPt*1.25 }
   let remaining = availHFirst
@@ -188,15 +196,24 @@ function drawTitle(doc, songTitle, songKey){
   const w = usableWidth()
   let lines = []
   try { lines = doc.splitTextToSize(String(songTitle || ''), w) } catch { lines = [String(songTitle || '')] }
-  drawTextSafe(doc, lines, MARGINS.left, MARGINS.top - 6 + TITLE_PT * 0.7)
+  let y = MARGINS.top + TITLE_PT
+  const arr = Array.isArray(lines) ? lines : [lines]
+  for(const ln of arr){
+    drawTextSafe(doc, ln, MARGINS.left, y)
+    y += TITLE_PT * TITLE_LINE_FACTOR
+  }
 
   // Subtitle
   try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
   doc.setFontSize(SUBTITLE_PT)
-  if (songKey) drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, MARGINS.top + 18)
+  if (songKey) {
+    drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, y)
+    y += SUBTITLE_PT * SUBTITLE_LINE_FACTOR
+  }
 
   // Reset body font
   try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+  return y
 }
 
 function renderSection(doc, section, x, y, width, lineH){
@@ -267,7 +284,7 @@ function renderPlanned(doc, plan, sections, song){
   drawTitle(doc, songTitle, songKey)
   for(let p=0; p<plan.pages.length; p++){
     if (p>0) doc.addPage([PAGE.w, PAGE.h])
-    const headerOffset = (p===0) ? headerHeight() : 0
+    const headerOffset = (p===0) ? headerHeightFor(doc, songTitle, songKey) : 0
     const x0 = MARGINS.left
     const x1 = MARGINS.left + width + (cols===2 ? GUTTER : 0)
     let y0 = MARGINS.top + headerOffset
@@ -297,13 +314,15 @@ export async function downloadSingleSongPdf(song){
   const sections = sectionify(song)
   const doc = createDoc()
   await ensureFonts(doc)
+  const songTitle = song?.title || 'Untitled'
+  const songKey = song?.key || song?.originalKey || ''
 
   // Decision ladder
   // 1) 1-col @15→11pt
   for(const pt of SIZE_WINDOW){
     doc.setFontSize(pt)
-    if (canPackOnePage(doc, sections, 1, pt)){
-      const plan = planOnePage(doc, sections, 1, pt)
+    if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){
+      const plan = planOnePage(doc, sections, 1, pt, songTitle, songKey)
       renderPlanned(doc, plan, sections, song)
       const blob = doc.output('blob')
       triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
@@ -313,8 +332,8 @@ export async function downloadSingleSongPdf(song){
   // 2) 2-col @15→11pt
   for(const pt of SIZE_WINDOW){
     doc.setFontSize(pt)
-    if (canPackOnePage(doc, sections, 2, pt)){
-      const plan = planOnePage(doc, sections, 2, pt)
+    if (canPackOnePage(doc, sections, 2, pt, songTitle, songKey)){
+      const plan = planOnePage(doc, sections, 2, pt, songTitle, songKey)
       renderPlanned(doc, plan, sections, song)
       const blob = doc.output('blob')
       triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
@@ -324,7 +343,7 @@ export async function downloadSingleSongPdf(song){
   // 3) Fallback: multi-page 1-col @15pt
   const pt = 15
   doc.setFontSize(pt)
-  const plan = planMultiPage(doc, sections, pt)
+  const plan = planMultiPage(doc, sections, pt, songTitle, songKey)
   renderPlanned(doc, plan, sections, song)
   const blob = doc.output('blob')
   triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
