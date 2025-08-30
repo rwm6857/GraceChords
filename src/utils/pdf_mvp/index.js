@@ -25,7 +25,7 @@ const LINE_HEIGHT_FACTOR = 1.2
 const CHORD_ABOVE_GAP = 0.75
 const SECTION_SPACER_PT = 8
 const TITLE_TO_KEY_FACTOR = 0.85 // tighter gap between last title line and key
-const KEY_TO_SECTION_LINES = 2.25 // more space between key and first section
+const KEY_TO_SECTION_LINES = 1.125 // slightly over one line; tighter than before
 
 function createDoc(){
   const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
