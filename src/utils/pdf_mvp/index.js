@@ -24,6 +24,8 @@ const SUBTITLE_LINE_FACTOR = 1.0
 const LINE_HEIGHT_FACTOR = 1.2
 const CHORD_ABOVE_GAP = 0.75
 const SECTION_SPACER_PT = 8
+const TITLE_TO_KEY_FACTOR = 0.85 // tighter gap between last title line and key
+const KEY_TO_SECTION_LINES = 2.25 // more space between key and first section
 
 function createDoc(){
   const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
@@ -49,15 +51,17 @@ function headerHeightFor(doc, songTitle, songKey){
   const w = usableWidth()
   let titleLines = []
   try { titleLines = doc.splitTextToSize(String(songTitle || ''), w) } catch { titleLines = [String(songTitle || '')] }
-  const titleH = (Array.isArray(titleLines) ? titleLines.length : 1) * TITLE_PT * TITLE_LINE_FACTOR
-  const subH = songKey ? SUBTITLE_PT * SUBTITLE_LINE_FACTOR : 0
-  return Math.ceil(titleH + subH)
+  const n = Array.isArray(titleLines) ? titleLines.length : 1
+  // First title line takes TITLE_PT; additional lines add TITLE_LINE_FACTOR increments
+  const titleStack = TITLE_PT + (Math.max(0, n - 1)) * (TITLE_PT * TITLE_LINE_FACTOR)
+  const gapTitleToKey = songKey ? TITLE_PT * TITLE_TO_KEY_FACTOR : 0
+  const keyStack = songKey ? SUBTITLE_PT * SUBTITLE_LINE_FACTOR : 0
+  return Math.ceil(titleStack + gapTitleToKey + keyStack)
 }
 
 function headerOffsetFor(doc, songTitle, songKey, bodyPt){
-  // Total header + generous gap (≈1.75 lines) before first section header
-  const lines = 1.75
-  return headerHeightFor(doc, songTitle, songKey) + Math.ceil(bodyPt * LINE_HEIGHT_FACTOR * lines)
+  // Total header + clear space before first section header
+  return headerHeightFor(doc, songTitle, songKey) + Math.ceil(bodyPt * LINE_HEIGHT_FACTOR * KEY_TO_SECTION_LINES)
 }
 
 function sectionify(song){
@@ -205,11 +209,12 @@ function drawTitle(doc, songTitle, songKey){
   const w = usableWidth()
   let lines = []
   try { lines = doc.splitTextToSize(String(songTitle || ''), w) } catch { lines = [String(songTitle || '')] }
-  let y = MARGINS.top + TITLE_PT
   const arr = Array.isArray(lines) ? lines : [lines]
-  for(const ln of arr){
-    drawTextSafe(doc, ln, MARGINS.left, y)
-    y += TITLE_PT * TITLE_LINE_FACTOR
+  const y0 = MARGINS.top + TITLE_PT
+  // Draw wrapped title lines using fixed increments
+  for(let i = 0; i < arr.length; i++){
+    const y = y0 + i * (TITLE_PT * TITLE_LINE_FACTOR)
+    drawTextSafe(doc, arr[i], MARGINS.left, y)
   }
 
   // Subtitle
@@ -218,15 +223,20 @@ function drawTitle(doc, songTitle, songKey){
   if (songKey) {
     // Draw key in a subtle gray to contrast with the title
     try { doc.setTextColor(90, 90, 90) } catch {}
-    drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, y)
-    y += SUBTITLE_PT * SUBTITLE_LINE_FACTOR
+    const yKey = y0 + (Math.max(0, arr.length - 1)) * (TITLE_PT * TITLE_LINE_FACTOR) + (TITLE_PT * TITLE_TO_KEY_FACTOR)
+    drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, yKey)
+    const yAfterKey = yKey + SUBTITLE_PT * SUBTITLE_LINE_FACTOR
     // Restore text color to black
     try { doc.setTextColor(0, 0, 0) } catch {}
+    // Reset body font and return bottom position of the header
+    try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+    return yAfterKey
   }
 
   // Reset body font
   try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
-  return y
+  // If no key, return bottom of title stack
+  return y0 + (Math.max(0, arr.length - 1)) * (TITLE_PT * TITLE_LINE_FACTOR)
 }
 
 function renderSection(doc, section, x, y, width, lineH){
