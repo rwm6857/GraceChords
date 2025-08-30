@@ -17,7 +17,7 @@ const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch
 const GUTTER = 24
 const TITLE_PT = 24
-const SUBTITLE_PT = 18
+const SUBTITLE_PT = 16
 const SIZE_WINDOW = [16, 15, 14, 13, 12, 11]
 const TITLE_LINE_FACTOR = 1.04
 const SUBTITLE_LINE_FACTOR = 1.0
@@ -216,8 +216,12 @@ function drawTitle(doc, songTitle, songKey){
   try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
   doc.setFontSize(SUBTITLE_PT)
   if (songKey) {
+    // Draw key in a slightly lighter gray to contrast with the title
+    try { doc.setTextColor(120, 120, 120) } catch {}
     drawTextSafe(doc, `Key of ${songKey}`, MARGINS.left, y)
     y += SUBTITLE_PT * SUBTITLE_LINE_FACTOR
+    // Restore text color to black
+    try { doc.setTextColor(0, 0, 0) } catch {}
   }
 
   // Reset body font
@@ -227,16 +231,17 @@ function drawTitle(doc, songTitle, songKey){
 
 function renderSection(doc, section, x, y, width, lineH){
   let cursorY = y
+  const bodyPt = Math.round(lineH / LINE_HEIGHT_FACTOR)
+  doc.setFontSize(bodyPt)
   if (section.label){
     try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
-    // Slightly smaller header than body for compactness
-    doc.setFontSize(Math.round(lineH / LINE_HEIGHT_FACTOR * 0.95))
+    // Header same size as lyrics
+    doc.setFontSize(bodyPt)
     drawTextSafe(doc, `[${String(section.label).toUpperCase()}]`, x, cursorY)
     cursorY += lineH // keep header spacing consistent with lyric lines
     try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
   }
 
-  const bodyPt = Math.round(lineH / 1.25)
   doc.setFontSize(bodyPt)
 
   for(const ln of section.lines || []){
