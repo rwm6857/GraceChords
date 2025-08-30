@@ -19,10 +19,11 @@ const GUTTER = 24
 const TITLE_PT = 20
 const SUBTITLE_PT = 15
 const SIZE_WINDOW = [15, 14, 13, 12, 11]
-const TITLE_LINE_FACTOR = 1.05
+const TITLE_LINE_FACTOR = 1.04
 const SUBTITLE_LINE_FACTOR = 1.0
-const CHORD_ABOVE_GAP = 0.8
-const HEADER_SECTION_GAP = 12
+const LINE_HEIGHT_FACTOR = 1.2
+const CHORD_ABOVE_GAP = 0.75
+const SECTION_SPACER_PT = 8
 
 function createDoc(){
   const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
@@ -51,6 +52,11 @@ function headerHeightFor(doc, songTitle, songKey){
   const titleH = (Array.isArray(titleLines) ? titleLines.length : 1) * TITLE_PT * TITLE_LINE_FACTOR
   const subH = songKey ? SUBTITLE_PT * SUBTITLE_LINE_FACTOR : 0
   return Math.ceil(titleH + subH)
+}
+
+function headerOffsetFor(doc, songTitle, songKey, bodyPt){
+  // Total header + a blank line equivalent to one body line
+  return headerHeightFor(doc, songTitle, songKey) + Math.ceil(bodyPt * LINE_HEIGHT_FACTOR)
 }
 
 function sectionify(song){
@@ -96,9 +102,9 @@ function splitLyricWithChords(doc, text, chords, width){
 
 function measureSectionHeight(doc, section, width, bodyPt){
   let h = 0
-  const lineH = bodyPt * 1.25
+  const lineH = bodyPt * LINE_HEIGHT_FACTOR
   if (section.label) {
-    h += lineH * 1.2 // section header
+    h += lineH // section header consumes one line height
   }
   for(const ln of section.lines || []){
     if (ln.comment) {
@@ -112,13 +118,13 @@ function measureSectionHeight(doc, section, width, bodyPt){
     }
   }
   // spacer between sections
-  h += 10
+  h += SECTION_SPACER_PT
   return { height: h, lineH }
 }
 
 function canPackOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
-  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerOffsetFor(doc, songTitle, songKey, bodyPt)
   const heights = sections.map(s => measureSectionHeight(doc, s, width, bodyPt))
   if (columns === 1){
     const total = heights.reduce((n, x) => n + x.height, 0)
@@ -136,8 +142,8 @@ function canPackOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
 
 function planOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
-  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
-  const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns===2 ? [[],[]] : [[]] }], lineH: bodyPt*1.25 }
+  const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerOffsetFor(doc, songTitle, songKey, bodyPt)
+  const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns===2 ? [[],[]] : [[]] }], lineH: bodyPt*LINE_HEIGHT_FACTOR }
   const cols = plan.pages[0].columns
   let idx = 0
   let colIdx = 0
@@ -164,9 +170,9 @@ function planMultiPage(doc, sections, bodyPt, songTitle, songKey){
   // 1 column, 15pt, page-break between sections as needed
   const columns = 1
   const width = colWidth(columns)
-  const availHFirst = PAGE.h - MARGINS.top - MARGINS.bottom - headerHeightFor(doc, songTitle, songKey)
+  const availHFirst = PAGE.h - MARGINS.top - MARGINS.bottom - headerOffsetFor(doc, songTitle, songKey, bodyPt)
   const availHNext = PAGE.h - MARGINS.top - MARGINS.bottom
-  const plan = { columns, fontPt: bodyPt, pages: [], lineH: bodyPt*1.25 }
+  const plan = { columns, fontPt: bodyPt, pages: [], lineH: bodyPt*LINE_HEIGHT_FACTOR }
   let remaining = availHFirst
   let page = { columns: [[]] }
   plan.pages.push(page)
@@ -222,9 +228,10 @@ function renderSection(doc, section, x, y, width, lineH){
   let cursorY = y
   if (section.label){
     try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
-    doc.setFontSize(Math.round(lineH/1.25))
+    // Slightly smaller header than body for compactness
+    doc.setFontSize(Math.round(lineH / LINE_HEIGHT_FACTOR * 0.95))
     drawTextSafe(doc, `[${String(section.label).toUpperCase()}]`, x, cursorY)
-    cursorY += lineH * 1.2
+    cursorY += lineH // keep header spacing consistent with lyric lines
     try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
   }
 
@@ -243,28 +250,32 @@ function renderSection(doc, section, x, y, width, lineH){
     const rows = splitLyricWithChords(doc, ln.plain || '', ln.chords || [], width)
     for(const row of rows){
       if ((row.chords || []).length){
-        // chords line above lyric, mono bold, avoid overlap
-        try { doc.setFont('NotoSansMono', 'bold') } catch { try { doc.setFont('courier', 'bold') } catch {} }
+        // Measure lyric substring widths in lyric font to match wrapping
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+        doc.setFontSize(bodyPt)
         let lastX = -Infinity
+        // Measure minimal chord separation using chord font
         let spaceW = 0.01
-        try { spaceW = Math.max(0.01, doc.getTextWidth(' ')) } catch {}
-        for(const c of row.chords){
-          const offsetInLine = c.index - (ln.plain?.length || 0) + row.lyric.length // WRONG mapping if used; recompute properly below
-        }
-        // Proper placement: compute chord position via pre substring width
-        let consumed = 0
+        try { doc.setFont('NotoSansMono', 'bold'); spaceW = Math.max(0.01, doc.getTextWidth(' ')) } catch {}
+        // Restore lyric font for measuring lyric substrings
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+        doc.setFontSize(bodyPt)
         for(const c of row.chords){
           const offsetInLine = Math.min(Math.max(0, c.index - (row.start || 0)), row.lyric.length)
           const pre = row.lyric.slice(0, offsetInLine)
           let chordX = x
           try { chordX = x + doc.getTextWidth(pre) } catch {}
           if (chordX < lastX + spaceW) chordX = lastX + spaceW
+          // Draw chord in mono bold at computed position
+          try { doc.setFont('NotoSansMono', 'bold') } catch { try { doc.setFont('courier', 'bold') } catch {} }
           drawTextSafe(doc, String(c.sym), chordX, cursorY)
           try { lastX = chordX + Math.max(spaceW, doc.getTextWidth(String(c.sym))) } catch { lastX = chordX + spaceW }
+          // Switch back to lyric font for measuring next chord offset
+          try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+          doc.setFontSize(bodyPt)
         }
-        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
-        doc.setFontSize(bodyPt)
-        cursorY += lineH
+        // tighter gap between chords and lyric
+        cursorY += lineH * CHORD_ABOVE_GAP
       }
 
       drawTextSafe(doc, row.lyric, x, cursorY)
@@ -272,8 +283,8 @@ function renderSection(doc, section, x, y, width, lineH){
     }
   }
 
-  // spacer
-  return cursorY + 10
+  // spacer between sections
+  return cursorY + SECTION_SPACER_PT
 }
 
 function renderPlanned(doc, plan, sections, song){
@@ -286,7 +297,8 @@ function renderPlanned(doc, plan, sections, song){
   drawTitle(doc, songTitle, songKey)
   for(let p=0; p<plan.pages.length; p++){
     if (p>0) doc.addPage([PAGE.w, PAGE.h])
-    const headerOffset = (p===0) ? headerHeightFor(doc, songTitle, songKey) + HEADER_SECTION_GAP : 0
+    const bodyPt = plan.fontPt || Math.round(lineH / LINE_HEIGHT_FACTOR)
+    const headerOffset = (p===0) ? headerOffsetFor(doc, songTitle, songKey, bodyPt) : 0
     const x0 = MARGINS.left
     const x1 = MARGINS.left + width + (cols===2 ? GUTTER : 0)
     let y0 = MARGINS.top + headerOffset
