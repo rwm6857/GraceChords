@@ -19,9 +19,10 @@ const GUTTER = 24
 const TITLE_PT = 20
 const SUBTITLE_PT = 15
 const SIZE_WINDOW = [15, 14, 13, 12, 11]
-const TITLE_LINE_FACTOR = 1.15
-const SUBTITLE_LINE_FACTOR = 1.1
-const CHORD_ABOVE_GAP = 0.85
+const TITLE_LINE_FACTOR = 1.05
+const SUBTITLE_LINE_FACTOR = 1.0
+const CHORD_ABOVE_GAP = 0.8
+const HEADER_SECTION_GAP = 12
 
 function createDoc(){
   const JsPDFCtor = (typeof window !== 'undefined' && window.jsPDF) || jsPDF
@@ -49,8 +50,7 @@ function headerHeightFor(doc, songTitle, songKey){
   try { titleLines = doc.splitTextToSize(String(songTitle || ''), w) } catch { titleLines = [String(songTitle || '')] }
   const titleH = (Array.isArray(titleLines) ? titleLines.length : 1) * TITLE_PT * TITLE_LINE_FACTOR
   const subH = songKey ? SUBTITLE_PT * SUBTITLE_LINE_FACTOR : 0
-  const extraGap = 6
-  return Math.ceil(titleH + subH + extraGap)
+  return Math.ceil(titleH + subH)
 }
 
 function sectionify(song){
@@ -82,10 +82,12 @@ function splitLyricWithChords(doc, text, chords, width){
   try { parts = doc.splitTextToSize(String(text || ''), width) } catch { parts = [String(text || '')] }
   const lines = []
   let consumed = 0
-  for(const p of parts){
+  for(let i=0; i<parts.length; i++){
+    const p = parts[i]
+    const isLast = i === parts.length - 1
     const start = consumed
     const end = start + p.length
-    const lineChords = (chords || []).filter(c => c.index >= start && c.index < end)
+    const lineChords = (chords || []).filter(c => c.index >= start && (c.index < end || (isLast && c.index === end)))
     lines.push({ lyric: p, chords: lineChords, start })
     consumed += p.length
   }
@@ -284,7 +286,7 @@ function renderPlanned(doc, plan, sections, song){
   drawTitle(doc, songTitle, songKey)
   for(let p=0; p<plan.pages.length; p++){
     if (p>0) doc.addPage([PAGE.w, PAGE.h])
-    const headerOffset = (p===0) ? headerHeightFor(doc, songTitle, songKey) : 0
+    const headerOffset = (p===0) ? headerHeightFor(doc, songTitle, songKey) + HEADER_SECTION_GAP : 0
     const x0 = MARGINS.left
     const x1 = MARGINS.left + width + (cols===2 ? GUTTER : 0)
     let y0 = MARGINS.top + headerOffset
