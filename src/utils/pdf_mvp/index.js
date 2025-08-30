@@ -446,3 +446,190 @@ export const __test = {
     return { height: h, offset: off }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Multi-song (Setlist) and Songbook exports
+
+async function planForSong(song){
+  // Reuse the decision ladder used by downloadSingleSongPdf(), but only return plan
+  const sections = sectionify(song)
+  const doc = createDoc()
+  const songTitle = song?.title || 'Untitled'
+  const songKey = song?.key || song?.originalKey || ''
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){
+      return planOnePage(doc, sections, 1, pt, songTitle, songKey)
+    }
+  }
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 2, pt, songTitle, songKey)){
+      return planOnePage(doc, sections, 2, pt, songTitle, songKey)
+    }
+  }
+  // fallback: 1-col multi-page at 15
+  const pt = 15
+  doc.setFontSize(pt)
+  return planMultiPage(doc, sections, pt, songTitle, songKey)
+}
+
+export async function downloadMultiSongPdf(songs = []){
+  if (!Array.isArray(songs) || songs.length === 0) return
+  const doc = createDoc()
+  await ensureFonts(doc)
+
+  for (let i = 0; i < songs.length; i++){
+    const song = songs[i]
+    const plan = await planForSong(song)
+    const sections = sectionify(song)
+    if (i > 0) doc.addPage([PAGE.w, PAGE.h])
+    renderPlanned(doc, plan, sections, song)
+  }
+
+  const blob = doc.output('blob')
+  triggerDownload(blob, `setlist-${new Date().toISOString().slice(0,10)}.pdf`)
+}
+
+export async function downloadSongbookPdf(songs = [], { includeTOC = true, coverImageDataUrl = null } = {}){
+  if (!Array.isArray(songs) || songs.length === 0) return
+  const doc = createDoc()
+  await ensureFonts(doc)
+
+  // Pre-plan to compute TOC page numbers
+  const pre = []
+  for (const s of songs){
+    const plan = await planForSong(s)
+    pre.push({ song: s, plan, sections: sectionify(s) })
+  }
+
+  let pageNo = 1
+  // Cover page
+  if (coverImageDataUrl){
+    try {
+      // Fit image centered while preserving aspect ratio
+      const availW = PAGE.w - MARGINS.left - MARGINS.right
+      const availH = PAGE.h - MARGINS.top - MARGINS.bottom
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image()
+        i.onload = () => resolve(i)
+        i.onerror = reject
+        i.src = coverImageDataUrl
+      })
+      const scale = Math.min(availW / img.width, availH / img.height)
+      const w = img.width * scale
+      const h = img.height * scale
+      const x = MARGINS.left + (availW - w) / 2
+      const y = MARGINS.top + (availH - h) / 2
+      doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, 'FAST')
+    } catch {
+      // If image fails, draw a simple title
+      try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+      doc.setFontSize(28)
+      drawTextSafe(doc, 'Songbook', PAGE.w/2, PAGE.h/2)
+    }
+    pageNo++
+  } else {
+    // Simple cover if no image
+    try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+    doc.setFontSize(28)
+    drawTextSafe(doc, 'Songbook', PAGE.w/2, PAGE.h/2)
+    pageNo++
+  }
+
+  // Compute TOC pagination (default 1-col; switch to 2-col to avoid a second page; if a second page is needed, continue with 2-col)
+  const entries = pre.length
+  const lineH = 16
+  const yStartFirst = MARGINS.top + 24
+  const rowsPerColFirst = Math.max(1, Math.floor((PAGE.h - MARGINS.bottom - yStartFirst) / lineH))
+  const rowsPerColNext  = Math.max(1, Math.floor((PAGE.h - MARGINS.bottom - MARGINS.top) / lineH))
+
+  let tocPages = 0
+  if (includeTOC) {
+    if (entries <= rowsPerColFirst) tocPages = 1
+    else if (entries <= 2 * rowsPerColFirst) tocPages = 1
+    else {
+      const remaining = Math.max(0, entries - 2 * rowsPerColFirst)
+      const extraPages = Math.ceil(remaining / (2 * rowsPerColNext))
+      tocPages = 1 + extraPages
+    }
+  }
+
+  // Compute page numbers per song (account for cover + all TOC pages)
+  const pageStart = []
+  if (includeTOC) pageNo += tocPages
+  for (let i = 0; i < pre.length; i++){
+    pageStart[i] = pageNo
+    const pages = Math.max(1, pre[i].plan.pages?.length || 1)
+    pageNo += pages
+  }
+
+  // TOC page
+  if (includeTOC){
+    const leftX = MARGINS.left
+    const rightX = PAGE.w / 2 + 10
+
+    // First TOC page
+    doc.addPage([PAGE.w, PAGE.h])
+    try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+    doc.setFontSize(18)
+    drawTextSafe(doc, 'Table of Contents', MARGINS.left, MARGINS.top)
+    try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+    doc.setFontSize(12)
+
+    let idx = 0
+    if (entries <= rowsPerColFirst) {
+      // Single column fits on first page
+      let y = yStartFirst
+      while (idx < entries && y <= PAGE.h - MARGINS.bottom - lineH) {
+        const title = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, y)
+        y += lineH
+        idx++
+      }
+    } else {
+      // Two columns on first page to avoid a second page if possible
+      let yL = yStartFirst, yR = yStartFirst
+      // Left column
+      for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++) {
+        const title = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, yL)
+        yL += lineH
+      }
+      // Right column
+      for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++) {
+        const title = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, rightX, yR)
+        yR += lineH
+      }
+
+      // Additional TOC pages (two columns)
+      while (idx < entries) {
+        doc.addPage([PAGE.w, PAGE.h])
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+        doc.setFontSize(12)
+        let yL2 = MARGINS.top, yR2 = MARGINS.top
+        for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++) {
+          const title = String(pre[idx].song?.title || 'Untitled')
+          drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, yL2)
+          yL2 += lineH
+        }
+        for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++) {
+          const title = String(pre[idx].song?.title || 'Untitled')
+          drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, rightX, yR2)
+          yR2 += lineH
+        }
+      }
+    }
+  }
+
+  // Songs (each starts on a new page; first song follows TOC)
+  for (let i = 0; i < pre.length; i++){
+    doc.addPage([PAGE.w, PAGE.h])
+    const numbered = { ...pre[i].song, title: `${i+1}. ${pre[i].song?.title || 'Untitled'}` }
+    renderPlanned(doc, pre[i].plan, pre[i].sections, numbered)
+  }
+
+  const blob = doc.output('blob')
+  triggerDownload(blob, `songbook-${new Date().toISOString().slice(0,10)}.pdf`)
+}
