@@ -148,25 +148,34 @@ function canPackOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
 function planOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
   const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerOffsetFor(doc, songTitle, songKey, bodyPt)
-  const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns===2 ? [[],[]] : [[]] }], lineH: bodyPt*LINE_HEIGHT_FACTOR }
+  const plan = { columns, fontPt: bodyPt, pages: [{ columns: columns === 2 ? [[], []] : [[]] }], lineH: bodyPt * LINE_HEIGHT_FACTOR }
   const cols = plan.pages[0].columns
-  let idx = 0
-  let colIdx = 0
-  let remaining = [availH, availH]
-  while(idx < sections.length){
-    const s = sections[idx]
-    const { height } = measureSectionHeight(doc, s, width, bodyPt)
-    if (height <= remaining[colIdx]){
-      cols[colIdx].push(idx)
-      remaining[colIdx] -= height
-      idx++
-    } else if (columns === 2 && colIdx === 0){
-      // try second column
-      colIdx = 1
-    } else {
-      // cannot fit
-      return null
+  if (columns === 1){
+    let rem = availH
+    for (let i = 0; i < sections.length; i++){
+      const { height } = measureSectionHeight(doc, sections[i], width, bodyPt)
+      if (height > rem) return null
+      cols[0].push(i)
+      rem -= height
     }
+    return plan
+  }
+  // Two-column greedy: try left; if not, try right. Mirrors canPackOnePage().
+  let remL = availH, remR = availH
+  for (let i = 0; i < sections.length; i++){
+    const { height } = measureSectionHeight(doc, sections[i], width, bodyPt)
+    if (height <= remL){
+      cols[0].push(i)
+      remL -= height
+      continue
+    }
+    if (height <= remR){
+      cols[1].push(i)
+      remR -= height
+      continue
+    }
+    // cannot fit per the greedy test
+    return null
   }
   return plan
 }
