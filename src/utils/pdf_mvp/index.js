@@ -16,9 +16,9 @@ import { registerPdfFonts } from '../pdf2/fonts.js'
 const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch
 const GUTTER = 24
-const TITLE_PT = 20
-const SUBTITLE_PT = 15
-const SIZE_WINDOW = [15, 14, 13, 12, 11]
+const TITLE_PT = 24
+const SUBTITLE_PT = 18
+const SIZE_WINDOW = [16, 15, 14, 13, 12, 11]
 const TITLE_LINE_FACTOR = 1.04
 const SUBTITLE_LINE_FACTOR = 1.0
 const LINE_HEIGHT_FACTOR = 1.2
@@ -55,8 +55,9 @@ function headerHeightFor(doc, songTitle, songKey){
 }
 
 function headerOffsetFor(doc, songTitle, songKey, bodyPt){
-  // Total header + a blank line equivalent to one body line
-  return headerHeightFor(doc, songTitle, songKey) + Math.ceil(bodyPt * LINE_HEIGHT_FACTOR)
+  // Total header + generous gap (≈1.75 lines) before first section header
+  const lines = 1.75
+  return headerHeightFor(doc, songTitle, songKey) + Math.ceil(bodyPt * LINE_HEIGHT_FACTOR * lines)
 }
 
 function sectionify(song){
