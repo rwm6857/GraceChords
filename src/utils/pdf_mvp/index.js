@@ -379,3 +379,70 @@ export async function downloadSingleSongPdf(song){
   triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
   return { plan }
 }
+
+// Test helper: plan only (no rendering or download). Returns both the raw plan
+// and a summary { columns, size, pages } for easy assertions.
+export async function planSingleSong(song){
+  const sections = sectionify(song)
+  const doc = createDoc()
+  const songTitle = song?.title || 'Untitled'
+  const songKey = song?.key || song?.originalKey || ''
+
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){
+      const plan = planOnePage(doc, sections, 1, pt, songTitle, songKey)
+      return { plan, summary: { columns: plan.columns, size: plan.fontPt, pages: plan.pages.length } }
+    }
+  }
+  for(const pt of SIZE_WINDOW){
+    doc.setFontSize(pt)
+    if (canPackOnePage(doc, sections, 2, pt, songTitle, songKey)){
+      const plan = planOnePage(doc, sections, 2, pt, songTitle, songKey)
+      return { plan, summary: { columns: plan.columns, size: plan.fontPt, pages: plan.pages.length } }
+    }
+  }
+  const pt = 15
+  doc.setFontSize(pt)
+  const plan = planMultiPage(doc, sections, pt, songTitle, songKey)
+  return { plan, summary: { columns: plan.columns, size: plan.fontPt, pages: plan.pages.length } }
+}
+
+// ---------------------- Test-only helpers (non-rendering) -------------------
+function computeChordXsInternal({ text, chords, width, pt }){
+  const doc = createDoc()
+  try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+  doc.setFontSize(pt)
+  const rows = splitLyricWithChords(doc, String(text||''), chords || [], width)
+  const row = rows[0] || { lyric: '', chords: [], start: 0 }
+  // Minimal spacing measured in chord font
+  let spaceW = 0.01
+  try { doc.setFont('NotoSansMono', 'bold'); spaceW = Math.max(0.01, doc.getTextWidth(' ')) } catch {}
+  // Lyric font for measuring substrings
+  try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+  doc.setFontSize(pt)
+  const xs = []
+  let lastX = -Infinity
+  for(const c of (row.chords || [])){
+    const offset = Math.min(Math.max(0, (c.index|0) - (row.start || 0)), row.lyric.length)
+    const pre = row.lyric.slice(0, offset)
+    let x = 0
+    try { x = doc.getTextWidth(pre) } catch { x = 0 }
+    if (x < lastX + spaceW) x = lastX + spaceW
+    xs.push(x)
+    lastX = x
+  }
+  let lyricWidth = 0
+  try { lyricWidth = doc.getTextWidth(row.lyric || '') } catch { lyricWidth = 0 }
+  return { xs, lyricWidth, spaceW }
+}
+
+export const __test = {
+  computeChordXs: computeChordXsInternal,
+  headerHeights: (title, key, bodyPt) => {
+    const doc = createDoc()
+    const h = headerHeightFor(doc, title || '', key || '')
+    const off = headerOffsetFor(doc, title || '', key || '', bodyPt || 16)
+    return { height: h, offset: off }
+  }
+}

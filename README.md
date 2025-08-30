@@ -64,6 +64,15 @@ Place the following fonts in `public/fonts/` to embed them in exported PDFs:
 - `NotoSansMono-Regular.ttf`
 - `NotoSansMono-Bold.ttf`
 
+**PDF Export (MVP Engine)**
+- **Engine:** single-song exporter lives at `src/utils/pdf_mvp/` (wired via `src/utils/pdf/index.js`).
+- **Decision ladder:** 1-col single page at sizes `16 → 12` pt; else 2-col at `16 → 12` pt; else 1-col multipage at 15 pt (header only on page 1).
+- **Typography:** Title 26 pt bold; Key 16 pt italic gray (`rgb(90,90,90)`); lyrics/chords 12–16 pt with ~1.2× line-height; section headers same size as lyrics (bold).
+- **Chords:** appear above the exact lyric character; no overlaps (≥ one space width); trailing chords flush to end.
+- **Sections:** never split across columns/pages; compact, consistent spacing.
+- **Tests:** run `npm run test:mvp` to guard column/size/page decisions, chord alignment, header spacing.
+- See `src/utils/pdf_mvp/README.md` and the wiki page for details.
+
 ## PPTX Slides
 Place PowerPoint lyric decks in `public/pptx/` named after the song's file name without the `.chordpro` extension.
 For example, a song stored as `public/songs/glorious-king.chordpro` can have slides at `public/pptx/glorious-king.pptx`.

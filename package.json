@@ -11,7 +11,8 @@
     "build:index": "node scripts/buildIndex.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:mvp": "vitest run src/__tests__/pdf_mvp.*.test.js --pool=forks"
   },
   "dependencies": {
     "fuse.js": "^7.0.0",
