@@ -5,6 +5,8 @@ import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
 import { lintChordPro } from '../utils/chordpro/lint'
 import { downloadZip } from '../utils/zip'
+import indexData from '../data/index.json'
+import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import { showToast } from '../utils/toast'
@@ -54,6 +56,7 @@ function AdminPanel(){
   const [text, setText] = useState(INITIAL_TEXT)
   const [meta, setMeta] = useState({})
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
+  const editorRef = useRef(null)
 
   const [saveWithDirectives, setSaveWithDirectives] = useState(true)
   const [prefer2Col, setPrefer2Col] = useState(false)
@@ -140,8 +143,11 @@ function AdminPanel(){
     }
     const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     const base = kebab(meta.id || doc.meta.title || 'untitled')
-    const fname = `${base}.chordpro`
-    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '' }])
+    const fname = editingFile || `${base}.chordpro`
+    const willUpdate = items.some(it => it.filename === fname)
+    const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
+    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '', commitMsg }])
+    if (willUpdate) showToast?.(`Will update existing file: ${fname}`) ?? alert(`Will update existing file: ${fname}`)
   }
 
   function convertAndStage(){
@@ -187,8 +193,10 @@ function AdminPanel(){
     }
     const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     const base = kebab(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
-    const fname = `${base}.chordpro`
-    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || d.title, key: doc.meta.key || '' }])
+    const fname = editingFile || `${base}.chordpro`
+    const willUpdate = items.some(it => it.filename === fname)
+    const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
+    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || d.title, key: doc.meta.key || '', commitMsg }])
   }
   function unstage(name){ setStaged(s => s.filter(f => f.filename !== name)) }
   function renameStaged(name, nextName){
@@ -197,6 +205,61 @@ function AdminPanel(){
   }
   function setPerFileCommit(name, msg){
     setStaged(s => s.map(f => f.filename === name ? { ...f, commitMsg: msg } : f))
+  }
+
+  // ---- Load existing song from index ----
+  const items = (indexData?.items || [])
+  const [editingFile, setEditingFile] = useState('')
+  const [loadId, setLoadId] = useState('')
+  async function loadExisting(){
+    const it = items.find(s => String(s.id) === String(loadId))
+    if (!it) return
+    try {
+      const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
+      const url = `${base}songs/${it.filename}`
+      const body = await fetchTextCached(url)
+      if (body) setText(body)
+      setEditingFile(it.filename)
+      showToast?.(`Loaded ${it.filename} for editing`) ?? alert(`Loaded ${it.filename} for editing`)
+    } catch (e) {
+      showToast?.(`Failed to load ${it.filename}`) ?? alert(`Failed to load ${it.filename}`)
+    }
+  }
+
+  function insertAtCursor(snippet){
+    const ta = editorRef.current
+    if(!ta){ setText(t => (t || '') + snippet); return }
+    const start = ta.selectionStart ?? 0
+    const end = ta.selectionEnd ?? start
+    setText(prev => {
+      const before = prev.slice(0, start)
+      const after = prev.slice(end)
+      return before + snippet + after
+    })
+    // Restore caret after React update
+    setTimeout(() => {
+      try {
+        ta.focus()
+        const pos = start + snippet.length
+        ta.setSelectionRange(pos, pos)
+      } catch {}
+    }, 0)
+  }
+
+  function majorScaleChordSet(keySym){
+    // Build I, ii, iii, IV, V, vi chord symbols for given major key
+    const scaleSemis = [0, 2, 4, 5, 7, 9] // I ii iii IV V vi
+    const minorIdx = new Set([1,2,5])
+    const k = String(keySym || '').toUpperCase()
+    const i = KEYS.indexOf(k)
+    const rootIndex = i >= 0 ? i : KEYS.indexOf('G') // default G
+    const out = []
+    for(let d=0; d<scaleSemis.length; d++){
+      const idx = (rootIndex + scaleSemis[d]) % KEYS.length
+      const base = KEYS[idx]
+      out.push(minorIdx.has(d) ? `${base}m` : base)
+    }
+    return out
   }
 
   const [prOpen, setPrOpen] = useState(false)
@@ -264,6 +327,25 @@ function AdminPanel(){
           <button className="btn" onClick={validateTokenNow}>Validate</button>
           <div className="spacer" />
           <button className="btn primary" disabled={!staged.length} onClick={openPrModal}>Create PR…</button>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <strong>Load existing:</strong>
+          <select value={loadId} onChange={e=> setLoadId(e.target.value)}>
+            <option value="">— Choose a song —</option>
+            {items.map(s => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
+          <button className="btn" onClick={loadExisting} disabled={!loadId}>Load</button>
+          {editingFile && (
+            <span className="Small" style={{ marginLeft: 8 }}>
+              Editing: <code>{editingFile}</code>
+              <button className="btn small" style={{ marginLeft: 8 }} onClick={() => setEditingFile('')}>Clear</button>
+            </span>
+          )}
         </div>
       </div>
 
@@ -361,9 +443,36 @@ function AdminPanel(){
         </label>
       </div>
 
+      {/* Editor filename indicator */}
+      <div className="Row Small" style={{ alignItems:'center', gap:8, marginTop:10 }}>
+        <label>Filename
+          <input
+            readOnly
+            value={editingFile || filename}
+            title={editingFile ? 'Editing existing file' : 'Suggested filename'}
+            style={{ marginLeft: 8, width: 320 }}
+          />
+        </label>
+        {editingFile && (
+          <span className="Small">(loaded from index — updates will overwrite this file)</span>
+        )}
+      </div>
+
       {/* Editor + Preview */}
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:10}}>
+      {/* Quick chord insert */}
+      <div className="Row" style={{ alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
+        <strong>Quick chords</strong>
+        <span className="Small">(Key: {meta.key || 'G'})</span>
+        {majorScaleChordSet(meta.key || 'G').map(sym => (
+          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}]`}>
+            {sym}
+          </button>
+        ))}
+      </div>
+
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:6}}>
         <textarea
+          ref={editorRef}
           value={text}
           onChange={e=> setText(e.target.value)}
           style={{width:'100%', minHeight:'60vh', fontFamily:'ui-monospace, Menlo, Consolas, monospace'}}
@@ -402,6 +511,15 @@ function AdminPanel(){
         <button className="btn" onClick={stageSong}>Stage Song</button>
         <button className="btn" onClick={convertAndStage}>Convert → Stage</button>
         <button className="btn primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
+        {editingFile ? (
+          <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">
+            Editing existing
+          </span>
+        ) : (
+          <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }} title="New file will be created">
+            New song
+          </span>
+        )}
         <label style={{display:'flex', alignItems:'center', gap:4}}>
           <input type="checkbox" checked={persist} onChange={e=> setPersist(e.target.checked)} />
           Keep drafts in browser

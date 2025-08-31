@@ -25,7 +25,7 @@ function loadSong(rel){
 
 describe('MVP PDF planner', () => {
   it('chooses two columns for the candidate song when appropriate', async () => {
-    const song = loadSong('public/songs/test_two_column_candidate.chordpro')
+    const song = loadSong('src/__tests__/fixtures/chordpro/test_two_column_candidate.chordpro')
     const { summary } = await planSingleSong(song)
     expect(summary.pages).toBe(1)
     expect(summary.columns).toBe(2)
@@ -34,7 +34,7 @@ describe('MVP PDF planner', () => {
   })
 
   it('handles midwrap two-column case on a single page', async () => {
-    const song = loadSong('public/songs/test_two_column_midwrap.chordpro')
+    const song = loadSong('src/__tests__/fixtures/chordpro/test_two_column_midwrap.chordpro')
     const { summary } = await planSingleSong(song)
     expect(summary.pages).toBe(1)
     expect([1,2]).toContain(summary.columns)
@@ -42,14 +42,14 @@ describe('MVP PDF planner', () => {
   })
 
   it('falls back to multi-page without splitting sections', async () => {
-    const song = loadSong('public/songs/test_multi_page_forced.chordpro')
+    const song = loadSong('src/__tests__/fixtures/chordpro/test_multi_page_forced.chordpro')
     const { summary } = await planSingleSong(song)
     expect(summary.pages).toBeGreaterThan(1)
     expect(summary.columns).toBe(1)
   })
 
   it('dense trailing chords still yields a clean single page', async () => {
-    const song = loadSong('public/songs/test_trailing_chords_dense_v2.chordpro')
+    const song = loadSong('src/__tests__/fixtures/chordpro/test_trailing_chords_dense_v2.chordpro')
     const { summary } = await planSingleSong(song)
     expect(summary.pages).toBe(1)
     expect(summary.columns).toBe(1)

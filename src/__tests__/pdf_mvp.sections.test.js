@@ -17,7 +17,7 @@ function songFromChordpro(rel){
 
 describe('MVP section integrity and header spacing', () => {
   it('never splits a section across columns/pages', async () => {
-    const song = songFromChordpro('public/songs/test_two_column_many_sections.chordpro')
+    const song = songFromChordpro('src/__tests__/fixtures/chordpro/test_two_column_many_sections.chordpro')
     const { plan } = await planSingleSong(song)
     const seen = new Set()
     for (const page of plan.pages) {
@@ -41,4 +41,3 @@ describe('MVP section integrity and header spacing', () => {
     expect(offset - height).toBeGreaterThanOrEqual(bodyPt * 1.1 - 0.5)
   })
 })
-

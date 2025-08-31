@@ -1,55 +1,11 @@
-// Public PDF API used by components (SongView, Setlist, Songbook).
-// pdf2 currently runs alongside the legacy engine; this facade delegates to
-// the newer implementation while keeping a fallback to the old generator.
+// Public PDF API facade. Delegates to the MVP engine and exposes
+// `sectionsFromSong` for tests/utilities.
 
-import jsPDF from "jspdf";
-import { planSong, renderSongIntoDoc } from "../pdf2/index.js";
 import {
   downloadSingleSongPdf as downloadSingleSongPdfMvp,
   downloadMultiSongPdf as downloadMultiSongPdfMvp,
   downloadSongbookPdf as downloadSongbookPdfMvp,
 } from "../pdf_mvp/index.js";
-
-// Lazy legacy import for fallback when pdf2 isn't available
-let legacyPromise;
-async function loadLegacy() {
-  legacyPromise ||= import("./index - Copy.js");
-  return legacyPromise;
-}
-
-const TRACE_ON = (() => {
-  try {
-    return (
-      typeof window !== "undefined" &&
-      window.localStorage?.getItem("pdfPlanTrace") === "1"
-    );
-  } catch {
-    return false;
-  }
-})();
-
-function debugTraceSections(sections) {
-  if (!TRACE_ON) return;
-  const rows = sections.map((s) => ({ id: s.id, len: (s.text || "").length }));
-  console.table(rows);
-}
-
-function debugWarnFirstPage(plan) {
-  if (!TRACE_ON) return;
-  const count =
-    plan.pages?.[0]?.columns?.reduce((n, c) => n + (c.sectionIds?.length || 0), 0) ||
-    0;
-  if (count === 0) console.warn("[pdf2] first page received zero sections");
-}
-
-// --- Shared defaults ---------------------------------------------------------
-const defaultOpts = {
-  ptWindow: [16, 15, 14, 13, 12],
-  maxColumns: 2,
-  pageSizePt: { w: 612, h: 792 }, // Letter
-  marginsPt: { top: 56, right: 40, bottom: 56, left: 40 },
-  gutterPt: 24,
-};
 
 // Sections builder: convert a NormalizedSong into simple text "sections"
 // (no-split paragraphs). Chords are rendered inline by injecting

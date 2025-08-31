@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sectionsFromSong } from '../../pdf/index.js';
+import { sectionsFromSong } from '../utils/pdf/index.js';
 
 describe('sectionsFromSong', () => {
   it('injects chord tokens and section labels', () => {

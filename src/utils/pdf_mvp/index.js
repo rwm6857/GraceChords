@@ -11,7 +11,7 @@
 // - Fonts: Noto Sans family preferred; fall back to jsPDF built-ins.
 
 import jsPDF from 'jspdf'
-import { registerPdfFonts } from '../pdf2/fonts.js'
+import { registerPdfFonts } from './fonts.js'
 
 const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch
@@ -642,9 +642,13 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       // Additional TOC pages (two columns)
       while (idx < entries) {
         doc.addPage([PAGE.w, PAGE.h])
+        // Header: continued marker
+        try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+        doc.setFontSize(18)
+        drawTextSafe(doc, 'Table of Contents (continued)', MARGINS.left, MARGINS.top)
         try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
         doc.setFontSize(11)
-        let yL2 = MARGINS.top, yR2 = MARGINS.top
+        let yL2 = MARGINS.top + 24, yR2 = MARGINS.top + 24
         for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++) {
           const title = String(pre[idx].song?.title || 'Untitled')
           drawTextSafe(doc, `${idx+1}. ${title}`, leftX, yL2)
