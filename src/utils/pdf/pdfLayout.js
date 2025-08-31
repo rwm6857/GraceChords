@@ -438,6 +438,10 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
     }
     const layout = { pages: [{ columns }] }
 
+    const headerTitlePt = Math.max(22, winner.pt + 6)
+    const headerKeyPt = Math.max(12, winner.pt - 2)
+    const computedHeaderOffset = Math.ceil(headerTitlePt * 1.05 + headerKeyPt * 1.05 + 12)
+
     const plan = {
       lyricFamily: oBase.lyricFamily,
       chordFamily: oBase.chordFamily,
@@ -445,9 +449,11 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
       chordSizePt: winner.pt,
       columns: winner.cols,
       margin: oBase.margin,
-      headerOffsetY: oBase.headerOffsetY,
+      headerOffsetY: computedHeaderOffset,
       gutter: oBase.gutter,
       layout,
+      title: String(song?.title || song?.meta?.title || 'Untitled'),
+      key: String(song?.key || song?.meta?.key || ''),
       debugFooter
     }
     return { plan }
@@ -471,6 +477,11 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
     )
     plan = { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz, layout }
   }
+  plan.title = String(song?.title || song?.meta?.title || 'Untitled')
+  plan.key = String(song?.key || song?.meta?.key || '')
+  const headerTitlePt = Math.max(22, plan.lyricSizePt + 6)
+  const headerKeyPt = Math.max(12, plan.lyricSizePt - 2)
+  plan.headerOffsetY = Math.ceil(headerTitlePt * 1.05 + headerKeyPt * 1.05 + 12)
   plan.debugFooter = `Plan: ${plan.columns} col • ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length === 1 ? 'yes' : 'no'}`
   return { plan }
 }

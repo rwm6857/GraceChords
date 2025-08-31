@@ -18,14 +18,15 @@ export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
   const headerKeyPt = Math.max(12, plan.lyricSizePt - 2)
   ctx.fillStyle = '#000'
   ctx.font = `bold ${headerTitlePt}px ${plan.lyricFamily}`
-  ctx.fillText(plan.title, margin, margin + 24)
+  ctx.fillText(String(plan.title || 'Untitled'), margin, margin + 24)
   ctx.font = `italic ${headerKeyPt}px ${plan.lyricFamily}`
-  ctx.fillText(`Key: ${plan.key || '—'}`, margin, margin + 40)
+  const keyStr = String(plan.key || '—')
+  ctx.fillText(`Key of ${keyStr}`, margin, margin + 40)
 
   const lineGap = 4
   const sectionSize = plan.lyricSizePt
   const sectionTopPad = Math.round(plan.lyricSizePt * 0.85)
-  const contentStartY = margin + plan.headerOffsetY
+  const contentStartY = margin + (plan.headerOffsetY || (headerTitlePt * 1.05 + headerKeyPt * 1.05 + 12))
 
   const pages = plan.layout.pages || []
   const page = pages[0]
