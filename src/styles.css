@@ -152,6 +152,21 @@ input,select,textarea{
 
 .divider{ height:1px; background:var(--line); margin:18px 0 }
 
+/* Mobile bottom action bar (SongView) */
+.mobilebar{ display:none; }
+@media (max-width: 640px){
+  .mobilebar{
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    padding: var(--space-2) var(--space-4);
+    display: flex; gap: var(--space-2); justify-content: space-around;
+    z-index: 90;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.06);
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  }
+}
+
 /* ========== Media block ========== */
 .media__toggle{ display:inline-flex; align-items:center; gap:8px }
 .media__panel{ overflow:hidden; max-height:0; opacity:0; transition:max-height .25s ease, opacity .2s ease }
@@ -174,6 +189,11 @@ input,select,textarea{
   .tagbar .badge{ scroll-snap-align: start; white-space: nowrap; }
 }
 
+/* Compact icon buttons on very small screens */
+@media (max-width: 640px){
+  .iconbtn{ gap:6px; padding:6px 8px; }
+}
+
 /* ========== Home page layout ========== */
 .HomePage{
   max-width:1280px;
@@ -184,11 +204,18 @@ input,select,textarea{
   flex:1 1 auto;
   min-height:0;
 }
+@supports(padding: max(0px)){
+  .HomePage{
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
 .HomeHeader{
   position:sticky; top:0; z-index:5;
   background: var(--bg, Canvas);
   padding-block:1rem;
 }
+.HomeHeader .row, .HomeHeader input, .HomeHeader label{ min-width: 0; max-width: 100%; }
 /* Only the results scroll */
 .HomeResults{
   flex:1 1 auto;
@@ -200,7 +227,7 @@ input,select,textarea{
 .HomeGrid{
   display:grid;
   gap:0.875rem;
-  grid-template-columns:1fr;
+  grid-template-columns:minmax(0,1fr);
   margin-top:10px;
 }
 

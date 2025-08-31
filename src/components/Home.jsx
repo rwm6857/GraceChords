@@ -263,6 +263,7 @@ export default function Home(){
               onChange={e=> setQ(e.target.value)}
               onKeyDown={onSearchKeyDown}
               placeholder="Search title/tags/authors…"
+              aria-label="Search songs"
               style={{flex:1}}
             />
             <label className="row" style={{gap:8, alignItems:'center'}}>

@@ -31,3 +31,4 @@ export const SaveIcon = (p)=> <S {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 
 export const CopyIcon = (p)=> <S {...p}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></S>
 export const TrashIcon = (p)=> <S {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></S>
 export const PrintIcon = (p)=> <S {...p}><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="2"/></S>
+export const MinusIcon = (p)=> <S {...p}><path d="M5 12h14"/></S>

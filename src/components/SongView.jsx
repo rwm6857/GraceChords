@@ -5,7 +5,7 @@ import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import indexData from '../data/index.json'
-import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon } from './Icons'
+import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon, PlusIcon, MinusIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
@@ -270,7 +270,7 @@ if(!entry){
   
 
   return (
-    <div className="container">
+    <div className="container" style={isNarrow ? { paddingBottom: '84px' } : undefined}>
       <Busy busy={busy} />
       <div className="songpage__top">
         <Link to="/" className="back">← Back</Link>
@@ -286,9 +286,9 @@ if(!entry){
           <select value={toKey} onChange={e=> setToKey(e.target.value)}>
             {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
           </select>
-          <label style={{display:'inline-flex', alignItems:'center', gap:6}}>
+          <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle chords">
             <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
-            <EyeIcon /> Chords
+            <EyeIcon /> <span className="text-when-wide">Chords</span>
           </label>
           {!isNarrow && (
             <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle two-column reading view">
@@ -312,6 +312,7 @@ if(!entry){
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
             disabled={busy}
+            title="Download PDF"
           >
             {busy ? 'Exporting…' : <>
               <DownloadIcon /> <span className="text-when-wide">Download PDF</span>
@@ -324,6 +325,7 @@ if(!entry){
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
             onMouseEnter={prefetchJpg}
             onFocus={prefetchJpg}
+            title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
           >
             <DownloadIcon /> <span className="text-when-wide">Download JPG</span>
             <span className="text-when-narrow">JPG</span>
@@ -412,6 +414,16 @@ if(!entry){
               </div>
             )}
           </div>
+        </div>
+      )}
+      {/* Mobile action bar */}
+      {isNarrow && (
+        <div className="mobilebar" role="group" aria-label="Song actions">
+          <button className="btn iconbtn" onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
+          <button className="btn iconbtn" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
+          <button className="btn iconbtn" onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
+          <button className="btn iconbtn" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
+          <button className="btn iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
         </div>
       )}
     </div>

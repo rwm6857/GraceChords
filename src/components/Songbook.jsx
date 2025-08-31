@@ -226,7 +226,7 @@ export default function Songbook() {
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
           <button className="btn iconbtn" onClick={selectAllFiltered} disabled={!filteredCount} title="Select all filtered">
-            <PlusIcon /><span className="text-when-wide">Select all ({filteredCount})</span>
+            <PlusIcon /><span className="text-when-wide">Select all ({filteredCount})</span><span className="text-when-narrow">All</span>
           </button>
           <button className="btn iconbtn" onClick={clearAll} disabled={!selectedCount} title="Clear selection">
             <ClearIcon /><span className="text-when-wide">Clear</span>
@@ -239,7 +239,7 @@ export default function Songbook() {
             disabled={!selectedEntries.length || busy}
             title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
           >
-            {busy ? 'Exporting…' : <><DownloadIcon /><span className="text-when-wide">Export PDF ({selectedEntries.length})</span></>}
+            {busy ? 'Exporting…' : <><DownloadIcon /><span className="text-when-wide">Export PDF ({selectedEntries.length})</span><span className="text-when-narrow">PDF</span></>}
           </button>
         </div>
       </div>

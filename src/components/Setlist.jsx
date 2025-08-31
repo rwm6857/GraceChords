@@ -332,14 +332,14 @@ async function exportPdf() {
               onFocus={prefetchPdf}
               disabled={busy}
               title="Export set as a single PDF"
-            >{busy ? 'Exporting…' : <><DownloadIcon /> Export PDF</>}</button>
+            >{busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</button>
             <button
               className="btn iconbtn"
               onClick={bundlePptx}
               disabled={pptxCount===0 || !!pptxProgress}
               title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'}
             >
-              {pptxProgress ? pptxProgress : <><DownloadIcon /> Bundle PPTX</>}
+              {pptxProgress ? pptxProgress : <><DownloadIcon /> <span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}
             </button>
             <button className="btn iconbtn" onClick={onPrint} title="Print setlist"><PrintIcon /><span className="text-when-wide">Print</span></button>
             <button className="btn iconbtn" onClick={()=> setList([])} title="Clear setlist"><ClearIcon /><span className="text-when-wide">Clear</span></button>
