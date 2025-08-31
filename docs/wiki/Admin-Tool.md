@@ -11,8 +11,9 @@ Draft, load, and update songs directly in the browser.
 2. Write or paste ChordPro content and preview changes.
 3. Use "Load existing" to fetch a song from the catalog. When loaded, an "Editing existing" badge appears and the filename field shows the target.
 4. Use the Quick chords strip to insert chords like `[C]`, `[Am]` at the cursor. Buttons adapt to the song key (I, ii, iii, IV, V, vi).
-5. Click **Stage Song** to queue changes. If editing, the staged entry will carry an `update: <file>` commit message.
-6. Click **Create PR…** to push staged files to a feature branch and open a pull request.
+5. Set the Original Key by typing a symbol (e.g., C, Am, Dm, F#m). Non-standard entries are allowed; quick chord buttons default to G if the key is unrecognized.
+6. Click **Stage Song** to queue changes. If editing, the staged entry will carry an `update: <file>` commit message.
+7. Click **Create PR…** to push staged files to a feature branch and open a pull request.
 
 Notes
 - Staged filenames can be renamed inline before creating the PR.
