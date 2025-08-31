@@ -313,7 +313,10 @@ if(!entry){
             onFocus={prefetchPdf}
             disabled={busy}
           >
-            {busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Download PDF</span></>}
+            {busy ? 'Exporting…' : <>
+              <DownloadIcon /> <span className="text-when-wide">Download PDF</span>
+              <span className="text-when-narrow">PDF</span>
+            </>}
           </button>
           <button
             className="btn iconbtn"
@@ -323,6 +326,7 @@ if(!entry){
             onFocus={prefetchJpg}
           >
             <DownloadIcon /> <span className="text-when-wide">Download JPG</span>
+            <span className="text-when-narrow">JPG</span>
           </button>
         </div>
       </div>

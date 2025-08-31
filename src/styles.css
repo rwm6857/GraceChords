@@ -107,11 +107,16 @@ input,select,textarea{
   display:inline-flex; align-items:center; gap:8px;
   padding:6px 10px; border-radius: var(--radius-1);
   background: var(--btn); border:1px solid var(--line);
+  min-width: 0;
 }
 
 /* Hide supplemental text labels on very small screens */
 .text-when-wide { display: inline; }
 @media (max-width: 640px){ .text-when-wide { display: none; } }
+
+/* Show narrow labels on mobile only */
+.text-when-narrow { display: none; }
+@media (max-width: 640px){ .text-when-narrow { display: inline; } }
 
 .grid{ display:grid; grid-template-columns:1fr; gap:10px }
 @media(min-width:820px){ .grid{ grid-template-columns:1fr 1fr } }
@@ -276,8 +281,9 @@ input,select,textarea{
   .card.toolbar > * { width: 100%; }
   .card.toolbar label { width: 100%; }
   .card.toolbar select { width: 100%; }
-  .card.toolbar .btn { width: calc(50% - 4px); } /* two per row */
+  .card.toolbar .btn:not(.iconbtn) { width: calc(50% - 4px); } /* two per row for text buttons */
   .card.toolbar .btn.primary { width: 100%; }    /* Save gets full row */
+  .card.toolbar .iconbtn { width: auto; }        /* icon buttons shrink */
   .card.toolbar .meta { width: auto; }
 }
 
