@@ -1,7 +1,9 @@
 import { SongDoc, SongSection, SongLine, ChordPlacement } from './types';
 
 const RX_LONG_DIR = /^\{(start_of|end_of)_(verse|chorus|bridge|intro|tag|outro)(?::\s*([^}]+))?\}$/i;
-const RX_SHORT_DIR = /^\{(sov|eov|soc|eoc|sob|eob)\}$/i;
+// Short-form environments optionally accept a label after the code, with or without a colon, e.g.
+// {sov Verse 1} or {sov: Verse 1}
+const RX_SHORT_DIR = /^\{\s*(sov|eov|soc|eoc|sob|eob)(?::?\s*([^}]+))?\s*\}$/i;
 const RX_CAPO = /^\{capo:\s*(\d+)\}$/i;
 const RX_COLUMNS = /^\{columns:\s*(\d+)\}$/i;
 const RX_COL_BREAK = /^\{column_break\}$/i;
@@ -62,8 +64,10 @@ function parseDirective(raw: string): Dir | null {
   }
   m = RX_SHORT_DIR.exec(t);
   if (m) {
-    const map = SHORT_MAP[m[1].toLowerCase()];
-    if (map) return { start: map.start, kind: map.kind };
+    const code = m[1].toLowerCase();
+    const label = (m[2] || '').trim();
+    const map = SHORT_MAP[code];
+    if (map) return { start: map.start, kind: map.kind, label: map.start && label ? label : undefined };
   }
   return null;
 }

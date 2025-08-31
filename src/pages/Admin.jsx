@@ -488,6 +488,37 @@ function AdminPanel(){
         ))}
       </div>
 
+      {/* Quick directives (short form for verse/chorus/bridge; long form for others) */}
+      <div className="Row" style={{ alignItems:'center', gap:8, marginTop:6, flexWrap:'wrap' }}>
+        <strong>Directives</strong>
+        {[
+          { k: 'verse',  label: 'Verse',  short: 'sov', end: 'eov' },
+          { k: 'chorus', label: 'Chorus', short: 'soc', end: 'eoc' },
+          { k: 'bridge', label: 'Bridge', short: 'sob', end: 'eob' },
+          { k: 'intro',  label: 'Intro' },
+          { k: 'tag',    label: 'Tag' },
+          { k: 'outro',  label: 'Outro' },
+        ].map(d => (
+          <button key={d.k} className="btn small" title={`Insert ${d.label} block`} onClick={() => {
+            const start = d.short ? `{${d.short} ${d.label}}\n` : `{start_of_${d.k}: ${d.label}}\n`
+            const end = d.end ? `\n{${d.end}}` : `\n{end_of_${d.k}}`
+            const ta = editorRef.current
+            if (ta && ta.selectionStart !== undefined && ta.selectionEnd !== undefined && ta.selectionStart !== ta.selectionEnd) {
+              const selStart = ta.selectionStart
+              const selEnd = ta.selectionEnd
+              setText(prev => prev.slice(0, selStart) + start + prev.slice(selStart, selEnd) + end + prev.slice(selEnd))
+              setTimeout(() => {
+                try { ta.focus(); ta.setSelectionRange(selStart + start.length, selEnd + start.length) } catch {}
+              }, 0)
+            } else {
+              insertAtCursor(`${start}\n${end}`)
+            }
+          }}>
+            {d.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:6}}>
         <textarea
           ref={editorRef}
