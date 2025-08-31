@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { KEYS, parseChordPro } from '../utils/chordpro'
+import { KEYS, parseChordPro, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
@@ -18,7 +18,7 @@ const INITIAL_TEXT = `{title: }
 {key: }
 {authors: }
 {country: }
-{tags: Fast, Slow, Hymn, Holiday}
+{tags: }
 {youtube: }
 {mp3: }
 {pptx: }
@@ -262,6 +262,20 @@ function AdminPanel(){
     return out
   }
 
+  function resolveQuickChordMajor(inputKey){
+    // Accept C, F#, Bb, Am, Dm, F#m etc. Use relative major for minor keys.
+    const s = String(inputKey || '').trim()
+    if (!s) return 'G'
+    const m = /^([A-Ga-g][#b]?)(m|min)?$/i.exec(s)
+    if (!m) return 'G'
+    const root = transposeSym(m[1], 0) // normalize flats to sharps
+    const idx = KEYS.indexOf(root)
+    if (idx < 0) return 'G'
+    const isMinor = !!m[2]
+    const majorIdx = isMinor ? (idx + 3) % KEYS.length : idx
+    return KEYS[majorIdx]
+  }
+
   const [prOpen, setPrOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
@@ -389,13 +403,11 @@ function AdminPanel(){
         </label>
 
         <label>Original Key
-          <select
+          <input
             value={meta.key||''}
             onChange={e=> setText(t=> setOrInsertMeta(t, 'key', e.target.value))}
-          >
-            <option value=""></option>
-            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-          </select>
+            placeholder="e.g., C, Am, Dm, F#m"
+          />
         </label>
 
         <label>Authors
@@ -463,7 +475,7 @@ function AdminPanel(){
       <div className="Row" style={{ alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
         <strong>Quick chords</strong>
         <span className="Small">(Key: {meta.key || 'G'})</span>
-        {majorScaleChordSet(meta.key || 'G').map(sym => (
+        {majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')).map(sym => (
           <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}]`}>
             {sym}
           </button>

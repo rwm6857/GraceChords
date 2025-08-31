@@ -213,12 +213,44 @@ export default function Home(){
 
   optionRefs.current = []
 
+  // ---- Hidden Admin reveal (triple-click title or Alt+Shift+A) ----
+  const [showAdmin, setShowAdmin] = useState(() => {
+    try { return localStorage.getItem('adminReveal') === '1' } catch { return false }
+  })
+  const clickRef = useRef({ n: 0, t: 0 })
+  function maybeRevealAdmin(){
+    const now = Date.now()
+    const d = clickRef.current
+    if (now - d.t > 1800) { d.n = 0 } // reset window after 1.8s
+    d.t = now
+    d.n += 1
+    if (d.n >= 3) {
+      setShowAdmin(true)
+      try { localStorage.setItem('adminReveal', '1') } catch {}
+      d.n = 0
+    }
+  }
+  useEffect(() => {
+    function onKey(e){
+      if ((e.key === 'A' || e.key === 'a') && (e.altKey && e.shiftKey)){
+        setShowAdmin(true)
+        try { localStorage.setItem('adminReveal', '1') } catch {}
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <div className="HomePage">
       <div className="HomeHeader">
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <h1>GraceChords</h1>
-          {/* Removed redundant Setlist link (NavBar already has it) */}
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
+          <h1 onClick={maybeRevealAdmin} title="GraceChords">GraceChords</h1>
+          {showAdmin && (
+            <Link to="/admin" className="Small" style={{ textDecoration:'none', opacity:0.75 }}>
+              Admin
+            </Link>
+          )}
         </div>
 
         <div className="card" style={{display:'grid', gap:10}}>
