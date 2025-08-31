@@ -1,13 +1,22 @@
-Draft and preview songs directly in the browser.
+Draft, load, and update songs directly in the browser.
 
 ## At a glance
 - Compose ChordPro text with live preview
-- Export the result as `.chordpro`
+- Load an existing song from the index to update it
+- Stage songs and open a PR to add/update `public/songs/*.chordpro`
+- Quick chord insert buttons (transpose-aware by key)
 - Password protected via `VITE_ADMIN_PW`
-- Currently edits one song at a time
 
 1. Navigate to `/admin` and enter the password.
 2. Write or paste ChordPro content and preview changes.
-3. Click **Export** to download the `.chordpro` file for storage in `public/songs`.
+3. Use "Load existing" to fetch a song from the catalog. When loaded, an "Editing existing" badge appears and the filename field shows the target.
+4. Use the Quick chords strip to insert chords like `[C]`, `[Am]` at the cursor. Buttons adapt to the song key (I, ii, iii, IV, V, vi).
+5. Click **Stage Song** to queue changes. If editing, the staged entry will carry an `update: <file>` commit message.
+6. Click **Create PR…** to push staged files to a feature branch and open a pull request.
+
+Notes
+- Staged filenames can be renamed inline before creating the PR.
+- When editing an existing file, the default commit message is `update: <filename>`.
+- Drafts can be saved in the browser and exported as a ZIP.
 
 [[ChordPro-Guide]]
