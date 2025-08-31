@@ -112,6 +112,7 @@ input,select,textarea{
 @media(min-width:820px){ .grid{ grid-template-columns:1fr 1fr } }
 
 .row{ display:flex; align-items:center; justify-content:space-between; gap:10px }
+.row{ flex-wrap: wrap; }
 .row .meta{ color:var(--muted); font-size:12px }
 
 .meta { color: var(--muted); }
@@ -152,12 +153,16 @@ input,select,textarea{
 
 /* ========== Tags & badges ========== */
 .badge{
-  padding:2px 8px; border-radius:999px;
+  padding:4px 10px; border-radius:999px;
   background:#eef2ff; color:#3730a3; border:1px solid #e6e6ff;
   font-size:12px
 }
 .badge.active{ background:#dbeafe; border-color:#bfdbfe }
 .tagbar{ display:flex; flex-wrap:wrap; gap:8px }
+@media (max-width: 640px){
+  .tagbar{ flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .tagbar .badge{ scroll-snap-align: start; white-space: nowrap; }
+}
 
 /* ========== Home page layout ========== */
 .HomePage{
@@ -219,7 +224,7 @@ input,select,textarea{
 }
 .topnav__inner{
   max-width:1200px; margin:0 auto; padding:10px 16px;
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap;
 }
 
 .brand{
@@ -228,6 +233,9 @@ input,select,textarea{
 }
 
 .topnav__links{ display:flex; gap:12px; align-items:center; }
+@media (max-width: 640px){
+  .topnav__links{ width: 100%; margin-top: 6px; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
 
 .topnav__link{
   padding:6px 10px; border-radius:8px;

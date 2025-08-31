@@ -271,7 +271,7 @@ export default function Home(){
                 checked={lyricsOn}
                 onChange={e=> setLyricsOn(e.target.checked)}
               />
-              <span className="meta">Lyrics contain</span>
+              <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
             </label>
           </div>
 
