@@ -5,7 +5,7 @@ Learn how GraceChords renders charts and songbooks for print.
 - Widow and orphan lines are tightened
 - Supports single or multi-column layouts
 - Embedded fonts live in `public/fonts`
-- Songbook TOC page numbers are computed after layout
+- Songbook TOC lists entries as "#. Title" (no page numbers); defaults to one column and switches to two columns before spilling to a second page
 
 ### Layout rules
 Charts keep whole sections on one page. The engine adjusts spacing to avoid lonely first or last lines.

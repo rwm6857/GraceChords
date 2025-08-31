@@ -272,6 +272,17 @@ function renderSection(doc, section, x, y, width, lineH){
       cursorY += lineH
       continue
     }
+    // If a line looks like a section label (no chords and label-ish text), render as header for consistency
+    const raw = String(ln.plain || '').trim()
+    const hasChords = Array.isArray(ln.chords) && ln.chords.length > 0
+    if (!hasChords && isHeaderLike(raw)){
+      try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+      doc.setFontSize(bodyPt)
+      drawTextSafe(doc, `[${raw.toUpperCase()}]`, x, cursorY)
+      cursorY += lineH
+      try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+      continue
+    }
     const rows = splitLyricWithChords(doc, ln.plain || '', ln.chords || [], width)
     for(const row of rows){
       if ((row.chords || []).length){
@@ -310,6 +321,11 @@ function renderSection(doc, section, x, y, width, lineH){
 
   // spacer between sections
   return cursorY + SECTION_SPACER_PT
+}
+
+function isHeaderLike(text=''){
+  const s = String(text).trim()
+  return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i.test(s)
 }
 
 function renderPlanned(doc, plan, sections, song){
@@ -532,17 +548,29 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       const y = MARGINS.top + (availH - h) / 2
       doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, 'FAST')
     } catch {
-      // If image fails, draw a simple title
+      // If image fails, fall back to default cover rendering below
       try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
-      doc.setFontSize(28)
-      drawTextSafe(doc, 'Songbook', PAGE.w/2, PAGE.h/2)
+      doc.setFontSize(TITLE_PT)
+      try { doc.text('GraceChords Songbook', PAGE.w/2, PAGE.h/2 - 10, { align: 'center', baseline: 'middle' }) } catch {}
+      try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+      doc.setFontSize(SUBTITLE_PT)
+      try { doc.setTextColor(90,90,90) } catch {}
+      const dateStr = new Date().toISOString().slice(0,10)
+      try { doc.text(dateStr, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
+      try { doc.setTextColor(0,0,0) } catch {}
     }
     pageNo++
   } else {
-    // Simple cover if no image
+    // Default cover: centered title + date subtitle (matching song page scheme)
     try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
-    doc.setFontSize(28)
-    drawTextSafe(doc, 'Songbook', PAGE.w/2, PAGE.h/2)
+    doc.setFontSize(TITLE_PT)
+    try { doc.text('GraceChords Songbook', PAGE.w/2, PAGE.h/2 - 10, { align: 'center', baseline: 'middle' }) } catch {}
+    try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+    doc.setFontSize(SUBTITLE_PT)
+    try { doc.setTextColor(90,90,90) } catch {}
+    const dateStr = new Date().toISOString().slice(0,10)
+    try { doc.text(dateStr, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
+    try { doc.setTextColor(0,0,0) } catch {}
     pageNo++
   }
 
@@ -564,15 +592,6 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
     }
   }
 
-  // Compute page numbers per song (account for cover + all TOC pages)
-  const pageStart = []
-  if (includeTOC) pageNo += tocPages
-  for (let i = 0; i < pre.length; i++){
-    pageStart[i] = pageNo
-    const pages = Math.max(1, pre[i].plan.pages?.length || 1)
-    pageNo += pages
-  }
-
   // TOC page
   if (includeTOC){
     const leftX = MARGINS.left
@@ -584,7 +603,7 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
     doc.setFontSize(18)
     drawTextSafe(doc, 'Table of Contents', MARGINS.left, MARGINS.top)
     try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
-    doc.setFontSize(12)
+    doc.setFontSize(11)
 
     let idx = 0
     if (entries <= rowsPerColFirst) {
@@ -592,7 +611,7 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       let y = yStartFirst
       while (idx < entries && y <= PAGE.h - MARGINS.bottom - lineH) {
         const title = String(pre[idx].song?.title || 'Untitled')
-        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, y)
+        drawTextSafe(doc, `${idx+1}. ${title}`, leftX, y)
         y += lineH
         idx++
       }
@@ -602,13 +621,13 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       // Left column
       for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++) {
         const title = String(pre[idx].song?.title || 'Untitled')
-        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, yL)
+        drawTextSafe(doc, `${idx+1}. ${title}`, leftX, yL)
         yL += lineH
       }
       // Right column
       for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++) {
         const title = String(pre[idx].song?.title || 'Untitled')
-        drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, rightX, yR)
+        drawTextSafe(doc, `${idx+1}. ${title}`, rightX, yR)
         yR += lineH
       }
 
@@ -616,16 +635,16 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       while (idx < entries) {
         doc.addPage([PAGE.w, PAGE.h])
         try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
-        doc.setFontSize(12)
+        doc.setFontSize(11)
         let yL2 = MARGINS.top, yR2 = MARGINS.top
         for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++) {
           const title = String(pre[idx].song?.title || 'Untitled')
-          drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, leftX, yL2)
+          drawTextSafe(doc, `${idx+1}. ${title}`, leftX, yL2)
           yL2 += lineH
         }
         for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++) {
           const title = String(pre[idx].song?.title || 'Untitled')
-          drawTextSafe(doc, `${idx+1}. ${title}  ....  ${pageStart[idx]}`, rightX, yR2)
+          drawTextSafe(doc, `${idx+1}. ${title}`, rightX, yR2)
           yR2 += lineH
         }
       }
