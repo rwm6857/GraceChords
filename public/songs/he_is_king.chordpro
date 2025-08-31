@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [Bm]The glory of our Lord and King, our God who’s strong and mighty
 [Em]All of creation and the earth, will give him praises
 [Bm]Great are you Lord my Jesus, who overcame the pow’r of death
@@ -18,8 +18,11 @@ Pre-Chorus
 [Bm]We will give him glory
 [G]Raise up a [D]cry [A]
 
-Chorus
+{eov}
+{soc Chorus}
 [D]Jesus you will reign [A]forever, full of grace and full of [Bm]mercy
 [G]No one can compare to you Lord, mighty, strong in [D]battle [A]
 [Bm]Lamb of God, you are exalted, seated on the throne [G]eternal
 [D]All the earth and every [A]nation give him praise now and [Bm]forevermore
+
+{eoc}

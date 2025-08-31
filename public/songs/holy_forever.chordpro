@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse 1
+{sov Verse 1}
 A [C]thousand generations
 [F]Falling down in [C]worship
 To [Am]sing the song of [G]ages to the [F]Lamb
@@ -23,7 +23,8 @@ All [F]thrones and dominions
 All [G]powers and positions
 Your [Am]name stands above them [Dm]all
 
-Chorus
+{eov}
+{soc Chorus}
 And the angels [F]cry, [G]Holy
 All creation [C]cries, [Am]Holy
 You are lifted [Dm]high, [G]Holy
@@ -34,7 +35,8 @@ To the King of [C]Kings, [Am]Holy
 You will always [Dm]be, [G]Holy
 Holy [C]forever
 
-Verse 2
+{eoc}
+{sov Verse 2}
 [C]If you’ve been forgiven and
 [F]If you’ve been re[C]deemed
 [Am]Sing the song [C]forever to the [F]Lamb
@@ -42,6 +44,9 @@ Verse 2
 [Am]Sing the song [G]forever to the [F]Lamb
 We’ll [Am]sing the song for[G]ever and [F]amen
 
-Tag
+{eov}
+{start_of_tag: Tag}
 You will always [Dm]be, Ho[G]ly
 Holy for[C]ever
+
+{end_of_tag}

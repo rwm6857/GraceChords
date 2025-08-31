@@ -7,14 +7,17 @@
 {mp3: }
 {pptx: }
 
-Verse 1
+{sov Verse 1}
 [D]Great is thy faithfulness, O God my [G]Father [A7] [D]
 [G]There is no shadow of turning with [D]Thee
 [A]Thou changest not, thy compassions they [D]fail not [Em7]
 [G]As thou hast been, thou forever wilt [D]be [A7] [D]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]Great is thy [D]faithfulness, great is thy [Bm]faithfulness
 [Em]Morning by morning new mercies I [A7]see
 [A]All I have needed thy hand hath [D]provided [Em7]
 [G]Great is thy faithfulness, Lord unto [D]me [A7] [D]
+
+{eoc}

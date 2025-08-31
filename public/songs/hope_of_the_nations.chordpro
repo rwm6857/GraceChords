@@ -7,14 +7,17 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [F]Raise up the flag, to all of the [Bb/F]lands
 [F]See your salvation that’s at [Eb]hand
 [F]Prepare the way, the way of our [Bb/F]Lord
 [F]The King of glory soon to [Gm]come [Bb/C] [F]
 
-Chorus
+{eov}
+{soc Chorus}
 [C7]Lift it high, the cross of [F]Jesus Christ
 [Am7]He's the hope of the [Gm7]earth and [Eb]world [Csus4]
 [F]Lift it high, the cross of [Am7]Jesus Christ
 [Gm7]Till the day, that the [Bb/C]nations give him [F]praise
+
+{eoc}

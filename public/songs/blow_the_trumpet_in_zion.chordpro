@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [Dm]Rush in the city, march to the wall
 [C]Great is the army commanded by the Lord
 [Dm]Rush in the city, march to the wall
@@ -19,8 +19,11 @@ Pre-Chorus
 [F]The Lord declares his [Gm]voice
 [A]Be strong and [Dm]mighty
 
-Chorus
+{eov}
+{soc Chorus}
 [Dm]Blow the trumpets of war in Zion
 [A]Sound them in the holy mountain
 [Dm]Blow the trumpets of war in Zion
 [Bb]Let them re[A]sound in [Dm]Zion
+
+{eoc}

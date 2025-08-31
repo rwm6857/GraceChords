@@ -7,13 +7,14 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [D]Blessing and [G/D]honor, [D]glory [G/D]and po[D]wer
 [D]be unto the [A/C#]Ancient of [Bm7]Days; [A/C#]
 [D]From [G/D]ev’ry [D]nation, [D]all of cre[G/D]ation[D]
 [Bm]bow before the [A/C#]Ancient of [D]Days. [D/F#]
 
-Chorus
+{eov}
+{soc Chorus}
 [G]Ev’ry tongue in [Em7]heaven and [A]earth
 Shall [D/F#]declare your glory,
 [G]ev’ry knee [Em7]shall bow at your [A]throne in wor[D/F#]ship; [F#m7]
@@ -21,12 +22,16 @@ Shall [D/F#]declare your glory,
 [D/F#]and your [F#m7]kingdom [G]shall [Em7]not pass [A7]away,
 O [G/A]Ancient of [D]Days.
 
-Bridge
+{eoc}
+{sob Bridge}
 Your [D]kingdom shall reign over all the earth,
 [C/D]Sing unto [G/D]the [C/D]Ancient of [D]Days
 [D]For none can compare to your matchless worth,
 [C/D]Sing unto [G/D]the [C/D]Ancient of [D]Days
 
-Tag
+{eob}
+{start_of_tag: Tag}
 O [D]Ancient of [G/D]Days.   O [D]Ancient of Days.
 O [G/A]Ancient of [D]Days.
+
+{end_of_tag}

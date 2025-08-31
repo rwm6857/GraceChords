@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [A]Above all [D]powers, [E]above all [A]kings,
 [A/C#]Above all [D]nature and [E]all created [A]things.
 [A/G#]Above all [F#m]wisdom and all [Amaj7/E]the ways of [D]man,[A/C#]
@@ -18,9 +18,12 @@ Verse
 [A/G#]Above all [F#m]wealth and [Amaj7/E]]treasures of the [D]earth,[A/C#]
 [Bm7]There’s no way to [D/A]measure what you’[C#sus4/G#]re worth. [C#]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]Cruci[Bm7]fied, [E/G#]laid behind the [A]stone,
 You [A]lived to [Bm7]die, [E/G#]rejected and [A]alone.
 [A/G#]Like a [F#m]rose, [Amaj7/E]trampled on the [D]ground,[A/C#]
 You took the [Bm7]fall, and [A/C#]now you [D2]reign, [E]above [A]all.
 (You took the fall, and now your reign, Yeshua)
+
+{eoc}

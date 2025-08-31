@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [B]The cross of our Christ is an [G#m]everlasting love
 [C#m]A love that holds, never [F#]fails
 [B]We will go towards Jerusalem with this [E]truth of Christ
@@ -19,7 +19,8 @@ Pre-Chorus
 [E]Prepare the way, let his kingdom [B]come
 [C#m]His church will rise and be vic[F#]torious
 
-Chorus
+{eov}
+{soc Chorus}
 [E/F#]Holding the word the Lord com[B]mands
 [E]Rise up oh Global Church of [B]Christ
 [G#m]We will not turn back nor [C#m]flee
@@ -27,3 +28,5 @@ When we're faced with death and [E/F#]fear
 [B]Holding revival in our [E]hearts
 Rise up oh Global Church of [B]Christ
 [C#m]Till our Jesus comes in [F#7]glory as the [B]King
+
+{eoc}
