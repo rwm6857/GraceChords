@@ -21,6 +21,22 @@
   --accent: var(--primary);
   --panel: var(--card);
   --line: var(--border);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  /* Radius */
+  --radius-1: 6px;
+  --radius-2: 10px;
+
+  /* Typography */
+  --font-base: clamp(14px, 3.5vw, 16px);
+  --font-meta: 0.9rem;
+  --font-title: clamp(22px, 5.5vw, 28px);
 }
 
 [data-theme="dark"] {
@@ -43,35 +59,37 @@
 html, body, #root { height: 100% }
 .App { min-height: 100dvh; display: flex; flex-direction: column; }
 .Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
-html, body { background: var(--bg); color: var(--text); }
+html, body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans', sans-serif;
+  font-size: var(--font-base);
 }
 
 a{ color: var(--primary); text-decoration: none }
 
-.container{ padding:16px; max-width:1200px; margin:0 auto }
+.container{ padding: var(--space-4); max-width:1200px; margin:0 auto }
+@media (max-width: 480px){ .container{ padding: var(--space-3); } }
 
 .card{
   background: var(--card);
   border:1px solid var(--line);
-  border-radius:10px;
-  padding:12px;
+  border-radius: var(--radius-2);
+  padding: var(--space-3);
 }
 
 input,select,textarea{
-  padding:8px 10px;
+  padding: var(--space-2) 10px;
   border:1px solid var(--line);
-  border-radius:8px;
+  border-radius: var(--radius-1);
   background: var(--card);
   color: var(--text);
 }
 
 .btn{
-  padding:8px 12px;
-  border-radius:8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-1);
   border:1px solid var(--line);
   background: var(--btn);
   color: var(--btn-text);
@@ -86,7 +104,7 @@ input,select,textarea{
 
 .iconbtn{
   display:inline-flex; align-items:center; gap:8px;
-  padding:6px 10px; border-radius:6px;
+  padding:6px 10px; border-radius: var(--radius-1);
   background: var(--btn); border:1px solid var(--line);
 }
 
@@ -102,13 +120,13 @@ input,select,textarea{
 
 /* ========== Song page bits ========== */
 .songpage__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
-.songpage__title{ margin:0; font-size:28px; line-height:1.2 }
+.songpage__title{ margin:0; font-size: var(--font-title); line-height:1.2 }
 .songpage__meta{ color:var(--muted); font-size:13px; margin-top:4px }
 
 .songpage__sheet{
   background: var(--card);
-  padding:16px;
-  border-radius:10px;
+  padding: var(--space-4);
+  border-radius: var(--radius-2);
   box-shadow:0 1px 2px rgba(0,0,0,.03);
   margin-top:12px;
 }
