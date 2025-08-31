@@ -330,7 +330,13 @@ function AdminPanel(){
 
   return (
     <div className="container">
-      <h1>Admin</h1>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div>
+          <a href="/" className="back">← Back</a>
+        </div>
+        <h1 style={{ margin: 0 }}>Admin</h1>
+        <div />
+      </div>
 
       <div className="card">
         <div className="Row" style={{ alignItems:'center', gap:8 }}>
