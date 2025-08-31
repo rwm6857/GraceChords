@@ -8,6 +8,9 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
 import SongCard from './ui/SongCard'
+import { PlusIcon } from './Icons'
+import { DownloadIcon } from './Icons'
+import { ClearIcon } from './Icons'
 import '../styles/cards.css'
 import '../styles/songbook.css'
 
@@ -222,29 +225,30 @@ export default function Songbook() {
           />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          <button className="btn" onClick={selectAllFiltered} disabled={!filteredCount}>
-            Select all ({filteredCount})
+          <button className="btn iconbtn" onClick={selectAllFiltered} disabled={!filteredCount} title="Select all filtered">
+            <PlusIcon /><span className="text-when-wide">Select all ({filteredCount})</span>
           </button>
-          <button className="btn" onClick={clearAll} disabled={!selectedCount}>
-            Clear
+          <button className="btn iconbtn" onClick={clearAll} disabled={!selectedCount} title="Clear selection">
+            <ClearIcon /><span className="text-when-wide">Clear</span>
           </button>
           <button
-            className="btn primary"
+            className="btn primary iconbtn"
             onClick={handleExport}
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
             disabled={!selectedEntries.length || busy}
             title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
           >
-            {busy ? 'Exporting…' : `Export PDF (${selectedEntries.length})`}
+            {busy ? 'Exporting…' : <><DownloadIcon /><span className="text-when-wide">Export PDF ({selectedEntries.length})</span></>}
           </button>
         </div>
       </div>
 
       {/* Two-pane region */}
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div className="BuilderPage" style={{ marginTop: 12 }}>
         {/* Left pane */}
         <div className="BuilderLeft">
+          <div className="card">
           <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 8 }}>
             <div className="Field" style={{ minWidth: 220 }}>
               <label htmlFor="sb-search">Search:</label>
@@ -340,10 +344,12 @@ export default function Songbook() {
               })}
             </div>
           </div>
+          </div>
         </div>
 
         {/* Right pane */}
         <div className="BuilderRight">
+          <div className="card">
           <strong>Current selection ({selectedEntries.length})</strong>
           <div
             className="PreviewList"
@@ -361,6 +367,7 @@ export default function Songbook() {
                 </li>
               ))}
             </ol>
+          </div>
           </div>
         </div>
       </div>

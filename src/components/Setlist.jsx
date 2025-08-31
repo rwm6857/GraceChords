@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon } from './Icons'
+import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, PrintIcon } from './Icons'
 import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
@@ -262,11 +262,11 @@ async function exportPdf() {
             </option>
           ))}
         </select>
-        <button className="btn" onClick={onNew}>New</button>
-        <button className="btn primary" onClick={onSave}>Save</button>
+        <button className="btn iconbtn" onClick={onNew} title="New set"><PlusIcon /><span className="text-when-wide">New</span></button>
+        <button className="btn primary iconbtn" onClick={onSave} title="Save set"><SaveIcon /><span className="text-when-wide">Save</span></button>
         {/* Save As removed per request */}
-        <button className="btn" onClick={onDuplicate} disabled={!list.length}>Duplicate</button>
-        <button className="btn" onClick={onDelete} disabled={!currentId}>Delete</button>
+        <button className="btn iconbtn" onClick={onDuplicate} disabled={!list.length} title="Duplicate set"><CopyIcon /><span className="text-when-wide">Duplicate</span></button>
+        <button className="btn iconbtn" onClick={onDelete} disabled={!currentId} title="Delete set"><TrashIcon /><span className="text-when-wide">Delete</span></button>
 
         {/* Quick transpose */}
         <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:6}}>
@@ -277,8 +277,9 @@ async function exportPdf() {
         </div>
       </div>
 
-      <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
-        <div>
+      <div className="BuilderPage" style={{marginTop:12}}>
+        <div className="BuilderLeft">
+          <div className="card">
           {/* Removed the redundant "Setlist name" field */}
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
@@ -289,14 +290,16 @@ async function exportPdf() {
                   key={s.id}
                   title={s.title}
                   subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                  rightSlot={<button className="btn" onClick={()=> addSong(s)}>Add</button>}
+                  rightSlot={<button className="btn iconbtn" onClick={()=> addSong(s)} title="Add to set"><PlusIcon /><span className="text-when-wide">Add</span></button>}
                 />
               ))}
             </div>
           </div>
+          </div>
         </div>
 
-        <div>
+        <div className="BuilderRight">
+          <div className="card">
           <strong>Current setlist ({list.length})</strong>
           <div style={{minHeight:0, maxHeight:360, overflow:'auto', marginTop:6}}>
             {list.map((sel)=>{
@@ -321,24 +324,25 @@ async function exportPdf() {
               )
             })}
           </div>
-          <div style={{display:'flex', gap:8, marginTop:8}}>
+          <div style={{display:'flex', gap:8, marginTop:8, flexWrap:'wrap'}}>
             <button
               className="btn primary iconbtn"
               onClick={exportPdf}
               onMouseEnter={prefetchPdf}
               onFocus={prefetchPdf}
               disabled={busy}
+              title="Export set as a single PDF"
             >{busy ? 'Exporting…' : <><DownloadIcon /> Export PDF</>}</button>
             <button
               className="btn iconbtn"
               onClick={bundlePptx}
               disabled={pptxCount===0 || !!pptxProgress}
-              title={pptxCount===0 ? 'No PPTX files found for this set.' : ''}
+              title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'}
             >
               {pptxProgress ? pptxProgress : <><DownloadIcon /> Bundle PPTX</>}
             </button>
-            <button className="btn" onClick={onPrint}>Print</button>
-            <button className="btn" onClick={()=> setList([])}>Clear</button>
+            <button className="btn iconbtn" onClick={onPrint} title="Print setlist"><PrintIcon /><span className="text-when-wide">Print</span></button>
+            <button className="btn iconbtn" onClick={()=> setList([])} title="Clear setlist"><ClearIcon /><span className="text-when-wide">Clear</span></button>
           </div>
 
           {/* Print-only minimal outline */}
@@ -355,6 +359,7 @@ async function exportPdf() {
                 )
               })}
             </ol>
+          </div>
           </div>
         </div>
       </div>

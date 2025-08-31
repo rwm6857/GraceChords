@@ -101,12 +101,17 @@ input,select,textarea{
   border: 0;
 }
 .btn.primary:hover{ filter:brightness(.96) }
+.btn:hover{ filter: brightness(.98); }
 
 .iconbtn{
   display:inline-flex; align-items:center; gap:8px;
   padding:6px 10px; border-radius: var(--radius-1);
   background: var(--btn); border:1px solid var(--line);
 }
+
+/* Hide supplemental text labels on very small screens */
+.text-when-wide { display: inline; }
+@media (max-width: 640px){ .text-when-wide { display: none; } }
 
 .grid{ display:grid; grid-template-columns:1fr; gap:10px }
 @media(min-width:820px){ .grid{ grid-template-columns:1fr 1fr } }

@@ -36,6 +36,17 @@ export default function SongView(){
   const jpgAlerted = useRef(false)
   const [busy, setBusy] = useState(false)
   const lastPlan = useRef(null)
+  const [isNarrow, setIsNarrow] = useState(() => {
+    try { return window.innerWidth < 600 } catch { return false }
+  })
+
+  useEffect(() => {
+    function onResize(){
+      try { setIsNarrow(window.innerWidth < 600) } catch {}
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
@@ -269,7 +280,7 @@ if(!entry){
         </div>
       </div>
 
-      <div className="toolbar">
+      <div className="toolbar card">
         <div style={{display:'flex', alignItems:'center', gap:10}}>
           <span title="Transpose"><TransposeIcon /></span>
           <select value={toKey} onChange={e=> setToKey(e.target.value)}>
@@ -279,18 +290,20 @@ if(!entry){
             <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
             <EyeIcon /> Chords
           </label>
-          <label style={{display:'inline-flex', alignItems:'center', gap:6}}>
-            <input
-              type="checkbox"
-              checked={twoColsView}
-              onChange={e=> {
-                const v = e.target.checked
-                setTwoColsView(v)
-                try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
-              }}
-            />
-            View: {twoColsView ? '2 columns' : '1 column'}
-          </label>
+          {!isNarrow && (
+            <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle two-column reading view">
+              <input
+                type="checkbox"
+                checked={twoColsView}
+                onChange={e=> {
+                  const v = e.target.checked
+                  setTwoColsView(v)
+                  try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
+                }}
+              />
+              View: {twoColsView ? '2 columns' : '1 column'}
+            </label>
+          )}
         </div>
         <div style={{display:'flex', gap:10}}>
           <button
@@ -300,7 +313,7 @@ if(!entry){
             onFocus={prefetchPdf}
             disabled={busy}
           >
-            {busy ? 'Exporting…' : <><DownloadIcon /> Download PDF</>}
+            {busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Download PDF</span></>}
           </button>
           <button
             className="btn iconbtn"
@@ -309,17 +322,17 @@ if(!entry){
             onMouseEnter={prefetchJpg}
             onFocus={prefetchJpg}
           >
-            <DownloadIcon /> Download JPG
+            <DownloadIcon /> <span className="text-when-wide">Download JPG</span>
           </button>
         </div>
       </div>
 
       <div
         className="songpage__sheet"
-        style={twoColsView ? { columnCount: 2, columnGap: '24px' } : undefined}
+        style={!isNarrow && twoColsView ? { columnCount: 2, columnGap: '24px' } : undefined}
       >
         {(parsed.blocks || []).map((block, bi)=> (
-          <div key={bi} style={twoColsView ? { breakInside: 'avoid' } : undefined}>
+          <div key={bi} style={!isNarrow && twoColsView ? { breakInside: 'avoid' } : undefined}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
                         {(block.lines || []).map((ln, li) => {
                                 const key = `${bi}-${li}`
@@ -470,6 +483,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
+  const [measureKey, setMeasureKey] = useState(0)
 
   useEffect(()=>{
     if(!hostRef.current) return
@@ -506,7 +520,23 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
     const chordTop = 0                           // chord layer sits at host top
     setState({ offsets, padTop, chordTop })
-  }, [plain, chords, steps, showChords])
+  }, [plain, chords, steps, showChords, measureKey])
+
+  // Recalculate on container resize (orientation/viewport changes)
+  useEffect(() => {
+    const el = hostRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => setMeasureKey(k => k + 1))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Fallback: window resize
+  useEffect(() => {
+    function onResize(){ setMeasureKey(k => k + 1) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   return (
     <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: showChords ? state.padTop : 0}}>
