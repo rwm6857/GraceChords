@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
+import { compareSongsByTitle, normalizeTitleForSort } from '../utils/sort'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import SongCard from './ui/SongCard'
@@ -87,7 +88,7 @@ export default function Home(){
         return r.item
       })
     } else {
-      list = items.slice().sort((a,b) => a.title.localeCompare(b.title))
+      list = items.slice().sort(compareSongsByTitle)
     }
 
     // Tag filter
@@ -113,7 +114,7 @@ export default function Home(){
       const bs = scoreMap.has(b.id) ? scoreMap.get(b.id) : Number.POSITIVE_INFINITY
       if (as !== bs) return as - bs
 
-      return a.title.localeCompare(b.title)
+      return compareSongsByTitle(a, b)
     })
 
     return list

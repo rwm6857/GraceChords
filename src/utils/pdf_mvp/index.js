@@ -555,8 +555,12 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
       try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
       doc.setFontSize(SUBTITLE_PT)
       try { doc.setTextColor(90,90,90) } catch {}
-      const dateStr = new Date().toISOString().slice(0,10)
-      try { doc.text(dateStr, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
+      const d1 = new Date();
+      const mm1 = String(d1.getMonth() + 1).padStart(2, '0');
+      const dd1 = String(d1.getDate()).padStart(2, '0');
+      const yyyy1 = d1.getFullYear();
+      const dateStr1 = `${mm1}.${dd1}.${yyyy1}`
+      try { doc.text(dateStr1, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
       try { doc.setTextColor(0,0,0) } catch {}
     }
     pageNo++
@@ -568,8 +572,12 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
     try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
     doc.setFontSize(SUBTITLE_PT)
     try { doc.setTextColor(90,90,90) } catch {}
-    const dateStr = new Date().toISOString().slice(0,10)
-    try { doc.text(dateStr, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
+    const d2 = new Date();
+    const mm2 = String(d2.getMonth() + 1).padStart(2, '0');
+    const dd2 = String(d2.getDate()).padStart(2, '0');
+    const yyyy2 = d2.getFullYear();
+    const dateStr2 = `${mm2}.${dd2}.${yyyy2}`
+    try { doc.text(dateStr2, PAGE.w/2, PAGE.h/2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
     try { doc.setTextColor(0,0,0) } catch {}
     pageNo++
   }

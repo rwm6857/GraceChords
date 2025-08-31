@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
 import { parseChordPro } from '../utils/chordpro'
+import { compareSongsByTitle } from '../utils/sort'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
@@ -14,9 +15,7 @@ import '../styles/songbook.css'
 let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
-function byTitle(a, b) {
-  return (a?.title || '').localeCompare(b?.title || '', undefined, { sensitivity: 'base' })
-}
+function byTitle(a, b) { return compareSongsByTitle(a, b) }
 function uniqSorted(arr) {
   return [...new Set(arr.filter(Boolean))].sort((a, b) =>
     String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })

@@ -23,6 +23,9 @@ export default function SongView(){
   const [toKey, setToKey] = useState('C')
   const [showChords, setShowChords] = useState(true)
   const [showMedia, setShowMedia] = useState(false)
+  const [twoColsView, setTwoColsView] = useState(() => {
+    try { return localStorage.getItem('songView:twoCols') === '1' } catch { return false }
+  })
   const [err, setErr] = useState('')
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
@@ -276,6 +279,18 @@ if(!entry){
             <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
             <EyeIcon /> Chords
           </label>
+          <label style={{display:'inline-flex', alignItems:'center', gap:6}}>
+            <input
+              type="checkbox"
+              checked={twoColsView}
+              onChange={e=> {
+                const v = e.target.checked
+                setTwoColsView(v)
+                try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
+              }}
+            />
+            View: {twoColsView ? '2 columns' : '1 column'}
+          </label>
         </div>
         <div style={{display:'flex', gap:10}}>
           <button
@@ -299,9 +314,12 @@ if(!entry){
         </div>
       </div>
 
-      <div className="songpage__sheet">
+      <div
+        className="songpage__sheet"
+        style={twoColsView ? { columnCount: 2, columnGap: '24px' } : undefined}
+      >
         {(parsed.blocks || []).map((block, bi)=> (
-          <div key={bi}>
+          <div key={bi} style={twoColsView ? { breakInside: 'avoid' } : undefined}>
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
                         {(block.lines || []).map((ln, li) => {
                                 const key = `${bi}-${li}`

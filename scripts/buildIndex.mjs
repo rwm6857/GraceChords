@@ -5,7 +5,10 @@ const root = process.cwd()
 const songsDir = path.join(root, 'public', 'songs')
 const outFile = path.join(root, 'src', 'data', 'index.json')
 
-const files = (await fs.readdir(songsDir)).filter(f=> f.endsWith('.chordpro'))
+const files = (await fs.readdir(songsDir))
+  .filter(f=> f.endsWith('.chordpro'))
+  // Ignore local sample/test files prefixed with "test_" so they don't ship
+  .filter(f=> !/^test_/i.test(f))
 const items = []
 for(const filename of files){
   const full = path.join(songsDir, filename)
@@ -14,7 +17,20 @@ for(const filename of files){
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
     items.push({ id, title: meta.title || id || filename.replace(/\.chordpro$/,''), filename, originalKey: meta.key || '', tags: (meta.tags||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), country: meta.country||'' })
 }
-items.sort((a,b)=> a.title.localeCompare(b.title, undefined, {sensitivity:'base'}))
+function normalizeTitleForSort(title = ''){
+  const t = String(title || '').trim()
+  const t2 = t.replace(/^[^A-Za-z0-9]+/, '') || t
+  return t2
+}
+function compareSongsByTitle(a, b){
+  const aa = normalizeTitleForSort(a?.title || '')
+  const bb = normalizeTitleForSort(b?.title || '')
+  const aNum = /^[0-9]/.test(aa)
+  const bNum = /^[0-9]/.test(bb)
+  if (aNum !== bNum) return aNum ? -1 : 1
+  return aa.localeCompare(bb, undefined, { sensitivity: 'base' })
+}
+items.sort(compareSongsByTitle)
 await fs.mkdir(path.dirname(outFile), { recursive: true })
 await fs.writeFile(outFile, JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2), 'utf8')
 console.log(`Wrote ${items.length} songs to ${outFile}`)
