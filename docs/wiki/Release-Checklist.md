@@ -8,13 +8,14 @@ Use this checklist to ship changes to GraceChords confidently and avoid stale as
 
 ## 1) Add or Update Songs
 - Place `.chordpro` files under `public/songs/`
-- For PPTX, add files under `public/pptx/` named after the song slug
+- For PPTX, you can drop raw files in `TO_RENAME/` for normalization
 
-## 2) Rebuild the Index
+## 2) Normalize & Rebuild the Index
 ```bash
+npm run normalize
 npm run build-index
 ```
-This generates `src/data/index.json` from `public/songs/**`. Commit it.
+Normalization converts hyphens/spaces to underscores and removes duplicates (keeps underscore form). The index is written to `src/data/index.json`. Commit it.
 
 ## 3) Run Tests (PDF MVP Guards)
 ```bash
@@ -47,4 +48,3 @@ Then reload.
 ## Troubleshooting
 - Song changes not visible? Ensure `VITE_COMMIT_SHA` was set on build and the SW update completed
 - Missing song in search? Re-run `npm run build-index` and commit `src/data/index.json`
-
