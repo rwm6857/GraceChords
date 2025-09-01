@@ -78,7 +78,22 @@ function AdminPanel(){
 
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
   const filename = `${id||'untitled'}.chordpro`
-  const parsed = useMemo(()=> parseChordPro(text||''), [text])
+  const parsed = useMemo(() => {
+    try {
+      const doc = parseChordProOrLegacy(text || '')
+      const blocks = (doc.sections || []).map(sec => ({
+        section: sec.label,
+        lines: (sec.lines || []).map(ln => ({
+          text: ln.comment || ln.lyrics || '',
+          chords: ln.chords || [],
+          comment: !!ln.comment
+        }))
+      }))
+      return { meta: doc.meta, blocks }
+    } catch {
+      return { meta: {}, blocks: [] }
+    }
+  }, [text])
 
   function addDraft(){
     const title = meta.title || 'Untitled'
@@ -522,7 +537,7 @@ function AdminPanel(){
           <div style={{marginTop:8}}>
             {(parsed.blocks||[]).map((b,bi)=>(
               <div key={bi}>
-                <div className="section">{b.section ? `[${b.section}]` : ''}</div>
+                <div className="section">{b.section || ''}</div>
                 {(b.lines||[]).map((ln,li)=>(
                   <MeasuredPreviewLine
                     key={`${bi}-${li}`}
@@ -541,15 +556,15 @@ function AdminPanel(){
         <label><input type="checkbox" checked={saveWithDirectives} onChange={e=> setSaveWithDirectives(e.target.checked)} /> Save with ChordPro section directives</label>
         <label><input type="checkbox" checked={prefer2Col} onChange={e=> setPrefer2Col(e.target.checked)} /> Prefer 2 columns</label>
         <label><input type="checkbox" checked={showCapo} onChange={e=> setShowCapo(e.target.checked)} /> Capo in header</label>
-        <label title="Always writes .chordpro extension"><input type="checkbox" checked readOnly /> Normalize to .chordpro</label>
+        <span className="Small" title="Files are always saved with a .chordpro extension">Saves as .chordpro</span>
       </div>
 
       {/* Draft actions */}
       <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
-        <button className="btn" onClick={lintCurrent}>Lint</button>
-        <button className="btn" onClick={addDraft}>Add to Drafts</button>
-        <button className="btn" onClick={stageSong}>Stage Song</button>
-        <button className="btn" onClick={convertAndStage}>Convert → Stage</button>
+        <button className="btn" onClick={lintCurrent} title="Run ChordPro lint and show warnings">Lint</button>
+        <button className="btn" onClick={addDraft} title="Save current text as a draft and clear the editor">Add to Drafts</button>
+        <button className="btn" onClick={stageSong} title="Serialize and add to the staging table for PR">Stage Song</button>
+        <button className="btn" onClick={convertAndStage} title="Convert legacy/plain blocks into canonical ChordPro + stage">Convert → Stage</button>
         <button className="btn primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
         {editingFile ? (
           <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">
@@ -680,6 +695,10 @@ function parseMeta(t){
   const m = {}
   const re = /^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}\s*$/gm
   let x
-  while((x = re.exec(t))){ m[x[1].trim().toLowerCase()] = x[2].trim() }
+  while((x = re.exec(t))){
+    const key = x[1].trim().toLowerCase()
+    const val = x[2] // preserve spaces as typed
+    m[key] = val
+  }
   return m
 }
