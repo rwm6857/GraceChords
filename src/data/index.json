@@ -1,6 +1,18 @@
 {
-  "generatedAt": "2025-09-01T02:12:18.805Z",
+  "generatedAt": "2025-09-01T02:28:48.917Z",
   "items": [
+    {
+      "id": "10-000-reasons",
+      "title": "10,000 Reasons",
+      "filename": "10-000-reasons.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Matt Redman",
+        "Jonas Myrin"
+      ],
+      "country": ""
+    },
     {
       "id": "abba",
       "title": "Abba",
@@ -19,6 +31,18 @@
     {
       "id": "above-all",
       "title": "Above All",
+      "filename": "above-all.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Paul Baloche",
+        "Lenny LeBlanc"
+      ],
+      "country": ""
+    },
+    {
+      "id": "above-all",
+      "title": "Above All",
       "filename": "above_all.chordpro",
       "originalKey": "A",
       "tags": [
@@ -31,6 +55,17 @@
         "Lenny LeBlanc"
       ],
       "country": "USA"
+    },
+    {
+      "id": "all-in-all",
+      "title": "All in All",
+      "filename": "all-in-all.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Dennis Jernigan"
+      ],
+      "country": ""
     },
     {
       "id": "all-that-s-within-me",
@@ -47,6 +82,15 @@
     {
       "id": "amazing-grace",
       "title": "Amazing Grace",
+      "filename": "amazing-grace.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "amazing-grace",
+      "title": "Amazing Grace",
       "filename": "amazing_grace.chordpro",
       "originalKey": "D",
       "tags": [
@@ -56,6 +100,17 @@
         "John Newton"
       ],
       "country": "USA"
+    },
+    {
+      "id": "ancient-of-days",
+      "title": "Ancient of Days",
+      "filename": "ancient-of-days.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Ron Kenoly"
+      ],
+      "country": ""
     },
     {
       "id": "ancient-of-days",
@@ -74,6 +129,63 @@
       "country": "USA"
     },
     {
+      "id": "as-the-deer",
+      "title": "As the Deer",
+      "filename": "as-the-deer.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Martin Nystrom"
+      ],
+      "country": ""
+    },
+    {
+      "id": "battle-belongs",
+      "title": "Battle Belongs",
+      "filename": "battle-belongs.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Phil Wickham",
+        "Jonathan Smith"
+      ],
+      "country": ""
+    },
+    {
+      "id": "beautiful-one",
+      "title": "Beautiful One",
+      "filename": "beautiful-one.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Tim Hughes"
+      ],
+      "country": ""
+    },
+    {
+      "id": "beautiful-savior",
+      "title": "Beautiful Savior",
+      "filename": "beautiful-savior.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Planetshakers"
+      ],
+      "country": ""
+    },
+    {
+      "id": "better-word",
+      "title": "Better Word",
+      "filename": "better-word.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Leeland Mooring",
+        "Kyle Lee"
+      ],
+      "country": ""
+    },
+    {
       "id": "blessed-assurance",
       "title": "Blessed Assurance",
       "filename": "blessed_assurance.chordpro",
@@ -85,6 +197,18 @@
         "Fanny J. Crosby"
       ],
       "country": "USA"
+    },
+    {
+      "id": "blessed-be-your-name",
+      "title": "Blessed be Your Name",
+      "filename": "blessed-be-your-name.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Matt Redman",
+        "Beth Redman"
+      ],
+      "country": ""
     },
     {
       "id": "blow-the-trumpet-in-zion",
@@ -111,6 +235,19 @@
       ],
       "authors": [],
       "country": "Korea"
+    },
+    {
+      "id": "christ-be-magnified",
+      "title": "Christ be Magnified",
+      "filename": "christ-be-magnified.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Cody Carnes",
+        "Cory Asbury",
+        "Ethan Hulse"
+      ],
+      "country": ""
     },
     {
       "id": "close-to-thee",
@@ -140,6 +277,17 @@
     {
       "id": "come-now-is-the-time-to-worship",
       "title": "Come, Now is the Time to Worship",
+      "filename": "come-now-is-the-time-to-worship.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Brian Doerksen"
+      ],
+      "country": ""
+    },
+    {
+      "id": "come-now-is-the-time-to-worship",
+      "title": "Come, Now is the Time to Worship",
       "filename": "come_now_is_the_time_to_worship.chordpro",
       "originalKey": "D",
       "tags": [
@@ -163,6 +311,28 @@
       ],
       "authors": [],
       "country": "USA"
+    },
+    {
+      "id": "dancing-generation",
+      "title": "Dancing Generation",
+      "filename": "dancing-generation.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Matt Redman"
+      ],
+      "country": ""
+    },
+    {
+      "id": "days-of-elijah",
+      "title": "Days of Elijah",
+      "filename": "days-of-elijah.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Robin Mark"
+      ],
+      "country": ""
     },
     {
       "id": "days-of-elijah",
@@ -216,6 +386,29 @@
       "country": "Israel"
     },
     {
+      "id": "even-so-come",
+      "title": "Even So Come",
+      "filename": "even-so-come.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Passion"
+      ],
+      "country": ""
+    },
+    {
+      "id": "everlasting-god",
+      "title": "Everlasting God",
+      "filename": "everlasting-god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Brenton Brown",
+        "Ken Riley"
+      ],
+      "country": ""
+    },
+    {
       "id": "everlasting-god",
       "title": "Everlasting God",
       "filename": "everlasting_god.chordpro",
@@ -256,6 +449,17 @@
       "country": "Russia"
     },
     {
+      "id": "give-us-clean-hands",
+      "title": "Give us Clean Hands",
+      "filename": "give-us-clean-hands.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Charlie Hall"
+      ],
+      "country": ""
+    },
+    {
       "id": "global-church-of-christ",
       "title": "Global Church of Christ",
       "filename": "global_church_of_christ.chordpro",
@@ -292,6 +496,57 @@
       ],
       "authors": [],
       "country": "Israel"
+    },
+    {
+      "id": "good-good-father",
+      "title": "Good Good Father",
+      "filename": "good-good-father.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Pat Barrett",
+        "Tony Brown"
+      ],
+      "country": ""
+    },
+    {
+      "id": "goodbye-yesterday",
+      "title": "Goodbye Yesterday",
+      "filename": "goodbye-yesterday.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Elevation Worship"
+      ],
+      "country": ""
+    },
+    {
+      "id": "goodness-of-god",
+      "title": "Goodness of God",
+      "filename": "goodness-of-god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Jenn Johnson",
+        "Ed Cash",
+        "Ben Fielding",
+        "Jason Ingram",
+        "Brian Johnson"
+      ],
+      "country": ""
+    },
+    {
+      "id": "great-are-you-lord",
+      "title": "Great are You Lord",
+      "filename": "great-are-you-lord.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Jason Ingram",
+        "Leslie Jordan",
+        "David Leonard"
+      ],
+      "country": ""
     },
     {
       "id": "great-is-the-lord",
@@ -335,6 +590,15 @@
       "country": "USA"
     },
     {
+      "id": "hallelujah-your-love-is-amazing",
+      "title": "Hallelujah (Your Love is Amazing)",
+      "filename": "hallelujah.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "happy-day",
       "title": "Happy Day",
       "filename": "happy_day.chordpro",
@@ -374,6 +638,17 @@
       "country": "Indonesia"
     },
     {
+      "id": "heart-of-worship",
+      "title": "Heart of Worship",
+      "filename": "heart-of-worship.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Matt Redman"
+      ],
+      "country": ""
+    },
+    {
       "id": "here-i-am",
       "title": "Here I Am",
       "filename": "here_i_am.chordpro",
@@ -385,6 +660,17 @@
       ],
       "authors": [],
       "country": "China"
+    },
+    {
+      "id": "here-i-am-again",
+      "title": "Here I am Again",
+      "filename": "here-i-am-again.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Tommy Walker"
+      ],
+      "country": ""
     },
     {
       "id": "here-i-am-again",
@@ -400,6 +686,17 @@
         "Billy James Foote"
       ],
       "country": "USA"
+    },
+    {
+      "id": "here-i-am-to-worship",
+      "title": "Here I am to Worship",
+      "filename": "here-i-am-to-worship.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Tim Hughes"
+      ],
+      "country": ""
     },
     {
       "id": "holy-forever",
@@ -441,6 +738,39 @@
       "country": "Korea"
     },
     {
+      "id": "hosanna-praise-is-rising",
+      "title": "Hosanna (Praise is Rising)",
+      "filename": "hosanna.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "how-great-is-our-god",
+      "title": "How Great is our God",
+      "filename": "how-great-is-our-god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Chris Tomlin",
+        "Jesse Reeves",
+        "Ed Cash"
+      ],
+      "country": ""
+    },
+    {
+      "id": "how-great-thou-art",
+      "title": "How Great Thou Art",
+      "filename": "how-great-thou-art.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Stuart K. Hine (trans/adapt.)"
+      ],
+      "country": ""
+    },
+    {
       "id": "how-great-thou-art",
       "title": "How Great Thou Art",
       "filename": "how_great_thou_art.chordpro",
@@ -452,6 +782,17 @@
         "Stuart K. Hine"
       ],
       "country": "USA"
+    },
+    {
+      "id": "i-am-free",
+      "title": "I am Free",
+      "filename": "i-am-free.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Jon Egan"
+      ],
+      "country": ""
     },
     {
       "id": "i-am-free",
@@ -481,6 +822,17 @@
       "country": "USA"
     },
     {
+      "id": "i-could-sing-of-your-love-forever",
+      "title": "I Could Sing of Your Love Forever",
+      "filename": "i-could-sing-of-your-love-forever.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Martin Smith"
+      ],
+      "country": ""
+    },
+    {
       "id": "i-enter-in-the-holy-place",
       "title": "I Enter in the Holy Place",
       "filename": "i_enter_in_the_holy_place.chordpro",
@@ -494,6 +846,15 @@
       "country": "Korea"
     },
     {
+      "id": "i-hear-thy-welcome-voice",
+      "title": "I Hear Thy Welcome Voice",
+      "filename": "i-hear-thy-welcome-voice.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "i-lift-my-eyes",
       "title": "I Lift My Eyes",
       "filename": "i_lift_my_eyes.chordpro",
@@ -505,6 +866,21 @@
       ],
       "authors": [],
       "country": "Iran"
+    },
+    {
+      "id": "i-thank-god",
+      "title": "I Thank God",
+      "filename": "i-thank-god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Dante Bowe",
+        "Aaron Moses",
+        "Jesse Cline",
+        "Maryanne George",
+        "Chuck Butler"
+      ],
+      "country": ""
     },
     {
       "id": "i-will-follow-you",
@@ -521,6 +897,15 @@
     },
     {
       "id": "i-ll-always-love-you",
+      "title": "I'll Always Love you",
+      "filename": "ill-always-love-you.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "i-ll-always-love-you",
       "title": "I’ll Always Love You",
       "filename": "ill_always_love_you.chordpro",
       "originalKey": "A",
@@ -529,6 +914,15 @@
       ],
       "authors": [],
       "country": "USA"
+    },
+    {
+      "id": "in-jesus-name",
+      "title": "In Jesus Name",
+      "filename": "in-jesus-name.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "in-jesus-name",
@@ -568,6 +962,15 @@
     },
     {
       "id": "it-is-well-with-my-soul",
+      "title": "It is Well with my Soul",
+      "filename": "it-is-well-with-my-soul.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "it-is-well-with-my-soul",
       "title": "It Is Well With My Soul",
       "filename": "it_is_well_with_my_soul.chordpro",
       "originalKey": "C",
@@ -579,6 +982,20 @@
         "Philip P. Bliss"
       ],
       "country": "USA"
+    },
+    {
+      "id": "jesus-i-need-you",
+      "title": "Jesus I Need You",
+      "filename": "jesus-i-need-you.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Brooke Ligertwood",
+        "Scott Ligertwood",
+        "Reuben Morgan",
+        "Joel Davies"
+      ],
+      "country": ""
     },
     {
       "id": "jesus-lamb-of-god",
@@ -607,6 +1024,162 @@
       "country": "China"
     },
     {
+      "id": "jesus-we-enthrone-you",
+      "title": "Jesus We Enthrone You",
+      "filename": "jesus-we-enthrone-you.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Paul Kyle"
+      ],
+      "country": ""
+    },
+    {
+      "id": "jesus-we-love-you",
+      "title": "Jesus we Love You",
+      "filename": "jesus-we-love-you.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Bethel Music"
+      ],
+      "country": ""
+    },
+    {
+      "id": "king-of-kings",
+      "title": "King of Kings",
+      "filename": "king-of-kings.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Brooke Ligertwood",
+        "Scott Ligertwood",
+        "Jason Ingram"
+      ],
+      "country": ""
+    },
+    {
+      "id": "king-of-kings-majesty",
+      "title": "King of Kings, Majesty",
+      "filename": "king-of-kings-majesty.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Jarrod Cooper"
+      ],
+      "country": ""
+    },
+    {
+      "id": "king-of-my-heart",
+      "title": "King of my Heart",
+      "filename": "king-of-my-heart.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "John Mark McMillan",
+        "Sarah McMillan"
+      ],
+      "country": ""
+    },
+    {
+      "id": "lamb",
+      "title": "Lamb",
+      "filename": "lamb.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "let-your-glory-fall",
+      "title": "Let Your Glory Fall",
+      "filename": "let-your-glory-fall.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Vineyard / Don Moen"
+      ],
+      "country": ""
+    },
+    {
+      "id": "living-hope",
+      "title": "Living Hope",
+      "filename": "living-hope.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Phil Wickham",
+        "Brian Johnson"
+      ],
+      "country": ""
+    },
+    {
+      "id": "lord-i-give-you-my-heart",
+      "title": "Lord I Give You my Heart",
+      "filename": "lord-i-give-you-my-heart.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Reuben Morgan"
+      ],
+      "country": ""
+    },
+    {
+      "id": "lord-i-lift-your-name-on-high",
+      "title": "Lord I Lift Your Name on High",
+      "filename": "lord-i-lift-your-name-on-high.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Rick Founds"
+      ],
+      "country": ""
+    },
+    {
+      "id": "lord-i-offer-my-life",
+      "title": "Lord I Offer My Life",
+      "filename": "lord-i-offer-my-life.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Claire Cloninger",
+        "Don Moen"
+      ],
+      "country": ""
+    },
+    {
+      "id": "majesty-here-i-am",
+      "title": "Majesty (Here I Am)",
+      "filename": "majesty.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Delirious?"
+      ],
+      "country": ""
+    },
+    {
+      "id": "mighty-to-save",
+      "title": "Mighty to Save",
+      "filename": "mighty-to-save.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Ben Fielding",
+        "Reuben Morgan"
+      ],
+      "country": ""
+    },
+    {
+      "id": "more-love-to-thee",
+      "title": "More Love to Thee",
+      "filename": "more-love-to-thee.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "more-love-to-thee",
       "title": "More Love to Thee",
       "filename": "more_love_to_thee.chordpro",
@@ -619,6 +1192,147 @@
         "William H. Doane"
       ],
       "country": "USA"
+    },
+    {
+      "id": "no-chains-of-me",
+      "title": "No Chains of Me",
+      "filename": "no-chains-of-me.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "no-longer-slaves",
+      "title": "No Longer Slaves",
+      "filename": "no-longer-slaves.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Jonathan David Helser",
+        "Melissa Helser",
+        "Brian Johnson"
+      ],
+      "country": ""
+    },
+    {
+      "id": "o-come-to-the-altar",
+      "title": "O Come to the Altar",
+      "filename": "o-come-to-the-altar.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Chris Brown",
+        "Mack Brock",
+        "Steven Furtick",
+        "Wade Joye"
+      ],
+      "country": ""
+    },
+    {
+      "id": "one-way",
+      "title": "One Way",
+      "filename": "one-way.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Joel Houston",
+        "Jonathon Douglass"
+      ],
+      "country": ""
+    },
+    {
+      "id": "our-god",
+      "title": "Our God",
+      "filename": "our-god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Chris Tomlin"
+      ],
+      "country": ""
+    },
+    {
+      "id": "praise",
+      "title": "Praise",
+      "filename": "praise.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Elevation Worship"
+      ],
+      "country": ""
+    },
+    {
+      "id": "reckless-love",
+      "title": "Reckless Love",
+      "filename": "reckless-love.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Cory Asbury",
+        "Caleb Culver",
+        "Ran Jackson"
+      ],
+      "country": ""
+    },
+    {
+      "id": "refiner-s-fire",
+      "title": "Refiner's Fire",
+      "filename": "refiners-fire.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "run-to-the-father",
+      "title": "Run to the Father",
+      "filename": "run-to-the-father.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Cody Carnes",
+        "Matt Maher",
+        "Ran Jackson"
+      ],
+      "country": ""
+    },
+    {
+      "id": "set-a-fire",
+      "title": "Set a Fire",
+      "filename": "set-a-fire.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Will Reagan"
+      ],
+      "country": ""
+    },
+    {
+      "id": "shout-to-the-lord",
+      "title": "Shout to the Lord",
+      "filename": "shout-to-the-lord.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Darlene Zschech"
+      ],
+      "country": ""
+    },
+    {
+      "id": "sing-sing-sing",
+      "title": "Sing, Sing, Sing",
+      "filename": "sing-sing-sing.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Chris Tomlin",
+        "Daniel Carson",
+        "Jesse Reeves",
+        "Matt Gilder"
+      ],
+      "country": ""
     },
     {
       "id": "singing-i-go",
@@ -649,6 +1363,67 @@
       "country": "USA"
     },
     {
+      "id": "still",
+      "title": "Still",
+      "filename": "still.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Hillsong Worship"
+      ],
+      "country": ""
+    },
+    {
+      "id": "stronger",
+      "title": "Stronger",
+      "filename": "stronger.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Hillsong Worship"
+      ],
+      "country": ""
+    },
+    {
+      "id": "take-me-in",
+      "title": "Take Me In",
+      "filename": "take-me-in.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Kutless"
+      ],
+      "country": ""
+    },
+    {
+      "id": "thank-you-jesus-for-the-blood",
+      "title": "Thank You Jesus for the Blood",
+      "filename": "thank-you-jesus-for-the-blood.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Charity Gayle",
+        "David Gentiles",
+        "Steven Musso",
+        "Ryan Kennedy",
+        "Bryan McCleery"
+      ],
+      "country": ""
+    },
+    {
+      "id": "there-is-a-cloud",
+      "title": "There Is a Cloud",
+      "filename": "there-is-a-cloud.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Steven Furtick",
+        "Chris Brown",
+        "Mack Brock"
+      ],
+      "country": ""
+    },
+    {
       "id": "tis-so-sweet-to-trust-in-jesus",
       "title": "’Tis So Sweet to Trust in Jesus",
       "filename": "tis_so_sweet_to_trust_in_jesus.chordpro",
@@ -663,6 +1438,59 @@
       "country": "USA"
     },
     {
+      "id": "touch-of-heaven",
+      "title": "Touch of Heaven",
+      "filename": "touch-of-heaven.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Aodhan King",
+        "Brooke Ligertwood",
+        "Scott Ligertwood"
+      ],
+      "country": ""
+    },
+    {
+      "id": "under-the-blood",
+      "title": "Under the Blood",
+      "filename": "under-the-blood.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Marty Nystrom"
+      ],
+      "country": ""
+    },
+    {
+      "id": "up-and-fight-against-the-devil",
+      "title": "Up and Fight Against the Devil",
+      "filename": "up-and-fight-against-the-devil.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "we-will-keep-our-faith-alive",
+      "title": "We will Keep Our Faith Alive",
+      "filename": "we-will-keep-our-faith-alive.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "what-a-beautiful-name",
+      "title": "What a Beautiful Name",
+      "filename": "what-a-beautiful-name.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Hillsong Worship"
+      ],
+      "country": ""
+    },
+    {
       "id": "where-jesus-is-tis-heaven",
       "title": "Where Jesus is ’Tis Heaven",
       "filename": "where_jesus_is_tis_heaven.chordpro",
@@ -672,6 +1500,74 @@
       ],
       "authors": [],
       "country": "USA"
+    },
+    {
+      "id": "with-all-my-heart",
+      "title": "With All My Heart",
+      "filename": "with-all-my-heart.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Babbie Mason"
+      ],
+      "country": ""
+    },
+    {
+      "id": "worthy-is-the-lamb",
+      "title": "Worthy is the Lamb",
+      "filename": "worthy-is-the-lamb.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Hillsong Worship"
+      ],
+      "country": ""
+    },
+    {
+      "id": "worthy-of-it-all",
+      "title": "Worthy of it All",
+      "filename": "worthy-of-it-all.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "David Brymer",
+        "Ryan Hall"
+      ],
+      "country": ""
+    },
+    {
+      "id": "you-deserve-the-glory",
+      "title": "You Deserve the Glory",
+      "filename": "you-deserve-the-glory.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Terry MacAlmon"
+      ],
+      "country": ""
+    },
+    {
+      "id": "your-grace-is-enough",
+      "title": "Your Grace is Enough",
+      "filename": "your-grace-is-enough.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Matt Maher"
+      ],
+      "country": ""
+    },
+    {
+      "id": "your-love-awakens-me",
+      "title": "Your Love Awakens Me",
+      "filename": "your-love-awakens-me.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Phil Wickham",
+        "Josh Farro"
+      ],
+      "country": ""
     }
   ]
 }
