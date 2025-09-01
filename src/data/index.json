@@ -1,10 +1,18 @@
 {
+<<<<<<< HEAD
   "generatedAt": "2025-09-01T02:28:48.917Z",
+=======
+  "generatedAt": "2025-09-01T02:40:56.514Z",
+>>>>>>> e431c9c8 (fixed normalization behavior)
   "items": [
     {
       "id": "10-000-reasons",
       "title": "10,000 Reasons",
+<<<<<<< HEAD
       "filename": "10-000-reasons.chordpro",
+=======
+      "filename": "10_000_reasons.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -59,7 +67,11 @@
     {
       "id": "all-in-all",
       "title": "All in All",
+<<<<<<< HEAD
       "filename": "all-in-all.chordpro",
+=======
+      "filename": "all_in_all.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -131,7 +143,11 @@
     {
       "id": "as-the-deer",
       "title": "As the Deer",
+<<<<<<< HEAD
       "filename": "as-the-deer.chordpro",
+=======
+      "filename": "as_the_deer.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -142,7 +158,11 @@
     {
       "id": "battle-belongs",
       "title": "Battle Belongs",
+<<<<<<< HEAD
       "filename": "battle-belongs.chordpro",
+=======
+      "filename": "battle_belongs.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -154,7 +174,11 @@
     {
       "id": "beautiful-one",
       "title": "Beautiful One",
+<<<<<<< HEAD
       "filename": "beautiful-one.chordpro",
+=======
+      "filename": "beautiful_one.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -165,7 +189,11 @@
     {
       "id": "beautiful-savior",
       "title": "Beautiful Savior",
+<<<<<<< HEAD
       "filename": "beautiful-savior.chordpro",
+=======
+      "filename": "beautiful_savior.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -176,7 +204,11 @@
     {
       "id": "better-word",
       "title": "Better Word",
+<<<<<<< HEAD
       "filename": "better-word.chordpro",
+=======
+      "filename": "better_word.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -201,7 +233,11 @@
     {
       "id": "blessed-be-your-name",
       "title": "Blessed be Your Name",
+<<<<<<< HEAD
       "filename": "blessed-be-your-name.chordpro",
+=======
+      "filename": "blessed_be_your_name.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -239,7 +275,11 @@
     {
       "id": "christ-be-magnified",
       "title": "Christ be Magnified",
+<<<<<<< HEAD
       "filename": "christ-be-magnified.chordpro",
+=======
+      "filename": "christ_be_magnified.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -315,7 +355,11 @@
     {
       "id": "dancing-generation",
       "title": "Dancing Generation",
+<<<<<<< HEAD
       "filename": "dancing-generation.chordpro",
+=======
+      "filename": "dancing_generation.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -324,6 +368,7 @@
       "country": ""
     },
     {
+<<<<<<< HEAD
       "id": "days-of-elijah",
       "title": "Days of Elijah",
       "filename": "days-of-elijah.chordpro",
@@ -335,6 +380,8 @@
       "country": ""
     },
     {
+=======
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "id": "days-of-elijah",
       "title": "Days of Elijah",
       "filename": "days_of_elijah.chordpro",
@@ -388,7 +435,11 @@
     {
       "id": "even-so-come",
       "title": "Even So Come",
+<<<<<<< HEAD
       "filename": "even-so-come.chordpro",
+=======
+      "filename": "even_so_come.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -397,6 +448,7 @@
       "country": ""
     },
     {
+<<<<<<< HEAD
       "id": "everlasting-god",
       "title": "Everlasting God",
       "filename": "everlasting-god.chordpro",
@@ -409,6 +461,8 @@
       "country": ""
     },
     {
+=======
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "id": "everlasting-god",
       "title": "Everlasting God",
       "filename": "everlasting_god.chordpro",
@@ -451,7 +505,11 @@
     {
       "id": "give-us-clean-hands",
       "title": "Give us Clean Hands",
+<<<<<<< HEAD
       "filename": "give-us-clean-hands.chordpro",
+=======
+      "filename": "give_us_clean_hands.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -500,7 +558,11 @@
     {
       "id": "good-good-father",
       "title": "Good Good Father",
+<<<<<<< HEAD
       "filename": "good-good-father.chordpro",
+=======
+      "filename": "good_good_father.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -512,7 +574,11 @@
     {
       "id": "goodbye-yesterday",
       "title": "Goodbye Yesterday",
+<<<<<<< HEAD
       "filename": "goodbye-yesterday.chordpro",
+=======
+      "filename": "goodbye_yesterday.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -523,7 +589,11 @@
     {
       "id": "goodness-of-god",
       "title": "Goodness of God",
+<<<<<<< HEAD
       "filename": "goodness-of-god.chordpro",
+=======
+      "filename": "goodness_of_god.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -538,7 +608,11 @@
     {
       "id": "great-are-you-lord",
       "title": "Great are You Lord",
+<<<<<<< HEAD
       "filename": "great-are-you-lord.chordpro",
+=======
+      "filename": "great_are_you_lord.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -640,7 +714,11 @@
     {
       "id": "heart-of-worship",
       "title": "Heart of Worship",
+<<<<<<< HEAD
       "filename": "heart-of-worship.chordpro",
+=======
+      "filename": "heart_of_worship.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -690,7 +768,11 @@
     {
       "id": "here-i-am-to-worship",
       "title": "Here I am to Worship",
+<<<<<<< HEAD
       "filename": "here-i-am-to-worship.chordpro",
+=======
+      "filename": "here_i_am_to_worship.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -749,7 +831,11 @@
     {
       "id": "how-great-is-our-god",
       "title": "How Great is our God",
+<<<<<<< HEAD
       "filename": "how-great-is-our-god.chordpro",
+=======
+      "filename": "how_great_is_our_god.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -760,6 +846,7 @@
       "country": ""
     },
     {
+<<<<<<< HEAD
       "id": "how-great-thou-art",
       "title": "How Great Thou Art",
       "filename": "how-great-thou-art.chordpro",
@@ -771,6 +858,8 @@
       "country": ""
     },
     {
+=======
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "id": "how-great-thou-art",
       "title": "How Great Thou Art",
       "filename": "how_great_thou_art.chordpro",
@@ -824,7 +913,11 @@
     {
       "id": "i-could-sing-of-your-love-forever",
       "title": "I Could Sing of Your Love Forever",
+<<<<<<< HEAD
       "filename": "i-could-sing-of-your-love-forever.chordpro",
+=======
+      "filename": "i_could_sing_of_your_love_forever.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -848,7 +941,11 @@
     {
       "id": "i-hear-thy-welcome-voice",
       "title": "I Hear Thy Welcome Voice",
+<<<<<<< HEAD
       "filename": "i-hear-thy-welcome-voice.chordpro",
+=======
+      "filename": "i_hear_thy_welcome_voice.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -870,7 +967,11 @@
     {
       "id": "i-thank-god",
       "title": "I Thank God",
+<<<<<<< HEAD
       "filename": "i-thank-god.chordpro",
+=======
+      "filename": "i_thank_god.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -986,7 +1087,11 @@
     {
       "id": "jesus-i-need-you",
       "title": "Jesus I Need You",
+<<<<<<< HEAD
       "filename": "jesus-i-need-you.chordpro",
+=======
+      "filename": "jesus_i_need_you.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1026,7 +1131,11 @@
     {
       "id": "jesus-we-enthrone-you",
       "title": "Jesus We Enthrone You",
+<<<<<<< HEAD
       "filename": "jesus-we-enthrone-you.chordpro",
+=======
+      "filename": "jesus_we_enthrone_you.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1037,7 +1146,11 @@
     {
       "id": "jesus-we-love-you",
       "title": "Jesus we Love You",
+<<<<<<< HEAD
       "filename": "jesus-we-love-you.chordpro",
+=======
+      "filename": "jesus_we_love_you.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1048,7 +1161,11 @@
     {
       "id": "king-of-kings",
       "title": "King of Kings",
+<<<<<<< HEAD
       "filename": "king-of-kings.chordpro",
+=======
+      "filename": "king_of_kings.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1061,7 +1178,11 @@
     {
       "id": "king-of-kings-majesty",
       "title": "King of Kings, Majesty",
+<<<<<<< HEAD
       "filename": "king-of-kings-majesty.chordpro",
+=======
+      "filename": "king_of_kings_majesty.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1072,7 +1193,11 @@
     {
       "id": "king-of-my-heart",
       "title": "King of my Heart",
+<<<<<<< HEAD
       "filename": "king-of-my-heart.chordpro",
+=======
+      "filename": "king_of_my_heart.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1093,7 +1218,11 @@
     {
       "id": "let-your-glory-fall",
       "title": "Let Your Glory Fall",
+<<<<<<< HEAD
       "filename": "let-your-glory-fall.chordpro",
+=======
+      "filename": "let_your_glory_fall.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1104,7 +1233,11 @@
     {
       "id": "living-hope",
       "title": "Living Hope",
+<<<<<<< HEAD
       "filename": "living-hope.chordpro",
+=======
+      "filename": "living_hope.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1116,7 +1249,11 @@
     {
       "id": "lord-i-give-you-my-heart",
       "title": "Lord I Give You my Heart",
+<<<<<<< HEAD
       "filename": "lord-i-give-you-my-heart.chordpro",
+=======
+      "filename": "lord_i_give_you_my_heart.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1127,7 +1264,11 @@
     {
       "id": "lord-i-lift-your-name-on-high",
       "title": "Lord I Lift Your Name on High",
+<<<<<<< HEAD
       "filename": "lord-i-lift-your-name-on-high.chordpro",
+=======
+      "filename": "lord_i_lift_your_name_on_high.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1138,7 +1279,11 @@
     {
       "id": "lord-i-offer-my-life",
       "title": "Lord I Offer My Life",
+<<<<<<< HEAD
       "filename": "lord-i-offer-my-life.chordpro",
+=======
+      "filename": "lord_i_offer_my_life.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1161,7 +1306,11 @@
     {
       "id": "mighty-to-save",
       "title": "Mighty to Save",
+<<<<<<< HEAD
       "filename": "mighty-to-save.chordpro",
+=======
+      "filename": "mighty_to_save.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1171,6 +1320,7 @@
       "country": ""
     },
     {
+<<<<<<< HEAD
       "id": "more-love-to-thee",
       "title": "More Love to Thee",
       "filename": "more-love-to-thee.chordpro",
@@ -1180,6 +1330,8 @@
       "country": ""
     },
     {
+=======
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "id": "more-love-to-thee",
       "title": "More Love to Thee",
       "filename": "more_love_to_thee.chordpro",
@@ -1196,7 +1348,11 @@
     {
       "id": "no-chains-of-me",
       "title": "No Chains of Me",
+<<<<<<< HEAD
       "filename": "no-chains-of-me.chordpro",
+=======
+      "filename": "no_chains_of_me.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1205,7 +1361,11 @@
     {
       "id": "no-longer-slaves",
       "title": "No Longer Slaves",
+<<<<<<< HEAD
       "filename": "no-longer-slaves.chordpro",
+=======
+      "filename": "no_longer_slaves.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1218,7 +1378,11 @@
     {
       "id": "o-come-to-the-altar",
       "title": "O Come to the Altar",
+<<<<<<< HEAD
       "filename": "o-come-to-the-altar.chordpro",
+=======
+      "filename": "o_come_to_the_altar.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1232,7 +1396,11 @@
     {
       "id": "one-way",
       "title": "One Way",
+<<<<<<< HEAD
       "filename": "one-way.chordpro",
+=======
+      "filename": "one_way.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1244,7 +1412,11 @@
     {
       "id": "our-god",
       "title": "Our God",
+<<<<<<< HEAD
       "filename": "our-god.chordpro",
+=======
+      "filename": "our_god.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1266,7 +1438,11 @@
     {
       "id": "reckless-love",
       "title": "Reckless Love",
+<<<<<<< HEAD
       "filename": "reckless-love.chordpro",
+=======
+      "filename": "reckless_love.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1279,7 +1455,11 @@
     {
       "id": "refiner-s-fire",
       "title": "Refiner's Fire",
+<<<<<<< HEAD
       "filename": "refiners-fire.chordpro",
+=======
+      "filename": "refiners_fire.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1288,7 +1468,11 @@
     {
       "id": "run-to-the-father",
       "title": "Run to the Father",
+<<<<<<< HEAD
       "filename": "run-to-the-father.chordpro",
+=======
+      "filename": "run_to_the_father.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1301,7 +1485,11 @@
     {
       "id": "set-a-fire",
       "title": "Set a Fire",
+<<<<<<< HEAD
       "filename": "set-a-fire.chordpro",
+=======
+      "filename": "set_a_fire.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1312,7 +1500,11 @@
     {
       "id": "shout-to-the-lord",
       "title": "Shout to the Lord",
+<<<<<<< HEAD
       "filename": "shout-to-the-lord.chordpro",
+=======
+      "filename": "shout_to_the_lord.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1323,7 +1515,11 @@
     {
       "id": "sing-sing-sing",
       "title": "Sing, Sing, Sing",
+<<<<<<< HEAD
       "filename": "sing-sing-sing.chordpro",
+=======
+      "filename": "sing_sing_sing.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1387,7 +1583,11 @@
     {
       "id": "take-me-in",
       "title": "Take Me In",
+<<<<<<< HEAD
       "filename": "take-me-in.chordpro",
+=======
+      "filename": "take_me_in.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1398,7 +1598,11 @@
     {
       "id": "thank-you-jesus-for-the-blood",
       "title": "Thank You Jesus for the Blood",
+<<<<<<< HEAD
       "filename": "thank-you-jesus-for-the-blood.chordpro",
+=======
+      "filename": "thank_you_jesus_for_the_blood.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1413,7 +1617,11 @@
     {
       "id": "there-is-a-cloud",
       "title": "There Is a Cloud",
+<<<<<<< HEAD
       "filename": "there-is-a-cloud.chordpro",
+=======
+      "filename": "there_is_a_cloud.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1440,7 +1648,11 @@
     {
       "id": "touch-of-heaven",
       "title": "Touch of Heaven",
+<<<<<<< HEAD
       "filename": "touch-of-heaven.chordpro",
+=======
+      "filename": "touch_of_heaven.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1453,7 +1665,11 @@
     {
       "id": "under-the-blood",
       "title": "Under the Blood",
+<<<<<<< HEAD
       "filename": "under-the-blood.chordpro",
+=======
+      "filename": "under_the_blood.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1464,7 +1680,11 @@
     {
       "id": "up-and-fight-against-the-devil",
       "title": "Up and Fight Against the Devil",
+<<<<<<< HEAD
       "filename": "up-and-fight-against-the-devil.chordpro",
+=======
+      "filename": "up_and_fight_against_the_devil.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1473,7 +1693,11 @@
     {
       "id": "we-will-keep-our-faith-alive",
       "title": "We will Keep Our Faith Alive",
+<<<<<<< HEAD
       "filename": "we-will-keep-our-faith-alive.chordpro",
+=======
+      "filename": "we_will_keep_our_faith_alive.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1482,7 +1706,11 @@
     {
       "id": "what-a-beautiful-name",
       "title": "What a Beautiful Name",
+<<<<<<< HEAD
       "filename": "what-a-beautiful-name.chordpro",
+=======
+      "filename": "what_a_beautiful_name.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1504,7 +1732,11 @@
     {
       "id": "with-all-my-heart",
       "title": "With All My Heart",
+<<<<<<< HEAD
       "filename": "with-all-my-heart.chordpro",
+=======
+      "filename": "with_all_my_heart.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1515,7 +1747,11 @@
     {
       "id": "worthy-is-the-lamb",
       "title": "Worthy is the Lamb",
+<<<<<<< HEAD
       "filename": "worthy-is-the-lamb.chordpro",
+=======
+      "filename": "worthy_is_the_lamb.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1526,7 +1762,11 @@
     {
       "id": "worthy-of-it-all",
       "title": "Worthy of it All",
+<<<<<<< HEAD
       "filename": "worthy-of-it-all.chordpro",
+=======
+      "filename": "worthy_of_it_all.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1538,7 +1778,11 @@
     {
       "id": "you-deserve-the-glory",
       "title": "You Deserve the Glory",
+<<<<<<< HEAD
       "filename": "you-deserve-the-glory.chordpro",
+=======
+      "filename": "you_deserve_the_glory.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1549,7 +1793,11 @@
     {
       "id": "your-grace-is-enough",
       "title": "Your Grace is Enough",
+<<<<<<< HEAD
       "filename": "your-grace-is-enough.chordpro",
+=======
+      "filename": "your_grace_is_enough.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
@@ -1560,7 +1808,11 @@
     {
       "id": "your-love-awakens-me",
       "title": "Your Love Awakens Me",
+<<<<<<< HEAD
       "filename": "your-love-awakens-me.chordpro",
+=======
+      "filename": "your_love_awakens_me.chordpro",
+>>>>>>> e431c9c8 (fixed normalization behavior)
       "originalKey": "",
       "tags": [],
       "authors": [
