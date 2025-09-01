@@ -10,6 +10,7 @@
   - [[ChordPro-Guide]]
   - [[PDF-and-Printing]]
   - [[Admin-Tool]]
+  - [[Admin-Tips]]
   - [[Troubleshooting]]
 
 - **Developer Guide**
