@@ -44,9 +44,10 @@ export default function Setlist(){
       for(const sel of list){
         const s = items.find(it=> it.id===sel.id)
         if(!s) continue
-        const url = `${import.meta.env.BASE_URL}pptx/${s.id}.pptx`
-        const ok = await headOk(url, s.id)
-        if(ok) found[s.id] = true
+        const slug = s.filename.replace(/\.chordpro$/i, '')
+        const url = `${import.meta.env.BASE_URL}pptx/${slug}.pptx`
+        const ok = await headOk(url, slug)
+        if(ok) found[slug] = true
       }
       if(!cancelled) setPptxMap(found)
     }
@@ -211,13 +212,14 @@ async function exportPdf() {
       const s = items.find(it=> it.id===sel.id)
       if(!s){ setPptxProgress(`Bundling ${i+1}/${list.length}…`); continue }
       setPptxProgress(`Bundling ${i+1}/${list.length}…`)
-      if(!pptxMap[s.id]) continue
+      const slug = s.filename.replace(/\.chordpro$/i, '')
+      if(!pptxMap[slug]) continue
       try{
-        const res = await fetch(`${import.meta.env.BASE_URL}pptx/${s.id}.pptx`)
+        const res = await fetch(`${import.meta.env.BASE_URL}pptx/${slug}.pptx`)
         if(!res.ok) continue
         const blob = await res.blob()
         added++
-        zip.file(`${String(added).padStart(2,'0')}-${s.id}.pptx`, blob)
+        zip.file(`${String(added).padStart(2,'0')}-${slug}.pptx`, blob)
       }catch{}
     }
     if(added>0){

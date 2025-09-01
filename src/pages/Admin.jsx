@@ -21,7 +21,6 @@ const INITIAL_TEXT = `{title: }
 {tags: }
 {youtube: }
 {mp3: }
-{pptx: }
 
 Verse 1
 []`
@@ -133,7 +132,6 @@ function AdminPanel(){
       tags: meta.tags || doc.meta.meta?.tags || '',
       youtube: meta.youtube || doc.meta.meta?.youtube || '',
       mp3: meta.mp3 || doc.meta.meta?.mp3 || '',
-      pptx: meta.pptx || doc.meta.meta?.pptx || '',
     }
     if (prefer2Col) {
       doc.layoutHints = { ...(doc.layoutHints || {}), requestedColumns: 2 }
@@ -156,8 +154,7 @@ function AdminPanel(){
         country: meta.country || '',
         tags: meta.tags || '',
         youtube: meta.youtube || '',
-        mp3: meta.mp3 || '',
-        pptx: meta.pptx || ''
+        mp3: meta.mp3 || ''
       })
       const fname = suggestCanonicalFilename(docTitle)
       setStaged(s => [...s, { filename: fname, content: out, title: docTitle, key: docKey || '' }])
@@ -220,9 +217,9 @@ function AdminPanel(){
       const body = await fetchTextCached(url)
       if (body) setText(body)
       setEditingFile(it.filename)
-      showToast?.(`Loaded ${it.filename} for editing`) ?? alert(`Loaded ${it.filename} for editing`)
     } catch (e) {
-      showToast?.(`Failed to load ${it.filename}`) ?? alert(`Failed to load ${it.filename}`)
+      console.error(e)
+      alert(`Failed to load ${it.filename}`)
     }
   }
 
@@ -363,7 +360,6 @@ function AdminPanel(){
           {editingFile && (
             <span className="Small" style={{ marginLeft: 8 }}>
               Editing: <code>{editingFile}</code>
-              <button className="btn small" style={{ marginLeft: 8 }} onClick={() => setEditingFile('')}>Clear</button>
             </span>
           )}
         </div>
@@ -453,12 +449,7 @@ function AdminPanel(){
           />
         </label>
 
-        <label>PPTX (URL or /media/…)
-          <input
-            value={meta.pptx||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'pptx', e.target.value))}
-          />
-        </label>
+        {/* PPTX linking is automatic via public/pptx/<slug>.pptx; no explicit field */}
       </div>
 
       {/* Editor filename indicator */}
