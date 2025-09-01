@@ -1,16 +1,13 @@
 {
-  "generatedAt": "2025-09-01T02:45:53.491Z",
+  "generatedAt": "2025-09-01T04:05:22.039Z",
   "items": [
     {
       "id": "10-000-reasons",
       "title": "10,000 Reasons",
       "filename": "10_000_reasons.chordpro",
-      "originalKey": "",
+      "originalKey": "C",
       "tags": [],
-      "authors": [
-        "Matt Redman",
-        "Jonas Myrin"
-      ],
+      "authors": [],
       "country": ""
     },
     {
