@@ -12,7 +12,9 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
-    "test:mvp": "vitest run src/__tests__/pdf_mvp.*.test.js --pool=forks"
+    "test:mvp": "vitest run src/__tests__/pdf_mvp.*.test.js --pool=forks",
+    "normalize": "node scripts/normalizeFilenames.mjs",
+    "convert:short": "node scripts/convertChordProAll.mjs"
   },
   "dependencies": {
     "fuse.js": "^7.0.0",

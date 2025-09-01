@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [D]You’re the God who formed my [Gm/D]heart, all of [D]me
 [Gmaj7]You’re the God who called my [Em7]name and [Gmaj7/A]destiny [A7]
 [D]You’re the one who guides me [D/F#]now, and [A/G]sends me [G] [D/E] [Em7]
@@ -18,7 +18,8 @@ Verse
 [D]You allow me Lord to [D/F#]take, up that [A/G]holy [G]cross [D/E] [Em]
 [D/A]May You lead me by your [A7]will, and your [D]grace oh [C/D]God
 
-Chorus
+{eov}
+{soc Chorus}
 [D/F#]Your ever[A/G]lasting [G]grace [A7/G]
 [F#m]Is a gift I can’t re[Am/F#]pay
 [B7]I’m surrounded by your [Em7]love, [G/A]
@@ -26,3 +27,5 @@ Chorus
 [D7]With no [Gmaj7]hesi[A7/G]tation,
 [F#m]I’ll step upon that [Bm7]land
 [Em7]Your everlasting [A7]grace will lead me in your [D]ways
+
+{eoc}

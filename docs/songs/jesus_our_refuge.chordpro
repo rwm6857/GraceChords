@@ -7,21 +7,24 @@
 {mp3: }
 {pptx: }
 
-Verse 1
+{sov Verse 1}
 [A]Jesus, our refuge and our [E]strength
 [D]Forever Victorious [A]King
 [D]As we seek your face, O [A/C#]God
 [Bm7]You’ll shine your great [E7]light over [A]us [D/A]
 
-Verse 2
+{eov}
+{sov Verse 2}
 [A]The battle belongs to you my [E]Lord
 [D]And victory is ours in this [A]place
 [A]We lift the name of Jesus [E]Christ
 [DM7]And praise him e[E7]ternally [A] [E7]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]The presence of our God it [E]shakes the [F#m7]whole [C#m7]earth
 [D]The prayers of the saints will [A]open [B7]heaven’s [E7]doors
 [A]All nations and all lands will [E]worship [F#m7]you [C#m7]Lord
 [D]Forever to the King who’s [A]seated on the [Bm7]throne [E7] [A]
 [Bm7]To Jesus [E7]Lamb of [A]God
+{eoc}

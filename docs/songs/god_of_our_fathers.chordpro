@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse 1
+{sov Verse 1}
 [C]God of our fathers we lift up your [F]name [C]
 [C]You keep your promises, you make a [F]way [C]
 [E]Rock and Defender, we [Am]trust in your [F]name
@@ -18,7 +18,8 @@ The [F]name of [G]Ye[C]shua
 [E]In times of trouble, our [Am]peace is in [F]you
 The [F]name of [G]Ye[C]shua [F] [C]
 
-Chorus
+{eov}
+{soc Chorus}
 [F]We praise you Lord, Savior of all the [C]earth
 [F]All nations and tribes will praise Ye[C]shua
 [F]Your holy name shall be [E]exalted on [Am]high
@@ -27,9 +28,13 @@ Chorus
 
 Verse 2 (Hebrew section omitted for brevity — melody same)
 
-Bridge
+{eoc}
+{sob Bridge}
 [C]Yeshua you are our [F]Saviour and [C]King
 [F]You are Messiah, [C]Emman[G]uel [C]
 
-Outro
+{eob}
+{start_of_outro: Outro}
 [C]Yeshua, Ye[F]shua, Ye[G]shua, Emmanu[C]el
+
+{end_of_outro}

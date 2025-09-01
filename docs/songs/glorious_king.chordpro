@@ -7,14 +7,17 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [A]Glorious King, [D]Lord and our [A]Savior
 [Bm7]We bless you [A/C#]now and for[E7]evermore
 [A]For you, Lord are rising, [D]above every [A]other
 For [Bm7]you alone have all power[D/A] and the [G]might [E7]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]Jesus, you are the [A/C#]Lamb who reigns on [D]high
 [Bm7]Jesus, we lift your [B/D#]name above all [E7]other names
 [A]All glory, honor, [A/C#]praise are yours, oh [D]God
 [A/C#]We bless your [Bm7]name, the [E7]name of [A]Jesus
+
+{eoc}

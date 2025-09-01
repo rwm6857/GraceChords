@@ -7,10 +7,11 @@
 {mp3: }
 {pptx: }
 
-Intro
+{start_of_intro: Intro}
 [A]  [A/C#] | [D] | [F#m7]  [A/C#] | [D]
 
-Verse 1
+{end_of_intro}
+{sov Verse 1}
 [A]These are the days of [D/A]Elijah,
 [F]Declaring the word of the [G]Lord, [A]
 [A]And these are the days of [D/A]Your servant, Moses,
@@ -21,8 +22,11 @@ Verse 1
 [A]Still, we are the voice in the [D]desert crying,
 [A/E]“Prepare ye the way of the [E]Lord!” [A]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]Behold He comes, [Bm/E]riding on the [A]clouds, [D]
 [F#m7]Shining like the sun, at the [E]trumpet call.
 [A/E]So lift your voice, it’s the [Bm/E]year of Ju[A/C#]bilee, [D]
 [A/E]And out of Zion’s hill, Sal[E]vation [A]comes.
+
+{eoc}

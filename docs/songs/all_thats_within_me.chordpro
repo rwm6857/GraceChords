@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [A]All [E/G#]that’s within [F#m]me
 To [D]every [Bm]breath I [E]breathe[E7]
 [A]I bring [E/G#]before [F#m]you, my [D]Lord and [Esus4]King[E]
@@ -15,8 +15,11 @@ To [D]every [Bm]breath I [E]breathe[E7]
 Only [D]your [E]presence can [A]set me free[A7]
 I will [D]worship you a[E]lone before[C#m] your [F#m]holy throne[D], [D#dim]to you I sing [E]
 
-Chorus
+{eov}
+{soc Chorus}
 [A]Lamb of [E/G#]God, I will [F#m]praise you (follow you)
 You’re [D]more than [A/C#]enough for me for all my [Esus]days[E7]
 [A]Lamb of [E/G#]God, I will [F#m]praise you (follow you)
 I’m [D]found in the [E]presence of the [A]Lord.
+
+{eoc}

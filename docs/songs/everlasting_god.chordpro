@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [B]Strength will rise as we [Bsus]wait upon the [B]Lord,
 We will [Bsus]wait upon the [B]Lord, we will [Bsus]wait upon the [B]Lord (repeat)
 
@@ -15,8 +15,11 @@ Pre-Chorus
 [B/D#]Our [E]God, [B/D#]you [E]reign for [F#]ev[G#m]er [F#]
 [B/D#]Our [E]hope, [B/D#]our [E]Strong De[F#]liv[G#m]er [F#]
 
-Chorus
+{eov}
+{soc Chorus}
 [B]You are the Everlasting [E]God, the Everlasting [G#m]God
 You do not faint, you [E]won’t grow [F#/E]weary
 [B]You’re the defender of the [E]weak, you comfort those in [G#m]need
 You lift us up on [E]wings like [F#/E]eagles [B]
+
+{eoc}

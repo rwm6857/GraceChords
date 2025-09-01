@@ -7,7 +7,7 @@
 {mp3: }
 {pptx: }
 
-Verse
+{sov Verse}
 [C]I lift my eyes and look to you, [G]Lord,
 [Dm7]My Jesus, my [G7]Lord and my [C]God
 [F]You bore my sins, [G/B]upon the [Am]cross [Fm/Ab]
@@ -18,8 +18,10 @@ Verse
 [F]It’s you alone [G/B]that I [Am7]desire [Fm/Ab]
 [C/G]Come and take your [G7]place, my Glorious [C]King
 
-Chorus
+{eov}
+{soc Chorus}
 [F]Open the heavens, [C/E]Lord, [F]lead us to see your [C/E]face
 [F]Spirit come set our [Am]hearts on [Dm7]fire [G]
 [F]All nations will bow [C/E]down, [F]worship and bless your [C/E]name
 [F]Glorious King who [Am]is to [Bb]come, [G]Jesus [C]
+{eoc}

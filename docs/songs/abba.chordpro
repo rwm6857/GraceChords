@@ -6,7 +6,7 @@
 {youtube: nSkHruWwsos}
 {mp3: }
 
-Verse
+{sov Verse}
 [Am]Oh, the one who loves us
 [F]Oh, the Savior of grace
 [Dm]He is our Abba, Father [E]God
@@ -16,16 +16,20 @@ Who [F]hides us in the secret place
 [Dm]He is our Lord and [E]King
 Our refuge and [Am]strength
 
-Chorus 1
+{eov}
+{soc Chorus 1}
 [Am]Abba, Abba, Abba, King of all the [Em]earth
 [Am]Father of all nations, he is our great [Em]God
 [Dm]Wash away our sins, O Lord
 [Dm]We bow down and seek your face
 [Em]Abba, O our God
 
-Chorus 2
+{eoc}
+{soc Chorus 2}
 [Am]Abba, Abba, Abba, King of all the [Em]earth
 [Am]Yeshua, Yeshua, Yeshua, He is our [Em]Savior
 [Dm]Hold us in your strength and grace
 [Dm]We will only love you Lord
 [Em]Abba, O our [E]God
+
+{eoc}
