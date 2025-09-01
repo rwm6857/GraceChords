@@ -16,5 +16,6 @@
   - [[Getting-Started]]
   - [[Project-Structure]]
   - [[Index-Building]]
+  - [[File-Naming-and-Normalization]]
   - [[Contributing]]
   - [[Release-Checklist]]

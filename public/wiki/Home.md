@@ -18,6 +18,7 @@ GraceChords keeps a ChordPro song catalog with fast search, transposable views, 
 - [[ChordPro-Guide]]
 - [[PDF-and-Printing]]
 - [[Index-Building]]
+- [[File-Naming-and-Normalization]]
 - [[Admin-Tool]]
 - [[Offline-Support]]
 - [[Troubleshooting]]

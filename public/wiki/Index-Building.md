@@ -4,12 +4,13 @@ Generate the searchable song index from ChordPro files.
 - `scripts/buildIndex.mjs` reads metadata
 - Output saved to `src/data/index.json`
 - Run with `npm run build-index`
+- Before building, normalize names with `npm run normalize`
 - Warns on missing fields
  - Ignores files prefixed with `test_*.chordpro`
  - Sorting: numeric titles first; otherwise by title with leading punctuation ignored (e.g., `'Tis` sorted under `T`)
 
 ```bash
-npm run build-index
+npm run normalize && npm run build-index
 ```
 Warnings highlight songs missing titles, keys, or tags so they can be fixed.
 
