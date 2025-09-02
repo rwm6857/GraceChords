@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-01T04:05:22.039Z",
+  "generatedAt": "2025-09-02T12:49:43.139Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -45,11 +45,9 @@
       "id": "all-in-all",
       "title": "All in All",
       "filename": "all_in_all.chordpro",
-      "originalKey": "",
+      "originalKey": "G",
       "tags": [],
-      "authors": [
-        "Dennis Jernigan"
-      ],
+      "authors": [],
       "country": ""
     },
     {
@@ -97,11 +95,9 @@
       "id": "as-the-deer",
       "title": "As the Deer",
       "filename": "as_the_deer.chordpro",
-      "originalKey": "",
+      "originalKey": "E",
       "tags": [],
-      "authors": [
-        "Martin Nystrom"
-      ],
+      "authors": [],
       "country": ""
     },
     {
