@@ -1,26 +1,28 @@
 {title: All in All}
-{key: }
-{authors: Dennis Jernigan}
-{youtube: zC617kE1maU}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{key: G}
+{meta: authors Dennis Jernigan}
+{meta: youtube zC617kE1maU}
+{meta: tags Slow}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
+[G]You are my [D/F#]strength when I am [Em]weak
+You are the [G]treasure that I [C]seek
+You are my[D/F#] all [G]in a[D/F#]ll
+[G]Seeking You [D/F#]as a precious [Em]jewel
+Lord to give [G]up I'd be a [C]fool
+You are my[D/F#] all [G]in a[D/F#]ll
+{end_of_verse}
 
-{sov Verse 2}
-{eov}
+{start_of_chorus: Chorus}
+[G]Jes[D/F#]us [Em]Lamb of [G]God [C]worthy [G]is Your [D/F#]name
+[G]Jes[D/F#]us [Em]Lamb of [G]God [C]worthy [G]is Your [D/F#]name
+{end_of_chorus}
 
-{soc Chorus}
-{eoc}
-
-{soc PreChorus}
-{eoc}
-
-{sob Bridge}
-{eob}
-
-{sot Tag}
-{eot}
+{start_of_verse: Verse 2}
+[G]Taking my [D/F#]sin my cross my [Em]shame
+Rising [G]again I bless your [C]name
+You are my[D/F#] all [G]in a[D/F#]ll
+[G]When I fall [D/F#]down you pick me [Em]up
+When I am [G]dry You fill my [C]cup
+You are my[D/F#] all [G]in a[D/F#]ll
+{end_of_verse}
