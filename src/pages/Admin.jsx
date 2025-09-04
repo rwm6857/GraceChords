@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, parseChordPro, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
+import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
 import { lintChordPro } from '../utils/chordpro/lint'
 import { downloadZip } from '../utils/zip'
@@ -154,7 +155,8 @@ function AdminPanel(){
     if (!showCapo) {
       doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
     }
-    const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    content = appendDisclaimerIfMissing(content)
     const base = kebab(meta.id || doc.meta.title || 'untitled')
     const fname = editingFile || `${base}.chordpro`
     const willUpdate = items.some(it => it.filename === fname)
@@ -172,7 +174,8 @@ function AdminPanel(){
         mp3: meta.mp3 || ''
       })
       const fname = suggestCanonicalFilename(docTitle)
-      setStaged(s => [...s, { filename: fname, content: out, title: docTitle, key: docKey || '' }])
+      const final = appendDisclaimerIfMissing(out)
+      setStaged(s => [...s, { filename: fname, content: final, title: docTitle, key: docKey || '' }])
       showToast?.(`Converted & staged: ${fname}`) ?? alert(`Converted & staged: ${fname}`)
     } catch (e) {
       showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
@@ -203,7 +206,8 @@ function AdminPanel(){
     if (!showCapo) {
       doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
     }
-    const content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    content = appendDisclaimerIfMissing(content)
     const base = kebab(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
     const fname = editingFile || `${base}.chordpro`
     const willUpdate = items.some(it => it.filename === fname)

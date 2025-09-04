@@ -97,6 +97,9 @@ export function parseChordProOrLegacy(input: string): SongDoc {
   for (const raw of lines) {
     const t = raw.trim();
 
+    // Ignore ChordPro-style comment lines beginning with '#'
+    if (t.startsWith('#')) { continue }
+
     if (t === '') {
       if (cur) cur.lines.push({ lyrics: '', chords: [] })
       continue

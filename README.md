@@ -79,6 +79,9 @@ npm run build-index
 
 The normalizer converts hyphens/spaces to underscores (e.g., `all-in-all.chordpro` → `all_in_all.chordpro`) and, when both forms exist, keeps the underscore file and deletes the hyphen one. It also copies/renames PPTX from `TO_RENAME/` to `public/pptx/` with normalized names.
 
+## Disclaimer Controls
+Set `VITE_ENABLE_DISCLAIMER=0` to disable the site footer, ChordPro comment block appending, and PDF footers. Optionally set `VITE_CONTACT_EMAIL=you@example.com` to append a contact line in site/ChordPro disclaimers.
+
 **PDF Export (MVP Engine)**
 - **Engine:** single-song, setlist, and songbook exporters live at `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
 - **Decision ladder:** 1-col single page at sizes `16 → 12` pt; else 2-col at `16 → 12` pt; else 1-col multipage at 15 pt (header only on page 1).

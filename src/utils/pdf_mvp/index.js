@@ -11,6 +11,7 @@
 // - Fonts: Noto Sans family preferred; fall back to jsPDF built-ins.
 
 import jsPDF from 'jspdf'
+import { applyFooterToAllPages } from '../pdf/footer'
 import { registerPdfFonts } from './fonts.js'
 
 const PAGE = { w: 612, h: 792 } // Letter
@@ -400,6 +401,7 @@ export async function downloadSingleSongPdf(song){
   doc.setFontSize(pt)
   const plan = planMultiPage(doc, sections, pt, songTitle, songKey)
   renderPlanned(doc, plan, sections, song)
+  applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
   const blob = doc.output('blob')
   triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
   return { plan }
@@ -511,7 +513,7 @@ export async function downloadMultiSongPdf(songs = []){
     if (i > 0) doc.addPage([PAGE.w, PAGE.h])
     renderPlanned(doc, plan, sections, song)
   }
-
+  applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
   const blob = doc.output('blob')
   triggerDownload(blob, `setlist-${new Date().toISOString().slice(0,10)}.pdf`)
 }
@@ -669,7 +671,7 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
     const numbered = { ...pre[i].song, title: `${i+1}. ${pre[i].song?.title || 'Untitled'}` }
     renderPlanned(doc, pre[i].plan, pre[i].sections, numbered)
   }
-
+  applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
   const blob = doc.output('blob')
   triggerDownload(blob, `songbook-${new Date().toISOString().slice(0,10)}.pdf`)
 }

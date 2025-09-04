@@ -2,6 +2,7 @@ export function parseChordPro(text){
   const lines = text.replace(/\r\n/g,'\n').split('\n'); const meta={}; const blocks=[]; let current={section:'',lines:[]}
   const metaRe=/^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}\s*$/
   for(const raw of lines){
+    if (/^\s*#/.test(raw)) { continue } // ignore ChordPro comment lines starting with '#'
     const m=raw.match(metaRe); if(m){ meta[m[1].trim().toLowerCase()] = m[2].trim(); continue }
     if(raw.trim()===''){ if(current.lines.length) blocks.push(current); current={section:'',lines:[]}; continue }
     const secMatch=raw.match(/^\s*(?:##?\s*|\[)([^#\]]+?)(?:\])?\s*$/);

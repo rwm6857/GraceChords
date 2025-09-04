@@ -9,6 +9,7 @@ const Songbook = React.lazy(() => import('./components/Songbook'))
 import NavBar from './components/NavBar'
 import ErrorBoundary from './components/ErrorBoundary'
 import Toast from './components/Toast'
+import SiteDisclaimer from './components/SiteDisclaimer'
 import './styles.css'
 
 export default function App(){
@@ -27,6 +28,7 @@ export default function App(){
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>
+      <SiteDisclaimer />
       <Toast />
     </ErrorBoundary>
   )
