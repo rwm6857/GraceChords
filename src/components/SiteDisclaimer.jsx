@@ -1,9 +1,11 @@
 import React from 'react'
 import { getSiteDisclaimer, isDisclaimerEnabled } from '../config/disclaimer'
+import { getCopyrightNotice } from '../config/copyright'
 
 export default function SiteDisclaimer(){
   if (!isDisclaimerEnabled()) return null
   const text = getSiteDisclaimer()
+  const copyright = getCopyrightNotice()
   return (
     <footer style={{ marginTop: '3rem' }}>
       <div
@@ -17,9 +19,9 @@ export default function SiteDisclaimer(){
           margin: '0 auto'
         }}
       >
-        {text}
+        <div>{text}</div>
+        <div style={{ fontSize: '0.83rem', opacity: 0.68, marginTop: 4 }}>{copyright}</div>
       </div>
     </footer>
   )
 }
-

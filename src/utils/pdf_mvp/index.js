@@ -380,6 +380,7 @@ export async function downloadSingleSongPdf(song){
     if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){
       const plan = planOnePage(doc, sections, 1, pt, songTitle, songKey)
       renderPlanned(doc, plan, sections, song)
+      applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
       const blob = doc.output('blob')
       triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
       return { plan }
@@ -391,6 +392,7 @@ export async function downloadSingleSongPdf(song){
     if (canPackOnePage(doc, sections, 2, pt, songTitle, songKey)){
       const plan = planOnePage(doc, sections, 2, pt, songTitle, songKey)
       renderPlanned(doc, plan, sections, song)
+      applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
       const blob = doc.output('blob')
       triggerDownload(blob, `${String(song?.title || 'song').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`)
       return { plan }
@@ -671,7 +673,9 @@ export async function downloadSongbookPdf(songs = [], { includeTOC = true, cover
     const numbered = { ...pre[i].song, title: `${i+1}. ${pre[i].song?.title || 'Untitled'}` }
     renderPlanned(doc, pre[i].plan, pre[i].sections, numbered)
   }
-  applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h })
+  // Skip cover + TOC pages when drawing footers
+  const prePages = 1 + (includeTOC ? tocPages : 0)
+  applyFooterToAllPages(doc, { left: MARGINS.left, bottom: MARGINS.bottom }, { w: PAGE.w, h: PAGE.h }, { startPage: prePages + 1 })
   const blob = doc.output('blob')
   triggerDownload(blob, `songbook-${new Date().toISOString().slice(0,10)}.pdf`)
 }
