@@ -20,7 +20,8 @@ export default function SiteDisclaimer(){
         }}
       >
         <div>{text}</div>
-        <div style={{ fontSize: '0.83rem', opacity: 0.68, marginTop: 4 }}>{copyright}</div>
+        <div style={{ height: '1em' }} aria-hidden="true" />
+        <div>{copyright}</div>
       </div>
     </footer>
   )
