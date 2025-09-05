@@ -1,14 +1,20 @@
 {
-  "generatedAt": "2025-09-02T12:49:43.139Z",
+  "generatedAt": "2025-09-05T22:03:35.629Z",
   "items": [
     {
       "id": "10-000-reasons",
       "title": "10,000 Reasons",
       "filename": "10_000_reasons.chordpro",
       "originalKey": "C",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow",
+        "Praise"
+      ],
+      "authors": [
+        "Matt Redman",
+        "Jonas Myrin"
+      ],
+      "country": "USA"
     },
     {
       "id": "abba",
