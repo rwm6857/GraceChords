@@ -441,14 +441,17 @@ function extractYouTubeId(input = '') {
 
   try {
     const u = new URL(s)
-    const host = u.hostname.replace(/^www\./, '')
+    const host = u.hostname.toLowerCase()
+    const h = host.replace(/^www\./, '')
+    const isYouTube = (h === 'youtube.com') || h.endsWith('.youtube.com')
+    const isYoutuBe = (h === 'youtu.be')
     // youtu.be/<id>
-    if (host === 'youtu.be') {
+    if (isYoutuBe) {
       const id = u.pathname.split('/').filter(Boolean)[0]
       if (ID.test(id)) return id
     }
-    // youtube.com
-    if (host.endsWith('youtube.com')) {
+    // youtube.com (and subdomains)
+    if (isYouTube) {
       // /watch?v=<id>
       const v = u.searchParams.get('v')
       if (ID.test(v)) return v
