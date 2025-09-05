@@ -1,13 +1,9 @@
 {title: 10,000 Reasons}
 {key: C}
-{meta: country USA}
-{meta: authors Matt Redman, Jonas Myrin}
-{meta: youtube XtwIT8JjddM}
-{meta: tags Slow, SNaddPraise}
-
-{start_of_intro: Intro}
-[C //G // D/F# // Em // C // G // Dsus // D //]
-{end_of_intro}
+{country: USA}
+{authors: Matt Redman, Jonas Myrin}
+{youtube: XtwIT8JjddM}
+{tags: Slow, Praise}
 
 {start_of_chorus: Chorus}
 Bless the [C]Lord O my [G]soul
@@ -50,3 +46,7 @@ Sing Your [C]praise [Em]unending
 And then for[D]ever[G]more
 for[Gsus]ever[G]more
 {end_of_verse}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
