@@ -25,7 +25,8 @@ Chorus
     const out = serializeChordPro(doc, { useDirectives: true });
     expect(out).toMatch(/\{title: Sample Song\}/);
     expect(out).toMatch(/\{key: C\}/);
-    expect(out).toMatch(/\{meta: country USA\}/);
+    // Unknown meta keys are emitted as {key: value}
+    expect(out).toMatch(/\{country: USA\}/);
     expect(out).toMatch(/\{start_of_verse: Verse 1\}/);
     expect(out).toMatch(/\{end_of_chorus\}/);
 

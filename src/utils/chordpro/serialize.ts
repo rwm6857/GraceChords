@@ -66,7 +66,8 @@ export function serializeChordPro(doc: SongDoc, opts: SerializeOpts = {}): strin
   const extra = doc?.meta?.meta || {};
   for (const [k, v] of Object.entries(extra)) {
     if (!v) continue;
-    metaLines.push(`{meta: ${k} ${String(v).trim()}}`);
+    // Emit unknown meta keys as plain {key: value} lines to preserve original tags
+    metaLines.push(`{${k}: ${String(v)}}`);
   }
   const head = includeMeta ? metaLines.join('\n') : '';
 
