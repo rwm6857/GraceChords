@@ -3,10 +3,26 @@ name: Build into /docs on main
 on:
   push:
     branches: [ main ]
+    # Build when site/app sources change; ignore docs-only commits and wiki/song triggers handled elsewhere
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - '404.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'public/**'
+      - '!public/songs/**'   # song changes handled by update-index -> commit triggers this via src/data change
+      - '!public/wiki/**'    # wiki handled by wiki-sync workflow (which builds afterward)
+      - '!docs/**'           # ignore docs-only changes
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-docs
+  cancel-in-progress: true
 
 jobs:
   build-to-docs:

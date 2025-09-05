@@ -82,6 +82,13 @@ The normalizer converts hyphens/spaces to underscores (e.g., `all-in-all.chordpr
 ## Disclaimer Controls
 Set `VITE_ENABLE_DISCLAIMER=0` to disable the site footer, ChordPro comment block appending, and PDF footers. Optionally set `VITE_CONTACT_EMAIL=you@example.com` to append a contact line in site/ChordPro disclaimers.
 
+## CI & Automation
+- Build to `docs/` (site code changes): `build-to-docs.yml` runs on changes under `src/**`, `index.html`, `404.html`, `vite.config.js`, `package*.json`, and `public/**` (excluding `public/songs/**` and `public/wiki/**`). Uses Node 20 and commits `docs/` with `VITE_COMMIT_SHA=${{ github.sha }}`.
+- Song changes → index then build: `update-index.yml` runs on `public/songs/**`, executes `node scripts/buildIndex.mjs`, commits `src/data/index.json`. That commit triggers the site build workflow above.
+- Wiki changes → sync then build: `wiki-sync.yml` runs on `public/wiki/**`, executes `node scripts/syncWiki.mjs` (requires `WIKI_PUSH_TOKEN` secret), then builds and commits `docs/`.
+- Docs-only commits are ignored by the build workflow.
+- Concurrency: the build workflow cancels in-progress runs to avoid overlapping `docs/` commits.
+
 **PDF Export (MVP Engine)**
 - **Engine:** single-song, setlist, and songbook exporters live at `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
 - **Decision ladder:** 1-col single page at sizes `16 → 12` pt; else 2-col at `16 → 12` pt; else 1-col multipage at 15 pt (header only on page 1).

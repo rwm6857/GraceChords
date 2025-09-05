@@ -162,7 +162,6 @@ function AdminPanel(){
     const willUpdate = items.some(it => it.filename === fname)
     const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
     setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '', commitMsg }])
-    if (willUpdate) showToast?.(`Will update existing file: ${fname}`) ?? alert(`Will update existing file: ${fname}`)
   }
 
   function convertAndStage(){
