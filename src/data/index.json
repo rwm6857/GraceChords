@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-05T22:03:35.629Z",
+  "generatedAt": "2025-09-06T20:51:10.102Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1272,6 +1272,15 @@
         "Ryan Kennedy",
         "Bryan McCleery"
       ],
+      "country": ""
+    },
+    {
+      "id": "the-revival",
+      "title": "The Revival (부흥 / 이 땅의 황무함을 보소서)",
+      "filename": "the-revival.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
