@@ -5,13 +5,15 @@ export type SerializeOpts = {
   includeMeta?: boolean;        // default true
 };
 
-export function kebab(s: string) {
+export function slugifyUnderscore(s: string) {
   return (s || '')
     .toLowerCase()
-    .replace(/[^\w]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^\w]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
 }
+// Backward-compat alias (deprecated)
+export const kebab = slugifyUnderscore;
 
 function cleanLabel(s?: string) {
   return (s || '').replace(/[{}]/g, '').trim();

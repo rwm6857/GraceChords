@@ -89,8 +89,8 @@ Convert documents into a ChordPro skeleton with section blocks. Default output u
 # DOCX → ChordPro (directives default)
 npm run ingest -- path/to/song.docx
 
-# PDF → ChordPro
-npm run ingest -- path/to/song.pdf --out public/songs
+# PDF → ChordPro (default output: public/songs)
+npm run ingest -- path/to/song.pdf
 
 # Plain headers instead of directives
 npm run ingest -- path/to/song.pdf --plain
@@ -99,7 +99,11 @@ npm run ingest -- path/to/song.pdf --plain
 Notes
 - Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
 - Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
+- Output directory must exist. By default it is `public/songs`. Use `--out <dir>` to override.
+- If the target filename already exists, the tool interactively asks to Overwrite, Rename, Skip, or Abort.
 - After import: `npm run normalize && npm run build-index`.
+- The tool strips a leading title duplicate and recognizes lines like `(Key of G)` to populate `{key: G}` while removing the line from lyrics. Pure chord-only lines are ignored.
+- Output filenames use underscores by default (e.g., `above_all.chordpro`).
 
 ## CI & Automation
 - Build to `docs/` (site code changes): `build-to-docs.yml` runs on changes under `src/**`, `index.html`, `404.html`, `vite.config.js`, `package*.json`, and `public/**` (excluding `public/songs/**` and `public/wiki/**`). Uses Node 20 and commits `docs/` with `VITE_COMMIT_SHA=${{ github.sha }}`.

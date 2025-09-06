@@ -2,14 +2,14 @@ Import lyrics from PDF/DOCX/TXT into a ChordPro skeleton that you can edit and a
 
 ## CLI usage
 ```bash
-# DOCX → ChordPro
+# DOCX → ChordPro (default output to public/songs/)
 npm run ingest -- path/to/file.docx
 
 # PDF → ChordPro
 npm run ingest -- path/to/file.pdf
 
-# Multiple files into public/songs/
-npm run ingest -- file1.docx file2.pdf --out public/songs
+# Multiple files (custom directory)
+npm run ingest -- file1.docx file2.pdf --out path/to/dir
 
 # Emit plain headers instead of directives
 npm run ingest -- song.pdf --plain
@@ -33,3 +33,10 @@ Images (OCR) are not enabled by default. If needed, consider installing the `tes
 ```bash
 npm run normalize && npm run build-index
 ```
+
+## Defaults & flags
+- Default output directory: `public/songs/` (must already exist). Use `--out <dir>` to override.
+- Default section mode: ChordPro directives. Use `--plain` to emit readable headers instead.
+- On filename conflicts the tool will prompt you to Overwrite, Rename, Skip, or Abort.
+- The tool removes leading duplicate title lines and recognizes lines like `(Key of Am)` to populate `{key: Am}` while removing that line from the lyrics. Chord-only lines are ignored.
+- Output filenames use underscores (e.g., `above_all.chordpro`).

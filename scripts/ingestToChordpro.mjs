@@ -14,10 +14,13 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import readline from 'node:readline/promises'
+import { stdin as input, stdout as output } from 'node:process'
 
 const argv = process.argv.slice(2)
 if (argv.length === 0) {
-  console.log('Usage: node scripts/ingestToChordpro.mjs <file...> [--out public/songs] [--plain]')
+  console.log('Usage: node scripts/ingestToChordpro.mjs <file...> [--out <dir>] [--plain]')
+  console.log('Default output: public/songs (must already exist).')
   process.exit(1)
 }
 
@@ -37,10 +40,14 @@ function parseCli(args){
 
 const { outDir, mode, inputs } = parseCli(argv)
 
-async function ensureDir(p){ await fs.mkdir(p, { recursive: true }) }
+async function dirExists(p){ try { const s = await fs.stat(p); return s.isDirectory() } catch { return false } }
 
 function slugify(s){
-  return String(s||'').toLowerCase().replace(/[^\w]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')
+  return String(s||'')
+    .toLowerCase()
+    .replace(/[^\w]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
 }
 
 function cleanupText(raw){
@@ -76,10 +83,10 @@ function guessTitle(text){
   return lines.slice(0,5).sort((a,b)=> b.length - a.length)[0] || 'Untitled'
 }
 
-function toChordProSkeleton({ title, body }){
+function toChordProSkeleton({ title, key, body }){
   const head = [
     `{title: ${title}}`,
-    `{key: }`,
+    `{key: ${key || ''}}`,
     `{authors: }`,
     `{country: }`,
     `{tags: }`,
@@ -93,9 +100,10 @@ function toChordProSkeleton({ title, body }){
 
 async function textFromDocx(file){
   try {
-    const mammoth = await import('mammoth').catch(()=> null)
-    if (!mammoth) throw new Error('mammoth not installed')
-    const res = await mammoth.default.extractRawText({ path: file })
+    const mod = await import('mammoth')
+    const api = (mod?.default && mod.default.extractRawText) ? mod.default : mod
+    if (!api?.extractRawText) throw new Error('mammoth not installed — run: npm i -D mammoth')
+    const res = await api.extractRawText({ path: file })
     return res.value || ''
   } catch (e) {
     throw new Error(`DOCX parse failed (${e?.message||e})`)
@@ -104,10 +112,22 @@ async function textFromDocx(file){
 
 async function textFromPdf(file){
   try {
-    const pdfParse = await import('pdf-parse').catch(()=> null)
-    if (!pdfParse) throw new Error('pdf-parse not installed')
+    // Try main entry, then explicit path for ESM interop.
+    let parseFn = null
+    try {
+      const mod = await import('pdf-parse')
+      parseFn = (mod?.default && typeof mod.default === 'function') ? mod.default : (typeof mod === 'function' ? mod : null)
+    } catch (e1) {
+      try {
+        const mod2 = await import('pdf-parse/lib/pdf-parse.js')
+        parseFn = (mod2?.default && typeof mod2.default === 'function') ? mod2.default : (typeof mod2 === 'function' ? mod2 : null)
+      } catch (e2) {
+        throw new Error(`pdf-parse not installed — run: npm i -D pdf-parse (details: ${e2?.message || e1?.message || 'unknown'})`)
+      }
+    }
+    if (!parseFn) throw new Error('pdf-parse load failed')
     const buf = await fs.readFile(file)
-    const res = await pdfParse.default(buf)
+    const res = await parseFn(buf)
     return res.text || ''
   } catch (e) {
     throw new Error(`PDF parse failed (${e?.message||e})`)
@@ -128,9 +148,11 @@ async function ingestOne(file){
 
   const clean = cleanupText(raw)
   const title = guessTitle(clean)
-  const structured = (mode === 'directives') ? toDirectiveSections(clean) : normalizeSectionHeaders(clean)
+  const extracted = extractKeyAndStripLines(clean, title)
+  const joined = extracted.lines.join('\n')
+  const structured = (mode === 'directives') ? toDirectiveSections(joined) : normalizeSectionHeaders(joined)
   const body = '\n' + structured + '\n'
-  const chordpro = toChordProSkeleton({ title, body })
+  const chordpro = toChordProSkeleton({ title, key: extracted.key, body })
   const fname = `${slugify(title)}.chordpro`
   return { fname, chordpro }
 }
@@ -143,21 +165,22 @@ function toDirectiveSections(text){
   const lines = String(text||'').split(/\r?\n/)
   const out = []
   // Header patterns like: "[Verse 1]", "Verse 1:", "PRE-CHORUS", "Intro"
-  const headerRx = /^(?:\[\s*)?\s*([A-Za-z][A-Za-z\-\s]*?)(?:\s*\])?\s*:?(?:\s*)$/
-  function classify(h){
-    const t = String(h||'').trim().replace(/\s+/g,' ')
-    const lower = t.toLowerCase()
-    // Extract base and number
-    const m = /^(pre[-\s]?chorus|verse|chorus|bridge|intro|outro|tag|refrain|ending|instrumental)(?:\s+(\d+))?$/.exec(lower)
-    if (!m) return { code: 'sob', end: 'eob', label: capitalCase(t) } // unknown → bridge label
-    const base = m[1]
-    const num = m[2]
-    if (base === 'verse') return { code: 'sov', end: 'eov', label: num ? `Verse ${num}` : 'Verse' }
-    if (base === 'chorus') return { code: 'soc', end: 'eoc', label: num ? `Chorus ${num}` : 'Chorus' }
-    if (base.startsWith('pre')) return { code: 'soc', end: 'eoc', label: 'Pre-Chorus' }
-    if (base === 'bridge') return { code: 'sob', end: 'eob', label: num ? `Bridge ${num}` : 'Bridge' }
-    // Everything else → bridge with label
-    return { code: 'sob', end: 'eob', label: capitalCase(t) }
+  const headerRx = /^(?:\[\s*)?\s*(pre[-\s]?chorus|verse|chorus|bridge|intro|outro|tag|refrain|ending|instrumental|interlude)(?:\s+(\d+))?\s*(?:\])?\s*:?\s*$/i
+  function classify(base, num){
+    const lower = String(base||'').toLowerCase()
+    if (lower === 'verse') return { code: 'sov', end: 'eov', label: num ? `Verse ${num}` : 'Verse' }
+    if (lower === 'chorus') return { code: 'soc', end: 'eoc', label: num ? `Chorus ${num}` : 'Chorus' }
+    if (lower.startsWith('pre')) return { code: 'soc', end: 'eoc', label: 'Pre-Chorus' }
+    if (lower === 'bridge') return { code: 'sob', end: 'eob', label: num ? `Bridge ${num}` : 'Bridge' }
+    return { code: 'sob', end: 'eob', label: capitalCase(base) }
+  }
+  function isChordLine(t){
+    const token = /^(?:[A-G](?:#|b)?(?:(?:maj|m|min|dim|aug|sus|add)?\d*)?(?:\/[A-G](?:#|b)?)?)(?:\([^)]+\))?$/
+    const parts = t.split(/\s+/).filter(Boolean)
+    if (!parts.length) return false
+    const filt = parts.filter(p => !/^[-|]+$/.test(p))
+    if (!filt.length) return false
+    return filt.every(p => token.test(p))
   }
   function capitalCase(s){ return String(s||'').replace(/\b\w/g, c => c.toUpperCase()) }
 
@@ -165,15 +188,6 @@ function toDirectiveSections(text){
   function close(){ if (open){ out.push(`{${open.end}}`); open = null } }
   function openAs(sec){ out.push(`{${sec.code}: ${sec.label}}`); open = { end: sec.end } }
 
-  // If there is leading content before any header, wrap it as a Verse
-  let sawHeader = false
-  for (let i=0; i<lines.length; i++){
-    const raw = lines[i]
-    const t = raw.trim()
-    const isHeader = t && headerRx.test(t)
-    if (isHeader){ sawHeader = true; break }
-    if (t) { sawHeader = false; break }
-  }
   // Process lines, emitting start/end markers around detected sections
   for (let i=0; i<lines.length; i++){
     const raw = lines[i]
@@ -181,15 +195,13 @@ function toDirectiveSections(text){
     if (!t){ out.push(''); continue }
     const m = headerRx.exec(t)
     if (m){
-      const sec = classify(m[1])
+      const sec = classify(m[1], m[2])
       close()
       openAs(sec)
       continue
     }
-    if (!open && sawHeader){
-      // Leading content before the first header → default Verse
-      openAs({ code: 'sov', end: 'eov', label: 'Verse' })
-    }
+    if (isChordLine(t)) continue
+    if (!open){ openAs({ code: 'sov', end: 'eov', label: 'Verse' }) }
     out.push(raw)
   }
   close()
@@ -201,12 +213,12 @@ function toDirectiveSections(text){
 function normalizeSectionHeaders(text){
   const lines = String(text||'').split(/\r?\n/)
   const out = []
-  const headerRx = /^(?:\[\s*)?\s*([A-Za-z][A-Za-z\-\s]*?)(?:\s*\])?\s*:?(?:\s*)$/
+  const headerRx = /^(?:\[\s*)?\s*(pre[-\s]?chorus|verse|chorus|bridge|intro|outro|tag|refrain|ending|instrumental|interlude)(?:\s+(\d+))?\s*(?:\])?\s*:?\s*$/i
   function capitalCase(s){ return String(s||'').replace(/\b\w/g, c => c.toUpperCase()) }
   function classifyLabel(h){
     const t = String(h||'').trim().replace(/\s+/g,' ')
     const lower = t.toLowerCase()
-    const m = /^(pre[-\s]?chorus|verse|chorus|bridge|intro|outro|tag|refrain|ending|instrumental)(?:\s+(\d+))?$/.exec(lower)
+    const m = /^(pre[-\s]?chorus|verse|chorus|bridge|intro|outro|tag|refrain|ending|instrumental|interlude)(?:\s+(\d+))?$/.exec(lower)
     if (!m) return capitalCase(t)
     const base = m[1]
     const num = m[2]
@@ -229,25 +241,83 @@ function normalizeSectionHeaders(text){
       if (typeof nxt !== 'undefined' && String(nxt).trim() !== '') out.push('')
       continue
     }
+    // drop chord-only lines in plain mode as well
+    if (/^(?:[A-G](?:#|b)?(?:(?:maj|m|min|dim|aug|sus|add)?\d*)?(?:\/[A-G](?:#|b)?)?)(?:\s+|$)/.test(t) && !/[a-z]{2,}/i.test(t)) continue
     out.push(raw)
   }
   return out.join('\n').replace(/\n{3,}/g, '\n\n')
 }
 
+// Extract key line like "(Key of G)" or "Key of Am" near the top; remove title duplicates.
+function extractKeyAndStripLines(text, title){
+  const lines = String(text||'').split(/\r?\n/)
+  let key = ''
+  const out = []
+  const titleNorm = String(title||'').trim().toLowerCase()
+  let seenContent = false
+  for (let i=0; i<lines.length; i++){
+    const raw = lines[i]
+    const t = raw.trim()
+    if (!t){ out.push(raw); continue }
+    if (!seenContent && t.toLowerCase() === titleNorm){ seenContent = true; continue }
+    const m = /^\(?\s*key\s+of\s+([A-Ga-g][#b]?(?:m)?)\s*\)?$/i.exec(t)
+    if (m){ key = m[1].toUpperCase(); continue }
+    out.push(raw)
+    seenContent = true
+  }
+  return { key, lines: out }
+}
+
 (async function main(){
-  await ensureDir(outDir)
-  let ok = 0, fail = 0
+  if (!(await dirExists(outDir))){
+    console.error(`[ingest] Output directory not found: ${outDir}`)
+    console.error('Create it first or pass a custom path with --out <dir>.')
+    process.exit(1)
+  }
+  const rl = readline.createInterface({ input, output })
+  let ok = 0, fail = 0, skipped = 0
   for (const input of inputs){
     try {
       const { fname, chordpro } = await ingestOne(input)
-      const outPath = path.join(outDir, fname)
+      let targetName = fname
+      let outPath = path.join(outDir, targetName)
+      // Handle collisions interactively
+      while (await fileExists(outPath)){
+        const choice = await promptChoice(rl, `File exists: ${targetName}. Overwrite [o], Rename [r], Skip [s], Abort [a]? (o/r/s/a) `)
+        if (choice === 'o') break
+        if (choice === 's') { console.log(`Skipped: ${targetName}`); skipped++; throw new Error('__SKIP__') }
+        if (choice === 'a') { console.log('Aborted by user.'); await rl.close(); process.exit(1) }
+        if (choice === 'r'){
+          const next = await rl.question('Enter new filename (without path, e.g., my_song.chordpro): ')
+          let proposed = String(next || '').trim()
+          if (!proposed) continue
+          if (!/\.chordpro$/i.test(proposed)) proposed += '.chordpro'
+          // basic sanitize to avoid nested paths
+          proposed = proposed.replace(/[\\/]+/g, '_')
+          targetName = proposed
+          outPath = path.join(outDir, targetName)
+          continue
+        }
+      }
       await fs.writeFile(outPath, chordpro, 'utf8')
       console.log(`Wrote: ${outPath}`)
       ok++
     } catch (e) {
-      console.error(`Failed: ${input} -> ${e?.message || e}`)
+      if (String(e?.message || e) !== '__SKIP__')
+        console.error(`Failed: ${input} -> ${e?.message || e}`)
       fail++
     }
   }
-  console.log(`Done. ${ok} file(s) written, ${fail} failed.`)
+  await rl.close()
+  console.log(`Done. ${ok} written, ${skipped} skipped, ${fail} failed.`)
 })().catch(e => { console.error(e); process.exit(1) })
+
+async function fileExists(p){ try { await fs.access(p); return true } catch { return false } }
+
+async function promptChoice(rl, q){
+  while (true){
+    const a = (await rl.question(q)).trim().toLowerCase()
+    if (['o','r','s','a'].includes(a)) return a
+    console.log('Please type one of: o, r, s, a')
+  }
+}

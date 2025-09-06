@@ -14,7 +14,7 @@ Practical tips for using the in‑app Admin editor (/#/admin) to author and upda
 
 ## Metadata
 - Title, Key, Authors, Country, Tags, YouTube, MP3 map to `{title: …}`, `{key: …}`, and `{meta: …}` entries. Spaces are preserved.
-- Filenames derive from the title id (kebab‑case), but are editable in the staging table.
+- Filenames derive from the title id (underscore slug), but are editable in the staging table.
 
 ## Slides (PPTX)
 - PPTX files link automatically by slug: `public/pptx/<song-filename-without-ext>.pptx`.

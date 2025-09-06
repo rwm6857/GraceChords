@@ -10,8 +10,8 @@ export type MetaExtras = {
   pptx?: string
 }
 
-function kebab(s: string){
-  return (s || '').toLowerCase().replace(/[^\w]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')
+function slugifyUnderscore(s: string){
+  return (s || '').toLowerCase().replace(/[^\w]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')
 }
 
 function stripDecorations(title: string){
@@ -45,5 +45,5 @@ export function convertToCanonicalChordPro(raw: string, extras?: Partial<MetaExt
 }
 
 export function suggestCanonicalFilename(title: string){
-  return `${kebab(stripDecorations(title || 'untitled'))}.chordpro`
+  return `${slugifyUnderscore(stripDecorations(title || 'untitled'))}.chordpro`
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
+import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serialize'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
 import { lintChordPro } from '../utils/chordpro/lint'
@@ -157,7 +157,7 @@ function AdminPanel(){
     }
     let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     content = appendDisclaimerIfMissing(content)
-    const base = kebab(meta.id || doc.meta.title || 'untitled')
+    const base = slugifyUnderscore(meta.id || doc.meta.title || 'untitled')
     const fname = editingFile || `${base}.chordpro`
     const willUpdate = items.some(it => it.filename === fname)
     const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
@@ -207,7 +207,7 @@ function AdminPanel(){
     }
     let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
     content = appendDisclaimerIfMissing(content)
-    const base = kebab(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
+    const base = slugifyUnderscore(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
     const fname = editingFile || `${base}.chordpro`
     const willUpdate = items.some(it => it.filename === fname)
     const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
