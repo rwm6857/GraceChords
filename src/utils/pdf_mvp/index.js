@@ -1,8 +1,8 @@
 // Minimal, reliable PDF exporter (MVP) focused on single-song export.
-// Implements the decision ladder described by the product notes:
-// 1) Try 1 column at 15→11pt, single page.
-// 2) If not, try 2 columns at 15→11pt, single page.
-// 3) Worst case, 1 column @15pt across multiple pages.
+// Decision ladder (matches README):
+// 1) Try 1 column at 16→12 pt, single page.
+// 2) If not, try 2 columns at 16→12 pt, single page.
+// 3) Fallback: 1 column at 15 pt across multiple pages.
 //
 // Constraints honored:
 // - Sections are atomic: never split across columns or pages.

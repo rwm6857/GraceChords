@@ -31,3 +31,5 @@ npm run test:mvp    # PDF layout guards
 npm run build       # output to docs/
 ```
 
+## See also
+- [[Importing-Lyrics]] — convert DOCX/PDF/TXT to a ChordPro skeleton (directives by default).

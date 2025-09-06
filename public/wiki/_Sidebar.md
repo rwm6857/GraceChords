@@ -8,6 +8,7 @@
   - [[Songbook-Builder]]
   - [[Bundle]]
   - [[ChordPro-Guide]]
+  - [[Importing-Lyrics]]
   - [[PDF-and-Printing]]
   - [[Admin-Tool]]
   - [[Admin-Tips]]

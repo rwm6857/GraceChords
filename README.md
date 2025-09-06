@@ -82,6 +82,25 @@ The normalizer converts hyphens/spaces to underscores (e.g., `all-in-all.chordpr
 ## Disclaimer Controls
 Set `VITE_ENABLE_DISCLAIMER=0` to disable the site footer, ChordPro comment block appending, and PDF footers. Optionally set `VITE_CONTACT_EMAIL=you@example.com` to append a contact line in site/ChordPro disclaimers.
 
+## Importing Lyrics (DOCX/PDF/TXT → ChordPro)
+Convert documents into a ChordPro skeleton with section blocks. Default output uses short ChordPro directives.
+
+```bash
+# DOCX → ChordPro (directives default)
+npm run ingest -- path/to/song.docx
+
+# PDF → ChordPro
+npm run ingest -- path/to/song.pdf --out public/songs
+
+# Plain headers instead of directives
+npm run ingest -- path/to/song.pdf --plain
+```
+
+Notes
+- Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
+- Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
+- After import: `npm run normalize && npm run build-index`.
+
 ## CI & Automation
 - Build to `docs/` (site code changes): `build-to-docs.yml` runs on changes under `src/**`, `index.html`, `404.html`, `vite.config.js`, `package*.json`, and `public/**` (excluding `public/songs/**` and `public/wiki/**`). Uses Node 20 and commits `docs/` with `VITE_COMMIT_SHA=${{ github.sha }}`.
 - Song changes → index then build: `update-index.yml` runs on `public/songs/**`, executes `node scripts/buildIndex.mjs`, commits `src/data/index.json`. That commit triggers the site build workflow above.

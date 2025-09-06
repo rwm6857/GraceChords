@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { KEYS, parseChordPro, transposeSym } from '../utils/chordpro'
+import { KEYS, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, kebab } from '../utils/chordpro/serialize'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'

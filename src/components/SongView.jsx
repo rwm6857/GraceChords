@@ -432,6 +432,12 @@ if(!entry){
 
 /* ---------- Helpers ---------- */
 
+// Extract a canonical 11-char YouTube video ID from common URL forms.
+// Accepts:
+//  - youtu.be/<id>
+//  - (subdomain.)youtube.com/watch?v=<id>
+//  - (subdomain.)youtube.com/{embed|shorts|live}/<id>
+// Rejects lookalike hosts (e.g., notyoutube.com) and overlong inputs.
 function extractYouTubeId(input = '') {
   const raw = String(input)
   if (raw.length > 200) return null
