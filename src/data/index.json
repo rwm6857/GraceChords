@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-07T02:54:14.606Z",
+  "generatedAt": "2025-09-07T03:29:20.053Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -30,15 +30,6 @@
         "Avraham Fried"
       ],
       "country": "Israel"
-    },
-    {
-      "id": "abba-israeli",
-      "title": "Abba (Israeli)",
-      "filename": "abba_israeli.chordpro",
-      "originalKey": "AM",
-      "tags": [],
-      "authors": [],
-      "country": ""
     },
     {
       "id": "above-all",
@@ -231,15 +222,6 @@
       "country": "Uzbekistan"
     },
     {
-      "id": "come-to-us-emmanuel-uzbek",
-      "title": "Come to Us, Emmanuel (Uzbek)",
-      "filename": "come_to_us_emmanuel_uzbek.chordpro",
-      "originalKey": "C",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
       "id": "come-now-is-the-time-to-worship",
       "title": "Come, Now is the Time to Worship",
       "filename": "come_now_is_the_time_to_worship.chordpro",
@@ -281,19 +263,6 @@
       "id": "dear-brother",
       "title": "Dear Brother",
       "filename": "dear_brother.chordpro",
-      "originalKey": "Am",
-      "tags": [
-        "Slow",
-        "Missions",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "Israel"
-    },
-    {
-      "id": "dear-brother-israeli",
-      "title": "Dear Brother (Israeli)",
-      "filename": "dear_brother_israeli.chordpro",
       "originalKey": "AM",
       "tags": [],
       "authors": [],
@@ -319,15 +288,6 @@
       ],
       "authors": [],
       "country": "Israel"
-    },
-    {
-      "id": "elohimisourrefuge",
-      "title": "ElohimisOurRefuge",
-      "filename": "elohimisourrefuge.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
-      "country": ""
     },
     {
       "id": "even-so-come",
@@ -359,22 +319,9 @@
       "country": ""
     },
     {
-      "id": "father-we-ask",
-      "title": "Father We Ask",
-      "filename": "father_we_ask.chordpro",
-      "originalKey": "G",
-      "tags": [
-        "Slow",
-        "Missions",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "Russia"
-    },
-    {
       "id": "father-we-ask-russian",
       "title": "Father We Ask (Russian)",
-      "filename": "father_we_ask_russian.chordpro",
+      "filename": "father_we_ask.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
@@ -414,30 +361,9 @@
       "country": "Egypt"
     },
     {
-      "id": "glorious-king-arabic",
-      "title": "Glorious King (Arabic)",
-      "filename": "glorious_king_arabic.chordpro",
-      "originalKey": "A",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
-      "id": "god-of-our-fathers",
-      "title": "God of Our Fathers",
-      "filename": "god_of_our_fathers.chordpro",
-      "originalKey": "C",
-      "tags": [
-        "Fast",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "Israel"
-    },
-    {
       "id": "god-of-our-fathers-israeli",
       "title": "God of Our Fathers (Israeli)",
-      "filename": "god_of_our_fathers_israeli.chordpro",
+      "filename": "god_of_our_fathers.chordpro",
       "originalKey": "C",
       "tags": [],
       "authors": [],
@@ -503,19 +429,8 @@
         "Fast",
         "Nations"
       ],
-      "authors": [
-        "Michael W. Smith"
-      ],
-      "country": "Israel"
-    },
-    {
-      "id": "great-is-the-lord",
-      "title": "Great is the Lord",
-      "filename": "great_is_the_lord_israeli.chordpro",
-      "originalKey": "G",
-      "tags": [],
       "authors": [],
-      "country": ""
+      "country": "Israel"
     },
     {
       "id": "great-is-thy-faithfulness",
@@ -534,19 +449,6 @@
       "tags": [],
       "authors": [],
       "country": ""
-    },
-    {
-      "id": "hail-to-the-brightness-of-zion-s-glad-morning",
-      "title": "Hail to the Brightness of Zion's Glad Morning",
-      "filename": "hail_to_the_brightness_of_zions_glad_morning.chordpro",
-      "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Thomas Hastings"
-      ],
-      "country": "USA"
     },
     {
       "id": "hallelujah-your-love-is-amazing",
@@ -576,9 +478,9 @@
       "country": ""
     },
     {
-      "id": "he-is-king",
-      "title": "He is King",
-      "filename": "he_is_king.chordpro",
+      "id": "he-is-the-king",
+      "title": "He is the King",
+      "filename": "he_is_the_king.chordpro",
       "originalKey": "Bm",
       "tags": [
         "Fast",
@@ -586,15 +488,6 @@
       ],
       "authors": [],
       "country": "Indonesia"
-    },
-    {
-      "id": "he-is-the-king-indonesian-dia-raja",
-      "title": "He is the King (Indonesian: Dia Raja)",
-      "filename": "he_is_the_king_indonesian_dia_raja.chordpro",
-      "originalKey": "BM",
-      "tags": [],
-      "authors": [],
-      "country": ""
     },
     {
       "id": "heart-of-worship",
@@ -655,22 +548,9 @@
       "title": "Holy Spirit, Come",
       "filename": "holy_spirit_come.chordpro",
       "originalKey": "F",
-      "tags": [
-        "Slow",
-        "Worship",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "India"
-    },
-    {
-      "id": "holy-spirit-come-indian",
-      "title": "Holy Spirit, Come (Indian)",
-      "filename": "holy_spirit_come_indian.chordpro",
-      "originalKey": "F",
       "tags": [],
       "authors": [],
-      "country": ""
+      "country": "India"
     },
     {
       "id": "hope-of-the-nations",
@@ -764,22 +644,9 @@
       "title": "I Lift My Eyes",
       "filename": "i_lift_my_eyes.chordpro",
       "originalKey": "C",
-      "tags": [
-        "Slow",
-        "Worship",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "Iran"
-    },
-    {
-      "id": "i-lift-my-eyes-iranian",
-      "title": "I Lift My Eyes (Iranian)",
-      "filename": "i_lift_my_eyes_iranian.chordpro",
-      "originalKey": "C",
       "tags": [],
       "authors": [],
-      "country": ""
+      "country": "Iran"
     },
     {
       "id": "i-thank-god",
@@ -801,22 +668,9 @@
       "title": "I Will Follow You",
       "filename": "i_will_follow_you.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Slow",
-        "Commitment",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "China"
-    },
-    {
-      "id": "i-will-follow-you-chinese",
-      "title": "I Will Follow You (Chinese)",
-      "filename": "i_will_follow_you_chinese.chordpro",
-      "originalKey": "A",
       "tags": [],
       "authors": [],
-      "country": ""
+      "country": "China"
     },
     {
       "id": "i-ll-always-love-you",
@@ -860,15 +714,6 @@
       "country": "USA"
     },
     {
-      "id": "in-jesus-name-intercp-int-l-ver",
-      "title": "In Jesus’ Name (InterCP Int’l Ver.)",
-      "filename": "in_jesus_name_intercp_int_l_ver.chordpro",
-      "originalKey": "D",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
       "id": "in-the-name-of-the-lord",
       "title": "In the Name of the Lord",
       "filename": "in_the_name_of_the_lord.chordpro",
@@ -879,15 +724,6 @@
       ],
       "authors": [],
       "country": "Morocco"
-    },
-    {
-      "id": "in-the-name-of-the-lord-le-nom-du-seigneur",
-      "title": "In the Name of the Lord (Le Nom du Seigneur)",
-      "filename": "in_the_name_of_the_lord_le_nom_du_seigneur.chordpro",
-      "originalKey": "D",
-      "tags": [],
-      "authors": [],
-      "country": ""
     },
     {
       "id": "it-is-well-with-my-soul",
@@ -951,13 +787,16 @@
       "country": ""
     },
     {
-      "id": "john-3-16-israeli",
-      "title": "John 3:16 (Israeli)",
-      "filename": "john_3_16_israeli.chordpro",
+      "id": "john-3-16",
+      "title": "John 3:16",
+      "filename": "john_3_16.chordpro",
       "originalKey": "G",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Nations"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Israel"
     },
     {
       "id": "kernel-of-wheat",
@@ -1017,13 +856,16 @@
       "country": ""
     },
     {
-      "id": "let-us-sing-to-the-lord-israeli",
-      "title": "Let Us Sing to the Lord (Israeli)",
-      "filename": "let_us_sing_to_the_lord_israeli.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "id": "let-us-sing-to-the-lord",
+      "title": "Let Us Sing to the Lord",
+      "filename": "let_us_sing_to_the_lord.chordpro",
+      "originalKey": "Em",
+      "tags": [
+        "Fast",
+        "Nations"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Israel"
     },
     {
       "id": "let-your-glory-fall",
@@ -1151,13 +993,13 @@
       "country": ""
     },
     {
-      "id": "my-savior-king-hindi-yeshu-mashi",
-      "title": "My Savior King (Hindi: Yeshu Mashi)",
-      "filename": "my_savior_king_hindi_yeshu_mashi.chordpro",
+      "id": "my-savior-king",
+      "title": "My Savior King",
+      "filename": "my_savior_king.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
-      "country": ""
+      "country": "India"
     },
     {
       "id": "new-acts",
@@ -1205,13 +1047,13 @@
       "country": ""
     },
     {
-      "id": "on-that-day-japanese",
-      "title": "On That Day (Japanese)",
+      "id": "on-that-day",
+      "title": "On That Day",
       "filename": "on_that_day_japanese.chordpro",
       "originalKey": "A",
       "tags": [],
       "authors": [],
-      "country": ""
+      "country": "Japan"
     },
     {
       "id": "one-way",
@@ -1268,7 +1110,7 @@
     {
       "id": "psalm-150-israeli",
       "title": "Psalm 150 (Israeli)",
-      "filename": "psalm_150_israeli.chordpro",
+      "filename": "psalm_150.chordpro",
       "originalKey": "DM",
       "tags": [],
       "authors": [],
@@ -1368,7 +1210,7 @@
     {
       "id": "shalomjerusalem",
       "title": "ShalomJerusalem",
-      "filename": "shalomjerusalem.chordpro",
+      "filename": "shalom_jerusalem.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1490,26 +1332,8 @@
     {
       "id": "the-revival",
       "title": "The Revival (부흥 / 이 땅의 황무함을 보소서)",
-      "filename": "the-revival.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
-      "id": "the-revival",
-      "title": "The Revival (부흥 / 이 땅의 황무함을 보소서)",
       "filename": "the_revival.chordpro",
       "originalKey": "G",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
-      "id": "thefinalcountdown-intercpint",
-      "title": "TheFinalCountdown(InterCPInt.)",
-      "filename": "thefinalcountdown_intercpint.chordpro",
-      "originalKey": "",
       "tags": [],
       "authors": [],
       "country": ""
@@ -1530,7 +1354,7 @@
     {
       "id": "thethrone",
       "title": "TheThrone",
-      "filename": "thethrone.chordpro",
+      "filename": "the_throne.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1562,15 +1386,6 @@
       "id": "under-the-blood",
       "title": "Under The Blood",
       "filename": "under_the_blood.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
-      "country": ""
-    },
-    {
-      "id": "up-and-fight-against-the-devil",
-      "title": "Up and Fight Against the Devil",
-      "filename": "up_and_fight_against_the_devil.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
