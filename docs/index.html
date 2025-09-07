@@ -5,33 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GraceChords</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <style>
-      #offline-badge {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        background: #4caf50;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        font-family: sans-serif;
-        border-radius: 4px;
-        z-index: 1000;
-      }
-    </style>
-    <script type="module" crossorigin src="./assets/index-D4o9cMnW.js"></script>
+    <script type="module" crossorigin src="./assets/index-BrMqCK6L.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DA24-PyL.css">
   </head>
   <body>
     <div id="root"></div>
-    <div id="offline-badge" hidden>Available offline</div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js', { type: 'module' });
-          navigator.serviceWorker.ready.then(() => {
-            document.getElementById('offline-badge').hidden = false;
-          });
         });
       }
     </script>
