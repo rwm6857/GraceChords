@@ -1,38 +1,42 @@
 {title: Blessed Assurance}
 {key: C}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Fanny J. Crosby}
+{country: USA}
+{tags: Hymn}
+{youtube: uMLOlYWM03g}
 
+{start_of_verse: Verse}
+Blessed [C]assurance, [F]Jesus is [C]mine!
+O what a [Am7]fore[G]taste of [D]glory di[G]vine!
+Heir of sal[C]vation, [F]purchase of [C]God
+Born of his [Dm]Spirit, [G]washed in his [C]blood
 
+{end_of_verse}
 
-{sov: Verse}
-Blessed assurance, Jesus is mine! 
-O what a foretaste of glory divine! 
-Heir of salvation, purchase of God 
-Born of his Spirit, washed in his blood 
+{start_of_chorus: Chorus}
+This is my [C]story, [F]this is my [C]song,
+Praising my [Am7]Savi[G]or [D]all the day [G]long
+[G7]This is my [C]story, [F]this is my [C]song,
+Praising my [Dm]Savior [G]all the day [C]long
 
-{eov}
-{soc: Chorus}
-This is my story, this is my song, 
-Praising my Savior all the day long 
-This is my story, this is my song, 
-Praising my Savior all the day long 
+{end_of_chorus}
 
-{eoc}
-{sov: Verse 2}
+{start_of_verse: Verse 2}
 Perfect submission, perfect delight 
 Visions of rapture now burst on my sight 
 Angels descending bring from above 
 Echoes of mercy, whispers of love 
 
-{eov}
-{sov: Verse 3}
+{end_of_verse}
+
+{start_of_verse: Verse 3}
 Perfect submission, all is at rest 
 I in my Savior am happy and blessed 
 Watching and waiting, looking above 
 Filled with his goodness, lost in his love 
 
-{eov}
+{end_of_verse}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
