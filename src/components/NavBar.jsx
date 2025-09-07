@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { SetlistIcon, Sun, Moon } from './Icons'
+import OfflineBadge from './OfflineBadge'
 import { currentTheme, toggleTheme } from '../utils/theme'
 
 export default function NavBar(){
@@ -62,6 +63,7 @@ export default function NavBar(){
             >
               Docs
             </a>
+            <OfflineBadge />
             {/* Toggle lives OUTSIDE links */}
             <button
               className="iconbtn"
