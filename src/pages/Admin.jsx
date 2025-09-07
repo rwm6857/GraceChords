@@ -95,6 +95,7 @@ function AdminPanel(){
       return { meta: {}, blocks: [] }
     }
   }, [text])
+  const quickChords = useMemo(() => majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')), [meta.key])
 
   function addDraft(){
     const title = meta.title || 'Untitled'
@@ -295,6 +296,22 @@ function AdminPanel(){
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
 
+  // Global hotkeys: Alt+1..6 insert quick chords in order
+  useEffect(() => {
+    function onKey(e){
+      if (!e.altKey) return
+      if (prOpen) return
+      const k = e.key
+      if (!/^([1-6])$/.test(k)) return
+      e.preventDefault()
+      const idx = parseInt(k, 10) - 1
+      const sym = quickChords[idx]
+      if (sym) insertAtCursor(`[${sym}]`)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [quickChords, prOpen])
+
   async function openPrModal(){
     try {
       const { default_branch } = await GH.getRepoInfo({ owner: 'rwm6857', repo: 'GraceChords' })
@@ -490,8 +507,8 @@ function AdminPanel(){
       <div className="Row" style={{ alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
         <strong>Quick chords</strong>
         <span className="Small">(Key: {meta.key || 'G'})</span>
-        {majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')).map(sym => (
-          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}]`}>
+        {quickChords.map((sym, i) => (
+          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>
             {sym}
           </button>
         ))}
