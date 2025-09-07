@@ -1,38 +1,41 @@
 {title: Amazing Grace}
 {key: D}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: John Newton}
+{tags: Hymn}
+{youtube: HHx05uZHj1I}
 
+{start_of_verse: Verse 1}
+Am[D]azing grace, how [G]sweet the [D]sound,
+That [D]saved a wretch like [A7]me.
+I [D]once was lost, but [G]now I’m [D]found,
+Was [D]blind, but [A]now I [D]see.
 
+{end_of_verse}
 
-{sov: Verse 1}
-Amazing grace, how sweet the sound, 
-That saved a wretch like me. 
-I once was lost, but now I’m found, 
-Was blind, but now I see. 
-
-{eov}
-{sov: Verse 2}
+{start_of_verse: Verse 2}
 Twas grace that taught my heart to fear, 
 And grace my fears released.  
 How precious did that grace appear,  
 The hour I first believed. 
 
-{eov}
-{sov: Verse 3}
+{end_of_verse}
+
+{start_of_verse: Verse 3}
 When we've been there ten thousand years, 
 Bright shining as the sun, 
 We've no less days to sing God's praise 
 Than when did when we first begun. 
 
-{eov}
-{sov: Verse 4}
+{end_of_verse}
+
+{start_of_verse: Verse 4}
 Amazing grace, how sweet the sound, 
 That saved a wretch like me. 
 I once was lost, but now I’m found, 
 Was blind, but now I see. 
 
-{eov}
+{end_of_verse}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
