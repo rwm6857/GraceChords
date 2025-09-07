@@ -1,24 +1,40 @@
 {title: Beautiful Savior}
-{key: }
+{key: A}
+{country: USA}
 {authors: Planetshakers}
 {youtube: JqqQnLyH_l0}
-{tags: }
-{pptx: }
+{tags: Slow, Praise}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse}
+[A]Jesus, [E]Beautiful [F#m]Savior
+[E]God of all [D]majesty, [A]risen [Bm]King
+Lamb of [A]God, [E]holy and [F#m]righteous
+[E]Blessed [D]redeemer, [A]bright morning [Bm]Star
 
-{sov Verse 2}
-{eov}
+{end_of_verse}
 
-{soc Chorus}
-{eoc}
+{start_of_chorus: Pre-Chorus}
+All the [E]heavens [A]shout your [D]praise
+All cre[E]ation [A]bows [D]to wor[F#m]ship You[E]
 
-{soc PreChorus}
-{eoc}
+{end_of_chorus}
 
-{sob Bridge}
-{eob}
+{start_of_chorus: Chorus}
+How [A]wonderful, [E]how [F#m]beautiful
+[E]Name above [D]every [A]name, [Bm]exalted [E]high
+How [A]wonderful, [E]how beauti[F#m]ful
+[E]Jesus [D]Your name [Bm]
+Name above [D]ev-[F#m]ery [E]name, [A]Jesus
 
-{sot Tag}
-{eot}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
+[A]I will sing for[F#m]ever
+[E]Jesus I [D]love You
+Jesus I [Bm]love [E]You
+
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
