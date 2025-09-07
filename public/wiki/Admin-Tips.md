@@ -11,6 +11,9 @@ Practical tips for using the in‑app Admin editor (/#/admin) to author and upda
 - Saves as .chordpro: Files are always saved with a `.chordpro` extension.
 - Prefer 2 columns: Adds a `{columns: 2}` hint for PDF layout.
 - Capo in header: Writes `{capo: N}` to display the capo in PDFs.
+ - Quick chords: Click buttons or use hotkeys to insert `[Chord]` at the caret:
+   - Win/Linux: Alt+1..6
+   - macOS: Ctrl+1..6
 
 ## Metadata
 - Title, Key, Authors, Country, Tags, YouTube, MP3 map to `{title: …}`, `{key: …}`, and `{meta: …}` entries. Spaces are preserved.

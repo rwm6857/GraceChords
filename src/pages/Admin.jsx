@@ -296,6 +296,31 @@ function AdminPanel(){
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
 
+  // Hotkeys: Win/Linux Alt+1..6, macOS Ctrl+1..6 insert quick chords (in order)
+  useEffect(() => {
+    function onKey(e){
+      const isMac = (() => {
+        try {
+          const plat = navigator.platform || ''
+          const ua = navigator.userAgent || ''
+          return /Mac|iPhone|iPad|iPod/i.test(plat || ua)
+        } catch { return false }
+      })()
+      const modifierOk = isMac ? e.ctrlKey : e.altKey
+      if (!modifierOk) return
+      if (prOpen) return
+      if (document.activeElement !== editorRef.current) return
+      const k = e.key
+      if (!/^([1-6])$/.test(k)) return
+      e.preventDefault()
+      const idx = parseInt(k, 10) - 1
+      const sym = quickChords[idx]
+      if (sym) insertAtCursor(`[${sym}]`)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [quickChords, prOpen])
+
   // Global hotkeys: Alt+1..6 insert quick chords in order
   useEffect(() => {
     function onKey(e){
@@ -508,7 +533,7 @@ function AdminPanel(){
         <strong>Quick chords</strong>
         <span className="Small">(Key: {meta.key || 'G'})</span>
         {quickChords.map((sym, i) => (
-          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>
+          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1} on Win/Linux, Ctrl+${i+1} on macOS)`}>
             {sym}
           </button>
         ))}
