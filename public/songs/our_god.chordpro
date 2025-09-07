@@ -1,26 +1,45 @@
 {title: Our God}
-{key: }
+{key: G}
+{country: USA}
 {authors: Chris Tomlin}
 {youtube: O5d_gm9zrnY}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{tags: Oldie}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
+[Em]Water You [C]turned into [G]wine
+[Em]Opened the [C]eyes of the [G]blind
+There's no one [Am7]like You
+None like [D]You
 
-{sov Verse 2}
-{eov}
+{end_of_verse}
 
-{soc Chorus}
-{eoc}
+{start_of_verse: Verse 2}
+[Em]Into the [C]darkness You [G]shine
+[Em]Out of the [C]ashes we [G]rise
+There's no one [Am7]like You
+None like [D]You
 
-{soc PreChorus}
-{eoc}
+{end_of_verse}
 
-{sob Bridge}
-{eob}
+{start_of_chorus: Chorus}
+[Em]Our God is greater
+[C]Our God is stronger
+[G]God, You are higher than [D]any other
+[Em]Our God is Healer
+[C]Awesome in power
+[G]Our God
+Our [D]God
 
-{sot Tag}
-{eot}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
+[Em]And if our God is for us
+[C]Then who could ever stop us
+[G]And if our God is with us
+[Dsus]Then what could stand against
+
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
