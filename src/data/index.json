@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-07T21:28:15.029Z",
+  "generatedAt": "2025-09-07T22:55:54.135Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -168,30 +168,41 @@
       "title": "Blessed Assurance",
       "filename": "blessed_assurance.chordpro",
       "originalKey": "C",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Hymn"
+      ],
+      "authors": [
+        "Fanny J. Crosby"
+      ],
+      "country": "USA"
     },
     {
       "id": "blessed-be-your-name",
       "title": "Blessed be Your Name",
       "filename": "blessed_be_your_name.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "A",
+      "tags": [
+        "Fast"
+      ],
       "authors": [
         "Matt Redman",
         "Beth Redman"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "blow-the-trumpet-in-zion",
       "title": "Blow the Trumpet in Zion",
       "filename": "blow_the_trumpet_in_zion.chordpro",
-      "originalKey": "DM",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "originalKey": "Dm",
+      "tags": [
+        "Fast",
+        "InterCP"
+      ],
+      "authors": [
+        "Paul Wilbur"
+      ],
+      "country": "Israel"
     },
     {
       "id": "calling",
