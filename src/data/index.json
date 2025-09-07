@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-07T03:29:20.053Z",
+  "generatedAt": "2025-09-07T21:28:15.029Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -73,8 +73,12 @@
       "title": "Amazing Grace",
       "filename": "amazing_grace.chordpro",
       "originalKey": "D",
-      "tags": [],
-      "authors": [],
+      "tags": [
+        "Hymn"
+      ],
+      "authors": [
+        "John Newton"
+      ],
       "country": ""
     },
     {
@@ -98,9 +102,13 @@
       "title": "As the Deer",
       "filename": "as_the_deer.chordpro",
       "originalKey": "E",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow"
+      ],
+      "authors": [
+        "Martin J. Nystrom"
+      ],
+      "country": "USA"
     },
     {
       "id": "battle-belongs",
@@ -118,35 +126,42 @@
       "id": "beautiful-one",
       "title": "Beautiful One",
       "filename": "beautiful_one.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "G",
+      "tags": [
+        "Fast"
+      ],
       "authors": [
         "Tim Hughes"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "beautiful-savior",
       "title": "Beautiful Savior",
       "filename": "beautiful_savior.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Praise"
+      ],
       "authors": [
         "Planetshakers"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "better-word",
       "title": "Better Word",
       "filename": "better_word.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Leeland Mooring",
-        "Kyle Lee"
+      "originalKey": "B",
+      "tags": [
+        "Slow",
+        "Contemporary"
       ],
-      "country": ""
+      "authors": [
+        "Leeland"
+      ],
+      "country": "USA"
     },
     {
       "id": "blessed-assurance",
