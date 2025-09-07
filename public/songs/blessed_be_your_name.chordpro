@@ -1,26 +1,58 @@
 {title: Blessed be Your Name}
-{key: }
+{key: A}
+{country: USA}
 {authors: Matt Redman, Beth Redman}
 {youtube: Pn6-lfoJ1x0}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{tags: Fast}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
+[A]Blessed [E]be Your name
+In the [F#m7]land that is [D]plentiful
+Where Your [A]streams of a[E]bundance flow
+[D]Blessed be Your name
 
-{sov Verse 2}
-{eov}
+[A]Blessed [E]be Your name
+When I'm [F#m7]found in the [D]desert place
+Though I [A]walk through the [E]wilderness
+[D]Blessed be Your name
 
-{soc Chorus}
-{eoc}
+Pre-Chorus
+[A]Every blessing [E]You pour out
+I'll [F#m7]turn back to [D]praise
+[A]When the darkness [E]closes in
+[F#m7]Lord still I will [D]say
 
-{soc PreChorus}
-{eoc}
+{end_of_verse}
 
-{sob Bridge}
-{eob}
+{start_of_chorus: Chorus}
+Blessed be the [A]name of the [E]Lord
+Blessed be Your [F#m7]name
+Blessed be the [D]name of the [A]Lord
+Blessed be Your [E]glor[F#m7]ious [D]name
 
-{sot Tag}
-{eot}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
+[A]Blessed be [E]Your name
+When the [F#m7]sun's shining [D]down on me
+When the [A]world's all as [E]it should be
+[D]Blessed be Your name
+
+[A]Blessed [E]be Your name
+On the [F#m7]road marked with [D]suffering
+Though there's [A]pain in the [E]offering
+Blessed [D]be Your name
+
+{end_of_verse}
+
+{start_of_bridge: Bridge}
+You [A]give and take [E]away
+You [F#m7]give and take [D]away
+My [A]heart will choose to [E]say
+Lord [F#m7]blessed be Your [D]name
+
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
