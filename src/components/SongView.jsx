@@ -272,13 +272,13 @@ if(!entry){
     <div className="container" style={isNarrow ? { paddingBottom: '84px' } : undefined}>
       <Busy busy={busy} />
       <div className="songpage__top">
-        <Link to="/" className="back">← Back</Link>
         <div style={{flex:1}}>
           <h1 className="songpage__title">{title}</h1>
-        <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
+          <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
         </div>
       </div>
 
+      {!isNarrow && (
       <div className="toolbar card">
         <div style={{display:'flex', alignItems:'center', gap:10}}>
           <span title="Transpose"><TransposeIcon /></span>
@@ -289,20 +289,18 @@ if(!entry){
             <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
             <EyeIcon /> <span className="text-when-wide">Chords</span>
           </label>
-          {!isNarrow && (
-            <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle two-column reading view">
-              <input
-                type="checkbox"
-                checked={twoColsView}
-                onChange={e=> {
-                  const v = e.target.checked
-                  setTwoColsView(v)
-                  try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
-                }}
-              />
-              View: {twoColsView ? '2 columns' : '1 column'}
-            </label>
-          )}
+          <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle two-column reading view">
+            <input
+              type="checkbox"
+              checked={twoColsView}
+              onChange={e=> {
+                const v = e.target.checked
+                setTwoColsView(v)
+                try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
+              }}
+            />
+            View: {twoColsView ? '2 columns' : '1 column'}
+          </label>
         </div>
         <div style={{display:'flex', gap:10}}>
           <button
@@ -331,6 +329,7 @@ if(!entry){
           </button>
         </div>
       </div>
+      )}
 
       <div
         className="songpage__sheet"
@@ -417,12 +416,15 @@ if(!entry){
       )}
       {/* Mobile action bar */}
       {isNarrow && (
-        <div className="mobilebar" role="group" aria-label="Song actions">
-          <button className="btn iconbtn" onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
-          <button className="btn iconbtn" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
-          <button className="btn iconbtn" onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
-          <button className="btn iconbtn" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
-          <button className="btn iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
+        <div className="mobilebar" role="group" aria-label="Song actions" style={{ display:'flex', gap:8 }}>
+          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
+          <select value={toKey} onChange={e=> setToKey(e.target.value)} title="Key" style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}>
+            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
+          </select>
+          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
+          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
+          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
+          <button className="btn primary iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
         </div>
       )}
     </div>

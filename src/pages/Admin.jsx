@@ -176,7 +176,6 @@ function AdminPanel(){
       const fname = suggestCanonicalFilename(docTitle)
       const final = appendDisclaimerIfMissing(out)
       setStaged(s => [...s, { filename: fname, content: final, title: docTitle, key: docKey || '' }])
-      showToast?.(`Converted & staged: ${fname}`) ?? alert(`Converted & staged: ${fname}`)
     } catch (e) {
       showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
     }
@@ -373,7 +372,7 @@ function AdminPanel(){
         title: prTitle,
         body: prBody,
       })
-      showToast?.(`PR #${pr.number} created`) ?? alert(`PR #${pr.number} created`)
+      // PR created; open in a new tab for review
       window.open(pr.html_url, '_blank', 'noopener')
       setStaged([])
       setPrOpen(false)
