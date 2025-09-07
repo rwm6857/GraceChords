@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-06T20:51:10.102Z",
+  "generatedAt": "2025-09-07T02:54:14.606Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -30,6 +30,15 @@
         "Avraham Fried"
       ],
       "country": "Israel"
+    },
+    {
+      "id": "abba-israeli",
+      "title": "Abba (Israeli)",
+      "filename": "abba_israeli.chordpro",
+      "originalKey": "AM",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "above-all",
@@ -73,13 +82,9 @@
       "title": "Amazing Grace",
       "filename": "amazing_grace.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "John Newton"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "ancient-of-days",
@@ -157,13 +162,9 @@
       "title": "Blessed Assurance",
       "filename": "blessed_assurance.chordpro",
       "originalKey": "C",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Fanny J. Crosby"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "blessed-be-your-name",
@@ -181,27 +182,19 @@
       "id": "blow-the-trumpet-in-zion",
       "title": "Blow the Trumpet in Zion",
       "filename": "blow_the_trumpet_in_zion.chordpro",
-      "originalKey": "Dm",
-      "tags": [
-        "Fast",
-        "Nations"
-      ],
-      "authors": [
-        "Ernie Haase"
-      ],
-      "country": "Israel"
+      "originalKey": "DM",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "calling",
-      "title": "Calling",
+      "title": "Calling (사명)",
       "filename": "calling.chordpro",
       "originalKey": "B",
-      "tags": [
-        "Slow",
-        "Commitment"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "christ-be-magnified",
@@ -221,13 +214,9 @@
       "title": "Close to Thee",
       "filename": "close_to_thee.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Fanny J. Crosby"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "come-to-us-emmanuel",
@@ -242,31 +231,31 @@
       "country": "Uzbekistan"
     },
     {
+      "id": "come-to-us-emmanuel-uzbek",
+      "title": "Come to Us, Emmanuel (Uzbek)",
+      "filename": "come_to_us_emmanuel_uzbek.chordpro",
+      "originalKey": "C",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "come-now-is-the-time-to-worship",
       "title": "Come, Now is the Time to Worship",
       "filename": "come_now_is_the_time_to_worship.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Fast",
-        "Oldie"
-      ],
-      "authors": [
-        "Brian Doerksen"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "creation-is-awaiting",
       "title": "Creation is Awaiting",
       "filename": "creation_is_awaiting.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Slow",
-        "Worship",
-        "Oldie"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "USA"
+      "country": ""
     },
     {
       "id": "dancing-generation",
@@ -284,13 +273,9 @@
       "title": "Days of Elijah",
       "filename": "days_of_elijah.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Nations"
-      ],
-      "authors": [
-        "Robin Mark"
-      ],
-      "country": "Israel"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "dear-brother",
@@ -306,17 +291,22 @@
       "country": "Israel"
     },
     {
+      "id": "dear-brother-israeli",
+      "title": "Dear Brother (Israeli)",
+      "filename": "dear_brother_israeli.chordpro",
+      "originalKey": "AM",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "dreams-of-heaven",
       "title": "Dreams of Heaven",
       "filename": "dreams_of_heaven.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Slow",
-        "Commitment",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "China"
+      "country": ""
     },
     {
       "id": "elohim-is-our-refuge",
@@ -329,6 +319,15 @@
       ],
       "authors": [],
       "country": "Israel"
+    },
+    {
+      "id": "elohimisourrefuge",
+      "title": "ElohimisOurRefuge",
+      "filename": "elohimisourrefuge.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "even-so-come",
@@ -346,27 +345,18 @@
       "title": "Everlasting God",
       "filename": "everlasting_god.chordpro",
       "originalKey": "B",
-      "tags": [
-        "Fast"
-      ],
-      "authors": [
-        "Brenton Brown",
-        "Ken Riley"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "everlasting-grace",
-      "title": "Everlasting Grace",
+      "title": "Everlasting Grace (하나님의 은혜)",
       "filename": "everlasting_grace.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Slow",
-        "Worship",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "father-we-ask",
@@ -380,6 +370,15 @@
       ],
       "authors": [],
       "country": "Russia"
+    },
+    {
+      "id": "father-we-ask-russian",
+      "title": "Father We Ask (Russian)",
+      "filename": "father_we_ask_russian.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "give-us-clean-hands",
@@ -397,13 +396,9 @@
       "title": "Global Church of Christ",
       "filename": "global_church_of_christ.chordpro",
       "originalKey": "B",
-      "tags": [
-        "Slow",
-        "Missions",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "glorious-king",
@@ -419,6 +414,15 @@
       "country": "Egypt"
     },
     {
+      "id": "glorious-king-arabic",
+      "title": "Glorious King (Arabic)",
+      "filename": "glorious_king_arabic.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "god-of-our-fathers",
       "title": "God of Our Fathers",
       "filename": "god_of_our_fathers.chordpro",
@@ -429,6 +433,15 @@
       ],
       "authors": [],
       "country": "Israel"
+    },
+    {
+      "id": "god-of-our-fathers-israeli",
+      "title": "God of Our Fathers (Israeli)",
+      "filename": "god_of_our_fathers_israeli.chordpro",
+      "originalKey": "C",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "good-good-father",
@@ -496,18 +509,31 @@
       "country": "Israel"
     },
     {
+      "id": "great-is-the-lord",
+      "title": "Great is the Lord",
+      "filename": "great_is_the_lord_israeli.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "great-is-thy-faithfulness",
       "title": "Great is Thy Faithfulness",
       "filename": "great_is_thy_faithfulness.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Thomas O. Chisholm",
-        "William M. Runyan"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "hail-to-the-brightness-of-zion-s-glad-morning",
+      "title": "Hail to the Brightness of Zion's Glad Morning",
+      "filename": "hail_to_the_brightness_of_zion_s_glad_morning.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "hail-to-the-brightness-of-zion-s-glad-morning",
@@ -536,27 +562,18 @@
       "title": "Happy Day",
       "filename": "happy_day.chordpro",
       "originalKey": "C",
-      "tags": [
-        "Fast"
-      ],
-      "authors": [
-        "Tim Hughes",
-        "Ben Cantelon"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "he-abides",
       "title": "He Abides",
       "filename": "he_abides.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Herbert Buffum"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "he-is-king",
@@ -569,6 +586,15 @@
       ],
       "authors": [],
       "country": "Indonesia"
+    },
+    {
+      "id": "he-is-the-king-indonesian-dia-raja",
+      "title": "He is the King (Indonesian: Dia Raja)",
+      "filename": "he_is_the_king_indonesian_dia_raja.chordpro",
+      "originalKey": "BM",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "heart-of-worship",
@@ -585,29 +611,19 @@
       "id": "here-i-am",
       "title": "Here I Am",
       "filename": "here_i_am.chordpro",
-      "originalKey": "Em",
-      "tags": [
-        "Slow",
-        "Commitment",
-        "Nations"
-      ],
+      "originalKey": "EM",
+      "tags": [],
       "authors": [],
-      "country": "China"
+      "country": ""
     },
     {
       "id": "here-i-am-again",
       "title": "Here I Am Again",
       "filename": "here_i_am_again.chordpro",
       "originalKey": "E",
-      "tags": [
-        "Fast",
-        "Swung",
-        "Oldie"
-      ],
-      "authors": [
-        "Billy James Foote"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "here-i-am-to-worship",
@@ -648,16 +664,22 @@
       "country": "India"
     },
     {
+      "id": "holy-spirit-come-indian",
+      "title": "Holy Spirit, Come (Indian)",
+      "filename": "holy_spirit_come_indian.chordpro",
+      "originalKey": "F",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "hope-of-the-nations",
-      "title": "Hope of the Nations",
+      "title": "Hope of the Nations (열방 향해)",
       "filename": "hope_of_the_nations.chordpro",
       "originalKey": "F",
-      "tags": [
-        "Fast",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "hosanna-praise-is-rising",
@@ -686,40 +708,27 @@
       "title": "How Great Thou Art",
       "filename": "how_great_thou_art.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Stuart K. Hine"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "i-am-free",
       "title": "I Am Free",
       "filename": "i_am_free.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Fast"
-      ],
-      "authors": [
-        "Jon Egan"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "i-am-thine-o-lord",
       "title": "I Am Thine O Lord",
       "filename": "i_am_thine_o_lord.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Fanny J. Crosby",
-        "William H. Doane"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "i-could-sing-of-your-love-forever",
@@ -734,16 +743,12 @@
     },
     {
       "id": "i-enter-in-the-holy-place",
-      "title": "I Enter in the Holy Place",
+      "title": "I Enter in the Holy Place (지극히 높은 주님의)",
       "filename": "i_enter_in_the_holy_place.chordpro",
       "originalKey": "F",
-      "tags": [
-        "Slow",
-        "Worship",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "i-hear-thy-welcome-voice",
@@ -766,6 +771,15 @@
       ],
       "authors": [],
       "country": "Iran"
+    },
+    {
+      "id": "i-lift-my-eyes-iranian",
+      "title": "I Lift My Eyes (Iranian)",
+      "filename": "i_lift_my_eyes_iranian.chordpro",
+      "originalKey": "C",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "i-thank-god",
@@ -796,6 +810,24 @@
       "country": "China"
     },
     {
+      "id": "i-will-follow-you-chinese",
+      "title": "I Will Follow You (Chinese)",
+      "filename": "i_will_follow_you_chinese.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "i-ll-always-love-you",
+      "title": "I’ll Always Love You",
+      "filename": "i_ll_always_love_you.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "i-ll-always-love-you",
       "title": "I’ll Always Love You",
       "filename": "ill_always_love_you.chordpro",
@@ -811,12 +843,9 @@
       "title": "In Jesus’ Name",
       "filename": "in_jesus_name.chordpro",
       "originalKey": "D",
-      "tags": [
-        "Fast",
-        "Contemporary"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "USA"
+      "country": ""
     },
     {
       "id": "in-jesus-name-intercp-int-l-ver",
@@ -831,6 +860,15 @@
       "country": "USA"
     },
     {
+      "id": "in-jesus-name-intercp-int-l-ver",
+      "title": "In Jesus’ Name (InterCP Int’l Ver.)",
+      "filename": "in_jesus_name_intercp_int_l_ver.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "in-the-name-of-the-lord",
       "title": "In the Name of the Lord",
       "filename": "in_the_name_of_the_lord.chordpro",
@@ -843,18 +881,22 @@
       "country": "Morocco"
     },
     {
+      "id": "in-the-name-of-the-lord-le-nom-du-seigneur",
+      "title": "In the Name of the Lord (Le Nom du Seigneur)",
+      "filename": "in_the_name_of_the_lord_le_nom_du_seigneur.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "it-is-well-with-my-soul",
       "title": "It Is Well With My Soul",
       "filename": "it_is_well_with_my_soul.chordpro",
       "originalKey": "C",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Horatio G. Spafford",
-        "Philip P. Bliss"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "jesus-i-need-you",
@@ -872,39 +914,20 @@
     },
     {
       "id": "jesus-lamb-of-god",
-      "title": "Jesus Lamb of God",
+      "title": "Jesus Lamb of God (예수 어린양!\"",
       "filename": "jesus_lamb_of_god.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Slow",
-        "Cross",
-        "Nations"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "Korea"
+      "country": ""
     },
     {
       "id": "jesus-our-refuge",
       "title": "Jesus Our Refuge",
       "filename": "jesus_our_refuge.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Slow",
-        "Missions",
-        "Nations"
-      ],
-      "authors": [],
-      "country": "China"
-    },
-    {
-      "id": "jesus-we-enthrone-you",
-      "title": "Jesus We Enthrone You",
-      "filename": "jesus_we_enthrone_you.chordpro",
-      "originalKey": "",
       "tags": [],
-      "authors": [
-        "Paul Kyle"
-      ],
+      "authors": [],
       "country": ""
     },
     {
@@ -919,27 +942,57 @@
       "country": ""
     },
     {
+      "id": "jesus-we-enthrone-you",
+      "title": "Jesus, We Enthrone You",
+      "filename": "jesus_we_enthrone_you.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "john-3-16-israeli",
+      "title": "John 3:16 (Israeli)",
+      "filename": "john_3_16_israeli.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "kernel-of-wheat",
+      "title": "Kernel of Wheat",
+      "filename": "kernel_of_wheat.chordpro",
+      "originalKey": "DM",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "king-of-kings",
       "title": "King of Kings",
       "filename": "king_of_kings.chordpro",
-      "originalKey": "",
+      "originalKey": "D",
       "tags": [],
-      "authors": [
-        "Brooke Ligertwood",
-        "Scott Ligertwood",
-        "Jason Ingram"
-      ],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "king-of-kings-intercp-int-l-ver",
+      "title": "King of Kings (InterCP Int’l Ver.)",
+      "filename": "king_of_kings_intercp_int_l_ver.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
       "id": "king-of-kings-majesty",
       "title": "King of Kings, Majesty",
       "filename": "king_of_kings_majesty.chordpro",
-      "originalKey": "",
+      "originalKey": "A",
       "tags": [],
-      "authors": [
-        "Jarrod Cooper"
-      ],
+      "authors": [],
       "country": ""
     },
     {
@@ -964,6 +1017,15 @@
       "country": ""
     },
     {
+      "id": "let-us-sing-to-the-lord-israeli",
+      "title": "Let Us Sing to the Lord (Israeli)",
+      "filename": "let_us_sing_to_the_lord_israeli.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "let-your-glory-fall",
       "title": "Let Your Glory Fall",
       "filename": "let_your_glory_fall.chordpro",
@@ -972,6 +1034,15 @@
       "authors": [
         "Vineyard / Don Moen"
       ],
+      "country": ""
+    },
+    {
+      "id": "lion-of-judah",
+      "title": "Lion of Judah",
+      "filename": "lion_of_judah.chordpro",
+      "originalKey": "AM",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
@@ -1021,6 +1092,15 @@
       "country": ""
     },
     {
+      "id": "lord-we-seek",
+      "title": "Lord We Seek (하나님의 사랑을)",
+      "filename": "lord_we_seek.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "majesty-here-i-am",
       "title": "Majesty (Here I Am)",
       "filename": "majesty.chordpro",
@@ -1029,6 +1109,15 @@
       "authors": [
         "Delirious?"
       ],
+      "country": ""
+    },
+    {
+      "id": "maranatha",
+      "title": "Maranatha",
+      "filename": "maranatha.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
@@ -1048,14 +1137,36 @@
       "title": "More Love to Thee",
       "filename": "more_love_to_thee.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Elizabeth Prentiss",
-        "William H. Doane"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "my-god-you-alone",
+      "title": "My God, You Alone (나의 주 나의 하나님이여)",
+      "filename": "my_god_you_alone.chordpro",
+      "originalKey": "E",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "my-savior-king-hindi-yeshu-mashi",
+      "title": "My Savior King (Hindi: Yeshu Mashi)",
+      "filename": "my_savior_king_hindi_yeshu_mashi.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "new-acts",
+      "title": "New Acts",
+      "filename": "new_acts.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "no-chains-of-me",
@@ -1094,6 +1205,15 @@
       "country": ""
     },
     {
+      "id": "on-that-day-japanese",
+      "title": "On That Day (Japanese)",
+      "filename": "on_that_day_japanese.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "one-way",
       "title": "One Way",
       "filename": "one_way.chordpro",
@@ -1103,6 +1223,15 @@
         "Joel Houston",
         "Jonathon Douglass"
       ],
+      "country": ""
+    },
+    {
+      "id": "open-up-the-doors-of-heaven",
+      "title": "Open Up the Doors of Heaven",
+      "filename": "open_up_the_doors_of_heaven.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
@@ -1128,6 +1257,24 @@
       "country": ""
     },
     {
+      "id": "preaching-the-cross",
+      "title": "Preaching the Cross",
+      "filename": "preaching_the_cross.chordpro",
+      "originalKey": "BM",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "psalm-150-israeli",
+      "title": "Psalm 150 (Israeli)",
+      "filename": "psalm_150_israeli.chordpro",
+      "originalKey": "DM",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "reckless-love",
       "title": "Reckless Love",
       "filename": "reckless_love.chordpro",
@@ -1150,6 +1297,33 @@
       "country": ""
     },
     {
+      "id": "revelations-5-13",
+      "title": "Revelations 5:13 (보좌에 계신이와)",
+      "filename": "revelations_5_13.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "righteous-powers",
+      "title": "Righteous Powers",
+      "filename": "righteous_powers.chordpro",
+      "originalKey": "E",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "rise-and-shout",
+      "title": "Rise and Shout",
+      "filename": "rise_and_shout.chordpro",
+      "originalKey": "AM",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "run-to-the-father",
       "title": "Run to the Father",
       "filename": "run_to_the_father.chordpro",
@@ -1163,6 +1337,24 @@
       "country": ""
     },
     {
+      "id": "savior-of-peace",
+      "title": "Savior of Peace (기쁨의 옷을 입은)",
+      "filename": "savior_of_peace.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "seek-hope-and-pray",
+      "title": "Seek, Hope, and Pray",
+      "filename": "seek_hope_and_pray.chordpro",
+      "originalKey": "F",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "set-a-fire",
       "title": "Set a Fire",
       "filename": "set_a_fire.chordpro",
@@ -1171,6 +1363,15 @@
       "authors": [
         "Will Reagan"
       ],
+      "country": ""
+    },
+    {
+      "id": "shalomjerusalem",
+      "title": "ShalomJerusalem",
+      "filename": "shalomjerusalem.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
@@ -1186,16 +1387,20 @@
     },
     {
       "id": "sing-sing-sing",
-      "title": "Sing, Sing, Sing",
+      "title": "Sing Sing Sing",
       "filename": "sing_sing_sing.chordpro",
-      "originalKey": "",
+      "originalKey": "D",
       "tags": [],
-      "authors": [
-        "Chris Tomlin",
-        "Daniel Carson",
-        "Jesse Reeves",
-        "Matt Gilder"
-      ],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "sing-sing-sing-intercp-int-l-ver",
+      "title": "Sing Sing Sing (InterCP Int’l Ver.)",
+      "filename": "sing_sing_sing_intercp_int_l_ver.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
@@ -1203,28 +1408,36 @@
       "title": "Singing I Go",
       "filename": "singing_i_go.chordpro",
       "originalKey": "F",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Eliza E. Hewitt",
-        "B. D. Ackley"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "sitting-in-the-shadow-of-death",
+      "title": "Sitting in the Shadow of Death",
+      "filename": "sitting_in_the_shadow_of_death.chordpro",
+      "originalKey": "A",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "spirit-come",
+      "title": "Spirit Come",
+      "filename": "spirit_come.chordpro",
+      "originalKey": "D",
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "stand-up-stand-up-for-jesus",
       "title": "Stand Up, Stand Up for Jesus",
       "filename": "stand_up_stand_up_for_jesus.chordpro",
       "originalKey": "A",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "George Duffield Jr.",
-        "George J. Webb"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "still",
@@ -1284,6 +1497,24 @@
       "country": ""
     },
     {
+      "id": "the-revival",
+      "title": "The Revival (부흥 / 이 땅의 황무함을 보소서)",
+      "filename": "the_revival.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "thefinalcountdown-intercpint",
+      "title": "TheFinalCountdown(InterCPInt.)",
+      "filename": "thefinalcountdown_intercpint.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "there-is-a-cloud",
       "title": "There Is a Cloud",
       "filename": "there_is_a_cloud.chordpro",
@@ -1297,18 +1528,22 @@
       "country": ""
     },
     {
+      "id": "thethrone",
+      "title": "TheThrone",
+      "filename": "thethrone.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
       "id": "tis-so-sweet-to-trust-in-jesus",
-      "title": "’Tis So Sweet to Trust in Jesus",
+      "title": "‘Tis So Sweet to Trust in Jesus",
       "filename": "tis_so_sweet_to_trust_in_jesus.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
-      "authors": [
-        "Louisa M. R. Stead",
-        "William J. Kirkpatrick"
-      ],
-      "country": "USA"
+      "tags": [],
+      "authors": [],
+      "country": ""
     },
     {
       "id": "touch-of-heaven",
@@ -1325,13 +1560,11 @@
     },
     {
       "id": "under-the-blood",
-      "title": "Under the Blood",
+      "title": "Under The Blood",
       "filename": "under_the_blood.chordpro",
       "originalKey": "",
       "tags": [],
-      "authors": [
-        "Marty Nystrom"
-      ],
+      "authors": [],
       "country": ""
     },
     {
@@ -1344,10 +1577,19 @@
       "country": ""
     },
     {
-      "id": "we-will-keep-our-faith-alive",
-      "title": "We will Keep Our Faith Alive",
-      "filename": "we_will_keep_our_faith_alive.chordpro",
+      "id": "up-and-fight-against-the-devil-key-of-b",
+      "title": "Up and Fight Against the Devil (Key of B)",
+      "filename": "up_and_fight_against_the_devil_key_of_b.chordpro",
       "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "we-will-keep-our-faith-alive",
+      "title": "We Will Keep Our Faith Alive",
+      "filename": "we_will_keep_our_faith_alive.chordpro",
+      "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": ""
@@ -1356,23 +1598,28 @@
       "id": "what-a-beautiful-name",
       "title": "What a Beautiful Name",
       "filename": "what_a_beautiful_name.chordpro",
-      "originalKey": "",
+      "originalKey": "E",
       "tags": [],
-      "authors": [
-        "Hillsong Worship"
-      ],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "what-a-beautiful-name-intercp-int-l-ver",
+      "title": "What a Beautiful Name (InterCP Int’l Ver.)",
+      "filename": "what_a_beautiful_name_intercp_int_l_ver.chordpro",
+      "originalKey": "E",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
       "id": "where-jesus-is-tis-heaven",
-      "title": "Where Jesus is ’Tis Heaven",
+      "title": "Where Jesus is Tis Heaven",
       "filename": "where_jesus_is_tis_heaven.chordpro",
       "originalKey": "G",
-      "tags": [
-        "Hymn"
-      ],
+      "tags": [],
       "authors": [],
-      "country": "USA"
+      "country": ""
     },
     {
       "id": "with-all-my-heart",
@@ -1420,14 +1667,30 @@
       "country": ""
     },
     {
-      "id": "your-grace-is-enough",
-      "title": "Your Grace is Enough",
-      "filename": "your_grace_is_enough.chordpro",
-      "originalKey": "",
+      "id": "you-endured-the-cross",
+      "title": "You Endured the Cross (십자가를 참으신)",
+      "filename": "you_endured_the_cross.chordpro",
+      "originalKey": "G",
       "tags": [],
-      "authors": [
-        "Matt Maher"
-      ],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "your-grace-is-enough",
+      "title": "Your Grace Is Enough",
+      "filename": "your_grace_is_enough.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
+      "country": ""
+    },
+    {
+      "id": "your-great-love",
+      "title": "Your Great Love (그 사랑 얼마나)",
+      "filename": "your_great_love.chordpro",
+      "originalKey": "G",
+      "tags": [],
+      "authors": [],
       "country": ""
     },
     {
