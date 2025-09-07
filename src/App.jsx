@@ -6,6 +6,8 @@ import Admin from './components/Admin'
 const Setlist = React.lazy(() => import('./components/Setlist'))
 import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
+const About = React.lazy(() => import('./components/About'))
+const Resources = React.lazy(() => import('./components/Resources'))
 import NavBar from './components/NavBar'
 import ErrorBoundary from './components/ErrorBoundary'
 import Toast from './components/Toast'
@@ -19,10 +21,12 @@ export default function App(){
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />
+            <Route path="/resources" element={<Resources />} />
           </Route>
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />

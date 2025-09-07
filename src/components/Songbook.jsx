@@ -194,11 +194,7 @@ export default function Songbook() {
     <div className="container">
       <Busy busy={busy} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <a href="/" className="back">
-            ← Back
-          </a>
-        </div>
+        <div />
         <h1 style={{ margin: 0 }}>Songbook Builder</h1>
         <div />
       </div>

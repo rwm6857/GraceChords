@@ -72,13 +72,13 @@ export default function Bundle(){
   }
 
   if(entries.length===0){
-    return <div className="container"><h1>Bundle</h1><p>No songs selected.</p><Link to="/" className="btn">← Back</Link></div>
+    return <div className="container"><h1>Bundle</h1><p>No songs selected.</p></div>
   }
 
   return (
     <div className="container">
       <div className="songpage__top">
-        <Link to="/" className="back">← Back</Link>
+        {/* Back link removed; use navbar Home */}
         <h1 style={{margin:0}}>Build PDF Bundle</h1>
       </div>
       <div className="card" style={{display:'grid', gap:10}}>

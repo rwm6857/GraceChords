@@ -239,7 +239,7 @@ async function exportPdf() {
     <div className="container">
       <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-        <div><Link to="/" className="back">← Back</Link></div>
+        <div />
         <h1 style={{margin:0}}>Setlist Builder</h1>
         <div />
       </div>

@@ -189,12 +189,11 @@ if(!entry){
       <div className="container">
         <p style={{color:'#b91c1c'}}>Error: {err}</p>
         <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
-        <Link to="/">Back</Link>
       </div>
     )
   }
   if(!parsed){
-    return <div className="container"><p>Loading… <Link to="/">Back</Link></p></div>
+    return <div className="container"><p>Loading…</p></div>
   }
 
   const slug = entry.filename.replace(/\.chordpro$/, '')

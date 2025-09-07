@@ -27,6 +27,12 @@ export default function NavBar(){
           <div className="topnav__links">
             <Link to="/" className={`topnav__link ${isActive('/') ? 'active':''}`}>Home</Link>
             <Link
+              to="/about"
+              className={`topnav__link ${isActive('/about') ? 'active':''}`}
+            >
+              About
+            </Link>
+            <Link
               to="/setlist"
               className={`topnav__link ${isActive('/setlist') ? 'active':''}`}
               onMouseEnter={() => import('./Setlist')}
@@ -41,6 +47,12 @@ export default function NavBar(){
               onMouseEnter={() => import('./Songbook')}
             >
               Songbook
+            </Link>
+            <Link
+              to="/resources"
+              className={`topnav__link ${isActive('/resources') ? 'active':''}`}
+            >
+              Resources
             </Link>
             <a
               href="https://github.com/rwm6857/GraceChords/wiki"
