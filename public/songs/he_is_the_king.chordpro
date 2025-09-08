@@ -1,27 +1,24 @@
 {title: He is the King}
 {key: Bm}
-{authors: }
 {country: Indonesia}
-{tags: Fast, Nations}
-{youtube: }
-{mp3: }
+{tags: Fast, Nations, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 The glory of our Lord and King, our God who’s strong and mighty 	
 All of creation and the earth, will give him praises	
 Great are you Lord my Jesus , who overcame the pow`r of death	
 I will declare your holy name, my strength my Savior 	
 
-{eov}
-{soc: Pre-Chorus}
+{end_of_verse}
+
+{start_of_chorus: Pre-Chorus}
 Oh King of all kings, 	
 We will give him glory	
 Raise up a cry	
 
-{eoc}
-{soc: Chorus}
+{end_of_chorus}
+
+{start_of_chorus: Chorus}
 Jesus you will reign forever,	
 Full of grace and full of mercy	
 No one can compare to you Lord, 	
@@ -31,4 +28,8 @@ Lamb of God, you are exalted,
 Seated on the throne eternal	
 All the earth and every nation,	
 Give him praise now and forever-more	
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
