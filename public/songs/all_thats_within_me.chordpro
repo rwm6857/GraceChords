@@ -1,13 +1,10 @@
 {title: All That’s Within Me}
 {key: A}
-{authors: }
 {country: Korea}
-{tags: Slow, Worship}
+{tags: Slow, Commitment, ICP}
 {youtube: MzZIyH9XTuY}
-{mp3: }
-{pptx: }
 
-{sov Verse}
+{start_of_verse: Verse}
 [A]All [E/G#]that’s within [F#m]me
 To [D]every [Bm]breath I [E]breathe[E7]
 [A]I bring [E/G#]before [F#m]you, my [D]Lord and [Esus4]King[E]
@@ -15,11 +12,16 @@ To [D]every [Bm]breath I [E]breathe[E7]
 Only [D]your [E]presence can [A]set me free[A7]
 I will [D]worship you a[E]lone before[C#m] your [F#m]holy throne[D], [D#dim]to you I sing [E]
 
-{eov}
-{soc Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 [A]Lamb of [E/G#]God, I will [F#m]praise you (follow you)
 You’re [D]more than [A/C#]enough for me for all my [Esus]days[E7]
 [A]Lamb of [E/G#]God, I will [F#m]praise you (follow you)
 I’m [D]found in the [E]presence of the [A]Lord.
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

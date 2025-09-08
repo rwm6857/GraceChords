@@ -2,19 +2,18 @@
 {key: D}
 {authors: Jamie Harvill, Gary Sadler}
 {country: USA}
-{tags: Fast, Swung, Oldie}
+{tags: Fast, Swung, Oldie, ICP}
 {youtube: kvG8pjLXcoQ}
-{mp3: }
-{pptx: }
 
-{sov Verse}
+{start_of_verse: Verse}
 [D]Blessing and [G/D]honor, [D]glory [G/D]and po[D]wer
 [D]be unto the [A/C#]Ancient of [Bm7]Days; [A/C#]
 [D]From [G/D]ev’ry [D]nation, [D]all of cre[G/D]ation[D]
 [Bm]bow before the [A/C#]Ancient of [D]Days. [D/F#]
 
-{eov}
-{soc Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 [G]Ev’ry tongue in [Em7]heaven and [A]earth
 Shall [D/F#]declare your glory,
 [G]ev’ry knee [Em7]shall bow at your [A]throne in wor[D/F#]ship; [F#m7]
@@ -22,16 +21,22 @@ Shall [D/F#]declare your glory,
 [D/F#]and your [F#m7]kingdom [G]shall [Em7]not pass [A7]away,
 O [G/A]Ancient of [D]Days.
 
-{eoc}
-{sob Bridge}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
 Your [D]kingdom shall reign over all the earth,
 [C/D]Sing unto [G/D]the [C/D]Ancient of [D]Days
 [D]For none can compare to your matchless worth,
 [C/D]Sing unto [G/D]the [C/D]Ancient of [D]Days
 
-{eob}
+{end_of_bridge}
+
 {start_of_tag: Tag}
 O [D]Ancient of [G/D]Days.   O [D]Ancient of Days.
 O [G/A]Ancient of [D]Days.
 
 {end_of_tag}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
