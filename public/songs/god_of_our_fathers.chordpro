@@ -1,14 +1,9 @@
-{title: God of Our Fathers (Israeli)}
+{title: God of Our Fathers (Hebrew)}
 {key: C}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: Israel}
+{tags: Fast, Nations, ICP}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 God of our fathers we lift up your name 
 You keep your promises, you make a way 
 Rock and Defender, we trust in your name 
@@ -19,16 +14,18 @@ You are the Comforter, Giver of joy
 In times of trouble, our peace is in you 
 The name of Yeshua 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 We praise you Lord, Savior of all the earth 
 All nations and tribes will praise Yeshua 
 Your holy name shall be exalted on high 
 The name of Yeshua 
 The name of Yeshua 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 God of our fathers we lift up your name 
 You fill our needs and your word never fails  
 You are our God and we trust in your ways 
@@ -39,19 +36,22 @@ You’ve set us free and you took all our shame
 The joy of salvation is found in you Lord 
 The name of Yeshua 
 
-{eov}
-{sob: Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 Yeshua you are our Saviour and King 
 You are Messiah, Emmanuel 
 
-{eob}
-{sob: Outro}
+{end_of_bridge}
+
+{start_of_bridge: Outro}
 Yeshua Yeshua Yeshua Emmanuel 
 
 God of Our Fathers (Israeli) 
 
-{eob}
-{sov: Verse 1}
+{end_of_bridge}
+
+{start_of_verse: Verse 1}
 El avoteinu nachriz et shimcha  
 Manche et ha derech le am sgulatcha 
 Sela, Magen, rak be'cha betochim 
@@ -62,8 +62,9 @@ Menachameinu metsif be simcha
 Bo me tzaareinu nimtsa hashalva 
 Be shem Yeshua 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Neromema et hashem ha yakar 
 Et shem moshieynu niten lo hadar 
 Neromema et hashem ha kadosh 
@@ -71,8 +72,9 @@ Et shem Yeshua
 
 Et shem Yeshua 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 El avoteinu nachriz et shimcha 
 Roe et tzarcheinu magshim ha'vtacha 
 Ata el roeinu davar lo nichsar 
@@ -83,14 +85,20 @@ En shem acher asher bo nivasha
 Gil, ve shichrur netanim be shem ze 
 Be shem Yeshua 
 
-{eov}
-{sob: Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 Hashem hamoshiah hashem ha pode 
 Hashem hagoel Emannuel 
 
-{eob}
-{sob: Outro}
+{end_of_bridge}
+
+{start_of_bridge: Outro}
 Hashem hamoshiah hashem ha pode 
 Hashem hagoel Emannuel 
 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
