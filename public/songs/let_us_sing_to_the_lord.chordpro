@@ -1,27 +1,24 @@
 {title: Let Us Sing to the Lord}
 {key: Em}
-{authors: }
 {country: Israel}
-{tags: Fast, Nations}
-{youtube: }
-{mp3: }
+{tags: Fast, Nations, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 (Key of Em/Fm) 
 
 Instr. (Em  D  Am7  Bm7) X2 
 
-{eov}
-{sov: Verse 1}
+{end_of_verse}
+
+{start_of_verse: Verse 1}
 Come and let us sing to the Lord 
 Shout praises to God Jehovah 
 Let us sing for joy to the Lord 
 The Rock of our Salvation 
 
-{eov}
-{soc: Chorus 1}
+{end_of_verse}
+
+{start_of_chorus: Chorus 1}
 Come into his presence with thanks 
 Make joyful praise to his name 
 D                  (Eb dim)        Em    G/D 
@@ -29,32 +26,40 @@ To our great Lord Yeshua
 
 Instr.  (Fm  Eb  Bbm7  Cm7)  X2 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 Heaven and earth are in his hands 
 All creation will bow before him 
 Mountains and seas come exalt him 
 Yeshua Adonai 
 
-{eov}
-{soc: Chorus 2}
+{end_of_verse}
+
+{start_of_chorus: Chorus 2}
 Give all glory, honor, and praise 
 Make joyful praise to his name 
 Eb                (Fb dim)        Fm    Ab/Eb      
 To our great King Yeshua  
 
-{eoc}
-{sob: Bridge}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
 Let us worship and bow 
 Kneel before the Lord God our maker 
 Ev’ry nation will bow 
 Kneel before the Lord God our maker 
 
-{eob}
-{soc: Chorus 2}
+{end_of_bridge}
+
+{start_of_chorus: Chorus 2}
 Give all glory, honor, and praise 
 Make joyful praise to his name 
 Eb                (Fb dim)        Fm    Ab/Eb      
 To our great King Yeshua  
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
