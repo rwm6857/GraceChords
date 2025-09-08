@@ -1,27 +1,25 @@
 {title: Everlasting God}
 {key: B}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Chris Tomlin}
+{country: USA}
+{tags: Fast, Oldie, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 Strength will rise as we wait upon the Lord, 
 We will wait upon the Lord 
 We will wait upon the Lord (repeat) 
 
-{eov}
-{soc: Pre-Chorus}
+{end_of_verse}
+
+{start_of_chorus: Pre-Chorus}
 Our God  
 You reign for - ev - er 
 Our hope  
 Our Strong De - liv - rer 
 
-{eoc}
-{soc: Chorus}
+{end_of_chorus}
+
+{start_of_chorus: Chorus}
 You are the Everlasting God 
 The Everlasting God 
 You do not faint, You won't grow weary 
@@ -29,4 +27,8 @@ You do not faint, You won't grow weary
 You're the Defender of the weak 
 You comfort those in need 
 You lift us up on wings like eagles 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
