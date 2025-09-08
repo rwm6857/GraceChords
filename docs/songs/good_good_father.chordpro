@@ -1,26 +1,65 @@
 {title: Good Good Father}
-{key: }
+{key: A}
+{country: USA}
 {authors: Pat Barrett, Tony Brown}
 {youtube: nC2gZMNrdmw}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{tags: Slow, Contemporary}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
+[A]I've heard a [Asus]thousand [A]stories
+Of what they [Asus]think You're [A]like
+But I've heard the [Asus]tender [A]whisper
+Of love in the [Asus]dead of [A]night
+And You [D2]tell me [A/C#]that You're pleased
+And that [Bm7]I'm never a[E(add4)]lone
 
-{sov Verse 2}
-{eov}
+{end_of_verse}
 
-{soc Chorus}
-{eoc}
+{start_of_chorus: Chorus}
+You're a good, good [D2]Father,
+It's who You are, [A/C#]it's who You are,
+[Bm7]It's who You [E(add4)]are
+And I'm loved by [D2]You
+It's who I am, [A/C#]it's who I am
+[Bm7]It's who I [E(add4)]am
 
-{soc PreChorus}
-{eoc}
+{end_of_chorus}
 
-{sob Bridge}
-{eob}
+{start_of_verse: Verse 2}
+Oh and [A]I've seen many searching for
+Answers far and wide
+But I know we're all searching for answers only You provide
+Because You [D2]know just [A/C#]what we need
+Before [Bm7]we say a [E(add4)]word
 
-{sot Tag}
-{eot}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
+Because You are [D2]perfect
+In all of Your [F#m7]ways
+You are [Bm7]perfect in all of Your [A]ways
+You are [D2]perfect in all of Your [F#m7]ways
+To [E]us
+
+{end_of_bridge}
+
+{start_of_verse: Verse 3}
+Oh this [A]Love so [Asus]undeni[A]able
+I, I can [Asus]hardly [A]speak
+Peace so [Asus]unex[A]plainable
+I, I can [Asus]hardly [A]think
+As You [D2]call me, [A/C#]deeper still
+As You [Bm7]call me [A/C#]deeper still
+As You [D2]call me [A/C#]deeper still
+Into [Bm7]love, love, [E(add4)]love
+
+{end_of_verse}
+
+{start_of_outro: Outro}
+You are [D2]perfect in all of Your [A]ways [Bm7] [E]
+You are [D2]perfect in all of Your [A]ways  [F#m] [E]
+{end_of_outro}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
