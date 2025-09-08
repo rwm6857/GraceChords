@@ -1,0 +1,1 @@
+CREATE TABLE songs(id TEXT PRIMARY KEY, title TEXT);
