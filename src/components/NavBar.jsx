@@ -38,8 +38,7 @@ export default function NavBar(){
               className={`topnav__link ${isActive('/setlist') ? 'active':''}`}
               onMouseEnter={() => import('./Setlist')}
             >
-              <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
-                <SetlistIcon /> Setlist
+              Setlist
               </span>
             </Link>
             <Link
