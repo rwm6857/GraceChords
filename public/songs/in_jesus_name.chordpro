@@ -1,14 +1,11 @@
 {title: In Jesus’ Name}
 {key: D}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Darlene Zschech}
+{country: USA}
+{tags: Fast, Contemporary}
+{youtube: Z6ikG3w5zvs}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 God is fighting for us God is on our side 
 He has overcome, yes he has overcome 
 We will not be shaken, we not will be moved 
@@ -19,18 +16,24 @@ He has overcome, yes he has overcome
 We will not be shaken, we not will be moved 
 Jesus, you are here 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 I will live, I will not die the resurrection power of Christ 
 Alive in me and I am free in Jesus’ name 
 I will live, I will not die 
 I will declare and lift you high 
 Christ revealed and I am healed in Jesus’ name 
 
-{eoc}
-{sob: Bridge}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
 God is fighting for us, pushing back the darkness 
 Lighting up the kingdom that cannot be shaken 
 In the name of Jesus, enemy’s defeated 
 Eternal King of kings, Jesus Christ 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

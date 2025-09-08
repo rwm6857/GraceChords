@@ -1,44 +1,48 @@
 {title: King of Kings (InterCP Int’l Ver.)}
 {key: D}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Hillsong}
+{country: USA}
+{tags: Slow, Praise, ICP}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 In the darkness we were waiting, without hope, without light 
 ‘Til from heaven you came running, there was mercy in your eyes 
 To fulfill the law and prophets, to a virgin came the Word 
 From a throne of endless glory, to a cradle in the dirt 
 
-{eov}
-{sov: Verse 2}
+{end_of_verse}
+
+{start_of_verse: Verse 2}
 To reveal the kingdom coming and to reconcile the lost 
 To redeem the whole creation, you did not despise the cross 
 For even in your suffering, you saw to the other side 
 Knowing this was our salvation, Jesus for our sake you died 
 
-{eov}
-{sov: Verse 3}
+{end_of_verse}
+
+{start_of_verse: Verse 3}
 And the morning that you rose, all of heaven held its breath 
 ‘Til that stone was moved for good, for the Lamb had conquered death 
 And the dead rose from their tombs, and the angels stood in awe 
 For the souls of all who’d come to the Father are restored 
 
-{eov}
-{sov: Verse 4}
+{end_of_verse}
+
+{start_of_verse: Verse 4}
 And the church of Christ was born, then the Spirit lit the flame 
 Now this gospel truth of old shall not kneel, shall not faint 
 By the power of his blood, he has set all nations free 
 Every nation shall rejoice and bow before the King of kings 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Praise the Father, praise the Son 
 Praise the Spirit, three in one 
 God of glory, majesty 
 Praise forever to the King of kings 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

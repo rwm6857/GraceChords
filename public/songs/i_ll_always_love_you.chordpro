@@ -1,32 +1,36 @@
 {title: I’ll Always Love You}
 {key: A}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Tim Hughes}
+{country: USA}
+{tags: Fast, Oldie, ICP}
+{youtube: ggCtbgiN3wQ}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 I just want to love    I just want to sing  
 To the one above     who has touched this thirsty soul 
 And now I'll never be the same	
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 I’ll always love you     I’ll always sing to you Jesus  
 I long to worship you in spirit and in truth 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 Every day I’ll come spend my life with you  
 Learning of your heart and what you’re calling me to do 
 My every breath belongs to you. 
 
-{eov}
-{sob: Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 And with a song we’ll lift the name of Jesus higher 
 And with a shout we’ll raise up one voice	
 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
