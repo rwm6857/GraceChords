@@ -1,52 +1,58 @@
 {title: Creation is Awaiting}
 {key: A}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Christ Bowater}
+{country: USA}
+{tags: Slow, Worship, Oldie, ICP}
+{youtube: MrvxMnmECpY}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Creation is awaiting the return of the Lord  
 The trees are poised to clap their hands for joy       
 The mountains stand majestic to salute their God 
 The desert lies in wait to burst into bloom 
 
-{eov}
-{soc: Chorus 1}
+{end_of_verse}
+
+{start_of_chorus: Chorus 1}
 The Lord is surely coming soon 
 Creation longs to see, the coming of our Lord       
 The Lord is surely coming soon 
 Creation longs to see, the coming of our Lord 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 The saints are awaiting the return of the Lord 
 His blood has washed us clean, we are redeemed 
 He has made us holy people, we will stand as one 
 As a bride longs for her groom the church will proclaim 
 
-{eov}
-{soc: Chorus 2}
+{end_of_verse}
+
+{start_of_chorus: Chorus 2}
 The Lord is surely coming soon 
 We will prepare the way, the coming of our Lord 
 The Lord is surely coming soon 
 We will prepare the way, the coming of our Lord 
 
-{eoc}
-{sov: Verse 3}
+{end_of_chorus}
+
+{start_of_verse: Verse 3}
 The nations are awaiting the return of the King 
 The earth is a footstool for his feet. 
 Ev’ry knee will bow down, ev’ry tongue confess, 
 That Jesus Christ is Lord of heaven and earth 
 
-{eov}
-{soc: Chorus 3}
+{end_of_verse}
+
+{start_of_chorus: Chorus 3}
 The King is coming, the King is coming 
 Our Lord is coming, in glory He will reign 
 The King is coming, the King is coming 
 Yeshua Lord and King, reigns in majesty 
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

@@ -1,42 +1,45 @@
-{title: Calling (사명)}
+{title: Calling}
 {key: B}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: Korea}
+{tags: Slow, Commitment, Cross, ICP}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Jesus you walked on a lonely road, you bore every sin and shame	
 How you shed your blood upon the cross, down that path I also will go	
 
-{eov}
-{sov: Verse 2}
+{end_of_verse}
+
+{start_of_verse: Verse 2}
 Though suffering comes I will follow you	
 Through seas and mountains I will follow you	
 For the lost and broken to return, I will gladly lay down my life	
 
-{eov}
-{soc: Chorus 1}
+{end_of_verse}
+
+{start_of_chorus: Chorus 1}
 Father God, I cry: “Would you send me? 	
 I will run to where you lead	
 My whole life I give it all to you	
 Would you send me, my Lord	
 
-{eoc}
-{soc: Chorus 2}
+{end_of_chorus}
+
+{start_of_chorus: Chorus 2}
 Though this world will hate me for your name 
 I will love them as you do 
 To save the world you died upon that cross 
 I will follow you Lord 
 
-{eoc}
-{soc: Chorus 3}
+{end_of_chorus}
+
+{start_of_chorus: Chorus 3}
 To the point of laying down your life, 	
 You displayed your love for us	
 Would you take my life and make it yours	
 For I love you my Lord	
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

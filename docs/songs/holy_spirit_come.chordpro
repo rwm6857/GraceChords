@@ -1,37 +1,39 @@
 {title: Holy Spirit, Come}
 {key: F}
-{authors: }
 {country: India}
-{tags: }
-{youtube: }
-{mp3: }
+{tags: Slow, Worship, Nations, ICP}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Holy Spirit come,  
 Come and fill this place 
 Jesus the way, the truth and the life  
 Come lead us to him 
 
-{eov}
-{sov: Verse 2}
+{end_of_verse}
+
+{start_of_verse: Verse 2}
 We bow down on our knees,  
 And lift our holy hands 
 We bow before our Lord, Jesus Christ 
 And worship at his feet 
 
-{eov}
-{sov: Verse 3}
+{end_of_verse}
+
+{start_of_verse: Verse 3}
 With mercy and by grace, 
 Lord come upon this place 
 Wash away the sins of our past 
 And purify us again 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Lord Yeshua we lift you high in this place 
 Lord Jesus we give you all honor and praise 
 We give you our hearts and all of our lives 
 Lord may your will be done 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

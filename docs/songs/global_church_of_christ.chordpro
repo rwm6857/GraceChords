@@ -1,28 +1,25 @@
 {title: Global Church of Christ}
 {key: B}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: China}
+{tags: Slow, Mission, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 The cross of our Christ is an everlasting love	
 A love that holds, never fails	
 We will go towards Jerusalem with this truth of Christ. 	
 With no hesitation, we will stand	
 
-{eov}
-{soc: Pre-Chorus}
+{end_of_verse}
+
+{start_of_chorus: Pre-Chorus}
 Though hardships come with persecution's pain, 	
 We know our faith will grow stronger still.	
 Prepare the way, let his kingdom come	
 His church will rise and be victorious! 	
 
-{eoc}
-{soc: Chorus}
+{end_of_chorus}
+
+{start_of_chorus: Chorus}
 Holding the word the Lord commands, 	
 Rise up oh Global Church of Christ	
 We will not turn back nor flee, 	
@@ -31,4 +28,8 @@ Holding revival in our hearts,
 Rise up oh Global Church of Christ 	
 Till our Jesus comes in glory as the King	
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

@@ -1,20 +1,20 @@
 {title: John 3:16}
 {key: G}
-{authors: }
 {country: Israel}
-{tags: Slow, Nations}
-{youtube: }
-{mp3: }
+{tags: Slow, Nations, Worship, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 For God so loved the world that he gave his one and only Son 
 That whoever believes in him shall not perish but have eternal life 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Hallelujah, hallelu --- jah, hallelujah, hallelujah, amen  
 Hallelujah, hallelu --- jah, hallelujah, -- amen  
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

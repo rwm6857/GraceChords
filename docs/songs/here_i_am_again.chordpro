@@ -1,37 +1,37 @@
 {title: Here I Am Again}
 {key: E}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Tommy Walker}
+{country: USA}
+{tags: Fast, Oldie, ICP}
+{youtube: tvnDQ7zZ3sg}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Here I am again just looking for the words that help me say that, 
 A                E/G#                F#7     B7sus 
 My heart is full of love and praises  
 I must have prayed a thousand prayers and sung a hundred songs, 
 But I just have to say again 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Oh how  I love you 
 More than words can say 
 In the deepest heart-felt way 
 Oh how Lord I love you 
 Once again receive my praise 
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 So many words, so many songs, so many melodies, yet, 
 Allow me one more declaration 
 You are the lover of my soul, the center of my life 
 So I just have to say again 
 
-{eov}
-{sob: Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 Thank you for a brand new day, 
 A brand new chance to stand and say 
 I love you 
@@ -39,4 +39,8 @@ I love you
 Help me find the words to say that 
 Tell you in a brand new way 
 I love you 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

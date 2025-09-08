@@ -1,21 +1,17 @@
 {title: Kernel of Wheat}
-{key: DM}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{key: Dm}
+{country: China}
+{tags: Slow, Commitment, Nations, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 A kernel of wheat, if it falls upon the earth to perish 
 A harvest of new life will rise up from the ground 
 If I lay down my life to die for the Lord 
 He’ll give us great revival to cover all the earth 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Lord take my life, Lord I desire 
 To be the seed that falls to the ground and dies 
 Laying down my life to see new life 
@@ -24,11 +20,16 @@ It’s my desire, Lord I desire
 All of my rights and my heart, I give to you 
 Through my life, Lord let your will be done 
 
-{eoc}
-{sob: Bridge}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
 To the ground we’re falling, as a kernel of wheat 
 All our lives we’re giving, to your holy calling 
 We will not stop running, till we see your coming 
 We will see the vict’ry, eternal heaven’s glory 
 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
