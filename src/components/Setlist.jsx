@@ -22,6 +22,7 @@ export default function Setlist(){
   const [name, setName] = useState('Untitled Set')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
+  const [icpOnly, setIcpOnly] = useState(false)
   const [list, setList] = useState([])
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')
@@ -75,10 +76,11 @@ export default function Setlist(){
 
   // search
   const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
-  const results = useMemo(
-    ()=> q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title)),
-    [q, fuse, items]
-  )
+  function icpPass(s){ return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP') }
+  const results = useMemo(() => {
+    const base = q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title))
+    return base.filter(icpPass)
+  }, [q, fuse, items, icpOnly])
 
   // list mutators
   function addSong(s){ if(list.find(x=> x.id===s.id)) return; setList([...list, { id: s.id, toKey: s.originalKey || 'C' }]) }
@@ -285,7 +287,13 @@ async function exportPdf() {
           {/* Removed the redundant "Setlist name" field */}
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
-            <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{display:'block', width:'100%', marginTop:6}} />
+            <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
+              <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
+              <label className="row" style={{gap:6, alignItems:'center'}}>
+                <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+              </label>
+            </div>
             <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
               {!fuse ? <div>Loading search…</div> : results.map(s=> (
                 <SongCard

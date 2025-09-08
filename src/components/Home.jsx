@@ -23,6 +23,7 @@ export default function Home(){
   const [selectedTags, setSelectedTags] = useState([]) // multi-select
   const [tagMode, setTagMode] = useState('any')        // 'any' | 'all'
   const [lyricsOn, setLyricsOn] = useState(false)
+  const [icpOnly, setIcpOnly] = useState(false)
 
   // Lyrics cache (id -> lowercased source text) — used ONLY when lyricsOn is true
   const [lyricsCache, setLyricsCache] = useState({})
@@ -47,12 +48,16 @@ export default function Home(){
       ? selectedTags.every(t => tags.includes(t))
       : selectedTags.some(t => tags.includes(t))
   }
+  function icpPass(s){
+    return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP')
+  }
 
   // Prefetch lyrics only when toggle is ON and there is a query
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
     const shouldFetch = items
       .filter(tagPass)
+      .filter(icpPass)
       .filter(s => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
       .slice(0, 200)
     if (!shouldFetch.length) return
@@ -91,12 +96,12 @@ export default function Home(){
       list = items.slice().sort(compareSongsByTitle)
     }
 
-    // Tag filter
-    list = list.filter(tagPass)
+    // Tag filter + ICP-only filter
+    list = list.filter(tagPass).filter(icpPass)
 
     // Lyrics union strictly when toggle is ON
     if (lyricsOn && qLower.length) {
-      const extra = items.filter(tagPass).filter(s => {
+      const extra = items.filter(tagPass).filter(icpPass).filter(s => {
         const txt = lyricsCache[s.id]
         return typeof txt === 'string' ? txt.includes(qLower) : false
       })
@@ -118,7 +123,7 @@ export default function Home(){
     })
 
     return list
-  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode])
+  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode, icpOnly])
 
   const [activeIndex, setActiveIndex] = useState(-1)
   const optionRefs = useRef([])
@@ -273,6 +278,14 @@ export default function Home(){
                 onChange={e=> setLyricsOn(e.target.checked)}
               />
               <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
+            </label>
+            <label className="row" style={{gap:8, alignItems:'center'}}>
+              <input
+                type="checkbox"
+                checked={icpOnly}
+                onChange={e=> setIcpOnly(e.target.checked)}
+              />
+              <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
             </label>
           </div>
 
