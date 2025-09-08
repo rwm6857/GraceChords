@@ -1,32 +1,33 @@
 {title: Dear Brother}
-{key: AM}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{key: Am}
+{country: Israel}
+{tags: Slow, Nations, Commitment}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 Dear brother, do not be afraid 
 Dear sister, be not in despair 
 Let us pray to our Lord Jesus Christ 
 Let us love our God with all our hearts 
 
-{eov}
-{soc: Chorus 1}
+{end_of_verse}
+
+{start_of_chorus: Chorus 1}
 In the Father’s house, there are many rooms 
 And he will prepare a place for me 
 On that day, he will come and will take me for himself 
 There is no more sorrow in my heart 
 
-{eoc}
-{soc: Chorus 2}
+{end_of_chorus}
+
+{start_of_chorus: Chorus 2}
 I trust and look to you alone 
 No matter what tribulation comes 
 I  will    carry the cross and will follow you alone 
   Dm           E           F   G (Am) 
 I will go out to all nations 
 (Maranatha, come quickly Lord Jesus) 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

@@ -1,24 +1,26 @@
 {title: I Am Free}
 {key: D}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Newsboys}
+{country: USA}
+{tags: Fast, Oldie, ICP}
+{youtube: _MbcYyOsF50}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Through you the blind will see, Through you the mute will sing,  
 Through you the dead will rise, Through you all hearts will praise, 
 Through you the darkness flees, Through you my heart screams,  
 I am free! I am free!    
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 I am free to run (I am free to run) 
 I am free to dance (I am free to dance) 
 I am free to live for you (I am free to live for you) 
 I am free (I am free)  
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

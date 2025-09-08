@@ -1,14 +1,9 @@
 {title: Great is the Lord}
 {key: G}
-{authors: }
 {country: Israel}
-{tags: Fast, Nations}
-{youtube: }
-{mp3: }
+{tags: Fast, Nations, ICP}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Great is the Lord our God  
 And worthy to be praised 
 All nations come worship him 
@@ -20,13 +15,15 @@ Jesus my Lord and my God
 I will love you and praise you forever 
 Yeshua 
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Hallelujah, Yeshua reigns in victory 
 Hallelujah, Yeshua our eternal King  
 
-{eoc}
-{sov: Verse 2}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
 You are eternal God 
 We give you all our praise 
 All nations come worship Him  
@@ -38,8 +35,9 @@ Blessing and honor and glory
 Elohim ruler of all the nations 
 Give him praise 
 
-{eov}
-{sov: Verse 3}
+{end_of_verse}
+
+{start_of_verse: Verse 3}
 Great are you Elohim 
 We give you all our praise 
 All nations come worship him  
@@ -52,11 +50,16 @@ He will wipe every tear from our eyes
 And sorrow and mourning will cease 
 Forevermore 
 
-{eov}
-{sob: Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 All nations come worship him 
 Give praise and glory to God 
 Hallelujah Yeshua 
 You are eternal King 
 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---

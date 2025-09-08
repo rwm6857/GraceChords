@@ -1,14 +1,9 @@
-{title: I Enter in the Holy Place (지극히 높은 주님의)}
+{title: I Enter in the Holy Place}
 {key: F}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: Korea}
+{tags: Slow, Worship, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 b
 
 I enter in the holy place, the presence of the High and Holy God 
@@ -19,8 +14,9 @@ I’m holding your unfailing love,
 I trust your love that never breaks or fades  
 With love that comes from up above, cover us with your grace  
 
-{eov}
-{soc: Chorus}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 Cover this place with your love,  
 Cover this place with your light 
 All hope once lost will be restored as I hope,  
@@ -30,4 +26,8 @@ Come take this place as yours, Lord
 Come touch this heart that’s yours, Lord 
 This dying heart of mine will come alive, 
 As I give you my worship 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
