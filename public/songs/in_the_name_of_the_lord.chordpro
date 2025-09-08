@@ -1,21 +1,17 @@
 {title: In the Name of the Lord}
 {key: D}
-{authors: }
 {country: Morocco}
-{tags: Fast, Nations}
-{youtube: }
-{mp3: }
+{tags: Fast, Nations, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 I will rejoice in the name of the Lord 
 I trust and hope in the name of the Lord 
 I lift my hands in the name of the Lord 
 I dance with joy in the name of the Lord 
 
-{eov}
-{soc: Chorus 1}
+{end_of_verse}
+
+{start_of_chorus: Chorus 1}
 Oh my soul will praise and sing 
 Of the wondrous love of God 
 I will bless my Savior’s name, Yeshua 
@@ -23,8 +19,9 @@ Oh my soul will praise and sing
 Of the wondrous love of God 
 I will bless my savior’s name, Yeshua 
 
-{eoc}
-{soc: Chorus 3}
+{end_of_chorus}
+
+{start_of_chorus: Chorus 3}
 Oh my soul will praise and sing 
 Declare the name of our Great Lord 
 I will bless His mighty name, Yeshua 
@@ -32,14 +29,16 @@ All the earth will hear and sing
 Proclaim the Kingdom of our God 
 Every nation praise His name, Yeshua	
 
-{eoc}
-{sob: Bridge}
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
 I will sing with joy, only Yeshua 
 I will lift and praise, only Yeshua 
 I will worship him, only Yeshua 
 I will shout his name, only Yeshua 
-{eob}
-{soc: Chorus 2}
+{end_of_bridge}
+
+{start_of_chorus: Chorus 2}
 Oh my soul will praise and sing 
 Declare the name of our Great Lord 
 I will bless His mighty name, Yeshua 
@@ -47,4 +46,8 @@ Oh my soul will praise and sing
 Declare the name of our Great Lord 
 I will bless His mighty name, Yeshua 
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
