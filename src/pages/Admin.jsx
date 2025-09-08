@@ -137,7 +137,15 @@ function AdminPanel(){
     setGhUser(null)
   }
 
-  const [staged, setStaged] = useState([])
+  const [staged, setStaged] = useState(() => {
+    try { const s = sessionStorage.getItem('adminStaged'); return s ? JSON.parse(s) : [] } catch { return [] }
+  })
+  useEffect(() => {
+    try {
+      if (staged && staged.length) sessionStorage.setItem('adminStaged', JSON.stringify(staged))
+      else sessionStorage.removeItem('adminStaged')
+    } catch {}
+  }, [staged])
   function stageSong(){
     const doc = parseChordProOrLegacy(text)
     doc.meta.title = meta.title || doc.meta.title || ''
@@ -372,7 +380,8 @@ function AdminPanel(){
         title: prTitle,
         body: prBody,
       })
-      // PR created; open in a new tab for review
+      // PR created; clear staged (and persisted copy) and open in a new tab for review
+      try { sessionStorage.removeItem('adminStaged') } catch {}
       window.open(pr.html_url, '_blank', 'noopener')
       setStaged([])
       setPrOpen(false)
@@ -428,30 +437,32 @@ function AdminPanel(){
         <div className="Row" style={{ alignItems:'center', gap:8 }}>
           <strong>Staged songs:</strong> {staged.length}
         </div>
-        <table className="Table Small" style={{ width: '100%', marginTop: 8 }}>
-          <thead>
-            <tr><th>Filename</th><th>Title</th><th>Key</th><th>Commit message</th><th></th></tr>
-          </thead>
-          <tbody>
-            {staged.map(s => (
-              <tr key={s.filename}>
-                <td>
-                  <input value={s.filename}
-                    onChange={e => renameStaged(s.filename, e.target.value)}
-                    style={{ width:'100%' }}/>
-                </td>
-                <td>{s.title || ''}</td>
-                <td>{s.key || ''}</td>
-                <td>
-                  <input placeholder={`add: ${s.filename}`} value={s.commitMsg || ''}
-                    onChange={e => setPerFileCommit(s.filename, e.target.value)}
-                    style={{ width:'100%' }}/>
-                </td>
-                <td><button className="btn small" onClick={() => unstage(s.filename)}>Remove</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div style={{ width:'100%', marginTop: 8, maxHeight: 240, overflow: 'auto', border: '1px solid var(--line)', borderRadius: 8 }}>
+          <table className="Table Small" style={{ width: '100%' }}>
+            <thead style={{ position: 'sticky', top: 0, background: 'var(--card)', boxShadow: '0 1px 0 var(--line)', zIndex: 1 }}>
+              <tr><th style={{background:'inherit'}}>Filename</th><th style={{background:'inherit'}}>Title</th><th style={{background:'inherit'}}>Key</th><th style={{background:'inherit'}}>Commit message</th><th style={{background:'inherit'}}></th></tr>
+            </thead>
+            <tbody>
+              {staged.map(s => (
+                <tr key={s.filename}>
+                  <td>
+                    <input value={s.filename}
+                      onChange={e => renameStaged(s.filename, e.target.value)}
+                      style={{ width:'100%' }}/>
+                  </td>
+                  <td>{s.title || ''}</td>
+                  <td>{s.key || ''}</td>
+                  <td>
+                    <input placeholder={`add: ${s.filename}`} value={s.commitMsg || ''}
+                      onChange={e => setPerFileCommit(s.filename, e.target.value)}
+                      style={{ width:'100%' }}/>
+                  </td>
+                  <td><button className="btn small" onClick={() => unstage(s.filename)}>Remove</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Metadata form */}
@@ -606,6 +617,7 @@ function AdminPanel(){
       {/* Draft actions */}
       <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
         <button className="btn" onClick={lintCurrent} title="Run ChordPro lint and show warnings">Lint</button>
+        <button className="btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song">New song</button>
         <button className="btn" onClick={addDraft} title="Save current text as a draft and clear the editor">Add to Drafts</button>
         <button className="btn" onClick={stageSong} title="Serialize and add to the staging table for PR">Stage Song</button>
         <button className="btn" onClick={convertAndStage} title="Convert legacy/plain blocks into canonical ChordPro + stage">Convert → Stage</button>
