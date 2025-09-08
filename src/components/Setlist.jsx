@@ -22,7 +22,12 @@ export default function Setlist(){
   const [name, setName] = useState('Untitled Set')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
-  const [icpOnly, setIcpOnly] = useState(false)
+  const [icpOnly, setIcpOnly] = useState(() => {
+    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
+  }, [icpOnly])
   const [list, setList] = useState([])
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')

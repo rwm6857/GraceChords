@@ -15,9 +15,12 @@ export default function OfflineBadge(){
   }, [])
   if (!ready) return null
   return (
-    <span className="badge" title="Cached for offline use" style={{ background:'#d1fae5', color:'#065f46' }}>
+    <span
+      className="badge"
+      title="Offline: app shell, fonts, index, and visited songs are cached. New content updates on next deploy or refresh."
+      style={{ background:'#d1fae5', color:'#065f46', fontSize:'11px', padding:'2px 8px' }}
+    >
       Available offline
     </span>
   )
 }
-

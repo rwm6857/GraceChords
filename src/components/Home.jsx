@@ -23,7 +23,12 @@ export default function Home(){
   const [selectedTags, setSelectedTags] = useState([]) // multi-select
   const [tagMode, setTagMode] = useState('any')        // 'any' | 'all'
   const [lyricsOn, setLyricsOn] = useState(false)
-  const [icpOnly, setIcpOnly] = useState(false)
+  const [icpOnly, setIcpOnly] = useState(() => {
+    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
+  }, [icpOnly])
 
   // Lyrics cache (id -> lowercased source text) — used ONLY when lyricsOn is true
   const [lyricsCache, setLyricsCache] = useState({})
