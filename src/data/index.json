@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-08T02:52:51.804Z",
+  "generatedAt": "2025-09-09T02:35:37.833Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -48,15 +48,6 @@
         "Lenny LeBlanc"
       ],
       "country": "USA"
-    },
-    {
-      "id": "all-in-all",
-      "title": "All in All",
-      "filename": "all_in_all.chordpro",
-      "originalKey": "G",
-      "tags": [],
-      "authors": [],
-      "country": ""
     },
     {
       "id": "all-that-s-within-me",
@@ -226,23 +217,31 @@
       "id": "christ-be-magnified",
       "title": "Christ be Magnified",
       "filename": "christ_be_magnified.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Praise"
+      ],
       "authors": [
         "Cody Carnes",
         "Cory Asbury",
         "Ethan Hulse"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "close-to-thee",
       "title": "Close to Thee",
       "filename": "close_to_thee.chordpro",
       "originalKey": "G",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow",
+        "Hymn"
+      ],
+      "authors": [
+        "Fanny Crosby"
+      ],
+      "country": "USA"
     },
     {
       "id": "come-to-us-emmanuel",
@@ -293,16 +292,19 @@
       "id": "dancing-generation",
       "title": "Dancing Generation",
       "filename": "dancing_generation.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "D",
+      "tags": [
+        "Fast",
+        "Oldie"
+      ],
       "authors": [
         "Matt Redman"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
-      "id": "days-of-elijah",
-      "title": "Days of Elijah",
+      "id": "days-of-elijah-intercp-ver",
+      "title": "Days of Elijah (InterCP Ver.)",
       "filename": "days_of_elijah.chordpro",
       "originalKey": "A",
       "tags": [
@@ -1661,6 +1663,20 @@
         "Ryan Hall"
       ],
       "country": ""
+    },
+    {
+      "id": "you-are-my-all-in-all",
+      "title": "You are my All in All",
+      "filename": "all_in_all.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Oldie"
+      ],
+      "authors": [
+        "Dennis Jernigan"
+      ],
+      "country": "USA"
     },
     {
       "id": "you-deserve-the-glory",
