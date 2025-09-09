@@ -203,6 +203,7 @@ input,select,textarea{
   flex-direction:column;
   flex:1 1 auto;
   min-height:0;
+  overflow: hidden; /* keep page from scrolling; only results scroll */
 }
 @supports(padding: max(0px)){
   .HomePage{
@@ -213,7 +214,7 @@ input,select,textarea{
 .HomeHeader{
   position:sticky; top:0; z-index:5;
   background: var(--bg, Canvas);
-  padding-block:1rem;
+  padding-block:0.5rem; /* slightly tighter to pull search up */
 }
 .HomeHeader .row, .HomeHeader input, .HomeHeader label{ min-width: 0; max-width: 100%; }
 /* Only the results scroll */
