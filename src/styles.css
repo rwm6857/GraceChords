@@ -204,7 +204,7 @@ input,select,textarea{
   flex-direction:column;
   flex:1 1 auto;
   min-height:0;
-  overflow: auto; /* HomePage provides the scroll container so header can stick */
+  overflow: hidden; /* prevent page scroll; only results scroll */
 }
 @supports(padding: max(0px)){
   .HomePage{
@@ -222,7 +222,8 @@ input,select,textarea{
 .HomeResults{
   flex:1 1 auto;
   min-height:0;
-  /* Let HomePage handle scrolling so header stickiness works */
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
 }
 
 .HomeGrid{
