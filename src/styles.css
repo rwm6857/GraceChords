@@ -59,6 +59,7 @@
 html, body, #root { height: 100% }
 .App { min-height: 100dvh; display: flex; flex-direction: column; }
 .Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.Route { overflow: hidden; }
 html, body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
 body{
