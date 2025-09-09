@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { SetlistIcon, Sun, Moon } from './Icons'
+import { Sun, Moon } from './Icons'
 import OfflineBadge from './OfflineBadge'
 import { currentTheme, toggleTheme } from '../utils/theme'
 
@@ -38,9 +38,7 @@ export default function NavBar(){
               className={`topnav__link ${isActive('/setlist') ? 'active':''}`}
               onMouseEnter={() => import('./Setlist')}
             >
-              <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
-                <SetlistIcon /> Setlist
-              </span>
+              Setlist
             </Link>
             <Link
               to="/songbook"
