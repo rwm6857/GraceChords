@@ -61,6 +61,12 @@ function AdminPanel(){
   const [saveWithDirectives, setSaveWithDirectives] = useState(true)
   const [prefer2Col, setPrefer2Col] = useState(false)
   const [showCapo, setShowCapo] = useState(true)
+  const [showPreview, setShowPreview] = useState(() => {
+    try { return localStorage.getItem('admin:showPreview') !== '0' } catch { return true }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('admin:showPreview', showPreview ? '1' : '0') } catch {}
+  }, [showPreview])
 
   const [persist, setPersist] = useState(() => localStorage.getItem('adminPersist') === '1')
   const [drafts, setDrafts] = useState(() => {
@@ -580,29 +586,32 @@ function AdminPanel(){
         ))}
       </div>
 
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:6}}>
+      <div style={{display:'grid', gridTemplateColumns: showPreview ? '1fr 1fr' : '1fr', gap:10, marginTop:6}}>
         <textarea
           ref={editorRef}
           value={text}
           onChange={e=> setText(e.target.value)}
-          style={{width:'100%', minHeight:'60vh', fontFamily:'ui-monospace, Menlo, Consolas, monospace'}}
+          style={{width:'100%', minHeight:'60vh', fontFamily:'ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
         />
-        <div className='card' style={{minHeight:'60vh', overflow:'auto'}}>
-          <strong>Preview</strong>
-          <div style={{marginTop:8}}>
-            {(parsed.blocks||[]).map((b,bi)=>(
-              <div key={bi}>
-                <div className="section">{b.section || ''}</div>
-                {(b.lines||[]).map((ln,li)=>(
-                  <MeasuredPreviewLine
-                    key={`${bi}-${li}`}
-                    plain={ln.text}
-                    chords={ln.chords || []}
-                  />
-                ))}
-              </div>
-            ))}
+        {showPreview && (
+          <div className='card' style={{minHeight:'60vh', overflow:'auto'}}>
+            <strong>Preview</strong>
+            <div style={{marginTop:8}}>
+              {(parsed.blocks||[]).map((b,bi)=>(
+                <div key={bi}>
+                  <div className="section">{b.section || ''}</div>
+                  {(b.lines||[]).map((ln,li)=>(
+                    <MeasuredPreviewLine
+                      key={`${bi}-${li}`}
+                      plain={ln.text}
+                      chords={ln.chords || []}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
+        )}
       </div>
       </div>
 
@@ -612,6 +621,7 @@ function AdminPanel(){
         <label><input type="checkbox" checked={prefer2Col} onChange={e=> setPrefer2Col(e.target.checked)} /> Prefer 2 columns</label>
         <label><input type="checkbox" checked={showCapo} onChange={e=> setShowCapo(e.target.checked)} /> Capo in header</label>
         <span className="Small" title="Files are always saved with a .chordpro extension">Saves as .chordpro</span>
+        <label style={{marginLeft:'auto'}}><input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview</label>
       </div>
 
       {/* Draft actions */}
