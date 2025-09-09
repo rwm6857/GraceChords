@@ -204,7 +204,6 @@ input,select,textarea{
   flex-direction:column;
   flex:1 1 auto;
   min-height:0;
-  overflow: hidden; /* prevent page scroll; only results scroll */
 }
 @supports(padding: max(0px)){
   .HomePage{
