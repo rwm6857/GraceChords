@@ -613,7 +613,6 @@ function AdminPanel(){
           </div>
         )}
       </div>
-      </div>
 
       {/* Save options */}
       <div className="Row Small" style={{gap:8, alignItems:'center', marginTop:10}}>
