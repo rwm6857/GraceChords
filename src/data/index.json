@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-09T02:35:37.833Z",
+  "generatedAt": "2025-09-10T03:58:53.675Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -325,7 +325,8 @@
       "tags": [
         "Slow",
         "Nations",
-        "Commitment"
+        "Commitment",
+        "ICP"
       ],
       "authors": [],
       "country": "Israel"
@@ -396,8 +397,8 @@
       "country": "Korea"
     },
     {
-      "id": "father-we-ask-russian",
-      "title": "Father We Ask (Russian)",
+      "id": "father-we-ask",
+      "title": "Father We Ask",
       "filename": "father_we_ask.chordpro",
       "originalKey": "G",
       "tags": [
