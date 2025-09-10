@@ -212,9 +212,11 @@ input,select,textarea{
   }
 }
 .HomeHeader{
-  position:sticky; top:0; z-index:5;
+  position: sticky;
+  top: var(--nav-h, 0px); /* stick below the navbar */
+  z-index: 50;            /* below .topnav (z-index: 60) */
   background: var(--bg, Canvas);
-  padding-block:0.5rem; /* slightly tighter to pull search up */
+  padding-block: 0.5rem; /* slightly tighter to pull search up */
 }
 .HomeHeader .row, .HomeHeader input, .HomeHeader label{ min-width: 0; max-width: 100%; }
 /* Only the results scroll */

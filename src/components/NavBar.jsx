@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Sun, Moon } from './Icons'
 import OfflineBadge from './OfflineBadge'
@@ -10,6 +10,19 @@ export default function NavBar(){
   const { pathname, hash } = useLocation()
   const path = (hash && hash.replace('#','')) || pathname
   const isActive = (p) => path === p
+  const navRef = useRef(null)
+
+  useLayoutEffect(() => {
+    function updateNavHeight(){
+      try {
+        const h = navRef.current?.offsetHeight || 0
+        document.documentElement.style.setProperty('--nav-h', `${h}px`)
+      } catch {}
+    }
+    updateNavHeight()
+    window.addEventListener('resize', updateNavHeight)
+    return () => window.removeEventListener('resize', updateNavHeight)
+  }, [])
 
   function onToggleClick(e){
     // In case a refactor ever nests this again, guard against navigation
@@ -22,7 +35,7 @@ export default function NavBar(){
   return (
     <>
       <a href="#main" style={{position:'absolute', left:-9999, top:-9999}} onFocus={(e)=>{e.target.style.left='8px'; e.target.style.top='8px';}}>Skip to content</a>
-      <nav className="topnav">
+      <nav className="topnav" ref={navRef}>
         <div className="topnav__inner">
           <Link to="/" className="brand">GraceChords</Link>
           <div className="topnav__links">
