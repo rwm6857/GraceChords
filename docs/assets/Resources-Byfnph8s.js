@@ -1,0 +1,1 @@
+import{j as e}from"./index-DALr1tWc.js";function n(){return e.jsxs("div",{className:"container",children:[e.jsx("h1",{children:"Resources"}),e.jsx("p",{style:{marginTop:8,opacity:.8},children:"Coming soon. Articles, guides, and non-song content relevant to GraceChords."})]})}export{n as default};
