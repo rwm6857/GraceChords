@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, PrintIcon, ClearIcon } from './Icons'
+import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -242,7 +242,7 @@ async function exportPdf() {
     }
     setPptxProgress('')
   }
-  function onPrint(){ window.print() }
+  
 
   return (
     <div className="container">
@@ -358,7 +358,6 @@ async function exportPdf() {
             >
               {pptxProgress ? pptxProgress : <><DownloadIcon /> <span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}
             </button>
-            <button className="btn iconbtn" onClick={onPrint} title="Print setlist"><PrintIcon /><span className="text-when-wide">Print</span></button>
             <button className="btn iconbtn" onClick={()=> setList([])} title="Clear setlist"><ClearIcon /><span className="text-when-wide">Clear</span></button>
           </div>
 
