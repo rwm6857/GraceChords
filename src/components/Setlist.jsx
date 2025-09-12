@@ -4,7 +4,8 @@ import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, PrintIcon, ClearIcon } from './Icons'
-import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
+import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -164,32 +165,33 @@ async function exportPdf() {
       try {
         const url = `${import.meta.env.BASE_URL}songs/${s.filename}`;
         const txt = await fetchTextCached(url);
-        const parsed = parseChordPro(txt);
+        const doc = parseChordProOrLegacy(txt);
 
         const baseKey =
-          parsed.meta?.key ||
-          parsed.meta?.originalkey ||
+          doc.meta?.key ||
+          doc.meta?.originalkey ||
           s.originalKey ||
           "C";
 
         const steps = stepsBetween(baseKey, sel.toKey || baseKey);
 
-        const blocks = (parsed.blocks || []).map((b) => ({
-          section: b.section,
-          lines: (b.lines || []).map((ln) => ({
-            plain: ln.text,
+        const blocks = (doc.sections || []).map((sec) => ({
+          section: sec.label,
+          lines: (sec.lines || []).map((ln) => ({
+            plain: ln.comment ? ln.comment : (ln.lyrics || ''),
             chordPositions: (ln.chords || []).map((c) => ({
               sym: transposeSym(c.sym, steps),
               index: c.index,
             })),
+            comment: ln.comment ? ln.comment : undefined,
           })),
         }));
 
         const slug = s.filename.replace(/\.chordpro$/i, "");
         const song = normalizeSongInput({
-          title: parsed.meta?.title || s.title || slug,
+          title: doc.meta?.title || s.title || slug,
           key: sel.toKey || baseKey,
-          capo: parsed.meta?.capo,
+          capo: doc.meta?.capo,
           lyricsBlocks: blocks,
         });
         songs.push(song);

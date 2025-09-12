@@ -1,7 +1,7 @@
 // src/components/Songbook.jsx
 import { useMemo, useState } from 'react'
 import indexData from '../data/index.json'
-import { parseChordPro } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/sort'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -126,19 +126,20 @@ export default function Songbook() {
         try {
           const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
           const txt = await fetchTextCached(url)
-          const parsed = parseChordPro(txt)
-          const blocks = parsed.blocks.map((b) => ({
-            section: b.section,
-            lines: (b.lines || []).map((ln) => ({
-              plain: ln.text,
+          const doc = parseChordProOrLegacy(txt)
+          const blocks = (doc.sections || []).map((sec) => ({
+            section: sec.label,
+            lines: (sec.lines || []).map((ln) => ({
+              plain: ln.comment ? ln.comment : (ln.lyrics || ''),
               chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
+              comment: ln.comment ? ln.comment : undefined,
             })),
           }))
           const slug = it.filename.replace(/\.chordpro$/, '')
           const song = normalizeSongInput({
-            title: parsed.meta.title || it.title || slug,
-            key: parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C',
-            capo: parsed.meta?.capo,
+            title: doc.meta.title || it.title || slug,
+            key: doc.meta.key || doc.meta.originalkey || it.originalKey || 'C',
+            capo: doc.meta?.capo,
             lyricsBlocks: blocks,
           })
           songs.push(song)
