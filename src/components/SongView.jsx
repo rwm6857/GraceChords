@@ -364,7 +364,11 @@ if(!entry){
 
       <div className="divider" />
 
-      {(parsed?.meta?.youtube || parsed?.meta?.mp3 || hasPptx) && (
+      {(() => {
+        const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+        const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
+        return (metaYoutube || metaMp3 || hasPptx)
+      })() && (
         <div>
           <button
             className="btn media__toggle"
@@ -374,20 +378,24 @@ if(!entry){
           </button>
 
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
-            {parsed?.meta?.youtube && (
+            {(() => {
+              const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+              return metaYoutube
+            })() && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 {pptxButton && (
                   <div style={{marginBottom:10}}>{pptxButton}</div>
                 )}
                 {(() => {
-                 const ytId = extractYouTubeId(parsed.meta.youtube)
+                 const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+                 const ytId = extractYouTubeId(metaYoutube)
                  return ytId ? (
                     <LiteYouTube id={ytId} />
                   ) : (
                     <a
                       className="btn"
-                      href={String(parsed.meta.youtube)}
+                      href={String(metaYoutube)}
                       target="_blank"
                       rel="noopener noreferrer"
                      >
@@ -398,14 +406,20 @@ if(!entry){
               </div>
             )}
 
-            {parsed?.meta?.mp3 && (
+            {(() => {
+              const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
+              return metaMp3
+            })() && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
-                <audio controls src={parsed.meta.mp3} />
+                <audio controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
               </div>
             )}
 
-            {!parsed?.meta?.youtube && pptxButton && (
+            {(() => {
+              const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+              return !metaYoutube && pptxButton
+            })() && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
                 {pptxButton}

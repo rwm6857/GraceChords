@@ -237,7 +237,13 @@ function AdminPanel(){
   }
 
   // ---- Load existing song from index ----
-  const items = (indexData?.items || [])
+  const items = useMemo(() => {
+    const arr = indexData?.items || []
+    const seen = new Set()
+    const uniq = []
+    for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
+    return uniq
+  }, [])
   const [editingFile, setEditingFile] = useState('')
   const [loadId, setLoadId] = useState('')
   async function loadExisting(){

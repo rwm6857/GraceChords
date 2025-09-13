@@ -49,13 +49,14 @@ describe('SongView PPTX button', () => {
   test('hides PPTX download when missing', async () => {
     mockFetch(false)
     render(
-      <MemoryRouter initialEntries={['/song/build-my-life']}>
+      <MemoryRouter initialEntries={['/song/abba']}>
         <Routes>
           <Route path="/song/:id" element={<SongView />} />
         </Routes>
       </MemoryRouter>
     )
-    await screen.findByText(/reference video/i)
+    // Ensure we are on the song page (title rendered)
+    await screen.findByRole('heading', { name: /test/i })
     await waitFor(() => {
       expect(screen.queryByRole('link', { name: /download pptx/i })).toBeNull()
     })

@@ -7,7 +7,17 @@ import { KEYS } from '../utils/chordpro'
 import SongCard from './ui/SongCard'
 
 export default function Home(){
-  const items = indexData?.items || []
+  const itemsRaw = indexData?.items || []
+  const items = useMemo(() => {
+    const seen = new Set()
+    const out = []
+    for (const s of itemsRaw) {
+      if (seen.has(s.id)) continue
+      seen.add(s.id)
+      out.push(s)
+    }
+    return out
+  }, [itemsRaw])
 
   // -------- Search & filters --------
   const [q, setQ] = useState('')

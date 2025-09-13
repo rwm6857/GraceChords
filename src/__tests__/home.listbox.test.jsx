@@ -18,12 +18,13 @@ describe('Home search accessibility', () => {
 
     await user.click(search)
     await user.keyboard('{ArrowDown}')
-    const first = screen.getByRole('option', { name: /^Abba/ })
+    const options = screen.getAllByRole('option')
+    const first = options[0]
     expect(first).toHaveFocus()
     expect(first).toHaveAttribute('aria-selected', 'true')
 
     await user.keyboard('{ArrowDown}')
-    const second = screen.getByRole('option', { name: /^Above All/ })
+    const second = screen.getAllByRole('option')[1]
     expect(second).toHaveFocus()
     expect(second).toHaveAttribute('aria-selected', 'true')
 

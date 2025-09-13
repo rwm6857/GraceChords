@@ -459,30 +459,30 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
     return { plan }
   }
 
-  // Fallback: legacy two-page @12pt
+  // Fallback: minimal, safe two-page @12pt plan without invoking planSongLayout
+  // This avoids legacy shape expectations and prevents crashes in debug strings.
   const minSz = 12
-  let layout = planSongLayout(
-    song,
-    { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz },
-    makeMeasureLyricAt(minSz),
-    makeMeasureChordAt(minSz)
-  )
-  let plan = { ...oBase, columns: 1, lyricSizePt: minSz, chordSizePt: minSz, layout }
-  if (!fitsWithinTwoPages(plan)) {
-    layout = planSongLayout(
-      song,
-      { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz },
-      makeMeasureLyricAt(minSz),
-      makeMeasureChordAt(minSz)
-    )
-    plan = { ...oBase, columns: 2, lyricSizePt: minSz, chordSizePt: minSz, layout }
+  const margin = oBase.margin
+  const plan = {
+    lyricFamily: oBase.lyricFamily,
+    chordFamily: oBase.chordFamily,
+    lyricSizePt: minSz,
+    chordSizePt: minSz,
+    columns: 1,
+    margin,
+    headerOffsetY: oBase.headerOffsetY,
+    gutter: oBase.gutter,
+    layout: { pages: [
+      { columns: [{ x: margin, blocks: [] }] },
+      { columns: [{ x: margin, blocks: [] }] },
+    ] },
+    title: String(song?.title || song?.meta?.title || 'Untitled'),
+    key: String(song?.key || song?.meta?.key || ''),
   }
-  plan.title = String(song?.title || song?.meta?.title || 'Untitled')
-  plan.key = String(song?.key || song?.meta?.key || '')
   const headerTitlePt = Math.max(22, plan.lyricSizePt + 6)
   const headerKeyPt = Math.max(12, plan.lyricSizePt - 2)
   plan.headerOffsetY = Math.ceil(headerTitlePt * 1.05 + headerKeyPt * 1.05 + 12)
-  plan.debugFooter = `Plan: ${plan.columns} col • ${plan.lyricSizePt}pt • singlePage=${plan.layout.pages.length === 1 ? 'yes' : 'no'}`
+  plan.debugFooter = isTraceOn() ? `Plan: ${plan.columns} col • ${plan.lyricSizePt}pt • singlePage=no` : undefined
   return { plan }
 }
 

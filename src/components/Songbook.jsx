@@ -27,7 +27,13 @@ function uniqSorted(arr) {
 
 export default function Songbook() {
   // Catalog from index.json (uses .items + .filename)
-  const items = useMemo(() => (indexData?.items || []).slice().sort(byTitle), [])
+  const items = useMemo(() => {
+    const arr = indexData?.items || []
+    const seen = new Set()
+    const uniq = []
+    for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
+    return uniq.slice().sort(byTitle)
+  }, [])
 
   // Filters / search
   const [search, setSearch] = useState('')
