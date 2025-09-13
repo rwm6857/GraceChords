@@ -350,6 +350,16 @@ async function exportPdf() {
               disabled={busy}
               title="Export set as a single PDF"
             >{busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</button>
+            <Link
+              className="btn iconbtn"
+              to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}` : '#')}
+              title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
+              aria-disabled={!list.length}
+              onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
+            >
+              <span className="text-when-wide">Open in Worship Mode</span>
+              <span className="text-when-narrow">Worship</span>
+            </Link>
             <button
               className="btn iconbtn"
               onClick={bundlePptx}

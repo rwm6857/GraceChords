@@ -9,6 +9,7 @@ const Songbook = React.lazy(() => import('./components/Songbook'))
 const About = React.lazy(() => import('./components/About'))
 const Resources = React.lazy(() => import('./components/Resources'))
 import NavBar from './components/NavBar'
+import WorshipMode from './pages/WorshipMode'
 import ErrorBoundary from './components/ErrorBoundary'
 import Toast from './components/Toast'
 import SiteDisclaimer from './components/SiteDisclaimer'
@@ -28,6 +29,7 @@ export default function App(){
             <Route path="/songbook" element={<Songbook />} />
             <Route path="/resources" element={<Resources />} />
           </Route>
+          <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
