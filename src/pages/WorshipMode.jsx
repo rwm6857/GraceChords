@@ -20,7 +20,8 @@ export default function WorshipMode(){
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections }]
   const [idx, setIdx] = useState(0)
   const [transpose, setTranspose] = useState(0)
-  const [songOffsets, setSongOffsets] = useState([]) // per-song initial offsets (semitones)
+  const [songOffsets, setSongOffsets] = useState([]) // per-song current offsets (semitones)
+  const [baseOffsets, setBaseOffsets] = useState([]) // per-song baseline offsets at session start
   const [showChords, setShowChords] = useState(true)
   const [fontPx, setFontPx] = useState(null)
   const [autoSize, setAutoSize] = useState(() => fontPx == null)
@@ -109,7 +110,6 @@ export default function WorshipMode(){
       const items = indexData?.items || []
       const targets = ids.map(id => items.find(it => String(it.id) === id)).filter(Boolean)
       const out = []
-      const offsets = []
       for (const s of targets) {
         try {
           const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
@@ -135,11 +135,14 @@ export default function WorshipMode(){
       }
       if (!cancelled) {
         // Compute baseline offsets from query
+        let baseOffs = out.map(() => 0)
         let offs = out.map(() => 0)
         if (query.toKeys && query.toKeys.length === out.length) {
-          offs = out.map((song, i) => stepsBetween(song.baseKey, query.toKeys[i]))
+          baseOffs = out.map((song, i) => stepsBetween(song.baseKey, query.toKeys[i]))
+          offs = baseOffs.slice()
         } else if (query.toKey && out.length === 1) {
-          offs = [stepsBetween(out[0].baseKey, query.toKey)]
+          baseOffs = [stepsBetween(out[0].baseKey, query.toKey)]
+          offs = baseOffs.slice()
         }
 
         // Restore from session if recent, unless explicit keys were provided
@@ -148,6 +151,7 @@ export default function WorshipMode(){
         if (canRestore) {
           try {
             if (!hasQueryKeys) {
+              if (Array.isArray(saved.baseOffsets) && saved.baseOffsets.length === out.length) baseOffs = saved.baseOffsets
               if (Array.isArray(saved.offsets) && saved.offsets.length === out.length) offs = saved.offsets
               if (typeof saved.idx === 'number') startIdx = Math.max(0, Math.min(out.length - 1, saved.idx))
             }
@@ -159,9 +163,10 @@ export default function WorshipMode(){
         }
 
         setSongs(out)
+        setBaseOffsets(baseOffs)
         setSongOffsets(offs)
         setIdx(startIdx)
-        setTranspose(offs[startIdx] || 0)
+        setTranspose((offs[startIdx] ?? baseOffs[startIdx] ?? 0))
         // Mobile swipe hint once per device
         try {
           const seen = localStorage.getItem('worship:swipeHintShown') === '1'
@@ -267,7 +272,7 @@ export default function WorshipMode(){
 
   // Keep transpose in sync when song changes
   useEffect(() => {
-    setTranspose(songOffsets[idx] || 0)
+    setTranspose((songOffsets[idx] ?? baseOffsets[idx] ?? 0))
   }, [idx])
   // Persist session for accidental refresh recovery
   useEffect(() => {
@@ -275,6 +280,7 @@ export default function WorshipMode(){
       idsString: ids.join(','),
       idx,
       offsets: songOffsets,
+      baseOffsets,
       cols,
       fontPx,
       autoSize,
@@ -282,7 +288,7 @@ export default function WorshipMode(){
       ts: Date.now(),
     }
     try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)) } catch {}
-  }, [ids.join(','), idx, songOffsets, cols, fontPx, autoSize, showChords])
+  }, [ids.join(','), idx, songOffsets, baseOffsets, cols, fontPx, autoSize, showChords])
 
   // Keyboard navigation
   useEffect(() => {
@@ -343,6 +349,11 @@ export default function WorshipMode(){
         // Update URL for persistence
         const newIds = copy.map(s => s.id)
         navigate(`/worship/${newIds.join(',')}`)
+        return copy
+      })
+      setBaseOffsets(prev => {
+        const copy = prev.slice()
+        copy.splice(Math.min(prev.length, idx + 1), 0, 0)
         return copy
       })
       setSongOffsets(prev => {
@@ -526,41 +537,43 @@ export default function WorshipMode(){
             <button
               className="btn iconbtn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(0); setSongOffsets(arr => { const c = arr.slice(); c[idx] = 0; return c }) }}
+              onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }}
               title="Reset key"
-              aria-label="Reset key to original"
+              aria-label="Reset key"
             >
               <RemoveIcon />{!isMobile ? <span className="text-when-wide"> Reset</span> : null}
             </button>
           </div>
-          {/* Center quick search (drop-up) */}
-          <div ref={searchRef} style={{position:'relative', flex:'1 1 40%', display:'flex', justifyContent:'center'}}>
-            <input
-              value={q}
-              onChange={e=> { setQ(e.target.value); setOpenSuggest(true) }}
-              onFocus={()=> setOpenSuggest(true)}
-              placeholder="Add song…"
-              aria-label="Add song by title"
-              style={{ minWidth: 240, maxWidth: 420 }}
-            />
-            {openSuggest && q.trim() && titleResults.length > 0 && (
-              <div
-                role="listbox"
-                style={{
-                  position:'absolute', bottom:'100%', marginBottom:8,
-                  background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:8,
-                  boxShadow:'0 6px 24px rgba(0,0,0,.18)', maxHeight:240, overflow:'auto', width:'100%', zIndex:6
-                }}
-              >
-                {titleResults.map(s => (
-                  <div key={s.id} role="option" aria-selected="false" style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', borderBottom:'1px solid var(--line)'}}>
-                    <div style={{minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{s.title}</div>
-                    <button className="btn iconbtn" aria-label={`Add ${s.title}`} onClick={() => addSongAfterCurrent(s.id)}><PlusIcon /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Center quick search (hidden on mobile) */}
+          {!isMobile && (
+            <div ref={searchRef} style={{position:'relative', flex:'1 1 40%', display:'flex', justifyContent:'center'}}>
+              <input
+                value={q}
+                onChange={e=> { setQ(e.target.value); setOpenSuggest(true) }}
+                onFocus={()=> setOpenSuggest(true)}
+                placeholder="Add song…"
+                aria-label="Add song by title"
+                style={{ minWidth: 240, maxWidth: 420 }}
+              />
+              {openSuggest && q.trim() && titleResults.length > 0 && (
+                <div
+                  role="listbox"
+                  style={{
+                    position:'absolute', bottom:'100%', marginBottom:8,
+                    background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:8,
+                    boxShadow:'0 6px 24px rgba(0,0,0,.18)', maxHeight:240, overflow:'auto', width:'100%', zIndex:6
+                  }}
+                >
+                  {titleResults.map(s => (
+                    <div key={s.id} role="option" aria-selected="false" style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', borderBottom:'1px solid var(--line)'}}>
+                      <div style={{minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{s.title}</div>
+                      <button className="btn iconbtn" aria-label={`Add ${s.title}`} onClick={() => addSongAfterCurrent(s.id)}><PlusIcon /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
             <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
             <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
