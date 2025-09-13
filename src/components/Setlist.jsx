@@ -352,7 +352,7 @@ async function exportPdf() {
             >{busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</button>
             <Link
               className="btn iconbtn"
-              to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}` : '#')}
+              to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
               title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
               aria-disabled={!list.length}
               onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}

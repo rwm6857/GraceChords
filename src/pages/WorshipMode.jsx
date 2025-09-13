@@ -1,6 +1,6 @@
 // src/pages/WorshipMode.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
@@ -9,12 +9,8 @@ import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon } from '../compon
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [16, 15, 14, 13, 12]
-
-const LS = {
-  transpose: 'worship:transpose',
-  showChords: 'worship:showChords',
-  fontSize: 'worship:fontSize',
-}
+const SESSION_KEY = 'worship:session'
+const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
 export default function WorshipMode(){
   const { songIds = '' } = useParams()
@@ -23,18 +19,10 @@ export default function WorshipMode(){
 
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections }]
   const [idx, setIdx] = useState(0)
-  const [transpose, setTranspose] = useState(() => {
-    try { return parseInt(localStorage.getItem(LS.transpose) || '0', 10) || 0 } catch { return 0 }
-  })
-  const [showChords, setShowChords] = useState(() => {
-    try { return localStorage.getItem(LS.showChords) !== '0' } catch { return true }
-  })
-  const [fontPx, setFontPx] = useState(() => {
-    try {
-      const v = parseInt(localStorage.getItem(LS.fontSize) || '', 10)
-      return Number.isFinite(v) ? v : null
-    } catch { return null }
-  })
+  const [transpose, setTranspose] = useState(0)
+  const [songOffsets, setSongOffsets] = useState([]) // per-song initial offsets (semitones)
+  const [showChords, setShowChords] = useState(true)
+  const [fontPx, setFontPx] = useState(null)
   const [autoSize, setAutoSize] = useState(() => fontPx == null)
 
   const viewportRef = useRef(null)
@@ -77,13 +65,29 @@ export default function WorshipMode(){
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  const location = useLocation()
+  const query = useMemo(() => {
+    const qs = new URLSearchParams(location.search || '')
+    return {
+      toKey: qs.get('toKey') || '',
+      toKeys: (qs.get('toKeys') || '').split(',').map(s => decodeURIComponent(s)).filter(Boolean),
+    }
+  }, [location.search])
+
   // Load songs by ids
   useEffect(() => {
     let cancelled = false
     async function load(){
+      // Attempt to restore session for this route
+      let saved = null
+      try { saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null') } catch {}
+      const idsString = ids.join(',')
+      const canRestore = !!(saved && saved.idsString === idsString && (Date.now() - (saved.ts || 0) <= SESSION_TTL_MS))
+
       const items = indexData?.items || []
       const targets = ids.map(id => items.find(it => String(it.id) === id)).filter(Boolean)
       const out = []
+      const offsets = []
       for (const s of targets) {
         try {
           const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
@@ -102,16 +106,42 @@ export default function WorshipMode(){
             }))
           }))
           out.push({ id: s.id, title, baseKey, sections })
+          // offsets computed after load
         } catch (err) {
           console.error(err)
         }
       }
-      if (!cancelled) setSongs(out)
-      if (!cancelled) setIdx(0)
+      if (!cancelled) {
+        // Compute baseline offsets from query
+        let offs = out.map(() => 0)
+        if (query.toKeys && query.toKeys.length === out.length) {
+          offs = out.map((song, i) => stepsBetween(song.baseKey, query.toKeys[i]))
+        } else if (query.toKey && out.length === 1) {
+          offs = [stepsBetween(out[0].baseKey, query.toKey)]
+        }
+
+        // Restore from session if recent
+        let startIdx = 0
+        if (canRestore) {
+          try {
+            if (Array.isArray(saved.offsets) && saved.offsets.length === out.length) offs = saved.offsets
+            if (typeof saved.idx === 'number') startIdx = Math.max(0, Math.min(out.length - 1, saved.idx))
+            if (typeof saved.cols === 'number') setCols(saved.cols)
+            if (typeof saved.fontPx === 'number') { setFontPx(saved.fontPx); setAutoSize(false) }
+            if (typeof saved.autoSize === 'boolean') setAutoSize(saved.autoSize)
+            if (typeof saved.showChords === 'boolean') setShowChords(saved.showChords)
+          } catch {}
+        }
+
+        setSongs(out)
+        setSongOffsets(offs)
+        setIdx(startIdx)
+        setTranspose(offs[startIdx] || 0)
+      }
     }
     load()
     return () => { cancelled = true }
-  }, [songIds])
+  }, [songIds, query.toKey, query.toKeys.join('|')])
 
   // Fit-to-viewport with column preference: on wide screens, prefer 2 columns to keep larger text.
   useEffect(() => {
@@ -196,16 +226,24 @@ export default function WorshipMode(){
     }
   }, [fontPx, autoSize, cols])
 
-  // Persist toggles
+  // Keep transpose in sync when song changes
   useEffect(() => {
-    try { localStorage.setItem(LS.transpose, String(transpose)) } catch {}
-  }, [transpose])
+    setTranspose(songOffsets[idx] || 0)
+  }, [idx])
+  // Persist session for accidental refresh recovery
   useEffect(() => {
-    try { localStorage.setItem(LS.showChords, showChords ? '1' : '0') } catch {}
-  }, [showChords])
-  useEffect(() => {
-    if (fontPx != null) try { localStorage.setItem(LS.fontSize, String(fontPx)) } catch {}
-  }, [fontPx])
+    const payload = {
+      idsString: ids.join(','),
+      idx,
+      offsets: songOffsets,
+      cols,
+      fontPx,
+      autoSize,
+      showChords,
+      ts: Date.now(),
+    }
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)) } catch {}
+  }, [ids.join(','), idx, songOffsets, cols, fontPx, autoSize, showChords])
 
   // Keyboard navigation
   useEffect(() => {
@@ -268,6 +306,11 @@ export default function WorshipMode(){
         navigate(`/worship/${newIds.join(',')}`)
         return copy
       })
+      setSongOffsets(prev => {
+        const copy = prev.slice()
+        copy.splice(Math.min(prev.length, idx + 1), 0, 0)
+        return copy
+      })
       setQ(''); setOpenSuggest(false)
     } catch (err) {
       console.error(err)
@@ -311,7 +354,9 @@ export default function WorshipMode(){
         {/* Title row */}
         <div ref={headerRef} style={{padding:'10px 16px', textAlign:'center'}}>
           <div style={{fontWeight:700, fontSize:'clamp(20px, 4vw, 28px)'}}>{cur?.title || ''}</div>
-          <div style={{opacity:.75, fontSize:14, marginTop:2}}>Key: {toKey} {cur?.baseKey && toKey !== cur.baseKey ? `(orig ${cur.baseKey})` : ''}</div>
+          <div style={{opacity:.75, fontSize:14, marginTop:2}}>
+            Key: {toKey}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
+          </div>
         </div>
         {/* Top-left home button */}
         <button
@@ -419,8 +464,8 @@ export default function WorshipMode(){
         }}>
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
             <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => setShowChords(v => !v)} title="Toggle chords">{showChords ? 'Chords On' : 'Chords Off'}</button>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(t => t + 2) }} title="Raise key">Key Up ♯</button>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { const delta = stepsBetween(toKey, cur?.baseKey || 'C'); setTranspose(t => t + delta) }} title="Reset key">Reset Key</button>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(t => { const nt = t + 2; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }} title="Raise key">Key Up ♯</button>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(0); setSongOffsets(arr => { const c = arr.slice(); c[idx] = 0; return c }) }} title="Reset key">Reset Key</button>
           </div>
           {/* Center quick search (drop-up) */}
           <div ref={searchRef} style={{position:'relative', flex:'1 1 40%', display:'flex', justifyContent:'center'}}>

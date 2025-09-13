@@ -329,7 +329,7 @@ if(!entry){
           </button>
           <Link
             className="btn iconbtn"
-            to={`/worship/${entry.id}`}
+            to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
             title="Open in Worship Mode"
           >
             <MediaIcon /> <span className="text-when-wide">Open in Worship Mode</span>
@@ -446,7 +446,7 @@ if(!entry){
           <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
           <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
           <button className="btn primary iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
-          <Link className="btn iconbtn" to={`/worship/${entry.id}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
+          <Link className="btn iconbtn" to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
         </div>
       )}
     </div>
