@@ -111,6 +111,16 @@ input,select,textarea{
   min-width: 0;
 }
 
+/* Dark theme: make icon buttons pop with brand color */
+[data-theme="dark"] .iconbtn{
+  background: var(--primary);
+  color: var(--primary-text);
+  border-color: var(--primary);
+}
+[data-theme="dark"] .iconbtn:hover{
+  filter: brightness(.96);
+}
+
 /* Hide supplemental text labels on very small screens */
 .text-when-wide { display: inline; }
 @media (max-width: 640px){ .text-when-wide { display: none; } }

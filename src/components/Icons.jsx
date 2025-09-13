@@ -54,3 +54,10 @@ export const TwoColIcon = (p) => (
     <line x1="14" y1="17" x2="20" y2="17" />
   </S>
 )
+
+export const HomeIcon = (p) => (
+  <S {...p}>
+    <path d="M3 11l9-8 9 8"/>
+    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>
+  </S>
+)

@@ -5,7 +5,7 @@ import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [16, 15, 14, 13, 12]
@@ -313,6 +313,16 @@ export default function WorshipMode(){
           <div style={{fontWeight:700, fontSize:'clamp(20px, 4vw, 28px)'}}>{cur?.title || ''}</div>
           <div style={{opacity:.75, fontSize:14, marginTop:2}}>Key: {toKey} {cur?.baseKey && toKey !== cur.baseKey ? `(orig ${cur.baseKey})` : ''}</div>
         </div>
+        {/* Top-left home button */}
+        <button
+          className="iconbtn"
+          aria-label="Go home"
+          title="Home"
+          onClick={() => navigate('/')}
+          style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px' }}
+        >
+          <HomeIcon />
+        </button>
         {/* Top-right theme toggle */}
         <button
           className="iconbtn"
@@ -369,7 +379,7 @@ export default function WorshipMode(){
           ref={contentRef}
           className="worship__content"
           style={{
-            flex:'1 1 auto', minHeight:0, overflow:'auto', padding:'8px 12px 84px',
+            flex:'1 1 auto', minHeight:0, overflow:'auto', padding:'10px 16px 12px',
             fontSize: fontPx ? `${fontPx}px` : undefined,
             lineHeight: 1.35,
             columnCount: cols,
@@ -516,6 +526,12 @@ function ChordLine({ plain, chords, steps, showChords }){
     }
     document.addEventListener('pointerdown', onPointerDown, true)
     return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [])
+  // Close suggestions on Escape
+  useEffect(() => {
+    function onKeyDown(e){ if (e.key === 'Escape') setOpenSuggest(false) }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   useEffect(() => {
