@@ -120,12 +120,15 @@ export default function WorshipMode(){
           offs = [stepsBetween(out[0].baseKey, query.toKey)]
         }
 
-        // Restore from session if recent
+        // Restore from session if recent, unless explicit keys were provided
+        const hasQueryKeys = (query.toKeys && query.toKeys.length === out.length) || (query.toKey && out.length === 1)
         let startIdx = 0
         if (canRestore) {
           try {
-            if (Array.isArray(saved.offsets) && saved.offsets.length === out.length) offs = saved.offsets
-            if (typeof saved.idx === 'number') startIdx = Math.max(0, Math.min(out.length - 1, saved.idx))
+            if (!hasQueryKeys) {
+              if (Array.isArray(saved.offsets) && saved.offsets.length === out.length) offs = saved.offsets
+              if (typeof saved.idx === 'number') startIdx = Math.max(0, Math.min(out.length - 1, saved.idx))
+            }
             if (typeof saved.cols === 'number') setCols(saved.cols)
             if (typeof saved.fontPx === 'number') { setFontPx(saved.fontPx); setAutoSize(false) }
             if (typeof saved.autoSize === 'boolean') setAutoSize(saved.autoSize)

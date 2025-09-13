@@ -1,8 +1,12 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 import { getSiteDisclaimer, isDisclaimerEnabled } from '../config/disclaimer'
 import { getCopyrightNotice } from '../config/copyright'
 
 export default function SiteDisclaimer(){
+  const { pathname, hash } = useLocation()
+  const inWorship = (pathname && pathname.startsWith('/worship')) || (hash && hash.includes('/worship'))
+  if (inWorship) return null
   if (!isDisclaimerEnabled()) return null
   const text = getSiteDisclaimer()
   const copyright = getCopyrightNotice()
