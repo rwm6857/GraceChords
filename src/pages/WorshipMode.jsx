@@ -3,8 +3,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
+import { Sun, Moon } from '../components/Icons'
 
 const PT_WINDOW = [16, 15, 14, 13, 12]
 
@@ -38,6 +39,22 @@ export default function WorshipMode(){
   const viewportRef = useRef(null)
   const contentRef = useRef(null)
   const touchRef = useRef({ x: 0, y: 0, at: 0 })
+  const [cols, setCols] = useState(1)
+  const [isWide, setIsWide] = useState(() => {
+    try { const vw = window.innerWidth, vh = window.innerHeight; return (vw >= 900) || (vw / Math.max(1, vh) >= 1.2) } catch { return false }
+  })
+  const [, setThemeBump] = useState(0)
+
+  useEffect(() => {
+    function onResize(){
+      try {
+        const vw = window.innerWidth, vh = window.innerHeight
+        setIsWide((vw >= 900) || (vw / Math.max(1, vh) >= 1.2))
+      } catch {}
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // Load songs by ids
   useEffect(() => {
@@ -75,26 +92,75 @@ export default function WorshipMode(){
     return () => { cancelled = true }
   }, [songIds])
 
-  // Fit-to-viewport: set font size using PT_WINDOW logic (largest that fits)
+  // Fit-to-viewport with column preference: on wide screens, prefer 2 columns to keep larger text.
   useEffect(() => {
     if (!autoSize) return
     const viewport = viewportRef.current
     const content = contentRef.current
     if (!viewport || !content) return
 
-    // Try candidates from largest to smallest
-    for (const pt of PT_WINDOW) {
-      content.style.setProperty('--worship-font', `${pt}px`)
-      // Force reflow then check
-      const fits = content.scrollHeight <= viewport.clientHeight && content.scrollWidth <= viewport.clientWidth
-      if (fits) {
-        // lock in this size
-        setFontPx(pt)
-        return
+    const prevSize = content.style.fontSize
+    const prevCols = content.style.columnCount
+    const prevGap = content.style.columnGap
+    try {
+      const colPref = isWide ? [2, 1] : [1, 2]
+      for (const pt of PT_WINDOW) {
+        for (const cc of colPref) {
+          content.style.fontSize = `${pt}px`
+          content.style.columnCount = String(cc)
+          content.style.columnGap = cc === 2 ? '20px' : '0px'
+          // Force reflow
+          // eslint-disable-next-line no-unused-expressions
+          content.offsetHeight
+          const fits = content.scrollHeight <= viewport.clientHeight
+          if (fits) {
+            setCols(cc)
+            setFontPx(pt)
+            return
+          }
+        }
       }
+      // Fallback to smallest size and preferred columns
+      setCols(colPref[0])
+      setFontPx(PT_WINDOW[PT_WINDOW.length - 1])
+    } finally {
+      content.style.fontSize = prevSize
+      content.style.columnCount = prevCols
+      content.style.columnGap = prevGap
     }
-    setFontPx(PT_WINDOW[PT_WINDOW.length - 1])
-  }, [songs, idx, autoSize, showChords])
+  }, [songs, idx, autoSize, showChords, isWide])
+
+  // When manually changing font size, allow auto switch to 2 columns if needed to fit.
+  useEffect(() => {
+    if (autoSize) return
+    const viewport = viewportRef.current
+    const content = contentRef.current
+    if (!viewport || !content) return
+    const prevSize = content.style.fontSize
+    const prevCols = content.style.columnCount
+    const prevGap = content.style.columnGap
+    try {
+      // First try current columns
+      content.style.fontSize = `${fontPx || 16}px`
+      content.style.columnCount = String(cols)
+      content.style.columnGap = cols === 2 ? '20px' : '0px'
+      // eslint-disable-next-line no-unused-expressions
+      content.offsetHeight
+      if (content.scrollHeight <= viewport.clientHeight) return
+      // Try two columns
+      content.style.columnCount = '2'
+      content.style.columnGap = '20px'
+      // eslint-disable-next-line no-unused-expressions
+      content.offsetHeight
+      if (content.scrollHeight <= viewport.clientHeight) {
+        setCols(2)
+      }
+    } finally {
+      content.style.fontSize = prevSize
+      content.style.columnCount = prevCols
+      content.style.columnGap = prevGap
+    }
+  }, [fontPx, autoSize])
 
   // Persist toggles
   useEffect(() => {
@@ -179,19 +245,31 @@ export default function WorshipMode(){
           <div style={{fontWeight:700, fontSize:'clamp(20px, 4vw, 28px)'}}>{cur?.title || ''}</div>
           <div style={{opacity:.75, fontSize:14, marginTop:2}}>Key: {toKey} {cur?.baseKey && toKey !== cur.baseKey ? `(orig ${cur.baseKey})` : ''}</div>
         </div>
+        {/* Top-right theme toggle */}
+        <button
+          className="iconbtn"
+          aria-label="Toggle dark mode"
+          title={currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={() => { toggleTheme(); setThemeBump(x => x + 1) }}
+          style={{ position:'fixed', top:10, right:10, zIndex:5, padding:'10px 12px' }}
+        >
+          {currentTheme() === 'dark' ? <Sun /> : <Moon />}
+        </button>
 
         {/* Content area */}
         <div
           ref={contentRef}
           className="worship__content"
           style={{
-            flex:'1 1 auto', minHeight:0, overflow:'auto', padding:'6px 18px 72px',
+            flex:'1 1 auto', minHeight:0, overflow:'auto', padding:'8px 12px 84px',
             fontSize: fontPx ? `${fontPx}px` : undefined,
             lineHeight: 1.35,
+            columnCount: cols,
+            columnGap: cols === 2 ? '20px' : undefined,
           }}
         >
           {cur ? (
-            <div className="worship__song" style={{maxWidth:900, margin:'0 auto'}}>
+            <div className="worship__song" style={{maxWidth:1200, margin:'0 auto'}}>
               {(cur.sections || []).map((sec, si) => (
                 <div key={si} style={{breakInside:'avoid'}}>
                   {sec.label ? <div className="section">[{sec.label}]</div> : null}
@@ -218,18 +296,17 @@ export default function WorshipMode(){
         <div className="worship__bar" role="toolbar" aria-label="Worship controls" style={{
           position:'fixed', left:0, right:0, bottom:0,
           display:'flex', gap:8, alignItems:'center', justifyContent:'space-between',
-          padding:'10px 12px', background:'var(--card)', borderTop:'1px solid var(--line)'
+          padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
         }}>
-          <div style={{display:'flex', gap:8, alignItems:'center'}}>
-            <button className="btn" onClick={() => setShowChords(v => !v)} title="Toggle chords">{showChords ? 'Chords On' : 'Chords Off'}</button>
-            <button className="btn" onClick={() => { setTranspose(t => t + 1) }} title="Raise key">Key Up ♯</button>
-            <button className="btn" onClick={() => { const delta = stepsBetween(toKey, cur?.baseKey || 'C'); setTranspose(t => t + delta) }} title="Reset key">Reset Key</button>
+          <div style={{display:'flex', gap:10, alignItems:'center'}}>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => setShowChords(v => !v)} title="Toggle chords">{showChords ? 'Chords On' : 'Chords Off'}</button>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(t => t + 2) }} title="Raise key">Key Up ♯</button>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { const delta = stepsBetween(toKey, cur?.baseKey || 'C'); setTranspose(t => t + delta) }} title="Reset key">Reset Key</button>
           </div>
-          <div style={{display:'flex', gap:8, alignItems:'center'}}>
-            <button className="btn" onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font">A−</button>
-            <button className="btn" onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font">A+</button>
-            <button className="btn" onClick={() => toggleTheme()} title="Theme">Theme</button>
-            <button className="btn primary" onClick={next} disabled={idx >= songs.length - 1} title="Next song">NEXT →</button>
+          <div style={{display:'flex', gap:10, alignItems:'center'}}>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font">A−</button>
+            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font">A+</button>
+            <button className="btn primary" style={{padding:'12px 18px', fontSize:16}} onClick={next} disabled={idx >= songs.length - 1} title="Next song">NEXT →</button>
           </div>
         </div>
       </div>
@@ -300,4 +377,3 @@ function ChordLine({ plain, chords, steps, showChords }){
     </div>
   )
 }
-

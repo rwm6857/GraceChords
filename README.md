@@ -10,6 +10,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 - 🛠️ Admin interface for authoring songs and rebuilding the index
 - 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
  - 🧭 SongView 1/2‑column reading view (site‑side)
+- 🎤 Worship/Perform Mode — full‑screen, touch‑friendly view with auto‑fit text, swipe/arrow navigation, and quick transpose
 
 ## Project Structure
 ```
@@ -45,6 +46,39 @@ npm run build
 Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
 
 Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
+
+## Worship/Perform Mode
+Full‑screen, minimal UI optimized for live performance.
+
+Access
+- From a song: use the “Open in Worship Mode” button on the Song page.
+- From a set: use “Open in Worship Mode” in Setlist to load the current set.
+- Direct URL: `/#/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/#/worship/abba,above-all`.
+
+Layout & Fit
+- Renders an entire song on a single page (no pagination), single column.
+- Auto‑fit font using the same candidate window as the PDF engine: tries sizes `16 → 12` px and chooses the largest that fully fits the viewport; you can override manually.
+- Chords render above lyrics with exact positioning; comments display in italic.
+
+Controls (floating toolbar)
+- NEXT →: advance to next song in the list.
+- Key Up (♯): raise key by 1 semitone; Reset Key: revert to original.
+- Theme: toggles light/dark (persists via existing theme utilities).
+- Font Size A−/A+: manual override (persists); use page reload to re‑enable auto‑fit.
+- Chords On/Off toggle.
+
+Navigation
+- Mobile/tablet: swipe left = NEXT, swipe right = PREV.
+- Desktop: Arrow Right/Left keys.
+
+Persistence
+- Theme: `gracechords.theme` (via `src/utils/theme.js`).
+- Worship settings: `worship:transpose`, `worship:showChords`, `worship:fontSize`.
+
+Notes
+- Worship Mode hides the site navbar for clarity (route is outside the shared `Layout`).
+- Uses the same chord rendering approach as SongView for alignment.
+- Keep song IDs and filenames up to date by running `npm run build-index` after adding songs.
 
 ## Admin & Index Generation
 Set the admin password via an environment variable and open `/#/admin` to author songs in ChordPro and download a bundle containing the song and updated index. Add files to `public/songs/` and merge `src/data/index.json`, or rebuild automatically:

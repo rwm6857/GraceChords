@@ -22,9 +22,9 @@ function mockFetch(){
     const u = String(url)
     const hit = Object.values(SONGS).find(s => u.includes(`/songs/${s.filename}`))
     if (hit) {
-      return new Response(new Blob([hit.content], { type: 'text/plain' }), { status: 200 })
+      return { ok: true, text: async () => hit.content }
     }
-    return new Response('', { status: 404 })
+    return { ok: false, text: async () => '' }
   }
   return () => { global.fetch = orig }
 }
@@ -92,7 +92,7 @@ describe('WorshipMode', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText('Abba')).toBeInTheDocument()
-    const btn = screen.getByRole('button', { name: /Theme/ })
+    const btn = screen.getByRole('button', { name: /Toggle dark mode/ })
     const before = document.documentElement.getAttribute('data-theme') || 'light'
     fireEvent.click(btn)
     const after = document.documentElement.getAttribute('data-theme')
@@ -114,4 +114,3 @@ describe('WorshipMode', () => {
     expect([16,15,14,13,12]).toContain(px)
   })
 })
-
