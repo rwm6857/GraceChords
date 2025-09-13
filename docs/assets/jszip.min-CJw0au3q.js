@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:docs/assets/jszip.min-XEYgVKo2.js
-import{m as bt,o as It}from"./index-Co6uMY05.js";function vt(yt){throw new Error('Could not dynamically require "'+yt+'". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.')}var kt={exports:{}};/*!
-========
 import{m as bt,o as It}from"./index-D1Qa1dhr.js";function vt(yt){throw new Error('Could not dynamically require "'+yt+'". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.')}var kt={exports:{}};/*!
->>>>>>>> 346a2f75 (Worship mode v1 added):docs/assets/jszip.min-CJw0au3q.js
 
 JSZip v3.10.1 - A JavaScript class for generating and reading zip files
 <http://stuartk.com/jszip>
