@@ -5,7 +5,7 @@ import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, TransposeIcon, RemoveIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [16, 15, 14, 13, 12]
@@ -34,8 +34,10 @@ export default function WorshipMode(){
   const [isWide, setIsWide] = useState(() => {
     try { const vw = window.innerWidth, vh = window.innerHeight; return (vw >= 900) || (vw / Math.max(1, vh) >= 1.2) } catch { return false }
   })
+  const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth < 768 } catch { return false } })
   const [, setThemeBump] = useState(0)
   const [availH, setAvailH] = useState(null)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
 
   // Quick add/search state
   const [q, setQ] = useState('')
@@ -48,11 +50,30 @@ export default function WorshipMode(){
     return items.filter(it => (it.title || '').toLowerCase().includes(s)).slice(0, 5)
   }, [q, items])
 
+  // Close suggestions on outside click/tap
+  useEffect(() => {
+    function onPointerDown(e){
+      const host = searchRef.current
+      if (!host) return
+      if (host.contains(e.target)) return
+      setOpenSuggest(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [])
+  // Close suggestions on Escape
+  useEffect(() => {
+    function onKeyDown(e){ if (e.key === 'Escape') setOpenSuggest(false) }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   useEffect(() => {
     function onResize(){
       try {
         const vw = window.innerWidth, vh = window.innerHeight
         setIsWide((vw >= 900) || (vw / Math.max(1, vh) >= 1.2))
+        setIsMobile(vw < 768)
         const vp = viewportRef.current
         const headerH = headerRef.current?.offsetHeight || 0
         const barH = barRef.current?.offsetHeight || 0
@@ -140,6 +161,15 @@ export default function WorshipMode(){
         setSongOffsets(offs)
         setIdx(startIdx)
         setTranspose(offs[startIdx] || 0)
+        // Mobile swipe hint once per device
+        try {
+          const seen = localStorage.getItem('worship:swipeHintShown') === '1'
+          if (!seen && (typeof window !== 'undefined') && (window.innerWidth < 768)) {
+            setShowSwipeHint(true)
+            localStorage.setItem('worship:swipeHintShown', '1')
+            setTimeout(() => setShowSwipeHint(false), 3000)
+          }
+        } catch {}
       }
     }
     load()
@@ -466,9 +496,36 @@ export default function WorshipMode(){
           padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
         }}>
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => setShowChords(v => !v)} title="Toggle chords">{showChords ? 'Chords On' : 'Chords Off'}</button>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(t => { const nt = t + 2; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }} title="Raise key">Key Up ♯</button>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setTranspose(0); setSongOffsets(arr => { const c = arr.slice(); c[idx] = 0; return c }) }} title="Reset key">Reset Key</button>
+            {/* Chords toggle */}
+            <button
+              className="btn iconbtn"
+              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              onClick={() => setShowChords(v => !v)}
+              title="Toggle chords"
+              aria-label="Toggle chords"
+            >
+              <EyeIcon />{!isMobile ? <span className="text-when-wide">{showChords ? ' Chords On' : ' Chords Off'}</span> : null}
+            </button>
+            {/* Key up (whole step) */}
+            <button
+              className="btn iconbtn"
+              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              onClick={() => { setTranspose(t => { const nt = t + 2; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              title="Raise key"
+              aria-label="Raise key (whole step)"
+            >
+              <TransposeIcon />{!isMobile ? <span className="text-when-wide"> Key Up</span> : null}
+            </button>
+            {/* Reset key */}
+            <button
+              className="btn iconbtn"
+              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              onClick={() => { setTranspose(0); setSongOffsets(arr => { const c = arr.slice(); c[idx] = 0; return c }) }}
+              title="Reset key"
+              aria-label="Reset key to original"
+            >
+              <RemoveIcon />{!isMobile ? <span className="text-when-wide"> Reset</span> : null}
+            </button>
           </div>
           {/* Center quick search (drop-up) */}
           <div ref={searchRef} style={{position:'relative', flex:'1 1 40%', display:'flex', justifyContent:'center'}}>
@@ -499,16 +556,19 @@ export default function WorshipMode(){
             )}
           </div>
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font">A−</button>
-            <button className="btn" style={{padding:'12px 16px', fontSize:16}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font">A+</button>
-            {idx > 0 && (
+            <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
+            <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+            {!isMobile && idx > 0 && (
               <button className="btn" style={{padding:'12px 18px', fontSize:16}} onClick={prev} title="Previous song">← BACK</button>
             )}
-            {idx < songs.length - 1 && (
+            {!isMobile && idx < songs.length - 1 && (
               <button className="btn primary" style={{padding:'12px 18px', fontSize:16}} onClick={next} title="Next song">NEXT →</button>
             )}
           </div>
         </div>
+        {isMobile && showSwipeHint && (
+          <div className="worship__hint" role="status" aria-live="polite">Swipe to see next/previous song</div>
+        )}
       </div>
     </div>
   )
@@ -564,23 +624,7 @@ function ChordLine({ plain, chords, steps, showChords }){
     setState({ offsets, padTop, chordTop })
   }, [plain, chords, steps, showChords, measureKey])
 
-  // Close suggestions on outside click/tap
-  useEffect(() => {
-    function onPointerDown(e){
-      const host = searchRef.current
-      if (!host) return
-      if (host.contains(e.target)) return
-      setOpenSuggest(false)
-    }
-    document.addEventListener('pointerdown', onPointerDown, true)
-    return () => document.removeEventListener('pointerdown', onPointerDown, true)
-  }, [])
-  // Close suggestions on Escape
-  useEffect(() => {
-    function onKeyDown(e){ if (e.key === 'Escape') setOpenSuggest(false) }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  
 
   useEffect(() => {
     const el = hostRef.current

@@ -205,6 +205,29 @@ input,select,textarea{
   .iconbtn{ gap:6px; padding:6px 8px; }
 }
 
+/* Worship Mode: swipe hint snackbar */
+.worship__hint{
+  position: fixed;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 200;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+  animation: worship-hint-fade 3s ease forwards;
+}
+/* Light theme default */
+.worship__hint{ background: rgba(255,255,255,.9); color: var(--text); border: 1px solid var(--line); }
+[data-theme="dark"] .worship__hint{ background: rgba(14,18,24,.85); color: var(--text); border: 1px solid var(--border); }
+
+@keyframes worship-hint-fade{
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ========== Home page layout ========== */
 .HomePage{
   max-width:1280px;
