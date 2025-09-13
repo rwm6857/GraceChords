@@ -38,6 +38,7 @@ export default function WorshipMode(){
   const [, setThemeBump] = useState(0)
   const [availH, setAvailH] = useState(null)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const hintTimerRef = useRef(0)
 
   // Quick add/search state
   const [q, setQ] = useState('')
@@ -167,7 +168,7 @@ export default function WorshipMode(){
           if (!seen && (typeof window !== 'undefined') && (window.innerWidth < 768)) {
             setShowSwipeHint(true)
             localStorage.setItem('worship:swipeHintShown', '1')
-            setTimeout(() => setShowSwipeHint(false), 3000)
+            hintTimerRef.current = setTimeout(() => setShowSwipeHint(false), 3000)
           }
         } catch {}
       }
@@ -175,6 +176,11 @@ export default function WorshipMode(){
     load()
     return () => { cancelled = true }
   }, [songIds, query.toKey, query.toKeys.join('|')])
+
+  // Clear pending swipe-hint timer on unmount
+  useEffect(() => {
+    return () => { if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = 0 } }
+  }, [])
 
   // Fit-to-viewport with column preference: on wide screens, prefer 2 columns to keep larger text.
   useEffect(() => {
@@ -589,6 +595,7 @@ function ChordLine({ plain, chords, steps, showChords }){
     }
     const ctx = canvasRef.current.getContext('2d')
     const lyr = hostRef.current.querySelector('.lyrics')
+    if (!ctx || !lyr) { setState({ offsets: [], padTop: 0, chordTop: 0 }); return }
     const cs = window.getComputedStyle(lyr)
 
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`

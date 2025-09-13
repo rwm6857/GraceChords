@@ -66,7 +66,7 @@ describe('WorshipMode', () => {
     expect(await screen.findByText('Above All')).toBeInTheDocument()
   })
 
-  it('transposes key up by one semitone', async () => {
+  it('transposes key up (whole step)', async () => {
     render(
       <MemoryRouter initialEntries={[`/worship/abba`]}>
         <Routes>
@@ -77,7 +77,7 @@ describe('WorshipMode', () => {
     expect(await screen.findByText('Abba')).toBeInTheDocument()
     const keyLine = screen.getByText(/Key:/)
     const initial = keyLine.textContent
-    const btn = screen.getByRole('button', { name: /Key Up/ })
+    const btn = screen.getByRole('button', { name: /Raise key/i })
     fireEvent.click(btn)
     // should now be different than initial
     expect(screen.getByText(/Key:/).textContent).not.toEqual(initial)
