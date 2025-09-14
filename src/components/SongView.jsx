@@ -404,12 +404,12 @@ if(!entry){
                  const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
                  const ytId = extractYouTubeId(metaYoutube)
                  return ytId ? (
-                    <div style={{ marginTop: 8 }}>
+                    <div style={{ marginTop: 12 }}>
                       <LiteYouTube id={ytId} />
                     </div>
                   ) : (
                     <a
-                      style={{ marginTop: 8, display: 'inline-block' }}
+                      style={{ marginTop: 12, display: 'inline-block' }}
                       className="btn"
                       href={String(metaYoutube)}
                       target="_blank"
