@@ -1,6 +1,7 @@
 // src/utils/image.js
 import { chooseBestLayout } from './pdf/pdfLayout'
 import { ensureCanvasFonts } from './pdf/fonts'
+import { slugifyUnderscore } from './chordpro/serialize'
 export { ensureCanvasFonts } from './pdf/fonts'
 
 // Render a planned layout to a Canvas2D
@@ -86,7 +87,7 @@ export async function downloadSingleSongJpg(song, options = {}) {
   }
   const canvas = renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi })
   const link = document.createElement('a')
-  const slug = (options.slug || song.slug || song.title || 'untitled').replace(/\s+/g, '_')
+  const slug = slugifyUnderscore(String(options.slug || song.slug || song.title || 'untitled'))
   link.href = canvas.toDataURL('image/jpeg', 0.92)
   link.download = `${slug}.jpg`
   link.click()

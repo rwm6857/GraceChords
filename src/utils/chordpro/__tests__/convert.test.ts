@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { convertToCanonicalChordPro } from '../convert'
+import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../convert'
 import { parseChordProOrLegacy } from '../parser'
 
 const legacy = `
@@ -19,5 +19,11 @@ describe('convertToCanonicalChordPro', () => {
     expect(doc.sections[0].lines[0].lyrics).toMatch(/Amazing grace/i)
     expect(doc.meta?.meta?.country).toBe('USA')
     expect(docTitle).toBe('Untitled')
+  })
+
+  it('suggestCanonicalFilename uses underscore slug', () => {
+    expect(suggestCanonicalFilename('Above All')).toBe('above_all.chordpro')
+    expect(suggestCanonicalFilename('All-in-All')).toBe('all_in_all.chordpro')
+    expect(suggestCanonicalFilename('  Hello, World!  ')).toBe('hello_world.chordpro')
   })
 })

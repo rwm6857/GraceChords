@@ -1,5 +1,5 @@
 import { parseChordProOrLegacy } from './parser'
-import { serializeChordPro } from './serialize'
+import { serializeChordPro, slugifyUnderscore } from './serialize'
 import type { SongDoc } from './types'
 
 export type MetaExtras = {
@@ -8,10 +8,6 @@ export type MetaExtras = {
   youtube?: string
   mp3?: string
   pptx?: string
-}
-
-function slugifyUnderscore(s: string){
-  return (s || '').toLowerCase().replace(/[^\w]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')
 }
 
 function stripDecorations(title: string){

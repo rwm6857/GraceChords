@@ -385,15 +385,19 @@ if(!entry){
           </button>
 
           <div className={`media__panel ${showMedia ? 'open' : ''}`}>
+            {pptxButton && (
+              <div className="media__card" style={{marginTop:10}}>
+                <div className="media__label">Lyric Slides (PPTX)</div>
+                {pptxButton}
+              </div>
+            )}
+
             {(() => {
               const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
               return metaYoutube
             })() && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
-                {pptxButton && (
-                  <div style={{marginBottom:10}}>{pptxButton}</div>
-                )}
                 {(() => {
                  const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
                  const ytId = extractYouTubeId(metaYoutube)
@@ -420,16 +424,6 @@ if(!entry){
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
                 <audio controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
-              </div>
-            )}
-
-            {(() => {
-              const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-              return !metaYoutube && pptxButton
-            })() && (
-              <div className="media__card" style={{marginTop:10}}>
-                <div className="media__label">Lyric Slides (PPTX)</div>
-                {pptxButton}
               </div>
             )}
           </div>
