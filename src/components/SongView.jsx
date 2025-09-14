@@ -388,7 +388,9 @@ if(!entry){
             {pptxButton && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                {pptxButton}
+                <div style={{ marginTop: 8 }}>
+                  {pptxButton}
+                </div>
               </div>
             )}
 
@@ -402,9 +404,12 @@ if(!entry){
                  const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
                  const ytId = extractYouTubeId(metaYoutube)
                  return ytId ? (
-                    <LiteYouTube id={ytId} />
+                    <div style={{ marginTop: 8 }}>
+                      <LiteYouTube id={ytId} />
+                    </div>
                   ) : (
                     <a
+                      style={{ marginTop: 8, display: 'inline-block' }}
                       className="btn"
                       href={String(metaYoutube)}
                       target="_blank"
