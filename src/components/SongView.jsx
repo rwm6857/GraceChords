@@ -388,7 +388,7 @@ if(!entry){
             {pptxButton && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 12 }}>
                   {pptxButton}
                 </div>
               </div>
