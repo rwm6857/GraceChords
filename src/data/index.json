@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-12T22:41:27.899Z",
+  "generatedAt": "2025-09-14T13:45:07.161Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -949,6 +949,18 @@
       "country": ""
     },
     {
+      "id": "jesus-you-have-set-me-free",
+      "title": "Jesus You Have Set Me Free",
+      "filename": "jesus_you_have_set_me_free.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Fast",
+        "Praise"
+      ],
+      "authors": [],
+      "country": "Korea"
+    },
+    {
       "id": "jesus-we-enthrone-you",
       "title": "Jesus, We Enthrone You",
       "filename": "jesus_we_enthrone_you.chordpro",
@@ -1098,13 +1110,14 @@
     },
     {
       "id": "lord-i-give-you-my-heart",
-      "title": "Lord I Give You my Heart",
+      "title": "Lord I Give You My Heart",
       "filename": "lord_i_give_you_my_heart.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Reuben Morgan"
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Worship"
       ],
+      "authors": [],
       "country": ""
     },
     {
