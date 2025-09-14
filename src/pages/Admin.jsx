@@ -83,8 +83,8 @@ function AdminPanel(){
     if(!persist) localStorage.removeItem('adminDrafts')
   }, [persist])
 
-  const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
-  const filename = `${id||'untitled'}.chordpro`
+  const id = slugifyUnderscore(meta.id || meta.title || '')
+  const filename = `${id || 'untitled'}.chordpro`
   const parsed = useMemo(() => {
     try {
       const doc = parseChordProOrLegacy(text || '')
