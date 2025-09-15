@@ -318,6 +318,10 @@ input,select,textarea{
   color: var(--primary-text);
   border: 1px solid var(--primary);
 }
+/* Ensure high contrast active link text in both themes */
+.topnav__link.active,
+.topnav__link.active:link,
+.topnav__link.active:visited{ color: #0b0f14 !important; }
 
 /* ========== Sticky toolbar (Setlist) ========== */
 .toolbar{
