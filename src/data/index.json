@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-14T23:19:55.898Z",
+  "generatedAt": "2025-09-15T03:41:14.321Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -484,8 +484,11 @@
       "id": "goodbye-yesterday",
       "title": "Goodbye Yesterday",
       "filename": "goodbye_yesterday.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "G",
+      "tags": [
+        "Fast",
+        "Contemporary"
+      ],
       "authors": [
         "Elevation Worship"
       ],
@@ -513,14 +516,18 @@
       "id": "great-are-you-lord",
       "title": "Great are You Lord",
       "filename": "great_are_you_lord.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Praise",
+        "Contemporary"
+      ],
       "authors": [
         "Jason Ingram",
         "Leslie Jordan",
         "David Leonard"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "great-is-the-lord",
