@@ -1,0 +1,1 @@
+import{j as s}from"./index-6e1UIAnr.js";function t({label:e,id:l,children:c,className:a="",...n}){return s.jsxs("label",{className:"gc-field",htmlFor:l,children:[e?s.jsx("span",{className:"gc-label",children:e}):null,s.jsx("span",{className:"gc-select",children:s.jsx("select",{id:l,className:a,...n,children:c})})]})}export{t as S};
