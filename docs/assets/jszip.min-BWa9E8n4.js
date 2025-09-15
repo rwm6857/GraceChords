@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:docs/assets/jszip.min-DUq-mdY0.js
-import{u as bt,v as It}from"./index-Iikal-yj.js";function vt(yt){throw new Error('Could not dynamically require "'+yt+'". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.')}var kt={exports:{}};/*!
-========
 import{u as bt,v as It}from"./index-C4a5WNds.js";function vt(yt){throw new Error('Could not dynamically require "'+yt+'". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.')}var kt={exports:{}};/*!
->>>>>>>> 8054e054 (trying to fix the color):docs/assets/jszip.min-BWa9E8n4.js
 
 JSZip v3.10.1 - A JavaScript class for generating and reading zip files
 <http://stuartk.com/jszip>
