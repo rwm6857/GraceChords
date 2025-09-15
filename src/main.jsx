@@ -13,3 +13,7 @@ createRoot(document.getElementById('root')).render(
     </HashRouter>
   </React.StrictMode>
 )
+
+// UI fonts + components styles
+import './styles/fonts.css'
+import './components/ui/ui.css'

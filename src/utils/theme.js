@@ -24,7 +24,7 @@ export function applyTheme(theme, { persist = false } = {}) {
 /** Initialize theme: use stored value or system preference (without persisting). */
 export function initTheme() {
   const stored = getStoredTheme()
-  const initial = stored || (systemPrefersDark() ? 'dark' : 'light')
+  const initial = stored || 'dark'
   applyTheme(initial, { persist: false })
 
   // If user has NOT chosen a theme, live-update when system preference changes

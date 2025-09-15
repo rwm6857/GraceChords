@@ -382,7 +382,7 @@ export default function WorshipMode(){
         <div style={{textAlign:'center'}}>
           <h1>Worship Mode</h1>
           <p>No songs provided. Append /worship/id1,id2 to the URL.</p>
-          <button className="btn" onClick={() => navigate('/')}>Back</button>
+          <button className="gc-btn" onClick={() => navigate('/')}>Back</button>
         </div>
       </div>
     )
@@ -515,7 +515,7 @@ export default function WorshipMode(){
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
             {/* Chords toggle */}
             <button
-              className="btn iconbtn"
+            className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
               onClick={() => setShowChords(v => !v)}
               title="Toggle chords"
@@ -525,7 +525,7 @@ export default function WorshipMode(){
             </button>
             {/* Key up (whole step) */}
             <button
-              className="btn iconbtn"
+            className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
               onClick={() => { setTranspose(t => { const nt = t + 2; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
               title="Raise key"
@@ -535,7 +535,7 @@ export default function WorshipMode(){
             </button>
             {/* Reset key */}
             <button
-              className="btn iconbtn"
+            className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
               onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }}
               title="Reset key"
@@ -567,7 +567,7 @@ export default function WorshipMode(){
                   {titleResults.map(s => (
                     <div key={s.id} role="option" aria-selected="false" style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', borderBottom:'1px solid var(--line)'}}>
                       <div style={{minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{s.title}</div>
-                      <button className="btn iconbtn" aria-label={`Add ${s.title}`} onClick={() => addSongAfterCurrent(s.id)}><PlusIcon /></button>
+                      <button className="gc-btn" aria-label={`Add ${s.title}`} onClick={() => addSongAfterCurrent(s.id)}><PlusIcon /></button>
                     </div>
                   ))}
                 </div>
@@ -575,13 +575,13 @@ export default function WorshipMode(){
             </div>
           )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
-            <button className="btn iconbtn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
             {!isMobile && idx > 0 && (
-              <button className="btn" style={{padding:'12px 18px', fontSize:16}} onClick={prev} title="Previous song">← BACK</button>
+              <button className="gc-btn" style={{padding:'12px 18px', fontSize:16}} onClick={prev} title="Previous song">← BACK</button>
             )}
             {!isMobile && idx < songs.length - 1 && (
-              <button className="btn primary" style={{padding:'12px 18px', fontSize:16}} onClick={next} title="Next song">NEXT →</button>
+              <button className="gc-btn gc-btn--primary" style={{padding:'12px 18px', fontSize:16}} onClick={next} title="Next song">NEXT →</button>
             )}
           </div>
         </div>
@@ -619,7 +619,7 @@ function ChordLine({ plain, chords, steps, showChords }){
       return { sym, x: left, w: 0 }
     })
 
-    const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     measured.forEach(m => { m.w = ctx.measureText(m.sym).width })
@@ -665,7 +665,7 @@ function ChordLine({ plain, chords, steps, showChords }){
       {showChords && state.offsets.length>0 && (
         <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
           {state.offsets.map((c, i)=>(
-            <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`, fontWeight: 700 }}>
+            <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`, fontWeight: 700 }}>
               {c.sym}
             </span>
           ))}

@@ -1,0 +1,66 @@
+/* Core UI kit styles (8px grid, dark-ready) */
+@layer components {
+  :root{
+    --ui-gap-1: 8px;
+    --ui-gap-2: 16px;
+    --ui-gap-3: 24px;
+    --ui-radius: 10px;
+  }
+
+  /* Buttons */
+  .gc-btn{ display:inline-flex; align-items:center; gap:8px; border-radius:10px; border:1px solid var(--border); padding:8px 12px; cursor:pointer; font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-weight:500; background: var(--btn); color: var(--btn-text); text-decoration:none; }
+  .gc-btn:hover{ filter:brightness(.98) }
+  .gc-btn:disabled{ opacity:.6; cursor: not-allowed; }
+  .gc-btn--primary{ background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+  .gc-btn--secondary{ background: var(--card); color: var(--text); }
+  .gc-btn--ghost{ background: transparent; color: var(--text); }
+  .gc-btn--sm{ padding:6px 10px; font-size: 0.95rem; }
+  .gc-btn--md{ padding:8px 12px; font-size: 1rem; }
+  .gc-btn--lg{ padding:10px 16px; font-size: 1.1rem; }
+  .gc-btn--iconOnly{ padding:8px; }
+
+  /* Inputs */
+  .gc-field{ display:flex; flex-direction:column; gap:6px; }
+  .gc-label{ font-family: "Inter", sans-serif; font-weight:400; opacity:.85 }
+  .gc-input{ padding:10px 12px; border-radius:10px; border:1px solid var(--border); background: var(--card); color: var(--text); font-family: "Inter", sans-serif; }
+  .gc-input:focus{ outline:2px solid var(--primary); outline-offset:2px }
+
+  .gc-select{ position:relative; display:inline-flex; align-items:center; }
+  .gc-select > select{ appearance:none; -webkit-appearance:none; padding:10px 34px 10px 12px; border-radius:10px; border:1px solid var(--border); background: var(--card); color: var(--text); font-family: "Inter", sans-serif; }
+  .gc-select:after{ content:""; position:absolute; right:10px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid currentColor; pointer-events:none; }
+
+  /* Tags */
+  .gc-tag{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-family: "Inter", sans-serif; font-weight:600; letter-spacing:.02em; text-transform:uppercase; font-size: 0.9rem; border:1px solid var(--border); }
+  .gc-tag--blue{ background:#dbeafe; color:#1e40af; border-color:#bfdbfe }
+  .gc-tag--green{ background:#d1fae5; color:#065f46; border-color:#a7f3d0 }
+  .gc-tag--amber{ background:#fef3c7; color:#92400e; border-color:#fde68a }
+  .gc-tag--gray{ background:#e5e7eb; color:#111827; border-color:#e5e7eb }
+  [data-theme="dark"] .gc-tag--gray{ background:#374151; color:#e5e7eb; border-color:#4b5563 }
+
+  /* Cards */
+  .gc-card{ border:1px solid var(--border); background: var(--card); border-radius:12px; padding:12px 14px; display:flex; gap:12px; align-items:flex-start; text-decoration:none; color:inherit; }
+  .gc-card__body{ flex: 0 1 auto; min-width:0; }
+  .gc-card__title{ font-family: "Inter", sans-serif; font-weight:700; font-size: 24px; line-height:1.2; }
+  .gc-card__meta{ color: var(--muted); font-size: .95rem; margin-top:4px; }
+  .gc-card__spacer{ flex:1 1 auto }
+  .gc-card__tags{ margin-top:8px; display:flex; flex-wrap:wrap; gap:8px }
+
+  /* Navbar */
+  .gc-navbar{ position:sticky; top:0; z-index:60; background: var(--card); backdrop-filter:saturate(180%) blur(8px); border-bottom:1px solid var(--line); }
+  .gc-navbar__inner{ max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:8px }
+  .gc-brand{ font-family: "Oswald", sans-serif; font-weight:600; letter-spacing:.2px; color: var(--text); font-size: 1.4rem; }
+  .gc-navlinks{ display:flex; gap:8px; align-items:center; }
+  .gc-navlink{ padding:6px 10px; border-radius:8px; color: var(--text); border:1px solid transparent; }
+  .gc-navlink:hover{ background: var(--btn); }
+  .gc-navlink.active{ background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+
+  /* Toolbar */
+  .gc-toolbar{ position:sticky; top:0; z-index:50; background: var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+
+  /* Panel */
+  .gc-panel{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background: var(--card); }
+  .gc-panel__header{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; cursor:pointer; }
+  .gc-panel__content{ overflow:hidden; max-height:0; opacity:.0; transition:max-height .25s ease, opacity .2s ease; }
+  .gc-panel__content.open{ max-height:2000px; opacity:1; }
+}
+

@@ -64,7 +64,7 @@ html, body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
 body{
   margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   font-size: var(--font-base);
 }
 
@@ -138,11 +138,11 @@ input,select,textarea{
 
 .meta { color: var(--muted); }
 
-.lyrics { line-height: 1.35; }
+.lyrics { line-height: 1.35; font-family: 'Inter', sans-serif; font-size: 18px; }
 
 /* ========== Song page bits ========== */
 .songpage__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
-.songpage__title{ margin:0; font-size: var(--font-title); line-height:1.2 }
+.songpage__title{ margin:0; font-size: var(--font-title); line-height:1.2; font-family:'Inter', sans-serif; font-weight:700 }
 .songpage__meta{ color:var(--muted); font-size:13px; margin-top:4px }
 
 .songpage__sheet{
@@ -159,7 +159,7 @@ input,select,textarea{
   letter-spacing: 0.02em;    /* subtle readability boost (optional) */
 }
 .linepair{ margin:2px 0 10px }
-.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Noto Sans Mono', monospace; white-space: pre }
+.mono{ font-family: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre }
 
 .divider{ height:1px; background:var(--line); margin:18px 0 }
 
@@ -300,10 +300,7 @@ input,select,textarea{
   display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap;
 }
 
-.brand{
-  font-weight:800; letter-spacing:.2px;
-  color: var(--text); /* fixes dark-mode invisibility */
-}
+.brand{ font-family: 'Oswald', sans-serif; font-weight:600; letter-spacing:.2px; color: var(--text); }
 
 .topnav__links{ display:flex; gap:12px; align-items:center; }
 @media (max-width: 640px){

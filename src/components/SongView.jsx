@@ -376,15 +376,12 @@ if(!entry){
         const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
         return (metaYoutube || metaMp3 || hasPptx)
       })() && (
-        <div>
-          <button
-            className="btn media__toggle"
-            onClick={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
+        <div style={{ marginTop: 12 }}>
+          <Panel
+            title={<span style={{ display:'inline-flex', alignItems:'center', gap:8 }}><MediaIcon /> Media</span>}
+            open={showMedia}
+            onToggle={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
           >
-            {showMedia ? <>Hide media</> : <><MediaIcon /> Show media</>}
-          </button>
-
-          <div className={`media__panel ${showMedia ? 'open' : ''}`}>
             {pptxButton && (
               <div className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
@@ -431,21 +428,21 @@ if(!entry){
                 <audio controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
               </div>
             )}
-          </div>
+          </Panel>
         </div>
       )}
       {/* Mobile action bar */}
       {isNarrow && (
         <div className="mobilebar" role="group" aria-label="Song actions" style={{ display:'flex', gap:8 }}>
-          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
+          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
           <select value={toKey} onChange={e=> setToKey(e.target.value)} title="Key" style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}>
             {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
           </select>
-          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
-          <button className="btn iconbtn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
-          <button className="btn primary iconbtn" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
-          <button className="btn primary iconbtn" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
-          <Link className="btn iconbtn" to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
+          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
+          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
+          <button className="gc-btn gc-btn--primary" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
+          <button className="gc-btn gc-btn--primary" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
+          <Link className="gc-btn" to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
         </div>
       )}
     </div>
@@ -557,7 +554,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     }))
 
     // Estimate chord ascent to reserve vertical space
-    const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize // match lyric size
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     const chordM = ctx.measureText('Mg')
@@ -593,7 +590,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,
-              fontFamily: `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
               fontWeight: 700
             }}>{c.sym}</span>
           ))}

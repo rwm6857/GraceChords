@@ -7,10 +7,12 @@ import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import Busy from './Busy'
-import SongCard from './ui/SongCard'
-import { PlusIcon } from './Icons'
-import { DownloadIcon } from './Icons'
-import { ClearIcon } from './Icons'
+import { SongCard } from './ui/Card'
+import Button from './ui/Button'
+import Select from './ui/Select'
+import Input from './ui/Input'
+import Toolbar from './ui/Toolbar'
+import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/cards.css'
 import '../styles/songbook.css'
 
@@ -207,7 +209,7 @@ export default function Songbook() {
       </div>
 
       {/* Toolbar */}
-      <div className="card toolbar" style={{ marginTop: 12 }}>
+      <Toolbar className="card" style={{ marginTop: 12 }}>
         <div className="Field">
           <input
             id="sb-toc"
@@ -228,24 +230,26 @@ export default function Songbook() {
           />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          <button className="btn iconbtn" onClick={selectAllFiltered} disabled={!filteredCount} title="Select all filtered">
-            <PlusIcon /><span className="text-when-wide">Select all ({filteredCount})</span><span className="text-when-narrow">All</span>
-          </button>
-          <button className="btn iconbtn" onClick={clearAll} disabled={!selectedCount} title="Clear selection">
-            <ClearIcon /><span className="text-when-wide">Clear</span>
-          </button>
-          <button
-            className="btn primary iconbtn"
+          <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Select all filtered" iconLeft={<PlusIcon />}>
+            <span className="text-when-wide">Select all ({filteredCount})</span>
+            <span className="text-when-narrow">All</span>
+          </Button>
+          <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" iconLeft={<ClearIcon />}>
+            <span className="text-when-wide">Clear</span>
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleExport}
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
             disabled={!selectedEntries.length || busy}
             title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
+            iconLeft={<DownloadIcon />}
           >
-            {busy ? 'Exporting…' : <><DownloadIcon /><span className="text-when-wide">Export PDF ({selectedEntries.length})</span><span className="text-when-narrow">PDF</span></>}
-          </button>
+            {busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF ({selectedEntries.length})</span><span className="text-when-narrow">PDF</span></>}
+          </Button>
         </div>
-      </div>
+      </Toolbar>
 
       {/* Two-pane region */}
       <div className="BuilderPage" style={{ marginTop: 12 }}>
@@ -254,56 +258,31 @@ export default function Songbook() {
           <div className="card">
           <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 8 }}>
             <div className="Field" style={{ minWidth: 220 }}>
-              <label htmlFor="sb-search">Search:</label>
-              <input
-                id="sb-search"
-                type="search"
-                placeholder="Title or author"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ width: '100%' }}
-              />
+              <Input id="sb-search" type="search" label="Search" placeholder="Title or author" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%' }} />
             </div>
             <div className="Field">
-              <label htmlFor="sb-tag">Tag:</label>
-              <select id="sb-tag" value={tag} onChange={(e) => setTag(e.target.value)}>
+              <Select id="sb-tag" value={tag} onChange={(e) => setTag(e.target.value)}>
                 <option>All</option>
                 {tags.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <option key={t} value={t}>{t}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="Field">
-              <label htmlFor="sb-country">Country:</label>
-              <select
-                id="sb-country"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-              >
+              <Select id="sb-country" value={country} onChange={(e) => setCountry(e.target.value)}>
                 <option>All</option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="Field">
-              <label htmlFor="sb-author">Author:</label>
-              <select
-                id="sb-author"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-              >
+              <Select id="sb-author" value={author} onChange={(e) => setAuthor(e.target.value)}>
                 <option>All</option>
                 {authors.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
+                  <option key={a} value={a}>{a}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
           <div className="Row Small" style={{ marginTop: '.5rem' }}>
@@ -332,14 +311,12 @@ export default function Songbook() {
                     title={s.title}
                     subtitle={subtitle}
                     tags={tags}
-                    leftSlot={
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => toggleOne(s.id, e.target.checked)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Select ${s.title}`}
-                      />
+                    rightSlot={
+                      checked ? (
+                        <Button title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} style={{ color:'#b91c1c' }}>Remove</Button>
+                      ) : (
+                        <Button variant="primary" title="Add" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />}>Add</Button>
+                      )
                     }
                     onClick={() => toggleOne(s.id, !checked)}
                   />

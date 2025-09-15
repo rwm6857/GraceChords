@@ -12,6 +12,9 @@ import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import { showToast } from '../utils/toast'
 import '../styles/admin.css'
+import Button from '../components/ui/Button'
+import Input from '../components/ui/Input'
+import Toolbar from '../components/ui/Toolbar'
 
 const PASSWORD = import.meta.env.VITE_ADMIN_PW
 
@@ -35,17 +38,10 @@ export default function Admin(){
       <div className="container" style={{maxWidth:480}}>
         <h1>Admin</h1>
         <p>Enter password to continue.</p>
-        <label htmlFor="adminPw" className="sr-only">Password</label>
-        <input
-          id="adminPw"
-          type="password"
-          value={pw}
-          onChange={e=> setPw(e.target.value)}
-          placeholder="Password"
-        />
-        <button className="btn primary" style={{marginLeft:8}} onClick={()=> setOk(pw===PASSWORD)}>
-          Enter
-        </button>
+        <Input id="adminPw" type="password" value={pw} onChange={e=> setPw(e.target.value)} placeholder="Password" />
+        <div style={{marginTop:8}}>
+          <Button variant="primary" onClick={()=> setOk(pw===PASSWORD)}>Enter</Button>
+        </div>
       </div>
     )
   }
@@ -555,9 +551,7 @@ function AdminPanel(){
         <strong>Quick chords</strong>
         <span className="Small">(Key: {meta.key || 'G'})</span>
         {quickChords.map((sym, i) => (
-          <button key={sym} className="btn small" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1} on Win/Linux, Ctrl+${i+1} on macOS)`}>
-            {sym}
-          </button>
+          <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1} on Win/Linux, Ctrl+${i+1} on macOS)`}>{sym}</button>
         ))}
       </div>
 
@@ -572,7 +566,7 @@ function AdminPanel(){
           { k: 'tag',    label: 'Tag' },
           { k: 'outro',  label: 'Outro' },
         ].map(d => (
-          <button key={d.k} className="btn small" title={`Insert ${d.label} block`} onClick={() => {
+          <button key={d.k} className="gc-btn gc-btn--sm" title={`Insert ${d.label} block`} onClick={() => {
             const start = d.short ? `{${d.short} ${d.label}}\n` : `{start_of_${d.k}: ${d.label}}\n`
             const end = d.end ? `\n{${d.end}}` : `\n{end_of_${d.k}}`
             const ta = editorRef.current
@@ -597,11 +591,30 @@ function AdminPanel(){
           ref={editorRef}
           value={text}
           onChange={e=> setText(e.target.value)}
-          style={{width:'100%', minHeight:'60vh', fontFamily:'ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
+          style={{width:'100%', minHeight:'60vh', fontFamily:'"Roboto Mono", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
         />
         {showPreview && (
           <div className='card' style={{minHeight:'60vh', overflow:'auto'}}>
             <strong>Preview</strong>
+            <div className="Small" style={{ marginTop:6, fontFamily:'"Roboto Mono", ui-monospace, Menlo, Consolas, monospace' }}>
+              {(() => {
+                const kv = {
+                  title: parsed?.meta?.title,
+                  key: parsed?.meta?.key || parsed?.meta?.originalkey,
+                  capo: parsed?.meta?.capo,
+                  authors: parsed?.meta?.meta?.authors,
+                  country: parsed?.meta?.meta?.country,
+                  tags: parsed?.meta?.meta?.tags,
+                  youtube: parsed?.meta?.meta?.youtube,
+                  mp3: parsed?.meta?.meta?.mp3,
+                }
+                return Object.entries(kv)
+                  .filter(([,v]) => v != null && String(v).trim() !== '')
+                  .map(([k,v]) => (
+                    <div key={k}><strong>{k}</strong>: {String(v)}</div>
+                  ))
+              })()}
+            </div>
             <div style={{marginTop:8}}>
               {(parsed.blocks||[]).map((b,bi)=>(
                 <div key={bi}>
@@ -631,12 +644,12 @@ function AdminPanel(){
 
       {/* Draft actions */}
       <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
-        <button className="btn" onClick={lintCurrent} title="Run ChordPro lint and show warnings">Lint</button>
-        <button className="btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song">New song</button>
-        <button className="btn" onClick={addDraft} title="Save current text as a draft and clear the editor">Add to Drafts</button>
-        <button className="btn" onClick={stageSong} title="Serialize and add to the staging table for PR">Stage Song</button>
-        <button className="btn" onClick={convertAndStage} title="Convert legacy/plain blocks into canonical ChordPro + stage">Convert → Stage</button>
-        <button className="btn primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
+        <button className="gc-btn" onClick={lintCurrent} title="Run ChordPro lint and show warnings">Lint</button>
+        <button className="gc-btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song">New song</button>
+        <button className="gc-btn" onClick={addDraft} title="Save current text as a draft and clear the editor">Add to Drafts</button>
+        <button className="gc-btn" onClick={stageSong} title="Serialize and add to the staging table for PR">Stage Song</button>
+        <button className="gc-btn" onClick={convertAndStage} title="Convert legacy/plain blocks into canonical ChordPro + stage">Convert → Stage</button>
+        <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
         {editingFile ? (
           <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">
             Editing existing
@@ -683,6 +696,14 @@ function AdminPanel(){
           <li><code>npm run build</code> → outputs to <code>docs/</code>.</li>
         </ol>
       </div>
+      <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12 }}>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          <button className="gc-btn" onClick={addDraft}>Save Draft</button>
+          <button className="gc-btn" onClick={stageSong}>Stage</button>
+          <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={drafts.length===0}>Export</button>
+          <button className="gc-btn" onClick={openPrModal}>Publish (PR)</button>
+        </div>
+      </Toolbar>
       <AdminPrModal
         open={prOpen}
         onClose={() => setPrOpen(false)}
@@ -721,7 +742,7 @@ function MeasuredPreviewLine({ plain, chords }){
     }))
 
     // Estimate chord ascent with mono bold (for reserved space)
-    const chordFontFamily = `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     const chordM = ctx.measureText('Mg')
@@ -741,7 +762,7 @@ function MeasuredPreviewLine({ plain, chords }){
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,
-              fontFamily: `'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
               fontWeight: 700
             }}>{c.sym}</span>
           ))}

@@ -8,7 +8,7 @@ import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
 const About = React.lazy(() => import('./components/About'))
 const Resources = React.lazy(() => import('./components/Resources'))
-import NavBar from './components/NavBar'
+import NavBar from './components/ui/Navbar'
 import WorshipMode from './pages/WorshipMode'
 import ErrorBoundary from './components/ErrorBoundary'
 import Toast from './components/Toast'

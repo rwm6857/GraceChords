@@ -4,7 +4,9 @@ import Fuse from 'fuse.js'
 import { compareSongsByTitle, normalizeTitleForSort } from '../utils/sort'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import SongCard from './ui/SongCard'
+import { SongCard } from './ui/Card'
+import Input from './ui/Input'
+import Button from './ui/Button'
 
 export default function Home(){
   const itemsRaw = indexData?.items || []
@@ -274,18 +276,17 @@ export default function Home(){
         </div>
 
         <div className="card" style={{display:'grid', gap:10}}>
-          <label htmlFor="search">Search</label>
+          <Input
+            id="search"
+            label="Search"
+            ref={searchRef}
+            value={q}
+            onChange={e=> setQ(e.target.value)}
+            onKeyDown={onSearchKeyDown}
+            placeholder="Search title/tags/authors…"
+            aria-label="Search songs"
+          />
           <div className="row" style={{gap:8, alignItems:'center'}}>
-            <input
-              id="search"
-              ref={searchRef}
-              value={q}
-              onChange={e=> setQ(e.target.value)}
-              onKeyDown={onSearchKeyDown}
-              placeholder="Search title/tags/authors…"
-              aria-label="Search songs"
-              style={{flex:1}}
-            />
             <label className="row" style={{gap:8, alignItems:'center'}}>
               <input
                 type="checkbox"
@@ -307,27 +308,19 @@ export default function Home(){
           <div className="row">
             {/* Tags: multi-select + Any/All */}
             <div className="tagbar">
-              <button className={`badge ${selectedTags.length===0 ? 'active':''}`} onClick={clearTags}>All</button>
+              <button className={`gc-tag gc-tag--blue ${selectedTags.length===0 ? '' : ''}`} onClick={clearTags}>All</button>
               {allTags.map(t => (
                 <button
                   key={t}
-                  className={`badge ${selectedTags.includes(t) ? 'active':''}`}
+                  className={`gc-tag ${selectedTags.includes(t) ? 'gc-tag--green':'gc-tag--gray'}`}
                   onClick={()=> toggleTag(t)}
                 >{t}</button>
               ))}
             </div>
             <div style={{display:'flex', gap:8, alignItems:'center'}}>
               <span className="meta">Match</span>
-              <button
-                className={`btn ${tagMode==='any' ? 'primary':''}`}
-                onClick={()=> setTagMode('any')}
-                title="Match songs with any selected tag"
-              >Any</button>
-              <button
-                className={`btn ${tagMode==='all' ? 'primary':''}`}
-                onClick={()=> setTagMode('all')}
-                title="Match songs with all selected tags"
-              >All</button>
+              <Button variant={tagMode==='any' ? 'primary':'secondary'} onClick={()=> setTagMode('any')} title="Match songs with any selected tag">Any</Button>
+              <Button variant={tagMode==='all' ? 'primary':'secondary'} onClick={()=> setTagMode('all')} title="Match songs with all selected tags">All</Button>
             </div>
           </div>
         </div>

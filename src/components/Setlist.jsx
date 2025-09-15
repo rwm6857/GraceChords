@@ -12,7 +12,11 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import Busy from './Busy'
-import SongCard from './ui/SongCard'
+import { SongCard } from './ui/Card'
+import Button from './ui/Button'
+import Select from './ui/Select'
+import Input from './ui/Input'
+import Toolbar from './ui/Toolbar'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -95,6 +99,15 @@ export default function Setlist(){
     const i = list.findIndex(x=> x.id===id); if(i<0) return
     const j = i + (dir==='up'?-1:1); if(j<0||j>=list.length) return
     const copy = list.slice(); const [item] = copy.splice(i,1); copy.splice(j,0,item); setList(copy)
+  }
+  function moveToIndex(srcId, dstIndex){
+    const i = list.findIndex(x=> x.id===srcId); if(i<0) return
+    if (dstIndex < 0 || dstIndex >= list.length) return
+    if (i === dstIndex) return
+    const copy = list.slice();
+    const [item] = copy.splice(i,1);
+    copy.splice(dstIndex,0,item);
+    setList(copy)
   }
   function changeKey(id, val){ setList(list.map(x=> x.id===id ? { ...x, toKey: val } : x)) }
 
@@ -254,39 +267,30 @@ async function exportPdf() {
       </div>
 
       {/* Named sets toolbar (keep) */}
-      <div className="card toolbar" style={{marginTop:12}}>
-        <label style={{display:'flex', alignItems:'center', gap:6}}>
-          <span>Set:</span>
-          <input
-            aria-label="Set name"
-            value={name}
-            onChange={e=> setName(e.target.value)}
-            style={{minWidth:220}}
-            placeholder="Sunday AM"
-          />
-        </label>
-        <select aria-label="Saved sets" value={selectedId} onChange={onLoad}>
+      <Toolbar className="card" style={{marginTop:12}}>
+        <Input label="Set" aria-label="Set name" value={name} onChange={e=> setName(e.target.value)} style={{minWidth:220}} placeholder="Sunday AM" />
+        <Select aria-label="Saved sets" value={selectedId} onChange={onLoad}>
           <option value="">— Load saved set —</option>
           {savedSets.map(s => (
             <option key={s.id} value={s.id}>
               {s.name} · {new Date(s.updatedAt).toLocaleString()}
             </option>
           ))}
-        </select>
-        <button className="btn iconbtn" onClick={onNew} title="New set"><PlusIcon /><span className="text-when-wide">New</span></button>
-        <button className="btn primary iconbtn" onClick={onSave} title="Save set"><SaveIcon /><span className="text-when-wide">Save</span></button>
+        </Select>
+        <Button onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
+        <Button variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
         {/* Save As removed per request */}
-        <button className="btn iconbtn" onClick={onDuplicate} disabled={!list.length} title="Duplicate set"><CopyIcon /><span className="text-when-wide">Duplicate</span></button>
-        <button className="btn iconbtn" onClick={onDelete} disabled={!currentId} title="Delete set"><TrashIcon /><span className="text-when-wide">Delete</span></button>
+        <Button onClick={onDuplicate} disabled={!list.length} title="Duplicate set" iconLeft={<CopyIcon />}> <span className="text-when-wide">Duplicate</span></Button>
+        <Button onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
 
         {/* Quick transpose */}
         <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:6}}>
           <span className="meta">Transpose:</span>
-          <button className="btn" onClick={()=> transposeSet(-1)} title="Transpose set down 1 semitone">–1</button>
-          <button className="btn" onClick={resetSetKeys} title="Reset all to originals">Reset</button>
-          <button className="btn" onClick={()=> transposeSet(1)} title="Transpose set up 1 semitone">+1</button>
+          <Button onClick={()=> transposeSet(-1)} title="Transpose set down 1 semitone">–1</Button>
+          <Button onClick={resetSetKeys} title="Reset all to originals">Reset</Button>
+          <Button onClick={()=> transposeSet(1)} title="Transpose set up 1 semitone">+1</Button>
         </div>
-      </div>
+      </Toolbar>
 
       <div className="BuilderPage" style={{marginTop:12}}>
         <div className="BuilderLeft">
@@ -295,7 +299,7 @@ async function exportPdf() {
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
             <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
-              <input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
+              <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
               <label className="row" style={{gap:6, alignItems:'center'}}>
                 <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
                 <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
@@ -307,7 +311,7 @@ async function exportPdf() {
                   key={s.id}
                   title={s.title}
                   subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                  rightSlot={<button className="btn iconbtn" onClick={()=> addSong(s)} title="Add to set"><PlusIcon /><span className="text-when-wide">Add</span></button>}
+                  rightSlot={<Button onClick={()=> addSong(s)} title="Add to set" iconLeft={<PlusIcon />}><span className="text-when-wide">Add</span></Button>}
                 />
               ))}
             </div>
@@ -319,22 +323,26 @@ async function exportPdf() {
           <div className="card">
           <strong>Current setlist ({list.length})</strong>
           <div style={{minHeight:0, maxHeight:360, overflow:'auto', marginTop:6}}>
-            {list.map((sel)=>{
+            {list.map((sel, idx)=>{
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null
               return (
                 <SongCard
                   key={sel.id}
+                  draggable
+                  onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.id)); e.dataTransfer.effectAllowed = 'move' }}
+                  onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                  onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
                   title={s.title}
                   subtitle={`Original: ${s.originalKey || '—'}`}
                   rightSlot={
                     <div style={{display:'flex', alignItems:'center', gap:6}}>
-                      <select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
+                      <Select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
                         {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-                      </select>
-                      <button className="btn" onClick={()=> move(sel.id,'up')} title="Move up"><ArrowUp /></button>
-                      <button className="btn" onClick={()=> move(sel.id,'down')} title="Move down"><ArrowDown /></button>
-                      <button className="btn" onClick={()=> removeSong(sel.id)} title="Remove"><RemoveIcon /></button>
+                      </Select>
+                      <Button onClick={()=> move(sel.id,'up')} title="Move up" iconLeft={<ArrowUp />} />
+                      <Button onClick={()=> move(sel.id,'down')} title="Move down" iconLeft={<ArrowDown />} />
+                      <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<RemoveIcon />} />
                     </div>
                   }
                 />
@@ -342,14 +350,15 @@ async function exportPdf() {
             })}
           </div>
           <div style={{display:'flex', gap:8, marginTop:8, flexWrap:'wrap'}}>
-            <button
-              className="btn primary iconbtn"
+            <Button
+              variant="primary"
               onClick={exportPdf}
               onMouseEnter={prefetchPdf}
               onFocus={prefetchPdf}
               disabled={busy}
               title="Export set as a single PDF"
-            >{busy ? 'Exporting…' : <><DownloadIcon /> <span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</button>
+              iconLeft={<DownloadIcon />}
+            >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
             <Link
               className="btn iconbtn"
               to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
@@ -360,15 +369,8 @@ async function exportPdf() {
               <span className="text-when-wide">Open in Worship Mode</span>
               <span className="text-when-narrow">Worship</span>
             </Link>
-            <button
-              className="btn iconbtn"
-              onClick={bundlePptx}
-              disabled={pptxCount===0 || !!pptxProgress}
-              title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'}
-            >
-              {pptxProgress ? pptxProgress : <><DownloadIcon /> <span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}
-            </button>
-            <button className="btn iconbtn" onClick={()=> setList([])} title="Clear setlist"><ClearIcon /><span className="text-when-wide">Clear</span></button>
+            <Button onClick={bundlePptx} disabled={pptxCount===0 || !!pptxProgress} title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
+            <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
           </div>
 
           {/* Print-only minimal outline */}
