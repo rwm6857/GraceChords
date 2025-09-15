@@ -306,14 +306,20 @@ async function exportPdf() {
               </label>
             </div>
             <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
-              {!fuse ? <div>Loading search…</div> : results.map(s=> (
-                <SongCard
-                  key={s.id}
-                  title={s.title}
-                  subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                  rightSlot={<Button onClick={()=> addSong(s)} title="Add to set" iconLeft={<PlusIcon />}><span className="text-when-wide">Add</span></Button>}
-                />
-              ))}
+              {!fuse ? (
+                <div>Loading search…</div>
+              ) : (
+                <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                  {results.map(s=> (
+                    <SongCard
+                      key={s.id}
+                      title={s.title}
+                      subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+                      rightSlot={<Button aria-label="Add" title="Add to set" iconLeft={<PlusIcon />} iconOnly />}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           </div>

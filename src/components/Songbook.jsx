@@ -227,7 +227,7 @@ export default function Songbook() {
             <strong>{selectedCount}</strong> selected
           </div>
           <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop: 6 }}>
-            <div className="gc-list" style={{ display:'grid', gap:'.5rem' }}>
+            <div className="gc-list" style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
               {results.map((s) => {
                 const checked = selectedIds.has(s.id)
                 const authorsLine = Array.isArray(s.authors) ? s.authors.join(', ') : (s.authors || '')
