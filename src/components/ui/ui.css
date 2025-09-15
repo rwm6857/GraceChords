@@ -53,6 +53,9 @@
   .gc-navlink{ padding:6px 10px; border-radius:8px; color: var(--text); border:1px solid transparent; }
   .gc-navlink:hover{ background: var(--btn); }
   .gc-navlink.active{ background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+  /* Ensure strong contrast in dark mode (selected link on blue background) */
+  [data-theme="dark"] .gc-navlink.active{ color: #0b0f14; background: var(--primary); border-color: var(--primary); }
+  [data-theme="dark"] .gc-navlink.active:visited{ color: #0b0f14; }
 
   /* Toolbar */
   .gc-toolbar{ position:sticky; top:0; z-index:50; background: var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }

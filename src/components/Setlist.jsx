@@ -294,7 +294,7 @@ async function exportPdf() {
 
       <div className="BuilderPage" style={{marginTop:12}}>
         <div className="BuilderLeft">
-          <div className="card">
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           {/* Removed the redundant "Setlist name" field */}
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
@@ -305,7 +305,7 @@ async function exportPdf() {
                 <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
               </label>
             </div>
-            <div style={{minHeight:0, maxHeight:300, overflow:'auto', marginTop:6}}>
+            <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
               {!fuse ? <div>Loading search…</div> : results.map(s=> (
                 <SongCard
                   key={s.id}
@@ -319,10 +319,10 @@ async function exportPdf() {
           </div>
         </div>
 
-        <div className="BuilderRight">
-          <div className="card">
+        <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           <strong>Current setlist ({list.length})</strong>
-          <div style={{minHeight:0, maxHeight:360, overflow:'auto', marginTop:6}}>
+          <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
             {list.map((sel, idx)=>{
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null

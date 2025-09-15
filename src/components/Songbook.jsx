@@ -1,5 +1,6 @@
 // src/components/Songbook.jsx
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/sort'
@@ -20,11 +21,6 @@ let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 function byTitle(a, b) { return compareSongsByTitle(a, b) }
-function uniqSorted(arr) {
-  return [...new Set(arr.filter(Boolean))].sort((a, b) =>
-    String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })
-  )
-}
 
 export default function Songbook() {
   // Catalog from index.json (uses .items + .filename)
@@ -36,66 +32,28 @@ export default function Songbook() {
     return uniq.slice().sort(byTitle)
   }, [])
 
-  // Filters / search
-  const [search, setSearch] = useState('')
-  const [tag, setTag] = useState('All')
-  const [country, setCountry] = useState('All')
-  const [author, setAuthor] = useState('All')
+  // Search (match Setlist semantics). Keep ICP-only toggle.
+  const [q, setQ] = useState('')
+  const [icpOnly, setIcpOnly] = useState(() => {
+    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
+  }, [icpOnly])
 
-  const tags = useMemo(
-    () =>
-      uniqSorted(
-        items.flatMap((s) => (Array.isArray(s.tags) ? s.tags : s.tags ? [s.tags] : []))
-      ),
-    [items]
-  )
-  const countries = useMemo(
-    () => uniqSorted(items.map((s) => s.country).filter(Boolean)),
-    [items]
-  )
-  const authors = useMemo(
-    () =>
-      uniqSorted(
-        items.flatMap((s) =>
-          Array.isArray(s.authors) ? s.authors : s.authors ? [s.authors] : []
-        )
-      ),
-    [items]
-  )
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    let arr = items
-    if (q) {
-      arr = arr.filter((s) => {
-        const title = (s.title || '').toLowerCase()
-        const auth = (
-          Array.isArray(s.authors) ? s.authors.join(', ') : s.authors || ''
-        ).toLowerCase()
-        return title.includes(q) || auth.includes(q)
-      })
-    }
-    if (tag !== 'All') {
-      arr = arr.filter((s) =>
-        Array.isArray(s.tags) ? s.tags.includes(tag) : s.tags === tag
-      )
-    }
-    if (country !== 'All') arr = arr.filter((s) => s.country === country)
-    if (author !== 'All') {
-      arr = arr.filter((s) =>
-        Array.isArray(s.authors) ? s.authors.includes(author) : s.authors === author
-      )
-    }
-    return arr.slice().sort(byTitle)
-  }, [items, search, tag, country, author])
+  const fuse = useMemo(() => new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
+  const results = useMemo(() => {
+    const base = q ? fuse.search(q).map(r => r.item) : items.slice().sort(byTitle)
+    return base.filter(s => !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP'))
+  }, [items, fuse, q, icpOnly])
 
   // Selection
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const selectedEntries = useMemo(
-    () => filtered.filter((s) => selectedIds.has(s.id)).slice().sort(byTitle),
-    [filtered, selectedIds]
+    () => results.filter((s) => selectedIds.has(s.id)).slice().sort(byTitle),
+    [results, selectedIds]
   )
-  const filteredCount = filtered.length
+  const filteredCount = results.length
   const selectedCount = selectedIds.size
 
   function toggleOne(id, checked) {
@@ -107,10 +65,10 @@ export default function Songbook() {
     })
   }
   function selectAllFiltered() {
-    if (!filtered.length) return
+    if (!results.length) return
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      for (const s of filtered) next.add(s.id)
+      for (const s of results) next.add(s.id)
       return next
     })
   }
@@ -229,10 +187,6 @@ export default function Songbook() {
           />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Select all filtered" iconLeft={<PlusIcon />}>
-            <span className="text-when-wide">Select all ({filteredCount})</span>
-            <span className="text-when-narrow">All</span>
-          </Button>
           <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" iconLeft={<ClearIcon />}>
             <span className="text-when-wide">Clear</span>
           </Button>
@@ -254,62 +208,35 @@ export default function Songbook() {
       <div className="BuilderPage" style={{ marginTop: 12 }}>
         {/* Left pane */}
         <div className="BuilderLeft">
-          <div className="card">
-          <div className="Row" style={{ gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 8 }}>
-            <div className="Field" style={{ minWidth: 220 }}>
-              <Input id="sb-search" type="search" label="Search" placeholder="Title or author" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%' }} />
-            </div>
-            <div className="Field">
-              <Select id="sb-tag" value={tag} onChange={(e) => setTag(e.target.value)}>
-                <option>All</option>
-                {tags.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </Select>
-            </div>
-            <div className="Field">
-              <Select id="sb-country" value={country} onChange={(e) => setCountry(e.target.value)}>
-                <option>All</option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </Select>
-            </div>
-            <div className="Field">
-              <Select id="sb-author" value={author} onChange={(e) => setAuthor(e.target.value)}>
-                <option>All</option>
-                {authors.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </Select>
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>
+          <div>
+            <strong>Add songs</strong>
+            <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
+              <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
+              <label className="row" style={{gap:6, alignItems:'center'}}>
+                <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+              </label>
+              <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />}>
+                <span className="text-when-wide">Add all ({filteredCount})</span>
+                <span className="text-when-narrow">All</span>
+              </Button>
             </div>
           </div>
           <div className="Row Small" style={{ marginTop: '.5rem' }}>
             <strong>{selectedCount}</strong> selected
           </div>
-          <div className="SongList" role="region" aria-label="Song list" style={{ minHeight: 0, maxHeight: 300, overflow: 'auto', marginTop: 6 }}>
-            <div className="gc-list">
-              {filtered.map((s) => {
+          <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop: 6 }}>
+            <div className="gc-list" style={{ display:'grid', gap:'.5rem' }}>
+              {results.map((s) => {
                 const checked = selectedIds.has(s.id)
-                const authorsLine = Array.isArray(s.authors)
-                  ? s.authors.join(', ')
-                  : s.authors || ''
-                const tags = Array.isArray(s.tags)
-                  ? s.tags
-                  : s.tags
-                  ? String(s.tags)
-                      .split(',')
-                      .map((t) => t.trim())
-                  : []
-                const subtitle = [authorsLine || '—', s.country]
-                  .filter(Boolean)
-                  .join(' • ')
+                const authorsLine = Array.isArray(s.authors) ? s.authors.join(', ') : (s.authors || '')
+                const subtitle = [authorsLine || '—', s.country].filter(Boolean).join(' • ')
                 return (
                   <SongCard
                     key={s.id}
                     title={s.title}
                     subtitle={subtitle}
-                    tags={tags}
                     rightSlot={
                       checked ? (
                         <Button aria-label="Remove" title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
@@ -327,26 +254,26 @@ export default function Songbook() {
         </div>
 
         {/* Right pane */}
-        <div className="BuilderRight">
-          <div className="card">
-          <strong>Current selection ({selectedEntries.length})</strong>
-          <div
-            className="PreviewList"
-            role="region"
-            aria-label="Selected songs"
-            style={{ minHeight: 0, maxHeight: 360, overflow: 'auto', marginTop: 6 }}
-          >
-            <ol className="List" style={{ listStyle: 'decimal inside' }}>
-              {selectedEntries.map((s) => (
-                <li key={s.id}>
-                  {s.title}
-                  {Array.isArray(s.authors) && s.authors.length ? (
-                    <span className="Small"> — {s.authors.join(', ')}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-          </div>
+        <div className="BuilderRight" style={{ minHeight: 0, display:'flex', flexDirection:'column' }}>
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
+            <strong>Current selection ({selectedEntries.length})</strong>
+            <div
+              className="PreviewList"
+              role="region"
+              aria-label="Selected songs"
+              style={{ minHeight: 0, flex:'1 1 auto', overflow: 'auto', marginTop: 6 }}
+            >
+              <ol className="List" style={{ listStyle: 'decimal inside' }}>
+                {selectedEntries.map((s) => (
+                  <li key={s.id}>
+                    {s.title}
+                    {Array.isArray(s.authors) && s.authors.length ? (
+                      <span className="Small"> — {s.authors.join(', ')}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         </div>
       </div>
