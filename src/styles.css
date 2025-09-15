@@ -41,7 +41,7 @@
 
 [data-theme="dark"] {
   --primary: #3b82f6;
-  --primary-text: #0b0f14;
+  --primary-text: #ffffff;
 
   --bg: #0b0f14;
   --text: #e6e7ea;
@@ -68,7 +68,19 @@ body{
   font-size: var(--font-base);
 }
 
-a{ color: var(--primary); text-decoration: none }
+/* Remove global blue link color; inherit from context */
+a{ color: inherit; text-decoration: none }
+
+/* Navbar: ensure readable text on selected/current page */
+.gc-navbar .gc-navlink{ color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
+.gc-navbar .gc-navlink.active,
+.gc-navbar .gc-navlink.active:link,
+.gc-navbar .gc-navlink.active:visited{
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
 
 .container{ padding: var(--space-4); max-width:1200px; margin:0 auto }
 @media (max-width: 480px){ .container{ padding: var(--space-3); } }
@@ -309,7 +321,8 @@ input,select,textarea{
 
 .topnav__link{
   padding:6px 10px; border-radius:8px;
-  color: var(--text);                    /* readable in both themes */
+  color: var(--text);
+  -webkit-text-fill-color: currentColor;
   border: 1px solid transparent;         /* avoid jump when active adds border */
 }
 .topnav__link:hover{ background: var(--btn); }
@@ -321,7 +334,11 @@ input,select,textarea{
 /* Ensure high contrast active link text in both themes */
 .topnav__link.active,
 .topnav__link.active:link,
-.topnav__link.active:visited{ color: #0b0f14 !important; }
+.topnav__link.active:visited{
+  color: #0b0f14 !important;
+  -webkit-text-fill-color: #0b0f14 !important;
+  mix-blend-mode: normal;
+}
 
 /* ========== Sticky toolbar (Setlist) ========== */
 .toolbar{
@@ -446,4 +463,16 @@ html, body, #root { height: 100%; }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+a.gc-navlink, .gc-navlink{
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+a.gc-navlink.active, .gc-navlink.active,
+a.gc-navlink.active:link, .gc-navlink.active:link,
+a.gc-navlink.active:visited, .gc-navlink.active:visited{
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }

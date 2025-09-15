@@ -35,11 +35,11 @@ export default function Navbar(){
       <div className="gc-navbar__inner">
         <Link to="/" className="gc-brand">GraceChords</Link>
         <div className="gc-navlinks">
-          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
-          <Link to="/about" className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
-          <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../Setlist')}>Setlist</Link>
-          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../Songbook')}>Songbook</Link>
-          <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
+          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Home</Link>
+          <Link to="/about" className={`gc-navlink ${isActive('/about') ? 'active':''}`} style={isActive('/about') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>About</Link>
+          <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../Setlist')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Setlist</Link>
+          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../Songbook')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songbook</Link>
+          <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Resources</Link>
           <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Docs</a>
           <OfflineBadge />
           <button
@@ -56,4 +56,3 @@ export default function Navbar(){
     </nav>
   )
 }
-

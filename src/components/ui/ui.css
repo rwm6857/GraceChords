@@ -1,5 +1,4 @@
 /* Core UI kit styles (8px grid, dark-ready) */
-@layer components {
   :root{
     --ui-gap-1: 8px;
     --ui-gap-2: 16px;
@@ -50,15 +49,23 @@
   .gc-navbar__inner{ max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:8px }
   .gc-brand{ font-family: "Oswald", sans-serif; font-weight:600; letter-spacing:.2px; color: var(--text); font-size: 1.4rem; }
   .gc-navlinks{ display:flex; gap:8px; align-items:center; }
-  .gc-navlink{ padding:6px 10px; border-radius:8px; color: var(--text); border:1px solid transparent; }
+  .gc-navlink{ padding:6px 10px; border-radius:8px; color: var(--text); -webkit-text-fill-color: currentColor; border:1px solid transparent; }
   .gc-navlink:hover{ background: var(--btn); }
   .gc-navlink.active,
   .gc-navlink.active:link,
   .gc-navlink.active:visited{
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #0b0f14; /* dark text for contrast on blue in both themes */
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important; /* white text on blue background */
+    -webkit-text-fill-color: #ffffff !important;
+    mix-blend-mode: normal;
   }
+
+  /* Strong scoping override: inside our navbar, never let global link color override */
+  .gc-navbar .gc-navlink{ color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
+  .gc-navbar .gc-navlink.active,
+  .gc-navbar .gc-navlink.active:link,
+  .gc-navbar .gc-navlink.active:visited{ color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; }
 
   /* Toolbar */
   .gc-toolbar{ position:sticky; top:0; z-index:50; background: var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
@@ -68,4 +75,4 @@
   .gc-panel__header{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; cursor:pointer; }
   .gc-panel__content{ overflow:hidden; max-height:0; opacity:.0; transition:max-height .25s ease, opacity .2s ease; }
   .gc-panel__content.open{ max-height:2000px; opacity:1; }
-}
+/* end */

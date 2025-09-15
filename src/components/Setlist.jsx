@@ -315,7 +315,7 @@ async function exportPdf() {
                       key={s.id}
                       title={s.title}
                       subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                      rightSlot={<Button aria-label="Add" title="Add to set" iconLeft={<PlusIcon />} iconOnly />}
+                      rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly />}
                     />
                   ))}
                 </div>
@@ -348,7 +348,7 @@ async function exportPdf() {
                       </Select>
                       <Button onClick={()=> move(sel.id,'up')} title="Move up" iconLeft={<ArrowUp />} />
                       <Button onClick={()=> move(sel.id,'down')} title="Move down" iconLeft={<ArrowDown />} />
-                      <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<RemoveIcon />} />
+                      <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                     </div>
                   }
                 />
