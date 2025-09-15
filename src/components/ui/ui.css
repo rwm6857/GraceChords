@@ -30,7 +30,7 @@
   .gc-select:after{ content:""; position:absolute; right:10px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid currentColor; pointer-events:none; }
 
   /* Tags */
-  .gc-tag{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-family: "Inter", sans-serif; font-weight:600; letter-spacing:.02em; text-transform:uppercase; font-size: 0.9rem; border:1px solid var(--border); }
+  .gc-tag{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-family: "Inter", sans-serif; font-weight:500; font-size: 0.9rem; border:1px solid var(--border); }
   .gc-tag--blue{ background:#dbeafe; color:#1e40af; border-color:#bfdbfe }
   .gc-tag--green{ background:#d1fae5; color:#065f46; border-color:#a7f3d0 }
   .gc-tag--amber{ background:#fef3c7; color:#92400e; border-color:#fde68a }
@@ -38,9 +38,9 @@
   [data-theme="dark"] .gc-tag--gray{ background:#374151; color:#e5e7eb; border-color:#4b5563 }
 
   /* Cards */
-  .gc-card{ border:1px solid var(--border); background: var(--card); border-radius:12px; padding:12px 14px; display:flex; gap:12px; align-items:flex-start; text-decoration:none; color:inherit; }
+  .gc-card{ border:1px solid var(--border); background: var(--card); border-radius:12px; padding:12px 14px; display:flex; gap:12px; align-items:flex-start; text-decoration:none; color: var(--text); }
   .gc-card__body{ flex: 0 1 auto; min-width:0; }
-  .gc-card__title{ font-family: "Inter", sans-serif; font-weight:700; font-size: 24px; line-height:1.2; }
+  .gc-card__title{ font-family: "Inter", sans-serif; font-weight:600; line-height:1.25; }
   .gc-card__meta{ color: var(--muted); font-size: .95rem; margin-top:4px; }
   .gc-card__spacer{ flex:1 1 auto }
   .gc-card__tags{ margin-top:8px; display:flex; flex-wrap:wrap; gap:8px }
@@ -63,4 +63,3 @@
   .gc-panel__content{ overflow:hidden; max-height:0; opacity:.0; transition:max-height .25s ease, opacity .2s ease; }
   .gc-panel__content.open{ max-height:2000px; opacity:1; }
 }
-

@@ -13,7 +13,6 @@ import Select from './ui/Select'
 import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
-import '../styles/cards.css'
 import '../styles/songbook.css'
 
 // Lazy pdf exporters
@@ -313,9 +312,9 @@ export default function Songbook() {
                     tags={tags}
                     rightSlot={
                       checked ? (
-                        <Button title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} style={{ color:'#b91c1c' }}>Remove</Button>
+                        <Button aria-label="Remove" title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                       ) : (
-                        <Button variant="primary" title="Add" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />}>Add</Button>
+                        <Button aria-label="Add" title="Add" variant="primary" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />} iconOnly />
                       )
                     }
                     onClick={() => toggleOne(s.id, !checked)}
