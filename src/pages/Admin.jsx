@@ -601,22 +601,7 @@ function AdminPanel(){
         <label style={{marginLeft:'auto'}}><input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview</label>
       </div>
 
-      {/* Draft actions */}
-      <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
-        <button className="gc-btn" onClick={lintCurrent} title="Run checks"><SearchIcon /> Check</button>
-        <button className="gc-btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song"><PlusIcon /> New song</button>
-        <button className="gc-btn" onClick={stageSong} title="Convert and stage song"><PlusIcon /> Stage</button>
-        <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={!staged.length}><DownloadIcon /> Download Staged (ZIP)</button>
-        {editingFile ? (
-          <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">
-            Editing existing
-          </span>
-        ) : (
-          <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }} title="New file will be created">
-            New song
-          </span>
-        )}
-      </div>
+      {/* Duplicate action row removed; sticky toolbar below handles actions */}
 
       {/* Drafts section removed; staging is the single source of truth. */}
 
