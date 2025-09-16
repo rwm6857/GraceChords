@@ -1,1 +1,17 @@
+# OS cruft
 .DS_Store
+
+# Dependencies and build caches
+node_modules/
+.npm/
+.pnpm-store/
+.vite/
+coverage/
+dist/
+
+# Local env and tooling
+.env
+.env.*
+.vscode/
+.idea/
+*.log

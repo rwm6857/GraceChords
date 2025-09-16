@@ -32,9 +32,16 @@ jobs:
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
       - name: Commit and push /docs
+        shell: bash
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs
-          git commit -m "Build: $GITHUB_SHA (after wiki sync)" || echo "No changes to commit"
+          # Stage only docs so tracked node_modules changes don't interfere
+          git add -A docs || true
+          if git diff --cached --quiet; then
+            echo "No changes to docs to commit"
+            exit 0
+          fi
+          git commit -m "Build: $GITHUB_SHA (after wiki sync)"
           git push
