@@ -597,9 +597,6 @@ function AdminPanel(){
 
       {/* Save options */}
       <div className="Row Small" style={{gap:8, alignItems:'center', marginTop:10}}>
-        <label><input type="checkbox" checked={saveWithDirectives} onChange={e=> setSaveWithDirectives(e.target.checked)} /> Save with ChordPro section directives</label>
-        <label><input type="checkbox" checked={prefer2Col} onChange={e=> setPrefer2Col(e.target.checked)} /> Prefer 2 columns</label>
-        <label><input type="checkbox" checked={showCapo} onChange={e=> setShowCapo(e.target.checked)} /> Capo in header</label>
         <span className="Small" title="Files are always saved with a .chordpro extension">Saves as .chordpro</span>
         <label style={{marginLeft:'auto'}}><input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview</label>
       </div>
