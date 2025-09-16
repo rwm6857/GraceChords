@@ -2,18 +2,16 @@ Practical tips for using the in‑app Admin editor (/#/admin) to author and upda
 
 ## Workflow
 - Load existing or start a new song. Use Quick chords and Directives to speed up editing.
-- Click Lint to catch common ChordPro issues.
-- Stage Song to add it to the staging table. Convert → Stage first if starting from plain text.
-- Create PR to open a branch and commit staged files.
+- Click Check to catch common ChordPro issues.
+- Stage to convert (when needed) and queue the song.
+- Publish to open a PR with staged files, or Download to export a ZIP for manual copy.
 
 ## Controls
-- Save with ChordPro directives: When on, sections are written with `{start_of_*}`/`{end_of_*}`. When off, headers are simple text.
 - Saves as .chordpro: Files are always saved with a `.chordpro` extension.
-- Prefer 2 columns: Adds a `{columns: 2}` hint for PDF layout.
-- Capo in header: Writes `{capo: N}` to display the capo in PDFs.
- - Quick chords: Click buttons or use hotkeys to insert `[Chord]` at the caret:
-   - Win/Linux: Alt+1..6
-   - macOS: Ctrl+1..6
+- Edits Author: Required before Publish; appended to the PR body.
+- Quick chords: Click buttons or use hotkeys to insert `[Chord]` at the caret:
+  - Win/Linux: Alt+1..6
+  - macOS: Ctrl+1..6
 
 ## Metadata
 - Title, Key, Authors, Country, Tags, YouTube, MP3 map to `{title: …}`, `{key: …}`, and `{meta: …}` entries. Spaces are preserved.

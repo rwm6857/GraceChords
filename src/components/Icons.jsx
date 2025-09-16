@@ -33,6 +33,23 @@ export const TrashIcon = (p)=> <S {...p}><polyline points="3 6 5 6 21 6"/><path 
 export const PrintIcon = (p)=> <S {...p}><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="2"/></S>
 export const MinusIcon = (p)=> <S {...p}><path d="M5 12h14"/></S>
 
+// Search (magnifying glass)
+export const SearchIcon = (p)=> (
+  <S {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </S>
+)
+
+// Cloud upload
+export const CloudUploadIcon = (p)=> (
+  <S {...p}>
+    <path d="M16 16l-4-4-4 4" />
+    <path d="M12 12v8" />
+    <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 16" />
+  </S>
+)
+
 // Column toggle icons
 export const OneColIcon = (p) => (
   <S {...p}>

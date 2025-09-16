@@ -10,10 +10,11 @@ import indexData from '../data/index.json'
 import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
+import Input from '../components/ui/Input'
+import Button from '../components/ui/Button'
+import { SearchIcon, PlusIcon, CloudUploadIcon, DownloadIcon } from '../components/Icons'
 import { showToast } from '../utils/toast'
 import '../styles/admin.css'
-import Button from '../components/ui/Button'
-import Input from '../components/ui/Input'
 import Toolbar from '../components/ui/Toolbar'
 
 const PASSWORD = import.meta.env.VITE_ADMIN_PW
@@ -100,9 +101,7 @@ function AdminPanel(){
   const quickChords = useMemo(() => majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')), [meta.key])
 
   function addDraft(){
-    const title = meta.title || 'Untitled'
-    setDrafts(d => [...d, { title, filename, body: text }])
-    setText(INITIAL_TEXT)
+    // Drafts feature deprecated in favor of staging. No-op retained for compatibility.
   }
   function removeDraft(i){ setDrafts(d => d.filter((_,j)=> j!==i)) }
   function editDraft(i){
@@ -112,10 +111,10 @@ function AdminPanel(){
     setDrafts(ds => ds.filter((_,j)=> j!==i))
   }
   async function exportDrafts(){
-    if(drafts.length===0) return
-    const files = drafts.map(d => ({ path: `songs/${d.filename}`, content: d.body }))
-    await downloadZip(files, { name: 'songs.zip' })
-    if(window.confirm('Clear drafts?')) setDrafts([])
+    // Export staged songs as a ZIP (replaces old drafts export)
+    if(!staged || staged.length===0) return
+    const files = staged.map(f => ({ path: `songs/${f.filename}`, content: f.content }))
+    await downloadZip(files, { name: 'staged-songs.zip' })
   }
 
   const [ghUser, setGhUser] = useState(null)
@@ -149,6 +148,21 @@ function AdminPanel(){
     } catch {}
   }, [staged])
   function stageSong(){
+    // Try to convert into canonical ChordPro first (preferred); fallback to serializing current text
+    try {
+      const { text: out, docTitle, docKey } = convertToCanonicalChordPro(text, {
+        country: meta.country || '',
+        tags: meta.tags || '',
+        youtube: meta.youtube || '',
+        mp3: meta.mp3 || ''
+      })
+      const fname = suggestCanonicalFilename(docTitle)
+      const final = appendDisclaimerIfMissing(out)
+      setStaged(s => [...s, { filename: fname, content: final, title: docTitle, key: docKey || '' }])
+      return
+    } catch {}
+
+    // Fallback: serialize parsed doc with directives as needed
     const doc = parseChordProOrLegacy(text)
     doc.meta.title = meta.title || doc.meta.title || ''
     doc.meta.key = meta.key || doc.meta.key || ''
@@ -175,21 +189,7 @@ function AdminPanel(){
     setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || 'Untitled', key: doc.meta.key || '', commitMsg }])
   }
 
-  function convertAndStage(){
-    try {
-      const { text: out, docTitle, docKey } = convertToCanonicalChordPro(text, {
-        country: meta.country || '',
-        tags: meta.tags || '',
-        youtube: meta.youtube || '',
-        mp3: meta.mp3 || ''
-      })
-      const fname = suggestCanonicalFilename(docTitle)
-      const final = appendDisclaimerIfMissing(out)
-      setStaged(s => [...s, { filename: fname, content: final, title: docTitle, key: docKey || '' }])
-    } catch (e) {
-      showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
-    }
-  }
+  function convertAndStage(){ stageSong() }
 
   function lintCurrent(){
     try {
@@ -310,6 +310,12 @@ function AdminPanel(){
   const [prOpen, setPrOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
+  const [editsAuthor, setEditsAuthor] = useState(() => {
+    try { return localStorage.getItem('admin:editsAuthor') || '' } catch { return '' }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('admin:editsAuthor', editsAuthor || '') } catch {}
+  }, [editsAuthor])
 
   // Hotkeys: Win/Linux Alt+1..6, macOS Ctrl+1..6 insert quick chords (in order)
   useEffect(() => {
@@ -356,6 +362,11 @@ function AdminPanel(){
     try {
       const { default_branch } = await GH.getRepoInfo({ owner: 'rwm6857', repo: 'GraceChords' })
       setDefaultBranch(default_branch || 'main')
+      if (!String(editsAuthor || '').trim()){
+        const msg = 'Please enter your name in the Edits Author field before submitting.'
+        showToast?.(msg) ?? alert(msg)
+        return
+      }
       setPrOpen(true)
     } catch (e) {
       showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
@@ -381,12 +392,13 @@ function AdminPanel(){
         })
       }
 
+      const appendedBody = `${prBody || ''}${prBody ? '\n\n' : ''}Submitted by: ${String(editsAuthor || '').trim()}`
       const pr = await GH.createPR({
         owner, repo,
         head: branchName,
         base: defaultBranch,
         title: prTitle,
-        body: prBody,
+        body: appendedBody,
       })
       // PR created; clear staged (and persisted copy) and open in a new tab for review
       try { sessionStorage.removeItem('adminStaged') } catch {}
@@ -412,14 +424,23 @@ function AdminPanel(){
       </div>
 
       <div className="card">
-        <div className="Row" style={{ alignItems:'center', gap:8 }}>
+        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
           <strong>GitHub:</strong>
           <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
           <button className="btn" onClick={setToken}>Set token</button>
           <button className="btn" onClick={clearToken}>Clear token</button>
           <button className="btn" onClick={validateTokenNow}>Validate</button>
           <div className="spacer" />
-          <button className="btn primary" disabled={!staged.length} onClick={openPrModal}>Create PR…</button>
+          <label style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <span>Edits Author <span aria-hidden style={{ color:'#ef4444' }}>*</span></span>
+            <input
+              value={editsAuthor}
+              onChange={e=> setEditsAuthor(e.target.value)}
+              placeholder="Your name"
+              style={{ minWidth:180 }}
+            />
+          </label>
+          {/* Publish moved to sticky toolbar */}
         </div>
       </div>
 
@@ -530,20 +551,7 @@ function AdminPanel(){
         {/* PPTX linking is automatic via public/pptx/<slug>.pptx; no explicit field */}
       </div>
 
-      {/* Editor filename indicator */}
-      <div className="Row Small" style={{ alignItems:'center', gap:8, marginTop:10 }}>
-        <label>Filename
-          <input
-            readOnly
-            value={editingFile || filename}
-            title={editingFile ? 'Editing existing file' : 'Suggested filename'}
-            style={{ marginLeft: 8, width: 320 }}
-          />
-        </label>
-        {editingFile && (
-          <span className="Small">(loaded from index — updates will overwrite this file)</span>
-        )}
-      </div>
+      {/* Editor filename indicator moved to sticky toolbar */}
 
       {/* Editor + Preview */}
       {/* Quick chord insert */}
@@ -644,12 +652,10 @@ function AdminPanel(){
 
       {/* Draft actions */}
       <div style={{display:'flex', gap:8, alignItems:'center', marginTop:10}}>
-        <button className="gc-btn" onClick={lintCurrent} title="Run ChordPro lint and show warnings">Lint</button>
-        <button className="gc-btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song">New song</button>
-        <button className="gc-btn" onClick={addDraft} title="Save current text as a draft and clear the editor">Add to Drafts</button>
-        <button className="gc-btn" onClick={stageSong} title="Serialize and add to the staging table for PR">Stage Song</button>
-        <button className="gc-btn" onClick={convertAndStage} title="Convert legacy/plain blocks into canonical ChordPro + stage">Convert → Stage</button>
-        <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={drafts.length===0}>Export Drafts (ZIP)</button>
+        <button className="gc-btn" onClick={lintCurrent} title="Run checks"><SearchIcon /> Check</button>
+        <button className="gc-btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }} title="Clear editor and start a new song"><PlusIcon /> New song</button>
+        <button className="gc-btn" onClick={stageSong} title="Convert and stage song"><PlusIcon /> Stage</button>
+        <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={!staged.length}><DownloadIcon /> Download Staged (ZIP)</button>
         {editingFile ? (
           <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">
             Editing existing
@@ -665,43 +671,56 @@ function AdminPanel(){
         </label>
       </div>
 
-      {drafts.length>0 && (
-        <div className="card" style={{marginTop:10}}>
-          <strong>Drafts</strong>
-          <table style={{width:'100%', marginTop:8}}>
-            <thead><tr><th style={{textAlign:'left'}}>Title</th><th style={{textAlign:'left'}}>File</th><th></th></tr></thead>
-            <tbody>
-              {drafts.map((d,i)=>(
-                <tr key={i}>
-                  <td>{d.title}</td>
-                  <td>{d.filename}</td>
-                  <td style={{textAlign:'right'}}>
-                    <button className="btn" onClick={()=>stageDraft(i)} style={{marginRight:4}}>Stage</button>
-                    <button className="btn" onClick={()=>editDraft(i)} style={{marginRight:4}}>Edit</button>
-                    <button className="btn" onClick={()=>removeDraft(i)}>Remove</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Drafts section removed; staging is the single source of truth. */}
 
       <div className="card" style={{marginTop:10}}>
-        <strong>Publish (docs/ Pages):</strong>
-        <ol>
-          <li>Unzip archive.</li>
-          <li>Copy <code>songs/*.chordpro</code> to <code>public/songs/</code>.</li>
-          <li>Merge entries into <code>src/data/index.json</code> (or run <code>npm run build-index</code>).</li>
-          <li><code>npm run build</code> → outputs to <code>docs/</code>.</li>
-        </ol>
+        <strong>Publish Guide</strong>
+        <div className="Small" style={{marginTop:6}}>
+          <div><strong>Preferred (Pull Request)</strong></div>
+          <ol>
+            <li>Stage songs using <em>Stage</em>.</li>
+            <li>Enter your name in <em>Edits Author</em>.</li>
+            <li>Click <em>Publish</em> in the sticky toolbar to open a PR.</li>
+            <li>Merge the PR after review. CI updates the site.</li>
+          </ol>
+          <div style={{marginTop:8}}><strong>Manual (ZIP)</strong></div>
+          <ol>
+            <li>Stage songs using <em>Stage</em>.</li>
+            <li>Click <em>Download</em> to save <code>staged-songs.zip</code>.</li>
+            <li>Unzip and copy <code>songs/*.chordpro</code> into <code>public/songs/</code>.</li>
+            <li>Run <code>npm run build-index</code> to refresh <code>src/data/index.json</code>.</li>
+            <li>Run <code>npm run build</code> to update <code>docs/</code> and deploy.</li>
+          </ol>
+        </div>
       </div>
-      <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12 }}>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          <button className="gc-btn" onClick={addDraft}>Save Draft</button>
-          <button className="gc-btn" onClick={stageSong}>Stage</button>
-          <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={drafts.length===0}>Export</button>
-          <button className="gc-btn" onClick={openPrModal}>Publish (PR)</button>
+      <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
+        {/* Left group */}
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button className="gc-btn" onClick={()=> { setEditingFile(''); setText(INITIAL_TEXT) }}><PlusIcon /> New</button>
+          <button className="gc-btn" onClick={lintCurrent}><SearchIcon /> Check</button>
+          <button className="gc-btn" onClick={stageSong}><PlusIcon /> Stage</button>
+        </div>
+        {/* Center: filename + status */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
+          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <span>Filename</span>
+            <input
+              readOnly
+              value={editingFile || (slugifyUnderscore(meta.id || meta.title || '') + '.chordpro')}
+              title={editingFile ? 'Editing existing file' : 'Suggested filename'}
+              style={{ width: 320 }}
+            />
+          </label>
+          {editingFile ? (
+            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">Editing</span>
+          ) : (
+            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }} title="New file will be created">New</span>
+          )}
+        </div>
+        {/* Right group */}
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button className="gc-btn gc-btn--primary" onClick={exportDrafts} disabled={!staged.length}><DownloadIcon /> Download</button>
+          <button className="gc-btn gc-btn--primary" onClick={openPrModal} disabled={!staged.length}><CloudUploadIcon /> Publish</button>
         </div>
       </Toolbar>
       <AdminPrModal

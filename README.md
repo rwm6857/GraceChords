@@ -81,7 +81,7 @@ Notes
 - Keep song IDs and filenames up to date by running `npm run build-index` after adding songs.
 
 ## Admin & Index Generation
-Set the admin password via an environment variable and open `/#/admin` to author songs in ChordPro and download a bundle containing the song and updated index. Add files to `public/songs/` and merge `src/data/index.json`, or rebuild automatically:
+Set the admin password via an environment variable and open `/#/admin` to author songs in ChordPro. Use Stage to queue changes; you can either publish a PR or download a ZIP of staged files.
 
 ```bash
 VITE_ADMIN_PW=your-password # in .env
@@ -91,8 +91,13 @@ npm run build-index
 Add `VITE_ADMIN_PW` to a local `.env` file for development and configure the same variable as a GitHub repository secret so builds receive it.
 
 Admin highlights:
-- Load an existing song from the index, edit in place, and stage an “update” PR.
+- Load an existing song from the index, edit in place, and Stage to queue changes.
+- “Edits Author” is required when publishing — your name is appended to the PR body.
+- Publish Staged opens a PR with staged files; Download Staged saves a ZIP for manual copy.
 - Quick chord buttons insert `[C]`, `[Am]`, etc., at the caret; buttons adapt to the song’s key (I, ii, iii, IV, V, vi).
+
+Manual publish (no PR):
+1) Stage → Download Staged → unzip → copy to `public/songs/` → `npm run build-index` → `npm run build`.
 
 ## PDF Fonts
 Place the following fonts in `public/fonts/` to embed them in exported PDFs:
