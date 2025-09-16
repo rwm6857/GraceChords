@@ -10,6 +10,7 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
 import Busy from './Busy'
+import Panel from './ui/Panel'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
