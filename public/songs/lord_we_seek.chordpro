@@ -1,14 +1,9 @@
-{title: Lord We Seek (하나님의 사랑을)}
+{title: Lord We Seek}
 {key: A}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: Korea}
+{tags: Slow, Worship, ICP}
 
-
-
-{sov: Verse}
+{start_of_verse: Verse}
 Lord we seek and yearn for your everlasting love 
 Lord we seek and yearn for your everlasting peace 
 Mighty God, who is Lord and Creator of all things 
@@ -19,21 +14,28 @@ Lord we seek to become like you in your righteousness
 Mighty God, who is Lord and Creator of all things 
 You have called me your beloved child 
 
-{eov}
-{soc: Pre-Chorus}
+{end_of_verse}
+
+{start_of_chorus: Pre-Chorus}
 With eyes of love you look to us 
 God of love, you will never turn away 
 With ears of grace you hear our cries  
 God of grace, may you receive our every prayer 
 
-{eoc}
-{soc: Chorus}
+{end_of_chorus}
+
+{start_of_chorus: Chorus}
 Lord you shine your light through all our darkness and all fear 
 Answer every cry and Lord you wipe away our tears 
 We will follow you, Lord wherever you will go 
 We will look to you alone 
 
-{eoc}
-{sob: Tag}
+{end_of_chorus}
+
+{start_of_bridge: Tag}
 We will look to you alone 
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
