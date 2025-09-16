@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-15T17:30:57.010Z",
+  "generatedAt": "2025-09-16T15:24:17.054Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -776,6 +776,20 @@
       "country": "Korea"
     },
     {
+      "id": "i-give-you-my-heart",
+      "title": "I Give You My Heart",
+      "filename": "i_give_you_my_heart.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Worship"
+      ],
+      "authors": [
+        "Hillsong"
+      ],
+      "country": "USA"
+    },
+    {
       "id": "i-hear-thy-welcome-voice",
       "title": "I Hear Thy Welcome Voice",
       "filename": "i_hear_thy_welcome_voice.chordpro",
@@ -1152,12 +1166,16 @@
     },
     {
       "id": "lord-we-seek",
-      "title": "Lord We Seek (하나님의 사랑을)",
+      "title": "Lord We Seek",
       "filename": "lord_we_seek.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Worship",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "majesty-here-i-am",
@@ -1202,12 +1220,16 @@
     },
     {
       "id": "my-god-you-alone",
-      "title": "My God, You Alone (나의 주 나의 하나님이여)",
+      "title": "My God, You Alone",
       "filename": "my_god_you_alone.chordpro",
       "originalKey": "E",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Worship",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "my-savior-king",
@@ -1362,12 +1384,16 @@
     },
     {
       "id": "revelations-5-13",
-      "title": "Revelations 5:13 (보좌에 계신이와)",
+      "title": "Revelations 5:13",
       "filename": "revelations_5_13.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Praise",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "righteous-powers",
@@ -1402,12 +1428,16 @@
     },
     {
       "id": "savior-of-peace",
-      "title": "Savior of Peace (기쁨의 옷을 입은)",
+      "title": "Savior of Peace",
       "filename": "savior_of_peace.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Worship",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "seek-hope-and-pray",
@@ -1557,12 +1587,16 @@
     },
     {
       "id": "the-revival",
-      "title": "The Revival (부흥 / 이 땅의 황무함을 보소서)",
+      "title": "The Revival",
       "filename": "the_revival.chordpro",
       "originalKey": "G",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Mission",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "there-is-a-cloud",
@@ -1723,12 +1757,16 @@
     },
     {
       "id": "you-endured-the-cross",
-      "title": "You Endured the Cross (십자가를 참으신)",
+      "title": "You Endured the Cross",
       "filename": "you_endured_the_cross.chordpro",
       "originalKey": "G",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Cross",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "your-grace-is-enough",
@@ -1747,12 +1785,16 @@
     },
     {
       "id": "your-great-love",
-      "title": "Your Great Love (그 사랑 얼마나)",
+      "title": "Your Great Love",
       "filename": "your_great_love.chordpro",
       "originalKey": "G",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Praise",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "your-love-awakens-me",
