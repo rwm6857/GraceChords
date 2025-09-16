@@ -27,8 +27,7 @@ const INITIAL_TEXT = `{title: }
 {youtube: }
 {mp3: }
 
-Verse 1
-[]`
+`
 
 export default function Admin(){
   const [ok, setOk] = useState(false)
@@ -39,10 +38,12 @@ export default function Admin(){
       <div className="container" style={{maxWidth:480}}>
         <h1>Admin</h1>
         <p>Enter password to continue.</p>
-        <Input id="adminPw" type="password" value={pw} onChange={e=> setPw(e.target.value)} placeholder="Password" />
-        <div style={{marginTop:8}}>
-          <Button variant="primary" onClick={()=> setOk(pw===PASSWORD)}>Enter</Button>
-        </div>
+        <form onSubmit={(e)=>{ e.preventDefault(); setOk(pw===PASSWORD) }}>
+          <Input id="adminPw" type="password" value={pw} onChange={e=> setPw(e.target.value)} placeholder="Password" />
+          <div style={{marginTop:8, display:'flex', justifyContent:'flex-end'}}>
+            <Button variant="primary" type="submit">Enter</Button>
+          </div>
+        </form>
       </div>
     )
   }
@@ -55,9 +56,7 @@ function AdminPanel(){
   useEffect(()=>{ setMeta(parseMeta(text)) },[text])
   const editorRef = useRef(null)
 
-  const [saveWithDirectives, setSaveWithDirectives] = useState(true)
-  const [prefer2Col, setPrefer2Col] = useState(false)
-  const [showCapo, setShowCapo] = useState(true)
+  // Directives always saved during stage; legacy layout/capo toggles removed
   const [showPreview, setShowPreview] = useState(() => {
     try { return localStorage.getItem('admin:showPreview') !== '0' } catch { return true }
   })
@@ -65,20 +64,7 @@ function AdminPanel(){
     try { localStorage.setItem('admin:showPreview', showPreview ? '1' : '0') } catch {}
   }, [showPreview])
 
-  const [persist, setPersist] = useState(() => localStorage.getItem('adminPersist') === '1')
-  const [drafts, setDrafts] = useState(() => {
-    if(localStorage.getItem('adminPersist') === '1'){
-      try{ return JSON.parse(localStorage.getItem('adminDrafts')||'[]') }catch{}
-    }
-    return []
-  })
-  useEffect(() => {
-    if(persist){ localStorage.setItem('adminDrafts', JSON.stringify(drafts)) }
-  }, [drafts, persist])
-  useEffect(() => {
-    localStorage.setItem('adminPersist', persist ? '1' : '0')
-    if(!persist) localStorage.removeItem('adminDrafts')
-  }, [persist])
+  // Drafts/persist removed in favor of staging only
 
   const id = slugifyUnderscore(meta.id || meta.title || '')
   const filename = `${id || 'untitled'}.chordpro`
@@ -100,16 +86,7 @@ function AdminPanel(){
   }, [text])
   const quickChords = useMemo(() => majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')), [meta.key])
 
-  function addDraft(){
-    // Drafts feature deprecated in favor of staging. No-op retained for compatibility.
-  }
-  function removeDraft(i){ setDrafts(d => d.filter((_,j)=> j!==i)) }
-  function editDraft(i){
-    const d = drafts[i]
-    if(!d) return
-    setText(d.body)
-    setDrafts(ds => ds.filter((_,j)=> j!==i))
-  }
+  // Draft helpers removed
   async function exportDrafts(){
     // Export staged songs as a ZIP (replaces old drafts export)
     if(!staged || staged.length===0) return
@@ -174,13 +151,7 @@ function AdminPanel(){
       youtube: meta.youtube || doc.meta.meta?.youtube || '',
       mp3: meta.mp3 || doc.meta.meta?.mp3 || '',
     }
-    if (prefer2Col) {
-      doc.layoutHints = { ...(doc.layoutHints || {}), requestedColumns: 2 }
-    }
-    if (!showCapo) {
-      doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
-    }
-    let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
+    let content = serializeChordPro(doc, { useDirectives: true })
     content = appendDisclaimerIfMissing(content)
     const base = slugifyUnderscore(meta.id || doc.meta.title || 'untitled')
     const fname = editingFile || `${base}.chordpro`
@@ -205,24 +176,7 @@ function AdminPanel(){
       showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
     }
   }
-  function stageDraft(i){
-    const d = drafts[i]
-    if(!d) return
-    const doc = parseChordProOrLegacy(d.body)
-    if (prefer2Col) {
-      doc.layoutHints = { ...(doc.layoutHints || {}), requestedColumns: 2 }
-    }
-    if (!showCapo) {
-      doc.meta.meta = { ...(doc.meta.meta || {}), showcapo: '0' }
-    }
-    let content = serializeChordPro(doc, { useDirectives: saveWithDirectives })
-    content = appendDisclaimerIfMissing(content)
-    const base = slugifyUnderscore(doc.meta?.title || d.filename.replace(/\.\w+$/, ''))
-    const fname = editingFile || `${base}.chordpro`
-    const willUpdate = items.some(it => it.filename === fname)
-    const commitMsg = willUpdate ? `update: ${fname}` : `add: ${fname}`
-    setStaged(s => [...s, { filename: fname, content, title: doc.meta.title || d.title, key: doc.meta.key || '', commitMsg }])
-  }
+  // stageDraft removed
   function unstage(name){ setStaged(s => s.filter(f => f.filename !== name)) }
   function renameStaged(name, nextName){
     const safe = nextName.replace(/\.\w+$/, '') + '.chordpro'
@@ -665,10 +619,6 @@ function AdminPanel(){
             New song
           </span>
         )}
-        <label style={{display:'flex', alignItems:'center', gap:4}}>
-          <input type="checkbox" checked={persist} onChange={e=> setPersist(e.target.checked)} />
-          Keep drafts in browser
-        </label>
       </div>
 
       {/* Drafts section removed; staging is the single source of truth. */}
