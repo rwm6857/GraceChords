@@ -167,7 +167,7 @@ export default function Songbook() {
       </div>
 
       {/* Toolbar */}
-      <Toolbar className="card" style={{ marginTop: 12 }}>
+      <Toolbar className="card" style={{ marginTop: 8 }}>
         <div className="Field">
           <input
             id="sb-toc"
@@ -206,7 +206,7 @@ export default function Songbook() {
       </Toolbar>
 
       {/* Two-pane region */}
-      <div className="BuilderPage" style={{ marginTop: 12 }}>
+      <div className="BuilderPage" style={{ marginTop: 8 }}>
         {/* Left pane */}
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>

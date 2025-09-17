@@ -412,7 +412,7 @@ html, body, #root { height: 100%; }
   padding-inline: 1rem;
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 1rem;
+  gap: 12px;
   flex: 1 1 auto;
   min-height: 0;
 }

@@ -314,7 +314,7 @@ async function exportPdf() {
       </div>
 
       {/* Named sets toolbar (keep) */}
-      <Toolbar className="card" style={{marginTop:12}}>
+      <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
         <Input label="Set" aria-label="Set name" value={name} onChange={e=> setName(e.target.value)} style={{minWidth:220}} placeholder="Sunday AM" />
         <Select aria-label="Saved sets" value={selectedId} onChange={onLoad}>
           <option value="">— Load saved set —</option>
@@ -393,7 +393,7 @@ async function exportPdf() {
         </div>
       </div>
 
-      <div className="BuilderPage" style={{marginTop:12}}>
+      <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           {/* Removed the redundant "Setlist name" field */}
@@ -406,7 +406,7 @@ async function exportPdf() {
                 <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
               </label>
             </div>
-            <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
+            <div style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6 }}>
               {!fuse ? (
                 <div>Loading search…</div>
               ) : (
