@@ -412,9 +412,11 @@ html, body, #root { height: 100%; }
   padding-inline: 1rem;
   display: grid;
   grid-template-columns: 1.5fr 1fr;
+  grid-template-rows: 1fr; /* ensure row fills remaining height */
   gap: 12px;
   flex: 1 1 auto;
   min-height: 0;
+  align-items: stretch;
 }
 @media (max-width: 1024px) { .BuilderPage { grid-template-columns: 1fr; } }
 
