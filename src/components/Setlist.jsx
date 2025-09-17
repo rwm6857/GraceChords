@@ -329,19 +329,7 @@ async function exportPdf() {
         <Button onClick={onDuplicate} disabled={!list.length} title="Duplicate set" iconLeft={<CopyIcon />}> <span className="text-when-wide">Duplicate</span></Button>
         <Button onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
 
-        {/* Set code tools */}
-        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <Button onClick={generateCode} title="Generate code for this set">Generate Set Code</Button>
-          <input
-            readOnly
-            placeholder="(code)"
-            value={setCode}
-            onFocus={(e)=> e.currentTarget.select()}
-            style={{ width: 200 }}
-            aria-label="Set code"
-          />
-          <Button onClick={copyLink} disabled={!setCode} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Link</Button>
-        </div>
+        {/* Set code tools moved into Set Sharing section below */}
 
         {/* Actions: Export, Worship, PPTX, Clear (moved from bottom) */}
         <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
@@ -382,10 +370,23 @@ async function exportPdf() {
         </div>
       </Toolbar>
 
-      {/* Load set by code */}
+      {/* Set Sharing: generate, copy link, load by code */}
       <div className="card" style={{ marginTop: 8 }}>
-        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
-          <strong>Load Set</strong>
+        <strong>Set Sharing</strong>
+        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 6 }}>
+          <Button onClick={generateCode} title="Generate code for this set">Generate Set Code</Button>
+          <input
+            readOnly
+            placeholder="(code)"
+            value={setCode}
+            onFocus={(e)=> e.currentTarget.select()}
+            style={{ width: 240 }}
+            aria-label="Set code"
+          />
+          <Button onClick={copyLink} disabled={!setCode} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Link</Button>
+        </div>
+        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 8 }}>
+          <span className="meta">Load from code</span>
           <input value={loadCode} onChange={e=> setLoadCode(e.target.value)} placeholder="Paste set code…" style={{ width: 240 }} aria-label="Load set code" />
           <Button onClick={loadFromCode} disabled={!loadCode.trim()} title="Load set from code">Load</Button>
         </div>
