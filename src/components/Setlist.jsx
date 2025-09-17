@@ -18,6 +18,7 @@ import Button from './ui/Button'
 import Select from './ui/Select'
 import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
+import PageContainer from './layout/PageContainer'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -304,7 +305,7 @@ async function exportPdf() {
   
 
   return (
-    <div className="container">
+    <PageContainer>
       <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div />
@@ -476,6 +477,6 @@ async function exportPdf() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }

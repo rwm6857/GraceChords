@@ -15,6 +15,7 @@ import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/songbook.css'
+import PageContainer from './layout/PageContainer'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -157,7 +158,7 @@ export default function Songbook() {
   }
 
   return (
-    <div className="container">
+    <PageContainer>
       <Busy busy={busy} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div />
@@ -277,6 +278,6 @@ export default function Songbook() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }
