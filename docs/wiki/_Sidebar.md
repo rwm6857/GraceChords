@@ -8,10 +8,12 @@
   - [[Setlists]]
   - [[Songbook-Builder]]
   - [[Bundle]]
+  - [[Resources]]
   - [[ChordPro-Guide]]
   - [[Importing-Lyrics]]
   - [[PDF-and-Printing]]
   - [[Admin-Tool]]
+  - [[Admin-Resources]]
   - [[Admin-Tips]]
   - [[Troubleshooting]]
 
