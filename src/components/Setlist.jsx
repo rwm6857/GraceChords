@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon } from './Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon, MediaIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -316,16 +316,17 @@ async function exportPdf() {
           <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
 
           {/* 4) Worship Mode */}
-          <Link
-            className="btn iconbtn"
+          <Button
+            as={Link}
             to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
             title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
             aria-disabled={!list.length}
             onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
+            iconLeft={<MediaIcon />}
           >
             <span className="text-when-wide">Worship Mode</span>
             <span className="text-when-narrow">Worship</span>
-          </Link>
+          </Button>
         </div>
       </Toolbar>
 
