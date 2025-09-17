@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-17T01:05:20.074Z",
+  "generatedAt": "2025-09-17T13:41:19.513Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -109,13 +109,15 @@
       "id": "battle-belongs",
       "title": "Battle Belongs",
       "filename": "battle_belongs.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Phil Wickham",
-        "Jonathan Smith"
+      "originalKey": "F",
+      "tags": [
+        "Slow",
+        "Contemporary"
       ],
-      "country": ""
+      "authors": [
+        "Phil Wickham"
+      ],
+      "country": "USA"
     },
     {
       "id": "beautiful-one",
@@ -361,12 +363,16 @@
       "id": "even-so-come",
       "title": "Even So Come",
       "filename": "even_so_come.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Praise",
+        "Contemporary"
+      ],
       "authors": [
         "Passion"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "everlasting-god",
@@ -423,7 +429,7 @@
       "authors": [
         "Charlie Hall"
       ],
-      "country": ""
+      "country": "USA"
     },
     {
       "id": "global-church-of-christ",
