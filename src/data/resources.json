@@ -1,0 +1,24 @@
+{
+  "generatedAt": "seed",
+  "items": [
+    {
+      "slug": "leading-worship-confidence",
+      "title": "Leading Worship with Confidence",
+      "author": "Ryan Moore",
+      "date": "2025-09-10",
+      "tags": ["leadership", "vocals", "confidence"],
+      "summary": "Practical tips for overcoming stage fear and leading with clarity.",
+      "filename": "leading-worship-confidence.md"
+    },
+    {
+      "slug": "team-rehearsal-guide",
+      "title": "Worship Team Rehearsal Guide",
+      "author": "GraceChords Admin",
+      "date": "2025-09-05",
+      "tags": ["band", "practice", "teamwork"],
+      "summary": "A structured plan to make rehearsals more efficient and Spirit-led.",
+      "filename": "team-rehearsal-guide.md"
+    }
+  ]
+}
+

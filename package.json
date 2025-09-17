@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "build-index": "node scripts/buildIndex.mjs",
     "build:index": "node scripts/buildIndex.mjs",
+    "build-resources-index": "node scripts/buildResourcesIndex.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run",

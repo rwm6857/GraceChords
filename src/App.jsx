@@ -8,6 +8,8 @@ import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
 const About = React.lazy(() => import('./components/About'))
 const Resources = React.lazy(() => import('./components/Resources'))
+const ResourcePost = React.lazy(() => import('./components/ResourcePost'))
+const AdminResources = React.lazy(() => import('./components/AdminResources'))
 import NavBar from './components/ui/Navbar'
 import WorshipMode from './pages/WorshipMode'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -28,9 +30,11 @@ export default function App(){
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/resources/:slug" element={<ResourcePost />} />
           </Route>
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/resources" element={<AdminResources />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>

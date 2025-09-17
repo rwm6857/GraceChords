@@ -1,0 +1,50 @@
+name: Rebuild Resources Index
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'public/resources/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-resources
+  cancel-in-progress: false
+
+jobs:
+  build-resources-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Rebuild resources index
+        run: npm run build-resources-index
+
+      - name: Commit changes (if any)
+        shell: bash
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/resources.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to resources.json"
+            exit 0
+          fi
+          git commit -m "chore(resources): rebuild resources index"
+          git push
+
