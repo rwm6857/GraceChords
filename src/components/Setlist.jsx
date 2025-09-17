@@ -258,6 +258,8 @@ async function exportPdf() {
       a.download = `setlist-pptx-${date}.zip`
       a.click()
       URL.revokeObjectURL(a.href)
+    } else {
+      try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
     }
     setPptxProgress('')
   }
@@ -291,6 +293,7 @@ async function exportPdf() {
 
         {/* Actions: Export, Worship, PPTX, Clear (moved from bottom) */}
         <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          {/* 1) Export PDF */}
           <Button
             variant="primary"
             onClick={exportPdf}
@@ -301,6 +304,18 @@ async function exportPdf() {
             iconLeft={<DownloadIcon />}
           >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
 
+          {/* 2) Export PPTX */}
+          <Button
+            onClick={bundlePptx}
+            disabled={list.length===0 || !!pptxProgress}
+            title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'}
+            iconLeft={<DownloadIcon />}
+          >{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
+
+          {/* 3) Clear */}
+          <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
+
+          {/* 4) Worship Mode */}
           <Link
             className="btn iconbtn"
             to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
@@ -308,13 +323,9 @@ async function exportPdf() {
             aria-disabled={!list.length}
             onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
           >
-            <span className="text-when-wide">Open in Worship Mode</span>
+            <span className="text-when-wide">Worship Mode</span>
             <span className="text-when-narrow">Worship</span>
           </Link>
-
-          <Button onClick={bundlePptx} disabled={pptxCount===0 || !!pptxProgress} title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
-
-          <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
         </div>
       </Toolbar>
 
