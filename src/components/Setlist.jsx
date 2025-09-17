@@ -289,12 +289,32 @@ async function exportPdf() {
         <Button onClick={onDuplicate} disabled={!list.length} title="Duplicate set" iconLeft={<CopyIcon />}> <span className="text-when-wide">Duplicate</span></Button>
         <Button onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
 
-        {/* Quick transpose */}
-        <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:6}}>
-          <span className="meta">Transpose:</span>
-          <Button onClick={()=> transposeSet(-1)} title="Transpose set down 1 semitone">–1</Button>
-          <Button onClick={resetSetKeys} title="Reset all to originals">Reset</Button>
-          <Button onClick={()=> transposeSet(1)} title="Transpose set up 1 semitone">+1</Button>
+        {/* Actions: Export, Worship, PPTX, Clear (moved from bottom) */}
+        <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <Button
+            variant="primary"
+            onClick={exportPdf}
+            onMouseEnter={prefetchPdf}
+            onFocus={prefetchPdf}
+            disabled={busy}
+            title="Export set as a single PDF"
+            iconLeft={<DownloadIcon />}
+          >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
+
+          <Link
+            className="btn iconbtn"
+            to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
+            title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
+            aria-disabled={!list.length}
+            onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
+          >
+            <span className="text-when-wide">Open in Worship Mode</span>
+            <span className="text-when-narrow">Worship</span>
+          </Link>
+
+          <Button onClick={bundlePptx} disabled={pptxCount===0 || !!pptxProgress} title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
+
+          <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
         </div>
       </Toolbar>
 
@@ -362,29 +382,7 @@ async function exportPdf() {
               )
             })}
           </div>
-          <div style={{display:'flex', gap:8, marginTop:8, flexWrap:'wrap'}}>
-            <Button
-              variant="primary"
-              onClick={exportPdf}
-              onMouseEnter={prefetchPdf}
-              onFocus={prefetchPdf}
-              disabled={busy}
-              title="Export set as a single PDF"
-              iconLeft={<DownloadIcon />}
-            >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
-            <Link
-              className="btn iconbtn"
-              to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
-              title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
-              aria-disabled={!list.length}
-              onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
-            >
-              <span className="text-when-wide">Open in Worship Mode</span>
-              <span className="text-when-narrow">Worship</span>
-            </Link>
-            <Button onClick={bundlePptx} disabled={pptxCount===0 || !!pptxProgress} title={pptxCount===0 ? 'No PPTX files found for this set.' : 'Bundle PPTX files for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Bundle PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
-            <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
-          </div>
+          {/* Actions moved to toolbar above */}
 
           {/* Print-only minimal outline */}
           <div className="print-only" style={{marginTop:16}}>
