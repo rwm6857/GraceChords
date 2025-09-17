@@ -395,7 +395,7 @@ async function exportPdf() {
 
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0, height:'100%' }}>
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           {/* Removed the redundant "Setlist name" field */}
           <div style={{marginTop:8}}>
             <strong>Add songs</strong>
@@ -428,7 +428,7 @@ async function exportPdf() {
         </div>
 
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0, height:'100%' }}>
+          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           <strong>Current setlist ({list.length})</strong>
           <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
             {list.map((sel, idx)=>{
