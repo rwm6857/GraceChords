@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, RemoveIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon } from './Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -44,8 +44,14 @@ export default function Setlist(){
   const [savedSets, setSavedSets] = useState(() => listSets())
   const [selectedId, setSelectedId] = useState('')
 
-  // load catalog
-  useEffect(()=>{ setItems(indexData?.items || []) },[])
+  // load catalog (dedupe by id to avoid duplicate keys/results)
+  useEffect(()=>{
+    const arr = indexData?.items || []
+    const seen = new Set()
+    const uniq = []
+    for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
+    setItems(uniq)
+  },[])
 
   // check available PPTX files for current set
   useEffect(() => {
@@ -315,7 +321,8 @@ async function exportPdf() {
                       key={s.id}
                       title={s.title}
                       subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                      rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly />}
+                      rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
+                      onClick={() => addSong(s)}
                     />
                   ))}
                 </div>
