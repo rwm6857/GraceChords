@@ -8,6 +8,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 - 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export
 - 📦 Bundle download for predefined groups of songs
 - 🛠️ Admin interface for authoring songs and rebuilding the index
+- 📚 Resources (blog-style posts) with search, tags, and an admin editor
 - 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
  - 🧭 SongView 1/2‑column reading view (site‑side)
 - 🎤 Worship/Perform Mode — full‑screen, touch‑friendly view with auto‑fit text, swipe/arrow navigation, and quick transpose
@@ -99,6 +100,35 @@ Admin highlights:
 Manual publish (no PR):
 1) Stage → Download Staged → unzip → copy to `public/songs/` → `npm run build-index` → `npm run build`.
 
+## Resources (Guides/Articles)
+GraceChords includes a lightweight resources/blog system for worship teams.
+
+- Content lives in `public/resources/*.md` with YAML-style frontmatter:
+
+  ```md
+  ---
+  title: "Leading Worship with Confidence"
+  author: "Ryan Moore"
+  date: "2025-09-10"
+  tags: ["leadership", "vocals"]
+  summary: "Practical tips for worship leaders."
+  ---
+
+  # Heading
+  Markdown content…
+  ```
+
+- Index page: `/#/resources` — grid of cards, search (title/summary, falls back to content), tag filters.
+- Post page: `/#/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes).
+- Admin editor: `/#/admin/resources` — create/edit posts with live preview and PR publishing (uses the same GitHub token flow as songs). Requires the “Edits Author” field.
+
+Build & CI
+- Rebuild resources index after adding/editing `.md` files:
+  ```bash
+  npm run build-resources-index
+  ```
+- CI workflow `.github/workflows/update-resources.yml` watches `public/resources/**`, runs the index builder, and commits `src/data/resources.json`. That commit triggers the site build workflow to update `docs/`.
+
 ## PDF Fonts
 Place the following fonts in `public/fonts/` to embed them in exported PDFs:
 - `NotoSans-Regular.ttf`
@@ -147,6 +177,7 @@ Notes
 ## CI & Automation
 - Build to `docs/` (site code changes): `build-to-docs.yml` runs on changes under `src/**`, `index.html`, `404.html`, `vite.config.js`, `package*.json`, and `public/**` (excluding `public/songs/**` and `public/wiki/**`). Uses Node 20 and commits `docs/` with `VITE_COMMIT_SHA=${{ github.sha }}`.
 - Song changes → index then build: `update-index.yml` runs on `public/songs/**`, executes `node scripts/buildIndex.mjs`, commits `src/data/index.json`. That commit triggers the site build workflow above.
+- Resource changes → index then build: `update-resources.yml` runs on `public/resources/**`, executes `node scripts/buildResourcesIndex.mjs`, commits `src/data/resources.json`. That commit triggers the site build workflow above.
 - Wiki changes → sync then build: `wiki-sync.yml` runs on `public/wiki/**`, executes `node scripts/syncWiki.mjs` (requires `WIKI_PUSH_TOKEN` secret), then builds and commits `docs/`.
 - Docs-only commits are ignored by the build workflow.
 - Concurrency: the build workflow cancels in-progress runs to avoid overlapping `docs/` commits.
