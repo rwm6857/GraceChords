@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon, MediaIcon } from './Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon, MediaIcon, LinkIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -11,6 +11,7 @@ import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/set
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
+import { encodeSet, decodeSet } from '../utils/setcode'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -23,6 +24,8 @@ let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 export default function Setlist(){
+  const { code: routeCode } = useParams()
+  const navigate = useNavigate()
   // existing state
   const [name, setName] = useState('Untitled Set')
   const [q, setQ] = useState('')
@@ -71,6 +74,18 @@ export default function Setlist(){
     check()
     return () => { cancelled = true }
   }, [list, items])
+
+  // Load set from route code if present
+  useEffect(() => {
+    if (!routeCode) return
+    const { entries, error } = decodeSet(routeCode)
+    if (error) {
+      alert(error)
+      navigate('/setlist', { replace: true })
+      return
+    }
+    setList(entries.map(e => ({ id: e.id, toKey: e.toKey })))
+  }, [routeCode])
 
   // (optional) migrate legacy single-set storage if present and nothing saved yet
   useEffect(() => {
@@ -230,6 +245,29 @@ async function exportPdf() {
 
   function prefetchPdf(){ loadPdfLib() }
 
+  // Set code helpers
+  const [setCode, setSetCode] = useState('')
+  const [loadCode, setLoadCode] = useState('')
+  function generateCode(){
+    const code = encodeSet(list)
+    setSetCode(code)
+  }
+  async function copyLink(){
+    try {
+      const url = `${location.origin}${location.pathname}#/set/${setCode}`
+      await navigator.clipboard.writeText(url)
+      try { showToast?.('Link copied!') } catch {}
+    } catch (e) { alert('Failed to copy link') }
+  }
+  function loadFromCode(){
+    const s = String(loadCode || '').trim()
+    const { entries, error } = decodeSet(s)
+    if (error) { alert(error); return }
+    setList(entries.map(e => ({ id: e.id, toKey: e.toKey })))
+    setLoadCode('')
+    setSetCode(s)
+  }
+
   async function bundlePptx(){
     setPptxProgress(`Bundling 0/${list.length}…`)
     const JSZip = (await import('jszip')).default
@@ -291,6 +329,20 @@ async function exportPdf() {
         <Button onClick={onDuplicate} disabled={!list.length} title="Duplicate set" iconLeft={<CopyIcon />}> <span className="text-when-wide">Duplicate</span></Button>
         <Button onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
 
+        {/* Set code tools */}
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <Button onClick={generateCode} title="Generate code for this set">Generate Set Code</Button>
+          <input
+            readOnly
+            placeholder="(code)"
+            value={setCode}
+            onFocus={(e)=> e.currentTarget.select()}
+            style={{ width: 200 }}
+            aria-label="Set code"
+          />
+          <Button onClick={copyLink} disabled={!setCode} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Link</Button>
+        </div>
+
         {/* Actions: Export, Worship, PPTX, Clear (moved from bottom) */}
         <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
           {/* 1) Export PDF */}
@@ -329,6 +381,15 @@ async function exportPdf() {
           </Button>
         </div>
       </Toolbar>
+
+      {/* Load set by code */}
+      <div className="card" style={{ marginTop: 8 }}>
+        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <strong>Load Set</strong>
+          <input value={loadCode} onChange={e=> setLoadCode(e.target.value)} placeholder="Paste set code…" style={{ width: 240 }} aria-label="Load set code" />
+          <Button onClick={loadFromCode} disabled={!loadCode.trim()} title="Load set from code">Load</Button>
+        </div>
+      </div>
 
       <div className="BuilderPage" style={{marginTop:12}}>
         <div className="BuilderLeft">
