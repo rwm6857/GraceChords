@@ -208,13 +208,10 @@ export default function Songbook() {
                   <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
                   <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
                 </label>
-                <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />}>
+                <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />} variant="primary" style={{ marginLeft: 'auto' }}>
                   <span className="text-when-wide">Add all ({filteredCount})</span>
                   <span className="text-when-narrow">All</span>
                 </Button>
-              </div>
-              <div className="Row Small" style={{ marginTop: '.5rem' }}>
-                <strong>{selectedCount}</strong> selected
               </div>
               <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', marginTop: 6 }}>
                 <div className="gc-list" style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
@@ -254,7 +251,7 @@ export default function Songbook() {
               aria-label="Selected songs"
               style={{ minHeight: 0, flex:'1 1 auto', overflow: 'auto', marginTop: 6 }}
             >
-              <ol className="List" style={{ listStyle: 'decimal inside' }}>
+              <ol className="List" style={{ listStyle: 'decimal inside', margin: 0, padding: 0 }}>
                 {selectedEntries.map((s) => (
                   <li key={s.id}>
                     {s.title}
