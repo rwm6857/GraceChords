@@ -3,11 +3,11 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, CopyIcon, TrashIcon, ClearIcon, MediaIcon, LinkIcon } from './Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, ClearIcon, MediaIcon, LinkIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
-import { listSets, getSet, saveSet, deleteSet, duplicateSet } from '../utils/sets'
+import { listSets, getSet, saveSet, deleteSet } from '../utils/sets'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
@@ -28,7 +28,7 @@ export default function Setlist(){
   const { code: routeCode } = useParams()
   const navigate = useNavigate()
   // existing state
-  const [name, setName] = useState('Untitled Set')
+  const [name, setName] = useState('New Setlist')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
   const [icpOnly, setIcpOnly] = useState(() => {
@@ -154,11 +154,20 @@ export default function Setlist(){
     setSelectedId(idToSelect || '')
   }
   function onNew(){
-    setCurrentId(null); setName('Untitled Set'); setList([]); setSelectedId('')
+    setCurrentId(null); setName('New Setlist'); setList([]); setSelectedId('')
   }
   function onSave(){
-    const finalName = (name?.trim() || 'Untitled Set')
-    const saved = saveSet({ id: currentId, name: finalName, items: list })
+    const proposed = (name?.trim() || 'New Setlist')
+    const input = window.prompt('Save set as:', proposed)
+    if (input === null) return
+    const finalName = (String(input).trim() || 'New Setlist')
+    // If no current id, but a set exists with this name, overwrite it by reusing its id
+    let targetId = currentId
+    if (!targetId) {
+      const existing = (listSets() || []).find(s => (s.name || '') === finalName)
+      if (existing) targetId = existing.id
+    }
+    const saved = saveSet({ id: targetId, name: finalName, items: list })
     setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
   }
   function onLoad(e){
@@ -168,17 +177,7 @@ export default function Setlist(){
     const s = getSet(id)
     if (s){ setCurrentId(s.id); setName(s.name || 'Untitled Set'); setList(s.items || []) }
   }
-  function onDuplicate(){
-    if (!currentId) {
-      // no id yet -> equivalent to Save As… but per your request we keep only Save
-      const proposed = `Copy of ${name || 'Untitled Set'}`
-      const saved = saveSet({ id: null, name: proposed, items: list })
-      setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
-      return
-    }
-    const copy = duplicateSet(currentId)
-    if (copy){ setCurrentId(copy.id); setName(copy.name); setList(copy.items || []); refreshSaved(copy.id) }
-  }
+  // Duplicate removed per request
   function onDelete(){
     if (!currentId) return
     if (window.confirm(`Delete set "${name}"? This cannot be undone.`)){
@@ -246,27 +245,14 @@ async function exportPdf() {
 
   function prefetchPdf(){ loadPdfLib() }
 
-  // Set code helpers
-  const [setCode, setSetCode] = useState('')
-  const [loadCode, setLoadCode] = useState('')
-  function generateCode(){
-    const code = encodeSet(list)
-    setSetCode(code)
-  }
-  async function copyLink(){
+  // Copy set link (generates code on demand)
+  async function copySetLink(){
     try {
-      const url = `${location.origin}${location.pathname}#/set/${setCode}`
+      const code = encodeSet(list)
+      const url = `${location.origin}${location.pathname}#/set/${code}`
       await navigator.clipboard.writeText(url)
       try { showToast?.('Link copied!') } catch {}
     } catch (e) { alert('Failed to copy link') }
-  }
-  function loadFromCode(){
-    const s = String(loadCode || '').trim()
-    const { entries, error } = decodeSet(s)
-    if (error) { alert(error); return }
-    setList(entries.map(e => ({ id: e.id, toKey: e.toKey })))
-    setLoadCode('')
-    setSetCode(s)
   }
 
   async function bundlePptx(){
@@ -313,9 +299,11 @@ async function exportPdf() {
         <div />
       </div>
 
-      {/* Named sets toolbar (keep) */}
+      {/* Consolidated controls */}
       <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
-        <Input label="Set" aria-label="Set name" value={name} onChange={e=> setName(e.target.value)} style={{minWidth:220}} placeholder="Sunday AM" />
+        <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
+          <strong title="Current set name" style={{ whiteSpace:'nowrap' }}>{name || 'New Setlist'}</strong>
+        </div>
         <Select aria-label="Saved sets" value={selectedId} onChange={onLoad}>
           <option value="">— Load saved set —</option>
           {savedSets.map(s => (
@@ -324,18 +312,15 @@ async function exportPdf() {
             </option>
           ))}
         </Select>
-        <Button onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-        <Button variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-        {/* Save As removed per request */}
-        <Button onClick={onDuplicate} disabled={!list.length} title="Duplicate set" iconLeft={<CopyIcon />}> <span className="text-when-wide">Duplicate</span></Button>
-        <Button onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+        <Button size="sm" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
+        <Button size="sm" variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
+        {/* Duplicate removed per request */}
+        <Button size="sm" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
 
-        {/* Set code tools moved into Set Sharing section below */}
-
-        {/* Actions: Export, Worship, PPTX, Clear (moved from bottom) */}
+        {/* Actions: Export, Worship, PPTX, Clear, Copy Link */}
         <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
           {/* 1) Export PDF */}
-          <Button
+          <Button size="sm"
             variant="primary"
             onClick={exportPdf}
             onMouseEnter={prefetchPdf}
@@ -346,7 +331,7 @@ async function exportPdf() {
           >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
 
           {/* 2) Export PPTX */}
-          <Button
+          <Button size="sm"
             onClick={bundlePptx}
             disabled={list.length===0 || !!pptxProgress}
             title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'}
@@ -354,10 +339,11 @@ async function exportPdf() {
           >{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
 
           {/* 3) Clear */}
-          <Button onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
+          <Button size="sm" onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
 
           {/* 4) Worship Mode */}
-          <Button
+          <Button size="sm"
+            variant="primary"
             as={Link}
             to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
             title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
@@ -368,44 +354,23 @@ async function exportPdf() {
             <span className="text-when-wide">Worship Mode</span>
             <span className="text-when-narrow">Worship</span>
           </Button>
+
+          {/* 5) Copy Set Link */}
+          <Button size="sm" variant="primary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Set Link</Button>
         </div>
       </Toolbar>
-
-      {/* Set Sharing: generate, copy link, load by code */}
-      <div className="card" style={{ marginTop: 8 }}>
-        <strong>Set Sharing</strong>
-        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 6 }}>
-          <Button onClick={generateCode} title="Generate code for this set">Generate Set Code</Button>
-          <input
-            readOnly
-            placeholder="(code)"
-            value={setCode}
-            onFocus={(e)=> e.currentTarget.select()}
-            style={{ width: 240 }}
-            aria-label="Set code"
-          />
-          <Button onClick={copyLink} disabled={!setCode} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Link</Button>
-        </div>
-        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap', marginTop: 8 }}>
-          <span className="meta">Load from code</span>
-          <input value={loadCode} onChange={e=> setLoadCode(e.target.value)} placeholder="Paste set code…" style={{ width: 240 }} aria-label="Load set code" />
-          <Button onClick={loadFromCode} disabled={!loadCode.trim()} title="Load set from code">Load</Button>
-        </div>
-      </div>
 
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
             <div className="BuilderScroll" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8 }}>
-              <div className="BuilderHeader">
-                <strong>Add songs</strong>
-                <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
-                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
-                  <label className="row" style={{gap:6, alignItems:'center'}}>
-                    <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                    <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-                  </label>
-                </div>
+              <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
+                <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
+                <label className="row" style={{gap:6, alignItems:'center'}}>
+                  <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                  <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+                </label>
               </div>
               {!fuse ? (
                 <div>Loading search…</div>

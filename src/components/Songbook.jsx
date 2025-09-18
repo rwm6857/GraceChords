@@ -210,47 +210,47 @@ export default function Songbook() {
         {/* Left pane */}
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>
-          <div style={{marginTop: 8}}>
-            <strong>Add songs</strong>
-            <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
-              <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
-              <label className="row" style={{gap:6, alignItems:'center'}}>
-                <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-              </label>
-              <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />}>
-                <span className="text-when-wide">Add all ({filteredCount})</span>
-                <span className="text-when-narrow">All</span>
-              </Button>
+            <div className="BuilderScroll" style={{ minHeight: 0, flex:'1 1 auto', overflow:'auto', marginTop: 8 }}>
+              <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
+                <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
+                <label className="row" style={{gap:6, alignItems:'center'}}>
+                  <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                  <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+                </label>
+                <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />}>
+                  <span className="text-when-wide">Add all ({filteredCount})</span>
+                  <span className="text-when-narrow">All</span>
+                </Button>
+              </div>
+              <div className="Row Small" style={{ marginTop: '.5rem' }}>
+                <strong>{selectedCount}</strong> selected
+              </div>
+              <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', marginTop: 6 }}>
+                <div className="gc-list" style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                  {results.map((s) => {
+                    const checked = selectedIds.has(s.id)
+                    const authorsLine = Array.isArray(s.authors) ? s.authors.join(', ') : (s.authors || '')
+                    const subtitle = [authorsLine || '—', s.country].filter(Boolean).join(' • ')
+                    return (
+                      <SongCard
+                        key={s.id}
+                        title={s.title}
+                        subtitle={subtitle}
+                        rightSlot={
+                          checked ? (
+                            <Button aria-label="Remove" title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                          ) : (
+                            <Button aria-label="Add" title="Add" variant="primary" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />} iconOnly />
+                          )
+                        }
+                        onClick={() => toggleOne(s.id, !checked)}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="Row Small" style={{ marginTop: '.5rem' }}>
-            <strong>{selectedCount}</strong> selected
-          </div>
-          <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop: 6 }}>
-            <div className="gc-list" style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
-              {results.map((s) => {
-                const checked = selectedIds.has(s.id)
-                const authorsLine = Array.isArray(s.authors) ? s.authors.join(', ') : (s.authors || '')
-                const subtitle = [authorsLine || '—', s.country].filter(Boolean).join(' • ')
-                return (
-                  <SongCard
-                    key={s.id}
-                    title={s.title}
-                    subtitle={subtitle}
-                    rightSlot={
-                      checked ? (
-                        <Button aria-label="Remove" title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
-                      ) : (
-                        <Button aria-label="Add" title="Add" variant="primary" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />} iconOnly />
-                      )
-                    }
-                    onClick={() => toggleOne(s.id, !checked)}
-                  />
-                )
-              })}
-            </div>
-          </div>
           </div>
         </div>
 
