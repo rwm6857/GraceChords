@@ -210,7 +210,7 @@ export default function Songbook() {
         {/* Left pane */}
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>
-          <div>
+          <div style={{marginTop: 8}}>
             <strong>Add songs</strong>
             <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
               <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />

@@ -420,7 +420,7 @@ html, body, #root { height: 100%; }
 
 /* Left pane */
 .BuilderLeft { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--bg, Canvas); padding: .75rem 0; }
+.BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--card); padding: .75rem 0; }
 .BuilderScroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 
 /* List rows */

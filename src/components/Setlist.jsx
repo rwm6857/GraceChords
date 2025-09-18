@@ -396,21 +396,21 @@ async function exportPdf() {
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-          {/* Removed the redundant "Setlist name" field */}
-          <div style={{marginTop:8}}>
-            <strong>Add songs</strong>
-            <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
-              <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
-              <label className="row" style={{gap:6, alignItems:'center'}}>
-                <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-              </label>
-            </div>
-            <div className="BuilderScroll" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6 }}>
+            <div className="BuilderScroll" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8 }}>
+              <div className="BuilderHeader">
+                <strong>Add songs</strong>
+                <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
+                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1}} />
+                  <label className="row" style={{gap:6, alignItems:'center'}}>
+                    <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                    <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+                  </label>
+                </div>
+              </div>
               {!fuse ? (
                 <div>Loading search…</div>
               ) : (
-                <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', marginTop:6 }}>
                   {results.map(s=> (
                     <SongCard
                       key={s.id}
@@ -424,39 +424,42 @@ async function exportPdf() {
               )}
             </div>
           </div>
-          </div>
         </div>
 
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-          <strong>Current setlist ({list.length})</strong>
-          <div className="BuilderScroll" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
-            {list.map((sel, idx)=>{
-              const s = items.find(it=> it.id===sel.id)
-              if(!s) return null
-              return (
-                <SongCard
-                  key={sel.id}
-                  draggable
-                  onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.id)); e.dataTransfer.effectAllowed = 'move' }}
-                  onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                  onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
-                  title={s.title}
-                  subtitle={`Original: ${s.originalKey || '—'}`}
-                  rightSlot={
-                    <div style={{display:'flex', alignItems:'center', gap:6}}>
-                      <Select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
-                        {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-                      </Select>
-                      <Button onClick={()=> move(sel.id,'up')} title="Move up" iconLeft={<ArrowUp />} />
-                      <Button onClick={()=> move(sel.id,'down')} title="Move down" iconLeft={<ArrowDown />} />
-                      <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
-                    </div>
-                  }
-                />
-              )
-            })}
-          </div>
+            <div className="BuilderScroll" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8}}>
+              <div className="BuilderHeader">
+                <strong>Current setlist ({list.length})</strong>
+              </div>
+              <div style={{ marginTop: 6 }}>
+                {list.map((sel, idx)=>{
+                  const s = items.find(it=> it.id===sel.id)
+                  if(!s) return null
+                  return (
+                    <SongCard
+                      key={sel.id}
+                      draggable
+                      onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.id)); e.dataTransfer.effectAllowed = 'move' }}
+                      onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                      onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
+                      title={s.title}
+                      subtitle={`Original: ${s.originalKey || '—'}`}
+                      rightSlot={
+                        <div style={{display:'flex', alignItems:'center', gap:6}}>
+                          <Select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
+                            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
+                          </Select>
+                          <Button onClick={()=> move(sel.id,'up')} title="Move up" iconLeft={<ArrowUp />} />
+                          <Button onClick={()=> move(sel.id,'down')} title="Move down" iconLeft={<ArrowDown />} />
+                          <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                        </div>
+                      }
+                    />
+                  )
+                })}
+              </div>
+            </div>
           {/* Actions moved to toolbar above */}
 
           {/* Print-only minimal outline */}
