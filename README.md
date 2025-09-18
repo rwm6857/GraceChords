@@ -5,7 +5,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 ## Features
 - 🔍 Instant search with tag filters
 - 🎸 Song view with key transposition, chord toggling, and single-song PDF download
-- 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export
+- 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export (sticky pane headers, independent scrolling, named saves, shareable links)
 - 📦 Bundle download for predefined groups of songs
 - 🛠️ Admin interface for authoring songs and rebuilding the index
 - 📚 Resources (blog-style posts) with search, tags, and an admin editor
@@ -217,7 +217,8 @@ Song files (`/songs/**`) and the index (`/src/data/index.json`) are fetched with
 ## Usage Notes
 - **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
 - **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), 1/2‑column reading view, collapsible media.
-- **Setlist**: `/setlist` lets you build/reorder sets, choose keys, and export a single PDF.
+- **Setlist**: `/setlist` lets you build/reorder sets, choose keys, save/load by name (modal), share a link, and export PDF/PPTX. Headers are sticky within each pane; panes scroll independently.
+- **Songbook**: builder mirrors Setlist layout and width; sticky header with inline search and “Add all”. Export always includes a TOC; optional cover image.
 - **PDFs**: vector text with Noto Sans; sections stay together; layout auto‑switches to two columns when needed.
 
 ## Sorting & Index
