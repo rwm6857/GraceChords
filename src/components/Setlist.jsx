@@ -406,7 +406,7 @@ async function exportPdf() {
                 <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
               </label>
             </div>
-            <div style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6 }}>
+            <div className="BuilderScroll" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6 }}>
               {!fuse ? (
                 <div>Loading search…</div>
               ) : (
@@ -430,7 +430,7 @@ async function exportPdf() {
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
           <strong>Current setlist ({list.length})</strong>
-          <div style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
+          <div className="BuilderScroll" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:6}}>
             {list.map((sel, idx)=>{
               const s = items.find(it=> it.id===sel.id)
               if(!s) return null

@@ -407,11 +407,9 @@ html, body, #root { height: 100%; }
 
 /* Builder layout shared by Setlist and Songbook */
 .BuilderPage {
-  max-width: var(--builder-max, 1200px);
-  margin: 0 auto;
-  padding-inline: 1rem;
+  width: 100%;
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   grid-template-rows: 1fr; /* ensure row fills remaining height */
   gap: 12px;
   flex: 1 1 auto;
@@ -421,7 +419,7 @@ html, body, #root { height: 100%; }
 @media (max-width: 900px) { .BuilderPage { grid-template-columns: 1fr; } }
 
 /* Left pane */
-.BuilderLeft { display: flex; flex-direction: column; min-height: 0; }
+.BuilderLeft { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--bg, Canvas); padding: .75rem 0; }
 .BuilderScroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 
@@ -437,7 +435,7 @@ html, body, #root { height: 100%; }
 }
 
 /* Right pane */
-.BuilderRight { min-height: 0; display: flex; flex-direction: column; gap: .75rem; }
+.BuilderRight { min-height: 0; display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
 .RightSection { padding: .25rem 0; }
 .RightScroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
 
