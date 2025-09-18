@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, ClearIcon, MediaIcon, LinkIcon } from './Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -339,27 +339,28 @@ async function exportPdf() {
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
           {/* Left cluster: Save, Load, New, Delete */}
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            <Button size="sm" variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-            <Button size="sm" onClick={onOpenLoad} title="Load saved set" iconLeft={<DownloadIcon />}> <span className="text-when-wide">Load</span></Button>
-            <Button size="sm" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-            <Button size="sm" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+            <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
+            <Button size="sm" variant="secondary" onClick={onOpenLoad} title="Load saved set" iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}> <span className="text-when-wide">Load</span></Button>
+            <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
+            <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
           </div>
 
           {/* Right cluster: Export PDF, Export PPTX, Share Set, Worship Mode */}
           <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-           {/* 1) Export PDF */}
-          <Button size="sm"
-            variant="primary"
+            {/* 1) Export PDF */}
+          <Button
+            variant="primary" size="md"
             onClick={exportPdf}
             onMouseEnter={prefetchPdf}
             onFocus={prefetchPdf}
-            disabled={busy}
+            disabled={busy || list.length===0}
             title="Export set as a single PDF"
             iconLeft={<DownloadIcon />}
           >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
 
           {/* 2) Export PPTX */}
-          <Button size="sm"
+          <Button
+            variant="primary" size="md"
             onClick={bundlePptx}
             disabled={list.length===0 || !!pptxProgress}
             title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'}
@@ -367,16 +368,14 @@ async function exportPdf() {
           >{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
 
           {/* 3) Share Set */}
-          <Button size="sm" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />}>Share Set</Button>
+          <Button variant="primary" size="md" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share Set</Button>
 
           {/* 4) Worship Mode */}
-          <Button size="sm"
-            variant="primary"
+          <Button
+            variant="primary" size="md"
             as={Link}
-            to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '#')}
-            title={list.length ? 'Open Worship Mode with this set' : 'Add songs to open Worship Mode'}
-            aria-disabled={!list.length}
-            onClick={(e)=>{ if(!list.length){ e.preventDefault() } }}
+            to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')}
+            title={'Open Worship Mode'}
             iconLeft={<MediaIcon />}
           >
             <span className="text-when-wide">Worship Mode</span>

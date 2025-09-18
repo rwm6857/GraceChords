@@ -51,6 +51,15 @@ export const CloudUploadIcon = (p)=> (
   </S>
 )
 
+// Cloud download
+export const CloudDownloadIcon = (p)=> (
+  <S {...p}>
+    <path d="M8 12l4 4 4-4" />
+    <path d="M12 8v8" />
+    <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 16" />
+  </S>
+)
+
 // Column toggle icons
 export const OneColIcon = (p) => (
   <S {...p}>

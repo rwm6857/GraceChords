@@ -78,7 +78,6 @@ export default function Songbook() {
   }
 
   // Export
-  const [includeTOC, setIncludeTOC] = useState(true)
   const [cover, setCover] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -115,7 +114,7 @@ export default function Songbook() {
         }
       }
       if (songs.length) {
-        await downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl: cover })
+        await downloadSongbookPdf(songs, { includeTOC: true, coverImageDataUrl: cover })
       }
     } finally {
       setBusy(false)
@@ -169,16 +168,7 @@ export default function Songbook() {
       {/* Toolbar */}
       <Toolbar className="card" style={{ marginTop: 8 }}>
         <div className="Field">
-          <input
-            id="sb-toc"
-            type="checkbox"
-            checked={includeTOC}
-            onChange={(e) => setIncludeTOC(e.target.checked)}
-          />
-          <label htmlFor="sb-toc">Include table of contents</label>
-        </div>
-        <div className="Field">
-          <label htmlFor="sb-cover">Cover page (image):</label>
+          <label htmlFor="sb-cover">Upload Cover Image:</label>
           <input
             id="sb-cover"
             className="CoverInput"
@@ -200,7 +190,7 @@ export default function Songbook() {
             title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
             iconLeft={<DownloadIcon />}
           >
-            {busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF ({selectedEntries.length})</span><span className="text-when-narrow">PDF</span></>}
+            {busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}
           </Button>
         </div>
       </Toolbar>
