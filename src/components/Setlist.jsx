@@ -47,6 +47,8 @@ export default function Setlist(){
   const [currentId, setCurrentId] = useState(null)
   const [savedSets, setSavedSets] = useState(() => listSets())
   const [selectedId, setSelectedId] = useState('')
+  const [loadOpen, setLoadOpen] = useState(false)
+  const [loadChoice, setLoadChoice] = useState('')
 
   // load catalog (dedupe by id to avoid duplicate keys/results)
   useEffect(()=>{
@@ -170,12 +172,17 @@ export default function Setlist(){
     const saved = saveSet({ id: targetId, name: finalName, items: list })
     setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
   }
-  function onLoad(e){
-    const id = e.target.value
-    setSelectedId(id)
-    if (!id) return
+  function onLoadConfirm(){
+    const id = loadChoice || selectedId || ''
+    if (!id) { setLoadOpen(false); return }
     const s = getSet(id)
-    if (s){ setCurrentId(s.id); setName(s.name || 'Untitled Set'); setList(s.items || []) }
+    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(s.items || []) ; setSelectedId(s.id) }
+    setLoadOpen(false)
+  }
+  function onOpenLoad(){
+    const first = (savedSets[0]?.id) || ''
+    setLoadChoice(selectedId || first)
+    setLoadOpen(true)
   }
   // Duplicate removed per request
   function onDelete(){
@@ -292,6 +299,31 @@ async function exportPdf() {
 
   return (
     <PageContainer>
+      {/* Load Set modal */}
+      {loadOpen ? (
+        <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
+          <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Load Set</h3>
+            {savedSets.length ? (
+              <label style={{ display:'block', margin:'8px 0' }}>Select a saved set
+                <select value={loadChoice} onChange={e=> setLoadChoice(e.target.value)} style={{ width:'100%' }}>
+                  {savedSets.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · {new Date(s.updatedAt).toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="meta">No saved sets yet.</div>
+            )}
+            <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
+              <Button onClick={()=> setLoadOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={onLoadConfirm} disabled={!savedSets.length}>Load</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div />
@@ -299,27 +331,23 @@ async function exportPdf() {
         <div />
       </div>
 
-      {/* Consolidated controls */}
+      {/* Consolidated controls with title on its own line */}
       <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-          <strong title="Current set name" style={{ whiteSpace:'nowrap' }}>{name || 'New Setlist'}</strong>
+        <div style={{ width: '100%', marginBottom: 6 }}>
+          <strong title="Current set name">{name || 'New Setlist'}</strong>
         </div>
-        <Select aria-label="Saved sets" value={selectedId} onChange={onLoad}>
-          <option value="">— Load saved set —</option>
-          {savedSets.map(s => (
-            <option key={s.id} value={s.id}>
-              {s.name} · {new Date(s.updatedAt).toLocaleString()}
-            </option>
-          ))}
-        </Select>
-        <Button size="sm" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-        <Button size="sm" variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-        {/* Duplicate removed per request */}
-        <Button size="sm" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
+          {/* Left cluster: Save, Load, New, Delete */}
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <Button size="sm" variant="primary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
+            <Button size="sm" onClick={onOpenLoad} title="Load saved set" iconLeft={<DownloadIcon />}> <span className="text-when-wide">Load</span></Button>
+            <Button size="sm" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
+            <Button size="sm" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+          </div>
 
-        {/* Actions: Export, Worship, PPTX, Clear, Copy Link */}
-        <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          {/* 1) Export PDF */}
+          {/* Right cluster: Export PDF, Export PPTX, Share Set, Worship Mode */}
+          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+           {/* 1) Export PDF */}
           <Button size="sm"
             variant="primary"
             onClick={exportPdf}
@@ -338,8 +366,8 @@ async function exportPdf() {
             iconLeft={<DownloadIcon />}
           >{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
 
-          {/* 3) Clear */}
-          <Button size="sm" onClick={()=> setList([])} title="Clear setlist" iconLeft={<ClearIcon />}><span className="text-when-wide">Clear</span></Button>
+          {/* 3) Share Set */}
+          <Button size="sm" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />}>Share Set</Button>
 
           {/* 4) Worship Mode */}
           <Button size="sm"
@@ -354,9 +382,7 @@ async function exportPdf() {
             <span className="text-when-wide">Worship Mode</span>
             <span className="text-when-narrow">Worship</span>
           </Button>
-
-          {/* 5) Copy Set Link */}
-          <Button size="sm" variant="primary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />}>Copy Set Link</Button>
+          </div>
         </div>
       </Toolbar>
 
