@@ -160,7 +160,7 @@ export default function Songbook() {
   return (
     <PageContainer>
       <Busy busy={busy} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
         <div />
         <h1 style={{ margin: 0 }}>Songbook Builder</h1>
         <div />
