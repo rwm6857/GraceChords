@@ -6,6 +6,7 @@ Worship Mode is a full‑screen, touch‑friendly view for live performance. It 
 - From a Song: click “Open in Worship Mode”.
 - From a Setlist: click “Open in Worship Mode” to load the current set.
 - Direct URL: `/#/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/#/worship/abba,above-all`.
+ - Blank: `/#/worship` opens Worship Mode without a selection; add songs from Setlist to build a flow.
 
 ### Layout & Fitting
 - Single column; entire song rendered on one screen (no pagination).
@@ -40,4 +41,3 @@ Worship Mode is a full‑screen, touch‑friendly view for live performance. It 
 - “Text looks too small”: tap A+ to increase size; auto‑fit chooses the largest size that fits the full song.
 - “Chords wrap oddly”: ensure your song’s chord positions are correct in ChordPro; collisions are resolved and chords align over matching lyric characters.
 - “Song not found”: confirm the song ID exists in `src/data/index.json` and that `public/songs/<file>.chordpro` is present. Rebuild the index if needed.
-
