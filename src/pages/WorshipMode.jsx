@@ -671,7 +671,7 @@ function ChordLine({ plain, chords, steps, showChords }){
           ))}
         </div>
       )}
-      <div className="lyrics" style={{whiteSpace:'pre-wrap', overflowWrap:'anywhere'}}>{plain}</div>
+      <div className="lyrics" style={{whiteSpace:'pre-wrap', overflowWrap:'anywhere', fontSize:'inherit'}}>{plain}</div>
     </div>
   )
 }
