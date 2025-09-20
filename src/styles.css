@@ -37,6 +37,13 @@
   --font-base: clamp(14px, 3.5vw, 16px);
   --font-meta: 0.9rem;
   --font-title: clamp(22px, 5.5vw, 28px);
+
+  /* Viewport + breakpoints */
+  --vh: 1vh;           /* legacy fallback */
+  --dvh: 1dvh;         /* modern mobile-safe */
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --bp-mobile: 640px;
+  --bp-tablet: 820px;
 }
 
 [data-theme="dark"] {
@@ -61,6 +68,7 @@ html, body, #root { height: 100% }
 .Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 /* .Route { overflow: hidden; }  Removed to allow sticky Home header */
 html, body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+#root, .Route { overflow-x: hidden; }
 
 body{
   margin:0;
@@ -83,7 +91,7 @@ a{ color: inherit; text-decoration: none }
 }
 
 .container{ padding: var(--space-4); max-width:1200px; margin:0 auto }
-@media (max-width: 480px){ .container{ padding: var(--space-3); } }
+@media (max-width: 640px){ .container{ padding: var(--space-3); } }
 
 .card{
   background: var(--card);
@@ -91,6 +99,7 @@ a{ color: inherit; text-decoration: none }
   border-radius: var(--radius-2);
   padding: var(--space-3);
 }
+@media (max-width: 640px){ .card{ padding: 8px 10px; } }
 
 input,select,textarea{
   padding: var(--space-2) 10px;
@@ -98,6 +107,7 @@ input,select,textarea{
   border-radius: var(--radius-1);
   background: var(--card);
   color: var(--text);
+  font-size: 16px; /* prevent iOS zoom */
 }
 
 .btn{
@@ -133,13 +143,12 @@ input,select,textarea{
   filter: brightness(.96);
 }
 
-/* Hide supplemental text labels on very small screens */
+/* Label helpers across mobile/tablet */
 .text-when-wide { display: inline; }
-@media (max-width: 640px){ .text-when-wide { display: none; } }
+@media (max-width: 820px){ .text-when-wide { display: none; } }
 
-/* Show narrow labels on mobile only */
 .text-when-narrow { display: none; }
-@media (max-width: 640px){ .text-when-narrow { display: inline; } }
+@media (max-width: 820px){ .text-when-narrow { display: inline; } }
 
 .grid{ display:grid; grid-template-columns:1fr; gap:10px }
 @media(min-width:820px){ .grid{ grid-template-columns:1fr 1fr } }
@@ -151,6 +160,7 @@ input,select,textarea{
 .meta { color: var(--muted); }
 
 .lyrics { line-height: 1.35; font-family: 'Inter', sans-serif; font-size: 18px; }
+@media (max-width: 640px){ .lyrics { line-height: 1.28; } }
 
 /* ========== Song page bits ========== */
 .songpage__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
@@ -172,6 +182,7 @@ input,select,textarea{
 }
 .linepair{ margin:2px 0 10px }
 .mono{ font-family: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre }
+.mono{ overflow-wrap: anywhere; }
 
 .divider{ height:1px; background:var(--line); margin:18px 0 }
 
@@ -186,9 +197,12 @@ input,select,textarea{
     display: flex; gap: var(--space-2); justify-content: space-around;
     z-index: 90;
     box-shadow: 0 -2px 8px rgba(0,0,0,.06);
-    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-2) + var(--safe-b));
   }
 }
+
+/* Helper to ensure content clears a fixed mobile bar */
+.has-mobilebar-padding{ padding-bottom: calc(84px + var(--safe-b)); }
 
 /* ========== Media block ========== */
 .media__toggle{ display:inline-flex; align-items:center; gap:8px }
@@ -368,6 +382,15 @@ input,select,textarea{
   .card.toolbar .meta { width: auto; }
 }
 
+/* Equal 2x2 function buttons (Setlist mobile toolbar) */
+.setlist-actions--mobile {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.setlist-actions--mobile .btn,
+.setlist-actions--mobile .gc-btn { justify-content: center; }
+
 /* ========== Print rules ========== */
 @media print {
   nav, .topnav, .back, .tagbar, .iconbtn, .btn, select, input, textarea { display: none !important; }
@@ -422,6 +445,14 @@ html, body, #root { height: 100%; }
 .BuilderLeft { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--card); padding: .75rem 0; }
 .BuilderScroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+
+/* Panes with fixed heights on small screens */
+@media (max-width: 640px){
+  .pane--addSongs,
+  .pane--currentSet { overflow: auto; min-height: 0; }
+  .pane--addSongs { height: var(--addSongsH, 360px); }
+  .pane--currentSet { max-height: var(--addSongsH, 360px); }
+}
 
 /* List rows */
 .BuilderList { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }

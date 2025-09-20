@@ -47,35 +47,49 @@ export default function Resources(){
   }, [q, tag, fuse, items, contentMap])
 
   return (
-    <div className="container">
-      <h1>Resources</h1>
-      <div style={{ marginTop: 10, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-        <input placeholder="Search resources..." value={q} onChange={e=> setQ(e.target.value)} style={{ flex:'1 1 320px' }} />
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-          <TagChip label="All" active={!tag} onClick={()=> setTag('')} />
-          {allTags.map(t => (
-            <TagChip key={t} label={t} active={tag===t} onClick={()=> setTag(t)} />
-          ))}
+    <div className="HomePage">
+      <div className="HomeHeader">
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
+          <h1>Resources</h1>
+        </div>
+        <div className="card" style={{display:'grid', gap:10}}>
+          <input
+            placeholder="Search resources..."
+            value={q}
+            onChange={e=> setQ(e.target.value)}
+            aria-label="Search resources"
+            style={{ minWidth:0, fontSize:16 }}
+          />
+          <div className="row" style={{gap:8, alignItems:'center'}}>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+              <TagChip label="All" active={!tag} onClick={()=> setTag('')} />
+              {allTags.map(t => (
+                <TagChip key={t} label={t} active={tag===t} onClick={()=> setTag(t)} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:12, marginTop:12 }}>
-        {filtered.map(it => (
-          <article key={it.slug} className="card" style={{ padding:12, display:'flex', flexDirection:'column', gap:8 }}>
-            <h3 style={{ margin:'4px 0' }}>
-              <Link to={`/resources/${it.slug}`}>{it.title}</Link>
-            </h3>
-            <div className="Small" style={{ opacity: 0.8 }}>
-              by {it.author} • {fmtDate(it.date)}
-            </div>
-            {it.tags?.length ? (
-              <div className="Small" style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                {it.tags.map(t => <span key={t} className="gc-tag gc-tag--gray">{t}</span>)}
+      <div className="HomeResults" role="region" aria-label="Resource results">
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12, marginTop:12 }}>
+          {filtered.map(it => (
+            <article key={it.slug} className="card" style={{ padding:12, display:'flex', flexDirection:'column', gap:8 }}>
+              <h3 style={{ margin:'4px 0' }}>
+                <Link to={`/resources/${it.slug}`}>{it.title}</Link>
+              </h3>
+              <div className="Small" style={{ opacity: 0.8 }}>
+                by {it.author} • {fmtDate(it.date)}
               </div>
-            ) : null}
-            {it.summary ? <p style={{ margin:'4px 0 0 0' }}>{it.summary}</p> : null}
-          </article>
-        ))}
+              {it.tags?.length ? (
+                <div className="Small" style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {it.tags.map(t => <span key={t} className="gc-tag gc-tag--gray">{t}</span>)}
+                </div>
+              ) : null}
+              {it.summary ? <p style={{ margin:'4px 0 0 0' }}>{it.summary}</p> : null}
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   )

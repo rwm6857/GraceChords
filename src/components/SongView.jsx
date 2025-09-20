@@ -270,7 +270,7 @@ if(!entry){
   
 
   return (
-    <div className="container" style={isNarrow ? { paddingBottom: '84px' } : undefined}>
+    <div className="container" style={isNarrow ? { paddingBottom: 'calc(84px + var(--safe-b))' } : undefined}>
       <Busy busy={busy} />
       <div className="songpage__top">
         <div style={{flex:1}}>
@@ -547,9 +547,10 @@ function MeasuredLine({ plain, chords, steps, showChords }){
 
     // Lyrics font for width measurement
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    const hostW = hostRef.current.getBoundingClientRect().width || 0
 
-    // Measure pixel offsets for each chord
-    const offsets = (showChords ? chords : []).map(c => ({
+    // Measure pixel offsets for each chord; clamp to container to avoid spill
+    let offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
       sym: transposeSym(c.sym, steps)
     }))
@@ -560,6 +561,13 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
+
+    // Clamp chords near line end (2px safety)
+    offsets = offsets.map(o => {
+      const w = ctx.measureText(o.sym).width
+      const maxLeft = Math.max(0, hostW - w - 2)
+      return { ...o, left: Math.min(o.left, maxLeft) }
+    })
 
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics

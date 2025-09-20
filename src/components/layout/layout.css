@@ -3,7 +3,7 @@
   margin:0 auto;
   padding:0 1.5rem;
   /* Fill viewport minus navbar height; no page scroll */
-  height: calc(100vh - var(--nav-h, 0px));
+  height: calc(100 * var(--dvh) - var(--nav-h, 0px));
   display: flex;
   flex-direction: column;
   min-height: 0;

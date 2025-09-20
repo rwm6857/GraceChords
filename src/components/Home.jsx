@@ -6,7 +6,7 @@ import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
-import Button from './ui/Button'
+// Button was only used for ANY/ALL; removed
 
 export default function Home(){
   const itemsRaw = indexData?.items || []
@@ -32,8 +32,7 @@ export default function Home(){
     return Array.from(set).sort((a,b)=> a.localeCompare(b))
   }, [items])
 
-  const [selectedTags, setSelectedTags] = useState([]) // multi-select
-  const [tagMode, setTagMode] = useState('any')        // 'any' | 'all'
+  const [selectedTags, setSelectedTags] = useState([]) // multi-select (ANY match)
   const [lyricsOn, setLyricsOn] = useState(false)
   const [icpOnly, setIcpOnly] = useState(() => {
     try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
@@ -61,9 +60,8 @@ export default function Home(){
   function tagPass(s){
     if (!selectedTags.length) return true
     const tags = s.tags || []
-    return tagMode === 'all'
-      ? selectedTags.every(t => tags.includes(t))
-      : selectedTags.some(t => tags.includes(t))
+    // ANY semantics: include if a song has at least one selected tag
+    return selectedTags.some(t => tags.includes(t))
   }
   function icpPass(s){
     return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP')
@@ -96,7 +94,7 @@ export default function Home(){
     })()
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTags.join(','), tagMode])
+  }, [lyricsOn, qLower, items, selectedTags.join(',')])
 
   // Compute results (Fuse + tag filter; optionally union lyrics matches ONLY when lyricsOn)
   const results = useMemo(() => {
@@ -140,7 +138,7 @@ export default function Home(){
     })
 
     return list
-  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), tagMode, icpOnly])
+  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), icpOnly])
 
   const [activeIndex, setActiveIndex] = useState(-1)
   const optionRefs = useRef([])
@@ -223,7 +221,11 @@ export default function Home(){
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    searchRef.current?.focus()
+    // Only auto-focus on desktop to avoid iOS keyboard pop
+    try {
+      const isDesktop = window.matchMedia && window.matchMedia('(min-width: 821px)').matches
+      if (isDesktop) searchRef.current?.focus()
+    } catch {}
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
@@ -278,7 +280,6 @@ export default function Home(){
         <div className="card" style={{display:'grid', gap:10}}>
           <Input
             id="search"
-            label="Search"
             ref={searchRef}
             value={q}
             onChange={e=> setQ(e.target.value)}
@@ -306,7 +307,7 @@ export default function Home(){
           </div>
 
           <div className="row">
-            {/* Tags: multi-select + Any/All */}
+            {/* Tags: multi-select */}
             <div className="tagbar">
               <button className={`gc-tag gc-tag--blue ${selectedTags.length===0 ? '' : ''}`} onClick={clearTags}>All</button>
               {allTags.map(t => (
@@ -316,11 +317,6 @@ export default function Home(){
                   onClick={()=> toggleTag(t)}
                 >{t}</button>
               ))}
-            </div>
-            <div style={{display:'flex', gap:8, alignItems:'center'}}>
-              <span className="meta">Match</span>
-              <Button variant={tagMode==='any' ? 'primary':'secondary'} onClick={()=> setTagMode('any')} title="Match songs with any selected tag">Any</Button>
-              <Button variant={tagMode==='all' ? 'primary':'secondary'} onClick={()=> setTagMode('all')} title="Match songs with all selected tags">All</Button>
             </div>
           </div>
         </div>

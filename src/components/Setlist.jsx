@@ -42,6 +42,8 @@ export default function Setlist(){
   const [pptxProgress, setPptxProgress] = useState('')
   const pptxCount = Object.keys(pptxMap).length
   const [busy, setBusy] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
+  const [isTablet, setIsTablet] = useState(() => { try { return window.innerWidth <= 820 } catch { return false } })
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -106,6 +108,19 @@ export default function Setlist(){
         setSelectedId(saved.id)
       }
     } catch {}
+  }, [])
+
+  // viewport listeners
+  useEffect(() => {
+    function onResize(){
+      try {
+        const w = window.innerWidth
+        setIsMobile(w <= 640)
+        setIsTablet(w <= 820)
+      } catch {}
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   // search
@@ -331,64 +346,42 @@ async function exportPdf() {
         <div />
       </div>
 
-      {/* Consolidated controls with title on its own line */}
-      <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
-        <div style={{ width: '100%', marginBottom: 6 }}>
-          <strong title="Current set name">{name || 'New Setlist'}</strong>
-        </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
-          {/* Left cluster: Save, Load, New, Delete */}
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-            <Button size="sm" variant="secondary" onClick={onOpenLoad} title="Load saved set" iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}> <span className="text-when-wide">Load</span></Button>
-            <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-            <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+      {/* Toolbar: mobile grid vs desktop/tablet full */}
+      {isMobile ? (
+        <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
+          <div className="setlist-actions--mobile" style={{ width:'100%' }}>
+            <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
+            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'} iconLeft={<DownloadIcon />}>PPTX</Button>
+            <Button onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
+            <Button as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
           </div>
-
-          {/* Right cluster: Export PDF, Export PPTX, Share Set, Worship Mode */}
-          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            {/* 1) Export PDF */}
-          <Button
-            variant="primary" size="md"
-            onClick={exportPdf}
-            onMouseEnter={prefetchPdf}
-            onFocus={prefetchPdf}
-            disabled={busy || list.length===0}
-            title="Export set as a single PDF"
-            iconLeft={<DownloadIcon />}
-          >{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
-
-          {/* 2) Export PPTX */}
-          <Button
-            variant="primary" size="md"
-            onClick={bundlePptx}
-            disabled={list.length===0 || !!pptxProgress}
-            title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'}
-            iconLeft={<DownloadIcon />}
-          >{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
-
-          {/* 3) Share Set */}
-          <Button variant="primary" size="md" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share Set</Button>
-
-          {/* 4) Worship Mode */}
-          <Button
-            variant="primary" size="md"
-            as={Link}
-            to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')}
-            title={'Open Worship Mode'}
-            iconLeft={<MediaIcon />}
-          >
-            <span className="text-when-wide">Worship Mode</span>
-            <span className="text-when-narrow">Worship</span>
-          </Button>
+        </Toolbar>
+      ) : (
+        <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
+          <div style={{ width: '100%', marginBottom: 6 }}>
+            <strong title="Current set name">{name || 'New Setlist'}</strong>
           </div>
-        </div>
-      </Toolbar>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
+              <Button size="sm" variant="secondary" onClick={onOpenLoad} title="Load saved set" iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}> <span className="text-when-wide">Load</span></Button>
+              <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
+              <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+            </div>
+            <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
+              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
+              <Button variant="primary" size="md" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share Set</Button>
+              <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
+            </div>
+          </div>
+        </Toolbar>
+      )}
 
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-            <div className="BuilderScroll" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8 }}>
+            <div className="BuilderScroll pane--addSongs" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8 }}>
               <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                 <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
@@ -418,7 +411,7 @@ async function exportPdf() {
 
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-            <div className="BuilderScroll" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8}}>
+            <div className="BuilderScroll pane--currentSet" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8}}>
               <div className="BuilderHeader">
                 <strong>Current setlist ({list.length})</strong>
               </div>

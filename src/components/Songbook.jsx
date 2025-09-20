@@ -10,7 +10,6 @@ import { showToast } from '../utils/toast'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
-import Select from './ui/Select'
 import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
@@ -33,20 +32,13 @@ export default function Songbook() {
     return uniq.slice().sort(byTitle)
   }, [])
 
-  // Search (match Setlist semantics). Keep ICP-only toggle.
+  // Search (match Setlist semantics).
   const [q, setQ] = useState('')
-  const [icpOnly, setIcpOnly] = useState(() => {
-    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
-  })
-  useEffect(() => {
-    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
-  }, [icpOnly])
 
   const fuse = useMemo(() => new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
   const results = useMemo(() => {
-    const base = q ? fuse.search(q).map(r => r.item) : items.slice().sort(byTitle)
-    return base.filter(s => !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP'))
-  }, [items, fuse, q, icpOnly])
+    return q ? fuse.search(q).map(r => r.item) : items.slice().sort(byTitle)
+  }, [items, fuse, q])
 
   // Selection
   const [selectedIds, setSelectedIds] = useState(() => new Set())
@@ -80,6 +72,14 @@ export default function Songbook() {
   // Export
   const [cover, setCover] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
+
+  // viewport listener
+  useEffect(() => {
+    function onResize(){ try { setIsMobile(window.innerWidth <= 640) } catch {} }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   async function handleExport() {
     if (!selectedEntries.length) return
@@ -167,7 +167,7 @@ export default function Songbook() {
 
       {/* Toolbar */}
       <Toolbar className="card" style={{ marginTop: 8 }}>
-        <div className="Field">
+        <div className="Field" style={{ minWidth: 0 }}>
           <label htmlFor="sb-cover">Upload Cover Image:</label>
           <input
             id="sb-cover"
@@ -175,6 +175,7 @@ export default function Songbook() {
             type="file"
             accept="image/*"
             onChange={onCoverFile}
+            style={isMobile ? ({ maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } as any) : undefined}
           />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
@@ -190,7 +191,7 @@ export default function Songbook() {
             title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
             iconLeft={<DownloadIcon />}
           >
-            {busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}
+            {busy ? 'Exporting…' : (isMobile ? 'PDF' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>)}
           </Button>
         </div>
       </Toolbar>
@@ -200,14 +201,11 @@ export default function Songbook() {
         {/* Left pane */}
         <div className="BuilderLeft">
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>
-            <div className="BuilderScroll" style={{ minHeight: 0, flex:'1 1 auto', overflow:'auto', marginTop: 8 }}>
+            <div className="BuilderScroll pane--addSongs" style={{ minHeight: 0, flex:'1 1 auto', overflow:'auto', marginTop: 8 }}>
               <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                 <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
-                <label className="row" style={{gap:6, alignItems:'center'}}>
-                  <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                  <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-                </label>
+                {/* ICP-only removed for Songbook */}
                 <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />} variant="primary" style={{ marginLeft: 'auto' }}>
                   <span className="text-when-wide">Add all ({filteredCount})</span>
                   <span className="text-when-narrow">All</span>
@@ -246,7 +244,7 @@ export default function Songbook() {
           <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
             <strong>Current selection ({selectedEntries.length})</strong>
             <div
-              className="PreviewList"
+              className="PreviewList pane--currentSet"
               role="region"
               aria-label="Selected songs"
               style={{ minHeight: 0, flex:'1 1 auto', overflow: 'auto', marginTop: 6 }}

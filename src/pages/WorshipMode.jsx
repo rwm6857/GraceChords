@@ -8,7 +8,7 @@ import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, TransposeIcon, RemoveIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
-const PT_WINDOW = [16, 15, 14, 13, 12]
+const PT_WINDOW = [18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
 const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
@@ -443,7 +443,7 @@ export default function WorshipMode(){
             const prevCols = content.style.columnCount
             const prevGap = content.style.columnGap
             try {
-              let pt = fontPx || 16
+              let pt = fontPx || 18
               for (;;) {
                 content.style.fontSize = `${pt}px`
                 content.style.columnCount = String(target)
@@ -585,8 +585,8 @@ export default function WorshipMode(){
             </div>
           )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 16) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 16) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 18) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 18) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
             {!isMobile && idx > 0 && (
               <button className="gc-btn" style={{padding:'12px 18px', fontSize:16}} onClick={prev} title="Previous song">← BACK</button>
             )}

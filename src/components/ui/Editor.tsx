@@ -9,6 +9,9 @@ type Props = {
 }
 
 export default function Editor({ value, onChange, textareaRef, preview }: Props){
+  const fontSize = preview
+    ? 'clamp(14px, 2.8vw, 16px)'
+    : 'clamp(12px, 2.5vw, 14px)' // slightly smaller when preview is off
   return (
     <div style={{ display: 'grid', gridTemplateColumns: preview ? '1fr 1fr' : '1fr', gap: 10 }}>
       <textarea
@@ -19,7 +22,7 @@ export default function Editor({ value, onChange, textareaRef, preview }: Props)
           width: '100%',
           minHeight: '60vh',
           fontFamily: fonts.editor,
-          fontSize: 'clamp(14px, 2.8vw, 16px)',
+          fontSize,
         }}
       />
       {preview ? (
@@ -30,4 +33,3 @@ export default function Editor({ value, onChange, textareaRef, preview }: Props)
     </div>
   )
 }
-
