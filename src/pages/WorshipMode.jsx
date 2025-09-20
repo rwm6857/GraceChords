@@ -523,13 +523,23 @@ export default function WorshipMode(){
             >
               <EyeIcon />{!isMobile ? <span className="text-when-wide">{showChords ? ' Chords On' : ' Chords Off'}</span> : null}
             </button>
-            {/* Key up (whole step) */}
+            {/* Key down (half step) */}
             <button
             className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(t => { const nt = t + 2; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              onClick={() => { setTranspose(t => { const nt = t - 1; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              title="Lower key"
+              aria-label="Lower key (half step)"
+            >
+              <TransposeIcon />{!isMobile ? <span className="text-when-wide"> Key Down</span> : null}
+            </button>
+            {/* Key up (half step) */}
+            <button
+            className="gc-btn"
+              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              onClick={() => { setTranspose(t => { const nt = t + 1; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
               title="Raise key"
-              aria-label="Raise key (whole step)"
+              aria-label="Raise key (half step)"
             >
               <TransposeIcon />{!isMobile ? <span className="text-when-wide"> Key Up</span> : null}
             </button>
@@ -661,7 +671,7 @@ function ChordLine({ plain, chords, steps, showChords }){
   }, [])
 
   return (
-    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: showChords ? state.padTop : 0}}>
+    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: (showChords && state.offsets.length>0) ? state.padTop : 0}}>
       {showChords && state.offsets.length>0 && (
         <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
           {state.offsets.map((c, i)=>(

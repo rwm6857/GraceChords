@@ -584,7 +584,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
   }, [])
 
   return (
-    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: showChords ? state.padTop : 0}}>
+    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: (showChords && state.offsets.length>0) ? state.padTop : 0}}>
       {showChords && state.offsets.length>0 && (
         <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
           {state.offsets.map((c, i)=>(
