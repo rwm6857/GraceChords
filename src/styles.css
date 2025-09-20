@@ -277,10 +277,10 @@ input,select,textarea{
   top: var(--nav-h, 0px); /* stick below the navbar */
   z-index: 50;            /* below .topnav (z-index: 60) */
   background: var(--bg, Canvas);
-  padding-block: 0; /* manage equal spacing via top padding + card margin */
-  padding-top: var(--space-2);
+  padding-block: 0; /* keep header tight to navbar */
+  padding-top: 0;
 }
-/* Keep default h1 margins to preserve nice spacing below title */
+.HomeHeader h1{ margin-top: 0; }
 .HomeHeader .row, .HomeHeader input, .HomeHeader label{ min-width: 0; max-width: 100%; }
 /* Only the results scroll */
 .HomeResults{
