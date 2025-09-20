@@ -81,8 +81,9 @@
   .gc-drawer__links{ display:flex; flex-direction:column; gap:6px; align-items: flex-end; text-align: right; }
   .gc-drawer .gc-navlink{ display:block; font-size: 1.05rem; padding:10px 12px; }
   .gc-drawer__footer{ margin-top:auto; padding-top:12px; border-top:1px solid var(--line); }
-  .gc-drawer__overlay{ position:fixed; inset:0; background: rgba(0,0,0,.35); backdrop-filter: blur(2px); z-index:998; display:none; }
+  .gc-drawer__overlay{ position:fixed; inset:0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index:998; display:none; }
   .gc-drawer.open + .gc-drawer__overlay{ display:block; }
+  .gc-drawer__overlay.open{ display:block; }
 
   /* Toolbar */
   .gc-toolbar{ position:sticky; top:0; z-index:50; background: var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }

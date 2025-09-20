@@ -132,7 +132,7 @@ export default function Navbar(){
           </button>
         </div>
       </div>
-      <div className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden={!open} />
+      <div className={["gc-drawer__overlay", open ? 'open' : ''].filter(Boolean).join(' ')} onClick={()=> closeDrawer()} aria-hidden={!open} />
     </nav>
   )
 }
