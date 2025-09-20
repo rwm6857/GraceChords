@@ -2,7 +2,7 @@ Create a PDF songbook from selected songs without transposition.
 
 ## At a glance
 - Checkbox list with search and filters like Home
-- Sticky header with inline search and ICP-only toggle
+- Sticky header with inline search
 - “Add all” respects current filters (primary, right-aligned)
 - Export is alphabetized and numbered
 - Always generates a table of contents; optional cover image

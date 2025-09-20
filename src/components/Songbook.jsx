@@ -175,7 +175,7 @@ export default function Songbook() {
             type="file"
             accept="image/*"
             onChange={onCoverFile}
-            style={isMobile ? ({ maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } as any) : undefined}
+            style={isMobile ? { maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } : undefined}
           />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
