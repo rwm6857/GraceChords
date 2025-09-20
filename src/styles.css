@@ -280,8 +280,7 @@ input,select,textarea{
   padding-block: 0; /* manage equal spacing via top padding + card margin */
   padding-top: var(--space-2);
 }
-.HomeHeader h1{ margin: 0; }
-.HomeHeader .card{ margin-top: var(--space-2); }
+/* Keep default h1 margins to preserve nice spacing below title */
 .HomeHeader .row, .HomeHeader input, .HomeHeader label{ min-width: 0; max-width: 100%; }
 /* Only the results scroll */
 .HomeResults{
