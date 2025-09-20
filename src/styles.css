@@ -65,7 +65,7 @@
 * { box-sizing: border-box }
 html, body, #root { height: 100% }
 .App { min-height: 100dvh; display: flex; flex-direction: column; }
-.Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.Route { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 /* .Route { overflow: hidden; }  Removed to allow sticky Home header */
 html, body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 #root, .Route { overflow-x: hidden; }
@@ -289,17 +289,11 @@ input,select,textarea{
 .HomeGrid{
   display:grid;
   gap:0.875rem;
-  grid-template-columns:minmax(0,1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   margin-top:10px;
 }
-
-@media (min-width:820px){ .HomeGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media (min-width:1200px){
-  .HomeGrid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
-}
-@media (min-width:1500px){
-  .HomeGrid{ grid-template-columns:repeat(4,minmax(0,1fr)); }
-}
+/* Cap at 4 columns on very wide screens */
+@media (min-width:1500px){ .HomeGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); } }
 
 /* Remove bullets and tidy lists */
 .HomeGrid, .HomeGrid ul, .HomeGrid li{
