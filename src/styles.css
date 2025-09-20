@@ -263,6 +263,8 @@ input,select,textarea{
   flex-direction:column;
   flex:1 1 auto;
   min-height:0;
+  height: calc(100 * var(--dvh) - var(--nav-h, 0px));
+  overflow: hidden; /* constrain inner scroller */
 }
 @supports(padding: max(0px)){
   .HomePage{
@@ -289,7 +291,7 @@ input,select,textarea{
 .HomeGrid{
   display:grid;
   gap:0.875rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   margin-top:10px;
 }
 /* Cap at 4 columns on very wide screens */
