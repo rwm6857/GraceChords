@@ -274,7 +274,7 @@ input,select,textarea{
 }
 .HomeHeader{
   position: sticky;
-  top: calc(var(--nav-h, 0px) - var(--space-2)); /* nudge up slightly while sticking below navbar */
+  top: calc(var(--nav-h, 0px) - var(--space-4)); /* nudge up more while sticking below navbar */
   z-index: 50;            /* below .topnav (z-index: 60) */
   background: var(--bg, Canvas);
   padding-block: 0; /* keep header tight to navbar */
