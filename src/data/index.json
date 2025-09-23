@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-22T14:50:59.737Z",
+  "generatedAt": "2025-09-23T17:09:40.640Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1641,10 +1641,17 @@
       "id": "under-the-blood",
       "title": "Under The Blood",
       "filename": "under_the_blood.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "originalKey": "A",
+      "tags": [
+        "Fast",
+        "Swung",
+        "Oldie",
+        "ICP"
+      ],
+      "authors": [
+        "Marty Nystrom"
+      ],
+      "country": "USA"
     },
     {
       "id": "up-and-fight-against-the-devil-key-of-b",
