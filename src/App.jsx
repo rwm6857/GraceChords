@@ -28,6 +28,7 @@ export default function App(){
             <Route path="/about" element={<About />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
+            <Route path="/setlist/:songIds" element={<Setlist />} />
             <Route path="/set/:code" element={<Setlist />} />
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />

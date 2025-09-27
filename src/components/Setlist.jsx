@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
@@ -25,7 +25,8 @@ let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
 export default function Setlist(){
-  const { code: routeCode } = useParams()
+  const { code: routeCode, songIds: routeSongIds } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
   // existing state
   const [name, setName] = useState('New Setlist')
@@ -89,8 +90,41 @@ export default function Setlist(){
       navigate('/setlist', { replace: true })
       return
     }
-    setList(entries.map(e => ({ id: e.id, toKey: e.toKey })))
+    // Update list and canonicalize to param-style URL
+    const decoded = entries.map(e => ({ id: e.id, toKey: e.toKey }))
+    setList(decoded)
+    const ids = decoded.map(e => e.id).join(',')
+    const keys = decoded.map(e => encodeURIComponent(e.toKey || '')).join(',')
+    navigate(`/setlist/${ids}?toKeys=${keys}`, { replace: true })
   }, [routeCode])
+
+  // Load set from param-style route (/setlist/:songIds?toKeys=...)
+  useEffect(() => {
+    if (!routeSongIds) return
+    const ids = (routeSongIds || '').split(',').map(s => s.trim()).filter(Boolean)
+    if (!ids.length) return
+    const qs = new URLSearchParams(location.search || '')
+    const toKeys = (qs.get('toKeys') || '').split(',').map(s => decodeURIComponent(s)).filter(Boolean)
+    const out = ids.map((id, i) => ({ id, toKey: toKeys[i] || '' }))
+    setList(out)
+  }, [routeSongIds, location.search])
+
+  // Keep URL in sync with current list so refresh/share reflect state (param-style)
+  useEffect(() => {
+    try {
+      if (!Array.isArray(list)) return
+      if (list.length === 0) {
+        if (routeCode || routeSongIds) navigate('/setlist', { replace: true })
+        return
+      }
+      const ids = list.map(e => e.id).join(',')
+      const keys = list.map(e => encodeURIComponent(e.toKey || '')).join(',')
+      const currentIds = routeSongIds || ''
+      const currentKeys = new URLSearchParams(location.search || '').get('toKeys') || ''
+      if (ids !== currentIds || keys !== currentKeys) navigate(`/setlist/${ids}?toKeys=${keys}`, { replace: true })
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list.map(s => `${s.id}:${s.toKey}`).join('|'), routeSongIds, location.search, routeCode])
 
   // (optional) migrate legacy single-set storage if present and nothing saved yet
   useEffect(() => {
@@ -270,8 +304,9 @@ async function exportPdf() {
   // Copy set link (generates code on demand)
   async function copySetLink(){
     try {
-      const code = encodeSet(list)
-      const url = `${location.origin}${location.pathname}#/set/${code}`
+      const ids = list.map(e => e.id).join(',')
+      const keys = list.map(e => encodeURIComponent(e.toKey || '')).join(',')
+      const url = `${location.origin}${location.pathname}#/setlist/${ids}?toKeys=${keys}`
       await navigator.clipboard.writeText(url)
       try { showToast?.('Link copied!') } catch {}
     } catch (e) { alert('Failed to copy link') }
