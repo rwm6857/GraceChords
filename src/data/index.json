@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-09-23T17:09:40.640Z",
+  "generatedAt": "2025-10-02T01:36:07.270Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1676,18 +1676,29 @@
       "title": "What a Beautiful Name",
       "filename": "what_a_beautiful_name.chordpro",
       "originalKey": "E",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow",
+        "Contemporary"
+      ],
+      "authors": [
+        "Hillsong"
+      ],
+      "country": "USA"
     },
     {
       "id": "what-a-beautiful-name-intercp-int-l-ver",
       "title": "What a Beautiful Name (InterCP Int’l Ver.)",
       "filename": "what_a_beautiful_name_intercp_int_l_ver.chordpro",
       "originalKey": "E",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow",
+        "Contemporary",
+        "ICP"
+      ],
+      "authors": [
+        "Hillsong"
+      ],
+      "country": "USA"
     },
     {
       "id": "where-jesus-is-tis-heaven",
