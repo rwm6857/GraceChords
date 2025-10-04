@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-02T03:38:09.466Z",
+  "generatedAt": "2025-10-04T17:45:14.440Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1667,9 +1667,15 @@
       "title": "We Will Keep Our Faith Alive",
       "filename": "we_will_keep_our_faith_alive.chordpro",
       "originalKey": "G",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Slow",
+        "Hymn",
+        "ICP"
+      ],
+      "authors": [
+        "Don Besig"
+      ],
+      "country": "USA"
     },
     {
       "id": "what-a-beautiful-name",
@@ -1764,12 +1770,16 @@
       "id": "you-deserve-the-glory",
       "title": "You Deserve the Glory",
       "filename": "you_deserve_the_glory.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Terry MacAlmon"
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Praise",
+        "Oldie"
       ],
-      "country": ""
+      "authors": [
+        "Tim Hughes"
+      ],
+      "country": "USA"
     },
     {
       "id": "you-endured-the-cross",
