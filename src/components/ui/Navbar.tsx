@@ -110,26 +110,28 @@ export default function Navbar(){
       </div>
       {/* Drawer (mobile/tablet) */}
       <div id="mainmenu" ref={drawerRef as any} className={['gc-drawer', open ? 'open':''].filter(Boolean).join(' ')} aria-hidden={!open}>
-        <div className="gc-drawer__links">
-          <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
-          <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
-          <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
-          <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
-          <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
-          <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
-        </div>
-        <div className="gc-drawer__footer">
-          <OfflineBadge />
-          <button
-            className="gc-btn gc-btn--secondary"
-            aria-label="Toggle dark mode"
-            aria-pressed={isDark}
-            onClick={onToggleClick}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{ width:'100%', justifyContent:'center', marginTop:8 }}
-          >
-            {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
-          </button>
+        <div className="gc-drawer__panel">
+          <div className="gc-drawer__links">
+            <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
+            <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
+            <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
+            <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
+            <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
+            <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
+          </div>
+          <div className="gc-drawer__footer">
+            <OfflineBadge />
+            <button
+              className="gc-btn gc-btn--secondary"
+              aria-label="Toggle dark mode"
+              aria-pressed={isDark}
+              onClick={onToggleClick}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{ width:'100%', justifyContent:'center', marginTop:8 }}
+            >
+              {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
+            </button>
+          </div>
         </div>
       </div>
       <div className={["gc-drawer__overlay", open ? 'open' : ''].filter(Boolean).join(' ')} onClick={()=> closeDrawer()} aria-hidden={!open} />
