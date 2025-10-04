@@ -109,7 +109,14 @@ export default function Navbar(){
         </div>
       </div>
       {/* Drawer (mobile/tablet) */}
-      <div id="mainmenu" ref={drawerRef as any} className={['gc-drawer', open ? 'open':''].filter(Boolean).join(' ')} aria-hidden={!open}>
+      <div
+        id="mainmenu"
+        ref={drawerRef as any}
+        className={['gc-drawer', open ? 'open':''].filter(Boolean).join(' ')}
+        data-open={open ? 'true' : 'false'}
+        aria-hidden={!open}
+      >
+        <button type="button" className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden="true" tabIndex={-1} />
         <div className="gc-drawer__panel">
           <div className="gc-drawer__links">
             <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
@@ -134,7 +141,6 @@ export default function Navbar(){
           </div>
         </div>
       </div>
-      <div className={["gc-drawer__overlay", open ? 'open' : ''].filter(Boolean).join(' ')} onClick={()=> closeDrawer()} aria-hidden={!open} />
     </nav>
   )
 }
