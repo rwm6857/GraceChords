@@ -118,10 +118,10 @@
     height:100%;
     margin:0;
     padding:calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + var(--safe-b));
-    background: var(--card);
-    color: var(--text);
+    background: rgba(17,24,39,.95);
+    color:#ffffff;
     border-radius:12px 0 0 12px;
-    box-shadow:-24px 0 48px rgba(15,23,42,.35);
+    box-shadow:-24px 0 48px rgba(15,23,42,.45);
     display:flex;
     flex-direction:column;
     gap:16px;
@@ -151,59 +151,32 @@
     font-size:1.05rem;
     padding:10px 14px;
     border-radius:10px;
-    color: var(--text) !important;
-    -webkit-text-fill-color: var(--text) !important;
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
     border:1px solid transparent;
     background:transparent;
     transition: background .18s ease, border-color .18s ease, color .18s ease;
   }
   .gc-drawer .gc-navlink:hover{
-    background: rgba(37,99,235,.10);
+    background:rgba(255,255,255,.12);
   }
   .gc-drawer .gc-navlink.active,
   .gc-drawer .gc-navlink.active:link,
   .gc-drawer .gc-navlink.active:visited{
-    background: var(--primary) !important;
-    border-color: var(--primary) !important;
+    background:rgba(255,255,255,.18) !important;
+    border-color:transparent !important;
     color:#ffffff !important;
     -webkit-text-fill-color:#ffffff !important;
   }
   .gc-drawer__footer{
     margin-top:auto;
     padding-top:16px;
-    border-top:1px solid var(--line);
+    border-top:1px solid rgba(255,255,255,.18);
     display:flex;
     flex-direction:column;
     gap:12px;
   }
   .gc-drawer__footer .gc-btn{
-    background: var(--btn);
-    color: var(--btn-text);
-    border-color: var(--line);
-  }
-
-  [data-theme="dark"] .gc-drawer__panel{
-    background: rgba(17,24,39,.95);
-    color:#ffffff;
-    box-shadow:-24px 0 48px rgba(0,0,0,.45);
-  }
-  [data-theme="dark"] .gc-drawer .gc-navlink{
-    color:#ffffff !important;
-    -webkit-text-fill-color:#ffffff !important;
-  }
-  [data-theme="dark"] .gc-drawer .gc-navlink:hover{
-    background:rgba(255,255,255,.12);
-  }
-  [data-theme="dark"] .gc-drawer .gc-navlink.active,
-  [data-theme="dark"] .gc-drawer .gc-navlink.active:link,
-  [data-theme="dark"] .gc-drawer .gc-navlink.active:visited{
-    background:rgba(255,255,255,.18) !important;
-    border-color:transparent !important;
-  }
-  [data-theme="dark"] .gc-drawer__footer{
-    border-top:1px solid rgba(255,255,255,.18);
-  }
-  [data-theme="dark"] .gc-drawer__footer .gc-btn{
     background:rgba(255,255,255,.14);
     color:#ffffff;
     border-color:transparent;
