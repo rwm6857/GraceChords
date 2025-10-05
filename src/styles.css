@@ -474,6 +474,52 @@ html, body, #root { height: 100%; }
   .setlist-scroll{ padding-right:4px; }
 }
 
+/* --- Setlist: mobile/single-column fixes --- */
+@media (max-width: 900px) {
+  /* Force stacked flow */
+  .BuilderPage,
+  .builder-grid,
+  .builder-page,
+  .setlist-root {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: auto !important;
+  }
+
+  /* Ensure sections grow naturally */
+  .setlist-section {
+    position: static !important;
+    inset: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    transform: none !important;
+  }
+
+  /* Proper spacing */
+  .setlist-add { margin-bottom: 16px !important; }
+  .setlist-current { margin-top: 0 !important; }
+
+  /* Disable sticky headers */
+  .section-header.no-sticky,
+  .setlist-section .section-header.no-sticky {
+    position: static !important;
+    top: auto !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Expand lists naturally */
+  .setlist-list.no-pane-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Defensive cleanup */
+  .card, .panel, .builder-card, .setlist-section {
+    overflow: visible !important;
+  }
+}
+
 /* List rows */
 .BuilderList { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
 .BuilderRow { border: 1px solid var(--border, rgba(0,0,0,.1)); border-radius: 12px; background: var(--surface, #f8f9fb); }

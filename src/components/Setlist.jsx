@@ -63,6 +63,7 @@ export default function Setlist(){
   const [busy, setBusy] = useState(false)
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
   const [isTablet, setIsTablet] = useState(() => { try { return window.innerWidth <= 820 } catch { return false } })
+  const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -169,6 +170,7 @@ export default function Setlist(){
         const w = window.innerWidth
         setIsMobile(w <= 640)
         setIsTablet(w <= 820)
+        setIsStacked(w <= 900)
       } catch {}
     }
     window.addEventListener('resize', onResize)
@@ -451,9 +453,9 @@ async function exportPdf() {
 
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
-          <div className="card setlist-pane">
-            <div className="BuilderScroll setlist-scroll pane--addSongs">
-              <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <section className="setlist-section setlist-add" data-role="add">
+            <div className="card setlist-pane">
+              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                 <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
                 <label className="row" style={{gap:6, alignItems:'center'}}>
@@ -461,32 +463,34 @@ async function exportPdf() {
                   <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
                 </label>
               </div>
-              {!fuse ? (
-                <div>Loading search…</div>
-              ) : (
-                <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', marginTop:6 }}>
-                  {results.map(s=> (
-                    <SongCard
-                      key={s.id}
-                      title={s.title}
-                      subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
-                      rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
-                      onClick={() => addSong(s)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--addSongs'].join(' ')}>
+                {!fuse ? (
+                  <div>Loading search…</div>
+                ) : (
+                  <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', marginTop:6 }}>
+                    {results.map(s=> (
+                      <SongCard
+                        key={s.id}
+                        title={s.title}
+                        subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+                        rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
+                        onClick={() => addSong(s)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </section>
         </div>
 
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
-          <div className="card setlist-pane">
-            <div className="BuilderScroll setlist-scroll pane--currentSet">
-              <div className="BuilderHeader">
+          <section className="setlist-section setlist-current" data-role="current">
+            <div className="card setlist-pane">
+              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')}>
                 <strong>Current setlist ({list.length})</strong>
               </div>
-              <div style={{ marginTop: 6 }}>
+              <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
                 {list.map((sel, idx)=>{
                   const s = items.find(it=> it.id===sel.id)
                   if(!s) return null
@@ -531,7 +535,7 @@ async function exportPdf() {
               })}
             </ol>
           </div>
-          </div>
+          </section>
         </div>
       </div>
     </PageContainer>
