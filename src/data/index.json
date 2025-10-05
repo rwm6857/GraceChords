@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-04T17:45:14.440Z",
+  "generatedAt": "2025-10-05T17:13:43.012Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -780,6 +780,21 @@
       ],
       "authors": [],
       "country": "Korea"
+    },
+    {
+      "id": "i-exalt-thee",
+      "title": "I Exalt Thee",
+      "filename": "i_exalt_thee.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Slow",
+        "Hymn",
+        "Oldie"
+      ],
+      "authors": [
+        "Pete Sanchez"
+      ],
+      "country": "USA"
     },
     {
       "id": "i-give-you-my-heart",
