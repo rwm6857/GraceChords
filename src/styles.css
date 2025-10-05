@@ -465,7 +465,12 @@ html, body, #root { height: 100%; }
 .setlist-scroll{ margin-top:8px; padding-right:6px; }
 
 @media (max-width: 900px){
-  .setlist-pane{ flex:1 1 auto; min-height:0; max-height:none; }
+  .setlist-pane{
+    flex:0 0 auto;
+    min-height: var(--setlist-pane-min);
+    max-height: var(--setlist-pane-max);
+    width: 100%;
+  }
 }
 @media (max-width: 640px){
   .setlist-scroll{ padding-right:4px; }
