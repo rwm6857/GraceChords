@@ -452,10 +452,10 @@ html, body, #root { height: 100%; }
 .setlist-pane{
   display:flex;
   flex-direction:column;
-  align-self:flex-start;
-  flex:0 1 var(--setlist-pane-max);
-  min-height: var(--setlist-pane-min);
-  max-height: var(--setlist-pane-max);
+  width:100%;
+  align-self:stretch;
+  min-height:0;
+  max-height:none;
 }
 .setlist-pane .BuilderScroll{
   flex:1 1 auto;
@@ -466,10 +466,8 @@ html, body, #root { height: 100%; }
 
 @media (max-width: 900px){
   .setlist-pane{
-    flex:0 0 auto;
     min-height: var(--setlist-pane-min);
     max-height: var(--setlist-pane-max);
-    width: 100%;
   }
 }
 @media (max-width: 640px){
