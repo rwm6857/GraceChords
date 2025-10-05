@@ -1,5 +1,5 @@
-import React, { useLayoutEffect, useRef, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import React, { useLayoutEffect, useRef, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import OfflineBadge from '../OfflineBadge'
 import { currentTheme, toggleTheme } from '../../utils/theme'
@@ -15,7 +15,7 @@ export default function Navbar(){
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null)
   const drawerRef = useRef<HTMLDivElement | null>(null)
-  const portalRef = useRef<HTMLDivElement | null>(null)
+  const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
 
   useLayoutEffect(() => {
@@ -35,6 +35,17 @@ export default function Navbar(){
     toggleTheme()
     setBump(x => x + 1)
   }
+
+  useEffect(() => {
+    const host = document.createElement('div')
+    host.className = 'gc-drawer-host'
+    document.body.appendChild(host)
+    setPortalNode(host)
+    return () => {
+      if (host.parentNode) host.parentNode.removeChild(host)
+      lockBodyScroll(false)
+    }
+  }, [])
 
   // Drawer helpers
   function lockBodyScroll(lock: boolean){
@@ -84,7 +95,7 @@ export default function Navbar(){
           ref={btnRef as any}
           className="gc-hamburger"
           aria-label="Open main menu"
-          aria-controls="mainmenu"
+          aria-controls="gc-mobile-nav"
           aria-expanded={open}
           onClick={(e)=> { e.preventDefault(); open ? closeDrawer() : openDrawer() }}
         >
@@ -112,9 +123,9 @@ export default function Navbar(){
         </div>
         </div>
       </nav>
-      {portalRef.current ? ReactDOM.createPortal(
+      {portalNode ? createPortal(
         <div
-          id="mainmenu"
+          id="gc-mobile-nav"
           ref={drawerRef as any}
           className={['gc-drawer', open ? 'open' : ''].filter(Boolean).join(' ')}
           data-open={open ? 'true' : 'false'}
@@ -145,18 +156,8 @@ export default function Navbar(){
             </div>
           </nav>
         </div>,
-        portalRef.current
+        portalNode
       ) : null}
     </>
   )
 }
-  useEffect(() => {
-    const host = document.createElement('div')
-    host.className = 'gc-drawer-host'
-    document.body.appendChild(host)
-    portalRef.current = host
-    return () => {
-      if (host.parentNode) host.parentNode.removeChild(host)
-      portalRef.current = null
-    }
-  }, [])
