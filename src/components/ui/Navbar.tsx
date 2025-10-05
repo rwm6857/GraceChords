@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import OfflineBadge from '../OfflineBadge'
 import { currentTheme, toggleTheme } from '../../utils/theme'
@@ -14,6 +15,7 @@ export default function Navbar(){
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null)
   const drawerRef = useRef<HTMLDivElement | null>(null)
+  const portalRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
 
   useLayoutEffect(() => {
@@ -73,8 +75,9 @@ export default function Navbar(){
   }, [open])
 
   return (
-    <nav className="gc-navbar" ref={navRef as any}>
-      <div className="gc-navbar__inner">
+    <>
+      <nav className="gc-navbar" ref={navRef as any}>
+        <div className="gc-navbar__inner">
         <Link to="/" className="gc-brand">GraceChords</Link>
         {/* Hamburger on mobile/tablet */}
         <button
@@ -107,40 +110,53 @@ export default function Navbar(){
             {isDark ? <Sun /> : <Moon />}
           </button>
         </div>
-      </div>
-      {/* Drawer (mobile/tablet) */}
-      <div
-        id="mainmenu"
-        ref={drawerRef as any}
-        className={['gc-drawer', open ? 'open':''].filter(Boolean).join(' ')}
-        data-open={open ? 'true' : 'false'}
-        aria-hidden={!open}
-      >
-        <button type="button" className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden="true" tabIndex={-1} />
-        <nav className="gc-drawer__panel" role="navigation" aria-label="Mobile menu">
-          <div className="gc-drawer__links">
-            <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
-            <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
-            <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
-            <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
-            <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
-            <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
-          </div>
-          <div className="gc-drawer__footer">
-            <OfflineBadge />
-            <button
-              className="gc-btn gc-btn--secondary"
-              aria-label="Toggle dark mode"
-              aria-pressed={isDark}
-              onClick={onToggleClick}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              style={{ width:'100%', justifyContent:'center', marginTop:8 }}
-            >
-              {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
-            </button>
-          </div>
-        </nav>
-      </div>
-    </nav>
+        </div>
+      </nav>
+      {portalRef.current ? ReactDOM.createPortal(
+        <div
+          id="mainmenu"
+          ref={drawerRef as any}
+          className={['gc-drawer', open ? 'open' : ''].filter(Boolean).join(' ')}
+          data-open={open ? 'true' : 'false'}
+          aria-hidden={!open}
+        >
+          <button type="button" className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden="true" tabIndex={-1} />
+          <nav className="gc-drawer__panel" role="navigation" aria-label="Mobile menu">
+            <div className="gc-drawer__links">
+              <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
+              <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
+              <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
+              <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
+              <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
+              <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
+            </div>
+            <div className="gc-drawer__footer">
+              <OfflineBadge />
+              <button
+                className="gc-btn gc-btn--secondary"
+                aria-label="Toggle dark mode"
+                aria-pressed={isDark}
+                onClick={onToggleClick}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                style={{ width:'100%', justifyContent:'center', marginTop:8 }}
+              >
+                {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
+              </button>
+            </div>
+          </nav>
+        </div>,
+        portalRef.current
+      ) : null}
+    </>
   )
 }
+  useEffect(() => {
+    const host = document.createElement('div')
+    host.className = 'gc-drawer-host'
+    document.body.appendChild(host)
+    portalRef.current = host
+    return () => {
+      if (host.parentNode) host.parentNode.removeChild(host)
+      portalRef.current = null
+    }
+  }, [])

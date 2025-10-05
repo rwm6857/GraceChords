@@ -46,6 +46,8 @@
   --bp-tablet: 820px;
   --setlist-pane-min: clamp(320px, 48vh, 420px);
   --setlist-pane-max: clamp(380px, 60vh, 520px);
+  --drawer-surface: rgba(15,23,42,.94);
+  --drawer-text: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -61,6 +63,8 @@
 
   --btn: #1f2937;
   --btn-text: #e6e7ea;
+  --drawer-surface: rgba(8,12,20,.94);
+  --drawer-text: #ffffff;
 }
 
 /* ========== Global ========== */

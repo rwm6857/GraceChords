@@ -118,8 +118,8 @@
     height:100%;
     margin:0;
     padding:calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + var(--safe-b));
-    background: rgba(17,24,39,.95);
-    color:#ffffff;
+    background: var(--drawer-surface);
+    color: var(--drawer-text);
     border-radius:12px 0 0 12px;
     box-shadow:-24px 0 48px rgba(15,23,42,.45);
     display:flex;
@@ -151,8 +151,8 @@
     font-size:1.05rem;
     padding:10px 14px;
     border-radius:10px;
-    color:#ffffff !important;
-    -webkit-text-fill-color:#ffffff !important;
+    color: var(--drawer-text) !important;
+    -webkit-text-fill-color: var(--drawer-text) !important;
     border:1px solid transparent;
     background:transparent;
     transition: background .18s ease, border-color .18s ease, color .18s ease;
@@ -178,7 +178,7 @@
   }
   .gc-drawer__footer .gc-btn{
     background:rgba(255,255,255,.14);
-    color:#ffffff;
+    color: var(--drawer-text);
     border-color:transparent;
   }
 
