@@ -44,6 +44,8 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --bp-mobile: 640px;
   --bp-tablet: 820px;
+  --setlist-pane-min: clamp(320px, 48vh, 420px);
+  --setlist-pane-max: clamp(380px, 60vh, 520px);
 }
 
 [data-theme="dark"] {
@@ -443,12 +445,26 @@ html, body, #root { height: 100%; }
 .BuilderHeader { position: sticky; top: 0; z-index: 5; background: var(--card); padding: .75rem 0; }
 .BuilderScroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 
-/* Panes with fixed heights on small screens */
+.setlist-pane{
+  display:flex;
+  flex-direction:column;
+  align-self:flex-start;
+  flex:0 1 var(--setlist-pane-max);
+  min-height: var(--setlist-pane-min);
+  max-height: var(--setlist-pane-max);
+}
+.setlist-pane .BuilderScroll{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+}
+.setlist-scroll{ margin-top:8px; padding-right:6px; }
+
+@media (max-width: 900px){
+  .setlist-pane{ flex:1 1 auto; min-height:0; max-height:none; }
+}
 @media (max-width: 640px){
-  .pane--addSongs,
-  .pane--currentSet { overflow: auto; min-height: 0; }
-  .pane--addSongs { height: var(--addSongsH, 360px); }
-  .pane--currentSet { max-height: var(--addSongsH, 360px); }
+  .setlist-scroll{ padding-right:4px; }
 }
 
 /* List rows */

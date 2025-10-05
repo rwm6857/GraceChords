@@ -117,7 +117,7 @@ export default function Navbar(){
         aria-hidden={!open}
       >
         <button type="button" className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden="true" tabIndex={-1} />
-        <div className="gc-drawer__panel">
+        <nav className="gc-drawer__panel" role="navigation" aria-label="Mobile menu">
           <div className="gc-drawer__links">
             <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
             <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
@@ -139,7 +139,7 @@ export default function Navbar(){
               {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
             </button>
           </div>
-        </div>
+        </nav>
       </div>
     </nav>
   )

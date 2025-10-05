@@ -24,6 +24,24 @@ import PageContainer from './layout/PageContainer'
 let pdfLibPromise
 const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
 
+function makeUid(){
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  } catch {}
+  return `sel-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+}
+
+function createSelection(input){
+  if (!input) return null
+  const { id, toKey = '' } = input
+  if (id == null) return null
+  return { uid: makeUid(), id, toKey }
+}
+
+function hydrateSelections(entries = []){
+  return entries.map(entry => createSelection(entry)).filter(Boolean)
+}
+
 export default function Setlist(){
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
@@ -92,7 +110,7 @@ export default function Setlist(){
     }
     // Update list and canonicalize to param-style URL
     const decoded = entries.map(e => ({ id: e.id, toKey: e.toKey }))
-    setList(decoded)
+    setList(hydrateSelections(decoded))
     const ids = decoded.map(e => e.id).join(',')
     const keys = decoded.map(e => encodeURIComponent(e.toKey || '')).join(',')
     navigate(`/setlist/${ids}?toKeys=${keys}`, { replace: true })
@@ -106,7 +124,7 @@ export default function Setlist(){
     const qs = new URLSearchParams(location.search || '')
     const toKeys = (qs.get('toKeys') || '').split(',').map(s => decodeURIComponent(s)).filter(Boolean)
     const out = ids.map((id, i) => ({ id, toKey: toKeys[i] || '' }))
-    setList(out)
+    setList(hydrateSelections(out))
   }, [routeSongIds, location.search])
 
   // Keep URL in sync with current list so refresh/share reflect state (param-style)
@@ -138,7 +156,7 @@ export default function Setlist(){
         setSavedSets(listSets())
         setCurrentId(saved.id)
         setName(saved.name)
-        setList(saved.items || [])
+        setList(hydrateSelections(saved.items || []))
         setSelectedId(saved.id)
       }
     } catch {}
@@ -166,23 +184,40 @@ export default function Setlist(){
   }, [q, fuse, items, icpOnly])
 
   // list mutators
-  function addSong(s){ if(list.find(x=> x.id===s.id)) return; setList([...list, { id: s.id, toKey: s.originalKey || 'C' }]) }
-  function removeSong(id){ setList(list.filter(x=> x.id!==id)) }
-  function move(id, dir){
-    const i = list.findIndex(x=> x.id===id); if(i<0) return
-    const j = i + (dir==='up'?-1:1); if(j<0||j>=list.length) return
-    const copy = list.slice(); const [item] = copy.splice(i,1); copy.splice(j,0,item); setList(copy)
+  function addSong(s){
+    if (!s) return
+    const entry = createSelection({ id: s.id, toKey: s.originalKey || s.key || 'C' })
+    setList(prev => [...prev, entry])
   }
-  function moveToIndex(srcId, dstIndex){
-    const i = list.findIndex(x=> x.id===srcId); if(i<0) return
-    if (dstIndex < 0 || dstIndex >= list.length) return
-    if (i === dstIndex) return
-    const copy = list.slice();
-    const [item] = copy.splice(i,1);
-    copy.splice(dstIndex,0,item);
-    setList(copy)
+  function removeSong(uid){
+    setList(prev => prev.filter(x => x.uid !== uid))
   }
-  function changeKey(id, val){ setList(list.map(x=> x.id===id ? { ...x, toKey: val } : x)) }
+  function move(uid, dir){
+    setList(prev => {
+      const i = prev.findIndex(x => x.uid === uid)
+      if (i < 0) return prev
+      const j = i + (dir === 'up' ? -1 : 1)
+      if (j < 0 || j >= prev.length) return prev
+      const copy = prev.slice()
+      const [item] = copy.splice(i, 1)
+      copy.splice(j, 0, item)
+      return copy
+    })
+  }
+  function moveToIndex(srcUid, dstIndex){
+    setList(prev => {
+      if (dstIndex < 0 || dstIndex >= prev.length) return prev
+      const i = prev.findIndex(x => x.uid === srcUid)
+      if (i < 0 || i === dstIndex) return prev
+      const copy = prev.slice()
+      const [item] = copy.splice(i, 1)
+      copy.splice(dstIndex, 0, item)
+      return copy
+    })
+  }
+  function changeKey(uid, val){
+    setList(prev => prev.map(x => x.uid === uid ? { ...x, toKey: val } : x))
+  }
 
   // quick transpose (entire set)
   function transposeSet(delta){
@@ -218,14 +253,15 @@ export default function Setlist(){
       const existing = (listSets() || []).find(s => (s.name || '') === finalName)
       if (existing) targetId = existing.id
     }
-    const saved = saveSet({ id: targetId, name: finalName, items: list })
+    const payload = list.map(({ id, toKey }) => ({ id, toKey }))
+    const saved = saveSet({ id: targetId, name: finalName, items: payload })
     setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
   }
   function onLoadConfirm(){
     const id = loadChoice || selectedId || ''
     if (!id) { setLoadOpen(false); return }
     const s = getSet(id)
-    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(s.items || []) ; setSelectedId(s.id) }
+    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])) ; setSelectedId(s.id) }
     setLoadOpen(false)
   }
   function onOpenLoad(){
@@ -415,8 +451,8 @@ async function exportPdf() {
 
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-            <div className="BuilderScroll pane--addSongs" style={{ minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8 }}>
+          <div className="card setlist-pane">
+            <div className="BuilderScroll setlist-scroll pane--addSongs">
               <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                 <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
@@ -445,8 +481,8 @@ async function exportPdf() {
         </div>
 
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-            <div className="BuilderScroll pane--currentSet" style={{minHeight:0, flex:'1 1 auto', overflow:'auto', marginTop:8}}>
+          <div className="card setlist-pane">
+            <div className="BuilderScroll setlist-scroll pane--currentSet">
               <div className="BuilderHeader">
                 <strong>Current setlist ({list.length})</strong>
               </div>
@@ -456,21 +492,21 @@ async function exportPdf() {
                   if(!s) return null
                   return (
                     <SongCard
-                      key={sel.id}
+                      key={sel.uid || `${sel.id}-${idx}`}
                       draggable
-                      onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.id)); e.dataTransfer.effectAllowed = 'move' }}
+                      onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.uid || sel.id)); e.dataTransfer.effectAllowed = 'move' }}
                       onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                       onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
                       title={s.title}
                       subtitle={`Original: ${s.originalKey || '—'}`}
                       rightSlot={
                         <div style={{display:'flex', alignItems:'center', gap:6}}>
-                          <Select value={sel.toKey} onChange={e=> changeKey(sel.id, e.target.value)}>
+                          <Select value={sel.toKey} onChange={e=> changeKey(sel.uid, e.target.value)}>
                             {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
                           </Select>
-                          <Button onClick={()=> move(sel.id,'up')} title="Move up" iconLeft={<ArrowUp />} />
-                          <Button onClick={()=> move(sel.id,'down')} title="Move down" iconLeft={<ArrowDown />} />
-                          <Button onClick={()=> removeSong(sel.id)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                          <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
+                          <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
+                          <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                         </div>
                       }
                     />
@@ -484,11 +520,11 @@ async function exportPdf() {
           <div className="print-only" style={{marginTop:16}}>
             <h2 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h2>
             <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
-              {list.map(sel => {
+              {list.map((sel, idxPrint) => {
                 const s = items.find(it=> it.id===sel.id)
                 if (!s) return null
                 return (
-                  <li key={sel.id}>
+                  <li key={sel.uid || `${sel.id}-${idxPrint}`}>
                     {s.title} — {sel.toKey || s.originalKey || '—'}
                   </li>
                 )
