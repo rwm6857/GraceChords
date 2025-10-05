@@ -464,12 +464,6 @@ html, body, #root { height: 100%; }
 }
 .setlist-scroll{ margin-top:8px; padding-right:6px; }
 
-@media (max-width: 900px){
-  .setlist-pane{
-    min-height: var(--setlist-pane-min);
-    max-height: var(--setlist-pane-max);
-  }
-}
 @media (max-width: 640px){
   .setlist-scroll{ padding-right:4px; }
 }
@@ -486,6 +480,15 @@ html, body, #root { height: 100%; }
     grid-auto-rows: auto !important;
   }
 
+  .BuilderLeft,
+  .BuilderRight{
+    display:block !important;
+    min-height:0 !important;
+    width:100% !important;
+  }
+  .BuilderLeft{ order:0 !important; }
+  .BuilderRight{ order:1 !important; margin-top:16px; }
+
   /* Ensure sections grow naturally */
   .setlist-section {
     position: static !important;
@@ -494,11 +497,22 @@ html, body, #root { height: 100%; }
     overflow: visible !important;
     z-index: auto !important;
     transform: none !important;
+    display:block !important;
+  }
+
+  .setlist-pane{
+    display:block !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  .setlist-pane .BuilderScroll{
+    overflow:visible !important;
   }
 
   /* Proper spacing */
   .setlist-add { margin-bottom: 16px !important; }
-  .setlist-current { margin-top: 0 !important; }
+  .setlist-current { margin-top: 16px !important; }
 
   /* Disable sticky headers */
   .section-header.no-sticky,
@@ -507,9 +521,15 @@ html, body, #root { height: 100%; }
     top: auto !important;
     backdrop-filter: none !important;
   }
+  .BuilderHeader.no-sticky{ position: static !important; }
 
   /* Expand lists naturally */
-  .setlist-list.no-pane-scroll {
+  .setlist-section.setlist-add .setlist-list{
+    max-height: 62dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .setlist-section.setlist-current .setlist-list{
     max-height: none !important;
     overflow: visible !important;
   }

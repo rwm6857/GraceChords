@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
@@ -64,6 +64,8 @@ export default function Setlist(){
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
   const [isTablet, setIsTablet] = useState(() => { try { return window.innerWidth <= 820 } catch { return false } })
   const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
+  const originalHtmlOverflow = useRef('')
+  const originalBodyOverflow = useRef('')
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -99,6 +101,23 @@ export default function Setlist(){
     check()
     return () => { cancelled = true }
   }, [list, items])
+
+  useEffect(() => {
+    try {
+      const html = document.documentElement
+      const body = document.body
+      originalHtmlOverflow.current = html.style.overflowY || ''
+      originalBodyOverflow.current = body.style.overflowY || ''
+      if (getComputedStyle(html).overflowY === 'hidden') html.style.overflowY = ''
+      if (getComputedStyle(body).overflowY === 'hidden') body.style.overflowY = ''
+    } catch {}
+    return () => {
+      try {
+        document.documentElement.style.overflowY = originalHtmlOverflow.current
+        document.body.style.overflowY = originalBodyOverflow.current
+      } catch {}
+    }
+  }, [])
 
   // Load set from route code if present
   useEffect(() => {
