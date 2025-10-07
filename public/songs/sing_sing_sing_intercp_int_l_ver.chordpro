@@ -1,28 +1,30 @@
 {title: Sing Sing Sing (InterCP Int’l Ver.)}
 {key: D}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{authors: Chris Tomlin}
+{country: USA}
+{tags: Fast, Contemporary, ICP}
 
+{start_of_verse: Verse 1}
+[D]The Son of promise, Jesus, who shed his blood and freed us
+[Bm7]To fulfill history, Son of God, you are the one[A]
+Let all the [G]earth, proclaim your [D]name
 
+{end_of_verse}
 
-{sov: Verse 1}
-The Son of promise, Jesus, who shed his blood and freed us 
-To fulfill history, Son of God, you are the one 
-Let all the earth, proclaim your name 
+{start_of_verse: Verse 2}
+[D]God’s holy army rising, trumpets of war resounding
+[Bm7]Stirring hearts for battle, Lamb of God we follow [A]you
+Where you will [G]go, to victo[Bm]ry [A/C#]
 
-{eov}
-{sov: Verse 2}
-God’s holy army rising, trumpets of war resounding 
-Stirring hearts for battle, Lamb of God we follow you 
-Where you will go, to victory 
+{end_of_verse}
 
-{eov}
-{soc: Chorus}
-We will sing, sing, sing, and make music with the heavens 
-We will sing, sing, sing, grateful that you hear us 
-When we shout your praise 
-Lift high the name of Jesus 
-{eoc}
+{start_of_chorus: Chorus}
+We will [D]sing, sing, sing, and make music with the heavens
+We will [Bm7]sing, sing, sing, grateful that you hear us
+When we [A]shout your praise
+Lift [G]high the name of [D]Jesus
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
