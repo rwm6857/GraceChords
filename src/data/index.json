@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-05T17:13:43.012Z",
+  "generatedAt": "2025-10-07T03:11:17.219Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -834,6 +834,21 @@
       "country": "Iran"
     },
     {
+      "id": "i-pledge-allegiance-to-the-lamb",
+      "title": "I Pledge Allegiance to the Lamb",
+      "filename": "i_pledge_allegiance_to_the_lamb.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Commitment",
+        "ICP"
+      ],
+      "authors": [
+        "Ray Boltz"
+      ],
+      "country": "USA"
+    },
+    {
       "id": "i-thank-god",
       "title": "I Thank God",
       "filename": "i_thank_god.chordpro",
@@ -1203,9 +1218,13 @@
       "title": "Maranatha",
       "filename": "maranatha.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Mission",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "mighty-to-save",
@@ -1246,7 +1265,12 @@
       "title": "My Savior King",
       "filename": "my_savior_king.chordpro",
       "originalKey": "G",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Praise",
+        "Nations",
+        "ICP"
+      ],
       "authors": [],
       "country": "India"
     },
@@ -1321,9 +1345,13 @@
       "title": "Open Up the Doors of Heaven",
       "filename": "open_up_the_doors_of_heaven.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Praise",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "our-god",
@@ -1454,9 +1482,13 @@
       "title": "Seek, Hope, and Pray",
       "filename": "seek_hope_and_pray.chordpro",
       "originalKey": "F",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Worship",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "set-a-fire",
@@ -1503,9 +1535,15 @@
       "title": "Sing Sing Sing (InterCP Int’l Ver.)",
       "filename": "sing_sing_sing_intercp_int_l_ver.chordpro",
       "originalKey": "D",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "tags": [
+        "Fast",
+        "Contemporary",
+        "ICP"
+      ],
+      "authors": [
+        "Chris Tomlin"
+      ],
+      "country": "USA"
     },
     {
       "id": "singing-i-go",
@@ -1521,9 +1559,13 @@
       "title": "Sitting in the Shadow of Death",
       "filename": "sitting_in_the_shadow_of_death.chordpro",
       "originalKey": "A",
-      "tags": [],
+      "tags": [
+        "Slow",
+        "Mission",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
       "id": "spirit-come",
@@ -1609,6 +1651,21 @@
       "country": "Korea"
     },
     {
+      "id": "the-throne",
+      "title": "The Throne",
+      "filename": "the_throne.chordpro",
+      "originalKey": "Fm",
+      "tags": [
+        "Slow",
+        "Worship",
+        "Mission",
+        "Nations",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "Taiwan"
+    },
+    {
       "id": "there-is-a-cloud",
       "title": "There Is a Cloud",
       "filename": "there_is_a_cloud.chordpro",
@@ -1619,15 +1676,6 @@
         "Chris Brown",
         "Mack Brock"
       ],
-      "country": ""
-    },
-    {
-      "id": "thethrone",
-      "title": "TheThrone",
-      "filename": "the_throne.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
       "country": ""
     },
     {
