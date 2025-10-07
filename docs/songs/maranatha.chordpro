@@ -1,37 +1,40 @@
 {title: Maranatha}
 {key: A}
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{country: Korea}
+{tags: Slow, Mission, ICP}
+{youtube: VDNhMhj2GhQ}
 
-
-
-{sov: Verse 1}
+{start_of_verse: Verse 1}
 Maranatha, Jesus our Lord 
 Come, we long for your return 
 Across the earth, may nations rise 
 To worship you our Lord and King  
 
-{eov}
-{sov: Verse 2}
+{end_of_verse}
+
+{start_of_verse: Verse 2}
 Maranatha, do not delay 
 Come, we long for your return 
 All tribes and tongue, turn to Jesus  
 With dance and praise before His coming throne  
 
-{eov}
-{soc: Pre-Chorus}
+{end_of_verse}
+
+{start_of_chorus: Pre-Chorus}
 King of kings, we’ll prepare the way of your return 
 We’ll take up our cross and go out to the ends of the earth  
 When the glory of the kingdom is covering the earth 
 From the nations we will usher in our King  
 
-{eoc}
-{soc: Chorus}
+{end_of_chorus}
+
+{start_of_chorus: Chorus}
 Maranatha, Maranatha 
 Amen, Jesus, come we long for your return 
 Maranatha, Maranatha  
 Amen, Jesus, come we long for your return  
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
