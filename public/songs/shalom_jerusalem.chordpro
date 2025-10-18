@@ -1,40 +1,31 @@
-{title: ShalomJerusalem}
-{key: }
-{authors: }
-{country: }
-{tags: }
-{youtube: }
-{mp3: }
+{title: Shalom Jerusalem}
+{key: Bm}
+{country: Israel}
+{tags: Slow, Mission, Nations, ICP}
 
+{start_of_verse: Verse 1}
+[Bm]Pray for peace [Em]Jerusalem, [F#sus]city of [F#]our God[Bm]
+[Em]There salvation was [Bm]poured [G]out for you, the [F#]atoning of the [Bm]Lord
+[Bm]Once your streets were filled [Em]with joy, [F#]branches raised up [Bm]high
+[Em]Shouting, "Blessed [Bm]be the Holy One, [F#]Yeshua Ado[Bm]nai"
 
+{end_of_verse}
 
-{sov: Verse}
-(KeyofBm)
-Verse1
-BmEmF#susF#Bm
-PrayforpeaceJerusalem,cityofourGod
-EmBmGF#Bm
-Theresalvationwaspouredoutforyou,theatoningoftheLord
-BmEmF#Bm
-Onceyourstreetswerefilledwithjoy,branchesraiseduphigh
-EmBmF#Bm
-shouting,"BlessedbetheHolyOne,YeshuaAdonai"
-{eov}
-{soc: Chorus}
-GDABm
-ShalomshalomJerusalempeacebetoyou
-GABm
-WhenMessiahcomestotakeushome
-GF#susF#Bm
-MayHispraisebefoundinyou
-Verse2
-BmEmF#susF#BmEmBm
-Israelbeloved,Ephraimmyson,howmyheartwouldthrilltohearyousay,
-GF#Bm
-"OurMessiahhascome!"
-BmEmF#Bm
-Ohmybrothershearthesewords,maytheypierceyoursoul
-EmBmGF#Bm
-TurnagaintoworshipAdonai,MessiahYeshua
+{start_of_chorus: Chorus}
+[G]Shalom shalom [D]Jerusalem [A]peace be to [Bm]you
+[G]When Mes[A]siah [Bm]comes to take us home
+[G]May His [F#sus]praise be [F#]found in [Bm]you
 
-{eoc}
+{end_of_chorus}
+
+{start_of_verse: Verse 2}
+[Bm]Israel be[Em]loved, [F#sus]Ephraim [F#]my [Bm]son, [Em]how my heart would thrill to [Bm]hear you say,
+"[G]Our [F#]Messiah [Bm]has come!"
+[Bm]Oh my brothers [Em]hear these [F#]words, may they [Bm]pierce your soul
+[Em]Turn again to worship Adonai, [G]Mes[F#]siah Yesh[Bm]ua
+
+{end_of_verse}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
