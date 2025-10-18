@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-07T03:11:17.219Z",
+  "generatedAt": "2025-10-18T17:02:47.591Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1329,6 +1329,21 @@
       "country": "Japan"
     },
     {
+      "id": "once-again",
+      "title": "Once Again",
+      "filename": "once_again.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Mission",
+        "Commitment",
+        "Revival",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "Korea"
+    },
+    {
       "id": "one-way",
       "title": "One Way",
       "filename": "one_way.chordpro",
@@ -1502,13 +1517,18 @@
       "country": ""
     },
     {
-      "id": "shalomjerusalem",
-      "title": "ShalomJerusalem",
+      "id": "shalom-jerusalem",
+      "title": "Shalom Jerusalem",
       "filename": "shalom_jerusalem.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "Bm",
+      "tags": [
+        "Slow",
+        "Mission",
+        "Nations",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Israel"
     },
     {
       "id": "shout-to-the-lord",
@@ -1636,6 +1656,20 @@
         "Bryan McCleery"
       ],
       "country": ""
+    },
+    {
+      "id": "the-love-of-the-cross",
+      "title": "The Love of the Cross",
+      "filename": "the_love_of_the_cross.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Hymn",
+        "Cross",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "Korea"
     },
     {
       "id": "the-revival",
