@@ -59,7 +59,7 @@ export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
           ctx.fillText(b.comment, x, y)
           ctx.fillStyle = prev
           y += plan.lyricSizePt + lineGap
-          continue
+          return
         }
         if (b.chords?.length) {
           ctx.font = `bold ${plan.chordSizePt}px ${plan.chordFamily}`
