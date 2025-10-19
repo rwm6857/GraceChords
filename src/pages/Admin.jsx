@@ -701,9 +701,7 @@ function InstrumentalPreviewLine({ spec }){
 function MeasuredPreviewLine({ plain, chords, comment }){
   if (comment) {
     return (
-      <div style={{ fontStyle: 'italic', opacity: 0.75, margin: '2px 0 10px', fontSize: '0.92em' }}>
-        {plain}
-      </div>
+      <div className="comment">{plain}</div>
     )
   }
   const hostRef = useRef(null)

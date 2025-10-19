@@ -186,6 +186,11 @@ input,select,textarea{
   margin-bottom: 0.25em;     /* small gap before the first lyric line */
   letter-spacing: 0.02em;    /* subtle readability boost (optional) */
 }
+.comment {
+  font-style: italic;
+  color: var(--muted);
+  margin: 2px 0 10px;
+}
 .linepair{ margin:2px 0 10px }
 .mono{ font-family: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre }
 .mono{ overflow-wrap: anywhere; }

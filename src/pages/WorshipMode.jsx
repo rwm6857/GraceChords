@@ -517,7 +517,7 @@ export default function WorshipMode(){
                         />
                       ) : null
                     ) : ln.comment ? (
-                      <div key={`${si}-${li}`} className="comment" style={{fontStyle:'italic', opacity:.75, margin:'2px 0 10px', fontSize:'0.92em'}}>{ln.plain}</div>
+                      <div key={`${si}-${li}`} className="comment">{ln.plain}</div>
                     ) : (
                       <ChordLine
                         key={`${si}-${li}`}

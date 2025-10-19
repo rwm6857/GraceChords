@@ -84,4 +84,20 @@ Chorus
     expect(out).toMatch(/^Verse 1/m);
     expect(out).not.toMatch(/\{start_of_/);
   });
+
+  it('emits standalone directives for instrumental and comment sections', () => {
+    const doc = parseChordProOrLegacy(`
+{start_of_verse: Verse 1}
+Line before
+{end_of_verse}
+{inst D, A, E}
+{comment: Whisper}
+`);
+
+    const out = serializeChordPro(doc, { useDirectives: true, includeMeta: false });
+    expect(out).toMatch(/\{instrumental:\s*D,\s*A,\s*E\}/);
+    expect(out).not.toMatch(/start_of_instrumental/i);
+    expect(out).toMatch(/\{c:\s*Whisper\}/i);
+    expect(out).not.toMatch(/start_of_comment/i);
+  });
 });

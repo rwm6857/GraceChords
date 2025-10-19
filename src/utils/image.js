@@ -2,6 +2,7 @@
 import { chooseBestLayout } from './pdf/pdfLayout'
 import { ensureCanvasFonts } from './pdf/fonts'
 import { slugifyUnderscore } from './chordpro/serialize'
+import { formatInstrumental } from './instrumental.js'
 export { ensureCanvasFonts } from './pdf/fonts'
 
 // Render a planned layout to a Canvas2D
@@ -40,7 +41,26 @@ export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
         ctx.font = `bold ${sectionSize}px ${plan.lyricFamily}`
         ctx.fillText(`[${b.header}]`, x, y)
         y += sectionSize + 4
+      } else if (b.type === 'instrumental') {
+        const rows = formatInstrumental(b.instrumental || {}, { split: plan.columns === 2 })
+        if (rows.length) {
+          ctx.font = `bold ${plan.chordSizePt}px ${plan.chordFamily}`
+          ctx.fillStyle = '#000'
+          rows.forEach((row) => {
+            ctx.fillText(row, x, y)
+            y += plan.lyricSizePt + lineGap
+          })
+        }
       } else if (b.type === 'line') {
+        if (b.comment) {
+          ctx.font = `italic ${plan.lyricSizePt}px ${plan.lyricFamily}`
+          const prev = ctx.fillStyle
+          ctx.fillStyle = '#6b7280'
+          ctx.fillText(b.comment, x, y)
+          ctx.fillStyle = prev
+          y += plan.lyricSizePt + lineGap
+          continue
+        }
         if (b.chords?.length) {
           ctx.font = `bold ${plan.chordSizePt}px ${plan.chordFamily}`
           b.chords.forEach(c => ctx.fillText(c.sym, x + c.x, y))

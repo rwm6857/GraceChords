@@ -291,7 +291,9 @@ function renderSection(doc, section, x, y, width, lineH, columns = 1){
     if (ln.comment){
       // render italic comment
       try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+      try { doc.setTextColor(120, 120, 120) } catch {}
       drawTextSafe(doc, ln.plain || '', x, cursorY)
+      try { doc.setTextColor(0, 0, 0) } catch {}
       try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
       cursorY += lineH
       continue

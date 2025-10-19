@@ -372,7 +372,6 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
     if (secHeightsCache[pt]) return secHeightsCache[pt]
     const lineGap = 4
     const secTopPad = Math.round(pt * 0.85)
-    const commentSize = Math.max(10, pt - 2)
     const arr = (song.sections || []).map((sec, idx) => {
       let h = secTopPad + pt
       for (const ln of (sec.lines || [])) {
@@ -383,7 +382,7 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
           continue
         }
         if (ln.comment) {
-          h += commentSize + 3
+          h += pt + lineGap
         } else {
           if (ln?.chords?.length) h += pt + lineGap / 2
           h += pt + lineGap
@@ -515,9 +514,6 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
   const sections = Array.isArray(song.sections) ? song.sections : []
   const o = { ...DEFAULT_LAYOUT_OPT, ...opt, gutter: DEFAULT_LAYOUT_OPT.gutter }
   const lineGap = 4
-  const sectionSize = o.lyricSizePt
-  const sectionTopPad = Math.round(o.lyricSizePt * 0.85)
-  const commentSize = Math.max(10, o.lyricSizePt - 2)
 
   const margin = o.margin
   const pageH = o.pageHeight
@@ -583,10 +579,8 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
         }
         if (b.type === 'line') {
           if (b.comment) {
-            const cpt = Math.max(10, pt - 2);
-            // width call warms cache; height increment approximates comment line height
-            void lyricWidthAt(cpt, b.comment);
-            h += cpt;
+            void lyricWidthAt(pt, b.comment);
+            h += pt + lineGap;
             continue;
           }
           if (Array.isArray(b.chords) && b.chords.length) {

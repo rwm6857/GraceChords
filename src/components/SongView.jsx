@@ -395,7 +395,7 @@ if(!entry){
                                 }
                                 const plain = ln.text || ''
                                 if (ln.comment) {
-                                        return <div key={key} className="comment" style={{fontStyle:'italic', fontSize:'0.85em', opacity:0.75}}>{plain}</div>
+                                        return <div key={key} className="comment">{plain}</div>
                                 }
                                 const hasChords = !!(ln.chords && ln.chords.length)
                                 if (!hasChords && isSectionLabel(plain)) {
