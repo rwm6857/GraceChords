@@ -30,7 +30,6 @@ describe('Admin login', () => {
     await userEvent.type(input, 'secret')
     await userEvent.click(screen.getByRole('button', { name: /enter/i }))
 
-    expect(await screen.findByRole('button', { name: /add to drafts/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /stage/i })).toBeInTheDocument()
   })
 })
-

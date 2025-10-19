@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import indexData from '../data/index.json'
@@ -89,13 +90,33 @@ export default function SongView(){
       .then(txt => {
         try {
           const doc = parseChordProOrLegacy(txt)
-          const blocks = (doc.sections || []).map(sec => ({
+          const blocks = (doc.sections || []).map((sec) => ({
             section: sec.label,
-            lines: (sec.lines || []).map(ln => ({
-              text: ln.comment || ln.lyrics || '',
-              chords: ln.chords || [],
-              comment: !!ln.comment
-            }))
+            lines: (sec.lines || []).map((ln) => {
+              if (ln.instrumental) {
+                return {
+                  type: 'instrumental',
+                  text: '',
+                  chords: [],
+                  comment: false,
+                  instrumental: ln.instrumental,
+                };
+              }
+              if (ln.comment) {
+                return {
+                  type: 'comment',
+                  text: ln.comment,
+                  chords: [],
+                  comment: true,
+                };
+              }
+              return {
+                type: 'lyric',
+                text: ln.lyrics || '',
+                chords: ln.chords || [],
+                comment: false,
+              };
+            }),
           }))
           const p = { meta: doc.meta, blocks }
           setParsed(p)
@@ -214,11 +235,24 @@ if(!entry){
     capo: parsed?.meta?.capo,
     lyricsBlocks: (parsed.blocks || []).map(b => ({
       section: b.section,
-      lines: (b.lines || []).map(ln => ({
-        plain: ln.text,
-        chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index })),
-        comment: ln.comment ? ln.text : undefined
-      }))
+      lines: (b.lines || []).map(ln => {
+        if (ln.instrumental) {
+          return {
+            instrumental: transposeInstrumental(ln.instrumental, steps),
+          }
+        }
+        if (ln.comment) {
+          return {
+            plain: ln.text,
+            chordPositions: [],
+            comment: ln.text,
+          }
+        }
+        return {
+          plain: ln.text,
+          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index })),
+        }
+      })
     }))
   })
 
@@ -348,6 +382,17 @@ if(!entry){
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
                         {(block.lines || []).map((ln, li) => {
                                 const key = `${bi}-${li}`
+                                if (ln.instrumental) {
+                                        if (!showChords) return null
+                                        return (
+                                                <InstrumentalLine
+                                                        key={key}
+                                                        spec={ln.instrumental}
+                                                        steps={steps}
+                                                        split={!isNarrow && twoColsView}
+                                                />
+                                        )
+                                }
                                 const plain = ln.text || ''
                                 if (ln.comment) {
                                         return <div key={key} className="comment" style={{fontStyle:'italic', fontSize:'0.85em', opacity:0.75}}>{plain}</div>
@@ -521,6 +566,31 @@ function LiteYouTube({ id }) {
 function isSectionLabel(text = '') {
   const s = String(text).trim()
   return /^(?:verse(?:\s*\d+)?|chorus|bridge|tag|pre[-\s]?chorus|intro|outro|ending|refrain)\s*\d*$/i.test(s)
+}
+
+
+function InstrumentalLine({ spec, steps, split }) {
+  const inst = transposeInstrumental(spec, steps)
+  const rows = formatInstrumental(inst, { split })
+  if (!rows.length) return null
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {rows.map((line, idx) => (
+        <div
+          key={idx}
+          style={{
+            whiteSpace: 'pre',
+            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontWeight: 700,
+            fontSize: 'inherit',
+            lineHeight: 1.35,
+          }}
+        >
+          {line}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 

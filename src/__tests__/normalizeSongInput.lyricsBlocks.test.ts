@@ -17,6 +17,12 @@ describe('normalizeSongInput lyricsBlocks', () => {
             { plain: 'Line 2', chordPositions: [], comment: 'Note' },
           ],
         },
+        {
+          section: 'Instrumental',
+          lines: [
+            { instrumental: { chords: ['D', 'A', 'E'], repeat: 2 } },
+          ],
+        },
       ],
     }
 
@@ -27,25 +33,35 @@ describe('normalizeSongInput lyricsBlocks', () => {
     expect(out.capo).toBe(2)
     expect(out.layoutHints?.requestedColumns).toBe(2)
     expect(out.tempo).toBe('120bpm')
-    expect(out.sections).toHaveLength(1)
+    expect(out.sections).toHaveLength(2)
 
     const sec = out.sections[0]
     expect(sec.label).toBe('Verse')
     expect(sec.lines).toHaveLength(2)
     expect(sec.blocks).toHaveLength(3)
-    expect(sec.lines[0]).toEqual({
+    expect(sec.lines[0]).toMatchObject({
       lyrics: 'Line 1',
       chords: [{ index: 0, sym: 'C' }],
       comment: undefined,
+      instrumental: undefined,
     })
-    expect(sec.lines[1]).toEqual({
+    expect(sec.lines[1]).toMatchObject({
       lyrics: 'Line 2',
       chords: [],
       comment: 'Note',
+      instrumental: undefined,
     })
     expect(sec.blocks[0]).toEqual({ type: 'section', header: 'Verse' })
     expect(sec.blocks[1]).toMatchObject({ type: 'line', lyrics: 'Line 1' })
     expect(sec.blocks[2]).toMatchObject({ type: 'line', comment: 'Note' })
+
+    const instSec = out.sections[1]
+    expect(instSec.label).toBe('Instrumental')
+    expect(instSec.lines).toHaveLength(1)
+    expect(instSec.lines[0]).toMatchObject({
+      instrumental: { chords: ['D', 'A', 'E'], repeat: 2 },
+      lyrics: undefined,
+    })
+    expect(instSec.blocks?.[1]).toMatchObject({ type: 'instrumental', instrumental: { chords: ['D', 'A', 'E'], repeat: 2 } })
   })
 })
-

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { KEYS, transposeSym } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { formatInstrumental } from '../utils/instrumental'
 import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serialize'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
@@ -74,9 +75,10 @@ function AdminPanel(){
       const blocks = (doc.sections || []).map(sec => ({
         section: sec.label,
         lines: (sec.lines || []).map(ln => ({
-          text: ln.comment || ln.lyrics || '',
-          chords: ln.chords || [],
-          comment: !!ln.comment
+          text: ln.instrumental ? '' : (ln.comment || ln.lyrics || ''),
+          chords: ln.instrumental ? [] : (ln.chords || []),
+          comment: !!ln.comment,
+          instrumental: ln.instrumental || null,
         }))
       }))
       return { meta: doc.meta, blocks }
@@ -582,11 +584,16 @@ function AdminPanel(){
                 <div key={bi}>
                   <div className="section">{b.section || ''}</div>
                   {(b.lines||[]).map((ln,li)=>(
-                    <MeasuredPreviewLine
-                      key={`${bi}-${li}`}
-                      plain={ln.text}
-                      chords={ln.chords || []}
-                    />
+                    ln.instrumental ? (
+                      <InstrumentalPreviewLine key={`${bi}-${li}`} spec={ln.instrumental} />
+                    ) : (
+                      <MeasuredPreviewLine
+                        key={`${bi}-${li}`}
+                        plain={ln.text}
+                        chords={ln.chords || []}
+                        comment={ln.comment}
+                      />
+                    )
                   ))}
                 </div>
               ))}
@@ -668,7 +675,37 @@ function AdminPanel(){
 }
 
 /** Preview line with pixel-measured chord overlay (matches Song View’s alignment rule) */
-function MeasuredPreviewLine({ plain, chords }){
+function InstrumentalPreviewLine({ spec }){
+  const rows = formatInstrumental(spec || {}, { split: false })
+  if (!rows.length) return null
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {rows.map((line, idx) => (
+        <div
+          key={idx}
+          style={{
+            whiteSpace: 'pre',
+            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontWeight: 700,
+            fontSize: 'inherit',
+            lineHeight: 1.35,
+          }}
+        >
+          {line}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MeasuredPreviewLine({ plain, chords, comment }){
+  if (comment) {
+    return (
+      <div style={{ fontStyle: 'italic', opacity: 0.75, margin: '2px 0 10px', fontSize: '0.92em' }}>
+        {plain}
+      </div>
+    )
+  }
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })

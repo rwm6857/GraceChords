@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import indexData from '../data/index.json'
-import { parseChordPro, stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { transposeInstrumental } from '../utils/instrumental'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/toast'
 
@@ -34,20 +36,28 @@ export default function Bundle(){
           const res = await fetch(`${import.meta.env.BASE_URL}songs/${it.filename}`)
           if(!res.ok) throw new Error(`Missing file ${it.filename}`)
           const text = await res.text()
-          const parsed = parseChordPro(text)
-          const baseKey = parsed.meta.key || parsed.meta.originalkey || it.originalKey || 'C'
+          const doc = parseChordProOrLegacy(text)
+          const baseKey = doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C'
           const steps = stepsBetween(baseKey, toKey)
-          const blocks = parsed.blocks.map(b => ({
-            section: b.section,
-            lines: b.lines.map(ln => ({
-              plain: ln.text,
-              chordPositions: (ln.chords||[]).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
-            }))
+          const blocks = (doc.sections || []).map(sec => ({
+            section: sec.label,
+            lines: (sec.lines || []).map(ln => {
+              if (ln.instrumental) {
+                return { instrumental: transposeInstrumental(ln.instrumental, steps) }
+              }
+              if (ln.comment) {
+                return { plain: ln.comment, chordPositions: [], comment: ln.comment }
+              }
+              return {
+                plain: ln.lyrics || '',
+                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+              }
+            })
           }))
           return normalizeSongInput({
-            title: parsed.meta.title || it.title,
+            title: doc.meta?.title || it.title,
             key: toKey,
-            capo: parsed.meta?.capo,
+            capo: doc.meta?.capo,
             lyricsBlocks: blocks,
           })
         })()

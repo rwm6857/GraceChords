@@ -5,6 +5,7 @@ import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon } from './Icons'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { transposeInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/sets'
@@ -324,14 +325,25 @@ async function exportPdf() {
 
         const blocks = (doc.sections || []).map((sec) => ({
           section: sec.label,
-          lines: (sec.lines || []).map((ln) => ({
-            plain: ln.comment ? ln.comment : (ln.lyrics || ''),
-            chordPositions: (ln.chords || []).map((c) => ({
-              sym: transposeSym(c.sym, steps),
-              index: c.index,
-            })),
-            comment: ln.comment ? ln.comment : undefined,
-          })),
+          lines: (sec.lines || []).map((ln) => {
+            if (ln.instrumental) {
+              return { instrumental: transposeInstrumental(ln.instrumental, steps) };
+            }
+            if (ln.comment) {
+              return {
+                plain: ln.comment,
+                chordPositions: [],
+                comment: ln.comment,
+              };
+            }
+            return {
+              plain: ln.lyrics || '',
+              chordPositions: (ln.chords || []).map((c) => ({
+                sym: transposeSym(c.sym, steps),
+                index: c.index,
+              })),
+            };
+          }),
         }));
 
         const slug = s.filename.replace(/\.chordpro$/i, "");

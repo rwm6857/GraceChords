@@ -1,14 +1,22 @@
 export type ChordPlacement = { sym: string; index: number };
+
+export type InstrumentalDirective = {
+  chords: string[];
+  repeat?: number;
+};
+
 export type SongLine = {
   lyrics: string;
   chords: ChordPlacement[];
   comment?: string;
+  instrumental?: InstrumentalDirective;
 };
 
 export type SongSection = {
   kind: string; // e.g., 'verse', 'chorus'
   label?: string;
   lines: SongLine[];
+  instrumental?: InstrumentalDirective;
 };
 
 export type SongMeta = {

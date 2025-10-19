@@ -13,6 +13,7 @@
 import jsPDF from 'jspdf'
 import { applyFooterToAllPages } from '../pdf/footer'
 import { registerPdfFonts } from './fonts.js'
+import { formatInstrumental } from '../instrumental.js'
 
 const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch
@@ -73,7 +74,8 @@ function sectionify(song){
         lines: (b.lines || []).map(ln => ({
           plain: ln.plain ?? ln.lyrics ?? '',
           chords: (ln.chordPositions ?? ln.chords ?? []).map(c => ({ sym: String(c.sym || ''), index: Math.max(0, c.index|0) })),
-          comment: ln.comment
+          comment: ln.comment,
+          instrumental: ln.instrumental
         }))
       }))
     : Array.isArray(song?.sections)
@@ -82,7 +84,8 @@ function sectionify(song){
           lines: (s.lines || []).map(ln => ({
             plain: ln.plain ?? ln.lyrics ?? '',
             chords: (ln.chordPositions ?? ln.chords ?? []).map(c => ({ sym: String(c.sym || ''), index: Math.max(0, c.index|0) })),
-            comment: ln.comment
+            comment: ln.comment,
+            instrumental: ln.instrumental
           }))
         }))
       : []
@@ -106,13 +109,21 @@ function splitLyricWithChords(doc, text, chords, width){
   return lines
 }
 
-function measureSectionHeight(doc, section, width, bodyPt){
+function measureSectionHeight(doc, section, width, bodyPt, columns = 1){
   let h = 0
   const lineH = bodyPt * LINE_HEIGHT_FACTOR
   if (section.label) {
     h += lineH // section header consumes one line height
   }
   for(const ln of section.lines || []){
+    if (ln.instrumental){
+      const rows = formatInstrumental(ln.instrumental, { split: columns === 2 })
+      const rowCount = Math.max(1, rows.length)
+      // warm cache for width measurement
+      try { rows.forEach(row => doc.getTextWidth ? doc.getTextWidth(row) : null) } catch {}
+      h += rowCount * lineH
+      continue
+    }
     if (ln.comment) {
       h += lineH // comments render as a single line (italic), no chords
       continue
@@ -131,7 +142,7 @@ function measureSectionHeight(doc, section, width, bodyPt){
 function canPackOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   const width = colWidth(columns)
   const availH = PAGE.h - MARGINS.top - MARGINS.bottom - headerOffsetFor(doc, songTitle, songKey, bodyPt)
-  const heights = sections.map(s => measureSectionHeight(doc, s, width, bodyPt))
+  const heights = sections.map(s => measureSectionHeight(doc, s, width, bodyPt, columns))
   if (columns === 1){
     const total = heights.reduce((n, x) => n + x.height, 0)
     return total <= availH
@@ -154,7 +165,7 @@ function planOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   if (columns === 1){
     let rem = availH
     for (let i = 0; i < sections.length; i++){
-      const { height } = measureSectionHeight(doc, sections[i], width, bodyPt)
+      const { height } = measureSectionHeight(doc, sections[i], width, bodyPt, columns)
       if (height > rem) return null
       cols[0].push(i)
       rem -= height
@@ -164,7 +175,7 @@ function planOnePage(doc, sections, columns, bodyPt, songTitle, songKey){
   // Two-column greedy: try left; if not, try right. Mirrors canPackOnePage().
   let remL = availH, remR = availH
   for (let i = 0; i < sections.length; i++){
-    const { height } = measureSectionHeight(doc, sections[i], width, bodyPt)
+    const { height } = measureSectionHeight(doc, sections[i], width, bodyPt, columns)
     if (height <= remL){
       cols[0].push(i)
       remL -= height
@@ -249,7 +260,7 @@ function drawTitle(doc, songTitle, songKey){
   return y0 + (Math.max(0, arr.length - 1)) * (TITLE_PT * TITLE_LINE_FACTOR)
 }
 
-function renderSection(doc, section, x, y, width, lineH){
+function renderSection(doc, section, x, y, width, lineH, columns = 1){
   let cursorY = y
   const bodyPt = Math.round(lineH / LINE_HEIGHT_FACTOR)
   doc.setFontSize(bodyPt)
@@ -265,6 +276,18 @@ function renderSection(doc, section, x, y, width, lineH){
   doc.setFontSize(bodyPt)
 
   for(const ln of section.lines || []){
+    if (ln.instrumental){
+      const rows = formatInstrumental(ln.instrumental, { split: columns === 2 })
+      if (rows.length){
+        try { doc.setFont('NotoSansMono', 'bold') } catch { try { doc.setFont('courier', 'bold') } catch {} }
+        for (const row of rows){
+          drawTextSafe(doc, row, x, cursorY)
+          cursorY += lineH
+        }
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+      }
+      continue
+    }
     if (ln.comment){
       // render italic comment
       try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
@@ -347,11 +370,11 @@ function renderPlanned(doc, plan, sections, song){
     let y1 = MARGINS.top + headerOffset
     const colIdxs = plan.pages[p].columns
     for(const idx of colIdxs[0]){
-      y0 = renderSection(doc, sections[idx], x0, y0, width, lineH)
+      y0 = renderSection(doc, sections[idx], x0, y0, width, lineH, cols)
     }
     if (cols === 2){
       for(const idx of colIdxs[1]){
-        y1 = renderSection(doc, sections[idx], x1, y1, width, lineH)
+        y1 = renderSection(doc, sections[idx], x1, y1, width, lineH, cols)
       }
     }
   }

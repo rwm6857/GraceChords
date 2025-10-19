@@ -32,4 +32,40 @@ describe('ChordPro features: capo, comments, columns, define', () => {
     expect(out).toMatch(/\{define:\s*G\s+/i);
     expect(out).toMatch(/\{column_break\}/);
   });
+
+  it('creates standalone sections for instrumental and comment directives', () => {
+    const src = `
+{title: Sample}
+{start_of_verse: Verse 1}
+Line before
+{inst D, A, E}
+Line after
+{end_of_verse}
+{com Whisper}
+{i: Em, D, Am7, Bm7 x2}
+`;
+
+    const doc = parseChordProOrLegacy(src);
+    expect(doc.sections.length).toBeGreaterThanOrEqual(4);
+
+    const [first, second, third, fourth] = doc.sections;
+    expect(first.kind).toBe('verse');
+    expect(first.lines[0]?.lyrics).toBe('Line before');
+
+    expect(second.kind).toBe('instrumental');
+    expect(second.instrumental?.chords).toEqual(['D', 'A', 'E']);
+    expect(second.lines[0]?.instrumental?.repeat).toBeUndefined();
+
+    expect(third.kind).toBe('verse');
+    expect(third.lines[0]?.lyrics).toBe('Line after');
+
+    const commentSec = doc.sections.find(sec => sec.kind === 'comment');
+    expect(commentSec?.lines?.[0]?.comment).toBe('Whisper');
+
+    const instSections = doc.sections.filter(sec => sec.kind === 'instrumental');
+    expect(instSections).toHaveLength(2);
+    const lastInst = instSections[instSections.length - 1];
+    expect(lastInst.instrumental?.chords).toEqual(['Em', 'D', 'Am7', 'Bm7']);
+    expect(lastInst.instrumental?.repeat).toBe(2);
+  });
 });

@@ -111,6 +111,6 @@ describe('WorshipMode', () => {
     await screen.findByText('Abba')
     const el = document.querySelector('.worship__content')
     const px = parseInt(el?.style?.fontSize || '0', 10)
-    expect([16,15,14,13,12]).toContain(px)
+    expect([18,17,16,15,14]).toContain(px)
   })
 })

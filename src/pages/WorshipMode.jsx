@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, TransposeIcon, RemoveIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
@@ -119,13 +120,30 @@ export default function WorshipMode(){
           const doc = parseChordProOrLegacy(txt)
           const title = doc?.meta?.title || s.title || s.id
           const baseKey = doc?.meta?.key || doc?.meta?.originalkey || s.originalKey || 'C'
-          const sections = (doc.sections || []).map(sec => ({
+          const sections = (doc.sections || []).map((sec) => ({
             label: sec.label,
-            lines: (sec.lines || []).map(ln => ({
-              plain: ln.comment ? ln.comment : (ln.lyrics || ''),
-              chords: ln.chords || [],
-              comment: !!ln.comment,
-            }))
+            lines: (sec.lines || []).map((ln) => {
+              if (ln.instrumental) {
+                return {
+                  plain: '',
+                  chords: [],
+                  comment: false,
+                  instrumental: ln.instrumental,
+                };
+              }
+              if (ln.comment) {
+                return {
+                  plain: ln.comment,
+                  chords: [],
+                  comment: true,
+                };
+              }
+              return {
+                plain: ln.lyrics || '',
+                chords: ln.chords || [],
+                comment: false,
+              };
+            }),
           }))
           out.push({ id: s.id, title, baseKey, sections })
           // offsets computed after load
@@ -337,9 +355,10 @@ export default function WorshipMode(){
       const sections = (doc.sections || []).map(sec => ({
         label: sec.label,
         lines: (sec.lines || []).map(ln => ({
-          plain: ln.comment ? ln.comment : (ln.lyrics || ''),
-          chords: ln.chords || [],
+          plain: ln.instrumental ? '' : (ln.comment ? ln.comment : (ln.lyrics || '')),
+          chords: ln.instrumental ? [] : (ln.chords || []),
           comment: !!ln.comment,
+          instrumental: ln.instrumental,
         }))
       }))
       // Insert after current index
@@ -488,7 +507,16 @@ export default function WorshipMode(){
                 <div key={si} style={{breakInside:'avoid'}}>
                   {sec.label ? <div className="section">[{sec.label}]</div> : null}
                   {(sec.lines || []).map((ln, li) => (
-                    ln.comment ? (
+                    ln.instrumental ? (
+                      showChords ? (
+                        <InstrumentalRow
+                          key={`${si}-${li}`}
+                          spec={ln.instrumental}
+                          steps={steps}
+                          split={cols === 2}
+                        />
+                      ) : null
+                    ) : ln.comment ? (
                       <div key={`${si}-${li}`} className="comment" style={{fontStyle:'italic', opacity:.75, margin:'2px 0 10px', fontSize:'0.92em'}}>{ln.plain}</div>
                     ) : (
                       <ChordLine
@@ -599,6 +627,30 @@ export default function WorshipMode(){
           <div className="worship__hint" role="status" aria-live="polite">Swipe to see next/previous song</div>
         )}
       </div>
+    </div>
+  )
+}
+
+function InstrumentalRow({ spec, steps, split }){
+  const inst = transposeInstrumental(spec, steps)
+  const rows = formatInstrumental(inst, { split })
+  if (!rows.length) return null
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {rows.map((line, idx) => (
+        <div
+          key={idx}
+          style={{
+            whiteSpace: 'pre',
+            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontWeight: 700,
+            fontSize: 'inherit',
+            lineHeight: 1.35,
+          }}
+        >
+          {line}
+        </div>
+      ))}
     </div>
   )
 }

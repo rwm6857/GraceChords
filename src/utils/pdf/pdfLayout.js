@@ -4,6 +4,7 @@
 
 import { parseChordPro } from '../chordpro.js';
 import { resolveChordCollisions } from '../chords.js';
+import { splitInstrumental, formatInstrumental } from '../instrumental.js';
 
 const PT_WINDOW = [16, 15, 14, 13, 12];
 
@@ -215,12 +216,15 @@ export function normalizeSongInput(input) {
           lyrics: ln.plain,
           chords: ln.chordPositions,
           comment: ln.comment,
+          instrumental: ln.instrumental,
         }));
         const blocks = [
           { type: 'section', header: b.section },
-          ...lines.map(ln => ln.comment
-            ? { type: 'line', comment: ln.comment }
-            : { type: 'line', lyrics: ln.lyrics, chords: ln.chords })
+          ...lines.map(ln => {
+            if (ln.instrumental) return { type: 'instrumental', instrumental: ln.instrumental };
+            if (ln.comment) return { type: 'line', comment: ln.comment };
+            return { type: 'line', lyrics: ln.lyrics, chords: ln.chords };
+          })
         ];
         return { label: b.section, lines, blocks };
       });
@@ -231,9 +235,11 @@ export function normalizeSongInput(input) {
         const lines = s.lines || [];
         const blocks = s.blocks || [
           { type: 'section', header: s.label || s.kind },
-          ...lines.map(ln => ln.comment
-            ? { type: 'line', comment: ln.comment }
-            : { type: 'line', lyrics: ln.lyrics, chords: ln.chords })
+          ...lines.map(ln => {
+            if (ln.instrumental) return { type: 'instrumental', instrumental: ln.instrumental };
+            if (ln.comment) return { type: 'line', comment: ln.comment };
+            return { type: 'line', lyrics: ln.lyrics, chords: ln.chords };
+          })
         ];
         return { ...s, lines, blocks };
       });
@@ -321,6 +327,13 @@ function widthOverflows(song, cols, pt, oBase, makeMeasureLyricAt, makeMeasureCh
 
   for (const sec of song.sections) {
     for (const ln of (sec.lines || [])) {
+      if (ln.instrumental) {
+        const rows = formatInstrumental(ln.instrumental, { split: cols === 2 })
+        for (const row of rows) {
+          if (measureChord(row) > colW) return true
+        }
+        continue
+      }
       if (ln.comment) {
         if (measureLyric(ln.comment) > colW) return true
         continue
@@ -363,6 +376,12 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
     const arr = (song.sections || []).map((sec, idx) => {
       let h = secTopPad + pt
       for (const ln of (sec.lines || [])) {
+        if (ln.instrumental) {
+          const rows = splitInstrumental(ln.instrumental, { split: true })
+          const rowCount = Math.max(1, rows.length)
+          h += rowCount * (pt + lineGap)
+          continue
+        }
         if (ln.comment) {
           h += commentSize + 3
         } else {
@@ -552,6 +571,15 @@ export function planSongLayout(songIn, opt = {}, measureLyric = (t) => 0, measur
         if (b.type === 'section') {
           // header already accounted via secTopPad
           continue;
+        }
+        if (b.type === 'instrumental') {
+          const rows = formatInstrumental(b.instrumental || {}, { split: true })
+          const rowCount = Math.max(1, rows.length)
+          for (const row of rows) {
+            void chordWidthAt(pt, row)
+          }
+          h += rowCount * (pt + lineGap)
+          continue
         }
         if (b.type === 'line') {
           if (b.comment) {

@@ -6,6 +6,7 @@ import {
   downloadMultiSongPdf as downloadMultiSongPdfMvp,
   downloadSongbookPdf as downloadSongbookPdfMvp,
 } from "../pdf_mvp/index.js";
+import { formatInstrumental } from "../instrumental.js";
 
 // Sections builder: convert a NormalizedSong into simple text "sections"
 // (no-split paragraphs). Chords are rendered inline by injecting
@@ -46,6 +47,7 @@ function sectionsFromSong(song) {
         plain: ln.plain ?? ln.lyrics ?? "",
         chordPositions: ln.chordPositions ?? ln.chords ?? [],
         comment: ln.comment,
+        instrumental: ln.instrumental,
       })),
     }));
   }
@@ -55,6 +57,13 @@ function sectionsFromSong(song) {
     let buf = "";
     if (b?.section) buf += `[${b.section}]\n`;
     for (const ln of b?.lines || []) {
+      if (ln?.instrumental) {
+        const rows = formatInstrumental(ln.instrumental, { split: false });
+        rows.forEach((row) => {
+          buf += `${row}\n`;
+        });
+        continue;
+      }
       if (ln?.comment) {
         buf += `(${ln.comment})\n`;
         continue;

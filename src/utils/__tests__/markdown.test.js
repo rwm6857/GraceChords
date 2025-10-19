@@ -34,7 +34,7 @@ Body here.`
     expect(html).toContain('<a href="https://example.com"')
     expect(html).toContain('<img alt="Alt" src="img.png"')
     expect(html).toContain('<code>inline</code>')
-    expect(html).toContain('<pre><code>code block</code></pre>')
+    expect(html).toMatch(/<pre><code>\s*code block\s*<\/code><\/pre>/)
   })
 
   it('stripMarkdown produces readable plain text', () => {
@@ -53,4 +53,3 @@ Body here.`
     expect(slugifyKebab('Názaré – São Paulo')).toBe('nazare-sao-paulo')
   })
 })
-

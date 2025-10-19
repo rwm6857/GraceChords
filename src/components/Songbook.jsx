@@ -94,11 +94,27 @@ export default function Songbook() {
           const doc = parseChordProOrLegacy(txt)
           const blocks = (doc.sections || []).map((sec) => ({
             section: sec.label,
-            lines: (sec.lines || []).map((ln) => ({
-              plain: ln.comment ? ln.comment : (ln.lyrics || ''),
-              chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
-              comment: ln.comment ? ln.comment : undefined,
-            })),
+            lines: (sec.lines || []).map((ln) => {
+              if (ln.instrumental) {
+                return {
+                  instrumental: {
+                    chords: Array.isArray(ln.instrumental?.chords) ? ln.instrumental.chords.slice() : [],
+                    repeat: typeof ln.instrumental?.repeat === 'number' ? ln.instrumental.repeat : undefined,
+                  },
+                }
+              }
+              if (ln.comment) {
+                return {
+                  plain: ln.comment,
+                  chordPositions: [],
+                  comment: ln.comment,
+                }
+              }
+              return {
+                plain: ln.lyrics || '',
+                chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
+              }
+            }),
           }))
           const slug = it.filename.replace(/\.chordpro$/, '')
           const song = normalizeSongInput({

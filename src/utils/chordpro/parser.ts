@@ -1,4 +1,4 @@
-import { SongDoc, SongSection, SongLine, ChordPlacement } from './types';
+import { SongDoc, SongSection, SongLine, ChordPlacement, InstrumentalDirective } from './types';
 
 const RX_LONG_DIR = /^\{(start_of|end_of)_(verse|chorus|bridge|intro|tag|outro)(?::\s*([^}]+))?\}$/i;
 // Short-form environments optionally accept a label after the code, with or without a colon, e.g.
@@ -7,7 +7,8 @@ const RX_SHORT_DIR = /^\{\s*(sov|eov|soc|eoc|sob|eob)(?::?\s*([^}]+))?\s*\}$/i;
 const RX_CAPO = /^\{capo:\s*(\d+)\}$/i;
 const RX_COLUMNS = /^\{columns:\s*(\d+)\}$/i;
 const RX_COL_BREAK = /^\{column_break\}$/i;
-const RX_COMMENT = /^\{(c|comment):\s*([^}]+)\}$/i;
+const RX_COMMENT = /^\{\s*(c|comment|com|ment)(?=\s|:)(?::?\s*([^}]+))?\s*\}$/i;
+const RX_INSTRUMENTAL = /^\{\s*(instrumental|inst|i)(?=\s|:|})(?::?\s*([^}]+))?\s*\}$/i;
 const RX_DEFINE = /^\{define:\s*([^}]+)\}$/i;
 const SHORT_MAP: Record<string, { start: boolean; kind: string }> = {
   sov: { start: true,  kind: 'verse' },
@@ -49,6 +50,59 @@ function normalizePlainHeader(line: string) {
 }
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function parseInstrumentalDirective(body: string): InstrumentalDirective {
+  const chords: string[] = [];
+  let repeat: number | undefined;
+  const raw = (body || '').trim();
+  if (!raw) return { chords, repeat };
+
+  const repeatToken = (token: string) => {
+    const trimmed = token.trim();
+    if (!trimmed) return { chord: '', rep: undefined as number | undefined };
+    const directRepeat = trimmed.match(/^(.*?)(x\d+)$/i);
+    if (directRepeat && directRepeat[1].trim()) {
+      const chord = directRepeat[1].trim();
+      const rep = parseInt(directRepeat[2].slice(1), 10);
+      return { chord, rep: isNaN(rep) ? undefined : rep };
+    }
+    return { chord: trimmed, rep: undefined };
+  };
+
+  const assignRepeat = (token: string) => {
+    if (/^x\d+$/i.test(token.trim())) {
+      const rep = parseInt(token.trim().slice(1), 10);
+      if (!Number.isNaN(rep)) repeat = rep;
+      return true;
+    }
+    return false;
+  };
+
+  const pushPart = (part: string) => {
+    if (!part) return;
+    const { chord, rep } = repeatToken(part);
+    if (chord) chords.push(chord);
+    if (rep && !Number.isNaN(rep)) repeat = rep;
+  };
+
+  if (raw.includes(',')) {
+    const parts = raw.split(',').map(p => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      pushPart(part);
+    }
+  } else {
+    const tokens = raw.split(/\s+/).filter(Boolean);
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (assignRepeat(tok)) continue;
+      const { chord, rep } = repeatToken(tok);
+      if (chord) chords.push(chord);
+      if (rep && !Number.isNaN(rep)) repeat = rep;
+    }
+  }
+
+  return { chords, repeat };
 }
 
 type Dir = { start: boolean; kind: string; label?: string };
@@ -94,6 +148,16 @@ export function parseChordProOrLegacy(input: string): SongDoc {
     if (cur) { doc.sections.push(cur); cur = null; }
   };
 
+  const insertStandaloneSection = (section: SongSection) => {
+    if (cur && cur.lines.length) {
+      const resumeLabel = cur.label;
+      const resumeKind = cur.kind;
+      doc.sections.push(cur);
+      cur = { kind: resumeKind, label: resumeLabel, lines: [] };
+    }
+    doc.sections.push(section);
+  };
+
   for (const raw of lines) {
     const t = raw.trim();
 
@@ -115,9 +179,26 @@ export function parseChordProOrLegacy(input: string): SongDoc {
     }
     if (RX_COL_BREAK.test(t)) { doc.layoutHints!.columnBreakAfter!.push(doc.sections.length); continue; }
     if ((m = RX_COMMENT.exec(t))) {
-      const note = m[2].trim();
-      if (!cur) openSection('verse', 'Verse');
-      cur!.lines.push({ lyrics: '', chords: [], comment: note });
+      const note = (m[2] || '').trim();
+      if (!note) continue;
+      const commentSection: SongSection = {
+        kind: 'comment',
+        label: '',
+        lines: [{ lyrics: '', chords: [], comment: note }],
+      };
+      insertStandaloneSection(commentSection);
+      continue;
+    }
+    if ((m = RX_INSTRUMENTAL.exec(t))) {
+      const spec = parseInstrumentalDirective(m[2] || '');
+      const instLine: SongLine = { lyrics: '', chords: [], instrumental: spec };
+      const instSection: SongSection = {
+        kind: 'instrumental',
+        label: 'Instrumental',
+        lines: [instLine],
+        instrumental: spec,
+      };
+      insertStandaloneSection(instSection);
       continue;
     }
     if ((m = RX_DEFINE.exec(t))) {

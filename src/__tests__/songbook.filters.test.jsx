@@ -5,17 +5,15 @@ import Songbook from '../components/Songbook.jsx'
 describe('Songbook filters', () => {
   test('filters songs by selected author present in index', async () => {
     render(<Songbook />)
-    const authorSelect = await screen.findByLabelText(/author/i)
+    const searchInput = await screen.findByPlaceholderText(/search/i)
 
-    await userEvent.selectOptions(authorSelect, 'Matt Redman')
-    // Present in current index.json under Matt Redman
+    await userEvent.type(searchInput, 'Redman')
     expect(await screen.findByText('10,000 Reasons')).toBeInTheDocument()
     expect(await screen.findByText('Heart of Worship')).toBeInTheDocument()
-    // Ensure unrelated title is not included when filtering
     expect(screen.queryByText('Abba')).not.toBeInTheDocument()
 
-    // Switch to a different available author in the data (e.g., Chris Tomlin)
-    await userEvent.selectOptions(authorSelect, 'Chris Tomlin')
+    await userEvent.clear(searchInput)
+    await userEvent.type(searchInput, 'Tomlin')
     expect(await screen.findByText('Holy Forever')).toBeInTheDocument()
     expect(screen.queryByText('10,000 Reasons')).not.toBeInTheDocument()
   })
