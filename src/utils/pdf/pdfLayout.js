@@ -438,6 +438,17 @@ export function chooseBestLayout(songIn, baseOpt = {}, makeMeasureLyricAt = () =
         const sec = song.sections[si]
         blocks.push({ type: 'section', header: sec.label || sec.kind })
         for (const ln of (sec.lines || [])) {
+          if (ln.instrumental) {
+            const spec = ln.instrumental || {}
+            blocks.push({
+              type: 'instrumental',
+              instrumental: {
+                chords: Array.isArray(spec.chords) ? spec.chords.slice() : [],
+                repeat: typeof spec.repeat === 'number' ? spec.repeat : undefined,
+              },
+            })
+            continue
+          }
           if (ln.comment) {
             blocks.push({ type: 'line', comment: ln.comment })
           } else {

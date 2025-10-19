@@ -68,4 +68,29 @@ Line after
     expect(lastInst.instrumental?.chords).toEqual(['Em', 'D', 'Am7', 'Bm7']);
     expect(lastInst.instrumental?.repeat).toBe(2);
   });
+
+  it('keeps top-level instrumental directives ahead of the first section', () => {
+    const src = `
+{title: Example}
+{inst Em, D, Am7, Bm7 x2}
+{sov Verse 1}
+[Em]Line one
+{eov}
+`;
+    const doc = parseChordProOrLegacy(src);
+    expect(doc.sections[0]?.kind).toBe('instrumental');
+    const instLine = doc.sections[0]?.lines?.[0];
+    expect(instLine?.instrumental?.chords).toEqual(['Em', 'D', 'Am7', 'Bm7']);
+    expect(instLine?.instrumental?.repeat).toBe(2);
+    expect(doc.sections[1]?.kind).toBe('verse');
+
+    const blocks = (doc.sections || []).map((sec) => ({
+      section: sec.label,
+      lines: (sec.lines || []).map((ln) => ({
+        instrumental: ln.instrumental,
+        comment: ln.comment,
+      })),
+    }));
+    expect(blocks[0]?.lines?.[0]?.instrumental?.chords).toEqual(['Em', 'D', 'Am7', 'Bm7']);
+  });
 });
