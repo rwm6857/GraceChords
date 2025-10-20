@@ -4,14 +4,14 @@ Learn how GraceChords renders charts and songbooks for print.
 - Sections never split across pages
 - Widow and orphan lines are tightened
 - Supports single or multi-column layouts
-- Embedded fonts live in `public/fonts`
+- Embedded PDF fonts live in `src/assets/fonts/`
 - Songbook TOC lists entries as "#. Title" (no page numbers); defaults to one column and switches to two columns before spilling to a second page
 
 ### Layout rules
 Charts keep whole sections on one page. The engine adjusts spacing to avoid lonely first or last lines.
 
 ### Fonts
-Place custom fonts in `public/fonts/` to embed them in PDFs.
+Place Noto Sans and Noto Sans Mono files in `src/assets/fonts/` to embed them in PDFs.
 
 ### Troubleshooting
 If a section still splits, shorten lines or reduce font size.
@@ -51,3 +51,5 @@ If a section still splits, shorten lines or reduce font size.
 - Fonts: Noto Sans + Noto Mono preferred; falls back to helvetica/courier if not registered.
 - Service worker: `/songs/**` and `/src/data/index.json` use network-first to pick up edits after deploy.
 - Recommended: build with `VITE_COMMIT_SHA=$(git rev-parse HEAD)` to invalidate old caches.
+
+See also [[PDF-Engine-(MVP)]] for developer notes.

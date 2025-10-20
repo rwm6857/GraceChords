@@ -41,3 +41,6 @@ Supported in content: images, links, headings, lists, blockquotes, inline and fe
 
 See [[Admin-Resources]] for creating/editing posts and publishing changes.
 
+### CI: Resources Index
+
+On changes under `public/resources/*.md`, the workflow `update-resources.yml` rebuilds `src/data/resources.json` and commits it to `main`. That commit triggers the site build to publish updates to `docs/`.

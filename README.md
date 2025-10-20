@@ -39,6 +39,7 @@ npm test
 For more detail, see the [Getting Started](../../wiki/Getting-Started) and [Contributing](../../wiki/Contributing) pages.
 
 ## Building & Deployment
+See the wiki page for details on CI/CD and wiki sync: ../../wiki/Build-and-Deploy
 Generate the static site into `docs/` and push to the `main` branch to serve via GitHub Pages:
 ```bash
 npm run build
@@ -130,7 +131,7 @@ Build & CI
 - CI workflow `.github/workflows/update-resources.yml` watches `public/resources/**`, runs the index builder, and commits `src/data/resources.json`. That commit triggers the site build workflow to update `docs/`.
 
 ## PDF Fonts
-Place the following fonts in `public/fonts/` to embed them in exported PDFs:
+Place the following font files in `src/assets/fonts/` so the PDF exporter can bundle them (they are imported with `?url` and registered at runtime):
 - `NotoSans-Regular.ttf`
 - `NotoSans-Bold.ttf`
 - `NotoSans-Italic.ttf`

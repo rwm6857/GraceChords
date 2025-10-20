@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `src/`: React app (components, pages, utils, styles, tests). Key areas: `src/utils/pdf_mvp`, `src/utils/pdf`, `src/utils/chordpro`, `src/data/index.json`.
-- `public/`: user content and static assets — songs in `public/songs/`, fonts in `public/fonts/`, optional slides in `public/pptx/`.
+- `public/`: user content and static assets — songs in `public/songs/`, UI fonts in `public/fonts/`, optional slides in `public/pptx/`.
 - `scripts/`: maintenance tasks (index build, filename normalization, wiki sync).
 - `docs/`: Vite build output for GitHub Pages. Do not edit by hand.
 
@@ -37,4 +37,4 @@
 
 ## Security & Configuration Tips
 - Local `.env`: set `VITE_ADMIN_PW=your-password`. For deploys, set the same repo secret; optional `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust caches.
-- Fonts for PDF export must exist in `public/fonts/` (see README for list).
+- Fonts for PDF export must exist in `src/assets/fonts/` (see README for list).

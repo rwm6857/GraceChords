@@ -11,6 +11,9 @@ npm run dev
 ```
 The app uses Vite with a HashRouter, so routing works on GitHub Pages.
 
+Environment
+- Create a local `.env` with `VITE_ADMIN_PW=your-password` to enable the Admin tools.
+
 ## Build for deployment
 ```bash
 npm run build
