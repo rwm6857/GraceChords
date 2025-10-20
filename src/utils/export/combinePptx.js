@@ -5,6 +5,7 @@ const PPT_SLIDE_LAYOUT_CT = 'application/vnd.openxmlformats-officedocument.prese
 const PRESENTATION_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const RELS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 const OFFICE_REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+const PPT_NOTES_MASTER_CT = 'application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml'
 
 const parser = new DOMParser()
 const serializer = new XMLSerializer()
@@ -226,6 +227,11 @@ async function prepareContext(zip) {
     return Number.isNaN(id) ? max : Math.max(max, id)
   }, 2147483647)
 
+  const notesMasterList =
+    presentationDoc.getElementsByTagNameNS(PRESENTATION_NS, 'notesMasterIdLst')[0] ||
+    presentationDoc.getElementsByTagName('p:notesMasterIdLst')[0] ||
+    null
+
   const contentTypesPath = '[Content_Types].xml'
   const contentTypesEntry = getZipEntry(zip, contentTypesPath)
   if (!contentTypesEntry) throw new Error('Base PPTX missing [Content_Types].xml')
@@ -274,6 +280,7 @@ async function prepareContext(zip) {
     presentationDoc,
     sldIdList,
     sldMasterList: masterList,
+    notesMasterList,
     presentationRelsPath,
     presentationRelsDoc,
     contentTypesPath,
@@ -284,6 +291,7 @@ async function prepareContext(zip) {
     counters,
     partMap: new Map(),
     masterRelMap: new Map(),
+    notesMasterRelMap: new Map(),
   }
 }
 
@@ -345,6 +353,42 @@ function registerMaster(context, masterPath) {
   relDoc.documentElement.appendChild(relElement)
 
   context.masterRelMap.set(masterPath, relId)
+  return relId
+}
+
+function registerNotesMaster(context, notesMasterPath) {
+  if (context.notesMasterRelMap.has(notesMasterPath)) return context.notesMasterRelMap.get(notesMasterPath)
+
+  const doc = context.presentationDoc
+  const relDoc = context.presentationRelsDoc
+
+  let list = context.notesMasterList
+  if (!list) {
+    list = doc.createElementNS(PRESENTATION_NS, 'p:notesMasterIdLst')
+    const parent = doc.documentElement
+    const beforeNode = context.sldIdList || parent.firstChild
+    if (beforeNode) parent.insertBefore(list, beforeNode)
+    else parent.appendChild(list)
+    context.notesMasterList = list
+  }
+
+  context.nextRelId += 1
+  const relId = `rId${context.nextRelId}`
+
+  const node = doc.createElementNS(PRESENTATION_NS, 'p:notesMasterId')
+  node.setAttributeNS(OFFICE_REL_NS, 'r:id', relId)
+  list.appendChild(node)
+
+  const relElement = relDoc.createElement('Relationship')
+  relElement.setAttribute('Id', relId)
+  relElement.setAttribute(
+    'Type',
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster'
+  )
+  relElement.setAttribute('Target', getRelativePath('ppt/presentation.xml', notesMasterPath))
+  relDoc.documentElement.appendChild(relElement)
+
+  context.notesMasterRelMap.set(notesMasterPath, relId)
   return relId
 }
 
@@ -432,6 +476,8 @@ async function clonePart(
 
   if (typeInfo.contentType === PPT_SLIDE_MASTER_CT) {
     registerMaster(context, newPath)
+  } else if (typeInfo.contentType === PPT_NOTES_MASTER_CT) {
+    registerNotesMaster(context, newPath)
   }
 
   return newPath
