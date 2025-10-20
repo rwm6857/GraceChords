@@ -35,7 +35,7 @@ export default function Songbook() {
   // Search (match Setlist semantics).
   const [q, setQ] = useState('')
 
-  const fuse = useMemo(() => new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
+  const fuse = useMemo(() => new Fuse(items, { keys: ['title','tags','authors'], threshold:0.4 }), [items])
   const results = useMemo(() => {
     return q ? fuse.search(q).map(r => r.item) : items.slice().sort(byTitle)
   }, [items, fuse, q])

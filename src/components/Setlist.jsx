@@ -13,6 +13,7 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import { encodeSet, decodeSet } from '../utils/setcode'
+import { downloadSetlistAsPptx } from '../utils/export/downloadSetlist'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -60,6 +61,7 @@ export default function Setlist(){
   const [list, setList] = useState([])
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')
+  const [combinePptxProgress, setCombinePptxProgress] = useState('')
   const pptxCount = Object.keys(pptxMap).length
   const [busy, setBusy] = useState(false)
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
@@ -382,6 +384,7 @@ async function exportPdf() {
   }
 
   async function bundlePptx(){
+    if (combinePptxProgress) return
     setPptxProgress(`Bundling 0/${list.length}…`)
     const JSZip = (await import('jszip')).default
     const zip = new JSZip()
@@ -413,6 +416,34 @@ async function exportPdf() {
       try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
     }
     setPptxProgress('')
+  }
+
+  async function combineSetlistPptx(){
+    if (pptxProgress || combinePptxProgress) return
+    setCombinePptxProgress('Combining…')
+    try {
+      const songs = []
+      for (const sel of list) {
+        const s = items.find(it => it.id === sel.id)
+        if (!s) continue
+        const slug = s.filename.replace(/\.chordpro$/i, '')
+        if (!pptxMap[slug]) continue
+        songs.push(s)
+      }
+      if (!songs.length) {
+        try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
+        return
+      }
+      await downloadSetlistAsPptx(
+        { name: name || 'Setlist', songs },
+        { baseUrl: import.meta.env.BASE_URL }
+      )
+    } catch (err) {
+      console.error(err)
+      try { (showToast && showToast('Failed to combine PPTX files')) || alert('Failed to combine PPTX files') } catch {}
+    } finally {
+      setCombinePptxProgress('')
+    }
   }
   
 
@@ -455,7 +486,8 @@ async function exportPdf() {
         <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
           <div className="setlist-actions--mobile" style={{ width:'100%' }}>
             <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
-            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'} iconLeft={<DownloadIcon />}>PPTX</Button>
+            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>PPTX ZIP</Button>
+            <Button onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress || 'Single PPTX'}</Button>
             <Button onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
             <Button as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
           </div>
@@ -474,7 +506,8 @@ async function exportPdf() {
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
-              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX</span><span className="text-when-narrow">PPTX</span></>}</Button>
+              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">Export PPTX ZIP</span><span className="text-when-narrow">PPTX ZIP</span></>}</Button>
+              <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">Single PPTX</span><span className="text-when-narrow">Single</span></>}</Button>
               <Button variant="primary" size="md" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share Set</Button>
               <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
             </div>
