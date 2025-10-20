@@ -68,10 +68,14 @@ See [[Slides-(PPTX)]] for details.
 See [[Resources]] and [[Admin-Resources]].
 
 ## Troubleshooting
-- Song not found: confirm the `.chordpro` file exists and re‑run `npm run build-index`.
+- Song not found: confirm the `.chordpro` file exists and re-run `npm run build-index`.
 - Chords misaligned: ensure chord brackets precede the exact lyric characters and keep lines concise.
 - Fonts in PDF look off: ensure Noto fonts exist under `src/assets/fonts/`.
 - Stale build: set `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during `npm run build` to refresh caches.
 
-See also: [[ChordPro-Guide]] [[Importing-Lyrics]] [[File-Naming-and-Normalization]] [[Index-Building]] [[Admin-Tool]]
+## Add Visual Walkthroughs
+- Place screenshots or GIFs under `public/wiki-assets/` (files committed to the repo).
+- Reference them in Markdown using `![](../wiki-assets/your-image.png)`.
+- Inline captions can be added with normal Markdown (e.g., `_Figure: staging a new song_`).
 
+See also: [[ChordPro-Guide]] [[Importing-Lyrics]] [[File-Naming-and-Normalization]] [[Index-Building]] [[Admin-Tool]]
