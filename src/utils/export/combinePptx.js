@@ -118,9 +118,18 @@ function allocateNumber(store, key) {
   return next
 }
 
+function getZipEntry(zip, selector) {
+  if (!zip) return null
+  const result = zip.file(selector)
+  if (Array.isArray(result)) return result.length ? result[0] : null
+  return result || null
+}
+
 async function prepareContext(zip) {
   const presentationXmlPath = 'ppt/presentation.xml'
-  const presentationXml = await zip.file(presentationXmlPath).async('string')
+  const presentationEntry = getZipEntry(zip, presentationXmlPath)
+  if (!presentationEntry) throw new Error('Base PPTX missing ppt/presentation.xml')
+  const presentationXml = await presentationEntry.async('string')
   const presentationDoc = parseXml(presentationXml)
 
   const sldIdList =
@@ -138,7 +147,9 @@ async function prepareContext(zip) {
   }, 255)
 
   const presentationRelsPath = 'ppt/_rels/presentation.xml.rels'
-  const presentationRelsXml = await zip.file(presentationRelsPath).async('string')
+  const presentationRelsEntry = getZipEntry(zip, presentationRelsPath)
+  if (!presentationRelsEntry) throw new Error('Base PPTX missing ppt/_rels/presentation.xml.rels')
+  const presentationRelsXml = await presentationRelsEntry.async('string')
   const presentationRelsDoc = parseXml(presentationRelsXml)
   const relationshipNodes = Array.from(presentationRelsDoc.getElementsByTagName('Relationship'))
   const maxRelId = relationshipNodes.reduce((max, node) => {
@@ -147,7 +158,9 @@ async function prepareContext(zip) {
   }, 0)
 
   const contentTypesPath = '[Content_Types].xml'
-  const contentTypesXml = await zip.file(contentTypesPath).async('string')
+  const contentTypesEntry = getZipEntry(zip, contentTypesPath)
+  if (!contentTypesEntry) throw new Error('Base PPTX missing [Content_Types].xml')
+  const contentTypesXml = await contentTypesEntry.async('string')
   const contentTypesDoc = parseXml(contentTypesXml)
 
   const counters = {}
@@ -204,12 +217,16 @@ function appendSlideId(context, relId) {
 }
 
 async function copyBinary(zip, srcZip, originalPath, newPath) {
-  const data = await srcZip.file(originalPath).async('uint8array')
+  const entry = getZipEntry(srcZip, originalPath)
+  if (!entry) throw new Error(`Missing PPTX binary part: ${originalPath}`)
+  const data = await entry.async('uint8array')
   zip.file(newPath, data)
 }
 
 async function copyXml(zip, srcZip, originalPath, newPath) {
-  const xml = await srcZip.file(originalPath).async('string')
+  const entry = getZipEntry(srcZip, originalPath)
+  if (!entry) throw new Error(`Missing PPTX xml part: ${originalPath}`)
+  const xml = await entry.async('string')
   zip.file(newPath, xml)
 }
 
@@ -223,7 +240,7 @@ async function copyNotesPart(context, srcZip, originalPath, newSlidePath, mappin
   ensureContentOverride(context.contentTypesDoc, `/${newPath}`, PPT_NOTES_CT)
 
   const originalRelsPath = `${info.dir}_rels/${info.prefix}${info.number}${info.ext}.rels`
-  const relFile = srcZip.file(originalRelsPath)[0]
+  const relFile = getZipEntry(srcZip, originalRelsPath)
   if (relFile) {
     const relXml = await relFile.async('string')
     const relDoc = parseXml(relXml)
@@ -247,7 +264,7 @@ async function processSlideRelationships(context, srcZip, sourceContentTypesDoc,
   const originalPath = slideInfo.path
   const originalNumber = slideInfo.number
   const relPath = `ppt/slides/_rels/slide${originalNumber}.xml.rels`
-  const relEntry = srcZip.file(relPath)[0]
+  const relEntry = getZipEntry(srcZip, relPath)
   if (!relEntry) return
 
   const relXml = await relEntry.async('string')
@@ -285,7 +302,7 @@ async function processSlideRelationships(context, srcZip, sourceContentTypesDoc,
       if (absolute.startsWith('ppt/slideLayouts') || absolute.startsWith('ppt/slideMasters')) {
         continue
       }
-      if (!srcZip.file(absolute)[0]) continue
+      if (!getZipEntry(srcZip, absolute)) continue
       const mapped =
         mapping.get(absolute) ||
         (await copyXmlPart(context, srcZip, sourceContentTypesDoc, absolute, mapping))
@@ -325,8 +342,10 @@ function ensureDefaultContentType(targetDoc, sourceDoc, extension) {
 async function copyXmlPart(context, srcZip, sourceContentTypesDoc, originalPath, mapping) {
   const info = parseNumberedPath(originalPath)
   if (!info) {
-    if (!context.zip.file(originalPath)[0]) {
-      const xml = await srcZip.file(originalPath).async('string')
+    if (!getZipEntry(context.zip, originalPath)) {
+      const sourceEntry = getZipEntry(srcZip, originalPath)
+      if (!sourceEntry) return null
+      const xml = await sourceEntry.async('string')
       context.zip.file(originalPath, xml)
       const ct = getOverrideContentType(sourceContentTypesDoc, `/${originalPath}`)
       if (ct) ensureContentOverride(context.contentTypesDoc, `/${originalPath}`, ct)
@@ -368,7 +387,9 @@ async function appendSlides(context, srcZip) {
 
   if (!slides.length) return
 
-  const sourceContentTypesXml = await srcZip.file('[Content_Types].xml').async('string')
+  const sourceContentTypesEntry = getZipEntry(srcZip, '[Content_Types].xml')
+  if (!sourceContentTypesEntry) throw new Error('Source PPTX missing [Content_Types].xml')
+  const sourceContentTypesXml = await sourceContentTypesEntry.async('string')
   const sourceContentTypesDoc = parseXml(sourceContentTypesXml)
 
   for (let i = 0; i < slides.length; i++) {
