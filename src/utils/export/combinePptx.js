@@ -104,16 +104,17 @@ function parseNumberedPath(path) {
   }
 }
 
-function ensureCounter(context, key, value) {
-  if (!context.counters[key] || context.counters[key] < value) {
-    context.counters[key] = value
+function ensureCounter(store, key, value) {
+  const current = Number(store[key] || 0)
+  if (value > current) {
+    store[key] = value
   }
 }
 
-function allocateNumber(context, key) {
-  const current = context.counters[key] || 0
+function allocateNumber(store, key) {
+  const current = Number(store[key] || 0)
   const next = current + 1
-  context.counters[key] = next
+  store[key] = next
   return next
 }
 
@@ -216,7 +217,7 @@ async function copyNotesPart(context, srcZip, originalPath, newSlidePath, mappin
   const info = parseNumberedPath(originalPath)
   if (!info) return null
   const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context, key)
+  const newNumber = allocateNumber(context.counters, key)
   const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
   await copyXml(context.zip, srcZip, originalPath, newPath)
   ensureContentOverride(context.contentTypesDoc, `/${newPath}`, PPT_NOTES_CT)
@@ -334,7 +335,7 @@ async function copyXmlPart(context, srcZip, sourceContentTypesDoc, originalPath,
     return originalPath
   }
   const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context, key)
+  const newNumber = allocateNumber(context.counters, key)
   const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
   await copyXml(context.zip, srcZip, originalPath, newPath)
   const ct = getOverrideContentType(sourceContentTypesDoc, `/${originalPath}`)
@@ -347,7 +348,7 @@ async function copyMediaPart(context, srcZip, sourceContentTypesDoc, originalPat
   const info = parseNumberedPath(originalPath)
   if (!info) return null
   const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context, key)
+  const newNumber = allocateNumber(context.counters, key)
   const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
   await copyBinary(context.zip, srcZip, originalPath, newPath)
   const ext = info.ext.startsWith('.') ? info.ext.slice(1) : ''
@@ -373,7 +374,7 @@ async function appendSlides(context, srcZip) {
   for (let i = 0; i < slides.length; i++) {
     const slideEntry = slides[i]
     const number = getNumericSuffix(slideEntry.name)
-    const newSlideNumber = allocateNumber(context, 'ppt/slides/slide')
+    const newSlideNumber = allocateNumber(context.counters, 'ppt/slides/slide')
     const newSlidePath = `ppt/slides/slide${newSlideNumber}.xml`
     const xml = await slideEntry.async('string')
     context.zip.file(newSlidePath, xml)
