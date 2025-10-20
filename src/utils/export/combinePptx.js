@@ -1,5 +1,7 @@
 const PPT_SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
 const PPT_NOTES_CT = 'application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml'
+const PPT_SLIDE_MASTER_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml'
+const PPT_SLIDE_LAYOUT_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml'
 const PRESENTATION_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const RELS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 const OFFICE_REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -125,6 +127,59 @@ function getZipEntry(zip, selector) {
   return result || null
 }
 
+function getRelationshipsPath(partPath) {
+  const lastSlash = partPath.lastIndexOf('/')
+  const dir = lastSlash >= 0 ? partPath.slice(0, lastSlash + 1) : ''
+  const file = lastSlash >= 0 ? partPath.slice(lastSlash + 1) : partPath
+  return `${dir}_rels/${file}.rels`
+}
+
+function getContentTypeInfo(doc, partPath) {
+  if (!doc || !partPath) return { contentType: '', fromOverride: false, extension: '' }
+  const partName = `/${partPath}`
+  const overrides = Array.from(doc.getElementsByTagName('Override'))
+  const overrideNode = overrides.find((node) => node.getAttribute('PartName') === partName)
+  if (overrideNode) {
+    return {
+      contentType: overrideNode.getAttribute('ContentType') || '',
+      fromOverride: true,
+      extension: partPath.split('.').pop() || '',
+    }
+  }
+  const defaults = Array.from(doc.getElementsByTagName('Default'))
+  const extension = partPath.split('.').pop() || ''
+  const defaultNode = defaults.find((node) => node.getAttribute('Extension') === extension)
+  if (defaultNode) {
+    return {
+      contentType: defaultNode.getAttribute('ContentType') || '',
+      fromOverride: false,
+      extension,
+    }
+  }
+  return { contentType: '', fromOverride: false, extension }
+}
+
+function ensureDefaultContentType(targetDoc, sourceDoc, extension) {
+  if (!extension) return
+  const existing = Array.from(targetDoc.getElementsByTagName('Default')).some(
+    (node) => node.getAttribute('Extension') === extension
+  )
+  if (existing) return
+  const sourceNode = Array.from(sourceDoc?.getElementsByTagName?.('Default') || []).find(
+    (node) => node.getAttribute('Extension') === extension
+  )
+  if (!sourceNode) return
+  const clone = targetDoc.createElement('Default')
+  clone.setAttribute('Extension', extension)
+  clone.setAttribute('ContentType', sourceNode.getAttribute('ContentType') || '')
+  targetDoc.documentElement.appendChild(clone)
+}
+
+function isBinaryContentType(contentType) {
+  if (!contentType) return false
+  return !/xml|text|application\/(.*\+xml)/i.test(contentType)
+}
+
 async function prepareContext(zip) {
   const presentationXmlPath = 'ppt/presentation.xml'
   const presentationEntry = getZipEntry(zip, presentationXmlPath)
@@ -137,9 +192,9 @@ async function prepareContext(zip) {
     presentationDoc.getElementsByTagName('p:sldIdLst')[0]
 
   const slideIdNodes = sldIdList
-    ? Array.from(sldIdList.getElementsByTagNameNS(PRESENTATION_NS, 'sldId')).concat(
-        Array.from(sldIdList.getElementsByTagName('p:sldId'))
-      )
+    ? Array.from(
+        sldIdList.getElementsByTagNameNS(PRESENTATION_NS, 'sldId')
+      ).concat(Array.from(sldIdList.getElementsByTagName('p:sldId')))
     : []
   const maxSlideId = slideIdNodes.reduce((max, node) => {
     const id = Number(node.getAttribute('id'))
@@ -157,6 +212,20 @@ async function prepareContext(zip) {
     return Math.max(max, num)
   }, 0)
 
+  const masterList =
+    presentationDoc.getElementsByTagNameNS(PRESENTATION_NS, 'sldMasterIdLst')[0] ||
+    presentationDoc.getElementsByTagName('p:sldMasterIdLst')[0] ||
+    null
+  const masterIdNodes = masterList
+    ? Array.from(
+        masterList.getElementsByTagNameNS(PRESENTATION_NS, 'sldMasterId')
+      ).concat(Array.from(masterList.getElementsByTagName('p:sldMasterId')))
+    : []
+  const maxMasterId = masterIdNodes.reduce((max, node) => {
+    const id = Number(node.getAttribute('id'))
+    return Number.isNaN(id) ? max : Math.max(max, id)
+  }, 2147483647)
+
   const contentTypesPath = '[Content_Types].xml'
   const contentTypesEntry = getZipEntry(zip, contentTypesPath)
   if (!contentTypesEntry) throw new Error('Base PPTX missing [Content_Types].xml')
@@ -172,21 +241,49 @@ async function prepareContext(zip) {
   })
 
   ensureCounter(counters, 'ppt/slides/slide', findMaxNumber(zip, /^ppt\/slides\/slide(\d+)\.xml$/))
-  ensureCounter(counters, 'ppt/notesSlides/notesSlide', findMaxNumber(zip, /^ppt\/notesSlides\/notesSlide(\d+)\.xml$/))
-  ensureCounter(counters, 'ppt/media/image', findMaxNumber(zip, /^ppt\/media\/image(\d+)\.[^.]+$/))
+  ensureCounter(
+    counters,
+    'ppt/notesSlides/notesSlide',
+    findMaxNumber(zip, /^ppt\/notesSlides\/notesSlide(\d+)\.xml$/)
+  )
+  ensureCounter(
+    counters,
+    'ppt/slideMasters/slideMaster',
+    findMaxNumber(zip, /^ppt\/slideMasters\/slideMaster(\d+)\.xml$/)
+  )
+  ensureCounter(
+    counters,
+    'ppt/slideLayouts/slideLayout',
+    findMaxNumber(zip, /^ppt\/slideLayouts\/slideLayout(\d+)\.xml$/)
+  )
+  ensureCounter(counters, 'ppt/theme/theme', findMaxNumber(zip, /^ppt\/theme\/theme(\d+)\.xml$/))
+  ensureCounter(
+    counters,
+    'ppt/notesMasters/notesMaster',
+    findMaxNumber(zip, /^ppt\/notesMasters\/notesMaster(\d+)\.xml$/)
+  )
+  ensureCounter(
+    counters,
+    'ppt/media/image',
+    findMaxNumber(zip, /^ppt\/media\/image(\d+)\.[^.]+$/)
+  )
 
   return {
     zip,
     presentationXmlPath,
     presentationDoc,
     sldIdList,
+    sldMasterList: masterList,
     presentationRelsPath,
     presentationRelsDoc,
     contentTypesPath,
     contentTypesDoc,
     nextSlideId: maxSlideId,
     nextRelId: maxRelId,
+    nextMasterId: maxMasterId,
     counters,
+    partMap: new Map(),
+    masterRelMap: new Map(),
   }
 }
 
@@ -216,167 +313,180 @@ function appendSlideId(context, relId) {
   list.appendChild(node)
 }
 
-async function copyBinary(zip, srcZip, originalPath, newPath) {
-  const entry = getZipEntry(srcZip, originalPath)
-  if (!entry) throw new Error(`Missing PPTX binary part: ${originalPath}`)
-  const data = await entry.async('uint8array')
-  zip.file(newPath, data)
-}
+function registerMaster(context, masterPath) {
+  if (context.masterRelMap.has(masterPath)) return context.masterRelMap.get(masterPath)
 
-async function copyXml(zip, srcZip, originalPath, newPath) {
-  const entry = getZipEntry(srcZip, originalPath)
-  if (!entry) throw new Error(`Missing PPTX xml part: ${originalPath}`)
-  const xml = await entry.async('string')
-  zip.file(newPath, xml)
-}
+  const doc = context.presentationDoc
+  const relDoc = context.presentationRelsDoc
 
-async function copyNotesPart(context, srcZip, originalPath, newSlidePath, mapping) {
-  const info = parseNumberedPath(originalPath)
-  if (!info) return null
-  const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context.counters, key)
-  const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
-  await copyXml(context.zip, srcZip, originalPath, newPath)
-  ensureContentOverride(context.contentTypesDoc, `/${newPath}`, PPT_NOTES_CT)
-
-  const originalRelsPath = `${info.dir}_rels/${info.prefix}${info.number}${info.ext}.rels`
-  const relFile = getZipEntry(srcZip, originalRelsPath)
-  if (relFile) {
-    const relXml = await relFile.async('string')
-    const relDoc = parseXml(relXml)
-    const relNodes = Array.from(relDoc.getElementsByTagName('Relationship'))
-    const newSlideRelative = getRelativePath(newPath, newSlidePath)
-    relNodes.forEach((node) => {
-      const type = node.getAttribute('Type') || ''
-      if (type.endsWith('/slide')) {
-        node.setAttribute('Target', newSlideRelative)
-      }
-    })
-    const newRelsPath = `${info.dir}_rels/${info.prefix}${newNumber}${info.ext}.rels`
-    context.zip.file(newRelsPath, serializeXml(relDoc))
+  let list = context.sldMasterList
+  if (!list) {
+    list = doc.createElementNS(PRESENTATION_NS, 'p:sldMasterIdLst')
+    const firstChild = doc.documentElement.firstChild
+    if (firstChild) doc.documentElement.insertBefore(list, firstChild)
+    else doc.documentElement.appendChild(list)
+    context.sldMasterList = list
   }
 
-  mapping.set(originalPath, newPath)
+  context.nextMasterId = Number(context.nextMasterId || 2147483647)
+  context.nextMasterId += 1
+  context.nextRelId += 1
+  const relId = `rId${context.nextRelId}`
+
+  const masterNode = doc.createElementNS(PRESENTATION_NS, 'p:sldMasterId')
+  masterNode.setAttribute('id', String(context.nextMasterId))
+  masterNode.setAttributeNS(OFFICE_REL_NS, 'r:id', relId)
+  list.appendChild(masterNode)
+
+  const relElement = relDoc.createElement('Relationship')
+  relElement.setAttribute('Id', relId)
+  relElement.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster')
+  relElement.setAttribute('Target', getRelativePath('ppt/presentation.xml', masterPath))
+  relDoc.documentElement.appendChild(relElement)
+
+  context.masterRelMap.set(masterPath, relId)
+  return relId
+}
+
+async function clonePart(
+  context,
+  srcZip,
+  sourceContentTypesDoc,
+  sourceKey,
+  originalPath,
+  options = {}
+) {
+  if (!originalPath) return null
+  const mapKey = `${sourceKey}:${originalPath}`
+  if (context.partMap.has(mapKey)) return context.partMap.get(mapKey)
+
+  const entry = getZipEntry(srcZip, originalPath)
+  if (!entry) return null
+
+  const info = parseNumberedPath(originalPath)
+  const typeInfo = getContentTypeInfo(sourceContentTypesDoc, originalPath)
+  let newPath
+
+  if (info) {
+    const counterKey = `${info.dir}${info.prefix}`
+    const newNumber = allocateNumber(context.counters, counterKey)
+    newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
+  } else {
+    if (getZipEntry(context.zip, originalPath)) {
+      context.partMap.set(mapKey, originalPath)
+      return originalPath
+    }
+    newPath = originalPath
+  }
+
+  context.partMap.set(mapKey, newPath)
+
+  if (typeInfo.fromOverride) {
+    ensureContentOverride(context.contentTypesDoc, `/${newPath}`, typeInfo.contentType)
+  } else if (typeInfo.extension) {
+    ensureDefaultContentType(context.contentTypesDoc, sourceContentTypesDoc, typeInfo.extension)
+  }
+
+  const data = await entry.async(isBinaryContentType(typeInfo.contentType) ? 'uint8array' : 'string')
+  context.zip.file(newPath, data)
+
+  const relPath = getRelationshipsPath(originalPath)
+  const relEntry = getZipEntry(srcZip, relPath)
+  if (relEntry) {
+    const relXml = await relEntry.async('string')
+    const relDoc = parseXml(relXml)
+    const relNodes = Array.from(relDoc.getElementsByTagName('Relationship'))
+
+    for (const node of relNodes) {
+      const targetMode = (node.getAttribute('TargetMode') || '').toLowerCase()
+      if (targetMode === 'external') continue
+      const target = node.getAttribute('Target') || ''
+      const absolute = resolveTargetPath(originalPath, target)
+      if (!absolute) continue
+
+      let explicitTarget = null
+      if (typeof options.relationshipMutator === 'function') {
+        const result = await options.relationshipMutator({
+          node,
+          type: node.getAttribute('Type') || '',
+          absolutePath: absolute,
+          newPartPath: newPath,
+          originalPartPath: originalPath,
+        })
+        if (result === false) continue
+        if (result && result.targetPath) {
+          explicitTarget = result.targetPath
+        }
+      }
+
+      const clonedPath =
+        explicitTarget || (await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute))
+      if (!clonedPath) continue
+      const relative = getRelativePath(newPath, clonedPath)
+      node.setAttribute('Target', relative)
+    }
+
+    const newRelPath = getRelationshipsPath(newPath)
+    context.zip.file(newRelPath, serializeXml(relDoc))
+  }
+
+  if (typeInfo.contentType === PPT_SLIDE_MASTER_CT) {
+    registerMaster(context, newPath)
+  }
+
   return newPath
 }
 
-async function processSlideRelationships(context, srcZip, sourceContentTypesDoc, slideInfo, newSlidePath, mapping) {
-  const originalPath = slideInfo.path
-  const originalNumber = slideInfo.number
-  const relPath = `ppt/slides/_rels/slide${originalNumber}.xml.rels`
+async function processSlideRelationships(
+  context,
+  srcZip,
+  sourceContentTypesDoc,
+  sourceKey,
+  originalSlidePath,
+  newSlidePath
+) {
+  const relPath = getRelationshipsPath(originalSlidePath)
   const relEntry = getZipEntry(srcZip, relPath)
   if (!relEntry) return
 
   const relXml = await relEntry.async('string')
   const relDoc = parseXml(relXml)
   const relNodes = Array.from(relDoc.getElementsByTagName('Relationship'))
-  const ownerPath = newSlidePath
 
   for (const node of relNodes) {
     const type = node.getAttribute('Type') || ''
     const target = node.getAttribute('Target') || ''
     if (!target) continue
+    const absolute = resolveTargetPath(originalSlidePath, target)
+    if (!absolute) continue
 
     if (type.endsWith('/notesSlide')) {
-      const absolute = resolveTargetPath(originalPath, target)
-      if (!absolute) continue
-      const mapped = mapping.get(absolute)
-      const notePath =
-        mapped ||
-        (await copyNotesPart(context, srcZip, absolute, newSlidePath, mapping))
+      const notePath = await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute, {
+        relationshipMutator: ({ type: relType }) => {
+          if (relType.endsWith('/slide')) {
+            return { targetPath: newSlidePath }
+          }
+          return null
+        },
+      })
       if (!notePath) continue
-      const relative = getRelativePath(ownerPath, notePath)
-      node.setAttribute('Target', relative)
-    } else if (type.includes('/image') || type.includes('/video') || type.includes('/audio')) {
-      const absolute = resolveTargetPath(originalPath, target)
-      if (!absolute) continue
-      const mapped =
-        mapping.get(absolute) ||
-        (await copyMediaPart(context, srcZip, sourceContentTypesDoc, absolute, mapping))
-      if (!mapped) continue
-      const relative = getRelativePath(ownerPath, mapped)
-      node.setAttribute('Target', relative)
+      node.setAttribute('Target', getRelativePath(newSlidePath, notePath))
+    } else if (type.includes('/image') || type.includes('/audio') || type.includes('/video')) {
+      const mediaPath = await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute)
+      if (!mediaPath) continue
+      node.setAttribute('Target', getRelativePath(newSlidePath, mediaPath))
     } else {
-      const absolute = resolveTargetPath(originalPath, target)
-      if (!absolute) continue
-      if (absolute.startsWith('ppt/slideLayouts') || absolute.startsWith('ppt/slideMasters')) {
-        continue
-      }
-      if (!getZipEntry(srcZip, absolute)) continue
-      const mapped =
-        mapping.get(absolute) ||
-        (await copyXmlPart(context, srcZip, sourceContentTypesDoc, absolute, mapping))
-      if (!mapped) continue
-      const relative = getRelativePath(ownerPath, mapped)
-      node.setAttribute('Target', relative)
+      const dependencyPath = await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute)
+      if (!dependencyPath) continue
+      node.setAttribute('Target', getRelativePath(newSlidePath, dependencyPath))
     }
   }
 
-  const newRelPath = `ppt/slides/_rels/${newSlidePath.split('/').pop()}.rels`
+  const newRelPath = getRelationshipsPath(newSlidePath)
   context.zip.file(newRelPath, serializeXml(relDoc))
 }
 
-function getOverrideContentType(doc, partName) {
-  if (!doc) return null
-  const nodes = Array.from(doc.getElementsByTagName('Override'))
-  const match = nodes.find((node) => node.getAttribute('PartName') === partName)
-  return match ? match.getAttribute('ContentType') || null : null
-}
-
-function ensureDefaultContentType(targetDoc, sourceDoc, extension) {
-  if (!extension) return
-  const existing = Array.from(targetDoc.getElementsByTagName('Default')).some(
-    (node) => node.getAttribute('Extension') === extension
-  )
-  if (existing) return
-  const sourceNode = Array.from(sourceDoc?.getElementsByTagName?.('Default') || []).find(
-    (node) => node.getAttribute('Extension') === extension
-  )
-  if (!sourceNode) return
-  const clone = targetDoc.createElement('Default')
-  clone.setAttribute('Extension', extension)
-  clone.setAttribute('ContentType', sourceNode.getAttribute('ContentType') || '')
-  targetDoc.documentElement.appendChild(clone)
-}
-
-async function copyXmlPart(context, srcZip, sourceContentTypesDoc, originalPath, mapping) {
-  const info = parseNumberedPath(originalPath)
-  if (!info) {
-    if (!getZipEntry(context.zip, originalPath)) {
-      const sourceEntry = getZipEntry(srcZip, originalPath)
-      if (!sourceEntry) return null
-      const xml = await sourceEntry.async('string')
-      context.zip.file(originalPath, xml)
-      const ct = getOverrideContentType(sourceContentTypesDoc, `/${originalPath}`)
-      if (ct) ensureContentOverride(context.contentTypesDoc, `/${originalPath}`, ct)
-    }
-    mapping.set(originalPath, originalPath)
-    return originalPath
-  }
-  const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context.counters, key)
-  const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
-  await copyXml(context.zip, srcZip, originalPath, newPath)
-  const ct = getOverrideContentType(sourceContentTypesDoc, `/${originalPath}`)
-  if (ct) ensureContentOverride(context.contentTypesDoc, `/${newPath}`, ct)
-  mapping.set(originalPath, newPath)
-  return newPath
-}
-
-async function copyMediaPart(context, srcZip, sourceContentTypesDoc, originalPath, mapping) {
-  const info = parseNumberedPath(originalPath)
-  if (!info) return null
-  const key = `${info.dir}${info.prefix}`
-  const newNumber = allocateNumber(context.counters, key)
-  const newPath = `${info.dir}${info.prefix}${newNumber}${info.ext}`
-  await copyBinary(context.zip, srcZip, originalPath, newPath)
-  const ext = info.ext.startsWith('.') ? info.ext.slice(1) : ''
-  ensureDefaultContentType(context.contentTypesDoc, sourceContentTypesDoc, ext)
-  mapping.set(originalPath, newPath)
-  return newPath
-}
-
-async function appendSlides(context, srcZip) {
+async function appendSlides(context, srcZip, sourceKey) {
   const slides = srcZip
     .file(/^ppt\/slides\/slide\d+\.xml$/)
     .sort((a, b) => {
@@ -387,14 +497,11 @@ async function appendSlides(context, srcZip) {
 
   if (!slides.length) return
 
-  const sourceContentTypesEntry = getZipEntry(srcZip, '[Content_Types].xml')
-  if (!sourceContentTypesEntry) throw new Error('Source PPTX missing [Content_Types].xml')
-  const sourceContentTypesXml = await sourceContentTypesEntry.async('string')
-  const sourceContentTypesDoc = parseXml(sourceContentTypesXml)
+  const contentTypesEntry = getZipEntry(srcZip, '[Content_Types].xml')
+  if (!contentTypesEntry) throw new Error('Source PPTX missing [Content_Types].xml')
+  const sourceContentTypesDoc = parseXml(await contentTypesEntry.async('string'))
 
-  for (let i = 0; i < slides.length; i++) {
-    const slideEntry = slides[i]
-    const number = getNumericSuffix(slideEntry.name)
+  for (const slideEntry of slides) {
     const newSlideNumber = allocateNumber(context.counters, 'ppt/slides/slide')
     const newSlidePath = `ppt/slides/slide${newSlideNumber}.xml`
     const xml = await slideEntry.async('string')
@@ -407,15 +514,15 @@ async function appendSlides(context, srcZip) {
     createSlideRelationship(context, newSlideNumber, relId)
     appendSlideId(context, relId)
 
-    const mapping = new Map()
-    mapping.set(slideEntry.name, newSlidePath)
+    const originalSlidePath = slideEntry.name
+    context.partMap.set(`${sourceKey}:${originalSlidePath}`, newSlidePath)
     await processSlideRelationships(
       context,
       srcZip,
       sourceContentTypesDoc,
-      { path: slideEntry.name, number },
-      newSlidePath,
-      mapping
+      sourceKey,
+      originalSlidePath,
+      newSlidePath
     )
   }
 }
@@ -448,7 +555,7 @@ export async function combinePptxFiles(songFileUrls = [], setlistName = 'Setlist
   for (let i = 0; i < rest.length; i++) {
     const buffer = await fetchArrayBuffer(rest[i])
     const srcZip = await JSZip.loadAsync(buffer)
-    await appendSlides(context, srcZip)
+    await appendSlides(context, srcZip, `src${i + 1}`)
   }
 
   persistXml(context)
