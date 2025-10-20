@@ -377,7 +377,17 @@ async function exportPdf() {
     try {
       const ids = list.map(e => e.id).join(',')
       const keys = list.map(e => encodeURIComponent(e.toKey || '')).join(',')
-      const url = `${location.origin}${location.pathname}#/setlist/${ids}?toKeys=${keys}`
+      const baseOrigin = (() => {
+        try {
+          if (typeof window !== 'undefined' && window.location) {
+            const origin = window.location.origin || ''
+            const base = (import.meta?.env?.BASE_URL || '/').replace(/^\./, '')
+            return `${origin}${base}`.replace(/\/+$/, '/')
+          }
+        } catch {}
+        return ''
+      })()
+      const url = `${baseOrigin}#/setlist/${ids}?toKeys=${keys}`
       await navigator.clipboard.writeText(url)
       try { showToast?.('Link copied!') } catch {}
     } catch (e) { alert('Failed to copy link') }
