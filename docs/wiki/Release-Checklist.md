@@ -4,7 +4,7 @@ Use this checklist to ship changes to GraceChords confidently and avoid stale as
 
 ## Before You Start
 - Node.js 20 LTS installed
-- Fonts present under `public/fonts/` (Noto Sans + Noto Mono)
+- PDF fonts present under `src/assets/fonts/` (Noto Sans + Noto Mono)
 
 ## 1) Add or Update Songs
 - Place `.chordpro` files under `public/songs/`
@@ -23,15 +23,23 @@ npm run test:mvp
 ```
 Guards the approved PDF layout (spacing, columns, chord alignment).
 
-## 4) Build With Cache Busting
+## 4) Build & Deploy
+
+CI builds and commits `/docs` for you on push to `main`:
+- Site code changes → `.github/workflows/build-to-docs.yml`
+- Song changes → `.github/workflows/update-index.yml` (commits `src/data/index.json`, which triggers the site build)
+- Resources changes → `.github/workflows/update-resources.yml` (commits `src/data/resources.json`, which triggers the site build)
+- Wiki changes → `.github/workflows/wiki-sync.yml` (syncs wiki, then builds)
+
+Local build (optional for verification):
 ```bash
 VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
 ```
-Outputs static site into `docs/` and embeds the commit in the service worker cache name.
+This embeds the commit in the service worker cache name for clean updates.
 
 ## 5) Commit & Push
-- Commit `public/**`, `src/data/index.json`, `docs/**`
-- Push to `main` (GitHub Pages serves from `/docs`)
+- Commit `public/**` and any generated indices under `src/data/*.json`
+- Push to `main` (the build workflow will update `/docs`)
 
 ## 6) Verify On Production
 - Hard refresh the site
