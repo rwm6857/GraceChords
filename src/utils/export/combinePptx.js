@@ -2,6 +2,7 @@ const PPT_SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentation
 const PPT_NOTES_CT = 'application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml'
 const PPT_SLIDE_MASTER_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml'
 const PPT_SLIDE_LAYOUT_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml'
+const PPT_THEME_CT = 'application/vnd.openxmlformats-officedocument.theme+xml'
 const PRESENTATION_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
 const RELS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 const OFFICE_REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -181,6 +182,16 @@ function isBinaryContentType(contentType) {
   return !/xml|text|application\/(.*\+xml)/i.test(contentType)
 }
 
+function makeNumberedTargetFactory(sample) {
+  const regex = /(.*\D)(\d+)(\.\w+)$/
+  const match = sample && sample.match(regex)
+  if (match) {
+    const [, prefix, , suffix] = match
+    return (n) => `${prefix}${n}${suffix}`
+  }
+  return (n) => `slides/slide${n}.xml`
+}
+
 async function prepareContext(zip) {
   const presentationXmlPath = 'ppt/presentation.xml'
   const presentationEntry = getZipEntry(zip, presentationXmlPath)
@@ -213,6 +224,15 @@ async function prepareContext(zip) {
     return Math.max(max, num)
   }, 0)
 
+  const slideRelationshipNodes = relationshipNodes.filter((node) => {
+    const type = node.getAttribute('Type') || ''
+    return type.endsWith('/slide')
+  })
+  const slideTargetSample = slideRelationshipNodes.length
+    ? slideRelationshipNodes[0].getAttribute('Target') || ''
+    : ''
+  const getSlideTarget = makeNumberedTargetFactory(slideTargetSample)
+
   const masterList =
     presentationDoc.getElementsByTagNameNS(PRESENTATION_NS, 'sldMasterIdLst')[0] ||
     presentationDoc.getElementsByTagName('p:sldMasterIdLst')[0] ||
@@ -231,6 +251,26 @@ async function prepareContext(zip) {
     presentationDoc.getElementsByTagNameNS(PRESENTATION_NS, 'notesMasterIdLst')[0] ||
     presentationDoc.getElementsByTagName('p:notesMasterIdLst')[0] ||
     null
+
+  let defaultNotesMasterPath = null
+  const notesMasterRel = relationshipNodes.find((node) => {
+    const type = node.getAttribute('Type') || ''
+    return type.endsWith('/notesMaster')
+  })
+  if (notesMasterRel) {
+    const target = notesMasterRel.getAttribute('Target') || ''
+    defaultNotesMasterPath = resolveTargetPath('ppt/presentation.xml', target)
+  }
+
+  let defaultThemePath = null
+  const themeRel = relationshipNodes.find((node) => {
+    const type = node.getAttribute('Type') || ''
+    return type.endsWith('/theme')
+  })
+  if (themeRel) {
+    const target = themeRel.getAttribute('Target') || ''
+    defaultThemePath = resolveTargetPath('ppt/presentation.xml', target)
+  }
 
   const contentTypesPath = '[Content_Types].xml'
   const contentTypesEntry = getZipEntry(zip, contentTypesPath)
@@ -274,6 +314,85 @@ async function prepareContext(zip) {
     findMaxNumber(zip, /^ppt\/media\/image(\d+)\.[^.]+$/)
   )
 
+  const slideEntries = zip
+    .file(/^ppt\/slides\/slide\d+\.xml$/)
+    .sort((a, b) => getNumericSuffix(a.name) - getNumericSuffix(b.name))
+
+  let defaultLayoutTarget = ''
+  let defaultLayoutPath = ''
+  let defaultMasterPath = ''
+
+  if (slideEntries.length) {
+    const firstSlide = slideEntries[0]
+    const slideRelEntry = getZipEntry(zip, getRelationshipsPath(firstSlide.name))
+    if (slideRelEntry) {
+      const slideRelDoc = parseXml(await slideRelEntry.async('string'))
+      const relNodes = Array.from(slideRelDoc.getElementsByTagName('Relationship'))
+      const layoutRel = relNodes.find((node) => {
+        const type = node.getAttribute('Type') || ''
+        return type.endsWith('/slideLayout')
+      })
+      if (layoutRel) {
+        defaultLayoutTarget = layoutRel.getAttribute('Target') || ''
+        const resolved = resolveTargetPath(firstSlide.name, defaultLayoutTarget)
+        if (resolved && getZipEntry(zip, resolved)) {
+          defaultLayoutPath = resolved
+        }
+      }
+    }
+  }
+
+  if (!defaultLayoutPath) {
+    const layoutEntries = zip
+      .file(/^ppt\/slideLayouts\/.*\.xml$/)
+      .sort((a, b) => getNumericSuffix(a.name) - getNumericSuffix(b.name))
+    if (layoutEntries.length) {
+      defaultLayoutPath = layoutEntries[0].name
+      defaultLayoutTarget = slideEntries.length
+        ? getRelativePath(slideEntries[0].name, defaultLayoutPath)
+        : '../slideLayouts/slideLayout1.xml'
+    }
+  } else if (!defaultLayoutTarget && slideEntries.length) {
+    defaultLayoutTarget = getRelativePath(slideEntries[0].name, defaultLayoutPath)
+  }
+
+  if (defaultLayoutPath) {
+    const layoutRelEntry = getZipEntry(zip, getRelationshipsPath(defaultLayoutPath))
+    if (layoutRelEntry) {
+      const layoutRelDoc = parseXml(await layoutRelEntry.async('string'))
+      const layoutRelNodes = Array.from(layoutRelDoc.getElementsByTagName('Relationship'))
+      const masterRel = layoutRelNodes.find((node) => {
+        const type = node.getAttribute('Type') || ''
+        return type.endsWith('/slideMaster')
+      })
+      if (masterRel) {
+        const target = masterRel.getAttribute('Target') || ''
+        const resolved = resolveTargetPath(defaultLayoutPath, target)
+        if (resolved && getZipEntry(zip, resolved)) {
+          defaultMasterPath = resolved
+        }
+      }
+    }
+  }
+
+  if (!defaultMasterPath) {
+    const masterEntries = zip
+      .file(/^ppt\/slideMasters\/.*\.xml$/)
+      .sort((a, b) => getNumericSuffix(a.name) - getNumericSuffix(b.name))
+    if (masterEntries.length) {
+      defaultMasterPath = masterEntries[0].name
+    }
+  }
+
+  if (!defaultNotesMasterPath) {
+    const notesMasterEntries = zip
+      .file(/^ppt\/notesMasters\/.*\.xml$/)
+      .sort((a, b) => getNumericSuffix(a.name) - getNumericSuffix(b.name))
+    if (notesMasterEntries.length) {
+      defaultNotesMasterPath = notesMasterEntries[0].name
+    }
+  }
+
   return {
     zip,
     presentationXmlPath,
@@ -292,6 +411,12 @@ async function prepareContext(zip) {
     partMap: new Map(),
     masterRelMap: new Map(),
     notesMasterRelMap: new Map(),
+    getSlideTarget,
+    defaultLayoutTarget,
+    defaultLayoutPath,
+    defaultMasterPath,
+    defaultNotesMasterPath,
+    defaultThemePath,
   }
 }
 
@@ -300,7 +425,10 @@ function createSlideRelationship(context, slideIndex, relId) {
   const rel = context.presentationRelsDoc.createElement('Relationship')
   rel.setAttribute('Id', relId)
   rel.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide')
-  rel.setAttribute('Target', `slides/slide${slideIndex}.xml`)
+  const target = context.getSlideTarget
+    ? context.getSlideTarget(slideIndex)
+    : `slides/slide${slideIndex}.xml`
+  rel.setAttribute('Target', target)
   relationshipsEl.appendChild(rel)
 }
 
@@ -404,11 +532,28 @@ async function clonePart(
   const mapKey = `${sourceKey}:${originalPath}`
   if (context.partMap.has(mapKey)) return context.partMap.get(mapKey)
 
+  const typeInfo = getContentTypeInfo(sourceContentTypesDoc, originalPath)
   const entry = getZipEntry(srcZip, originalPath)
   if (!entry) return null
 
+  if (typeInfo.contentType === PPT_SLIDE_LAYOUT_CT && context.defaultLayoutPath) {
+    context.partMap.set(mapKey, context.defaultLayoutPath)
+    return context.defaultLayoutPath
+  }
+  if (typeInfo.contentType === PPT_SLIDE_MASTER_CT && context.defaultMasterPath) {
+    context.partMap.set(mapKey, context.defaultMasterPath)
+    return context.defaultMasterPath
+  }
+  if (typeInfo.contentType === PPT_NOTES_MASTER_CT && context.defaultNotesMasterPath) {
+    context.partMap.set(mapKey, context.defaultNotesMasterPath)
+    return context.defaultNotesMasterPath
+  }
+  if (typeInfo.contentType === PPT_THEME_CT && context.defaultThemePath) {
+    context.partMap.set(mapKey, context.defaultThemePath)
+    return context.defaultThemePath
+  }
+
   const info = parseNumberedPath(originalPath)
-  const typeInfo = getContentTypeInfo(sourceContentTypesDoc, originalPath)
   let newPath
 
   if (info) {
@@ -498,6 +643,12 @@ async function processSlideRelationships(
   const relXml = await relEntry.async('string')
   const relDoc = parseXml(relXml)
   const relNodes = Array.from(relDoc.getElementsByTagName('Relationship'))
+  const relationshipsEl = relDoc.documentElement
+  let layoutAssigned = false
+  let maxLocalRelId = relNodes.reduce((max, node) => {
+    const idAttr = node.getAttribute('Id') || ''
+    return Math.max(max, getNumericSuffix(idAttr))
+  }, 0)
 
   for (const node of relNodes) {
     const type = node.getAttribute('Type') || ''
@@ -505,6 +656,22 @@ async function processSlideRelationships(
     if (!target) continue
     const absolute = resolveTargetPath(originalSlidePath, target)
     if (!absolute) continue
+
+    if (type.endsWith('/slideLayout')) {
+      if (context.defaultLayoutTarget) {
+        if (!layoutAssigned) {
+          layoutAssigned = true
+          node.setAttribute('Target', context.defaultLayoutTarget)
+        } else {
+          relationshipsEl.removeChild(node)
+        }
+      } else if (!layoutAssigned) {
+        layoutAssigned = true
+      } else {
+        relationshipsEl.removeChild(node)
+      }
+      continue
+    }
 
     if (type.endsWith('/notesSlide')) {
       const notePath = await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute, {
@@ -526,6 +693,15 @@ async function processSlideRelationships(
       if (!dependencyPath) continue
       node.setAttribute('Target', getRelativePath(newSlidePath, dependencyPath))
     }
+  }
+
+  if (!layoutAssigned && context.defaultLayoutTarget) {
+    const relNode = relDoc.createElement('Relationship')
+    const newId = `rId${maxLocalRelId + 1 || 1}`
+    relNode.setAttribute('Id', newId)
+    relNode.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout')
+    relNode.setAttribute('Target', context.defaultLayoutTarget)
+    relationshipsEl.appendChild(relNode)
   }
 
   const newRelPath = getRelationshipsPath(newSlidePath)

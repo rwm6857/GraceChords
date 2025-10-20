@@ -423,16 +423,27 @@ async function exportPdf() {
     setCombinePptxProgress('Combining…')
     try {
       const songs = []
+      const missing = []
       for (const sel of list) {
         const s = items.find(it => it.id === sel.id)
         if (!s) continue
         const slug = s.filename.replace(/\.chordpro$/i, '')
-        if (!pptxMap[slug]) continue
+        if (!pptxMap[slug]) {
+          missing.push(s.title || slug)
+          continue
+        }
         songs.push(s)
       }
       if (!songs.length) {
         try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
         return
+      }
+      if (missing.length) {
+        const msg =
+          missing.length === 1
+            ? `${missing[0]} PPT file unavailable`
+            : `${missing.length} songs missing PPT files`
+        try { showToast?.(msg) } catch {}
       }
       await downloadSetlistAsPptx(
         { name: name || 'Setlist', songs },
