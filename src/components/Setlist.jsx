@@ -497,8 +497,8 @@ async function exportPdf() {
         <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
           <div className="setlist-actions--mobile" style={{ width:'100%' }}>
             <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
-            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>PPT ZIP</Button>
             <Button onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress || 'Export PPT'}</Button>
+            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>PPT ZIP</Button>
             <Button onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
             <Button as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
           </div>
@@ -514,12 +514,12 @@ async function exportPdf() {
               <Button size="sm" variant="secondary" onClick={onOpenLoad} title="Load saved set" iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}> <span className="text-when-wide">Load</span></Button>
               <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
               <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
+              <Button size="sm" variant="secondary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">Share Set</span></Button>
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
-              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">PPT ZIP</span><span className="text-when-narrow">PPT ZIP</span></>}</Button>
               <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">Export PPT</span><span className="text-when-narrow">Export PPT</span></>}</Button>
-              <Button variant="primary" size="md" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share Set</Button>
+              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">PPT ZIP</span><span className="text-when-narrow">PPT ZIP</span></>}</Button>
               <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
             </div>
           </div>
