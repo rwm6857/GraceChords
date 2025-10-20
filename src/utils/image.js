@@ -76,7 +76,8 @@ export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
 }
 
 /**
- * High-level helper to download a song as JPEG.
+ * High-level helper to prepare a song as JPEG.
+ * Returns the computed layout plan plus a Blob/filename for download or sharing.
  * Song objects should already include `sections` or be processed via
  * normalizeSongInput before calling this helper.
  */
@@ -106,10 +107,34 @@ export async function downloadSingleSongJpg(song, options = {}) {
     return { error: 'MULTI_PAGE', plan }
   }
   const canvas = renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi })
-  const link = document.createElement('a')
   const slug = slugifyUnderscore(String(options.slug || song.slug || song.title || 'untitled'))
-  link.href = canvas.toDataURL('image/jpeg', 0.92)
-  link.download = `${slug}.jpg`
-  link.click()
-  return { plan }
+  const filename = `${slug}.jpg`
+  const blob = await new Promise((resolve, reject) => {
+    if (typeof canvas.toBlob === 'function') {
+      canvas.toBlob(
+        (b) => {
+          if (b) resolve(b)
+          else reject(new Error('Failed to generate JPG blob'))
+        },
+        'image/jpeg',
+        0.92
+      )
+    } else {
+      try {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+        const parts = dataUrl.split(',')
+        const mimeMatch = parts[0]?.match(/:(.*?);/)
+        const binary = atob(parts[1] || '')
+        const length = binary.length
+        const u8 = new Uint8Array(length)
+        for (let i = 0; i < length; i += 1) {
+          u8[i] = binary.charCodeAt(i)
+        }
+        resolve(new Blob([u8], { type: mimeMatch?.[1] || 'image/jpeg' }))
+      } catch (err) {
+        reject(err)
+      }
+    }
+  })
+  return { plan, blob, filename }
 }

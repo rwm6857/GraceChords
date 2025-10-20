@@ -10,6 +10,7 @@ import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon, PlusIcon, MinusIcon } 
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
+import { smartPreviewAndShareJPG } from '../utils/smartPreviewAndShareJPG'
 import Busy from './Busy'
 import Panel from './ui/Panel'
 
@@ -298,7 +299,22 @@ if(!entry){
     const ok = await checkJpgSupport(true)
     if (!ok) return
     const { downloadSingleSongJpg } = await loadImageLib()
-    await downloadSingleSongJpg(buildSong(), { slug: entry.filename.replace(/\.chordpro$/, ''), plan: lastPlan.current })
+    const slug = entry.filename.replace(/\.chordpro$/, '')
+    try {
+      const res = await downloadSingleSongJpg(buildSong(), { slug, plan: lastPlan.current })
+      if (res?.plan) {
+        lastPlan.current = res.plan
+      }
+      if (res?.error === 'MULTI_PAGE') {
+        return
+      }
+      if (res?.blob) {
+        await smartPreviewAndShareJPG(res.blob, res.filename || `${slug}.jpg`)
+      }
+    } catch (err) {
+      console.error(err)
+      showToast('Failed to prepare JPG export.')
+    }
   }
 
   
