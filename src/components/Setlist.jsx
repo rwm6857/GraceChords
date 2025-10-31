@@ -469,7 +469,7 @@ async function exportPdf() {
   
 
   return (
-    <PageContainer>
+    <PageContainer className="is-setlist">
       {/* Load Set modal */}
       {loadOpen ? (
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">

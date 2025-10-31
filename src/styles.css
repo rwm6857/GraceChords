@@ -482,6 +482,14 @@ html, body, #root { height: 100%; }
 
 /* --- Setlist: mobile/single-column fixes --- */
 @media (max-width: 900px) {
+  /* Setlist page: allow overall page scroll in stacked layout.
+     .gc-page has a fixed viewport height + overflow:hidden by default; lift that here. */
+  .gc-page.is-setlist{
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
   /* Force stacked flow */
   .BuilderPage,
   .builder-grid,
