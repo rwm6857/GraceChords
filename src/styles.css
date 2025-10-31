@@ -541,7 +541,18 @@ html, body, #root { height: 100%; }
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
+  /* Mirror Add-songs scroller for Current setlist on stacked/mobile */
   .setlist-section.setlist-current .setlist-list{
+    max-height: 62dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Make sure parents don’t clip the inner scroll area */
+  .BuilderRight,
+  .setlist-section.setlist-current,
+  .setlist-section.setlist-current .setlist-pane {
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
   }
