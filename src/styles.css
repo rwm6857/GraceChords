@@ -556,6 +556,22 @@ html, body, #root { height: 100%; }
     -webkit-overflow-scrolling: touch !important;
   }
 
+  /* Tweak scroller height by device size */
+  /* Mobile phones: shorten by ~1.5 card heights */
+  @media (max-width: 640px){
+    .setlist-section.setlist-add .setlist-list,
+    .setlist-section.setlist-current .setlist-list{
+      max-height: calc(62dvh - 12dvh) !important; /* ≈ ~100–120px less on phones */
+    }
+  }
+  /* Portrait tablets: shorten by ~3 card heights */
+  @media (min-width: 641px) and (max-width: 900px){
+    .setlist-section.setlist-add .setlist-list,
+    .setlist-section.setlist-current .setlist-list{
+      max-height: calc(62dvh - 20dvh) !important; /* ≈ ~220–240px less on tablets */
+    }
+  }
+
   /* Make sure parents don’t clip the inner scroll area */
   .BuilderRight,
   .setlist-section.setlist-current,
