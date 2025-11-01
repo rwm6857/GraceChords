@@ -9,7 +9,7 @@ import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, RemoveIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
-const PT_WINDOW = [18, 17, 16, 15, 14]
+const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
 const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
@@ -32,7 +32,7 @@ export default function WorshipMode(){
   const headerRef = useRef(null)
   const barRef = useRef(null)
   const touchRef = useRef({ x: 0, y: 0, at: 0 })
-  const [cols, setCols] = useState(1)
+  const [cols, setCols] = useState(() => { try { return (window.innerWidth < 768) ? 1 : 2 } catch { return 2 } })
   const [isWide, setIsWide] = useState(() => {
     try { const vw = window.innerWidth, vh = window.innerHeight; return (vw >= 900) || (vw / Math.max(1, vh) >= 1.2) } catch { return false }
   })
@@ -216,7 +216,7 @@ export default function WorshipMode(){
     const prevCols = content.style.columnCount
     const prevGap = content.style.columnGap
     try {
-      const colPref = isWide ? [2, 1] : [1, 2]
+      const colPref = isMobile ? [1, 2] : [2, 1]
       for (const pt of PT_WINDOW) {
         for (const cc of colPref) {
           content.style.fontSize = `${pt}px`
@@ -256,7 +256,7 @@ export default function WorshipMode(){
     const prevGap = content.style.columnGap
     try {
       // First try current columns
-      content.style.fontSize = `${fontPx || 16}px`
+      content.style.fontSize = `${fontPx || 20}px`
       content.style.columnCount = String(cols)
       content.style.columnGap = cols === 2 ? '20px' : '0px'
       // eslint-disable-next-line no-unused-expressions
@@ -462,7 +462,7 @@ export default function WorshipMode(){
             const prevCols = content.style.columnCount
             const prevGap = content.style.columnGap
             try {
-              let pt = fontPx || 18
+              let pt = fontPx || 20
               for (;;) {
                 content.style.fontSize = `${pt}px`
                 content.style.columnCount = String(target)
@@ -613,8 +613,8 @@ export default function WorshipMode(){
             </div>
           )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 18) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 18) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
+            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
             {!isMobile && (
               <>
                 <button
