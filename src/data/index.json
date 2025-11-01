@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-20T01:59:05.627Z",
+  "generatedAt": "2025-11-01T04:18:50.127Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1323,6 +1323,19 @@
     {
       "id": "on-that-day",
       "title": "On That Day",
+      "filename": "on_that_day.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Mission",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "Japan"
+    },
+    {
+      "id": "on-that-day",
+      "title": "On That Day",
       "filename": "on_that_day_japanese.chordpro",
       "originalKey": "A",
       "tags": [],
@@ -1400,19 +1413,30 @@
       "id": "preaching-the-cross",
       "title": "Preaching the Cross",
       "filename": "preaching_the_cross.chordpro",
-      "originalKey": "BM",
-      "tags": [],
+      "originalKey": "Bm",
+      "tags": [
+        "Slow",
+        "Cross",
+        "Commitment",
+        "ICP"
+      ],
       "authors": [],
-      "country": ""
+      "country": "Korea"
     },
     {
-      "id": "psalm-150-israeli",
-      "title": "Psalm 150 (Israeli)",
+      "id": "psalm-150",
+      "title": "Psalm 150",
       "filename": "psalm_150.chordpro",
-      "originalKey": "DM",
-      "tags": [],
-      "authors": [],
-      "country": ""
+      "originalKey": "Dm",
+      "tags": [
+        "Fast",
+        "Nations",
+        "ICP"
+      ],
+      "authors": [
+        "MIQDEM"
+      ],
+      "country": "Israel"
     },
     {
       "id": "reckless-love",
