@@ -447,6 +447,16 @@ export default function WorshipMode(){
         >
           {currentTheme() === 'dark' ? <Sun /> : <Moon />}
         </button>
+        {/* Top-right chords toggle (left of column/theme) */}
+        <button
+          className="iconbtn"
+          aria-label="Toggle chords"
+          title={showChords ? 'Hide chords' : 'Show chords'}
+          onClick={() => setShowChords(v => !v)}
+          style={{ position:'fixed', top:10, right:110, zIndex:5, padding:'10px 12px' }}
+        >
+          <EyeIcon />
+        </button>
         {/* Manual column toggle next to theme */}
         <button
           className="iconbtn"
@@ -541,16 +551,6 @@ export default function WorshipMode(){
           padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
         }}>
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            {/* Chords toggle */}
-            <button
-            className="gc-btn"
-              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => setShowChords(v => !v)}
-              title="Toggle chords"
-              aria-label="Toggle chords"
-            >
-              <EyeIcon />{!isMobile ? <span className="text-when-wide">{showChords ? ' Chords On' : ' Chords Off'}</span> : null}
-            </button>
             {/* Key down (half step) */}
             <button
             className="gc-btn"
