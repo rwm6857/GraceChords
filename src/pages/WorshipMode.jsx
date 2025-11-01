@@ -6,7 +6,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym } from '../utils/chordpro'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, RemoveIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
@@ -615,10 +615,34 @@ export default function WorshipMode(){
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
             <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
             <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+            {isMobile && (
+              <>
+                <button
+                  className={`gc-btn gc-btn--iconOnly ${idx > 0 ? 'gc-btn--primary' : ''}`}
+                  style={{minWidth:44, minHeight:44}}
+                  onClick={prev}
+                  title="Previous song"
+                  aria-label="Previous song"
+                  disabled={idx <= 0}
+                >
+                  <ArrowLeft />
+                </button>
+                <button
+                  className={`gc-btn gc-btn--iconOnly ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`}
+                  style={{minWidth:44, minHeight:44}}
+                  onClick={next}
+                  title="Next song"
+                  aria-label="Next song"
+                  disabled={idx >= songs.length - 1}
+                >
+                  <ArrowRight />
+                </button>
+              </>
+            )}
             {!isMobile && (
               <>
                 <button
-                  className="gc-btn"
+                  className={`gc-btn ${idx > 0 ? 'gc-btn--primary' : ''}`}
                   style={{padding:'12px 18px', fontSize:16}}
                   onClick={prev}
                   title="Previous song"
@@ -627,7 +651,7 @@ export default function WorshipMode(){
                   ← BACK
                 </button>
                 <button
-                  className="gc-btn gc-btn--primary"
+                  className={`gc-btn ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`}
                   style={{padding:'12px 18px', fontSize:16}}
                   onClick={next}
                   title="Next song"
