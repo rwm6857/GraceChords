@@ -3,10 +3,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, GearIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
@@ -24,6 +24,8 @@ export default function WorshipMode(){
   const [songOffsets, setSongOffsets] = useState([]) // per-song current offsets (semitones)
   const [baseOffsets, setBaseOffsets] = useState([]) // per-song baseline offsets at session start
   const [showChords, setShowChords] = useState(true)
+  const [halfStep, setHalfStep] = useState(false)
+  const [openSettings, setOpenSettings] = useState(false)
   const [fontPx, setFontPx] = useState(null)
   const [autoSize, setAutoSize] = useState(() => fontPx == null)
 
@@ -177,6 +179,7 @@ export default function WorshipMode(){
             if (typeof saved.fontPx === 'number') { setFontPx(saved.fontPx); setAutoSize(false) }
             if (typeof saved.autoSize === 'boolean') setAutoSize(saved.autoSize)
             if (typeof saved.showChords === 'boolean') setShowChords(saved.showChords)
+            if (typeof saved.halfStep === 'boolean') setHalfStep(saved.halfStep)
           } catch {}
         }
 
@@ -303,10 +306,11 @@ export default function WorshipMode(){
       fontPx,
       autoSize,
       showChords,
+      halfStep,
       ts: Date.now(),
     }
     try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)) } catch {}
-  }, [ids.join(','), idx, songOffsets, baseOffsets, cols, fontPx, autoSize, showChords])
+  }, [ids.join(','), idx, songOffsets, baseOffsets, cols, fontPx, autoSize, showChords, halfStep])
 
   // Keyboard navigation
   useEffect(() => {
@@ -437,25 +441,15 @@ export default function WorshipMode(){
         >
           <HomeIcon />
         </button>
-        {/* Top-right theme toggle */}
+        {/* Top-right settings (opens menu) */}
         <button
           className="iconbtn"
-          aria-label="Toggle dark mode"
-          title={currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          onClick={() => { toggleTheme(); setThemeBump(x => x + 1) }}
-          style={{ position:'fixed', top:10, right:10, zIndex:5, padding:'10px 12px' }}
+          aria-label="Open settings"
+          title="Settings"
+          onClick={() => setOpenSettings(true)}
+          style={{ position:'fixed', top:10, right:10, zIndex:6, padding:'10px 12px' }}
         >
-          {currentTheme() === 'dark' ? <Sun /> : <Moon />}
-        </button>
-        {/* Top-right chords toggle (left of column/theme) */}
-        <button
-          className="iconbtn"
-          aria-label="Toggle chords"
-          title={showChords ? 'Hide chords' : 'Show chords'}
-          onClick={() => setShowChords(v => !v)}
-          style={{ position:'fixed', top:10, right:110, zIndex:5, padding:'10px 12px' }}
-        >
-          <EyeIcon />
+          <GearIcon />
         </button>
         {/* Manual column toggle next to theme */}
         <button
@@ -497,6 +491,58 @@ export default function WorshipMode(){
         >
           {cols === 2 ? <OneColIcon size={18} /> : <TwoColIcon size={18} />}
         </button>
+
+        {/* Settings drawer */}
+        {openSettings && (
+          <div className="gc-drawer" data-open="true" role="dialog" aria-modal="true" aria-label="Settings">
+            <div className="gc-drawer__overlay" onClick={() => setOpenSettings(false)} />
+            <div className="gc-drawer__panel">
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ fontWeight:700, fontSize:18 }}>Settings</div>
+                <button className="gc-btn gc-btn--iconOnly" aria-label="Close" onClick={() => setOpenSettings(false)} title="Close"><RemoveIcon /></button>
+              </div>
+              <div className="gc-drawer__links" style={{ gap:12 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Theme</div>
+                  <button className="gc-btn" onClick={() => { toggleTheme(); setThemeBump(x => x + 1) }} title={currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="Toggle theme">
+                    {currentTheme() === 'dark' ? <Sun /> : <Moon />} <span className="text-when-wide">{currentTheme() === 'dark' ? ' Light' : ' Dark'}</span>
+                  </button>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Chords</div>
+                  <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
+                    <EyeIcon /> <span className="text-when-wide">{showChords ? ' On' : ' Off'}</span>
+                  </button>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Transpose increment</div>
+                  <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
+                    <input type="checkbox" checked={halfStep} onChange={e => setHalfStep(e.target.checked)} />
+                    <span>Half-step</span>
+                  </label>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Set key</div>
+                  <select value={toKey} disabled={!cur} onChange={e => {
+                    const sel = e.target.value
+                    const off = stepsBetween(cur?.baseKey, sel)
+                    setSongOffsets(arr => { const c = arr.slice(); c[idx] = off; return c })
+                    setTranspose(off)
+                  }} aria-label="Set key">
+                    {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Reset key</div>
+                  <button className="gc-btn" onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }} aria-label="Reset key"><RemoveIcon /> <span className="text-when-wide">Reset</span></button>
+                </div>
+              </div>
+              <div className="gc-drawer__footer">
+                <button className="gc-btn" onClick={() => setOpenSettings(false)}>Done</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content area */}
         <div
@@ -551,23 +597,23 @@ export default function WorshipMode(){
           padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
         }}>
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            {/* Key down (half step) */}
+            {/* Key down */}
             <button
             className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(t => { const nt = t - 1; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              onClick={() => { setTranspose(t => { const step = (halfStep ? 1 : 2); const nt = t - step; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
               title="Lower key"
-              aria-label="Lower key (half step)"
+              aria-label="Lower key"
             >
               <ArrowDown />{!isMobile ? <span className="text-when-wide"> Key Down</span> : null}
             </button>
-            {/* Key up (half step) */}
+            {/* Key up */}
             <button
             className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(t => { const nt = t + 1; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              onClick={() => { setTranspose(t => { const step = (halfStep ? 1 : 2); const nt = t + step; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
               title="Raise key"
-              aria-label="Raise key (half step)"
+              aria-label="Raise key"
             >
               <ArrowUp />{!isMobile ? <span className="text-when-wide"> Key Up</span> : null}
             </button>
