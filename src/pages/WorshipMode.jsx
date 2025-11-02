@@ -1031,19 +1031,18 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
 
     const cs = window.getComputedStyle(mid)
     const basePx = parseFloat(cs.fontSize) || 20
-    const minPx = 14
+    const minPx = Math.max(10, Math.floor(basePx - 6))
     const measure = () => mid.getBoundingClientRect().width
 
     let fontPx = basePx
     let currentW = measure()
-    if (currentW > avail && avail > 0 && currentW > 0) {
-      const ratio = avail / currentW
-      const target = Math.max(minPx, Math.floor(basePx * ratio))
-      fontPx = target
+    // Stepwise shrink for stability
+    while (currentW > avail && fontPx > minPx) {
+      fontPx = Math.max(minPx, fontPx - 1)
       mid.style.fontSize = `${fontPx}px`
       currentW = measure()
     }
-    if (currentW > avail && fontPx <= minPx) {
+    if (currentW > avail) {
       const words = originalTitle.split(/\s+/).filter(Boolean)
       if (!words.length) {
         mid.textContent = '…'
@@ -1082,7 +1081,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     : { background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6, padding:'4px' }
 
   return (
-    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss }}>
+    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '72px' }}>
       {/* Left: Clock (align near Home button) */}
       <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
         {clockText}
@@ -1104,7 +1103,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
             title={isRunning ? 'Stop' : 'Start'}
             style={playStyle}
           >
-            {isRunning ? <PauseIcon /> : <PlayIcon />}
+            {isRunning ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
           </button>
           <button
             className="gc-btn gc-btn--iconOnly gc-btn--sm"
@@ -1114,7 +1113,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
             disabled={!canReset}
             style={resetStyle}
           >
-            <ResetIcon />
+            <ResetIcon size={14} />
           </button>
         </span>
       )}
