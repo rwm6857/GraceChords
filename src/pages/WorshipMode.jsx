@@ -6,7 +6,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, GearIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
@@ -449,48 +449,9 @@ export default function WorshipMode(){
           onClick={() => setOpenSettings(true)}
           style={{ position:'fixed', top:10, right:10, zIndex:6, padding:'10px 12px' }}
         >
-          <GearIcon />
+          <SlidersIcon />
         </button>
-        {/* Manual column toggle next to theme */}
-        <button
-          className="iconbtn"
-          aria-label="Toggle columns"
-          title={cols === 2 ? 'Switch to 1 column' : 'Switch to 2 columns'}
-          onClick={() => {
-            const target = (cols === 2 ? 1 : 2)
-            setAutoSize(false)
-            const viewport = viewportRef.current
-            const content = contentRef.current
-            if (!viewport || !content) { setCols(target); return }
-            const prevSize = content.style.fontSize
-            const prevCols = content.style.columnCount
-            const prevGap = content.style.columnGap
-            try {
-              let pt = fontPx || 20
-              for (;;) {
-                content.style.fontSize = `${pt}px`
-                content.style.columnCount = String(target)
-                content.style.columnGap = target === 2 ? '20px' : '0px'
-                // eslint-disable-next-line no-unused-expressions
-                content.offsetHeight
-                const headerH = headerRef.current?.offsetHeight || 0
-                const barH = barRef.current?.offsetHeight || 0
-                const avail = (viewport.clientHeight - headerH - barH)
-                if (content.scrollHeight <= avail || pt <= 12) break
-                pt -= 1
-              }
-              setCols(target)
-              setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
-            } finally {
-              content.style.fontSize = prevSize
-              content.style.columnCount = prevCols
-              content.style.columnGap = prevGap
-            }
-          }}
-          style={{ position:'fixed', top:10, right:60, zIndex:5, padding:'10px 12px' }}
-        >
-          {cols === 2 ? <OneColIcon size={18} /> : <TwoColIcon size={18} />}
-        </button>
+        {/* Column toggle moved into settings */}
 
         {/* Settings drawer */}
         {openSettings && (
@@ -513,6 +474,85 @@ export default function WorshipMode(){
                   <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
                     <EyeIcon /> <span className="text-when-wide">{showChords ? ' On' : ' Off'}</span>
                   </button>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Columns</div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button
+                      className={`gc-btn ${cols === 1 ? 'gc-btn--primary' : ''}`}
+                      aria-label="Use 1 column"
+                      onClick={() => {
+                        const target = 1
+                        setAutoSize(false)
+                        const viewport = viewportRef.current
+                        const content = contentRef.current
+                        if (!viewport || !content) { setCols(target); return }
+                        const prevSize = content.style.fontSize
+                        const prevCols = content.style.columnCount
+                        const prevGap = content.style.columnGap
+                        try {
+                          let pt = fontPx || 20
+                          for (;;) {
+                            content.style.fontSize = `${pt}px`
+                            content.style.columnCount = String(target)
+                            content.style.columnGap = target === 2 ? '20px' : '0px'
+                            // eslint-disable-next-line no-unused-expressions
+                            content.offsetHeight
+                            const headerH = headerRef.current?.offsetHeight || 0
+                            const barH = barRef.current?.offsetHeight || 0
+                            const avail = (viewport.clientHeight - headerH - barH)
+                            if (content.scrollHeight <= avail || pt <= 12) break
+                            pt -= 1
+                          }
+                          setCols(target)
+                          setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
+                        } finally {
+                          content.style.fontSize = prevSize
+                          content.style.columnCount = prevCols
+                          content.style.columnGap = prevGap
+                        }
+                      }}
+                    >
+                      <OneColIcon /> <span className="text-when-wide">1</span>
+                    </button>
+                    <button
+                      className={`gc-btn ${cols === 2 ? 'gc-btn--primary' : ''}`}
+                      aria-label="Use 2 columns"
+                      onClick={() => {
+                        const target = 2
+                        setAutoSize(false)
+                        const viewport = viewportRef.current
+                        const content = contentRef.current
+                        if (!viewport || !content) { setCols(target); return }
+                        const prevSize = content.style.fontSize
+                        const prevCols = content.style.columnCount
+                        const prevGap = content.style.columnGap
+                        try {
+                          let pt = fontPx || 20
+                          for (;;) {
+                            content.style.fontSize = `${pt}px`
+                            content.style.columnCount = String(target)
+                            content.style.columnGap = target === 2 ? '20px' : '0px'
+                            // eslint-disable-next-line no-unused-expressions
+                            content.offsetHeight
+                            const headerH = headerRef.current?.offsetHeight || 0
+                            const barH = barRef.current?.offsetHeight || 0
+                            const avail = (viewport.clientHeight - headerH - barH)
+                            if (content.scrollHeight <= avail || pt <= 12) break
+                            pt -= 1
+                          }
+                          setCols(target)
+                          setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
+                        } finally {
+                          content.style.fontSize = prevSize
+                          content.style.columnCount = prevCols
+                          content.style.columnGap = prevGap
+                        }
+                      }}
+                    >
+                      <TwoColIcon /> <span className="text-when-wide">2</span>
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Transpose increment</div>
