@@ -173,6 +173,18 @@ input,select,textarea{
 .songpage__title{ margin:0; font-size: var(--font-title); line-height:1.2; font-family:'Inter', sans-serif; font-weight:700 }
 .songpage__meta{ color:var(--muted); font-size:13px; margin-top:4px }
 
+/* Song title strip: Stopwatch — Title — Clock (single line) */
+.songtitlebar{
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  white-space: nowrap;
+  font-size: var(--font-title);
+  line-height: 1.2;
+  font-family: 'Inter', sans-serif;
+}
+.songtitlebar__mid{ min-width:0; max-width:100%; overflow:hidden; }
+.songtitlebar__title{ font-weight:700; display:inline-block; white-space:nowrap; }
+.songtitlebar__side{ color: var(--muted); font-weight: 400; }
+
 .songpage__sheet{
   background: var(--card);
   padding: var(--space-4);

@@ -1,12 +1,12 @@
 // src/pages/WorshipMode.jsx
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 
 const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
@@ -28,6 +28,9 @@ export default function WorshipMode(){
   const [openSettings, setOpenSettings] = useState(false)
   const [fontPx, setFontPx] = useState(null)
   const [autoSize, setAutoSize] = useState(() => fontPx == null)
+  // Clock + Stopwatch settings (persist)
+  const [clock24h, setClock24h] = useState(() => { try { return localStorage.getItem('worship:clock24h') === '1' } catch { return false } })
+  const [showStopwatch, setShowStopwatch] = useState(() => { try { return localStorage.getItem('worship:showStopwatch') !== '0' } catch { return true } })
 
   const viewportRef = useRef(null)
   const contentRef = useRef(null)
@@ -43,6 +46,11 @@ export default function WorshipMode(){
   const [availH, setAvailH] = useState(null)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
   const hintTimerRef = useRef(0)
+  // Clock + Stopwatch runtime
+  const [now, setNow] = useState(() => new Date())
+  const [elapsedSec, setElapsedSec] = useState(0)
+  const [isRunning, setIsRunning] = useState(false)
+  const stopwatchStartRef = useRef(0)
 
   // Quick add/search state
   const [q, setQ] = useState('')
@@ -90,6 +98,112 @@ export default function WorshipMode(){
     onResize()
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  // Persist settings
+  useEffect(() => { try { localStorage.setItem('worship:clock24h', clock24h ? '1' : '0') } catch {} }, [clock24h])
+  useEffect(() => { try { localStorage.setItem('worship:showStopwatch', showStopwatch ? '1' : '0') } catch {} }, [showStopwatch])
+
+  // Clock: tick on minute boundary
+  useEffect(() => {
+    let t1 = null, t2 = null
+    const tick = () => setNow(new Date())
+    const ms = 60000 - (Date.now() % 60000)
+    t1 = setTimeout(() => { tick(); t2 = setInterval(tick, 60000) }, ms)
+    tick()
+    return () => { if (t1) clearTimeout(t1); if (t2) clearInterval(t2) }
+  }, [])
+
+  // Stopwatch: manual start/stop, default stopped at 00:00
+  useEffect(() => {
+    let id = null
+    if (isRunning) {
+      if (!stopwatchStartRef.current) {
+        stopwatchStartRef.current = Date.now()
+      }
+      id = setInterval(() => {
+        const start = stopwatchStartRef.current || Date.now()
+        setElapsedSec(Math.max(0, Math.floor((Date.now() - start) / 1000)))
+      }, 1000)
+    }
+    return () => { if (id) clearInterval(id) }
+  }, [isRunning])
+
+  // Restore stopwatch from sessionStorage on mount (reload case only)
+  useEffect(() => {
+    try {
+      const run = sessionStorage.getItem('worship:sw:running') === '1'
+      const startAt = Number(sessionStorage.getItem('worship:sw:startAt') || '0') || 0
+      const savedElapsed = Number(sessionStorage.getItem('worship:sw:elapsed') || '0') || 0
+      if (run && startAt > 0) {
+        stopwatchStartRef.current = startAt
+        const nowMs = Date.now()
+        setElapsedSec(Math.max(0, Math.floor((nowMs - startAt) / 1000)))
+        setIsRunning(true)
+      } else if (!run && savedElapsed > 0) {
+        setElapsedSec(savedElapsed)
+        setIsRunning(false)
+        stopwatchStartRef.current = 0
+      }
+    } catch {}
+  }, [])
+
+  // Persist stopwatch state into sessionStorage for reload recovery
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('worship:sw:running', isRunning ? '1' : '0')
+      sessionStorage.setItem('worship:sw:elapsed', String(elapsedSec))
+      if (isRunning && stopwatchStartRef.current) {
+        sessionStorage.setItem('worship:sw:startAt', String(stopwatchStartRef.current))
+      }
+    } catch {}
+  }, [isRunning, elapsedSec])
+
+  // Clear stopwatch stored state when navigating away (component unmount)
+  useEffect(() => {
+    return () => {
+      try {
+        sessionStorage.removeItem('worship:sw:running')
+        sessionStorage.removeItem('worship:sw:elapsed')
+        sessionStorage.removeItem('worship:sw:startAt')
+      } catch {}
+    }
+  }, [])
+
+  function toggleStopwatch(){
+    if (isRunning) {
+      setIsRunning(false)
+    } else {
+      // resume from current elapsed
+      stopwatchStartRef.current = Date.now() - (elapsedSec * 1000)
+      setIsRunning(true)
+    }
+  }
+  function resetStopwatch(){
+    setIsRunning(false)
+    setElapsedSec(0)
+    stopwatchStartRef.current = 0
+  }
+
+  // Auto-stop and reset when hiding the stopwatch
+  useEffect(() => {
+    if (!showStopwatch) {
+      setIsRunning(false)
+      setElapsedSec(0)
+      stopwatchStartRef.current = 0
+    }
+  }, [showStopwatch])
+
+  function formatClock(d){
+    const h = d.getHours(); const m = d.getMinutes()
+    if (clock24h) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+    const hr12 = h % 12 || 12; const ap = (h >= 12) ? 'p' : 'a'
+    return `${hr12}:${String(m).padStart(2,'0')}${ap}`
+  }
+  function formatStopwatch(sec){
+    const s = sec % 60, m = Math.floor(sec/60) % 60, h = Math.floor(sec/3600)
+    const ss = String(s).padStart(2,'0'); const mm = String(m).padStart(2,'0')
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+  }
 
   const location = useLocation()
   const query = useMemo(() => {
@@ -424,9 +538,19 @@ export default function WorshipMode(){
           background:'var(--bg)', color:'var(--text)'
         }}
       >
-        {/* Title row */}
+        {/* Title row: Stopwatch — Title — Clock */}
         <div ref={headerRef} style={{padding:'10px 16px', textAlign:'center'}}>
-          <div style={{fontWeight:700, fontSize:'clamp(20px, 4vw, 28px)'}}>{cur?.title || ''}</div>
+          <TitleStrip
+            title={cur?.title || ''}
+            clockText={formatClock(now)}
+            stopwatchText={showStopwatch ? formatStopwatch(elapsedSec) : ''}
+            showStopwatch={showStopwatch}
+            isRunning={isRunning}
+            onToggleRun={toggleStopwatch}
+            onReset={resetStopwatch}
+            canReset={elapsedSec > 0}
+            sizeCss="clamp(20px, 4vw, 28px)"
+          />
           <div style={{opacity:.75, fontSize:14, marginTop:2}}>
             Key: {toKey}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
           </div>
@@ -474,6 +598,20 @@ export default function WorshipMode(){
                   <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
                     <EyeIcon /> <span className="text-when-wide">{showChords ? ' On' : ' Off'}</span>
                   </button>
+                </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Show stopwatch</div>
+                  <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
+                    <input type="checkbox" checked={showStopwatch} onChange={e => setShowStopwatch(e.target.checked)} />
+                    <span>{showStopwatch ? 'On' : 'Off'}</span>
+                  </label>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Clock format</div>
+                  <select value={clock24h ? '24' : '12'} onChange={e => setClock24h(e.target.value === '24')} aria-label="Clock format">
+                    <option value="12">12-hour</option>
+                    <option value="24">24-hour</option>
+                  </select>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Columns</div>
@@ -860,6 +998,112 @@ function ChordLine({ plain, chords, steps, showChords }){
         </div>
       )}
       <div className="lyrics" style={{whiteSpace:'pre-wrap', overflowWrap:'anywhere', fontSize:'inherit'}}>{plain}</div>
+    </div>
+  )
+}
+
+/* ---------- Title strip for Worship Mode ---------- */
+function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset }){
+  const hostRef = useRef(null)
+  const leftRef = useRef(null)
+  const midRef = useRef(null)
+  const rightRef = useRef(null)
+  const originalTitle = String(title || '')
+  const [display, setDisplay] = useState({ text: originalTitle, size: 0 })
+  const [ready, setReady] = useState(false)
+
+  useLayoutEffect(() => {
+    const host = hostRef.current
+    const left = leftRef.current
+    const mid = midRef.current
+    const right = rightRef.current
+    if (!host || !mid) return
+    mid.style.whiteSpace = 'nowrap'
+    mid.textContent = originalTitle
+    mid.style.fontSize = ''
+
+    const hostW = Math.max(0, host.getBoundingClientRect().width)
+    const leftW = showStopwatch && left ? (left.getBoundingClientRect().width) : 0
+    const rightW = right ? (right.getBoundingClientRect().width) : 0
+    const gap = 12
+    const avail = Math.max(0, hostW - leftW - rightW - gap * 2)
+
+    const cs = window.getComputedStyle(mid)
+    const basePx = parseFloat(cs.fontSize) || 20
+    const minPx = 14
+    const measure = () => mid.getBoundingClientRect().width
+
+    let fontPx = basePx
+    let currentW = measure()
+    if (currentW > avail && avail > 0 && currentW > 0) {
+      const ratio = avail / currentW
+      const target = Math.max(minPx, Math.floor(basePx * ratio))
+      fontPx = target
+      mid.style.fontSize = `${fontPx}px`
+      currentW = measure()
+    }
+    if (currentW > avail && fontPx <= minPx) {
+      const words = originalTitle.split(/\s+/).filter(Boolean)
+      if (!words.length) {
+        mid.textContent = '…'
+      } else {
+        let n = words.length
+        while (n > 1) {
+          const candidate = words.slice(0, n - 1).join(' ') + '…'
+          mid.textContent = candidate
+          if (measure() <= avail) break
+          n -= 1
+        }
+        if (n <= 1) {
+          const single = words[0]
+          mid.textContent = (single && single.length <= 3) ? single : '…'
+        }
+      }
+    }
+    setDisplay({ text: mid.textContent || originalTitle, size: fontPx })
+    setReady(true)
+  }, [originalTitle, clockText, stopwatchText, showStopwatch])
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => { setReady(false); setDisplay(d => ({ ...d })) })
+    ro.observe(host)
+    return () => ro.disconnect()
+  }, [])
+
+  return (
+    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss }}>
+      {showStopwatch && (
+        <span ref={leftRef} className="songtitlebar__side" aria-label="Stopwatch" title="Stopwatch" style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+          <span>{stopwatchText || '00:00'}</span>
+          <button
+            className="gc-btn gc-btn--iconOnly gc-btn--sm"
+            onClick={onToggleRun}
+            aria-label={isRunning ? 'Stop stopwatch' : 'Start stopwatch'}
+            title={isRunning ? 'Stop' : 'Start'}
+            style={isRunning ? { background:'#fee2e2', color:'#991b1b', borderColor:'#fecaca' } : { background:'#dcfce7', color:'#065f46', borderColor:'#bbf7d0' }}
+          >
+            {isRunning ? <PauseIcon /> : <PlayIcon />}
+          </button>
+          <button
+            className="gc-btn gc-btn--iconOnly gc-btn--sm"
+            onClick={onReset}
+            aria-label="Reset stopwatch"
+            title="Reset"
+            disabled={!canReset}
+            style={{ background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6 }}
+          >
+            <ResetIcon />
+          </button>
+        </span>
+      )}
+      <div className="songtitlebar__mid">
+        <span ref={midRef} className="songtitlebar__title" style={display.size ? { fontSize: `${display.size}px` } : undefined} title={originalTitle}>
+          {ready ? display.text : originalTitle}
+        </span>
+      </div>
+      <span ref={rightRef} className="songtitlebar__side" aria-label="Clock" title="Clock">{clockText}</span>
     </div>
   )
 }

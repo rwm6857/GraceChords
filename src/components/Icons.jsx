@@ -113,3 +113,24 @@ export const HomeIcon = (p) => (
     <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>
   </S>
 )
+
+// Media controls
+export const PlayIcon = (p) => (
+  <S {...p}>
+    <polygon points="8 5 8 19 19 12" />
+  </S>
+)
+
+export const PauseIcon = (p) => (
+  <S {...p}>
+    <line x1="9" y1="5" x2="9" y2="19" />
+    <line x1="15" y1="5" x2="15" y2="19" />
+  </S>
+)
+
+export const ResetIcon = (p) => (
+  <S {...p}>
+    <polyline points="1 4 1 10 7 10" />
+    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+  </S>
+)

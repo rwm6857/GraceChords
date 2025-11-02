@@ -43,6 +43,7 @@ export default function SongView(){
     try { return window.innerWidth < 600 } catch { return false }
   })
 
+
   useEffect(() => {
     function onResize(){
       try { setIsNarrow(window.innerWidth < 600) } catch {}
@@ -203,6 +204,7 @@ export default function SongView(){
     check()
     return () => { cancelled = true }
   }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
+
 
 if(!entry){
     return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
@@ -695,3 +697,5 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     </div>
   )
 }
+
+/* TitleStrip was used only for SongView; removed per request. */
