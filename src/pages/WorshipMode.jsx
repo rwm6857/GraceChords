@@ -196,8 +196,8 @@ export default function WorshipMode(){
   function formatClock(d){
     const h = d.getHours(); const m = d.getMinutes()
     if (clock24h) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
-    const hr12 = h % 12 || 12; const ap = (h >= 12) ? 'p' : 'a'
-    return `${hr12}:${String(m).padStart(2,'0')}${ap}`
+    const hr12 = h % 12 || 12; const ap = (h >= 12) ? 'pm' : 'am'
+    return `${hr12}:${String(m).padStart(2,'0')} ${ap}`
   }
   function formatStopwatch(sec){
     const s = sec % 60, m = Math.floor(sec/60) % 60, h = Math.floor(sec/3600)
@@ -551,7 +551,7 @@ export default function WorshipMode(){
             canReset={elapsedSec > 0}
             sizeCss="clamp(20px, 4vw, 28px)"
           />
-          <div style={{opacity:.75, fontSize:14, marginTop:2}}>
+          <div style={{opacity:.75, fontSize:16, marginTop:2}}>
             Key: {toKey}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
           </div>
         </div>
@@ -1023,8 +1023,9 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     mid.style.fontSize = ''
 
     const hostW = Math.max(0, host.getBoundingClientRect().width)
-    const leftW = showStopwatch && left ? (left.getBoundingClientRect().width) : 0
-    const rightW = right ? (right.getBoundingClientRect().width) : 0
+    // Left shows clock, right shows stopwatch controls/text
+    const leftW = left ? (left.getBoundingClientRect().width) : 0
+    const rightW = showStopwatch && right ? (right.getBoundingClientRect().width) : 0
     const gap = 12
     const avail = Math.max(0, hostW - leftW - rightW - gap * 2)
 
@@ -1072,17 +1073,36 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     return () => ro.disconnect()
   }, [])
 
+  const isDark = (currentTheme && typeof currentTheme === 'function') ? (currentTheme() === 'dark') : false
+  const playStyle = isRunning
+    ? (isDark ? { background:'#7f1d1d', color:'#fecaca', borderColor:'#7f1d1d', padding:'4px' } : { background:'#fee2e2', color:'#991b1b', borderColor:'#fecaca', padding:'4px' })
+    : (isDark ? { background:'#064e3b', color:'#a7f3d0', borderColor:'#065f46', padding:'4px' } : { background:'#dcfce7', color:'#065f46', borderColor:'#bbf7d0', padding:'4px' })
+  const resetStyle = isDark
+    ? { background:'#374151', color:'#e5e7eb', borderColor:'#4b5563', opacity: canReset ? 1 : .6, padding:'4px' }
+    : { background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6, padding:'4px' }
+
   return (
     <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss }}>
+      {/* Left: Clock (align near Home button) */}
+      <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
+        {clockText}
+      </span>
+      {/* Middle: Smart-fitting title */}
+      <div className="songtitlebar__mid">
+        <span ref={midRef} className="songtitlebar__title" style={display.size ? { fontSize: `${display.size}px` } : undefined} title={originalTitle}>
+          {ready ? display.text : originalTitle}
+        </span>
+      </div>
+      {/* Right: Stopwatch (align near Settings button) */}
       {showStopwatch && (
-        <span ref={leftRef} className="songtitlebar__side" aria-label="Stopwatch" title="Stopwatch" style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+        <span ref={rightRef} className="songtitlebar__side songtitlebar__side--right" aria-label="Stopwatch" title="Stopwatch">
           <span>{stopwatchText || '00:00'}</span>
           <button
             className="gc-btn gc-btn--iconOnly gc-btn--sm"
             onClick={onToggleRun}
             aria-label={isRunning ? 'Stop stopwatch' : 'Start stopwatch'}
             title={isRunning ? 'Stop' : 'Start'}
-            style={isRunning ? { background:'#fee2e2', color:'#991b1b', borderColor:'#fecaca' } : { background:'#dcfce7', color:'#065f46', borderColor:'#bbf7d0' }}
+            style={playStyle}
           >
             {isRunning ? <PauseIcon /> : <PlayIcon />}
           </button>
@@ -1092,18 +1112,12 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
             aria-label="Reset stopwatch"
             title="Reset"
             disabled={!canReset}
-            style={{ background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6 }}
+            style={resetStyle}
           >
             <ResetIcon />
           </button>
         </span>
       )}
-      <div className="songtitlebar__mid">
-        <span ref={midRef} className="songtitlebar__title" style={display.size ? { fontSize: `${display.size}px` } : undefined} title={originalTitle}>
-          {ready ? display.text : originalTitle}
-        </span>
-      </div>
-      <span ref={rightRef} className="songtitlebar__side" aria-label="Clock" title="Clock">{clockText}</span>
     </div>
   )
 }

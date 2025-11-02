@@ -175,15 +175,18 @@ input,select,textarea{
 
 /* Song title strip: Stopwatch — Title — Clock (single line) */
 .songtitlebar{
-  display:flex; align-items:center; justify-content:center; gap:12px;
+  position: relative; display:block; text-align:center;
   white-space: nowrap;
   font-size: var(--font-title);
   line-height: 1.2;
   font-family: 'Inter', sans-serif;
 }
-.songtitlebar__mid{ min-width:0; max-width:100%; overflow:hidden; }
+.songtitlebar__mid{ display:inline-block; min-width:0; max-width:100%; overflow:hidden; }
 .songtitlebar__title{ font-weight:700; display:inline-block; white-space:nowrap; }
-.songtitlebar__side{ color: var(--muted); font-weight: 400; }
+.songtitlebar__side{ color: var(--muted); font-weight: 400; display:flex; align-items:center; gap:6px; position:absolute; top:50%; transform: translateY(-50%); }
+.songtitlebar__side--left{ left:0; margin-left:-6px; }
+.songtitlebar__side--right{ right:0; margin-right:-6px; }
+[data-theme="dark"] .songtitlebar__side{ color: #cbd5e1; }
 
 .songpage__sheet{
   background: var(--card);
