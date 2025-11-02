@@ -197,7 +197,7 @@ export default function WorshipMode(){
     const h = d.getHours(); const m = d.getMinutes()
     if (clock24h) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
     const hr12 = h % 12 || 12; const ap = (h >= 12) ? 'pm' : 'am'
-    return `${hr12}:${String(m).padStart(2,'0')}` + "\u202F" + `${ap}`
+    return `${hr12}:${String(m).padStart(2,'0')}${ap}`
   }
   function formatStopwatch(sec){
     const s = sec % 60, m = Math.floor(sec/60) % 60, h = Math.floor(sec/3600)
@@ -1006,6 +1006,7 @@ function ChordLine({ plain, chords, steps, showChords }){
 function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset }){
   const hostRef = useRef(null)
   const leftRef = useRef(null)
+  const midWrapRef = useRef(null)
   const midRef = useRef(null)
   const rightRef = useRef(null)
   const originalTitle = String(title || '')
@@ -1015,6 +1016,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
   useLayoutEffect(() => {
     const host = hostRef.current
     const left = leftRef.current
+    const midWrap = midWrapRef.current
     const mid = midRef.current
     const right = rightRef.current
     if (!host || !mid) return
@@ -1022,12 +1024,18 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     mid.textContent = originalTitle
     mid.style.fontSize = ''
 
-    const hostW = Math.max(0, host.getBoundingClientRect().width)
-    // Left shows clock, right shows stopwatch controls/text
-    const leftW = left ? (left.getBoundingClientRect().width) : 0
-    const rightW = showStopwatch && right ? (right.getBoundingClientRect().width) : 0
+    const hostRect = host.getBoundingClientRect()
+    const hostW = Math.max(0, hostRect.width)
+    const leftRect = left ? left.getBoundingClientRect() : null
+    const rightRect = (showStopwatch && right) ? right.getBoundingClientRect() : null
     const gap = 12
-    const avail = Math.max(0, hostW - leftW - rightW - gap * 2)
+    const leftEdge = leftRect ? (leftRect.right - hostRect.left) : 0
+    const rightEdge = rightRect ? (rightRect.left - hostRect.left) : hostW
+    const avail = Math.max(0, rightEdge - leftEdge - gap * 2)
+    // Constrain the visible mid wrapper and add interior padding to avoid overlap
+    if (midWrap) midWrap.style.maxWidth = `${avail}px`
+    host.style.paddingLeft = `${Math.max(0, leftEdge + gap)}px`
+    host.style.paddingRight = `${Math.max(0, (hostW - rightEdge) + gap)}px`
 
     const cs = window.getComputedStyle(mid)
     const basePx = parseFloat(cs.fontSize) || 20
@@ -1081,13 +1089,13 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     : { background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6, padding:'4px' }
 
   return (
-    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '72px' }}>
+    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '96px' }}>
       {/* Left: Clock (align near Home button) */}
       <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
         {clockText}
       </span>
       {/* Middle: Smart-fitting title */}
-      <div className="songtitlebar__mid">
+      <div className="songtitlebar__mid" ref={midWrapRef}>
         <span ref={midRef} className="songtitlebar__title" style={display.size ? { fontSize: `${display.size}px` } : undefined} title={originalTitle}>
           {ready ? display.text : originalTitle}
         </span>

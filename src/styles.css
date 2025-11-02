@@ -190,7 +190,7 @@ input,select,textarea{
   display:flex; align-items:center; gap:6px;
   position:absolute; top:50%; transform: translateY(-50%);
   font-family: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: calc(1em - 2px);
+  font-size: calc(1em - 2pt);
 }
 .songtitlebar__side--left{ left: var(--side-offset); }
 .songtitlebar__side--right{ right: var(--side-offset); }
