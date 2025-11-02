@@ -197,7 +197,7 @@ export default function WorshipMode(){
     const h = d.getHours(); const m = d.getMinutes()
     if (clock24h) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
     const hr12 = h % 12 || 12; const ap = (h >= 12) ? 'pm' : 'am'
-    return `${hr12}:${String(m).padStart(2,'0')} ${ap}`
+    return `${hr12}:${String(m).padStart(2,'0')}` + "\u202F" + `${ap}`
   }
   function formatStopwatch(sec){
     const s = sec % 60, m = Math.floor(sec/60) % 60, h = Math.floor(sec/3600)
