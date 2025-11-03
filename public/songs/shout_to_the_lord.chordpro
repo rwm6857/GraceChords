@@ -1,26 +1,34 @@
 {title: Shout to the Lord}
-{key: }
+{key: A}
+{country: USA}
 {authors: Darlene Zschech}
 {youtube: IUZEtVbJT5c}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{tags: Slow, Oldie}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
 
-{sov Verse 2}
-{eov}
+{end_of_verse}
 
-{soc Chorus}
-{eoc}
+{start_of_verse: Verse 1}
 
-{soc PreChorus}
-{eoc}
+{end_of_verse}
 
-{sob Bridge}
-{eob}
+{start_of_verse: Verse 2}
 
-{sot Tag}
-{eot}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
+
+{end_of_chorus}
+
+{start_of_chorus: PreChorus}
+
+{end_of_chorus}
+
+{start_of_bridge: Bridge}
+
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
