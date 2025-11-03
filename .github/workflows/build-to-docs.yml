@@ -12,9 +12,18 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'public/**'
-      - '!public/songs/**'   # song changes handled by update-index -> commit triggers this via src/data change
+      - '!public/songs/**'   # song changes handled by update-index -> build triggered via workflow_run
       - '!public/wiki/**'    # wiki handled by wiki-sync workflow (which builds afterward)
       - '!docs/**'           # ignore docs-only changes
+  # Also run after index/resource workflows finish on main. This avoids the
+  # GITHUB_TOKEN limitation where pushes from workflows don't trigger other workflows.
+  workflow_run:
+    workflows:
+      - Rebuild Song Index
+      - Rebuild Resources Index
+    branches: [ main ]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -26,6 +35,8 @@ concurrency:
 
 jobs:
   build-to-docs:
+    # If triggered via workflow_run, only run when the upstream workflow succeeded.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
