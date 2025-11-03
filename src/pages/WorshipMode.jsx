@@ -1012,6 +1012,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
   const originalTitle = String(title || '')
   const [display, setDisplay] = useState({ text: originalTitle, size: 0 })
   const [ready, setReady] = useState(false)
+  const [measureKey, setMeasureKey] = useState(0)
 
   useLayoutEffect(() => {
     const host = hostRef.current
@@ -1033,7 +1034,11 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     const rightEdge = rightRect ? (rightRect.left - hostRect.left) : hostW
     const avail = Math.max(0, rightEdge - leftEdge - gap * 2)
     // Constrain the visible mid wrapper and add interior padding to avoid overlap
-    if (midWrap) midWrap.style.maxWidth = `${avail}px`
+    if (midWrap){
+      midWrap.style.maxWidth = `${avail}px`
+      midWrap.style.width = `${avail}px`
+      midWrap.style.overflow = 'hidden'
+    }
     host.style.paddingLeft = `${Math.max(0, leftEdge + gap)}px`
     host.style.paddingRight = `${Math.max(0, (hostW - rightEdge) + gap)}px`
 
@@ -1070,14 +1075,20 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     }
     setDisplay({ text: mid.textContent || originalTitle, size: fontPx })
     setReady(true)
-  }, [originalTitle, clockText, stopwatchText, showStopwatch])
+  }, [originalTitle, clockText, stopwatchText, showStopwatch, isRunning, canReset, measureKey])
 
   useEffect(() => {
     const host = hostRef.current
     if (!host || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => { setReady(false); setDisplay(d => ({ ...d })) })
+    const ro = new ResizeObserver(() => { setReady(false); setMeasureKey(k => k + 1) })
     ro.observe(host)
     return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    function onResize(){ setMeasureKey(k => k + 1) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   const isDark = (currentTheme && typeof currentTheme === 'function') ? (currentTheme() === 'dark') : false

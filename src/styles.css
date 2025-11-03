@@ -183,7 +183,7 @@ input,select,textarea{
   --side-offset: 72px;
 }
 .songtitlebar__mid{ display:inline-block; min-width:0; max-width:100%; overflow:hidden; }
-.songtitlebar__title{ font-weight:700; display:inline-block; white-space:nowrap; }
+.songtitlebar__title{ font-weight:700; display:inline-block; white-space:nowrap; text-overflow: ellipsis; overflow: hidden; }
 .songtitlebar__side{
   color: var(--muted);
   font-weight: 400;
