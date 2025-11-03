@@ -1100,7 +1100,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     : { background:'#e5e7eb', color:'#111827', borderColor:'#e5e7eb', opacity: canReset ? 1 : .6, padding:'4px' }
 
   return (
-    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '96px' }}>
+    <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '84px' }}>
       {/* Left: Clock (align near Home button) */}
       <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
         {clockText}
