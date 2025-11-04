@@ -18,6 +18,7 @@ import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
 import Select from './ui/Select'
+import KeySelector from './KeySelector'
 import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import PageContainer from './layout/PageContainer'
@@ -590,9 +591,12 @@ async function exportPdf() {
                       subtitle={`Original: ${s.originalKey || '—'}`}
                       rightSlot={
                         <div style={{display:'flex', alignItems:'center', gap:6}}>
-                          <Select value={sel.toKey} onChange={e=> changeKey(sel.uid, e.target.value)}>
-                            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-                          </Select>
+                          <KeySelector
+                            variant='ui'
+                            baseKey={s.originalKey || 'C'}
+                            valueKey={sel.toKey || s.originalKey || 'C'}
+                            onChange={(full) => changeKey(sel.uid, full)}
+                          />
                           <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
                           <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
                           <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />

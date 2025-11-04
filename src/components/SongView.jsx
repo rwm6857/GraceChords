@@ -1,7 +1,8 @@
 // src/components/SongView.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSym } from '../utils/chordpro'
+import KeySelector from './KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -335,9 +336,11 @@ if(!entry){
       <div className="toolbar card">
         <div style={{display:'flex', alignItems:'center', gap:10}}>
           <span title="Transpose"><TransposeIcon /></span>
-          <select value={toKey} onChange={e=> setToKey(e.target.value)}>
-            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-          </select>
+          <KeySelector
+            baseKey={baseKey}
+            valueKey={toKey}
+            onChange={(full) => setToKey(full)}
+          />
           <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle chords">
             <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
             <EyeIcon /> <span className="text-when-wide">Chords</span>
@@ -499,9 +502,13 @@ if(!entry){
       {isNarrow && (
         <div className="mobilebar" role="group" aria-label="Song actions" style={{ display:'flex', gap:8 }}>
           <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
-          <select value={toKey} onChange={e=> setToKey(e.target.value)} title="Key" style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}>
-            {KEYS.map(k=> <option key={k} value={k}>{k}</option>)}
-          </select>
+          <KeySelector
+            baseKey={baseKey}
+            valueKey={toKey}
+            onChange={(full) => setToKey(full)}
+            title="Key"
+            style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}
+          />
           <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
           <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
           <button className="gc-btn gc-btn--primary" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>

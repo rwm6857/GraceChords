@@ -3,7 +3,8 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSym, KEYS, keyRoot } from '../utils/chordpro'
+import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
@@ -701,14 +702,16 @@ export default function WorshipMode(){
                 </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Set key</div>
-                  <select value={toKey} disabled={!cur} onChange={e => {
-                    const sel = e.target.value
-                    const off = stepsBetween(cur?.baseKey, sel)
-                    setSongOffsets(arr => { const c = arr.slice(); c[idx] = off; return c })
-                    setTranspose(off)
-                  }} aria-label="Set key">
-                    {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
+                  <KeySelector
+                    baseKey={cur?.baseKey || 'C'}
+                    valueKey={toKey}
+                    disabled={!cur}
+                    onChange={(full) => {
+                      const off = stepsBetween(cur?.baseKey, full)
+                      setSongOffsets(arr => { const c = arr.slice(); c[idx] = off; return c })
+                      setTranspose(off)
+                    }}
+                  />
                 </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Reset key</div>
@@ -837,6 +840,17 @@ export default function WorshipMode(){
             </div>
           )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
+            {isMobile && (
+              <button
+                className="gc-btn gc-btn--iconOnly"
+                style={{minWidth:44, minHeight:44}}
+                onClick={() => setShowChords(v => !v)}
+                title="Toggle chords"
+                aria-label="Toggle chords"
+              >
+                <EyeIcon />
+              </button>
+            )}
             <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
             <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
             {isMobile && (
