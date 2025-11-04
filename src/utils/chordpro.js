@@ -41,12 +41,32 @@ export function stepsBetween(fromKey, toKey){
 }
 
 export function transposeSym(sym, steps, preferFlat = false){
+  // Legacy/simple behavior with a default preference; does not preserve original accidental.
+  if (steps === 0) return sym
   if(sym.includes('/')){ const [r,b]=sym.split('/'); return transposeSym(r,steps,preferFlat)+'/'+transposeSym(b,steps,preferFlat) }
   const m=sym.match(/^([A-G][#b]?)(.*)$/); if(!m) return sym
   const i=KEYS.indexOf(norm(m[1])); if(i===-1) return sym
   const root = KEYS[(i+steps+12)%12]
   const outRoot = preferFlat && SHARP_TO_FLAT[root] ? SHARP_TO_FLAT[root] : root
   return outRoot + (m[2]||'')
+}
+
+// Preserve original accidental choice: flats stay flats, sharps stay sharps.
+export function transposeSymPrefer(sym, steps, defaultPreferFlat = false){
+  if (steps === 0) return sym
+  if (sym.includes('/')){
+    const [r,b] = sym.split('/')
+    return transposeSymPrefer(r, steps, defaultPreferFlat) + '/' + transposeSymPrefer(b, steps, defaultPreferFlat)
+  }
+  const m = sym.match(/^([A-G])([#b]?)(.*)$/)
+  if (!m) return sym
+  const [, base, acc, rest] = m
+  const preferFlat = acc === 'b' ? true : (acc === '#' ? false : defaultPreferFlat)
+  const idx = KEYS.indexOf(norm(base + (acc || '')))
+  if (idx === -1) return sym
+  const root = KEYS[(idx + steps + 12) % 12]
+  const outRoot = preferFlat && SHARP_TO_FLAT[root] ? SHARP_TO_FLAT[root] : root
+  return outRoot + (rest || '')
 }
 
 // Map sharp roots to their flat enharmonics for display

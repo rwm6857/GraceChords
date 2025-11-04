@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { KEYS, transposeSym } from '../utils/chordpro'
+import { KEYS, keyRoot } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { formatInstrumental } from '../utils/instrumental'
 import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serialize'
@@ -255,7 +255,7 @@ function AdminPanel(){
     if (!s) return 'G'
     const m = /^([A-Ga-g][#b]?)(m|min)?$/i.exec(s)
     if (!m) return 'G'
-    const root = transposeSym(m[1], 0) // normalize flats to sharps
+    const root = keyRoot(m[1]) // normalize flats to sharps
     const idx = KEYS.indexOf(root)
     if (idx < 0) return 'G'
     const isMinor = !!m[2]

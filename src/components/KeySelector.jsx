@@ -1,6 +1,6 @@
 import React from 'react'
 import SelectUI from './ui/Select'
-import { KEYS, keyRoot, stepsBetween, transposeSym } from '../utils/chordpro'
+import { KEYS, keyRoot, stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 
 // Display names for the 12 pitch classes using flats
 const KEYS_FLAT = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']
@@ -39,7 +39,8 @@ export default function KeySelector({
   const handleChange = (e) => {
     const root = e.target.value // canonical sharp root
     const steps = stepsBetween(baseKey, root)
-    const full = transposeSym(baseKey, steps) // preserves minor/quality from baseKey
+    const prefFlat = pref === 'flat'
+    const full = transposeSymPrefer(baseKey, steps, prefFlat) // preserves minor/quality and accidental style
     if (onChange) onChange(full)
   }
 
@@ -57,4 +58,3 @@ export default function KeySelector({
     </select>
   )
 }
-

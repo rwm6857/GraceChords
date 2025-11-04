@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "stats": "node scripts/repoStats.mjs",
     "build-index": "node scripts/buildIndex.mjs",
     "build:index": "node scripts/buildIndex.mjs",
     "build-resources-index": "node scripts/buildResourcesIndex.mjs",

@@ -23,6 +23,7 @@
   - [[Getting-Started]]
   - [[Project-Structure]]
   - [[Development-Commands]]
+  - [[Repository-Stats]]
   - [[Build-and-Deploy]]
   - [[Index-Building]]
   - [[File-Naming-and-Normalization]]

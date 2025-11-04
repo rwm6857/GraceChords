@@ -3,7 +3,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSym, KEYS, keyRoot, formatKey } from '../utils/chordpro'
+import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKey } from '../utils/chordpro'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
@@ -506,7 +506,7 @@ export default function WorshipMode(){
   }
 
   const cur = songs[idx]
-  const toKey = useMemo(() => (cur ? transposeSym(cur.baseKey, transpose) : 'C'), [cur?.baseKey, transpose])
+  const toKey = useMemo(() => (cur ? transposeSymPrefer(cur.baseKey, transpose, false) : 'C'), [cur?.baseKey, transpose])
   const baseRootRaw = (cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
   const steps = useMemo(() => (cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey])
@@ -967,7 +967,7 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
     const spaceW = ctx.measureText(' ').width || 6
     const measured = (showChords ? chords : []).map(c => {
       const left = ctx.measureText(plain.slice(0, c.index || 0)).width
-      const sym = transposeSym(c.sym, steps, preferFlat)
+      const sym = transposeSymPrefer(c.sym, steps, preferFlat)
       return { sym, x: left, w: 0 }
     })
 

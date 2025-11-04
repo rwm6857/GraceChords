@@ -1,7 +1,7 @@
 // src/components/SongView.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import KeySelector from './KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -183,8 +183,8 @@ export default function SongView(){
         setShowChords(v => !v)
         return
       }
-      if (e.key === '[') { e.preventDefault(); setToKey(k => transposeSym(k, -1)) }
-      if (e.key === ']') { e.preventDefault(); setToKey(k => transposeSym(k, +1)) }
+      if (e.key === '[') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, -1, /b/.test(String(baseKey)))) }
+      if (e.key === ']') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, +1, /b/.test(String(baseKey)))) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -256,7 +256,7 @@ if(!entry){
         }
         return {
           plain: ln.text,
-          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps, preferFlat), index: c.index })),
+          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSymPrefer(c.sym, steps, preferFlat), index: c.index })),
         }
       })
     }))
@@ -652,7 +652,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
     // Measure pixel offsets for each chord; clamp to container to avoid spill
     let offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: transposeSym(c.sym, steps, preferFlat)
+      sym: transposeSymPrefer(c.sym, steps, preferFlat)
     }))
 
     // Estimate chord ascent to reserve vertical space

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import indexData from '../data/index.json'
-import { stepsBetween, transposeSym, KEYS } from '../utils/chordpro'
+import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/instrumental'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -52,7 +52,7 @@ export default function Bundle(){
               }
               return {
                 plain: ln.lyrics || '',
-                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps, preferFlat), index: c.index }))
+                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSymPrefer(c.sym, steps, preferFlat), index: c.index }))
               }
             })
           }))

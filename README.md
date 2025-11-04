@@ -21,6 +21,17 @@ scripts/        # maintenance scripts (e.g., index generation)
 docs/           # Vite build output for GitHub Pages
 ```
 
+## Repository Metrics
+As of 2025-11-03 (excluding `docs/`, `node_modules/`, and `.git/`):
+- Files: 546
+- Lines (text files): 27,524
+- Characters (text files): 1,034,429
+
+Refresh locally:
+```bash
+npm run stats
+```
+
 ## Installation
 Use Node.js 20 LTS and install dependencies with `npm ci`:
 ```bash

@@ -4,7 +4,7 @@ import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon } from './Icons'
-import { stepsBetween, transposeSym } from '../utils/chordpro'
+import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { transposeInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -249,7 +249,8 @@ export default function Setlist(){
     setList(prev => prev.map(sel => {
       const s = items.find(it=> it.id===sel.id)
       const from = sel.toKey || s?.originalKey || 'C'
-      return { ...sel, toKey: transposeSym(from, delta) }
+      const preferFlat = /b/.test(String(s?.originalKey || ''))
+      return { ...sel, toKey: transposeSymPrefer(from, delta, preferFlat) }
     }))
   }
   function resetSetKeys(){
@@ -344,7 +345,7 @@ async function exportPdf() {
             return {
               plain: ln.lyrics || '',
               chordPositions: (ln.chords || []).map((c) => ({
-                sym: transposeSym(c.sym, steps, preferFlat),
+                sym: transposeSymPrefer(c.sym, steps, preferFlat),
                 index: c.index,
               })),
             };

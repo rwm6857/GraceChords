@@ -27,5 +27,7 @@ Common commands for development, testing, indexing, and maintenance.
 - `.env` — set `VITE_ADMIN_PW=your-password`
 - Optional: `VITE_COMMIT_SHA=$(git rev-parse HEAD)` when building to bust caches
 
-[[Getting-Started]] [[Project-Structure]] [[Index-Building]]
+## Stats
+- `npm run stats` — print counts of files, total lines, and characters (excludes `docs/`, `node_modules/`, and `.git/`)
 
+[[Getting-Started]] [[Project-Structure]] [[Index-Building]]
