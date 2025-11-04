@@ -39,18 +39,20 @@ export default function Bundle(){
           const doc = parseChordProOrLegacy(text)
           const baseKey = doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C'
           const steps = stepsBetween(baseKey, toKey)
+          const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
+          const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
           const blocks = (doc.sections || []).map(sec => ({
             section: sec.label,
             lines: (sec.lines || []).map(ln => {
               if (ln.instrumental) {
-                return { instrumental: transposeInstrumental(ln.instrumental, steps) }
+                return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat) }
               }
               if (ln.comment) {
                 return { plain: ln.comment, chordPositions: [], comment: ln.comment }
               }
               return {
                 plain: ln.lyrics || '',
-                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index }))
+                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps, preferFlat), index: c.index }))
               }
             })
           }))

@@ -244,7 +244,7 @@ if(!entry){
       lines: (b.lines || []).map(ln => {
         if (ln.instrumental) {
           return {
-            instrumental: transposeInstrumental(ln.instrumental, steps),
+            instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat),
           }
         }
         if (ln.comment) {
@@ -256,7 +256,7 @@ if(!entry){
         }
         return {
           plain: ln.text,
-          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps), index: c.index })),
+          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSym(c.sym, steps, preferFlat), index: c.index })),
         }
       })
     }))

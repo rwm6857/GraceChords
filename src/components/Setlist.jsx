@@ -325,12 +325,14 @@ async function exportPdf() {
           "C";
 
         const steps = stepsBetween(baseKey, sel.toKey || baseKey);
+        const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
+        const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
 
         const blocks = (doc.sections || []).map((sec) => ({
           section: sec.label,
           lines: (sec.lines || []).map((ln) => {
             if (ln.instrumental) {
-              return { instrumental: transposeInstrumental(ln.instrumental, steps) };
+              return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat) };
             }
             if (ln.comment) {
               return {
@@ -342,7 +344,7 @@ async function exportPdf() {
             return {
               plain: ln.lyrics || '',
               chordPositions: (ln.chords || []).map((c) => ({
-                sym: transposeSym(c.sym, steps),
+                sym: transposeSym(c.sym, steps, preferFlat),
                 index: c.index,
               })),
             };
