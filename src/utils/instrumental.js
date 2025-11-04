@@ -6,10 +6,10 @@ function normalizeSpec(spec){
   return { chords, repeat }
 }
 
-export function transposeInstrumental(spec, steps = 0){
+export function transposeInstrumental(spec, steps = 0, preferFlat = false){
   const { chords, repeat } = normalizeSpec(spec)
   const mapped = steps
-    ? chords.map(sym => transposeSym(sym, steps))
+    ? chords.map(sym => transposeSym(sym, steps, preferFlat))
     : chords.slice()
   return { chords: mapped, repeat }
 }

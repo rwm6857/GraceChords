@@ -226,6 +226,8 @@ if(!entry){
   const title = parsed?.meta?.title || entry.title || slug
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
+  const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
+  const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
 
   const pptxButton = hasPptx ? (
     <a className="btn" href={pptxUrl} download>
@@ -413,6 +415,7 @@ if(!entry){
                                                         key={key}
                                                         spec={ln.instrumental}
                                                         steps={steps}
+                                                        preferFlat={preferFlat}
                                                         split={!isNarrow && twoColsView}
                                                 />
                                         )
@@ -432,6 +435,7 @@ if(!entry){
                                                 chords={ln.chords || []}
                                                 steps={steps}
                                                 showChords={showChords}
+                                                preferFlat={preferFlat}
                                         />
                                 )
                         })}
@@ -595,8 +599,8 @@ function isSectionLabel(text = '') {
 }
 
 
-function InstrumentalLine({ spec, steps, split }) {
-  const inst = transposeInstrumental(spec, steps)
+function InstrumentalLine({ spec, steps, split, preferFlat }) {
+  const inst = transposeInstrumental(spec, steps, preferFlat)
   const rows = formatInstrumental(inst, { split })
   if (!rows.length) return null
   return (
@@ -620,7 +624,7 @@ function InstrumentalLine({ spec, steps, split }) {
 }
 
 
-function MeasuredLine({ plain, chords, steps, showChords }){
+function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
@@ -648,7 +652,7 @@ function MeasuredLine({ plain, chords, steps, showChords }){
     // Measure pixel offsets for each chord; clamp to container to avoid spill
     let offsets = (showChords ? chords : []).map(c => ({
       left: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: transposeSym(c.sym, steps)
+      sym: transposeSym(c.sym, steps, preferFlat)
     }))
 
     // Estimate chord ascent to reserve vertical space

@@ -40,11 +40,13 @@ export function stepsBetween(fromKey, toKey){
   return (b-a+12)%12
 }
 
-export function transposeSym(sym, steps){
-  if(sym.includes('/')){ const [r,b]=sym.split('/'); return transposeSym(r,steps)+'/'+transposeSym(b,steps) }
+export function transposeSym(sym, steps, preferFlat = false){
+  if(sym.includes('/')){ const [r,b]=sym.split('/'); return transposeSym(r,steps,preferFlat)+'/'+transposeSym(b,steps,preferFlat) }
   const m=sym.match(/^([A-G][#b]?)(.*)$/); if(!m) return sym
   const i=KEYS.indexOf(norm(m[1])); if(i===-1) return sym
-  return KEYS[(i+steps+12)%12] + (m[2]||'')
+  const root = KEYS[(i+steps+12)%12]
+  const outRoot = preferFlat && SHARP_TO_FLAT[root] ? SHARP_TO_FLAT[root] : root
+  return outRoot + (m[2]||'')
 }
 
 // Map sharp roots to their flat enharmonics for display

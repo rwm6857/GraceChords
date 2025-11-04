@@ -507,6 +507,8 @@ export default function WorshipMode(){
 
   const cur = songs[idx]
   const toKey = useMemo(() => (cur ? transposeSym(cur.baseKey, transpose) : 'C'), [cur?.baseKey, transpose])
+  const baseRootRaw = (cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
+  const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
   const steps = useMemo(() => (cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey])
 
   useEffect(() => {
@@ -758,6 +760,7 @@ export default function WorshipMode(){
                           key={`${si}-${li}`}
                           spec={ln.instrumental}
                           steps={steps}
+                          preferFlat={preferFlat}
                           split={cols === 2}
                         />
                       ) : null
@@ -769,6 +772,7 @@ export default function WorshipMode(){
                         plain={ln.plain}
                         chords={ln.chords}
                         steps={steps}
+                        preferFlat={preferFlat}
                         showChords={showChords}
                       />
                     )
@@ -917,8 +921,8 @@ export default function WorshipMode(){
   )
 }
 
-function InstrumentalRow({ spec, steps, split }){
-  const inst = transposeInstrumental(spec, steps)
+function InstrumentalRow({ spec, steps, split, preferFlat }){
+  const inst = transposeInstrumental(spec, steps, preferFlat)
   const rows = formatInstrumental(inst, { split })
   if (!rows.length) return null
   return (
@@ -941,7 +945,7 @@ function InstrumentalRow({ spec, steps, split }){
   )
 }
 
-function ChordLine({ plain, chords, steps, showChords }){
+function ChordLine({ plain, chords, steps, showChords, preferFlat }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
@@ -963,7 +967,7 @@ function ChordLine({ plain, chords, steps, showChords }){
     const spaceW = ctx.measureText(' ').width || 6
     const measured = (showChords ? chords : []).map(c => {
       const left = ctx.measureText(plain.slice(0, c.index || 0)).width
-      const sym = transposeSym(c.sym, steps)
+      const sym = transposeSym(c.sym, steps, preferFlat)
       return { sym, x: left, w: 0 }
     })
 
