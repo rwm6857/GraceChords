@@ -7,7 +7,7 @@ import { transposeInstrumental, formatInstrumental } from '../utils/instrumental
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import indexData from '../data/index.json'
-import { DownloadIcon, TransposeIcon, MediaIcon, EyeIcon, PlusIcon, MinusIcon } from './Icons'
+import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from './Icons'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { headOk, clearHeadCache } from '../utils/headCache'
@@ -335,28 +335,41 @@ if(!entry){
       {!isNarrow && (
       <div className="toolbar card">
         <div style={{display:'flex', alignItems:'center', gap:10}}>
-          <span title="Transpose"><TransposeIcon /></span>
           <KeySelector
             baseKey={baseKey}
             valueKey={toKey}
             onChange={(full) => setToKey(full)}
           />
-          <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle chords">
-            <input type="checkbox" checked={showChords} onChange={e=> setShowChords(e.target.checked)} />
-            <EyeIcon /> <span className="text-when-wide">Chords</span>
-          </label>
-          <label style={{display:'inline-flex', alignItems:'center', gap:6}} title="Toggle two-column reading view">
-            <input
-              type="checkbox"
-              checked={twoColsView}
-              onChange={e=> {
-                const v = e.target.checked
-                setTwoColsView(v)
-                try { localStorage.setItem('songView:twoCols', v ? '1' : '0') } catch {}
-              }}
-            />
-            View: {twoColsView ? '2 columns' : '1 column'}
-          </label>
+          <button
+            className={`gc-btn gc-btn--iconOnly ${!twoColsView ? 'gc-btn--primary' : ''}`}
+            aria-label="Use 1 column"
+            title="Use 1 column"
+            onClick={() => {
+              setTwoColsView(false)
+              try { localStorage.setItem('songView:twoCols', '0') } catch {}
+            }}
+          >
+            <OneColIcon />
+          </button>
+          <button
+            className={`gc-btn gc-btn--iconOnly ${twoColsView ? 'gc-btn--primary' : ''}`}
+            aria-label="Use 2 columns"
+            title="Use 2 columns"
+            onClick={() => {
+              setTwoColsView(true)
+              try { localStorage.setItem('songView:twoCols', '1') } catch {}
+            }}
+          >
+            <TwoColIcon />
+          </button>
+          <button
+            className={`gc-btn gc-btn--iconOnly ${showChords ? 'gc-btn--primary' : ''}`}
+            aria-label="Toggle chords"
+            title="Toggle chords"
+            onClick={() => setShowChords(v => !v)}
+          >
+            <EyeIcon />
+          </button>
         </div>
         <div style={{display:'flex', gap:10}}>
           <button
@@ -501,7 +514,6 @@ if(!entry){
       {/* Mobile action bar */}
       {isNarrow && (
         <div className="mobilebar" role="group" aria-label="Song actions" style={{ display:'flex', gap:8 }}>
-          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, -1))} title="Transpose down"><MinusIcon /></button>
           <KeySelector
             baseKey={baseKey}
             valueKey={toKey}
@@ -510,7 +522,6 @@ if(!entry){
             style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}
           />
           <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
-          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setToKey(k => transposeSym(k, +1))} title="Transpose up"><PlusIcon /></button>
           <button className="gc-btn gc-btn--primary" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
           <button className="gc-btn gc-btn--primary" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
           <Link className="gc-btn" to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
