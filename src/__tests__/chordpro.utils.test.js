@@ -25,6 +25,13 @@ describe('transposeSym', () => {
     expect(transposeSym('Dsus4', -2)).toBe('Csus4') // keeps quality/extensions
   })
 
+  it('computes stepsBetween for minor/base flat keys', () => {
+    expect(stepsBetween('Em', 'Fm')).toBe(1)
+    expect(stepsBetween('C#m', 'D')).toBe(1)
+    expect(stepsBetween('Bb', 'B')).toBe(1)
+    expect(stepsBetween('Am', 'A#')).toBe(1)
+  })
+
   it('preserves accidentals style per current implementation', () => {
     expect(transposeSym('Db', 2)).toBe('D#')        // still sharp-pref
     expect(transposeSym('F#', -1)).toBe('F')        // natural crossing ok
