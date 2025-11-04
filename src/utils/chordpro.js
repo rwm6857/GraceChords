@@ -46,3 +46,18 @@ export function transposeSym(sym, steps){
   const i=KEYS.indexOf(norm(m[1])); if(i===-1) return sym
   return KEYS[(i+steps+12)%12] + (m[2]||'')
 }
+
+// Map sharp roots to their flat enharmonics for display
+const SHARP_TO_FLAT = { 'C#':'Db', 'D#':'Eb', 'F#':'Gb', 'G#':'Ab', 'A#':'Bb' }
+
+// Format a key (root + suffix like 'm') to preferred accidental style.
+// pref: 'sharp' | 'flat'
+export function formatKey(key, pref = 'sharp'){
+  const s = String(key || '')
+  const m = s.match(/^([A-G][#b]?)(.*)$/)
+  if (!m) return s
+  const root = norm(m[1])
+  const rest = m[2] || ''
+  if (pref === 'flat' && SHARP_TO_FLAT[root]) return SHARP_TO_FLAT[root] + rest
+  return root + rest
+}

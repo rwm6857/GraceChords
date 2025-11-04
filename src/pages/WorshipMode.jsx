@@ -3,7 +3,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSym, KEYS, keyRoot } from '../utils/chordpro'
+import { stepsBetween, transposeSym, KEYS, keyRoot, formatKey } from '../utils/chordpro'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
@@ -552,9 +552,17 @@ export default function WorshipMode(){
             canReset={elapsedSec > 0}
             sizeCss="clamp(20px, 4vw, 28px)"
           />
-          <div style={{opacity:.75, fontSize:16, marginTop:2}}>
-            Key: {toKey}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
-          </div>
+          {(() => {
+            const base = cur?.baseKey || ''
+            const baseRootRaw = (String(base).match(/^([A-G][#b]?)/) || [,''])[1]
+            const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
+            const display = formatKey(toKey, preferFlat ? 'flat' : 'sharp')
+            return (
+              <div style={{opacity:.75, fontSize:16, marginTop:2}}>
+                Key: {display}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
+              </div>
+            )
+          })()}
         </div>
         {/* Top-left home button */}
         <button

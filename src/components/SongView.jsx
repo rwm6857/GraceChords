@@ -341,26 +341,16 @@ if(!entry){
             onChange={(full) => setToKey(full)}
           />
           <button
-            className={`gc-btn gc-btn--iconOnly ${!twoColsView ? 'gc-btn--primary' : ''}`}
-            aria-label="Use 1 column"
-            title="Use 1 column"
+            className={`gc-btn gc-btn--iconOnly gc-btn--primary`}
+            aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+            title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
             onClick={() => {
-              setTwoColsView(false)
-              try { localStorage.setItem('songView:twoCols', '0') } catch {}
+              const next = !twoColsView
+              setTwoColsView(next)
+              try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
             }}
           >
-            <OneColIcon />
-          </button>
-          <button
-            className={`gc-btn gc-btn--iconOnly ${twoColsView ? 'gc-btn--primary' : ''}`}
-            aria-label="Use 2 columns"
-            title="Use 2 columns"
-            onClick={() => {
-              setTwoColsView(true)
-              try { localStorage.setItem('songView:twoCols', '1') } catch {}
-            }}
-          >
-            <TwoColIcon />
+            {twoColsView ? <OneColIcon /> : <TwoColIcon />}
           </button>
           <button
             className={`gc-btn gc-btn--iconOnly ${showChords ? 'gc-btn--primary' : ''}`}
