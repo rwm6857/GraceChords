@@ -15,6 +15,8 @@ jobs:
       # 1️⃣ Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensure before/after SHAs exist for push range diffs
 
       # 2️⃣ Get the latest commit message and changed files
       - name: Get recent commit info
@@ -184,13 +186,26 @@ jobs:
             }')
 
           # Call OpenAI API
-          response=$(curl -sS https://api.openai.com/v1/chat/completions \
+          http_code=0
+          response=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "$payload" || true)
+          http_code=$(printf '%s' "$response" | tail -n1)
+          body=$(printf '%s' "$response" | sed '$d')
 
           # Extract message content from API response (if present)
-          summary=$(echo "$response" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+          summary=$(echo "$body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+
+          # If API failed, log minimal error context for debugging
+          if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
+            err=$(echo "$body" | jq -r '.error.message? // empty' 2>/dev/null || true)
+            if [ -n "$err" ]; then
+              echo "OpenAI error ($http_code): $err" >&2
+            elif [ "$http_code" -ne 200 ]; then
+              echo "OpenAI non-200 ($http_code) with empty body" >&2
+            fi
+          fi
 
           # Fallback summary if API failed or returned empty
           if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
@@ -213,11 +228,13 @@ jobs:
                   max_tokens: 150,
                   temperature: 0.9
                 }')
-              re_resp=$(curl -sS https://api.openai.com/v1/chat/completions \
+              re_resp=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -H "Content-Type: application/json" \
                 -d "$re_payload" || true)
-              re_sum=$(echo "$re_resp" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+              re_code=$(printf '%s' "$re_resp" | tail -n1)
+              re_body=$(printf '%s' "$re_resp" | sed '$d')
+              re_sum=$(echo "$re_body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
               if [ -n "$re_sum" ] && [ "$re_sum" != "null" ]; then
                 summary="$re_sum"
               fi
