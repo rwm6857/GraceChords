@@ -16,322 +16,94 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # ensure before/after SHAs exist for push range diffs
+          fetch-depth: 0  # needed for diff comparisons
 
-      # 2️⃣ Get the latest commit message and changed files
-      - name: Get recent commit info
-        id: commits
+      # 2️⃣ Determine if update should be announced
+      - name: Determine if update should be announced
+        id: announce_check
         shell: bash
+        run: |
+          set -euo pipefail
+
+          COMMIT_MSG="$(git log -1 --pretty=%B)"
+          SHOULD_ANNOUNCE="false"
+
+          echo "🔍 Checking commit message and changed files..."
+
+          # 1️⃣ Manual flags (case-insensitive)
+          if echo "$COMMIT_MSG" | grep -Ei '\#post|\#announce|\[major\]|\[release\]' >/dev/null; then
+            echo "✅ Detected manual post flag in commit message."
+            SHOULD_ANNOUNCE="true"
+          fi
+
+          # 2️⃣ Auto-trigger for song/resource updates
+          if git diff --name-only HEAD^ HEAD | grep -E '^public/(songs|resources)/' >/dev/null 2>&1; then
+            echo "✅ Detected song or resource changes."
+            SHOULD_ANNOUNCE="true"
+          fi
+
+          # 3️⃣ Default: skip posting
+          echo "should_announce=$SHOULD_ANNOUNCE" >> "$GITHUB_OUTPUT"
+          echo "Announcement flag set to: $SHOULD_ANNOUNCE"
+
+      # 3️⃣ Get commit and diff info (only if posting)
+      - name: Get recent commit info
+        if: steps.announce_check.outputs.should_announce == 'true'
+        id: commits
         run: |
           set -euo pipefail
           message_file="$RUNNER_TEMP/commit_message.txt"
           diff_file="$RUNNER_TEMP/changed_files.txt"
-          status_file="$RUNNER_TEMP/changed_status.txt"
 
-          event_name="${GITHUB_EVENT_NAME}"
-          event_path="${GITHUB_EVENT_PATH}"
-          after_sha="${GITHUB_SHA}"
-
-          if [ "$event_name" = "push" ] && command -v jq >/dev/null 2>&1; then
-            before_sha=$(jq -r '.before' "$event_path")
-            after_sha=$(jq -r '.after' "$event_path")
-
-            # Collect changed files across the pushed range
-            if [ -n "$before_sha" ] && [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
-              git diff --name-only "$before_sha" "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
-              git diff --name-status "$before_sha" "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
-            else
-              # Initial push or unknown before; diff against empty tree
-              git diff --name-only $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
-              git diff --name-status $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
-            fi
-
-            # Normalize name-status format and filter docs/node_modules
-            : > "$status_file"
-            while IFS=$'\t' read -r st p1 p2; do
-              [ -z "${st:-}" ] && continue
-              case "$st" in
-                R*) path="$p2"; st="R" ;;
-                *)  path="$p1" ;;
-              esac
-              case "$path" in
-                docs/*|node_modules/*) continue ;;
-              esac
-              printf "%s\t%s\n" "$st" "$path" >> "$status_file"
-            done < "$status_file.tmp"
-            rm -f "$status_file.tmp" || true
-
-            # Build a concise list of commit subjects from the event payload
-            jq -r '.commits[].message | split("\n")[0] | select(length>0) | "- " + .' "$event_path" > "$message_file" || true
-            if [ ! -s "$message_file" ]; then
-              # Fallback: use git log subjects across the range
-              if [ -n "$before_sha" ] && [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
-                git log --format='- %s' "$before_sha..$after_sha" > "$message_file" || true
-              else
-                git log --format='- %s' "$after_sha" > "$message_file" || true
-              fi
-            fi
+          git log -1 --pretty=format:"%s%n%b" > "$message_file"
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --name-only HEAD^ HEAD > "$diff_file"
           else
-            # workflow_dispatch or missing jq: use single-commit info
-            git log -1 --pretty=format:%s%n%b "$after_sha" > "$message_file" || true
-            git show --name-only --pretty="" "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
-            git show --name-status --pretty="" "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
-            : > "$status_file"
-            while IFS=$'\t' read -r st p1 p2; do
-              [ -z "${st:-}" ] && continue
-              case "$st" in
-                R*) path="$p2"; st="R" ;;
-                *)  path="$p1" ;;
-              esac
-              case "$path" in
-                docs/*|node_modules/*) continue ;;
-              esac
-              printf "%s\t%s\n" "$st" "$path" >> "$status_file"
-            done < "$status_file.tmp"
-            rm -f "$status_file.tmp" || true
+            git show --name-only --pretty="" HEAD > "$diff_file"
           fi
 
-          # Ensure files are not empty to avoid downstream surprises
-          if [ ! -s "$message_file" ]; then
-            printf "Update %s\n" "$after_sha" > "$message_file"
-          fi
-          if [ ! -s "$diff_file" ]; then
-            printf "(no files detected)\n" > "$diff_file"
-          fi
+          echo "message_path=$message_file" >> "$GITHUB_OUTPUT"
+          echo "diff_path=$diff_file" >> "$GITHUB_OUTPUT"
 
-          # Expose output paths to later steps (small strings only)
-          {
-            echo "message_path=$message_file"
-            echo "diff_path=$diff_file"
-            echo "status_path=$status_file"
-          } >> "$GITHUB_OUTPUT"
-
-      # 3️⃣ Generate AI-written summary via OpenAI (ChatGPT)
+      # 4️⃣ Generate AI-written summary via ChatGPT
       - name: Generate summary with ChatGPT
+        if: steps.announce_check.outputs.should_announce == 'true'
         id: chatgpt
         shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: gpt-4o-mini
-          OPENAI_MAX_TOKENS: 500
         run: |
           set -euo pipefail
 
-          # Helper: build a sensible fallback summary from commit + changed files
-          build_fallback() {
-            local msg file songs_list="" unique_tmp="$RUNNER_TEMP/songs_uniq.txt"
-            local added_tmp="$RUNNER_TEMP/songs_added.txt" updated_tmp="$RUNNER_TEMP/songs_updated.txt"
-            msg=$(cat "$RUNNER_TEMP/commit_message.txt" 2>/dev/null || true)
-            : > "$unique_tmp"
-            : > "$added_tmp"; : > "$updated_tmp"
-            if [ -s "$RUNNER_TEMP/changed_status.txt" ]; then
-              while IFS=$'\t' read -r st path; do
-                case "$path" in
-                  public/songs/*)
-                    base=${path##public/songs/}; base=${base%.*}
-                    base=${base//_/ }; base=${base//-/ }
-                    case "$st" in
-                      A) echo "$base" >> "$added_tmp" ;;
-                      M|R) echo "$base" >> "$updated_tmp" ;;
-                    esac ;;
-                esac
-              done < "$RUNNER_TEMP/changed_status.txt"
-            fi
-            if [ -s "$added_tmp" ] || [ -s "$updated_tmp" ]; then
-              if [ -s "$added_tmp" ]; then
-                echo "Added:" 
-                sort -u "$added_tmp" | sed 's/^/- /'
-                echo
-              fi
-              if [ -s "$updated_tmp" ]; then
-                echo "Updated:" 
-                sort -u "$updated_tmp" | sed 's/^/- /'
-                echo
-              fi
-              rm -f "$unique_tmp" "$added_tmp" "$updated_tmp" 2>/dev/null || true
-              return 0
-            fi
-            # Default narrative using commit subject/body first line
-            if [ -n "$msg" ]; then
-              printf "%s\n" "$msg" | sed -n '1,4p'
-            else
-              printf "Updates and improvements to GraceChords.\n"
-            fi
-          }
+          message=$(cat "${{ steps.commits.outputs.message_path }}" 2>/dev/null || echo "")
+          diff=$(cat "${{ steps.commits.outputs.diff_path }}" 2>/dev/null || echo "")
 
-          # If no API key is present, write fallback summary and skip API call
-          if [ -z "${OPENAI_API_KEY:-}" ]; then
-            echo "No OPENAI_API_KEY provided; using fallback summary." >&2
-            build_fallback > "$RUNNER_TEMP/summary.txt"
-            exit 0
-          fi
-
-          # Build JSON payload safely with jq to avoid quote escaping issues
           payload=$(jq -n \
-            --rawfile message "$RUNNER_TEMP/commit_message.txt" \
-            --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
-            --rawfile diff_status "$RUNNER_TEMP/changed_status.txt" \
-            --arg model "${OPENAI_MODEL:-gpt-4o-mini}" \
-            --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
+            --arg message "$message" \
+            --arg diff "$diff" \
             '{
-              model: $model,
+              model: "gpt-4o-mini",
               messages: [
                 {
-                  role: "system",
-                  content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list grouped by Added and Updated. Ignore any files under /docs and /node_modules. No extra headings beyond 'Added:' and 'Updated:' labels if you list. No links, no hashtags. Use plain text only. Keep it under 100 words. Do not include literal backslash escape sequences like \\n or \\t; use real line breaks and spaces. Avoid copying commit messages verbatim; rephrase for end users."
+                  "role": "system",
+                  "content": "You are the GraceChords Bot, a friendly technical writer. Write a concise Telegram post (1–3 sentences or short bullet list). Focus on user-facing changes (Added, Updated, Fixed). Use plain text and real newlines; avoid literal \\n. No hashtags or links."
                 },
                 {
-                  role: "user",
-                  content: ("Commit messages (most recent first):\n" + $message + "\n\nChanged files (ignore /docs and /node_modules):\n" + $diff + "\n\nChanged files with status (A=Added, M=Modified, R=Renamed):\n" + $diff_status + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list grouped as 'Added:' and 'Updated:'. Keep it concise. Plain text only. No links. Do not include literal sequences like \\n; use actual newlines. Avoid echoing commit messages verbatim.")
+                  "role": "user",
+                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff)
                 }
               ],
-              max_tokens: $max_tokens,
-              temperature: 0.9
+              max_tokens: 300,
+              temperature: 0.7
             }')
 
-          # Call OpenAI API
-          http_code=0
-          response=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
+          response=$(curl -s https://api.openai.com/v1/chat/completions \
             -H "Content-Type: application/json" \
-            -d "$payload" || true)
-          http_code=$(printf '%s' "$response" | tail -n1)
-          body=$(printf '%s' "$response" | sed '$d')
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "$payload")
 
-          # Extract message content from API response (if present)
-          summary=$(echo "$body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
-
-          # If API failed, log minimal error context for debugging
-          if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
-            err=$(echo "$body" | jq -r '.error.message? // empty' 2>/dev/null || true)
-            if [ -n "$err" ]; then
-              echo "OpenAI error ($http_code): $err" >&2
-            elif [ "$http_code" -ne 200 ]; then
-              echo "OpenAI non-200 ($http_code) with empty body" >&2
-            fi
-            # Retry with fallback model if model error
-            if printf '%s' "$err" | grep -qi 'model' || [ "${http_code}" = "404" ]; then
-              echo "Retrying with fallback model gpt-4o-mini" >&2
-              payload=$(jq -n \
-                --rawfile message "$RUNNER_TEMP/commit_message.txt" \
-                --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
-                --rawfile diff_status "$RUNNER_TEMP/changed_status.txt" \
-                --arg model "gpt-4o-mini" \
-                --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
-                '{
-                  model: $model,
-                  messages: [
-                    {
-                      role: "system",
-                      content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list grouped by Added and Updated. Ignore any files under /docs and /node_modules. No extra headings beyond 'Added:' and 'Updated:' labels if you list. No links, no hashtags. Use plain text only. Keep it under 100 words. Do not include literal backslash escape sequences like \\n or \\t; use real line breaks and spaces. Avoid copying commit messages verbatim; rephrase for end users."
-                    },
-                    {
-                      role: "user",
-                      content: ("Commit messages (most recent first):\n" + $message + "\n\nChanged files (ignore /docs and /node_modules):\n" + $diff + "\n\nChanged files with status (A=Added, M=Modified, R=Renamed):\n" + $diff_status + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list grouped as 'Added:' and 'Updated:'. Keep it concise. Plain text only. No links. Do not include literal sequences like \\n; use actual newlines. Avoid echoing commit messages verbatim.")
-                    }
-                  ],
-                  max_tokens: $max_tokens,
-                  temperature: 0.9
-                }')
-              response=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d "$payload" || true)
-              http_code=$(printf '%s' "$response" | tail -n1)
-              body=$(printf '%s' "$response" | sed '$d')
-              summary=$(echo "$body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
-            fi
-          fi
-
-          # Fallback summary if API failed or returned empty
-          if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
-            summary=$(build_fallback)
-          fi
-
-          # If summary appears to copy a commit subject verbatim, try one rewrite pass
-          if [ -n "${OPENAI_API_KEY:-}" ] && [ -s "$RUNNER_TEMP/commit_message.txt" ]; then
-            sum_trim=$(printf '%s' "$summary" | sed -e '1q' -e 's/^[-*]\s\+//' -e 's/[[:space:]]\+$//' -e 's/^[[:space:]]\+//')
-            if grep -Fxq -- "$sum_trim" "$RUNNER_TEMP/commit_message.txt" || grep -Fxq -- "- $sum_trim" "$RUNNER_TEMP/commit_message.txt"; then
-              re_payload=$(jq -n \
-                --arg attempt "$summary" \
-                --rawfile commits "$RUNNER_TEMP/commit_message.txt" \
-                --arg model "${OPENAI_MODEL:-gpt-4o-mini}" \
-                --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
-                '{
-                  model: $model,
-                  messages: [
-                    {role: "system", content: "Rewrite for a public Telegram audience: one sentence (or two short ones) summarizing changes. Do NOT copy any 3+ word phrase from the commits. Plain text only; no links or hashtags."},
-                    {role: "user", content: ("Original attempt:\n" + $attempt + "\n\nCommit subjects:\n" + $commits + "\n\nRewrite succinctly for non-developers.")}
-                  ],
-                  max_tokens: $max_tokens,
-                  temperature: 0.9
-                }')
-              re_resp=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d "$re_payload" || true)
-              re_code=$(printf '%s' "$re_resp" | tail -n1)
-              re_body=$(printf '%s' "$re_resp" | sed '$d')
-              re_sum=$(echo "$re_body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
-              if [ -n "$re_sum" ] && [ "$re_sum" != "null" ]; then
-                summary="$re_sum"
-              fi
-            fi
-          fi
-
-          # Export for next step
-          printf "%s" "$summary" > "$RUNNER_TEMP/summary.txt"
-
-      # 4️⃣ Send the formatted summary to Telegram (HTML with safe escaping)
-      - name: Send update to Telegram
-        shell: bash
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          set -euo pipefail
-          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-            echo "Telegram secrets missing; skipping send." >&2
-            exit 0
-          fi
-
-          # Load ChatGPT output from temp file
-          summary="$(cat "$RUNNER_TEMP/summary.txt" 2>/dev/null || true)"
-
-          # Convert literal "\n" to real newlines (and normalize CRLF)
-          summary=$(printf '%s' "$summary" | perl -pe 's/\r//g; s/\\r\\n|\r\n|\r|\n/\n/g')
-
+          summary=$(echo "$response" | jq -r '.choices[0].message.content // empty')
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
           fi
-
-          # Replace markdown bullets with real bullets
-          summary=$(printf '%s' "$summary" | sed -E 's/^[[:space:]]*-\s/• /')
-
-          # Escape unsafe HTML chars for Telegram
-          summary=$(printf '%s' "$summary" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
-
-          title='<b>🎸 GraceChords Update</b>'
-          footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
-
-          # Use printf with actual newlines (no backslashes!)
-          text=$(printf "%b" "$title\n\n$summary\n\n$footer")
-
-          # Build payload with jq --arg (newlines preserved and escaped in JSON)
-          payload=$(jq -n \
-            --arg chat_id "$TELEGRAM_CHAT_ID" \
-            --arg text "$text" \
-            --arg mode "HTML" \
-            '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
-
-          # Simulate a short, realistic typing delay
-          delay=$((3 + RANDOM % 3))
-          echo "GraceChords Bot is 'typing' for $delay seconds..."
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction" \
-               -d chat_id="$TELEGRAM_CHAT_ID" \
-               -d action="typing" >/dev/null || true
-          sleep "$delay"
-
-          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H 'Content-Type: application/json' \
-            -d "$payload"
+          printf "%s" "$summary"
