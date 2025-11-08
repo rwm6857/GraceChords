@@ -305,8 +305,11 @@ jobs:
             summary="(No summary generated — possibly empty commit message)"
           fi
 
+          # Replace leading "- " bullets with Unicode bullet to avoid MarkdownV2 '-' escaping
+          bulletized=$(printf '%s' "$summary" | sed -E 's/^[[:space:]]*-\s/• /')
+
           # Escape MarkdownV2-reserved characters
-          safe_summary=$(printf '%s' "$summary" \
+          safe_summary=$(printf '%s' "$bulletized" \
             | sed -e 's/\\/\\\\/g' \
                   -e 's/_/\\_/g' \
                   -e 's/\*/\\*/g' \
@@ -324,7 +327,6 @@ jobs:
                   -e 's/{/\\{/g' \
                   -e 's/}/\\}/g' \
                   -e 's/\./\\./g' \
-                  -e 's/-/\\-/g' \
                   -e 's/!/\\!/g')
 
           title='*🎸 GraceChords Update*'
