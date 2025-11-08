@@ -22,26 +22,50 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sha="${GITHUB_SHA}"
-          # Capture latest commit message and body for this SHA
-          message=$(git log -1 --pretty=format:%s%n%b "$sha" || true)
-          # List files changed in this commit (works even for first commit)
-          diff=$(git show --name-only --pretty="" "$sha" | sed '/^$/d' || true)
-
-          # Fallbacks to avoid empty outputs
-          if [ -z "$message" ]; then
-            message="Update $sha"
-          fi
-          if [ -z "$diff" ]; then
-            diff="(no files detected)"
-          fi
-
-          # Write outputs properly with delimiters
           message_file="$RUNNER_TEMP/commit_message.txt"
           diff_file="$RUNNER_TEMP/changed_files.txt"
-          printf "%s\n" "$message" > "$message_file"
-          printf "%s\n" "$diff" > "$diff_file"
 
+          event_name="${GITHUB_EVENT_NAME}"
+          event_path="${GITHUB_EVENT_PATH}"
+          after_sha="${GITHUB_SHA}"
+
+          if [ "$event_name" = "push" ] && command -v jq >/dev/null 2>&1; then
+            before_sha=$(jq -r '.before' "$event_path")
+            after_sha=$(jq -r '.after' "$event_path")
+
+            # Collect changed files across the pushed range
+            if [ -n "$before_sha" ] && [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
+              git diff --name-only "$before_sha" "$after_sha" | sed '/^$/d' > "$diff_file" || true
+            else
+              # Initial push or unknown before; diff against empty tree
+              git diff --name-only $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' > "$diff_file" || true
+            fi
+
+            # Build a concise list of commit subjects from the event payload
+            jq -r '.commits[].message | split("\n")[0] | select(length>0) | "- " + .' "$event_path" > "$message_file" || true
+            if [ ! -s "$message_file" ]; then
+              # Fallback: use git log subjects across the range
+              if [ -n "$before_sha" ] && [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
+                git log --format='- %s' "$before_sha..$after_sha" > "$message_file" || true
+              else
+                git log --format='- %s' "$after_sha" > "$message_file" || true
+              fi
+            fi
+          else
+            # workflow_dispatch or missing jq: use single-commit info
+            git log -1 --pretty=format:%s%n%b "$after_sha" > "$message_file" || true
+            git show --name-only --pretty="" "$after_sha" | sed '/^$/d' > "$diff_file" || true
+          fi
+
+          # Ensure files are not empty to avoid downstream surprises
+          if [ ! -s "$message_file" ]; then
+            printf "Update %s\n" "$after_sha" > "$message_file"
+          fi
+          if [ ! -s "$diff_file" ]; then
+            printf "(no files detected)\n" > "$diff_file"
+          fi
+
+          # Expose output paths to later steps (small strings only)
           {
             echo "message_path=$message_file"
             echo "diff_path=$diff_file"
@@ -56,10 +80,43 @@ jobs:
         run: |
           set -euo pipefail
 
-          # If no API key is present, skip and fall back later
+          # Helper: build a sensible fallback summary from commit + changed files
+          build_fallback() {
+            local msg file songs_list="" unique_tmp="$RUNNER_TEMP/songs_uniq.txt"
+            msg=$(cat "$RUNNER_TEMP/commit_message.txt" 2>/dev/null || true)
+            : > "$unique_tmp"
+            if grep -q '^public/songs/' "$RUNNER_TEMP/changed_files.txt" 2>/dev/null; then
+              while IFS= read -r file; do
+                case "$file" in
+                  public/songs/*)
+                    base=${file##public/songs/}
+                    base=${base%.*}
+                    # Replace separators with spaces for readability
+                    base=${base//_/ }
+                    base=${base//-/ }
+                    echo "$base" >> "$unique_tmp" ;;
+                esac
+              done < "$RUNNER_TEMP/changed_files.txt"
+              if [ -s "$unique_tmp" ]; then
+                sort -u "$unique_tmp" > "$unique_tmp.sorted"
+                songs_list=$(sed 's/^/- /' "$unique_tmp.sorted")
+                printf "%s\n" "$songs_list"
+                rm -f "$unique_tmp" "$unique_tmp.sorted" 2>/dev/null || true
+                return 0
+              fi
+            fi
+            # Default narrative using commit subject/body first line
+            if [ -n "$msg" ]; then
+              printf "%s\n" "$msg" | sed -n '1,4p'
+            else
+              printf "Updates and improvements to GraceChords.\n"
+            fi
+          }
+
+          # If no API key is present, write fallback summary and skip API call
           if [ -z "${OPENAI_API_KEY:-}" ]; then
-            echo "No OPENAI_API_KEY provided; will use fallback summary." >&2
-            printf "summary<<EOF\n\nEOF\n" >> "$GITHUB_OUTPUT"
+            echo "No OPENAI_API_KEY provided; using fallback summary." >&2
+            build_fallback > "$RUNNER_TEMP/summary.txt"
             exit 0
           fi
 
@@ -72,11 +129,11 @@ jobs:
               messages: [
                 {
                   role: "system",
-                  content: "You are the GraceChords Bot, a friendly but concise technical writer. Summarize GitHub updates for a public Telegram channel, focusing on new features, improvements, and bug fixes relevant to users. If changes only included adding songs, simply list the songs added as an exciting update!"
+                  content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list of songs and/or features added. No headings, no links, no hashtags. Use plain text only. Keep it under 100 words."
                 },
                 {
                   role: "user",
-                  content: ("Commit message:\n" + $message + "\n\nChanged files:\n" + $diff + "\n\nWrite a short, engaging update summary for Telegram. Include emojis if appropriate, use plain Markdown, and keep it under 100 words.")
+                  content: ("Commit messages:\n" + $message + "\n\nChanged files:\n" + $diff + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list of songs/features added. No links. No headings. Plain text only. Keep it under 100 words.")
                 }
               ],
               max_tokens: 300,
@@ -94,7 +151,7 @@ jobs:
 
           # Fallback summary if API failed or returned empty
           if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
-            summary=$(printf "%s\n\nFiles changed:\n%s\n" "$(cat "$RUNNER_TEMP/commit_message.txt" 2>/dev/null || true)" "$(cat "$RUNNER_TEMP/changed_files.txt" 2>/dev/null || true)")
+            summary=$(build_fallback)
           fi
 
           # Export for next step
@@ -120,14 +177,19 @@ jobs:
             summary="(No summary generated — possibly empty commit message)"
           fi
 
-          commit_url="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-          text=$(printf "🎸 GraceChords Update\n\n%s\n\nView commit: %s" "$summary" "$commit_url")
+          # Escape HTML special chars in summary for Telegram HTML parse mode
+          safe_summary=$(printf '%s' "$summary" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g')
+
+          title='<b>🎸 GraceChords Update</b>'
+          footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
+          text="$title\n\n$safe_summary\n\n$footer"
 
           # Build JSON payload using jq to ensure correct escaping
           payload=$(jq -n \
             --arg chat_id "$TELEGRAM_CHAT_ID" \
             --arg text "$text" \
-            '{chat_id: $chat_id, text: $text, disable_web_page_preview: true}')
+            --arg mode "HTML" \
+            '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
 
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H 'Content-Type: application/json' \
