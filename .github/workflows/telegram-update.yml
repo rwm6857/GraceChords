@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # allows manual triggering from Actions tab
+  workflow_dispatch: # allows manual run from Actions tab
 
 jobs:
   announce:
@@ -80,15 +80,17 @@ jobs:
           echo "$summary" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-      # 4️⃣ Send the formatted summary to your Telegram channel
+      # 4️⃣ Send the formatted summary to Telegram (with robust quoting)
       - name: Send update to Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          TEXT="🎸 *GraceChords Update*%0A%0A${{ steps.chatgpt.outputs.summary }}%0A%0A[View Commit](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-               -d chat_id="$TELEGRAM_CHAT_ID" \
-               -d parse_mode="Markdown" \
-               -d disable_web_page_preview=true \
-               -d text="$TE
+          summary="${{ steps.chatgpt.outputs.summary }}"
+          if [ -z "$summary" ] || [ "$summary" = "null" ]; then
+            summary="(No summary generated — possibly empty commit message)"
+          fi
+
+          # Encode safely for Telegram (handles emojis, newlines, quotes)
+          text=$(printf "🎸 *GraceChords Update*\n\n%s\n\n[View Commit](%s/%s/commit/%s)" \
+            "$
