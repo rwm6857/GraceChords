@@ -324,6 +324,14 @@ jobs:
             --arg mode "HTML" \
             '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
 
+          # Simulate a short, realistic typing delay
+          delay=$((3 + RANDOM % 3))
+          echo "GraceChords Bot is 'typing' for $delay seconds..."
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction" \
+               -d chat_id="$TELEGRAM_CHAT_ID" \
+               -d action="typing" >/dev/null || true
+          sleep "$delay"
+
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H 'Content-Type: application/json' \
             -d "$payload"
