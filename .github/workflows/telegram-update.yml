@@ -200,7 +200,7 @@ jobs:
           # If summary appears to copy a commit subject verbatim, try one rewrite pass
           if [ -n "${OPENAI_API_KEY:-}" ] && [ -s "$RUNNER_TEMP/commit_message.txt" ]; then
             sum_trim=$(printf '%s' "$summary" | sed -e '1q' -e 's/^[-*]\s\+//' -e 's/[[:space:]]\+$//' -e 's/^[[:space:]]\+//')
-            if grep -Fxq "$sum_trim" "$RUNNER_TEMP/commit_message.txt" || grep -Fxq "- $sum_trim" "$RUNNER_TEMP/commit_message.txt"; then
+            if grep -Fxq -- "$sum_trim" "$RUNNER_TEMP/commit_message.txt" || grep -Fxq -- "- $sum_trim" "$RUNNER_TEMP/commit_message.txt"; then
               re_payload=$(jq -n \
                 --arg attempt "$summary" \
                 --rawfile commits "$RUNNER_TEMP/commit_message.txt" \
@@ -250,12 +250,12 @@ jobs:
             summary="(No summary generated — possibly empty commit message)"
           fi
 
-          # Escape HTML and normalize newlines to <br/> for Telegram HTML mode
-          safe_summary=$(printf '%s' "$summary" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g' | sed ':a;N;$!ba;s/\n/<br\/>/g')
+          # Escape HTML special characters for Telegram HTML mode; keep real newlines
+          safe_summary=$(printf '%s' "$summary" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g')
 
           title='<b>🎸 GraceChords Update</b>'
           footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
-          text="$title<br/><br/>$safe_summary<br/><br/>$footer"
+          text="$title\n\n$safe_summary\n\n$footer"
 
           # Build JSON payload using jq to ensure correct escaping
           payload=$(jq -n \
