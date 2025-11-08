@@ -95,10 +95,7 @@ jobs:
 
           # Fallback summary if API failed or returned empty
           if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
-            summary="${COMMIT_MESSAGE}
-
-Files changed:
-${CHANGED_FILES}"
+            summary=$(printf "%s\n\nFiles changed:\n%s\n" "$COMMIT_MESSAGE" "$CHANGED_FILES")
           fi
 
           # Export for next step
@@ -114,6 +111,7 @@ ${CHANGED_FILES}"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SUMMARY: ${{ steps.chatgpt.outputs.summary }}
         run: |
           set -euo pipefail
           if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
@@ -121,11 +119,8 @@ ${CHANGED_FILES}"
             exit 0
           fi
 
-          # Safely inject ChatGPT output as multiline from previous step
-          summary=$(cat <<'EOF'
-${{ steps.chatgpt.outputs.summary }}
-EOF
-)
+          # Safely use ChatGPT output from env (supports multiline)
+          summary="$SUMMARY"
 
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
