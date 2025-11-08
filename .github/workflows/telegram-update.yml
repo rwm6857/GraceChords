@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # allows manual run from Actions tab
+  workflow_dispatch: # allows manual trigger
 
 jobs:
   announce:
@@ -12,42 +12,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repository
+      # 1️⃣ Checkout repository for diff + commit info
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for diff comparisons
+          fetch-depth: 0
 
-      # 2️⃣ Determine if update should be announced
+      # 2️⃣ Decide whether to post an update
       - name: Determine if update should be announced
         id: announce_check
         shell: bash
         run: |
           set -euo pipefail
-
           COMMIT_MSG="$(git log -1 --pretty=%B)"
           SHOULD_ANNOUNCE="false"
 
           echo "🔍 Checking commit message and changed files..."
 
-          # 1️⃣ Manual flags (case-insensitive)
+          # Manual flags
           if echo "$COMMIT_MSG" | grep -Ei '\#post|\#announce|\[major\]|\[release\]' >/dev/null; then
             echo "✅ Detected manual post flag in commit message."
             SHOULD_ANNOUNCE="true"
           fi
 
-          # 2️⃣ Auto-trigger for song/resource updates (guard first commit)
+          # Auto-trigger: song or resource updates
           if git rev-parse HEAD^ >/dev/null 2>&1 && \
              git diff --name-only HEAD^ HEAD | grep -E '^public/(songs|resources)/' >/dev/null 2>&1; then
             echo "✅ Detected song or resource changes."
             SHOULD_ANNOUNCE="true"
           fi
 
-          # 3️⃣ Default: skip posting
           echo "should_announce=$SHOULD_ANNOUNCE" >> "$GITHUB_OUTPUT"
           echo "Announcement flag set to: $SHOULD_ANNOUNCE"
 
-      # 3️⃣ Get commit and diff info (only if posting)
+      # 3️⃣ Gather commit and diff info (only if posting)
       - name: Get recent commit info
         if: ${{ steps.announce_check.outputs.should_announce == 'true' }}
         id: commits
@@ -67,7 +65,7 @@ jobs:
           echo "message_path=$message_file" >> "$GITHUB_OUTPUT"
           echo "diff_path=$diff_file" >> "$GITHUB_OUTPUT"
 
-      # 4️⃣ Generate AI-written summary via ChatGPT
+      # 4️⃣ Generate a summary using ChatGPT
       - name: Generate summary with ChatGPT
         if: ${{ steps.announce_check.outputs.should_announce == 'true' }}
         id: chatgpt
@@ -88,11 +86,11 @@ jobs:
               messages: [
                 {
                   "role": "system",
-                  "content": "You are the GraceChords Bot, a friendly, upbeat writer for end users. Write a short Telegram update with a casual, human voice. Keep it tight: 1–3 short sentences OR a tiny bullet list. Focus on what’s new or improved for users. You may add 1–2 fitting emojis, but don’t overdo it. Use real newlines (no literal \\n). No hashtags or links. Do not copy the commit message; rephrase. If most changes are songs (public/songs), list the song names as bullets using readable titles (underscores → spaces)."
+                  "content": "You are the GraceChords Bot, a friendly and upbeat writer. Write a short Telegram update for end users, in a casual tone. Keep it to 1–3 short sentences or a small bullet list. Use real newlines (no literal \\n). Avoid hashtags and links. You may include 1–2 fitting emojis."
                 },
                 {
                   "role": "user",
-                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff + "\\n\\nWrite a friendly, end‑user update now. Keep it concise and approachable; 1–2 emojis max.")
+                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff)
                 }
               ],
               max_tokens: 300,
@@ -100,18 +98,16 @@ jobs:
             }')
 
           response=$(curl -s https://api.openai.com/v1/chat/completions \
-            -H "Content-Type: application/json" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
             -d "$payload")
 
           summary=$(echo "$response" | jq -r '.choices[0].message.content // empty')
-          if [ -z "$summary" ] || [ "$summary" = "null" ]; then
-            summary="(No summary generated — possibly empty commit message)"
-          fi
+          [ -z "$summary" ] || [ "$summary" = "null" ] && summary="(No summary generated — possibly empty commit message)"
           printf "%s" "$summary" > "$RUNNER_TEMP/summary.txt"
           echo "summary_path=$RUNNER_TEMP/summary.txt" >> "$GITHUB_OUTPUT"
 
-      # 5️⃣ Send the formatted summary to Telegram (HTML with safe escaping)
+      # 5️⃣ Send formatted message to Telegram (with real newlines + typing delay)
       - name: Send update to Telegram
         if: ${{ steps.announce_check.outputs.should_announce == 'true' }}
         shell: bash
@@ -121,48 +117,57 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-            echo "Telegram secrets missing; skipping send." >&2
+            echo "⚠️ Telegram secrets missing; skipping send."
             exit 0
           fi
 
-          # Load ChatGPT output from temp file
           summary="$(cat "${{ steps.chatgpt.outputs.summary_path }}" 2>/dev/null || true)"
 
-          # Normalize escaped newlines to real newlines (robust, no format changes)
-          summary=${summary//$'\r'/}
-          summary=${summary/\\r\\n/$'\n'}
-          summary=${summary//\\n/$'\n'}
+          # Normalize newlines
+          summary=$(printf '%s' "$summary" | perl -pe 's/\r//g; s/\\r\\n|\r\n|\r|\n/\n/g')
+          [ -z "$summary" ] || [ "$summary" = "null" ] && summary="(No summary generated — possibly empty commit message)"
 
-          if [ -z "$summary" ] || [ "$summary" = "null" ]; then
-            summary="(No summary generated — possibly empty commit message)"
-          fi
-
-          # Replace markdown bullets with real bullets
+          # Replace leading "- " with "• "
           summary=$(printf '%s' "$summary" | sed -E 's/^[[:space:]]*-\s/• /')
 
-          # Escape unsafe HTML chars for Telegram
+          # Escape unsafe HTML chars
           summary=$(printf '%s' "$summary" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
 
           title='<b>🎸 GraceChords Update</b>'
           footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
-          text="$title\n\n$summary\n\n$footer"
 
-          # Build payload with jq --arg (newlines preserved in JSON)
+          # Properly build text with *real newlines*
+          text=$(printf "%b" "$title\n\n$summary\n\n$footer")
+
+          # Use jq --rawfile to preserve newlines exactly
           payload=$(jq -n \
             --arg chat_id "$TELEGRAM_CHAT_ID" \
-            --arg text "$text" \
             --arg mode "HTML" \
+            --rawfile text <(printf "%s" "$text") \
             '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
 
-          # Simulate a short, realistic typing delay
+          # Simulate "typing..." for 3–5 seconds
           delay=$((3 + RANDOM % 3))
-          echo "GraceChords Bot is 'typing' for $delay seconds..."
+          echo "⌛ GraceChords Bot is typing for $delay seconds..."
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d action="typing" >/dev/null || true
           sleep "$delay"
 
-          # Send message
+          echo "🚀 Sending message to Telegram..."
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H 'Content-Type: application/json' \
-            -d "$payload"
+               -H 'Content-Type: application/json' \
+               -d "$payload"
+
+      # 6️⃣ Debug output (always visible)
+      - name: Debug summary output
+        if: always()
+        run: |
+          echo "=== Announce Decision ==="
+          echo "should_announce=${{ steps.announce_check.outputs.should_announce }}"
+          echo
+          echo "=== Commit Message ==="
+          git log -1 --pretty=%B
+          echo
+          echo "=== Summary ==="
+          cat "$RUNNER_TEMP/summary.txt" 2>/dev/null || echo "(none)"
