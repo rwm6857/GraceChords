@@ -283,7 +283,7 @@ jobs:
           printf "%s" "$summary" > "$RUNNER_TEMP/summary.txt"
 
       # 4️⃣ Send the formatted summary to Telegram (HTML with safe escaping)
-           - name: Send update to Telegram
+      - name: Send update to Telegram
         shell: bash
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -317,11 +317,11 @@ jobs:
           # Use printf with actual newlines (no backslashes!)
           text=$(printf "%b" "$title\n\n$summary\n\n$footer")
 
-          # Build payload with jq --rawfile (preserves newlines)
+          # Build payload with jq --arg (newlines preserved and escaped in JSON)
           payload=$(jq -n \
             --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg text "$text" \
             --arg mode "HTML" \
-            --rawfile text <(printf "%s" "$text") \
             '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
 
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
