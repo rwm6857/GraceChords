@@ -19,15 +19,21 @@ jobs:
       # 2️⃣ Get the latest commit message and changed files
       - name: Get recent commit info
         id: commits
+        shell: bash
         run: |
-          # Capture latest commit message and body
-          message=$(git log -1 --pretty=format:"%s%n%b")
+          set -euo pipefail
+          sha="${GITHUB_SHA}"
+          # Capture latest commit message and body for this SHA
+          message=$(git log -1 --pretty=format:%s%n%b "$sha" || true)
+          # List files changed in this commit (works even for first commit)
+          diff=$(git show --name-only --pretty="" "$sha" | sed '/^$/d' || true)
 
-          # Check if previous commit exists (avoids error on first commit)
-          if git rev-parse HEAD^ >/dev/null 2>&1; then
-            diff=$(git diff --name-only HEAD^ HEAD)
-          else
-            diff=$(git diff --name-only HEAD)
+          # Fallbacks to avoid empty outputs
+          if [ -z "$message" ]; then
+            message="Update $sha"
+          fi
+          if [ -z "$diff" ]; then
+            diff="(no files detected)"
           fi
 
           # Write outputs properly with delimiters
@@ -43,23 +49,35 @@ jobs:
       # 3️⃣ Generate AI-written summary via OpenAI (ChatGPT)
       - name: Generate summary with ChatGPT
         id: chatgpt
+        shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          COMMIT_MESSAGE: ${{ steps.commits.outputs.message }}
+          CHANGED_FILES: ${{ steps.commits.outputs.diff }}
         run: |
+          set -euo pipefail
+
+          # If no API key is present, skip and fall back later
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "No OPENAI_API_KEY provided; will use fallback summary." >&2
+            printf "summary<<EOF\n\nEOF\n" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # Build JSON payload safely with jq to avoid quote escaping issues
           payload=$(jq -n \
-            --arg message "${{ steps.commits.outputs.message }}" \
-            --arg diff "${{ steps.commits.outputs.diff }}" \
+            --arg message "$COMMIT_MESSAGE" \
+            --arg diff "$CHANGED_FILES" \
             '{
               model: "gpt-4o-mini",
               messages: [
                 {
-                  "role": "system",
-                  "content": "You are the GraceChords Bot, a friendly but concise technical writer. Summarize GitHub updates for a public Telegram channel, focusing on new features, improvements, and bug fixes relevant to users. If changes only included adding songs, simply list the songs added as an exciting update!"
+                  role: "system",
+                  content: "You are the GraceChords Bot, a friendly but concise technical writer. Summarize GitHub updates for a public Telegram channel, focusing on new features, improvements, and bug fixes relevant to users. If changes only included adding songs, simply list the songs added as an exciting update!"
                 },
                 {
-                  "role": "user",
-                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff + "\\n\\nWrite a short, engaging update summary for Telegram. Include emojis if appropriate, use plain Markdown, and keep it under 100 words.")
+                  role: "user",
+                  content: ("Commit message:\n" + $message + "\n\nChanged files:\n" + $diff + "\n\nWrite a short, engaging update summary for Telegram. Include emojis if appropriate, use plain Markdown, and keep it under 100 words.")
                 }
               ],
               max_tokens: 300,
@@ -67,46 +85,61 @@ jobs:
             }')
 
           # Call OpenAI API
-          response=$(curl -s https://api.openai.com/v1/chat/completions \
+          response=$(curl -sS https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "$payload")
+            -d "$payload" || true)
 
-          # Extract message content from API response
-          summary=$(echo "$response" | jq -r '.choices[0].message.content')
+          # Extract message content from API response (if present)
+          summary=$(echo "$response" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+
+          # Fallback summary if API failed or returned empty
+          if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
+            summary="${COMMIT_MESSAGE}
+
+Files changed:
+${CHANGED_FILES}"
+          fi
 
           # Export for next step
-          echo "summary<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$summary" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          {
+            echo "summary<<EOF"
+            echo "$summary"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
-      # 4️⃣ Send the formatted summary to Telegram (with robust quoting)
-           - name: Send update to Telegram
+      # 4️⃣ Send the formatted summary to Telegram (robust JSON, no brittle Markdown parsing)
+      - name: Send update to Telegram
+        shell: bash
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Safely inject ChatGPT output as multiline
+          set -euo pipefail
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "Telegram secrets missing; skipping send." >&2
+            exit 0
+          fi
+
+          # Safely inject ChatGPT output as multiline from previous step
           summary=$(cat <<'EOF'
 ${{ steps.chatgpt.outputs.summary }}
 EOF
 )
 
-          # Handle empty/null summaries
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
           fi
 
-          # Build the text safely using printf
-          text=$(printf "🎸 *GraceChords Update*\n\n%s\n\n[View Commit](%s/%s/commit/%s)" \
-            "$summary" \
-            "${{ github.server_url }}" \
-            "${{ github.repository }}" \
-            "${{ github.sha }}" | jq -s -R -r @uri)
+          commit_url="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          text=$(printf "🎸 GraceChords Update\n\n%s\n\nView commit: %s" "$summary" "$commit_url")
 
-          # Send to Telegram
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-               -d chat_id="$TELEGRAM_CHAT_ID" \
-               -d parse_mode="Markdown" \
-               -d disable_web_page_preview=true \
-               -d text="$text"
+          # Build JSON payload using jq to ensure correct escaping
+          payload=$(jq -n \
+            --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg text "$text" \
+            '{chat_id: $chat_id, text: $text, disable_web_page_preview: true}')
+
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H 'Content-Type: application/json' \
+            -d "$payload"
