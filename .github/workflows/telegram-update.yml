@@ -324,6 +324,7 @@ jobs:
                   -e 's/{/\\{/g' \
                   -e 's/}/\\}/g' \
                   -e 's/\./\\./g' \
+                  -e 's/-/\\-/g' \
                   -e 's/!/\\!/g')
 
           title='*🎸 GraceChords Update*'
