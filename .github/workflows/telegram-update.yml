@@ -24,6 +24,7 @@ jobs:
           set -euo pipefail
           message_file="$RUNNER_TEMP/commit_message.txt"
           diff_file="$RUNNER_TEMP/changed_files.txt"
+          status_file="$RUNNER_TEMP/changed_status.txt"
 
           event_name="${GITHUB_EVENT_NAME}"
           event_path="${GITHUB_EVENT_PATH}"
@@ -35,11 +36,28 @@ jobs:
 
             # Collect changed files across the pushed range
             if [ -n "$before_sha" ] && [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
-              git diff --name-only "$before_sha" "$after_sha" | sed '/^$/d' > "$diff_file" || true
+              git diff --name-only "$before_sha" "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
+              git diff --name-status "$before_sha" "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
             else
               # Initial push or unknown before; diff against empty tree
-              git diff --name-only $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' > "$diff_file" || true
+              git diff --name-only $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
+              git diff --name-status $(git hash-object -t tree /dev/null) "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
             fi
+
+            # Normalize name-status format and filter docs/node_modules
+            : > "$status_file"
+            while IFS=$'\t' read -r st p1 p2; do
+              [ -z "${st:-}" ] && continue
+              case "$st" in
+                R*) path="$p2"; st="R" ;;
+                *)  path="$p1" ;;
+              esac
+              case "$path" in
+                docs/*|node_modules/*) continue ;;
+              esac
+              printf "%s\t%s\n" "$st" "$path" >> "$status_file"
+            done < "$status_file.tmp"
+            rm -f "$status_file.tmp" || true
 
             # Build a concise list of commit subjects from the event payload
             jq -r '.commits[].message | split("\n")[0] | select(length>0) | "- " + .' "$event_path" > "$message_file" || true
@@ -54,7 +72,21 @@ jobs:
           else
             # workflow_dispatch or missing jq: use single-commit info
             git log -1 --pretty=format:%s%n%b "$after_sha" > "$message_file" || true
-            git show --name-only --pretty="" "$after_sha" | sed '/^$/d' > "$diff_file" || true
+            git show --name-only --pretty="" "$after_sha" | sed '/^$/d' | grep -vE '^(docs/|node_modules/)' > "$diff_file" || true
+            git show --name-status --pretty="" "$after_sha" | sed '/^$/d' > "$status_file.tmp" || true
+            : > "$status_file"
+            while IFS=$'\t' read -r st p1 p2; do
+              [ -z "${st:-}" ] && continue
+              case "$st" in
+                R*) path="$p2"; st="R" ;;
+                *)  path="$p1" ;;
+              esac
+              case "$path" in
+                docs/*|node_modules/*) continue ;;
+              esac
+              printf "%s\t%s\n" "$st" "$path" >> "$status_file"
+            done < "$status_file.tmp"
+            rm -f "$status_file.tmp" || true
           fi
 
           # Ensure files are not empty to avoid downstream surprises
@@ -69,6 +101,7 @@ jobs:
           {
             echo "message_path=$message_file"
             echo "diff_path=$diff_file"
+            echo "status_path=$status_file"
           } >> "$GITHUB_OUTPUT"
 
       # 3️⃣ Generate AI-written summary via OpenAI (ChatGPT)
@@ -83,27 +116,36 @@ jobs:
           # Helper: build a sensible fallback summary from commit + changed files
           build_fallback() {
             local msg file songs_list="" unique_tmp="$RUNNER_TEMP/songs_uniq.txt"
+            local added_tmp="$RUNNER_TEMP/songs_added.txt" updated_tmp="$RUNNER_TEMP/songs_updated.txt"
             msg=$(cat "$RUNNER_TEMP/commit_message.txt" 2>/dev/null || true)
             : > "$unique_tmp"
-            if grep -q '^public/songs/' "$RUNNER_TEMP/changed_files.txt" 2>/dev/null; then
-              while IFS= read -r file; do
-                case "$file" in
+            : > "$added_tmp"; : > "$updated_tmp"
+            if [ -s "$RUNNER_TEMP/changed_status.txt" ]; then
+              while IFS=$'\t' read -r st path; do
+                case "$path" in
                   public/songs/*)
-                    base=${file##public/songs/}
-                    base=${base%.*}
-                    # Replace separators with spaces for readability
-                    base=${base//_/ }
-                    base=${base//-/ }
-                    echo "$base" >> "$unique_tmp" ;;
+                    base=${path##public/songs/}; base=${base%.*}
+                    base=${base//_/ }; base=${base//-/ }
+                    case "$st" in
+                      A) echo "$base" >> "$added_tmp" ;;
+                      M|R) echo "$base" >> "$updated_tmp" ;;
+                    esac ;;
                 esac
-              done < "$RUNNER_TEMP/changed_files.txt"
-              if [ -s "$unique_tmp" ]; then
-                sort -u "$unique_tmp" > "$unique_tmp.sorted"
-                songs_list=$(sed 's/^/- /' "$unique_tmp.sorted")
-                printf "%s\n" "$songs_list"
-                rm -f "$unique_tmp" "$unique_tmp.sorted" 2>/dev/null || true
-                return 0
+              done < "$RUNNER_TEMP/changed_status.txt"
+            fi
+            if [ -s "$added_tmp" ] || [ -s "$updated_tmp" ]; then
+              if [ -s "$added_tmp" ]; then
+                echo "Added:" 
+                sort -u "$added_tmp" | sed 's/^/- /'
+                echo
               fi
+              if [ -s "$updated_tmp" ]; then
+                echo "Updated:" 
+                sort -u "$updated_tmp" | sed 's/^/- /'
+                echo
+              fi
+              rm -f "$unique_tmp" "$added_tmp" "$updated_tmp" 2>/dev/null || true
+              return 0
             fi
             # Default narrative using commit subject/body first line
             if [ -n "$msg" ]; then
@@ -124,16 +166,17 @@ jobs:
           payload=$(jq -n \
             --rawfile message "$RUNNER_TEMP/commit_message.txt" \
             --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
+            --rawfile diff_status "$RUNNER_TEMP/changed_status.txt" \
             '{
               model: "gpt-4o-mini",
               messages: [
                 {
                   role: "system",
-                  content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list of songs and/or features added. No headings, no links, no hashtags. Use plain text only. Keep it under 100 words."
+                  content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list grouped by Added and Updated. Ignore any files under /docs and /node_modules. No extra headings beyond 'Added:' and 'Updated:' labels if you list. No links, no hashtags. Use plain text only. Keep it under 100 words. Do not include literal backslash escape sequences like \\n or \\t; use real line breaks and spaces. Avoid copying commit messages verbatim; rephrase for end users."
                 },
                 {
                   role: "user",
-                  content: ("Commit messages:\n" + $message + "\n\nChanged files:\n" + $diff + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list of songs/features added. No links. No headings. Plain text only. Keep it under 100 words.")
+                  content: ("Commit messages (most recent first):\n" + $message + "\n\nChanged files (ignore /docs and /node_modules):\n" + $diff + "\n\nChanged files with status (A=Added, M=Modified, R=Renamed):\n" + $diff_status + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list grouped as 'Added:' and 'Updated:'. Keep it concise. Plain text only. No links. Do not include literal sequences like \\n; use actual newlines. Avoid echoing commit messages verbatim.")
                 }
               ],
               max_tokens: 300,
@@ -172,6 +215,9 @@ jobs:
 
           # Load ChatGPT output from temp file (supports multiline)
           summary="$(cat "$RUNNER_TEMP/summary.txt" 2>/dev/null || true)"
+
+          # Convert any literal backslash escapes (e.g., \n) into real characters
+          summary=$(printf '%b' "$summary")
 
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
