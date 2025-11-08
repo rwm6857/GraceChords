@@ -37,13 +37,14 @@ jobs:
           fi
 
           # Write outputs properly with delimiters
+          message_file="$RUNNER_TEMP/commit_message.txt"
+          diff_file="$RUNNER_TEMP/changed_files.txt"
+          printf "%s\n" "$message" > "$message_file"
+          printf "%s\n" "$diff" > "$diff_file"
+
           {
-            echo "message<<EOF"
-            echo "$message"
-            echo "EOF"
-            echo "diff<<EOF"
-            echo "$diff"
-            echo "EOF"
+            echo "message_path=$message_file"
+            echo "diff_path=$diff_file"
           } >> "$GITHUB_OUTPUT"
 
       # 3️⃣ Generate AI-written summary via OpenAI (ChatGPT)
@@ -52,8 +53,6 @@ jobs:
         shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          COMMIT_MESSAGE: ${{ steps.commits.outputs.message }}
-          CHANGED_FILES: ${{ steps.commits.outputs.diff }}
         run: |
           set -euo pipefail
 
@@ -66,8 +65,8 @@ jobs:
 
           # Build JSON payload safely with jq to avoid quote escaping issues
           payload=$(jq -n \
-            --arg message "$COMMIT_MESSAGE" \
-            --arg diff "$CHANGED_FILES" \
+            --rawfile message "$RUNNER_TEMP/commit_message.txt" \
+            --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
             '{
               model: "gpt-4o-mini",
               messages: [
@@ -95,15 +94,11 @@ jobs:
 
           # Fallback summary if API failed or returned empty
           if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
-            summary=$(printf "%s\n\nFiles changed:\n%s\n" "$COMMIT_MESSAGE" "$CHANGED_FILES")
+            summary=$(printf "%s\n\nFiles changed:\n%s\n" "$(cat "$RUNNER_TEMP/commit_message.txt" 2>/dev/null || true)" "$(cat "$RUNNER_TEMP/changed_files.txt" 2>/dev/null || true)")
           fi
 
           # Export for next step
-          {
-            echo "summary<<EOF"
-            echo "$summary"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          printf "%s" "$summary" > "$RUNNER_TEMP/summary.txt"
 
       # 4️⃣ Send the formatted summary to Telegram (robust JSON, no brittle Markdown parsing)
       - name: Send update to Telegram
@@ -111,7 +106,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SUMMARY: ${{ steps.chatgpt.outputs.summary }}
         run: |
           set -euo pipefail
           if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
@@ -119,8 +113,8 @@ jobs:
             exit 0
           fi
 
-          # Safely use ChatGPT output from env (supports multiline)
-          summary="$SUMMARY"
+          # Load ChatGPT output from temp file (supports multiline)
+          summary="$(cat "$RUNNER_TEMP/summary.txt" 2>/dev/null || true)"
 
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
