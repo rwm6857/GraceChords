@@ -180,7 +180,7 @@ jobs:
                 }
               ],
               max_tokens: 300,
-              temperature: 0.7
+              temperature: 0.9
             }')
 
           # Call OpenAI API
@@ -195,6 +195,33 @@ jobs:
           # Fallback summary if API failed or returned empty
           if [ -z "${summary:-}" ] || [ "$summary" = "null" ]; then
             summary=$(build_fallback)
+          fi
+
+          # If summary appears to copy a commit subject verbatim, try one rewrite pass
+          if [ -n "${OPENAI_API_KEY:-}" ] && [ -s "$RUNNER_TEMP/commit_message.txt" ]; then
+            sum_trim=$(printf '%s' "$summary" | sed -e '1q' -e 's/^[-*]\s\+//' -e 's/[[:space:]]\+$//' -e 's/^[[:space:]]\+//')
+            if grep -Fxq "$sum_trim" "$RUNNER_TEMP/commit_message.txt" || grep -Fxq "- $sum_trim" "$RUNNER_TEMP/commit_message.txt"; then
+              re_payload=$(jq -n \
+                --arg attempt "$summary" \
+                --rawfile commits "$RUNNER_TEMP/commit_message.txt" \
+                '{
+                  model: "gpt-4o-mini",
+                  messages: [
+                    {role: "system", content: "Rewrite for a public Telegram audience: one sentence (or two short ones) summarizing changes. Do NOT copy any 3+ word phrase from the commits. Plain text only; no links or hashtags."},
+                    {role: "user", content: ("Original attempt:\n" + $attempt + "\n\nCommit subjects:\n" + $commits + "\n\nRewrite succinctly for non-developers.")}
+                  ],
+                  max_tokens: 150,
+                  temperature: 0.9
+                }')
+              re_resp=$(curl -sS https://api.openai.com/v1/chat/completions \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d "$re_payload" || true)
+              re_sum=$(echo "$re_resp" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+              if [ -n "$re_sum" ] && [ "$re_sum" != "null" ]; then
+                summary="$re_sum"
+              fi
+            fi
           fi
 
           # Export for next step
@@ -223,12 +250,12 @@ jobs:
             summary="(No summary generated — possibly empty commit message)"
           fi
 
-          # Escape HTML special chars in summary for Telegram HTML parse mode
-          safe_summary=$(printf '%s' "$summary" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g')
+          # Escape HTML and normalize newlines to <br/> for Telegram HTML mode
+          safe_summary=$(printf '%s' "$summary" | sed -e 's/&/\\&amp;/g' -e 's/</\\&lt;/g' -e 's/>/\\&gt;/g' | sed ':a;N;$!ba;s/\n/<br\/>/g')
 
           title='<b>🎸 GraceChords Update</b>'
           footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
-          text="$title\n\n$safe_summary\n\n$footer"
+          text="$title<br/><br/>$safe_summary<br/><br/>$footer"
 
           # Build JSON payload using jq to ensure correct escaping
           payload=$(jq -n \
