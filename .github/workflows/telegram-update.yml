@@ -1,0 +1,52 @@
+name: Share Updates to Telegram
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get recent commit info
+        id: commits
+        run: |
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          git log -1 --pretty=format:"%s%n%b" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only HEAD^ HEAD >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate summary with ChatGPT
+        id: chatgpt
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d '{
+              "model": "gpt-4o-mini",
+              "messages": [
+                {"role": "system", "content": "You are a technical writer for GraceChords, summarizing GitHub updates for a Telegram channel."},
+                {"role": "user", "content": "Commit message:\n${{ steps.commits.outputs.message }}\n\nChanged files:\n${{ steps.commits.outputs.diff }}\n\nWrite a concise, clear summary suitable for public Telegram announcement. Emphasize user-facing improvements, new features, or fixes."}
+              ],
+              "max_tokens": 300
+            }' | jq -r '.choices[0].message.content')
+          echo "summary=$RESPONSE" >> $GITHUB_OUTPUT
+
+      - name: Send update to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          TEXT="🎸 *GraceChords Update*\n\n${{ steps.chatgpt.outputs.summary }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+               -d chat_id="$TELEGRAM_CHAT_ID" \
+               -d parse_mode="Markdown" \
+               -d text="$TEXT"
