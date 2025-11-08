@@ -308,14 +308,13 @@ jobs:
           # Replace leading "- " bullets with Unicode bullet for nicer look
           bulletized=$(printf '%s' "$summary" | sed -E 's/^[[:space:]]*-\s/• /')
 
-          # Escape for Telegram HTML; then convert newlines to <br>
+          # Escape for Telegram HTML; keep real newlines (no <br>)
           safe_summary=$(printf '%s' "$bulletized" \
             | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
-          safe_summary=$(printf '%s' "$safe_summary" | sed ':a;N;$!ba;s/\n/<br>/g')
 
           title='<b>🎸 GraceChords Update</b>'
           footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
-          text="$title<br><br>$safe_summary<br><br>$footer"
+          text="$title\n\n$safe_summary\n\n$footer"
 
           # Build JSON payload using jq to ensure correct escaping
           payload=$(jq -n \
