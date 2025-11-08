@@ -128,8 +128,10 @@ jobs:
           # Load ChatGPT output from temp file
           summary="$(cat "${{ steps.chatgpt.outputs.summary_path }}" 2>/dev/null || true)"
 
-          # Normalize any escaped newlines to real newlines
-          summary=$(printf '%s' "$summary" | perl -pe 's/\r//g; s/\\r\\n|\r\n|\r|\n/\n/g; s/\\n/\n/g')
+          # Normalize escaped newlines to real newlines (robust, no format changes)
+          summary=${summary//$'\r'/}
+          summary=${summary/\\r\\n/$'\n'}
+          summary=${summary//\\n/$'\n'}
 
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
