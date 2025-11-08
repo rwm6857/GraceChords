@@ -298,12 +298,10 @@ jobs:
           # Load ChatGPT output from temp file (supports multiline)
           summary="$(cat "$RUNNER_TEMP/summary.txt" 2>/dev/null || true)"
 
-          # Convert any literal backslash escapes (e.g., \n) into real characters
-          summary=$(printf '%b' "$summary")
-          # Apply a second pass in case of double-escaped sequences (e.g., \\n)
-          summary=$(printf '%b' "$summary")
-          # Normalize CRLF to LF just in case
-          summary=$(printf '%s' "$summary" | tr -d '\r')
+          # Normalize any escaped newlines to real newlines, robustly
+          # 1) Remove CRs
+          # 2) Convert literal "\r\n" and "\n" sequences to real newlines
+          summary=$(printf '%s' "$summary" | perl -pe 's/\r//g; s/\\r\\n/\n/g; s/\\n/\n/g')
 
           if [ -z "$summary" ] || [ "$summary" = "null" ]; then
             summary="(No summary generated — possibly empty commit message)"
