@@ -88,11 +88,11 @@ jobs:
               messages: [
                 {
                   "role": "system",
-                  "content": "You are the GraceChords Bot, a friendly technical writer. Write a concise Telegram post (1–3 sentences or short bullet list). Focus on user-facing changes (Added, Updated, Fixed). Use plain text and real newlines; avoid literal \\n. No hashtags or links."
+                  "content": "You are the GraceChords Bot, a friendly, upbeat writer for end users. Write a short Telegram update with a casual, human voice. Keep it tight: 1–3 short sentences OR a tiny bullet list. Focus on what’s new or improved for users. You may add 1–2 fitting emojis, but don’t overdo it. Use real newlines (no literal \\n). No hashtags or links. Do not copy the commit message; rephrase. If most changes are songs (public/songs), list the song names as bullets using readable titles (underscores → spaces)."
                 },
                 {
                   "role": "user",
-                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff)
+                  "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff + "\\n\\nWrite a friendly, end‑user update now. Keep it concise and approachable; 1–2 emojis max.")
                 }
               ],
               max_tokens: 300,
