@@ -112,6 +112,8 @@ jobs:
         shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4o-mini
+          OPENAI_MAX_TOKENS: 500
         run: |
           set -euo pipefail
 
@@ -169,8 +171,10 @@ jobs:
             --rawfile message "$RUNNER_TEMP/commit_message.txt" \
             --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
             --rawfile diff_status "$RUNNER_TEMP/changed_status.txt" \
+            --arg model "${OPENAI_MODEL:-gpt-4o-mini}" \
+            --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
             '{
-              model: "gpt-4o-mini",
+              model: $model,
               messages: [
                 {
                   role: "system",
@@ -181,7 +185,7 @@ jobs:
                   content: ("Commit messages (most recent first):\n" + $message + "\n\nChanged files (ignore /docs and /node_modules):\n" + $diff + "\n\nChanged files with status (A=Added, M=Modified, R=Renamed):\n" + $diff_status + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list grouped as 'Added:' and 'Updated:'. Keep it concise. Plain text only. No links. Do not include literal sequences like \\n; use actual newlines. Avoid echoing commit messages verbatim.")
                 }
               ],
-              max_tokens: 300,
+              max_tokens: $max_tokens,
               temperature: 0.9
             }')
 
@@ -205,6 +209,38 @@ jobs:
             elif [ "$http_code" -ne 200 ]; then
               echo "OpenAI non-200 ($http_code) with empty body" >&2
             fi
+            # Retry with fallback model if model error
+            if printf '%s' "$err" | grep -qi 'model' || [ "${http_code}" = "404" ]; then
+              echo "Retrying with fallback model gpt-4o-mini" >&2
+              payload=$(jq -n \
+                --rawfile message "$RUNNER_TEMP/commit_message.txt" \
+                --rawfile diff "$RUNNER_TEMP/changed_files.txt" \
+                --rawfile diff_status "$RUNNER_TEMP/changed_status.txt" \
+                --arg model "gpt-4o-mini" \
+                --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
+                '{
+                  model: $model,
+                  messages: [
+                    {
+                      role: "system",
+                      content: "You are the GraceChords Bot, a friendly and concise technical writer. For public Telegram updates, write either (1) a short narrative summary in 1–2 sentences, or (2) a simple bulleted list grouped by Added and Updated. Ignore any files under /docs and /node_modules. No extra headings beyond 'Added:' and 'Updated:' labels if you list. No links, no hashtags. Use plain text only. Keep it under 100 words. Do not include literal backslash escape sequences like \\n or \\t; use real line breaks and spaces. Avoid copying commit messages verbatim; rephrase for end users."
+                    },
+                    {
+                      role: "user",
+                      content: ("Commit messages (most recent first):\n" + $message + "\n\nChanged files (ignore /docs and /node_modules):\n" + $diff + "\n\nChanged files with status (A=Added, M=Modified, R=Renamed):\n" + $diff_status + "\n\nWrite either a brief public-friendly changelog summary OR a bulleted list grouped as 'Added:' and 'Updated:'. Keep it concise. Plain text only. No links. Do not include literal sequences like \\n; use actual newlines. Avoid echoing commit messages verbatim.")
+                    }
+                  ],
+                  max_tokens: $max_tokens,
+                  temperature: 0.9
+                }')
+              response=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d "$payload" || true)
+              http_code=$(printf '%s' "$response" | tail -n1)
+              body=$(printf '%s' "$response" | sed '$d')
+              summary=$(echo "$body" | jq -er '.choices[0].message.content' 2>/dev/null || true)
+            fi
           fi
 
           # Fallback summary if API failed or returned empty
@@ -219,13 +255,15 @@ jobs:
               re_payload=$(jq -n \
                 --arg attempt "$summary" \
                 --rawfile commits "$RUNNER_TEMP/commit_message.txt" \
+                --arg model "${OPENAI_MODEL:-gpt-4o-mini}" \
+                --argjson max_tokens "${OPENAI_MAX_TOKENS:-500}" \
                 '{
-                  model: "gpt-4o-mini",
+                  model: $model,
                   messages: [
                     {role: "system", content: "Rewrite for a public Telegram audience: one sentence (or two short ones) summarizing changes. Do NOT copy any 3+ word phrase from the commits. Plain text only; no links or hashtags."},
                     {role: "user", content: ("Original attempt:\n" + $attempt + "\n\nCommit subjects:\n" + $commits + "\n\nRewrite succinctly for non-developers.")}
                   ],
-                  max_tokens: 150,
+                  max_tokens: $max_tokens,
                   temperature: 0.9
                 }')
               re_resp=$(curl -sS -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
