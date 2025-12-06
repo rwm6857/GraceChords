@@ -23,6 +23,9 @@ Common commands for development, testing, indexing, and maintenance.
 - `npm run convert:short` — convert existing songs to short directive style
 - `npm run repair:meta` — repair or fill common metadata fields across songs
 
+## SEO
+- `npm run generate:sitemap` — regenerate `public/sitemap.xml` (hash routes + all songs/resources)
+
 ## Environment
 - `.env` — set `VITE_ADMIN_PW=your-password`
 - Optional: `VITE_COMMIT_SHA=$(git rev-parse HEAD)` when building to bust caches
