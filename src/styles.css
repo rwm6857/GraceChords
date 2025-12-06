@@ -725,13 +725,13 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   color: rgba(255,255,255,0.9);
 }
 [data-theme="light"] .home-hero__content{
-  color: #0f172a;
+  color: rgba(0,0,0,0.85);
 }
 [data-theme="light"] .home-hero__subtitle{
-  color: #111827;
+  color: rgba(0,0,0,0.75);
 }
 [data-theme="light"] .home-hero__helper{
-  color: #111827;
+  color: rgba(0,0,0,0.65);
 }
 .home-hero__suggestions{
   z-index: 6;
