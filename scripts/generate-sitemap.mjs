@@ -8,7 +8,6 @@ const indexData = await readJson(path.join(root, 'src', 'data', 'index.json'))
 const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
 
 const staticRoutes = [
-  '/#/',
   '/#/about',
   '/#/setlist',
   '/#/songbook',
@@ -16,7 +15,7 @@ const staticRoutes = [
   '/#/bundle'
 ]
 
-const urls = new Set(staticRoutes.map((p) => `${BASE_URL}${p}`))
+const urlMap = new Map()
 
 async function readJson(filePath){
   try {
@@ -28,28 +27,66 @@ async function readJson(filePath){
   }
 }
 
+async function fileLastMod(filePath){
+  try {
+    const stat = await fs.stat(filePath)
+    return stat.mtimeMs
+  } catch {
+    return null
+  }
+}
+
 function encodeSlug(raw){
   if (!raw) return ''
   return encodeURIComponent(String(raw))
 }
 
+function formatDateUTC(d){
+  return new Date(d).toISOString().split('T')[0]
+}
+
+const todayStr = formatDateUTC(Date.now())
+function clampDateToToday(ms){
+  if (!ms) return todayStr
+  const candidate = formatDateUTC(ms)
+  return candidate > todayStr ? todayStr : candidate
+}
+
+function addUrl(loc, lastmod = todayStr){
+  if (!loc) return
+  const safeLoc = String(loc)
+  const safeDate = clampDateToToday(lastmod)
+  urlMap.set(safeLoc, safeDate)
+}
+
+// Homepage (canonical, non-hash)
+addUrl(`${BASE_URL}/`, todayStr)
+
+// Hash-based static routes
+for (const p of staticRoutes) addUrl(`${BASE_URL}${p}`, todayStr)
+
 for (const song of (indexData?.items || [])) {
   const slug = song?.id || song?.filename?.replace(/\.chordpro$/, '')
   if (!slug) continue
-  urls.add(`${BASE_URL}/#/song/${encodeSlug(slug)}`)
+  const loc = `${BASE_URL}/#/song/${encodeSlug(slug)}`
+  const songFile = song?.filename ? path.join(root, 'public', 'songs', song.filename) : null
+  const mtime = songFile ? await fileLastMod(songFile) : null
+  addUrl(loc, clampDateToToday(mtime))
 }
 
 for (const res of (resourcesData?.items || [])) {
   if (!res?.slug) continue
-  urls.add(`${BASE_URL}/#/resources/${encodeSlug(res.slug)}`)
+  const loc = `${BASE_URL}/#/resources/${encodeSlug(res.slug)}`
+  const resFile = res?.filename ? path.join(root, 'public', 'resources', res.filename) : null
+  const mtime = resFile ? await fileLastMod(resFile) : null
+  addUrl(loc, clampDateToToday(mtime))
 }
 
-const today = new Date().toISOString().slice(0, 10)
 const xml = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-  ...Array.from(urls).sort().map((loc) => (
-    `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n    <lastmod>${today}</lastmod>\n  </url>`
+  ...Array.from(urlMap.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([loc, lastmod]) => (
+    `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n    <lastmod>${lastmod}</lastmod>\n  </url>`
   )),
   '</urlset>',
   ''
@@ -57,4 +94,4 @@ const xml = [
 
 await fs.mkdir(path.dirname(outPath), { recursive: true })
 await fs.writeFile(outPath, xml, 'utf8')
-console.log(`Wrote ${urls.size} URLs to ${outPath}`)
+console.log(`Wrote ${urlMap.size} URLs to ${outPath}`)
