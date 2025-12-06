@@ -145,7 +145,7 @@ export default function HomeDashboard(){
           padding: '32px 20px',
           backgroundImage: `url(${theme === 'light' ? heroLight : heroDark})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center 32%'
+          backgroundPosition: 'center 70%'
         }}
       >
         <div

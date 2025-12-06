@@ -692,7 +692,12 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   bottom: 0;
   height: 80px;
   pointer-events: none;
+}
+[data-theme="dark"] .home-hero::after{
   background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 60%, var(--bg) 100%);
+}
+[data-theme="light"] .home-hero::after{
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 60%, var(--bg) 100%);
 }
 .home-hero__overlay{
   position: absolute;
@@ -717,9 +722,6 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
 }
 .home-hero__helper{
   color: rgba(255,255,255,0.9);
-}
-[data-theme="light"] .home-hero__helper{
-  color: #334155;
 }
 .home-hero__suggestions{
   z-index: 6;
