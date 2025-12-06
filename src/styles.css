@@ -707,7 +707,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   pointer-events: none;
 }
 [data-theme="light"] .home-hero__overlay{
-  background: linear-gradient(180deg, rgba(24,31,45,0.32) 0%, rgba(24,31,45,0.55) 42%, rgba(17,24,39,0.75) 100%);
+  background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0) 75%);
 }
 .home-hero__content{
   position: relative;
