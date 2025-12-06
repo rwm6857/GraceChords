@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import indexData from '../data/index.json'
+// TODO: consider swapping to a light-theme illustration when available (e.g., dashboard-hero-worship-angled-light.png)
 import heroImg from '../assets/dashboard-hero-worship-angled.png'
 
 const SITE_URL = 'https://gracechords.com'
@@ -121,16 +122,12 @@ export default function HomeDashboard(){
       </Helmet>
 
       <section
-        className="hero"
+        className="home-hero"
         style={{
-          position: 'relative',
           minHeight: 320,
           maxHeight: 380,
           width: '100%',
           maxWidth: 1200,
-          display: 'flex',
-          alignItems: 'flex-end',
-          overflow: 'hidden',
           borderRadius: 12,
           margin: '0 auto',
           padding: '32px 20px'
@@ -151,26 +148,22 @@ export default function HomeDashboard(){
         />
         <div
           aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(180deg, rgba(12,12,12,0.35) 0%, rgba(12,12,12,0.65) 40%, rgba(12,12,12,0.82) 100%)'
-          }}
+          className="home-hero__overlay"
         />
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: 1040,
-            margin: '0 auto',
-            color: '#f8fafc'
-          }}
-        >
-          <div style={{ maxWidth: 720, padding: '0 6px' }}>
-            <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 36px)' }}>Welcome to GraceChords</h1>
-            <p style={{ marginBottom: 18, fontSize: '1.05rem', color: '#e2e8f0' }}>
-              Free, open-source worship tools for churches and worshippers.
-            </p>
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: 1040,
+              margin: '0 auto',
+              color: '#f8fafc'
+            }}
+          >
+            <div style={{ maxWidth: 720, padding: '0 6px' }}>
+              <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 36px)' }}>Welcome to GraceChords</h1>
+              <p style={{ marginBottom: 18, fontSize: '1.05rem', color: '#e2e8f0' }}>
+                Free, open-source worship tools for churches and worshippers.
+              </p>
           </div>
           <div style={{ maxWidth: 720, position: 'relative' }} ref={containerRef}>
             <label
@@ -290,22 +283,13 @@ function QuickCard({ to, title, desc }){
   return (
     <Link
       to={to}
-      className="card"
-      style={{
-        padding: '18px 16px',
-        textDecoration: 'none',
-        color: 'inherit',
-        border: '1px solid rgba(148,163,184,0.3)',
-        borderRadius: 12,
-        background: 'linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-        boxShadow: '0 10px 24px rgba(0,0,0,0.18)'
-      }}
+      className="card tool-card"
     >
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginBottom: 6 }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{title}</h3>
-        <span aria-hidden="true" style={{ color:'#94a3b8' }}>→</span>
+      <div className="tool-card__head">
+        <h3 className="tool-card__title">{title}</h3>
+        <span aria-hidden="true" className="tool-card__chevron">→</span>
       </div>
-      <p style={{ margin: 0, color:'#cbd5e1', lineHeight: 1.5 }}>{desc}</p>
+      <p className="tool-card__desc">{desc}</p>
     </Link>
   )
 }
