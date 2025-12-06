@@ -721,7 +721,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   color: #f8fafc;
 }
 .home-hero__subtitle{
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 .home-hero__search-wrapper{
   position: relative;
@@ -745,7 +745,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
 [data-theme="light"] .home-hero__content h1,
 [data-theme="light"] .home-hero__subtitle,
 [data-theme="light"] .home-hero__helper{
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 .home-hero__suggestions{
   margin-top: 0;

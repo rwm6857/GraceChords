@@ -136,16 +136,16 @@ export default function HomeDashboard(){
       <section
         className="home-hero"
         style={{
-          minHeight: 320,
-          maxHeight: 380,
-          width: '100%',
-          maxWidth: 1200,
-          borderRadius: 12,
-          margin: '0 auto',
-          padding: '32px 20px',
+          minHeight: 270,
+          maxHeight: 320,
+          width: '100vw',
+          maxWidth: '100vw',
+          borderRadius: 0,
+          margin: '0 calc(50% - 50vw)',
+          padding: '24px 20px',
           backgroundImage: `url(${theme === 'light' ? heroLight : heroDark})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center 70%'
+          backgroundPosition: 'center 78%'
         }}
       >
         <div
@@ -162,8 +162,8 @@ export default function HomeDashboard(){
             }}
           >
             <div style={{ maxWidth: 720, padding: '0 6px' }}>
-              <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 40px)' }}>Welcome to GraceChords</h1>
-              <p className="home-hero__subtitle" style={{ fontSize: '1.1rem' }}>
+              <h1 style={{ marginBottom: 8, fontSize: 'clamp(30px, 4.5vw, 44px)' }}>Welcome to GraceChords</h1>
+              <p className="home-hero__subtitle" style={{ fontSize: '1.2rem', fontStyle: 'italic' }}>
                 Free, open-source worship tools for churches and worshippers.
               </p>
             </div>
