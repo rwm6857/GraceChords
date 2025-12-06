@@ -751,6 +751,8 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   margin-top: 0;
   top: 100% !important;
   border-radius: 0 0 10px 10px !important;
+  left: 0 !important;
+  right: 0 !important;
 }
 .home-hero__suggestions{
   z-index: 6;
