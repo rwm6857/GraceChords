@@ -681,7 +681,8 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   position: relative;
   display: flex;
   align-items: flex-end;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 0;
 }
 .home-hero::after{
   content: '';
@@ -689,17 +690,39 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   left: 0;
   right: 0;
   bottom: 0;
-  height: 120px;
+  height: 80px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--bg) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 60%, var(--bg) 100%);
 }
 .home-hero__overlay{
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(12,12,12,0.35) 0%, rgba(12,12,12,0.65) 40%, rgba(12,12,12,0.82) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 [data-theme="light"] .home-hero__overlay{
   background: linear-gradient(180deg, rgba(24,31,45,0.32) 0%, rgba(24,31,45,0.55) 42%, rgba(17,24,39,0.75) 100%);
+}
+.home-hero__content{
+  position: relative;
+  z-index: 2;
+}
+.home-hero__subtitle{
+  margin-bottom: 20px;
+}
+.home-hero__search-wrapper{
+  position: relative;
+  z-index: 3;
+}
+.home-hero__helper{
+  color: rgba(255,255,255,0.9);
+}
+[data-theme="light"] .home-hero__helper{
+  color: #334155;
+}
+.home-hero__suggestions{
+  z-index: 6;
 }
 
 .tool-card{
@@ -710,7 +733,11 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(15,23,42,0.95) 100%);
   box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-  transition: box-shadow 120ms ease, transform 120ms ease;
+  transition:
+    box-shadow 120ms ease-out,
+    transform 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
 }
 .tool-card__head{
   display: flex;
@@ -733,6 +760,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
 }
 .tool-card:hover{
   box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+  transform: translateY(-1px);
 }
 [data-theme="light"] .tool-card{
   background: #f5f5f7;
@@ -747,5 +775,11 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   color: #6b7280;
 }
 [data-theme="light"] .tool-card:hover{
-  box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+[data-theme="dark"] .tool-card:hover{
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 14px 35px rgba(0,0,0,0.5);
 }

@@ -145,7 +145,7 @@ export default function HomeDashboard(){
           padding: '32px 20px',
           backgroundImage: `url(${theme === 'light' ? heroLight : heroDark})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundPosition: 'center 32%'
         }}
       >
         <div
@@ -153,6 +153,7 @@ export default function HomeDashboard(){
           className="home-hero__overlay"
         />
           <div
+            className="home-hero__content"
             style={{
               position: 'relative',
               width: '100%',
@@ -163,11 +164,11 @@ export default function HomeDashboard(){
           >
             <div style={{ maxWidth: 720, padding: '0 6px' }}>
               <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 36px)' }}>Welcome to GraceChords</h1>
-              <p style={{ marginBottom: 18, fontSize: '1.05rem', color: '#e2e8f0' }}>
+              <p className="home-hero__subtitle" style={{ fontSize: '1.05rem', color: '#e2e8f0' }}>
                 Free, open-source worship tools for churches and worshippers.
               </p>
-          </div>
-          <div style={{ maxWidth: 720, position: 'relative' }} ref={containerRef}>
+            </div>
+          <div className="home-hero__search-wrapper" style={{ maxWidth: 720, position: 'relative' }} ref={containerRef}>
             <label
               htmlFor="home-search"
               style={{
@@ -212,6 +213,7 @@ export default function HomeDashboard(){
               <ul
                 id="home-search-suggestions"
                 role="listbox"
+                className="home-hero__suggestions"
                 style={{
                   position: 'absolute',
                   top: 'calc(100% + 6px)',
@@ -222,7 +224,7 @@ export default function HomeDashboard(){
                   borderRadius: 10,
                   boxShadow: '0 14px 32px rgba(0,0,0,0.32)',
                   overflow: 'hidden',
-                  zIndex: 10
+                  zIndex: 6
                 }}
               >
                 {suggestions.map((s, i) => (
@@ -251,14 +253,14 @@ export default function HomeDashboard(){
                 ))}
               </ul>
             )}
-            <div style={{ marginTop: 10, color: '#cbd5e1', fontSize: '0.95rem' }}>
+            <div className="home-hero__helper" style={{ marginTop: 10, fontSize: '0.95rem' }}>
               Search songs by title, tag, or author. Press Enter to browse or jump directly into a song.
             </div>
           </div>
         </div>
       </section>
 
-      <section style={{ marginTop: 32, marginBottom: 40 }}>
+      <section style={{ marginTop: 24, marginBottom: 40 }}>
         <div className="container" style={{ padding: '0 12px' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
             <h2 style={{ margin: 0 }}>Worship tools</h2>
