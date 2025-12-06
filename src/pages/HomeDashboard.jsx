@@ -158,13 +158,12 @@ export default function HomeDashboard(){
               position: 'relative',
               width: '100%',
               maxWidth: 1040,
-              margin: '0 auto',
-              color: '#f8fafc'
+              margin: '0 auto'
             }}
           >
             <div style={{ maxWidth: 720, padding: '0 6px' }}>
               <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 36px)' }}>Welcome to GraceChords</h1>
-              <p className="home-hero__subtitle" style={{ fontSize: '1.05rem', color: '#e2e8f0' }}>
+              <p className="home-hero__subtitle" style={{ fontSize: '1.05rem' }}>
                 Free, open-source worship tools for churches and worshippers.
               </p>
             </div>
@@ -216,12 +215,12 @@ export default function HomeDashboard(){
                 className="home-hero__suggestions"
                 style={{
                   position: 'absolute',
-                  top: 'calc(100% + 6px)',
+                  top: '100%',
                   left: 0,
                   right: 0,
                   background: 'rgba(17,24,39,0.95)',
                   border: '1px solid rgba(148,163,184,0.5)',
-                  borderRadius: 10,
+                  borderRadius: '0 0 10px 10px',
                   boxShadow: '0 14px 32px rgba(0,0,0,0.32)',
                   overflow: 'hidden',
                   zIndex: 6

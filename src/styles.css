@@ -734,6 +734,11 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   color: rgba(0,0,0,0.65);
 }
 .home-hero__suggestions{
+  margin-top: 0;
+  top: 100% !important;
+  border-radius: 0 0 10px 10px !important;
+}
+.home-hero__suggestions{
   z-index: 6;
 }
 
