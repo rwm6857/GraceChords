@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import indexData from '../data/index.json'
-// TODO: consider swapping to a light-theme illustration when available (e.g., dashboard-hero-worship-angled-light.png)
-import heroImg from '../assets/dashboard-hero-worship-angled.png'
+import heroDark from '../assets/dashboard-hero-worship-angled.png'
+import heroLight from '../assets/dashboard-hero-worship-angled-light.png'
+import { currentTheme } from '../utils/theme'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -17,6 +18,7 @@ export default function HomeDashboard(){
   const [activeIndex, setActiveIndex] = useState(-1)
   const containerRef = useRef(null)
   const blurTimer = useRef(null)
+  const [theme, setTheme] = useState(() => currentTheme())
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -40,6 +42,16 @@ export default function HomeDashboard(){
   useEffect(() => {
     if (!showSuggestions) setActiveIndex(-1)
   }, [showSuggestions, trimmed])
+
+  // Watch for theme changes via data-theme on <html>
+  useEffect(() => {
+    const el = document.documentElement
+    const observer = new MutationObserver(() => {
+      setTheme(currentTheme())
+    })
+    observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
 
   function clearBlurTimer(){
     if (blurTimer.current) {
@@ -130,22 +142,12 @@ export default function HomeDashboard(){
           maxWidth: 1200,
           borderRadius: 12,
           margin: '0 auto',
-          padding: '32px 20px'
+          padding: '32px 20px',
+          backgroundImage: `url(${theme === 'light' ? heroLight : heroDark})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
         }}
       >
-        <img
-          src={heroImg}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            filter: 'brightness(0.6)'
-          }}
-        />
         <div
           aria-hidden="true"
           className="home-hero__overlay"

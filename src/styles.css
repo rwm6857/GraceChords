@@ -80,10 +80,22 @@ body{
   margin:0;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   font-size: var(--font-base);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 /* Remove global blue link color; inherit from context */
 a{ color: inherit; text-decoration: none }
+
+/* Subtle theme fade for common surfaces */
+.card,
+input, select, textarea,
+.toolbar,
+.gc-navbar,
+.tool-card,
+.home-hero,
+.home-hero__overlay{
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-image 180ms ease;
+}
 
 /* Navbar: ensure readable text on selected/current page */
 .gc-navbar .gc-navlink{ color: var(--text) !important; -webkit-text-fill-color: var(--text) !important; }
