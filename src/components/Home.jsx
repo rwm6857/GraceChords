@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
 import { compareSongsByTitle, normalizeTitleForSort } from '../utils/sort'
 import indexData from '../data/index.json'
@@ -7,6 +8,11 @@ import { KEYS } from '../utils/chordpro'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
 // Button was only used for ANY/ALL; removed
+
+const SITE_URL = 'https://gracechords.com'
+const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
+const HOME_TITLE = 'GraceChords — Free Worship Song Chord Sheets & Lyrics'
+const HOME_DESCRIPTION = 'GraceChords provides free worship chord sheets and lyrics for churches, worship teams, and believers. Browse songs, build setlists, and access transposable charts.'
 
 export default function Home(){
   const itemsRaw = indexData?.items || []
@@ -267,6 +273,18 @@ export default function Home(){
 
   return (
     <div className="HomePage">
+      <Helmet>
+        <title>{HOME_TITLE}</title>
+        <meta name="description" content={HOME_DESCRIPTION} />
+        <meta name="keywords" content="worship chord sheets, worship lyrics, transposable charts, GraceChords" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={HOME_TITLE} />
+        <meta property="og:description" content={HOME_DESCRIPTION} />
+        <meta property="og:url" content={`${SITE_URL}/`} />
+        <meta property="og:site_name" content="GraceChords" />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <link rel="canonical" href={`${SITE_URL}/`} />
+      </Helmet>
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
           <h1 onClick={maybeRevealAdmin} title="GraceChords">GraceChords</h1>

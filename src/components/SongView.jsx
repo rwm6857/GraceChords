@@ -1,6 +1,7 @@
 // src/components/SongView.jsx
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import KeySelector from './KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
@@ -19,6 +20,36 @@ import Panel from './ui/Panel'
 let pdfLibPromise
 let pdfPlanPromise
 let imageLibPromise
+
+const SITE_URL = 'https://gracechords.com'
+const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
+
+function buildSongSeo(entry, parsed, id){
+  const slugFromFile = entry?.filename ? entry.filename.replace(/\.chordpro$/, '') : ''
+  const routeSlug = entry?.id || id || slugFromFile || 'song'
+  const titleRaw = (parsed?.meta?.title || entry?.title || routeSlug || 'Song') || 'Song'
+  const title = String(titleRaw).trim() || 'Song'
+  const pageTitle = `${title} – Chord Sheet & Lyrics | GraceChords`
+  const description = `Free worship chord sheet and lyrics for "${title}". Transposable, printable, and formatted for worship teams at GraceChords.`
+  const keywords = `${title} chords, ${title} lyrics, worship chord chart, GraceChords`
+  const url = `${SITE_URL}/#/song/${encodeURIComponent(routeSlug)}`
+  const authors = Array.isArray(entry?.authors) ? entry.authors.filter(Boolean) : []
+  const names = authors.length ? authors.join(', ') : ''
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'MusicComposition',
+    name: title,
+    inLanguage: 'en',
+    url,
+    isFamilyFriendly: true,
+    publisher: 'GraceChords'
+  }
+  if (names) {
+    ld.lyricist = names
+    ld.composer = names
+  }
+  return { pageTitle, description, keywords, url, ld, ogImage: OG_IMAGE_URL }
+}
 
 export default function SongView(){
   const { id } = useParams()
@@ -43,6 +74,8 @@ export default function SongView(){
   const [isNarrow, setIsNarrow] = useState(() => {
     try { return window.innerWidth < 600 } catch { return false }
   })
+  const songSeo = buildSongSeo(entry, parsed, id)
+  const songLdJson = JSON.stringify(songSeo.ld || {})
 
 
   useEffect(() => {
@@ -206,20 +239,46 @@ export default function SongView(){
     return () => { cancelled = true }
   }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
 
+  const helmet = (
+    <Helmet>
+      <title>{songSeo.pageTitle}</title>
+      <meta name="description" content={songSeo.description} />
+      {songSeo.keywords ? <meta name="keywords" content={songSeo.keywords} /> : null}
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="GraceChords" />
+      <meta property="og:title" content={songSeo.pageTitle} />
+      <meta property="og:description" content={songSeo.description} />
+      <meta property="og:url" content={songSeo.url} />
+      <meta property="og:image" content={songSeo.ogImage} />
+      <link rel="canonical" href={songSeo.url} />
+      <script type="application/ld+json">{songLdJson}</script>
+    </Helmet>
+  )
 
-if(!entry){
-    return <div className="container"><p>Song not found. <Link to="/">Back</Link></p></div>
+  if(!entry){
+    return (
+      <div className="container">
+        {helmet}
+        <p>Song not found. <Link to="/">Back</Link></p>
+      </div>
+    )
   }
   if(err){
     return (
       <div className="container">
+        {helmet}
         <p style={{color:'#b91c1c'}}>Error: {err}</p>
         <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
       </div>
     )
   }
   if(!parsed){
-    return <div className="container"><p>Loading…</p></div>
+    return (
+      <div className="container">
+        {helmet}
+        <p>Loading…</p>
+      </div>
+    )
   }
 
   const slug = entry.filename.replace(/\.chordpro$/, '')
@@ -326,6 +385,7 @@ if(!entry){
 
   return (
     <div className="container" style={isNarrow ? { paddingBottom: 'calc(84px + var(--safe-b))' } : undefined}>
+      {helmet}
       <Busy busy={busy} />
       <div className="songpage__top">
         <div style={{flex:1}}>

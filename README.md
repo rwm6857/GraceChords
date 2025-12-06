@@ -60,6 +60,11 @@ Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when de
 
 Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
 
+## SEO & Sitemaps
+- Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in `src/components/Home.jsx` and `src/components/SongView.jsx`).
+- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with main hash routes and all song/resource URLs).
+- `public/sitemap.xml` and `public/robots.txt` are served from the site root on GitHub Pages; keep both committed.
+
 ## Worship/Perform Mode
 Full‑screen, minimal UI optimized for live performance.
 
