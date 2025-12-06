@@ -418,27 +418,27 @@ export default function SongView(){
       <Busy busy={busy} />
       <div className="songpage__top">
         <div style={{flex:1}}>
-          <h1 className="songpage__title">{title}</h1>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+            <h1 className="songpage__title" style={{ margin:0 }}>{title}</h1>
+            {isIcpSong && (
+              <span
+                className="songpage__meta"
+                style={{
+                  fontSize: '0.85rem',
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  border: '1px solid #e5e7eb',
+                  background: '#f9fafb',
+                  color: '#6b7280',
+                  whiteSpace: 'nowrap',
+                  marginLeft: 'auto'
+                }}
+              >
+                InterCP All Nations Worship
+              </span>
+            )}
+          </div>
           <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
-          {isIcpSong && (
-            <div
-              className="songpage__meta"
-              style={{
-                marginTop: 4,
-                fontSize: '0.9rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 8px',
-                borderRadius: 6,
-                background: '#e5e7eb',
-                color: '#374151'
-              }}
-            >
-              <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>ICP</span>
-              <span>InterCP International (ICP)</span>
-            </div>
-          )}
         </div>
       </div>
 
