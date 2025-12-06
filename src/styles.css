@@ -694,10 +694,10 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   pointer-events: none;
 }
 [data-theme="dark"] .home-hero::after{
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 60%, var(--bg) 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 70%, var(--bg) 100%);
 }
 [data-theme="light"] .home-hero::after{
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 60%, var(--bg) 100%);
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 70%, var(--bg) 100%);
 }
 .home-hero__overlay{
   position: absolute;
@@ -707,7 +707,15 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   pointer-events: none;
 }
 [data-theme="light"] .home-hero__overlay{
-  background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0) 75%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.1) 15%,
+    rgba(0,0,0,0.45) 45%,
+    rgba(0,0,0,0.3) 65%,
+    rgba(0,0,0,0.15) 85%,
+    rgba(0,0,0,0) 100%
+  );
 }
 .home-hero__content{
   position: relative;
@@ -735,6 +743,11 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
 }
 [data-theme="light"] .home-hero__helper{
   color: rgba(0,0,0,0.65);
+}
+[data-theme="light"] .home-hero__content h1,
+[data-theme="light"] .home-hero__subtitle,
+[data-theme="light"] .home-hero__helper{
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 .home-hero__suggestions{
   margin-top: 0;
