@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Link, Outlet } from 'react-router-dom'
-import Home from './components/Home'
+import HomeDashboard from './pages/HomeDashboard'
 import Songs from './components/Songs'
 import SongView from './components/SongView'
 import Admin from './components/Admin'
@@ -25,7 +25,7 @@ export default function App(){
       <React.Suspense fallback={<div className="container"><h3>Loading...</h3></div>}>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />
             <Route path="/about" element={<About />} />
             <Route path="/song/:id" element={<SongView />} />

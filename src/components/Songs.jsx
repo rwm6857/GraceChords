@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
 import { compareSongsByTitle } from '../utils/sort'
@@ -14,6 +14,8 @@ const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churc
 
 export default function Songs(){
   const itemsRaw = indexData?.items || []
+  const [searchParams] = useSearchParams()
+  const initialQ = searchParams.get('q') || ''
   const items = useMemo(() => {
     const seen = new Set()
     const out = []
@@ -26,7 +28,7 @@ export default function Songs(){
   }, [itemsRaw])
 
   // -------- Search & filters --------
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState(initialQ)
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
   const qLower = q.trim().toLowerCase()
@@ -216,6 +218,12 @@ export default function Songs(){
       setActiveIndex(-1)
     }
   }, [results])
+
+  // Sync query param -> input when it changes (e.g., from /songs?q=term navigation)
+  useEffect(() => {
+    const nextQ = searchParams.get('q') || ''
+    setQ(nextQ)
+  }, [searchParams])
 
   useEffect(() => {
     function onKeyDown(e){
