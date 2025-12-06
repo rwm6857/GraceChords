@@ -162,8 +162,8 @@ export default function HomeDashboard(){
             }}
           >
             <div style={{ maxWidth: 720, padding: '0 6px' }}>
-              <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 36px)' }}>Welcome to GraceChords</h1>
-              <p className="home-hero__subtitle" style={{ fontSize: '1.05rem' }}>
+              <h1 style={{ marginBottom: 8, fontSize: 'clamp(28px, 4vw, 40px)' }}>Welcome to GraceChords</h1>
+              <p className="home-hero__subtitle" style={{ fontSize: '1.1rem' }}>
                 Free, open-source worship tools for churches and worshippers.
               </p>
             </div>
