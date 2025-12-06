@@ -104,7 +104,7 @@ export default function Navbar(){
         </button>
         <div className="gc-navlinks">
           <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Home</Link>
-          <Link to="/about" className={`gc-navlink ${isActive('/about') ? 'active':''}`} style={isActive('/about') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>About</Link>
+          <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`} style={isActive('/songs') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songs</Link>
           <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../Setlist')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Setlist</Link>
           <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../Songbook')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songbook</Link>
           <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Resources</Link>
@@ -135,7 +135,7 @@ export default function Navbar(){
           <nav className="gc-drawer__panel" role="navigation" aria-label="Mobile menu">
             <div className="gc-drawer__links">
               <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
-              <Link to="/about" onClick={closeDrawer} className={`gc-navlink ${isActive('/about') ? 'active':''}`}>About</Link>
+              <Link to="/songs" onClick={closeDrawer} className={`gc-navlink ${isActive('/songs') ? 'active':''}`}>Songs</Link>
               <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
               <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
               <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>

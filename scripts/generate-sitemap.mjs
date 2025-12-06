@@ -9,6 +9,7 @@ const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.j
 
 const staticRoutes = [
   '/#/about',
+  '/#/songs',
   '/#/setlist',
   '/#/songbook',
   '/#/resources',

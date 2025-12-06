@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route, Link, Outlet } from 'react-router-dom'
 import Home from './components/Home'
+import Songs from './components/Songs'
 import SongView from './components/SongView'
 import Admin from './components/Admin'
 const Setlist = React.lazy(() => import('./components/Setlist'))
@@ -25,6 +26,7 @@ export default function App(){
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/songs" element={<Songs />} />
             <Route path="/about" element={<About />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
