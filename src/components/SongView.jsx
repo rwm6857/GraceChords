@@ -421,8 +421,22 @@ export default function SongView(){
           <h1 className="songpage__title">{title}</h1>
           <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
           {isIcpSong && (
-            <div className="songpage__meta" style={{ marginTop: 4, fontSize: '0.9rem', color: '#2563eb' }}>
-              InterCP International (ICP) worship song
+            <div
+              className="songpage__meta"
+              style={{
+                marginTop: 4,
+                fontSize: '0.9rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 8px',
+                borderRadius: 6,
+                background: '#e5e7eb',
+                color: '#374151'
+              }}
+            >
+              <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>ICP</span>
+              <span>InterCP International (ICP)</span>
             </div>
           )}
         </div>

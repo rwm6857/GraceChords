@@ -62,7 +62,8 @@ Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
 
 ## SEO & Sitemaps
 - Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in `src/components/Home.jsx` and `src/components/SongView.jsx`).
-- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with main hash routes and all song/resource URLs).
+- Song pages tagged `ICP` get an InterCP-specific meta extension (description/keywords/JSON-LD) plus a visible badge on the page.
+- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with main hash routes and all song/resource/resource detail URLs).
 - `public/sitemap.xml` and `public/robots.txt` are served from the site root on GitHub Pages; keep both committed.
 
 ## Worship/Perform Mode

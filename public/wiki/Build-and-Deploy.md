@@ -5,6 +5,7 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 - GitHub Actions commit the built `docs/` back to `main`
 - Adding songs/resources updates indices automatically
 - Wiki content lives in this repo under `public/wiki/` and syncs to the GitHub Wiki
+- SEO assets (sitemap/robots) live in `public/`; regenerate sitemap with `npm run generate:sitemap`
 
 ## Workflows
 
@@ -47,4 +48,3 @@ npm run preview # http://localhost:4173
 Commits to `docs/` are made by CI. Push source changes and let workflows update `docs/`.
 
 [[Project-Structure]] [[Release-Checklist]]
-
