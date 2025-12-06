@@ -30,8 +30,29 @@ function buildSongSeo(entry, parsed, id){
   const titleRaw = (parsed?.meta?.title || entry?.title || routeSlug || 'Song') || 'Song'
   const title = String(titleRaw).trim() || 'Song'
   const pageTitle = `${title} – Chord Sheet & Lyrics | GraceChords`
-  const description = `Free worship chord sheet and lyrics for "${title}". Transposable, printable, and formatted for worship teams at GraceChords.`
-  const keywords = `${title} chords, ${title} lyrics, worship chord chart, GraceChords`
+  const tags = Array.isArray(entry?.tags) ? entry.tags : []
+  const isIcpSong = tags.some(t => (String(t || '')).toLowerCase() === 'icp')
+  const descriptionBase = `Free worship chord sheet and lyrics for "${title}". Transposable, printable, and formatted for worship teams at GraceChords.`
+  const description = isIcpSong
+    ? `${descriptionBase} Frequently used in InterCP International (ICP) worship and missions contexts.`
+    : descriptionBase
+  const keywordParts = [
+    `${title} chords`,
+    `${title} lyrics`,
+    'worship chord chart',
+    'GraceChords'
+  ]
+  if (isIcpSong) {
+    keywordParts.push(
+      `${title} ICP`,
+      `${title} InterCP`,
+      `${title} Intercorp`,
+      `${title} InterCP International`,
+      'InterCP worship',
+      'ICP worship song'
+    )
+  }
+  const keywords = keywordParts.join(', ')
   const url = `${SITE_URL}/#/song/${encodeURIComponent(routeSlug)}`
   const authors = Array.isArray(entry?.authors) ? entry.authors.filter(Boolean) : []
   const names = authors.length ? authors.join(', ') : ''
@@ -48,7 +69,14 @@ function buildSongSeo(entry, parsed, id){
     ld.lyricist = names
     ld.composer = names
   }
-  return { pageTitle, description, keywords, url, ld, ogImage: OG_IMAGE_URL }
+  if (isIcpSong) {
+    ld.isPartOf = {
+      '@type': 'Organization',
+      name: 'InterCP International',
+      alternateName: ['InterCP', 'Intercorp', 'ICP']
+    }
+  }
+  return { pageTitle, description, keywords, url, ld, ogImage: OG_IMAGE_URL, isIcpSong }
 }
 
 export default function SongView(){
@@ -76,6 +104,7 @@ export default function SongView(){
   })
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
+  const isIcpSong = !!songSeo.isIcpSong
 
 
   useEffect(() => {
@@ -391,6 +420,11 @@ export default function SongView(){
         <div style={{flex:1}}>
           <h1 className="songpage__title">{title}</h1>
           <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
+          {isIcpSong && (
+            <div className="songpage__meta" style={{ marginTop: 4, fontSize: '0.9rem', color: '#2563eb' }}>
+              InterCP International (ICP) worship song
+            </div>
+          )}
         </div>
       </div>
 
