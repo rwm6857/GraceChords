@@ -168,90 +168,92 @@ export default function HomeDashboard(){
               </p>
             </div>
           <div className="home-hero__search-wrapper" style={{ maxWidth: 720, position: 'relative' }} ref={containerRef}>
-            <label
-              htmlFor="home-search"
-              style={{
-                position: 'absolute',
-                width: 1,
-                height: 1,
-                padding: 0,
-                margin: -1,
-                overflow: 'hidden',
-                clip: 'rect(0,0,0,0)',
-                whiteSpace: 'nowrap',
-                border: 0
-              }}
-            >
-              Search worship songs
-            </label>
-            <input
-              id="home-search"
-              type="search"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true) }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={onBlur}
-              onKeyDown={handleKeyDown}
-              placeholder="Search songs by title, tag, or author…"
-              aria-autocomplete="list"
-              aria-expanded={showSuggestions && suggestions.length > 0}
-              aria-controls="home-search-suggestions"
-              aria-activedescendant={activeIndex >= 0 ? `home-sugg-${activeIndex}` : undefined}
-              style={{
-                width: '100%',
-                padding: '14px 14px',
-                borderRadius: 12,
-                border: '1px solid rgba(148,163,184,0.5)',
-                background: 'rgba(17,24,39,0.85)',
-                color: '#f8fafc',
-                fontSize: '1rem',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.25)'
-              }}
-            />
-            {showSuggestions && suggestions.length > 0 && (
-              <ul
-                id="home-search-suggestions"
-                role="listbox"
-                className="home-hero__suggestions"
+            <div className="home-hero__input-wrap">
+              <label
+                htmlFor="home-search"
                 style={{
                   position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: 'rgba(17,24,39,0.95)',
-                  border: '1px solid rgba(148,163,184,0.5)',
-                  borderRadius: '0 0 10px 10px',
-                  boxShadow: '0 14px 32px rgba(0,0,0,0.32)',
+                  width: 1,
+                  height: 1,
+                  padding: 0,
+                  margin: -1,
                   overflow: 'hidden',
-                  zIndex: 6
+                  clip: 'rect(0,0,0,0)',
+                  whiteSpace: 'nowrap',
+                  border: 0
                 }}
               >
-                {suggestions.map((s, i) => (
-                  <li
-                    key={s.id}
-                    id={`home-sugg-${i}`}
-                    role="option"
-                    aria-selected={i === activeIndex}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleNavigateToSong(s.id)}
-                    onMouseEnter={() => setActiveIndex(i)}
-                    style={{
-                      padding: '10px 12px',
-                      cursor: 'pointer',
-                      background: i === activeIndex ? 'rgba(59,130,246,0.16)' : 'transparent',
-                      color: '#e2e8f0',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 8
-                    }}
-                  >
-                    <span>{s.title}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{s.originalKey || ''}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+                Search worship songs
+              </label>
+              <input
+                id="home-search"
+                type="search"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true) }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={onBlur}
+                onKeyDown={handleKeyDown}
+                placeholder="Search songs by title, tag, or author…"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions && suggestions.length > 0}
+                aria-controls="home-search-suggestions"
+                aria-activedescendant={activeIndex >= 0 ? `home-sugg-${activeIndex}` : undefined}
+                style={{
+                  width: '100%',
+                  padding: '14px 14px',
+                  borderRadius: 12,
+                  border: '1px solid rgba(148,163,184,0.5)',
+                  background: 'rgba(17,24,39,0.85)',
+                  color: '#f8fafc',
+                  fontSize: '1rem',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.25)'
+                }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <ul
+                  id="home-search-suggestions"
+                  role="listbox"
+                  className="home-hero__suggestions"
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(17,24,39,0.95)',
+                    border: '1px solid rgba(148,163,184,0.5)',
+                    borderRadius: '0 0 10px 10px',
+                    boxShadow: '0 14px 32px rgba(0,0,0,0.32)',
+                    overflow: 'hidden',
+                    zIndex: 6
+                  }}
+                >
+                  {suggestions.map((s, i) => (
+                    <li
+                      key={s.id}
+                      id={`home-sugg-${i}`}
+                      role="option"
+                      aria-selected={i === activeIndex}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleNavigateToSong(s.id)}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      style={{
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        background: i === activeIndex ? 'rgba(59,130,246,0.16)' : 'transparent',
+                        color: '#e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <span>{s.title}</span>
+                      <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{s.originalKey || ''}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <div className="home-hero__helper" style={{ marginTop: 10, fontSize: '0.95rem' }}>
               Search songs by title, tag, or author. Press Enter to browse or jump directly into a song.
             </div>
