@@ -1,5 +1,6 @@
 // src/components/Songbook.jsx
 import { useMemo, useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -31,6 +32,8 @@ export default function Songbook() {
     for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
     return uniq.slice().sort(byTitle)
   }, [])
+
+  const location = useLocation()
 
   // Search (match Setlist semantics).
   const [q, setQ] = useState('')
@@ -80,6 +83,15 @@ export default function Songbook() {
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '')
+    const tagsParam = params.get('tags')
+    if (!tagsParam) return
+    const tags = tagsParam.split(',').map(t => t.trim()).filter(Boolean)
+    if (!tags.length) return
+    setQ(tags.join(' '))
+  }, [location.search])
 
   async function handleExport() {
     if (!selectedEntries.length) return

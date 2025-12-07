@@ -66,6 +66,28 @@ export default function HomeDashboard(){
     setShowSuggestions(false)
   }
 
+  function handleRandomSong(){
+    const arr = items || []
+    if (!arr.length) return
+    const choice = arr[Math.floor(Math.random() * arr.length)]
+    if (!choice) return
+    const slug = choice.id || (choice.filename ? choice.filename.replace(/\.chordpro$/i, '') : '')
+    if (!slug) return
+    navigate(`/song/${slug}`)
+  }
+
+  function handleIcpSet(){
+    navigate('/setlist?icp=1')
+  }
+
+  function handleThrowbackSongbook(){
+    navigate('/songbook?tags=oldie,hymn')
+  }
+
+  function handleContribute(){
+    try { window.open('https://github.com/rwm6857/GraceChords', '_blank') } catch {}
+  }
+
   function findExactMatch(term){
     const q = term.trim().toLowerCase()
     if (!q) return null
@@ -280,21 +302,52 @@ export default function HomeDashboard(){
           </div>
         </div>
       </section>
+
+      <section className="home-quick-actions" style={{ marginTop: 8, marginBottom: 40 }}>
+        <div className="container" style={{ padding: '0 12px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
+            <h2 style={{ margin: 0 }}>Quick actions</h2>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gap: 16,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
+            }}
+          >
+            <QuickCard title="Random Song" desc="Learn a new song today." onClick={handleRandomSong} />
+            <QuickCard title="Create an InterCP Set" desc="For Camps, World Mission, and Vision School." onClick={handleIcpSet} />
+            <QuickCard title="Make a Throwback Songbook" desc="Bring back the youth group nostalgia." onClick={handleThrowbackSongbook} />
+            <QuickCard title="Contribute" desc="Download source code, suggest a feature, or report a bug." onClick={handleContribute} />
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
 
-function QuickCard({ to, title, desc }){
-  return (
-    <Link
-      to={to}
-      className="card tool-card"
-    >
+function QuickCard({ to, title, desc, onClick }){
+  const isLink = !!to
+  const props = {
+    className: 'card tool-card',
+    onClick: onClick ? (e) => { e.preventDefault(); onClick() } : undefined
+  }
+  if (isLink) return (
+    <Link to={to} {...props}>
       <div className="tool-card__head">
         <h3 className="tool-card__title">{title}</h3>
         <span aria-hidden="true" className="tool-card__chevron">→</span>
       </div>
       <p className="tool-card__desc">{desc}</p>
     </Link>
+  )
+  return (
+    <button type="button" {...props} style={{ textAlign:'left' }}>
+      <div className="tool-card__head">
+        <h3 className="tool-card__title">{title}</h3>
+        <span aria-hidden="true" className="tool-card__chevron">→</span>
+      </div>
+      <p className="tool-card__desc">{desc}</p>
+    </button>
   )
 }

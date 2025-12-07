@@ -200,6 +200,11 @@ export default function Setlist(){
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '')
+    if (params.get('icp') === '1') setIcpOnly(true)
+  }, [location.search])
+
   // search
   const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
   function icpPass(s){ return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP') }
