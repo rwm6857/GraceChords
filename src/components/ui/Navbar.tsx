@@ -89,7 +89,20 @@ export default function Navbar(){
     <>
       <nav className="gc-navbar" ref={navRef as any}>
         <div className="gc-navbar__inner">
-        <Link to="/" className="gc-brand">GraceChords</Link>
+        <Link to="/" className="gc-brand" aria-label="GraceChords home">
+          {/* Wide logo for tablet/desktop */}
+          <img
+            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+            alt="GraceChords"
+            className="gc-brand__logo gc-brand__logo--wide"
+          />
+          {/* Square logo for mobile */}
+          <img
+            src={isDark ? '/gc-brand-square-dark.svg' : '/gc-brand-square-light.svg'}
+            alt="GraceChords"
+            className="gc-brand__logo gc-brand__logo--square"
+          />
+        </Link>
         {/* Hamburger on mobile/tablet */}
         <button
           ref={btnRef as any}

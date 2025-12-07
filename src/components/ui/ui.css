@@ -47,7 +47,40 @@
   /* Navbar */
   .gc-navbar{ position:sticky; top:0; z-index:60; background: var(--card); backdrop-filter:saturate(180%) blur(8px); border-bottom:1px solid var(--line); }
   .gc-navbar__inner{ max-width:1200px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:8px }
-  .gc-brand{ font-family: "Oswald", sans-serif; font-weight:600; letter-spacing:.2px; color: var(--text); font-size: 1.4rem; }
+  .gc-brand{
+    display:flex;
+    align-items:center;
+    text-decoration:none;
+    font-family:"Oswald", sans-serif;
+    font-weight:600;
+    letter-spacing:.2px;
+    color: var(--text);
+    font-size:1.4rem;
+    height:32px;
+  }
+
+  .gc-brand__logo{
+    display:block;
+    height:100%;
+  }
+
+  /* Default: square logo on small screens */
+  .gc-brand__logo--square{
+    display:block;
+  }
+  .gc-brand__logo--wide{
+    display:none;
+  }
+
+  /* Tablet/desktop: show wide logo, hide square logo */
+  @media (min-width: 640px){
+    .gc-brand__logo--wide{
+      display:block;
+    }
+    .gc-brand__logo--square{
+      display:none;
+    }
+  }
   .gc-navlinks{ display:flex; gap:8px; align-items:center; }
   .gc-navlink{ padding:6px 10px; border-radius:8px; color: var(--text); -webkit-text-fill-color: currentColor; border:1px solid transparent; }
   .gc-navlink:hover{ background: var(--btn); }
