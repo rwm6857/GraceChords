@@ -22,6 +22,7 @@ import KeySelector from './KeySelector'
 import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import PageContainer from './layout/PageContainer'
+import { filterByTag, pickManyRandom, pickRandom } from '../utils/quickActions'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -70,6 +71,7 @@ export default function Setlist(){
   const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
   const originalHtmlOverflow = useRef('')
   const originalBodyOverflow = useRef('')
+  const quickAppliedRef = useRef(false)
 
   // named sets
   const [currentId, setCurrentId] = useState(null)
@@ -205,6 +207,17 @@ export default function Setlist(){
     if (params.get('icp') === '1') setIcpOnly(true)
   }, [location.search])
 
+  useEffect(() => {
+    if (quickAppliedRef.current) return
+    const quick = location.state?.quickAction
+    if (!quick) return
+    if (!items.length) return
+    applyQuickAction(quick, items)
+    quickAppliedRef.current = true
+    navigate(location.pathname + (location.search || ''), { replace: true, state: null })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, items.map(s => s.id).join('|')])
+
   // search
   const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
   function icpPass(s){ return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP') }
@@ -244,6 +257,89 @@ export default function Setlist(){
       copy.splice(dstIndex, 0, item)
       return copy
     })
+  }
+
+  function applyQuickAction(key, songs){
+    if (!key) return
+    function addList(entries){
+      if (!entries || !entries.length) return
+      setList(hydrateSelections(entries.map(e => ({ id: e.id, toKey: e.toKey }))))
+    }
+
+    function songToEntry(song){
+      if (!song) return null
+      return { id: song.id, toKey: song.originalKey || song.key || 'C' }
+    }
+
+    function uniquePool(pool, usedIds){
+      return pool.filter((s) => s && !usedIds.has(s.id))
+    }
+
+    function chooseRandom(pool, usedIds){
+      const filtered = uniquePool(pool, usedIds)
+      const pick = filtered.length ? pickRandom(filtered) : null
+      if (pick) usedIds.add(pick.id)
+      return pick
+    }
+
+    function buildCelebrationSet(){
+      const fast = filterByTag(songs, 'FAST')
+      const out = []
+      const used = new Set()
+      const primary = fast.length >= 4 ? pickManyRandom(fast, 4) : fast.slice()
+      primary.forEach((s) => { if (s) used.add(s.id); out.push(s) })
+      if (out.length < 4){
+        const filler = pickManyRandom(uniquePool(songs, used), Math.min(4 - out.length, Math.max(0, songs.length - out.length)))
+        out.push(...filler)
+      }
+      return out.filter(Boolean).map(songToEntry).filter(Boolean).slice(0, 4)
+    }
+
+    function buildThreeSongFlow(){
+      const used = new Set()
+      const slow = filterByTag(songs, 'SLOW')
+      const slowKey = (key) => slow.filter((s) => (s?.originalKey || '').toUpperCase() === key.toUpperCase())
+      const fast = filterByTag(songs, 'FAST')
+
+      const first = chooseRandom(slowKey('G'), used) || chooseRandom(slow, used) || chooseRandom(songs, used)
+      const second = chooseRandom(fast, used) || chooseRandom(songs, used)
+      const third = chooseRandom(slowKey('A'), used) || chooseRandom(slow, used) || chooseRandom(songs, used)
+
+      return [first, second, third].filter(Boolean).map(songToEntry).filter(Boolean)
+    }
+
+    function buildRandomThemeSet(){
+      const themes = ['CROSS', 'COMMITMENT', 'MISSION', 'MISSIONS', 'PRAISE', 'HYMN']
+      const theme = pickRandom(themes)
+      const matches = filterByTag(songs, theme)
+      const used = new Set()
+      const out = []
+      if (matches.length >= 4){
+        out.push(...pickManyRandom(matches, 4))
+      } else if (matches.length >= 2){
+        out.push(...pickManyRandom(matches, Math.min(4, matches.length)))
+      } else if (matches.length){
+        out.push(...matches)
+      }
+      out.forEach((s) => s && used.add(s.id))
+      const need = Math.max(0, 2 - out.length)
+      if (need > 0){
+        const filler = pickManyRandom(uniquePool(songs, used), Math.min(need, songs.length - out.length))
+        out.push(...filler)
+      }
+      if (out.length < 4){
+        const more = pickManyRandom(uniquePool(songs, used), Math.min(4 - out.length, songs.length - out.length))
+        out.push(...more)
+      }
+      return out.filter(Boolean).map(songToEntry).filter(Boolean).slice(0, 4)
+    }
+
+    let entries = []
+    if (key === 'celebrationSet') entries = buildCelebrationSet()
+    else if (key === 'threeSongFlow') entries = buildThreeSongFlow()
+    else if (key === 'randomThemeSet') entries = buildRandomThemeSet()
+
+    if (entries.length) addList(entries)
   }
   function changeKey(uid, val){
     setList(prev => prev.map(x => x.uid === uid ? { ...x, toKey: val } : x))

@@ -1,6 +1,6 @@
 // src/components/Songbook.jsx
-import { useMemo, useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -16,6 +16,7 @@ import Toolbar from './ui/Toolbar'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/songbook.css'
 import PageContainer from './layout/PageContainer'
+import { filterByTag, pickManyRandom } from '../utils/quickActions'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -34,6 +35,8 @@ export default function Songbook() {
   }, [])
 
   const location = useLocation()
+  const navigate = useNavigate()
+  const quickAppliedRef = useRef(false)
 
   // Search (match Setlist semantics).
   const [q, setQ] = useState('')
@@ -72,6 +75,34 @@ export default function Songbook() {
     setSelectedIds(new Set())
   }
 
+  function applyQuickAction(key, songs){
+    if (!key) return
+    const all = songs || []
+    const toIds = (list) => new Set(list.map((s) => s.id))
+    if (key === 'random10SongCollection'){
+      const count = Math.min(10, all.length)
+      const picks = count === all.length ? all : pickManyRandom(all, count)
+      setSelectedIds(toIds(picks))
+      return
+    }
+    if (key === 'sendMeSongbook'){
+      const tags = ['NATION', 'NATIONS', 'MISSION', 'MISSIONS', 'ICP']
+      const matches = all.filter((song) => tags.some((t) => filterByTag([song], t).length))
+      if (matches.length){
+        matches.sort(byTitle)
+        setSelectedIds(toIds(matches))
+      } else {
+        const fallback = pickManyRandom(all, Math.min(5, all.length))
+        setSelectedIds(toIds(fallback))
+      }
+      return
+    }
+    if (key === 'graceChordsSongbook'){
+      const sorted = all.slice().sort(byTitle)
+      setSelectedIds(toIds(sorted))
+    }
+  }
+
   // Export
   const [cover, setCover] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -101,6 +132,17 @@ export default function Songbook() {
       return next
     })
   }, [location.search, items])
+
+  useEffect(() => {
+    if (quickAppliedRef.current) return
+    const quick = location.state?.quickAction
+    if (!quick) return
+    if (!items.length) return
+    applyQuickAction(quick, items)
+    quickAppliedRef.current = true
+    navigate(location.pathname + (location.search || ''), { replace: true, state: null })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, items.map(s => s.id).join('|')])
 
   async function handleExport() {
     if (!selectedEntries.length) return

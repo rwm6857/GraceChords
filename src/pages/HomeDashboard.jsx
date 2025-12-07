@@ -5,6 +5,7 @@ import indexData from '../data/index.json'
 import heroDark from '../assets/dashboard-hero-worship-angled.png'
 import heroLight from '../assets/dashboard-hero-worship-angled-light.png'
 import { currentTheme } from '../utils/theme'
+import { filterByTag, pickRandom } from '../utils/quickActions'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -66,26 +67,84 @@ export default function HomeDashboard(){
     setShowSuggestions(false)
   }
 
-  function handleRandomSong(){
-    const arr = items || []
-    if (!arr.length) return
-    const choice = arr[Math.floor(Math.random() * arr.length)]
-    if (!choice) return
-    const slug = choice.id || (choice.filename ? choice.filename.replace(/\.chordpro$/i, '') : '')
+  function sectionCount(song){
+    if (Array.isArray(song?.sections)) return song.sections.length
+    if (typeof song?.sectionCount === 'number') return song.sectionCount
+    return 0
+  }
+
+  // Quick action definitions (one picked per load for each type)
+  const songViewQuickActions = useMemo(() => ([
+    {
+      id: 'songOfDay',
+      title: 'Song of the Day',
+      desc: 'Join others in daily worship.',
+      pickSong: (songs) => {
+        if (!songs.length) return null
+        const seed = Number(new Date().toISOString().slice(0,10).replace(/-/g,'')) || 0
+        return songs[seed % songs.length] || null
+      }
+    },
+    {
+      id: 'quietTime',
+      title: 'Quiet Time',
+      desc: 'Start the day with word and worship.',
+      pickSong: (songs) => {
+        const slow = filterByTag(songs, 'SLOW')
+        const shortSlow = slow.filter((s) => sectionCount(s) <= 3)
+        const pool = shortSlow.length ? shortSlow : (slow.length ? slow : songs)
+        return pickRandom(pool)
+      }
+    },
+    {
+      id: 'highEnergy',
+      title: 'High Energy Hit',
+      desc: 'Lift up a shout of praise!',
+      pickSong: (songs) => {
+        const fast = filterByTag(songs, 'FAST')
+        const pool = fast.length ? fast : songs
+        return pickRandom(pool)
+      }
+    }
+  ]), [])
+
+  const setlistQuickActions = useMemo(() => ([
+    { id: 'celebrationSet', title: 'Celebration Set', desc: 'End with praise that shakes the earth!' },
+    { id: 'threeSongFlow', title: 'Build a 3-Song Flow', desc: 'Let the Spirit lead.' },
+    { id: 'randomThemeSet', title: 'Random Theme Set', desc: "Cross? Missions? Commitment? Let's see..." }
+  ]), [])
+
+  const songbookQuickActions = useMemo(() => ([
+    { id: 'random10SongCollection', title: 'Random 10-Song Collection', desc: 'Surprise me!' },
+    { id: 'sendMeSongbook', title: '"Send Me" Songbook', desc: 'Make a missions theme\'d song book.' },
+    { id: 'graceChordsSongbook', title: 'GraceChords Songbook', desc: 'Our entire library in one printable book.' }
+  ]), [])
+
+  const [songAction] = useState(() => pickRandom(songViewQuickActions))
+  const [setlistAction] = useState(() => pickRandom(setlistQuickActions))
+  const [songbookAction] = useState(() => pickRandom(songbookQuickActions))
+
+  function handleSongAction(){
+    if (!songAction) return
+    const song = songAction.pickSong(items || [])
+    if (!song) return
+    const slug = song.id || (song.filename ? song.filename.replace(/\.chordpro$/i, '') : '')
     if (!slug) return
     navigate(`/song/${slug}`)
   }
 
-  function handleIcpSet(){
-    navigate('/setlist?icp=1')
+  function handleSetlistAction(){
+    if (!setlistAction) return
+    navigate('/setlist', { state: { quickAction: setlistAction.id } })
   }
 
-  function handleThrowbackSongbook(){
-    navigate('/songbook?tags=oldie,hymn')
+  function handleSongbookAction(){
+    if (!songbookAction) return
+    navigate('/songbook', { state: { quickAction: songbookAction.id } })
   }
 
   function handleContribute(){
-    try { window.open('https://github.com/rwm6857/GraceChords', '_blank') } catch {}
+    try { window.open('https://github.com/rwm6857/GraceChords', '_blank', 'noopener,noreferrer') } catch {}
   }
 
   function findExactMatch(term){
@@ -306,18 +365,19 @@ export default function HomeDashboard(){
       <section className="home-quick-actions" style={{ marginTop: 8, marginBottom: 40 }}>
         <div className="container" style={{ padding: '0 12px' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
-            <h2 style={{ margin: 0 }}>Quick actions</h2>
+            <h2 className="home-section-title" style={{ margin: 0 }}>Quick actions</h2>
           </div>
           <div
+            className="home-quick-actions__grid"
             style={{
               display: 'grid',
               gap: 16,
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
             }}
           >
-            <QuickCard title="Random Song" desc="Learn a new song today." onClick={handleRandomSong} />
-            <QuickCard title="Create an InterCP Set" desc="For Camps, World Mission, and Vision School." onClick={handleIcpSet} />
-            <QuickCard title="Make a Throwback Songbook" desc="Bring back the youth group nostalgia." onClick={handleThrowbackSongbook} />
+            {songAction ? <QuickCard title={songAction.title} desc={songAction.desc} onClick={handleSongAction} /> : null}
+            {setlistAction ? <QuickCard title={setlistAction.title} desc={setlistAction.desc} onClick={handleSetlistAction} /> : null}
+            {songbookAction ? <QuickCard title={songbookAction.title} desc={songbookAction.desc} onClick={handleSongbookAction} /> : null}
             <QuickCard title="Contribute" desc="Download source code, suggest a feature, or report a bug." onClick={handleContribute} />
           </div>
         </div>
