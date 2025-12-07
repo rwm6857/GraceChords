@@ -683,6 +683,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   align-items: flex-end;
   overflow: visible;
   z-index: 0;
+  background-position: center 40%;
 }
 .home-hero::after{
   content: '';
