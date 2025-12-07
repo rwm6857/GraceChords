@@ -273,9 +273,9 @@ export default function HomeDashboard(){
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
             }}
           >
-            <QuickCard to="/songs" title="Songs" desc="Browse our library for worship charts." />
-            <QuickCard to="/setlist" title="Setlist" desc="Create sets for service." />
-            <QuickCard to="/songbook" title="Songbook" desc="Build custom, printable songbooks." />
+            <QuickCard to="/songs" title="Song Library" desc="Browse our library for worship charts." />
+            <QuickCard to="/setlist" title="Setlist Builder" desc="Create sets for service." />
+            <QuickCard to="/songbook" title="Songbook Tool" desc="Build custom, printable songbooks." />
             <QuickCard to="/resources" title="Resources" desc="Guides and tips for worshippers." />
           </div>
         </div>
