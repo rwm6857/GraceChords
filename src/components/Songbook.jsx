@@ -277,25 +277,56 @@ export default function Songbook() {
 
       {/* Two-pane region */}
       <div className="BuilderPage" style={{ marginTop: 8 }}>
-        {/* Left pane */}
         <div className="BuilderLeft">
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight: 0 }}>
-            <div className="BuilderScroll pane--addSongs" style={{ minHeight: 0, flex:'1 1 auto', overflow:'auto', marginTop: 8 }}>
-              <div className="BuilderHeader" style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
-                <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
-                {/* ICP-only removed for Songbook */}
-                <Button onClick={selectAllFiltered} disabled={!filteredCount} title="Add all filtered" iconLeft={<PlusIcon />} variant="primary" style={{ marginLeft: 'auto' }}>
+          <section className="setlist-section songbook-add" data-role="add">
+            <div className="card setlist-pane">
+              <div
+                className={['BuilderHeader', 'section-header'].filter(Boolean).join(' ')}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <strong style={{ whiteSpace: 'nowrap' }}>Add songs</strong>
+                <Input
+                  value={q}
+                  onChange={e => setQ(e.target.value)}
+                  placeholder="Search..."
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <Button
+                  onClick={selectAllFiltered}
+                  disabled={!filteredCount}
+                  title="Add all filtered"
+                  iconLeft={<PlusIcon />}
+                  variant="primary"
+                  style={{ marginLeft: 'auto' }}
+                >
                   <span className="text-when-wide">Add all ({filteredCount})</span>
                   <span className="text-when-narrow">All</span>
                 </Button>
               </div>
-              <div className="SongList" role="region" aria-label="Song list" style={{ display:'flex', flexDirection:'column', minHeight:0, flex:'1 1 auto', marginTop: 6 }}>
-                <div className="gc-list" style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
+
+              <div
+                className={['BuilderScroll', 'setlist-scroll', 'pane--addSongs'].join(' ')}
+                style={{ minHeight: 0, flex: '1 1 auto', overflow: 'auto', marginTop: 6 }}
+                role="region"
+                aria-label="Song list"
+              >
+                <div
+                  className="gc-list"
+                  style={{
+                    display: 'grid',
+                    gap: '.5rem',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  }}
+                >
                   {results.map((s) => {
                     const checked = selectedIds.has(s.id)
-                    const authorsLine = Array.isArray(s.authors) ? s.authors.join(', ') : (s.authors || '')
-                    const subtitle = [authorsLine || '—', s.country].filter(Boolean).join(' • ')
+                    const authorsLine = Array.isArray(s.authors)
+                      ? s.authors.join(', ')
+                      : (s.authors || '')
+                    const subtitle = [authorsLine || '—', s.country]
+                      .filter(Boolean)
+                      .join(' • ')
+
                     return (
                       <SongCard
                         key={s.id}
@@ -303,9 +334,23 @@ export default function Songbook() {
                         subtitle={subtitle}
                         rightSlot={
                           checked ? (
-                            <Button aria-label="Remove" title="Remove" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, false) }} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                            <Button
+                              aria-label="Remove"
+                              title="Remove"
+                              onClick={(e) => { e.stopPropagation(); toggleOne(s.id, false) }}
+                              iconLeft={<MinusIcon />}
+                              iconOnly
+                              style={{ color: '#b91c1c' }}
+                            />
                           ) : (
-                            <Button aria-label="Add" title="Add" variant="primary" onClick={(e)=> { e.stopPropagation(); toggleOne(s.id, true) }} iconLeft={<PlusIcon />} iconOnly />
+                            <Button
+                              aria-label="Add"
+                              title="Add"
+                              variant="primary"
+                              onClick={(e) => { e.stopPropagation(); toggleOne(s.id, true) }}
+                              iconLeft={<PlusIcon />}
+                              iconOnly
+                            />
                           )
                         }
                         onClick={() => toggleOne(s.id, !checked)}
@@ -315,31 +360,35 @@ export default function Songbook() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
         {/* Right pane */}
         <div className="BuilderRight" style={{ minHeight: 0, display:'flex', flexDirection:'column' }}>
-          <div className="card" style={{ display:'flex', flexDirection:'column', flex:'1 1 auto', minHeight:0 }}>
-            <strong>Current selection ({selectedEntries.length})</strong>
-            <div
-              className="PreviewList pane--currentSet"
-              role="region"
-              aria-label="Selected songs"
-              style={{ minHeight: 0, flex:'1 1 auto', overflow: 'auto', marginTop: 6 }}
-            >
-              <ol className="List" style={{ listStyle: 'decimal inside', margin: 0, padding: 0 }}>
-                {selectedEntries.map((s) => (
-                  <li key={s.id}>
-                    {s.title}
-                    {Array.isArray(s.authors) && s.authors.length ? (
-                      <span className="Small"> — {s.authors.join(', ')}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ol>
+          <section className="setlist-section songbook-current" data-role="current">
+            <div className="card setlist-pane">
+              <div className="BuilderHeader section-header">
+                <strong>Current selection ({selectedEntries.length})</strong>
+              </div>
+              <div
+                className="BuilderScroll pane--currentSet"
+                role="region"
+                aria-label="Selected songs"
+                style={{ minHeight: 0, flex: '1 1 auto', overflow: 'auto', marginTop: 6 }}
+              >
+                <ol className="List" style={{ listStyle: 'decimal inside', margin: 0, padding: 0 }}>
+                  {selectedEntries.map((s) => (
+                    <li key={s.id}>
+                      {s.title}
+                      {Array.isArray(s.authors) && s.authors.length ? (
+                        <span className="Small"> — {s.authors.join(', ')}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </PageContainer>
