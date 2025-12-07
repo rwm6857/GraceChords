@@ -88,10 +88,19 @@ export default function Songbook() {
     const params = new URLSearchParams(location.search || '')
     const tagsParam = params.get('tags')
     if (!tagsParam) return
-    const tags = tagsParam.split(',').map(t => t.trim()).filter(Boolean)
+    const tags = tagsParam.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
     if (!tags.length) return
-    setQ(tags.join(' '))
-  }, [location.search])
+    const matches = items.filter((s) => {
+      const songTags = Array.isArray(s.tags) ? s.tags.map(t => String(t).toLowerCase()) : []
+      return songTags.some(t => tags.includes(t))
+    })
+    if (!matches.length) return
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      matches.forEach((s) => next.add(s.id))
+      return next
+    })
+  }, [location.search, items])
 
   async function handleExport() {
     if (!selectedEntries.length) return
