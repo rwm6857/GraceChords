@@ -12,10 +12,10 @@ import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
-import Toolbar from '../components/ui/Toolbar'
-import { CloudUploadIcon, PlusIcon, SearchIcon, TrashIcon } from '../components/Icons'
+import { CloudUploadIcon, PlusIcon, TrashIcon, SearchIcon } from '../components/Icons'
 import { showToast } from '../utils/toast'
 import '../styles/admin.css'
+import Toolbar from '../components/ui/Toolbar'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
 
@@ -202,13 +202,31 @@ function EditorPanel({ authorName }){
   }
 
   return (
-    <div className="container">
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap', marginBottom: 8 }}>
-        <div>
-          <h1 style={{ margin: 0 }}>GraceChords Editor</h1>
-          <div className="Small">Author: {authorName}</div>
+    <div className="container gc-editor">
+      <EditorHelpTabs activeTab={activeTab} />
+      <header className="gc-editor__header">
+        <div className="gc-editor__title">
+          <h1>GraceChords Editor</h1>
+          <span className="gc-editor__author">Author: {authorName}</span>
         </div>
-        <div className="Row Small" style={{ gap:8 }}>
+        <nav className="gc-editor__tabs" aria-label="Editor tabs">
+          <button
+            className={`gc-editor__tab ${activeTab==='songs' ? 'is-active' : ''}`}
+            onClick={()=> setActiveTab('songs')}
+          >
+            🎵 Songs
+          </button>
+          <button
+            className={`gc-editor__tab ${activeTab==='posts' ? 'is-active' : ''}`}
+            onClick={()=> setActiveTab('posts')}
+          >
+            📄 Posts
+          </button>
+        </nav>
+      </header>
+
+      <div className="card gc-editor__github">
+        <div className="Row Small" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
           <strong>GitHub:</strong>
           <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
           <button className="btn" onClick={setToken}>Set token</button>
@@ -217,24 +235,18 @@ function EditorPanel({ authorName }){
         </div>
       </div>
 
-      <div className="card" style={{ display:'flex', gap:8, marginBottom:12 }}>
-        <button className={`gc-btn ${activeTab==='songs' ? 'gc-btn--primary' : ''}`} onClick={()=> setActiveTab('songs')}>Songs</button>
-        <button className={`gc-btn ${activeTab==='posts' ? 'gc-btn--primary' : ''}`} onClick={()=> setActiveTab('posts')}>Posts</button>
-      </div>
-
       {activeTab === 'songs' ? (
         <SongsEditor onStageSong={onStageSong} />
       ) : (
         <PostsEditor onStagePost={onStagePost} />
       )}
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <section className="card gc-staged-card">
         <div className="Row" style={{ alignItems:'center', gap:8 }}>
-          <strong>Staged changes</strong>
-          <span className="Small">({staged.length})</span>
+          <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
           <div className="spacer" />
           <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
-          <Button className="gc-btn gc-btn--primary" onClick={openPrModal} disabled={!staged.length}>
+          <Button variant="primary" onClick={openPrModal} disabled={!staged.length}>
             <CloudUploadIcon /> Open PR
           </Button>
         </div>
@@ -273,7 +285,13 @@ function EditorPanel({ authorName }){
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
+
+      {staged.length > 0 && (
+        <button className="gc-staged-floating" onClick={openPrModal}>
+          Staged: {staged.length} – Review / Open PR
+        </button>
+      )}
 
       <AdminPrModal
         open={prOpen}
@@ -310,21 +328,51 @@ function SongsEditor({ onStageSong }){
     }
     return uniq
   }, [])
+
   const [editingFile, setEditingFile] = useState('')
-  const [loadId, setLoadId] = useState('')
-  async function loadExisting(){
-    const it = items.find(s => String(s.id) === String(loadId))
+  const [originalMeta, setOriginalMeta] = useState(null)
+  const [originalContent, setOriginalContent] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteReasonInput, setDeleteReasonInput] = useState('')
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    return items.filter(s => {
+      const title = String(s.title || '').toLowerCase()
+      const tags = (s.tags || []).map(t => String(t).toLowerCase()).join(' ')
+      const authors = (s.authors || []).map(a => String(a).toLowerCase()).join(' ')
+      return title.includes(q) || tags.includes(q) || authors.includes(q)
+    }).slice(0, 12)
+  }, [items, searchQuery])
+
+  async function handleSelectSong(it){
     if (!it) return
     try {
       const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
       const url = `${base}songs/${it.filename}`
       const body = await fetchTextCached(url)
-      if (body) setText(body)
-      setEditingFile(it.filename)
+      if (body) {
+        setText(body)
+        const loadedMeta = parseMeta(body)
+        const canonical = buildCanonical(body, loadedMeta, it.filename)
+        setEditingFile(it.filename)
+        setOriginalMeta(loadedMeta)
+        setOriginalContent(canonical?.content || '')
+        setSearchQuery('')
+      }
     } catch (e) {
       console.error(e)
       alert(`Failed to load ${it.filename}`)
     }
+  }
+
+  function handleNewSong(){
+    setEditingFile('')
+    setOriginalMeta(null)
+    setOriginalContent('')
+    setText(INITIAL_TEXT)
   }
 
   function insertAtCursor(snippet){
@@ -344,6 +392,15 @@ function SongsEditor({ onStageSong }){
         ta.setSelectionRange(pos, pos)
       } catch {}
     }, 0)
+  }
+
+  function insertSectionHeader(label){
+    const spec = {
+      Verse: { start: '{sov Verse}\n', end: '{eov}\n' },
+      Chorus: { start: '{soc Chorus}\n', end: '{eoc}\n' },
+      Bridge: { start: '{sob Bridge}\n', end: '{eob}\n' },
+    }[label] || { start: `{start_of_${label.toLowerCase()}}:\n`, end: `{end_of_${label.toLowerCase()}}\n` }
+    insertAtCursor(`${spec.start}${spec.end}`)
   }
 
   function majorScaleChordSet(keySym){
@@ -392,47 +449,52 @@ function SongsEditor({ onStageSong }){
     }
   }, [text])
   const quickChords = useMemo(() => majorScaleChordSet(resolveQuickChordMajor(meta.key || 'G')), [meta.key])
+  useEffect(() => {
+    function onKey(e){
+      if (deleteModalOpen) return
+      if (!e.altKey) return
+      const k = e.key
+      if (!/^([1-6])$/.test(k)) return
+      const idx = parseInt(k, 10) - 1
+      const sym = quickChords[idx]
+      if (sym) {
+        e.preventDefault()
+        insertAtCursor(`[${sym}]`)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [quickChords, deleteModalOpen])
 
-  const [changeSummary, setChangeSummary] = useState('')
-  const [deleteReason, setDeleteReason] = useState('')
-
-  function newSong(){
-    setEditingFile('')
-    setText(INITIAL_TEXT)
-    setLoadId('')
-    setChangeSummary('')
-    setDeleteReason('')
-  }
-
-  function buildSongFile(){
+  function buildCanonical(rawText = text, metaOverride = meta, filenameOverride = editingFile){
     try {
-      const { text: out, docTitle, docKey } = convertToCanonicalChordPro(text, {
-        country: meta.country || '',
-        tags: meta.tags || '',
-        youtube: meta.youtube || '',
-        mp3: meta.mp3 || ''
+      const { text: out, docTitle, docKey } = convertToCanonicalChordPro(rawText, {
+        country: metaOverride.country || '',
+        tags: metaOverride.tags || '',
+        youtube: metaOverride.youtube || '',
+        mp3: metaOverride.mp3 || ''
       })
-      const fname = editingFile || suggestCanonicalFilename(docTitle)
+      const fname = filenameOverride || suggestCanonicalFilename(docTitle)
       const final = appendDisclaimerIfMissing(out)
-      return { filename: fname, title: docTitle || meta.title || 'Untitled', content: final, key: docKey || meta.key || '' }
+      return { filename: fname, title: docTitle || metaOverride.title || 'Untitled', content: final, key: docKey || metaOverride.key || '' }
     } catch {}
 
     try {
-      const doc = parseChordProOrLegacy(text)
-      doc.meta.title = meta.title || doc.meta.title || ''
-      doc.meta.key = meta.key || doc.meta.key || ''
+      const doc = parseChordProOrLegacy(rawText)
+      doc.meta.title = metaOverride.title || doc.meta.title || ''
+      doc.meta.key = metaOverride.key || doc.meta.key || ''
       doc.meta.meta = {
         ...(doc.meta.meta || {}),
-        authors: meta.authors || doc.meta.meta?.authors || '',
-        country: meta.country || doc.meta.meta?.country || '',
-        tags: meta.tags || doc.meta.meta?.tags || '',
-        youtube: meta.youtube || doc.meta.meta?.youtube || '',
-        mp3: meta.mp3 || doc.meta.meta?.mp3 || '',
+        authors: metaOverride.authors || doc.meta.meta?.authors || '',
+        country: metaOverride.country || doc.meta.meta?.country || '',
+        tags: metaOverride.tags || doc.meta.meta?.tags || '',
+        youtube: metaOverride.youtube || doc.meta.meta?.youtube || '',
+        mp3: metaOverride.mp3 || doc.meta.meta?.mp3 || '',
       }
       let content = serializeChordPro(doc, { useDirectives: true })
       content = appendDisclaimerIfMissing(content)
-      const base = slugifyUnderscore(meta.id || doc.meta.title || 'untitled')
-      const fname = editingFile || `${base}.chordpro`
+      const base = slugifyUnderscore(metaOverride.id || doc.meta.title || 'untitled')
+      const fname = filenameOverride || `${base}.chordpro`
       return { filename: fname, title: doc.meta.title || 'Untitled', content, key: doc.meta.key || '' }
     } catch (e) {
       console.error(e)
@@ -440,68 +502,90 @@ function SongsEditor({ onStageSong }){
     }
   }
 
-  function stageAdd(){
-    const built = buildSongFile()
-    if (!built) return
-    if (editingFile) {
-      showToast?.('Use "Stage Edit" for existing songs.') ?? alert('Use "Stage Edit" for existing songs.')
-      return
-    }
-    onStageSong([{
-      kind: 'song',
-      action: 'add',
-      title: built.title,
-      filename: built.filename,
-      content: built.content,
-    }])
-  }
+  const strippedText = (text || '').replace(/\s+/g, '').replace(/\{[^}]*\}/g, '')
+  const canStage = Boolean((meta.title || '').trim() || strippedText)
+  const isExisting = !!editingFile
 
-  function stageEdit(){
-    if(!editingFile){
-      showToast?.('Load an existing song to stage an edit.') ?? alert('Load an existing song to stage an edit.')
+  function handleStageChanges(){
+    const built = buildCanonical()
+    if (!built) return
+
+    if (!isExisting) {
+      onStageSong([{
+        kind: 'song',
+        action: 'add',
+        title: built.title,
+        filename: built.filename,
+        content: built.content,
+      }])
+      handleNewSong()
       return
     }
-    const built = buildSongFile()
-    if (!built) return
+
+    const changedParts = []
+    if ((meta.title || '').trim() !== (originalMeta?.title || '').trim()) changedParts.push('Title')
+    const metaFields = ['authors','tags','key','country','youtube']
+    const metaChanged = metaFields.some(f => (meta[f] || '').trim() !== (originalMeta?.[f] || '').trim())
+    if (metaChanged) changedParts.push('Metadata')
+    if ((built.content || '') !== (originalContent || '')) changedParts.push('Content')
+    const changeSummary = changedParts.length ? changedParts.join(' + ') : 'Minor edit'
+
     onStageSong([{
       kind: 'song',
       action: 'edit',
       title: built.title,
-      filename: built.filename,
+      filename: editingFile,
       content: built.content,
-      changeSummary: changeSummary || '',
+      changeSummary,
     }])
+    handleNewSong()
   }
 
-  function stageDelete(){
-    if(!editingFile){
-      showToast?.('Load an existing song to request deletion.') ?? alert('Load an existing song to request deletion.')
-      return
-    }
+  function confirmDeletion(reason){
+    if (!editingFile) return
     onStageSong([{
       kind: 'song',
       action: 'delete-request',
       title: meta.title || 'Untitled',
       filename: editingFile,
-      deleteReason: deleteReason || '',
+      deleteReason: reason,
     }])
+    setDeleteReasonInput('')
+    setDeleteModalOpen(false)
+    handleNewSong()
   }
 
   return (
-    <div className="card">
-      <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
-        <strong>Load existing:</strong>
-        <select value={loadId} onChange={e=> setLoadId(e.target.value)}>
-          <option value="">— Choose a song —</option>
-          {items.map(s => (
-            <option key={s.id} value={s.id}>{s.title}</option>
-          ))}
-        </select>
-        <button className="btn" onClick={loadExisting} disabled={!loadId}>Load</button>
-        {editingFile && (
-          <span className="Small" style={{ marginLeft: 8 }}>
-            Editing: <code>{editingFile}</code>
-          </span>
+    <div className="card gc-song-editor">
+      <div className="gc-song-selector">
+        <Button onClick={handleNewSong} iconLeft={<PlusIcon />}>New Song</Button>
+        <div className="gc-song-selector__search">
+          <input
+            type="search"
+            placeholder="Search existing songs…"
+            value={searchQuery}
+            onChange={e=> setSearchQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && searchResults.length) {
+                e.preventDefault()
+                handleSelectSong(searchResults[0])
+              }
+            }}
+          />
+          {searchResults.length > 0 && (
+            <ul className="gc-song-selector__results">
+              {searchResults.map(song => (
+                <li key={song.id} onMouseDown={()=> handleSelectSong(song)}>
+                  {song.title}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {editingFile ? (
+          <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>Editing {editingFile}</span>
+        ) : (
+          <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>New song</span>
         )}
       </div>
 
@@ -550,32 +634,38 @@ function SongsEditor({ onStageSong }){
             placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/..."
           />
         </label>
+      </div>
 
-        <label>MP3 (URL or /media/…)
-          <input
-            value={meta.mp3||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'mp3', e.target.value))}
-          />
+      <div className="gc-editor-toolbar">
+        <div className="gc-quick-row">
+          <strong>Quick chords</strong>
+          <span className="Small">(Key: {meta.key || 'G'})</span>
+          {quickChords.map((sym, i) => (
+            <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
+          ))}
+        </div>
+        <div className="gc-quick-sections">
+          <span className="Small">Quick sections:</span>
+          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Verse')}>Verse</button>
+          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Chorus')}>Chorus</button>
+          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Bridge')}>Bridge</button>
+        </div>
+        <label className="gc-preview-toggle">
+          <input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview
         </label>
       </div>
 
-      <div className="Row" style={{ alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
-        <strong>Quick chords</strong>
-        <span className="Small">(Key: {meta.key || 'G'})</span>
-        {quickChords.map((sym, i) => (
-          <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
-        ))}
-      </div>
-
-      <div style={{display:'grid', gridTemplateColumns: showPreview ? '1fr 1fr' : '1fr', gap:10, marginTop:6}}>
-        <textarea
-          ref={editorRef}
-          value={text}
-          onChange={e=> setText(e.target.value)}
-          style={{width:'100%', minHeight:'60vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
-        />
+      <div className={`gc-editor-split ${showPreview ? '' : 'is-single'}`}>
+        <div className="gc-editor-pane gc-editor-pane--input">
+          <textarea
+            ref={editorRef}
+            value={text}
+            onChange={e=> setText(e.target.value)}
+            style={{width:'100%', minHeight:'60vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
+          />
+        </div>
         {showPreview && (
-          <div className='card' style={{minHeight:'60vh', overflow:'auto'}}>
+          <div className="gc-editor-pane gc-editor-pane--preview">
             <strong>Preview</strong>
             <div className="Small" style={{ marginTop:6, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
               {(() => {
@@ -619,45 +709,37 @@ function SongsEditor({ onStageSong }){
         )}
       </div>
 
-      <div className="Row Small" style={{gap:8, alignItems:'center', marginTop:10}}>
-        <span className="Small">Saves as .chordpro</span>
-        <label style={{marginLeft:'auto'}}><input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview</label>
+      <div className="gc-stage-actions">
+        <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
+          Add Changes
+        </Button>
+        {isExisting && (
+          <Button onClick={()=> setDeleteModalOpen(true)} iconLeft={<TrashIcon />}>
+            Request Deletion
+          </Button>
+        )}
+        <span className="Small" style={{ marginLeft: 'auto' }}>Files save as .chordpro</span>
       </div>
 
-      <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <button className="gc-btn" onClick={newSong}><PlusIcon /> New</button>
-          <button className="gc-btn" onClick={stageAdd} disabled={!!editingFile}><PlusIcon /> Stage Add</button>
+      {deleteModalOpen && (
+        <div className="modal">
+          <div className="modal-body">
+            <h3>Request Deletion</h3>
+            <label>Why should this song be removed?
+              <textarea
+                rows={3}
+                value={deleteReasonInput}
+                onChange={e=> setDeleteReasonInput(e.target.value)}
+                placeholder="Reason for deletion"
+              />
+            </label>
+            <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
+              <button className="btn" onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</button>
+              <button className="btn primary" onClick={()=> confirmDeletion(deleteReasonInput)} disabled={!deleteReasonInput.trim()}>Submit request</button>
+            </div>
+          </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span>Filename</span>
-            <input
-              readOnly
-              value={editingFile || (slugifyUnderscore(meta.id || meta.title || '') + '.chordpro')}
-              title={editingFile ? 'Editing existing file' : 'Suggested filename'}
-              style={{ width: 320 }}
-            />
-          </label>
-          {editingFile ? (
-            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">Editing</span>
-          ) : (
-            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }} title="New file will be created">New</span>
-          )}
-        </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span>What changed?</span>
-            <input value={changeSummary} onChange={e=> setChangeSummary(e.target.value)} placeholder="Metadata, key, content…" disabled={!editingFile} />
-          </label>
-          <button className="gc-btn gc-btn--primary" onClick={stageEdit} disabled={!editingFile}><SearchIcon /> Stage Edit</button>
-          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span>Removal reason</span>
-            <input value={deleteReason} onChange={e=> setDeleteReason(e.target.value)} placeholder="Why remove this song?" disabled={!editingFile} />
-          </label>
-          <button className="gc-btn gc-btn--primary" onClick={stageDelete} disabled={!editingFile}><TrashIcon /> Stage Deletion</button>
-        </div>
-      </Toolbar>
+      )}
     </div>
   )
 }
@@ -752,6 +834,88 @@ function PostsEditor({ onStagePost }){
         )
       }}
     />
+  )
+}
+
+function EditorHelpTabs({ activeTab }){
+  const [open, setOpen] = useState('')
+  const chordTabLabel = activeTab === 'posts' ? 'Resource Help' : 'ChordPro Help'
+
+  const tabs = [
+    {
+      id: 'editor',
+      label: 'Editor Help',
+      title: 'Editor Help',
+      content: (
+        <>
+          <p>Fill in metadata (title, key, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
+          <p>New Song + search lets you start fresh or load an existing song to edit.</p>
+        </>
+      ),
+    },
+    {
+      id: 'chordpro',
+      label: chordTabLabel,
+      title: chordTabLabel,
+      content: (
+        <>
+          {activeTab === 'posts' ? (
+            <p>Resources use Markdown with frontmatter (title, author, date, tags, summary) followed by body content.</p>
+          ) : (
+            <>
+              <p>Use chords in square brackets: <code>[G]</code>. Section headers use short codes like <code>{'{sov Verse}'}</code> … <code>{'{eov}'}</code>.</p>
+              <pre className="Small" style={{ whiteSpace:'pre-wrap' }}>{`{title: Example}
+{key: G}
+{sov Verse}
+[G]Amazing [C]grace
+{eov}`}</pre>
+            </>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'staging',
+      label: 'Staging Help',
+      title: 'Staging Help',
+      content: (
+        <>
+          <p>“Add Changes” stages the current song (new or edited) for the PR. Deletion requests log a reason without deleting files.</p>
+          <p>Use the floating staged pill or the table to review and open the PR.</p>
+        </>
+      ),
+    },
+  ]
+
+  const active = tabs.find(t => t.id === open)
+
+  return (
+    <div className="gc-help">
+      <div className="gc-help__tabs" aria-label="Help tabs">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            className={`gc-help__tab ${open === t.id ? 'is-open' : ''}`}
+            onClick={() => setOpen(open === t.id ? '' : t.id)}
+          >
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
+      {active && (
+        <div className="gc-help__drawer">
+          <div className="gc-help__drawer-inner">
+            <div className="Row" style={{ justifyContent:'space-between', alignItems:'center', gap:8 }}>
+              <strong>{active.title}</strong>
+              <button className="btn small" onClick={()=> setOpen('')}>Close</button>
+            </div>
+            <div className="gc-help__content Small">
+              {active.content}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
