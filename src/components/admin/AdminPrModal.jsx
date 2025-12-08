@@ -15,6 +15,12 @@ export default function AdminPrModal({
 
   const hasStructuredStaging = Array.isArray(staged) && staged.some(it => it?.action)
 
+  function ensurePostTag(title){
+    if (!title) return ''
+    const trimmed = title.trim()
+    return trimmed.endsWith('#post') ? trimmed : `${trimmed} #post`
+  }
+
   function buildDefaultTitle(){
     const now = new Date()
     if (hasStructuredStaging && authorName) {
@@ -23,7 +29,7 @@ export default function AdminPrModal({
       const yy = String(now.getFullYear()).slice(-2)
       const hh = String(now.getHours()).padStart(2, '0')
       const min = String(now.getMinutes()).padStart(2, '0')
-      return `Song/Resource Update - ${mm}${dd}${yy} ${hh}:${min} by ${authorName}`
+      return ensurePostTag(`Song/Resource Update - ${mm}${dd}${yy} ${hh}:${min} by ${authorName}`)
     }
     return `Add ${staged?.length || 0} files (${now.toISOString().slice(0,10)})`
   }
@@ -77,7 +83,8 @@ export default function AdminPrModal({
     if (!staged.length) return setError('No staged files.')
     if (!branchName.trim()) return setError('Branch name is required.')
     try {
-      await onCreate({ branchName: branchName.trim(), prTitle: prTitle.trim(), prBody })
+      const finalTitle = hasStructuredStaging ? ensurePostTag(prTitle) : prTitle
+      await onCreate({ branchName: branchName.trim(), prTitle: finalTitle.trim(), prBody })
     } catch (e) {
       setError(String(e?.message || e))
     }
