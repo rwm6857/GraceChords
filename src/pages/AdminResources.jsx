@@ -32,7 +32,7 @@ export default function AdminResources(){
   return <ResourceEditor />
 }
 
-export function ResourceEditor({ actions, onDraftChange, showGhTools = true, heading = 'Admin: Resources', wrapInContainer = true }){
+export function ResourceEditor({ actions, onDraftChange, showGhTools = true, heading = 'Admin: Resources', wrapInContainer = true, panelize = false }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
   const [slug, setSlug] = useState('')
   const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
@@ -166,13 +166,15 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
 
   const customActions = typeof actions === 'function' ? actions({ draft, newPost }) : actions
 
+  const cardClass = panelize ? 'gc-editor-panel' : 'card'
+
   const content = (
     <>
       <h1>{heading}</h1>
 
       {/* GitHub token helpers */}
       {showGhTools && (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className={cardClass} style={{ marginTop: 12 }}>
           <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
             <strong>GitHub:</strong>
             <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
@@ -189,7 +191,7 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
       )}
 
       {/* Existing posts */}
-      <div className="card" style={{ marginTop: 12 }}>
+      <div className={cardClass} style={{ marginTop: 12 }}>
         <strong>Existing posts</strong>
         <div className="Row Small" style={{ marginTop: 6, gap: 8, flexWrap:'wrap' }}>
           {list.map(s => (
@@ -201,7 +203,7 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
       </div>
 
       {/* Form */}
-      <div className="card" style={{ marginTop: 12 }}>
+      <div className={cardClass} style={{ marginTop: 12 }}>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 10 }}>
           <label>Title
             <input value={meta.title} onChange={e=> setTitle(e.target.value)} />

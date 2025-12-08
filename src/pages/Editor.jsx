@@ -206,119 +206,123 @@ function EditorPanel({ authorName }){
   }
 
   return (
-    <div className="container gc-editor">
-      <EditorHelpTabs activeTab={activeTab} />
-      <header className="gc-editor__header">
-        <div className="gc-editor__title">
-          <h1>GraceChords Editor</h1>
-          <span className="gc-editor__author">Author: {authorName}</span>
-        </div>
-        <nav className="gc-editor__tabs" aria-label="Editor tabs">
-          <button
-            className={`gc-editor__tab ${activeTab==='songs' ? 'is-active' : ''}`}
-            onClick={()=> setActiveTab('songs')}
-          >
-            🎵 Songs
-          </button>
-          <button
-            className={`gc-editor__tab ${activeTab==='posts' ? 'is-active' : ''}`}
-            onClick={()=> setActiveTab('posts')}
-          >
-            📄 Posts
-          </button>
-        </nav>
-        <div className="gc-editor__actions">
-          <Link to="/" className="gc-editor__iconbtn" title="Back to home" aria-label="Back to home">
-            <HomeIcon size={18} />
-          </Link>
-          <button
-            className="gc-editor__iconbtn"
-            aria-label="Toggle theme"
-            onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-        </div>
-      </header>
+    <div className="gc-editor-page">
+      <div className="container gc-editor">
+        <EditorHelpTab />
+        <header className="gc-editor__header">
+          <div className="gc-editor__title">
+            <h1>GraceChords Editor</h1>
+            <span className="gc-editor__author">Author: {authorName}</span>
+          </div>
+          <nav className="gc-editor__tabs" aria-label="Editor tabs">
+            <button
+              className={`gc-editor__tab ${activeTab==='songs' ? 'is-active' : ''}`}
+              onClick={()=> setActiveTab('songs')}
+            >
+              🎵 Songs
+            </button>
+            <button
+              className={`gc-editor__tab ${activeTab==='posts' ? 'is-active' : ''}`}
+              onClick={()=> setActiveTab('posts')}
+            >
+              📄 Posts
+            </button>
+          </nav>
+          <div className="gc-editor__actions">
+            <Link to="/" className="gc-editor__iconbtn" title="Back to home" aria-label="Back to home">
+              <HomeIcon size={18} />
+            </Link>
+            <button
+              className="gc-editor__iconbtn"
+              aria-label="Toggle theme"
+              onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+        </header>
 
-      <div className="card gc-editor__github">
-        <div className="Row Small" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
-          <strong>GitHub:</strong>
-          <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
-          <button className="btn" onClick={setToken}>Set token</button>
-          <button className="btn" onClick={clearToken}>Clear</button>
-          <button className="btn" onClick={validateTokenNow}>Validate</button>
+        <div className="gc-editor-shell">
+          <div className="gc-editor-panel gc-editor__github">
+            <div className="Row Small" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
+              <strong>GitHub:</strong>
+              <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
+              <button className="btn" onClick={setToken}>Set token</button>
+              <button className="btn" onClick={clearToken}>Clear</button>
+              <button className="btn" onClick={validateTokenNow}>Validate</button>
+            </div>
+          </div>
+
+          {activeTab === 'songs' ? (
+            <SongsEditor onStageSong={onStageSong} />
+          ) : (
+            <PostsEditor onStagePost={onStagePost} />
+          )}
+
+          <section className="gc-editor-panel gc-editor-panel--staged gc-staged-card">
+            <div className="Row" style={{ alignItems:'center', gap:8 }}>
+              <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
+              <div className="spacer" />
+              <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
+              <Button variant="primary" onClick={openPrModal} disabled={!staged.length}>
+                <CloudUploadIcon /> Open PR
+              </Button>
+            </div>
+            <div style={{ width:'100%', marginTop: 8, overflow:'auto' }}>
+              <table className="Table Small" style={{ width:'100%' }}>
+                <thead>
+                  <tr>
+                    <th>Kind</th>
+                    <th>Action</th>
+                    <th>Title</th>
+                    <th>Filename</th>
+                    <th>Details</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staged.map((s, idx) => (
+                    <tr key={`${s.filename}-${idx}`}>
+                      <td>{s.kind}</td>
+                      <td>{s.action}</td>
+                      <td>{s.title}</td>
+                      <td><code>{s.filename}</code></td>
+                      <td>
+                        {s.changeSummary || s.deleteReason || ''}
+                      </td>
+                      <td>
+                        <button className="btn small" onClick={()=> removeStaged(idx)}>Remove</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!staged.length && (
+                    <tr>
+                      <td colSpan={6} className="Small" style={{ textAlign:'center', padding: 12 }}>Nothing staged yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
+
+        {staged.length > 0 && (
+          <button className="gc-staged-floating" onClick={openPrModal}>
+            Staged: {staged.length} – Review / Open PR
+          </button>
+        )}
+
+        <AdminPrModal
+          open={prOpen}
+          onClose={() => setPrOpen(false)}
+          defaultBranch={defaultBranch}
+          staged={staged}
+          authorName={authorName}
+          onCreate={createEditorPr}
+          busy={busy}
+        />
       </div>
-
-      {activeTab === 'songs' ? (
-        <SongsEditor onStageSong={onStageSong} />
-      ) : (
-        <PostsEditor onStagePost={onStagePost} />
-      )}
-
-      <section className="card gc-staged-card">
-        <div className="Row" style={{ alignItems:'center', gap:8 }}>
-          <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
-          <div className="spacer" />
-          <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
-          <Button variant="primary" onClick={openPrModal} disabled={!staged.length}>
-            <CloudUploadIcon /> Open PR
-          </Button>
-        </div>
-        <div style={{ width:'100%', marginTop: 8, overflow:'auto' }}>
-          <table className="Table Small" style={{ width:'100%' }}>
-            <thead>
-              <tr>
-                <th>Kind</th>
-                <th>Action</th>
-                <th>Title</th>
-                <th>Filename</th>
-                <th>Details</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {staged.map((s, idx) => (
-                <tr key={`${s.filename}-${idx}`}>
-                  <td>{s.kind}</td>
-                  <td>{s.action}</td>
-                  <td>{s.title}</td>
-                  <td><code>{s.filename}</code></td>
-                  <td>
-                    {s.changeSummary || s.deleteReason || ''}
-                  </td>
-                  <td>
-                    <button className="btn small" onClick={()=> removeStaged(idx)}>Remove</button>
-                  </td>
-                </tr>
-              ))}
-              {!staged.length && (
-                <tr>
-                  <td colSpan={6} className="Small" style={{ textAlign:'center', padding: 12 }}>Nothing staged yet.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {staged.length > 0 && (
-        <button className="gc-staged-floating" onClick={openPrModal}>
-          Staged: {staged.length} – Review / Open PR
-        </button>
-      )}
-
-      <AdminPrModal
-        open={prOpen}
-        onClose={() => setPrOpen(false)}
-        defaultBranch={defaultBranch}
-        staged={staged}
-        authorName={authorName}
-        onCreate={createEditorPr}
-        busy={busy}
-      />
     </div>
   )
 }
@@ -573,40 +577,42 @@ function SongsEditor({ onStageSong }){
   }
 
   return (
-    <div className="card gc-song-editor">
-      <div className="gc-song-selector">
-        <Button onClick={handleNewSong} iconLeft={<PlusIcon />}>New Song</Button>
-        <div className="gc-song-selector__search">
-          <input
-            type="search"
-            placeholder="Search existing songs…"
-            value={searchQuery}
-            onChange={e=> setSearchQuery(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && searchResults.length) {
-                e.preventDefault()
-                handleSelectSong(searchResults[0])
-              }
-            }}
-          />
-          {searchResults.length > 0 && (
-            <ul className="gc-song-selector__results">
-              {searchResults.map(song => (
-                <li key={song.id} onMouseDown={()=> handleSelectSong(song)}>
-                  {song.title}
-                </li>
-              ))}
-            </ul>
+    <div className="gc-song-editor">
+      <section className="gc-editor-panel gc-editor-panel--selector">
+        <div className="gc-song-selector">
+          <Button onClick={handleNewSong} iconLeft={<PlusIcon />}>New Song</Button>
+          <div className="gc-song-selector__search">
+            <input
+              type="search"
+              placeholder="Search existing songs…"
+              value={searchQuery}
+              onChange={e=> setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && searchResults.length) {
+                  e.preventDefault()
+                  handleSelectSong(searchResults[0])
+                }
+              }}
+            />
+            {searchResults.length > 0 && (
+              <ul className="gc-song-selector__results">
+                {searchResults.map(song => (
+                  <li key={song.id} onMouseDown={()=> handleSelectSong(song)}>
+                    {song.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {editingFile ? (
+            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>Editing {editingFile}</span>
+          ) : (
+            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>New song</span>
           )}
         </div>
-        {editingFile ? (
-          <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>Editing {editingFile}</span>
-        ) : (
-          <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>New song</span>
-        )}
-      </div>
+      </section>
 
-      <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop: 12}}>
+      <section className="gc-editor-panel gc-editor-panel--meta" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop: 12}}>
         <label>Title
           <input
             value={meta.title||''}
@@ -651,92 +657,94 @@ function SongsEditor({ onStageSong }){
             placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/..."
           />
         </label>
-      </div>
+      </section>
 
-      <div className="gc-editor-toolbar">
-        <div className="gc-quick-row">
-          <strong>Quick chords</strong>
-          <span className="Small">(Key: {meta.key || 'G'})</span>
-          {quickChords.map((sym, i) => (
-            <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
-          ))}
-        </div>
-        <div className="gc-quick-sections">
-          <span className="Small">Quick sections:</span>
-          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Verse')}>Verse</button>
-          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Chorus')}>Chorus</button>
-          <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Bridge')}>Bridge</button>
-        </div>
-        <label className="gc-preview-toggle">
-          <input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview
-        </label>
-      </div>
-
-      <div className={`gc-editor-split ${showPreview ? '' : 'is-single'}`}>
-        <div className="gc-editor-pane gc-editor-pane--input">
-          <textarea
-            ref={editorRef}
-            value={text}
-            onChange={e=> setText(e.target.value)}
-            style={{width:'100%', minHeight:'60vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
-          />
-        </div>
-        {showPreview && (
-          <div className="gc-editor-pane gc-editor-pane--preview">
-            <strong>Preview</strong>
-            <div className="Small" style={{ marginTop:6, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
-              {(() => {
-                const kv = {
-                  title: parsed?.meta?.title,
-                  key: parsed?.meta?.key || parsed?.meta?.originalkey,
-                  capo: parsed?.meta?.capo,
-                  authors: parsed?.meta?.meta?.authors,
-                  country: parsed?.meta?.meta?.country,
-                  tags: parsed?.meta?.meta?.tags,
-                  youtube: parsed?.meta?.meta?.youtube,
-                  mp3: parsed?.meta?.meta?.mp3,
-                }
-                return Object.entries(kv)
-                  .filter(([,v]) => v != null && String(v).trim() !== '')
-                  .map(([k,v]) => (
-                    <div key={k}><strong>{k}</strong>: {String(v)}</div>
-                  ))
-              })()}
-            </div>
-            <div style={{marginTop:8}}>
-              {(parsed.blocks||[]).map((b,bi)=>(
-                <div key={bi}>
-                  <div className="section">{b.section || ''}</div>
-                  {(b.lines||[]).map((ln,li)=>(
-                    ln.instrumental ? (
-                      <InstrumentalPreviewLine key={`${bi}-${li}`} spec={ln.instrumental} />
-                    ) : (
-                      <MeasuredPreviewLine
-                        key={`${bi}-${li}`}
-                        plain={ln.text}
-                        chords={ln.chords || []}
-                        comment={ln.comment}
-                      />
-                    )
-                  ))}
-                </div>
-              ))}
-            </div>
+      <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
+        <div className="gc-editor-toolbar">
+          <div className="gc-quick-row">
+            <strong>Quick chords</strong>
+            <span className="Small">(Key: {meta.key || 'G'})</span>
+            {quickChords.map((sym, i) => (
+              <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
+            ))}
           </div>
-        )}
-      </div>
+          <div className="gc-quick-sections">
+            <span className="Small">Quick sections:</span>
+            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Verse')}>Verse</button>
+            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Chorus')}>Chorus</button>
+            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Bridge')}>Bridge</button>
+          </div>
+          <label className="gc-preview-toggle">
+            <input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview
+          </label>
+        </div>
 
-      <div className="gc-stage-actions">
-        <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
-          Add Changes
-        </Button>
-        {isExisting && (
-          <Button onClick={()=> setDeleteModalOpen(true)} iconLeft={<TrashIcon />}>
-            Request Deletion
+        <div className={`gc-editor-split ${showPreview ? '' : 'is-single'}`}>
+          <div className="gc-editor-pane gc-editor-pane--input">
+            <textarea
+              ref={editorRef}
+              value={text}
+              onChange={e=> setText(e.target.value)}
+              style={{width:'100%', minHeight:'60vh', height:'60vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
+            />
+          </div>
+          {showPreview && (
+            <div className="gc-editor-pane gc-editor-pane--preview">
+              <strong>Preview</strong>
+              <div className="Small" style={{ marginTop:6, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
+                {(() => {
+                  const kv = {
+                    title: parsed?.meta?.title,
+                    key: parsed?.meta?.key || parsed?.meta?.originalkey,
+                    capo: parsed?.meta?.capo,
+                    authors: parsed?.meta?.meta?.authors,
+                    country: parsed?.meta?.meta?.country,
+                    tags: parsed?.meta?.meta?.tags,
+                    youtube: parsed?.meta?.meta?.youtube,
+                    mp3: parsed?.meta?.meta?.mp3,
+                  }
+                  return Object.entries(kv)
+                    .filter(([,v]) => v != null && String(v).trim() !== '')
+                    .map(([k,v]) => (
+                      <div key={k}><strong>{k}</strong>: {String(v)}</div>
+                    ))
+                })()}
+              </div>
+              <div style={{marginTop:8}}>
+                {(parsed.blocks||[]).map((b,bi)=>(
+                  <div key={bi}>
+                    <div className="section">{b.section || ''}</div>
+                    {(b.lines||[]).map((ln,li)=>(
+                      ln.instrumental ? (
+                        <InstrumentalPreviewLine key={`${bi}-${li}`} spec={ln.instrumental} />
+                      ) : (
+                        <MeasuredPreviewLine
+                          key={`${bi}-${li}`}
+                          plain={ln.text}
+                          chords={ln.chords || []}
+                          comment={ln.comment}
+                        />
+                      )
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="gc-stage-actions">
+          <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
+            Add Changes
           </Button>
-        )}
-        <span className="Small" style={{ marginLeft: 'auto' }}>Files save as .chordpro</span>
-      </div>
+          {isExisting && (
+            <Button onClick={()=> setDeleteModalOpen(true)} iconLeft={<TrashIcon />}>
+              Request Deletion
+            </Button>
+          )}
+          <span className="Small" style={{ marginLeft: 'auto' }}>Files save as .chordpro</span>
+        </div>
+      </section>
 
       {deleteModalOpen && (
         <div className="modal">
@@ -815,6 +823,7 @@ function PostsEditor({ onStagePost }){
       heading="Posts"
       showGhTools={false}
       wrapInContainer={false}
+      panelize
       onDraftChange={setDraft}
       actions={({ draft: currentDraft, newPost }) => {
         const d = currentDraft || draft
@@ -854,85 +863,42 @@ function PostsEditor({ onStagePost }){
   )
 }
 
-function EditorHelpTabs({ activeTab }){
-  const [open, setOpen] = useState('')
-  const chordTabLabel = activeTab === 'posts' ? 'Resource Help' : 'ChordPro Help'
-
-  const tabs = [
-    {
-      id: 'editor',
-      label: 'Editor Help',
-      title: 'Editor Help',
-      content: (
-        <>
-          <p>Fill in metadata (title, key, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
-          <p>New Song + search lets you start fresh or load an existing song to edit.</p>
-        </>
-      ),
-    },
-    {
-      id: 'chordpro',
-      label: chordTabLabel,
-      title: chordTabLabel,
-      content: (
-        <>
-          {activeTab === 'posts' ? (
-            <p>Resources use Markdown with frontmatter (title, author, date, tags, summary) followed by body content.</p>
-          ) : (
-            <>
-              <p>Use chords in square brackets: <code>[G]</code>. Section headers use short codes like <code>{'{sov Verse}'}</code> … <code>{'{eov}'}</code>.</p>
-              <pre className="Small" style={{ whiteSpace:'pre-wrap' }}>{`{title: Example}
+function EditorHelpTab(){
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        className="gc-editor-help-tab"
+        onClick={()=> setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label="Open editor help"
+      >
+        Editor Help
+      </button>
+      {open && (
+        <div className="gc-editor-help-drawer">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
+            <strong>Editor Help</strong>
+            <button className="btn small" onClick={()=> setOpen(false)} aria-label="Close help">✕</button>
+          </div>
+          <div className="gc-help__content Small" style={{ marginTop:8 }}>
+            <h3>Editor basics</h3>
+            <p>Fill metadata (title, key, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
+            <p>New Song + search lets you start fresh or load an existing song to edit.</p>
+            <h3>ChordPro tips</h3>
+            <p>Place chords in square brackets like <code>[G]</code>. Section headers use short codes such as <code>{'{sov Verse}'}</code> … <code>{'{eov}'}</code>.</p>
+            <pre className="Small" style={{ whiteSpace:'pre-wrap' }}>{`{title: Example}
 {key: G}
 {sov Verse}
 [G]Amazing [C]grace
 {eov}`}</pre>
-            </>
-          )}
-        </>
-      ),
-    },
-    {
-      id: 'staging',
-      label: 'Staging Help',
-      title: 'Staging Help',
-      content: (
-        <>
-          <p>“Add Changes” stages the current song (new or edited) for the PR. Deletion requests log a reason without deleting files.</p>
-          <p>Use the floating staged pill or the table to review and open the PR.</p>
-        </>
-      ),
-    },
-  ]
-
-  const active = tabs.find(t => t.id === open)
-
-  return (
-    <div className="gc-help">
-      <div className="gc-help__tabs" aria-label="Help tabs">
-        {tabs.map(t => (
-          <button
-            key={t.id}
-            className={`gc-help__tab ${open === t.id ? 'is-open' : ''}`}
-            onClick={() => setOpen(open === t.id ? '' : t.id)}
-          >
-            <span>{t.label}</span>
-          </button>
-        ))}
-      </div>
-      {active && (
-        <div className="gc-help__drawer">
-          <div className="gc-help__drawer-inner">
-            <div className="Row" style={{ justifyContent:'space-between', alignItems:'center', gap:8 }}>
-              <strong>{active.title}</strong>
-              <button className="btn small" onClick={()=> setOpen('')}>Close</button>
-            </div>
-            <div className="gc-help__content Small">
-              {active.content}
-            </div>
+            <h3>Staging &amp; PRs</h3>
+            <p>“Add Changes” stages the current song (new or edited) for the PR. Deletion requests log a reason without deleting files.</p>
+            <p>Use the staged table or floating pill to review and open the PR; a maintainer will review and merge.</p>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
