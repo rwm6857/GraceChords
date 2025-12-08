@@ -117,6 +117,8 @@ function EditorPanel({ authorName }){
     if (existing) {
       setTokenInput(existing)
       validateAndStoreToken(existing, { silent: true })
+    } else {
+      setTokenModalOpen(true)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -159,6 +161,7 @@ function EditorPanel({ authorName }){
       localStorage.removeItem('ghToken')
       setGhUser(null)
       setTokenError(e?.message || String(e))
+      setTokenModalOpen(true)
     } finally {
       setValidatingToken(false)
     }
@@ -245,7 +248,16 @@ function EditorPanel({ authorName }){
         <header className="gc-editor__header">
           <div className="gc-editor__title">
             <h1>GraceChords Editor</h1>
-            <span className="gc-editor__author">Author: {authorName}</span>
+            <span className="gc-editor__author">
+              Author: {authorName}
+              <span style={{ marginLeft: 8, display:'inline-flex', alignItems:'center', gap:4 }}>
+                Token {ghUser ? (
+                  <span title={`Token OK: ${ghUser.login}`} style={{ color:'var(--primary)' }}>✔</span>
+                ) : (
+                  <span title="Token missing or invalid" style={{ color:'#ef4444' }}>✘</span>
+                )}
+              </span>
+            </span>
           </div>
           <nav className="gc-editor__tabs" aria-label="Editor tabs">
             <button
