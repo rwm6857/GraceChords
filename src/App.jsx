@@ -4,6 +4,7 @@ import HomeDashboard from './pages/HomeDashboard'
 import Songs from './components/Songs'
 import SongView from './components/SongView'
 import Admin from './components/Admin'
+const Editor = React.lazy(() => import('./components/Editor'))
 const Setlist = React.lazy(() => import('./components/Setlist'))
 import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
@@ -17,7 +18,6 @@ import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoute'
 import Toast from './components/Toast'
 import SiteDisclaimer from './components/SiteDisclaimer'
-import './styles.css'
 
 export default function App(){
   return (
@@ -41,6 +41,7 @@ export default function App(){
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/resources" element={<AdminResources />} />
+          <Route path="/editor" element={<Editor />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>

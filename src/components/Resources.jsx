@@ -74,15 +74,15 @@ export default function Resources(){
       <div className="HomeResults" role="region" aria-label="Resource results">
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12, marginTop:12 }}>
           {filtered.map(it => (
-            <article key={it.slug} className="card" style={{ padding:12, display:'flex', flexDirection:'column', gap:8 }}>
-              <h3 style={{ margin:'4px 0' }}>
+            <article key={it.slug} className="gc-card" style={{ flexDirection:'column', gap:8 }}>
+              <h3 className="gc-card__title" style={{ margin:'4px 0' }}>
                 <Link to={`/resources/${it.slug}`}>{it.title}</Link>
               </h3>
-              <div className="Small" style={{ opacity: 0.8 }}>
+              <div className="gc-card__meta Small" style={{ opacity: 0.8 }}>
                 by {it.author} • {fmtDate(it.date)}
               </div>
               {it.tags?.length ? (
-                <div className="Small" style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                <div className="gc-card__tags Small" style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                   {it.tags.map(t => <span key={t} className="gc-tag gc-tag--gray">{t}</span>)}
                 </div>
               ) : null}

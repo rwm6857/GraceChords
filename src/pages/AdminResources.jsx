@@ -32,7 +32,7 @@ export default function AdminResources(){
   return <ResourceEditor />
 }
 
-function ResourceEditor(){
+export function ResourceEditor({ actions, onDraftChange, showGhTools = true, heading = 'Admin: Resources', wrapInContainer = true }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
   const [slug, setSlug] = useState('')
   const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
@@ -88,18 +88,18 @@ function ResourceEditor(){
   const [defaultBranch, setDefaultBranch] = useState('main')
   const [ghUser, setGhUser] = useState(null)
 
-  function composeFile(){
+  function composeFile(currentMeta = meta, currentBody = body){
     const fm = [
       '---',
-      `title: "${(meta.title||'').replace(/"/g,'\\"')}"`,
-      `author: "${(meta.author||'').replace(/"/g,'\\"')}"`,
-      `date: "${meta.date || ''}"`,
-      `tags: ${JSON.stringify(meta.tags||[])} `,
-      `summary: "${(meta.summary||'').replace(/"/g,'\\"')}"`,
+      `title: "${(currentMeta.title||'').replace(/"/g,'\\"')}"`,
+      `author: "${(currentMeta.author||'').replace(/"/g,'\\"')}"`,
+      `date: "${currentMeta.date || ''}"`,
+      `tags: ${JSON.stringify(currentMeta.tags||[])} `,
+      `summary: "${(currentMeta.summary||'').replace(/"/g,'\\"')}"`,
       '---',
       '',
     ].join('\n')
-    return fm + (body || '')
+    return fm + (currentBody || '')
   }
 
   function stage(){
@@ -145,25 +145,48 @@ function ResourceEditor(){
     } finally { setBusy(false) }
   }
 
-  return (
-    <div className="container" style={{ maxWidth: 1100 }}>
-      <h1>Admin: Resources</h1>
+  const finalSlug = slug || slugifyKebab(meta.title || 'untitled')
+  const filename = `${finalSlug}.md`
+  const content = composeFile()
+  const isExisting = list.some(it => it.slug === finalSlug)
+  const draft = useMemo(() => ({
+    slug: finalSlug,
+    filename,
+    meta,
+    body,
+    content,
+    isExisting,
+  }), [finalSlug, filename, meta, body, content, isExisting])
+
+  useEffect(() => {
+    if (typeof onDraftChange === 'function') {
+      onDraftChange(draft)
+    }
+  }, [draft, onDraftChange])
+
+  const customActions = typeof actions === 'function' ? actions({ draft, newPost }) : actions
+
+  const content = (
+    <>
+      <h1>{heading}</h1>
 
       {/* GitHub token helpers */}
-      <div className="card" style={{ marginTop: 12 }}>
-        <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
-          <strong>GitHub:</strong>
-          <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
-          <button className="btn" onClick={()=> { const t = prompt('Paste GitHub token (repo scope):',''); if(t!==null){ localStorage.setItem('ghToken', t.trim()) } }}>Set token</button>
-          <button className="btn" onClick={()=> { localStorage.removeItem('ghToken'); setGhUser(null) }}>Clear token</button>
-          <button className="btn" onClick={async ()=> { try { const u = await GH.validateToken(); setGhUser(u); alert(`Token OK: ${u.login}`) } catch(e){ setGhUser(null); alert(String(e?.message || e)) } }}>Validate</button>
-          <div className="spacer" />
-          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span>Edits Author <span aria-hidden style={{ color:'#ef4444' }}>*</span></span>
-            <input value={editsAuthor} onChange={e=> setEditsAuthor(e.target.value)} placeholder="Your name" style={{ minWidth:180 }} />
-          </label>
+      {showGhTools && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            <strong>GitHub:</strong>
+            <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
+            <button className="btn" onClick={()=> { const t = prompt('Paste GitHub token (repo scope):',''); if(t!==null){ localStorage.setItem('ghToken', t.trim()) } }}>Set token</button>
+            <button className="btn" onClick={()=> { localStorage.removeItem('ghToken'); setGhUser(null) }}>Clear token</button>
+            <button className="btn" onClick={async ()=> { try { const u = await GH.validateToken(); setGhUser(u); alert(`Token OK: ${u.login}`) } catch(e){ setGhUser(null); alert(String(e?.message || e)) } }}>Validate</button>
+            <div className="spacer" />
+            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span>Edits Author <span aria-hidden style={{ color:'#ef4444' }}>*</span></span>
+              <input value={editsAuthor} onChange={e=> setEditsAuthor(e.target.value)} placeholder="Your name" style={{ minWidth:180 }} />
+            </label>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Existing posts */}
       <div className="card" style={{ marginTop: 12 }}>
@@ -227,22 +250,24 @@ function ResourceEditor(){
       </div>
 
       {/* Toolbar */}
-      <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <Button onClick={newPost}><PlusIcon /> New</Button>
-          <Button onClick={stage}><SearchIcon /> Validate</Button>
-          <Button onClick={stage}><PlusIcon /> Stage</Button>
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-          <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <span>Filename</span>
-            <input readOnly value={`${(slug || slugifyKebab(meta.title || 'untitled'))}.md`} style={{ width: 320 }} />
-          </label>
-        </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <Button className="gc-btn gc-btn--primary" onClick={openPr}><CloudUploadIcon /> Publish</Button>
-        </div>
-      </Toolbar>
+      {customActions || (
+        <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <Button onClick={newPost}><PlusIcon /> New</Button>
+            <Button onClick={stage}><SearchIcon /> Validate</Button>
+            <Button onClick={stage}><PlusIcon /> Stage</Button>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
+            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span>Filename</span>
+              <input readOnly value={filename} style={{ width: 320 }} />
+            </label>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <Button className="gc-btn gc-btn--primary" onClick={openPr}><CloudUploadIcon /> Publish</Button>
+          </div>
+        </Toolbar>
+      )}
       <AdminPrModal
         open={prOpen}
         onClose={() => setPrOpen(false)}
@@ -251,6 +276,13 @@ function ResourceEditor(){
         onCreate={onCreatePr}
         busy={busy}
       />
+    </>
+  )
+
+  if(!wrapInContainer) return content
+  return (
+    <div className="container" style={{ maxWidth: 1100 }}>
+      {content}
     </div>
   )
 }

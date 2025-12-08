@@ -1,5 +1,4 @@
 import React from 'react'
-import '../../styles/cards.css'
 import { Link } from 'react-router-dom'
 
 const SongCard = React.forwardRef(function SongCard({
@@ -26,7 +25,7 @@ const SongCard = React.forwardRef(function SongCard({
         {tags.length > 0 && (
           <div className="gc-card__tags">
             {tags.map(t => (
-              <span key={t} className="gc-tag">{t}</span>
+              <span key={t} className="gc-tag gc-tag--gray">{t}</span>
             ))}
           </div>
         )}
