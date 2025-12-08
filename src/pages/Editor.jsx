@@ -702,7 +702,7 @@ function SongsEditor({ onStageSong }){
               ref={editorRef}
               value={text}
               onChange={e=> setText(e.target.value)}
-              style={{width:'100%', minHeight:'70vh', height:'70vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
+              style={{width:'100%', minHeight:'70vh', height:'70vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace'}}
             />
           </div>
           {showPreview && (
