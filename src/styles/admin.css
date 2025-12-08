@@ -26,6 +26,9 @@
 .gc-editor__iconbtn:hover { background:var(--btn); }
 .gc-editor-shell { max-width:1200px; margin:0 auto 2rem; padding:var(--space-4); border-radius:var(--radius-2); background:var(--card); box-shadow:0 10px 24px rgba(0,0,0,0.14); border:1px solid var(--border); }
 .gc-editor-panel { background:var(--card); border-radius:var(--radius-2); padding:var(--space-3); border:1px solid var(--border); }
+.gc-editor-panel label > input,
+.gc-editor-panel label > select,
+.gc-editor-panel label > textarea { margin-top:4px; display:block; width:100%; }
 
 .gc-song-editor { position: relative; overflow: visible; }
 .gc-song-selector { display:flex; align-items:center; gap:12px; flex-wrap:wrap; position:relative; }
