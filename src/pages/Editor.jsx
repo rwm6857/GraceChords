@@ -865,6 +865,16 @@ function PostsEditor({ onStagePost }){
 
 function EditorHelpTab(){
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    function onKey(e){
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
   return (
     <>
       <button
