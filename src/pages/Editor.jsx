@@ -680,14 +680,13 @@ function SongsEditor({ onStageSong }){
       <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
         <div className="gc-editor-toolbar">
           <div className="gc-quick-row">
-            <strong>Quick chords</strong>
-            <span className="Small">(Key: {meta.key || 'G'})</span>
+            <strong>Quick Chords</strong>
             {quickChords.map((sym, i) => (
               <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
             ))}
           </div>
           <div className="gc-quick-sections">
-            <span className="Small">Quick sections:</span>
+            <strong>Quick Sections</strong>
             <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Verse')}>Verse</button>
             <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Chorus')}>Chorus</button>
             <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Bridge')}>Bridge</button>
@@ -885,7 +884,7 @@ function EditorHelpTab(){
         aria-expanded={open}
         aria-label="Open editor help"
       >
-        Editor Help
+        {' Editor Help '}
       </button>
       {open && (
         <div className="gc-editor-help-drawer">
@@ -971,7 +970,7 @@ function MeasuredPreviewLine({ plain, chords, comment }){
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
-    const gap = 4
+    const gap = 2
     const padTop = Math.ceil(chordAscent + gap)
     const chordTop = 0
     setState({ offsets, padTop, chordTop })
