@@ -147,16 +147,16 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
 
   const finalSlug = slug || slugifyKebab(meta.title || 'untitled')
   const filename = `${finalSlug}.md`
-  const content = composeFile()
+  const composedContent = composeFile()
   const isExisting = list.some(it => it.slug === finalSlug)
   const draft = useMemo(() => ({
     slug: finalSlug,
     filename,
     meta,
     body,
-    content,
+    content: composedContent,
     isExisting,
-  }), [finalSlug, filename, meta, body, content, isExisting])
+  }), [finalSlug, filename, meta, body, composedContent, isExisting])
 
   useEffect(() => {
     if (typeof onDraftChange === 'function') {
