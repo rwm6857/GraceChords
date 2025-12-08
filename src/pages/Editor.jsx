@@ -219,13 +219,13 @@ function EditorPanel({ authorName }){
               className={`gc-editor__tab ${activeTab==='songs' ? 'is-active' : ''}`}
               onClick={()=> setActiveTab('songs')}
             >
-              🎵 Songs
+              🎵 Song Editor
             </button>
             <button
               className={`gc-editor__tab ${activeTab==='posts' ? 'is-active' : ''}`}
               onClick={()=> setActiveTab('posts')}
             >
-              📄 Posts
+              📄 Post Editor
             </button>
           </nav>
           <div className="gc-editor__actions">
@@ -354,6 +354,7 @@ function SongsEditor({ onStageSong }){
   const [originalMeta, setOriginalMeta] = useState(null)
   const [originalContent, setOriginalContent] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchIndex, setSearchIndex] = useState(-1)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteReasonInput, setDeleteReasonInput] = useState('')
 
@@ -367,6 +368,7 @@ function SongsEditor({ onStageSong }){
       return title.includes(q) || tags.includes(q) || authors.includes(q)
     }).slice(0, 12)
   }, [items, searchQuery])
+  useEffect(() => { setSearchIndex(-1) }, [searchQuery])
 
   async function handleSelectSong(it){
     if (!it) return
@@ -382,6 +384,7 @@ function SongsEditor({ onStageSong }){
         setOriginalMeta(loadedMeta)
         setOriginalContent(canonical?.content || '')
         setSearchQuery('')
+        setSearchIndex(-1)
       }
     } catch (e) {
       console.error(e)
@@ -588,16 +591,31 @@ function SongsEditor({ onStageSong }){
               value={searchQuery}
               onChange={e=> setSearchQuery(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter' && searchResults.length) {
+                if (!searchResults.length) return
+                if (e.key === 'ArrowDown') {
                   e.preventDefault()
-                  handleSelectSong(searchResults[0])
+                  setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setSearchIndex(i => Math.max(i - 1, 0))
+                } else if (e.key === 'Enter') {
+                  e.preventDefault()
+                  const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
+                  handleSelectSong(choice)
+                } else if (e.key === 'Escape') {
+                  setSearchIndex(-1)
                 }
               }}
             />
             {searchResults.length > 0 && (
               <ul className="gc-song-selector__results">
-                {searchResults.map(song => (
-                  <li key={song.id} onMouseDown={()=> handleSelectSong(song)}>
+                {searchResults.map((song, idx) => (
+                  <li
+                    key={song.id}
+                    className={searchIndex === idx ? 'is-active' : ''}
+                    onMouseEnter={()=> setSearchIndex(idx)}
+                    onMouseDown={()=> handleSelectSong(song)}
+                  >
                     {song.title}
                   </li>
                 ))}
@@ -685,30 +703,14 @@ function SongsEditor({ onStageSong }){
               ref={editorRef}
               value={text}
               onChange={e=> setText(e.target.value)}
-              style={{width:'100%', minHeight:'60vh', height:'60vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
+              style={{width:'100%', minHeight:'70vh', height:'70vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
             />
           </div>
           {showPreview && (
             <div className="gc-editor-pane gc-editor-pane--preview">
-              <strong>Preview</strong>
-              <div className="Small" style={{ marginTop:6, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
-                {(() => {
-                  const kv = {
-                    title: parsed?.meta?.title,
-                    key: parsed?.meta?.key || parsed?.meta?.originalkey,
-                    capo: parsed?.meta?.capo,
-                    authors: parsed?.meta?.meta?.authors,
-                    country: parsed?.meta?.meta?.country,
-                    tags: parsed?.meta?.meta?.tags,
-                    youtube: parsed?.meta?.meta?.youtube,
-                    mp3: parsed?.meta?.meta?.mp3,
-                  }
-                  return Object.entries(kv)
-                    .filter(([,v]) => v != null && String(v).trim() !== '')
-                    .map(([k,v]) => (
-                      <div key={k}><strong>{k}</strong>: {String(v)}</div>
-                    ))
-                })()}
+              <div className="Small" style={{ marginBottom:8, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
+                {parsed?.meta?.title ? <div style={{ fontWeight:700 }}>{parsed.meta.title}</div> : null}
+                {parsed?.meta?.key || parsed?.meta?.originalkey ? <div style={{ fontStyle:'italic' }}>Key of {parsed.meta.key || parsed.meta.originalkey}</div> : null}
               </div>
               <div style={{marginTop:8}}>
                 {(parsed.blocks||[]).map((b,bi)=>(
