@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { ResourceEditor } from './AdminResources.jsx'
 import { KEYS, keyRoot } from '../utils/chordpro'
@@ -12,10 +13,11 @@ import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
-import { CloudUploadIcon, PlusIcon, TrashIcon, SearchIcon } from '../components/Icons'
+import { CloudUploadIcon, PlusIcon, TrashIcon, SearchIcon, HomeIcon, Sun, Moon } from '../components/Icons'
 import { showToast } from '../utils/toast'
 import '../styles/admin.css'
 import Toolbar from '../components/ui/Toolbar'
+import { currentTheme, toggleTheme } from '../utils/theme'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
 
@@ -103,6 +105,8 @@ function EditorPanel({ authorName }){
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
   const [ghUser, setGhUser] = useState(null)
+  const [, setThemeTick] = useState(0)
+  const isDark = (currentTheme && typeof currentTheme === 'function') ? (currentTheme() === 'dark') : false
 
   function onStageSong(items){
     if(!items?.length) return
@@ -223,6 +227,19 @@ function EditorPanel({ authorName }){
             📄 Posts
           </button>
         </nav>
+        <div className="gc-editor__actions">
+          <Link to="/" className="gc-editor__iconbtn" title="Back to home" aria-label="Back to home">
+            <HomeIcon size={18} />
+          </Link>
+          <button
+            className="gc-editor__iconbtn"
+            aria-label="Toggle theme"
+            onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
       </header>
 
       <div className="card gc-editor__github">
