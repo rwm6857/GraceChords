@@ -105,8 +105,21 @@ function EditorPanel({ authorName }){
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
   const [ghUser, setGhUser] = useState(null)
+  const [tokenModalOpen, setTokenModalOpen] = useState(false)
+  const [tokenInput, setTokenInput] = useState('')
+  const [tokenError, setTokenError] = useState('')
+  const [validatingToken, setValidatingToken] = useState(false)
   const [, setThemeTick] = useState(0)
   const isDark = (currentTheme && typeof currentTheme === 'function') ? (currentTheme() === 'dark') : false
+
+  useEffect(() => {
+    const existing = localStorage.getItem('ghToken')
+    if (existing) {
+      setTokenInput(existing)
+      validateAndStoreToken(existing, { silent: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function onStageSong(items){
     if(!items?.length) return
@@ -123,23 +136,43 @@ function EditorPanel({ authorName }){
     setStaged([])
   }
 
-  async function validateTokenNow(){
+  async function validateAndStoreToken(rawToken, { silent = false } = {}) {
+    const t = (rawToken || '').trim()
+    if (!t) {
+      setTokenError('Token cannot be empty')
+      return
+    }
+    setValidatingToken(true)
+    setTokenError('')
     try {
-      const u = await GH.validateToken()
-      setGhUser(u)
-      showToast?.(`Token OK: ${u.login}`) ?? alert(`Token OK: ${u.login}`)
+      localStorage.setItem('ghToken', t)
+      const user = await GH.validateToken()
+      setGhUser(user)
+      if (!silent) {
+        const msg = `GitHub token OK: ${user.login}`
+        if (typeof showToast === 'function') showToast(msg)
+        else alert(msg)
+      }
+      setTokenModalOpen(false)
+      setTokenInput('')
     } catch (e) {
+      localStorage.removeItem('ghToken')
       setGhUser(null)
-      showToast?.(String(e.message || e)) ?? alert(String(e.message || e))
+      setTokenError(e?.message || String(e))
+    } finally {
+      setValidatingToken(false)
     }
   }
-  function setToken(){
-    const t = prompt('Paste GitHub token (repo scope):','')
-    if(t !== null){ localStorage.setItem('ghToken', t.trim()) }
-  }
-  function clearToken(){
-    localStorage.removeItem('ghToken')
-    setGhUser(null)
+
+  function handleOpenPrClick(){
+    const existing = localStorage.getItem('ghToken')
+    if (!existing) {
+      setTokenInput('')
+      setTokenError('')
+      setTokenModalOpen(true)
+      return
+    }
+    openPrModal()
   }
 
   async function openPrModal(){
@@ -244,16 +277,6 @@ function EditorPanel({ authorName }){
         </header>
 
         <div className="gc-editor-shell">
-          <div className="gc-editor-panel gc-editor__github">
-            <div className="Row Small" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
-              <strong>GitHub:</strong>
-              <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
-              <button className="btn" onClick={setToken}>Set token</button>
-              <button className="btn" onClick={clearToken}>Clear</button>
-              <button className="btn" onClick={validateTokenNow}>Validate</button>
-            </div>
-          </div>
-
           {activeTab === 'songs' ? (
             <SongsEditor onStageSong={onStageSong} />
           ) : (
@@ -265,7 +288,7 @@ function EditorPanel({ authorName }){
               <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
               <div className="spacer" />
               <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
-              <Button variant="primary" onClick={openPrModal} disabled={!staged.length}>
+              <Button variant="primary" onClick={handleOpenPrClick} disabled={!staged.length}>
                 <CloudUploadIcon /> Open PR
               </Button>
             </div>
@@ -308,7 +331,7 @@ function EditorPanel({ authorName }){
         </div>
 
         {staged.length > 0 && (
-          <button className="gc-staged-floating" onClick={openPrModal}>
+          <button className="gc-staged-floating" onClick={handleOpenPrClick}>
             Staged: {staged.length} – Review / Open PR
           </button>
         )}
@@ -317,14 +340,23 @@ function EditorPanel({ authorName }){
           open={prOpen}
           onClose={() => setPrOpen(false)}
           defaultBranch={defaultBranch}
-          staged={staged}
-          authorName={authorName}
-          onCreate={createEditorPr}
-          busy={busy}
-        />
-      </div>
+        staged={staged}
+        authorName={authorName}
+        onCreate={createEditorPr}
+        busy={busy}
+      />
+      <TokenModal
+        open={tokenModalOpen}
+        tokenInput={tokenInput}
+        setTokenInput={setTokenInput}
+        tokenError={tokenError}
+        validating={validatingToken}
+        onSubmit={validateAndStoreToken}
+        onClose={() => { setTokenModalOpen(false); setTokenError('') }}
+      />
     </div>
-  )
+  </div>
+)
 }
 
 function SongsEditor({ onStageSong }){
@@ -910,6 +942,36 @@ function EditorHelpTab(){
         </div>
       )}
     </>
+  )
+}
+
+function TokenModal({ open, tokenInput, setTokenInput, tokenError, validating, onSubmit, onClose }){
+  if (!open) return null
+  return (
+    <div className="modal">
+      <div className="modal-body">
+        <h3>GitHub token required</h3>
+        <p className="Small" style={{ opacity:0.85 }}>
+          Paste a GitHub personal access token (repo scope) to send changes as a pull request. It is stored only in this browser.
+        </p>
+        <label>Token
+          <input
+            type="password"
+            value={tokenInput}
+            onChange={e => setTokenInput(e.target.value)}
+            placeholder="ghp_..."
+            autoFocus
+          />
+        </label>
+        {tokenError ? <div className="alert error Small">{tokenError}</div> : null}
+        <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
+          <button className="btn" onClick={onClose} disabled={validating}>Cancel</button>
+          <button className="btn primary" onClick={()=> onSubmit(tokenInput)} disabled={validating}>
+            {validating ? 'Validating…' : 'Save token'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
