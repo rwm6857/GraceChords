@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-11-14T01:10:02.469Z",
+  "generatedAt": "2025-12-12T23:38:40.575Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1049,6 +1049,20 @@
       ],
       "authors": [],
       "country": "Israel"
+    },
+    {
+      "id": "joy-to-the-world-unspeakable-joy",
+      "title": "Joy to the World (Unspeakable Joy)",
+      "filename": "joy_to_the_world_unspeakable_joy.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Fast",
+        "Christmas"
+      ],
+      "authors": [
+        "Chris Tomlin"
+      ],
+      "country": "USA"
     },
     {
       "id": "kernel-of-wheat",
