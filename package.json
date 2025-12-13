@@ -35,7 +35,7 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.0.0",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.11",
     "mammoth": "^1.10.0",
     "pdf-parse": "^1.1.1",
     "vite": "^7.1.4",
