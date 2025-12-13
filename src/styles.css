@@ -783,11 +783,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   display:flex;
   flex-direction:column;
   gap:4px;
-  padding:10px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  text-decoration:none;
-  color: var(--text);
+  padding:10px 12px;
 }
 .home-mini-card__title{
   font-weight:600;
@@ -812,11 +808,11 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   flex-direction:column;
   gap:6px;
   padding:12px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  text-decoration:none;
-  color: var(--text);
   flex:1;
+}
+.home-mini-card.tool-card,
+.home-post-card.tool-card{
+  padding:12px;
 }
 .home-post-card__title{
   font-weight:600;

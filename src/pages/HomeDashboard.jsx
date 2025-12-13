@@ -466,7 +466,7 @@ function SongMiniCard({ song }){
   const author = Array.isArray(song.authors) ? song.authors[0] : ''
   const key = song.originalKey ? ` (${song.originalKey})` : ''
   return (
-    <Link to={`/song/${song.id}`} className="home-mini-card card">
+    <Link to={`/song/${song.id}`} className="home-mini-card tool-card">
       <div className="home-mini-card__title">
         <strong>{song.title}{key}</strong>
         {author ? <span className="home-mini-card__by"> by <em>{author}</em></span> : null}
@@ -484,7 +484,7 @@ function SongMiniCard({ song }){
 function PostMiniCard({ post }){
   const summary = post.summary || ''
   return (
-    <Link to={`/resources/${post.slug}`} className="home-post-card card">
+    <Link to={`/resources/${post.slug}`} className="home-post-card tool-card">
       <div className="home-post-card__title">{post.title}</div>
       <p className="home-post-card__summary line-clamp-3">{summary}</p>
     </Link>
