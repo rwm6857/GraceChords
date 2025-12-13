@@ -217,7 +217,7 @@ export default function HomeDashboard(){
       dateMs: parseDateMs(p.date)
     }))
     posts.sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
-    return posts.slice(0, 2)
+    return posts.slice(0, 3)
   }, [])
 
   return (
@@ -405,9 +405,6 @@ export default function HomeDashboard(){
 
       <section className="home-latest" style={{ marginTop: 8, marginBottom: 40 }}>
         <div className="container" style={{ padding: '0 12px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
-            <h2 className="home-section-title" style={{ margin: 0 }}>Latest</h2>
-          </div>
           <div className="home-latest__grid">
             <div className="home-latest__col">
               <div className="home-latest__header">
@@ -464,15 +461,15 @@ function QuickCard({ to, title, desc, onClick }){
 
 function SongMiniCard({ song }){
   const tags = song.tags || []
-  const shownTags = tags.slice(0, 3)
+  const shownTags = tags.slice(0, 4)
   const extra = tags.length - shownTags.length
   const author = Array.isArray(song.authors) ? song.authors[0] : ''
+  const key = song.originalKey ? ` (${song.originalKey})` : ''
   return (
     <Link to={`/song/${song.id}`} className="home-mini-card card">
-      <div className="home-mini-card__title">{song.title}</div>
-      <div className="home-mini-card__meta Small">
-        {song.originalKey ? <span className="home-mini-card__pill">Key {song.originalKey}</span> : null}
-        {author ? <span className="home-mini-card__pill">{author}</span> : null}
+      <div className="home-mini-card__title">
+        <strong>{song.title}{key}</strong>
+        {author ? <span className="home-mini-card__by"> by <em>{author}</em></span> : null}
       </div>
       <div className="home-mini-card__tags">
         {shownTags.map(t => (
