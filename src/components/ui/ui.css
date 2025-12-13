@@ -227,6 +227,9 @@
   .gc-editor-fab:active{
     transform: translateY(0) scale(.98);
   }
+  @media (max-width: 720px){
+    .gc-editor-fab{ display:none; }
+  }
   .gc-drawer__footer{
     margin-top:auto;
     padding-top:16px;
