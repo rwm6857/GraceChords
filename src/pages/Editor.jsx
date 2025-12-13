@@ -468,7 +468,30 @@ function SongsEditor({ onStageSong }){
       Chorus: { start: '{soc Chorus}\n', end: '{eoc}\n' },
       Bridge: { start: '{sob Bridge}\n', end: '{eob}\n' },
     }[label] || { start: `{start_of_${label.toLowerCase()}}:\n`, end: `{end_of_${label.toLowerCase()}}\n` }
-    insertAtCursor(`${spec.start}${spec.end}`)
+    const ta = editorRef.current
+    if(!ta){
+      setText(t => (t || '') + spec.start + spec.end)
+      return
+    }
+    const selStart = ta.selectionStart ?? 0
+    const selEnd = ta.selectionEnd ?? selStart
+    const hasSelection = selEnd > selStart
+
+    setText(prev => {
+      const before = prev.slice(0, selStart)
+      const selected = hasSelection ? prev.slice(selStart, selEnd) : ''
+      const after = prev.slice(selEnd)
+      return before + spec.start + selected + spec.end + after
+    })
+
+    setTimeout(() => {
+      try {
+        ta.focus()
+        const base = selStart + spec.start.length
+        const endPos = base + (hasSelection ? (selEnd - selStart) : 0)
+        ta.setSelectionRange(base, endPos || base)
+      } catch {}
+    }, 0)
   }
 
   function majorScaleChordSet(keySym){
