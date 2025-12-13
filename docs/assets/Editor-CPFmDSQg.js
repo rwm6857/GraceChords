@@ -1,4 +1,4 @@
-import{r as a,j as e,I as oe,B as R,u as he,c as ne,v as ge,s as A,L as me,H as pe,S as fe,M as xe,t as je,C as ye,A as Se,i as be,f as ke,p as ie,a as ve,b as we,d as le,e as Ce,g as Ne,P as ae,T as ue,h as Ee,k as Te,l as re,m as Ie,n as Re,o as Me,q as Pe,w as $e,K as G,x as _e,y as Ae}from"./index-BdVRZXNz.js";import{R as Fe}from"./AdminResources-NiwobW0O.js";import"./markdown-DhTLSAy7.js";const qe="10401040",ce=`{title: }
+import{r as a,j as e,I as oe,B as R,u as he,c as ne,v as ge,s as A,L as me,H as pe,S as fe,M as xe,t as je,C as ye,A as Se,i as be,f as ke,p as ie,a as ve,b as we,d as le,e as Ce,g as Ne,P as ae,T as ue,h as Ee,k as Te,l as re,m as Ie,n as Re,o as Me,q as Pe,w as $e,K as G,x as _e,y as Ae}from"./index-NDYv334z.js";import{R as Fe}from"./AdminResources-C695MT4k.js";import"./markdown-DhTLSAy7.js";const qe="10401040",ce=`{title: }
 {key: }
 {authors: }
 {country: }
