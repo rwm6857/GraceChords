@@ -1,0 +1,241 @@
+name: GraceChords Automation
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: automation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  automation:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE"^{commit}; then
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              BASE="HEAD^"
+            else
+              BASE="$(git rev-list --max-parents=0 HEAD)"
+            fi
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE" "${{ github.sha }}" || true)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          songs=false
+          resources=false
+          wiki=false
+          code=false
+          sitemap_inputs=false
+          index_script=false
+          resources_script=false
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              public/songs/*) songs=true; sitemap_inputs=true ;;
+              public/resources/*) resources=true; sitemap_inputs=true ;;
+              public/wiki/*|scripts/syncWiki.mjs) wiki=true ;;
+              scripts/buildIndex.mjs) index_script=true ;;
+              scripts/buildResourcesIndex.mjs) resources_script=true ;;
+              scripts/generate-sitemap.mjs|src/data/index.json|src/data/resources.json) sitemap_inputs=true ;;
+              docs/*) ;;
+              *) code=true ;;
+            esac
+          done <<< "$CHANGED"
+
+          if [ "$songs" = "true" ] || [ "$index_script" = "true" ]; then
+            index_needed=true
+          else
+            index_needed=false
+          fi
+
+          if [ "$resources" = "true" ] || [ "$resources_script" = "true" ]; then
+            resources_index_needed=true
+          else
+            resources_index_needed=false
+          fi
+
+          if [ "$sitemap_inputs" = "true" ] || [ "$index_needed" = "true" ] || [ "$resources_index_needed" = "true" ]; then
+            sitemap_needed=true
+          else
+            sitemap_needed=false
+          fi
+
+          if [ "$code" = "true" ] || [ "$index_needed" = "true" ] || [ "$resources_index_needed" = "true" ] || [ "$sitemap_needed" = "true" ] || [ "$wiki" = "true" ]; then
+            build_needed=true
+          else
+            build_needed=false
+          fi
+
+          echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "songs=$songs" >> "$GITHUB_OUTPUT"
+          echo "resources=$resources" >> "$GITHUB_OUTPUT"
+          echo "wiki=$wiki" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "index_needed=$index_needed" >> "$GITHUB_OUTPUT"
+          echo "resources_index_needed=$resources_index_needed" >> "$GITHUB_OUTPUT"
+          echo "sitemap_needed=$sitemap_needed" >> "$GITHUB_OUTPUT"
+          echo "build_needed=$build_needed" >> "$GITHUB_OUTPUT"
+
+      - name: Share update to Telegram
+        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' && github.event_name == 'push' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if echo "${{ github.event.head_commit.message }}" | grep -Ei '\[skip announce\]|\[no announce\]' >/dev/null; then
+            echo "Skipping Telegram due to commit flag."
+            exit 0
+          fi
+
+          commit_msg="${{ github.event.head_commit.message }}"
+          if [ -z "$commit_msg" ]; then
+            commit_msg="$(git log -1 --pretty=%B || true)"
+          fi
+
+          changed_files=$(printf '%s\n' "${{ steps.changes.outputs.changed_files }}")
+          summary=""
+
+          if [ -n "${OPENAI_API_KEY:-}" ]; then
+            payload=$(jq -n \
+              --arg message "$commit_msg" \
+              --arg diff "$changed_files" \
+              '{
+                model: "gpt-4o-mini",
+                messages: [
+                  {
+                    "role": "system",
+                    "content": "You are the GraceChords Bot, a friendly and upbeat writer. Write a short Telegram update for end users, in a casual tone. Keep it to 1–3 short sentences or a small bullet list. Use real newlines (no literal \\n). Avoid hashtags and links. You may include 1–2 fitting emojis."
+                  },
+                  {
+                    "role": "user",
+                    "content": ("Commit message:\\n" + $message + "\\n\\nChanged files:\\n" + $diff)
+                  }
+                ],
+                max_tokens: 300,
+                temperature: 0.7
+              }')
+
+            response=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+
+            summary=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+          fi
+
+          if [ -z "$summary" ] || [ "$summary" = "null" ]; then
+            summary="Update pushed: ${commit_msg:-latest changes}."
+            if [ -n "$changed_files" ]; then
+              summary="$summary\nFiles:\n$(echo "$changed_files" | sed 's/^/- /')"
+            fi
+          fi
+
+          summary=$(printf '%s' "$summary" | perl -pe 's/\r//g; s/\\r\\n|\r\n|\r/\n/g')
+          summary=$(printf '%s' "$summary" | sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&gt;/g')
+
+          title='<b>🎸 GraceChords Update</b>'
+          footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
+          text=$(printf "%b" "$title\n\n$summary\n\n$footer")
+
+          payload=$(jq -n \
+            --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg mode "HTML" \
+            --rawfile text <(printf "%s" "$text") \
+            '{chat_id: $chat_id, text: $text, parse_mode: $mode, disable_web_page_preview: true}')
+
+          delay=$((3 + RANDOM % 3))
+          echo "GraceChords Bot is typing for $delay seconds..."
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction" \
+               -d chat_id="$TELEGRAM_CHAT_ID" \
+               -d action="typing" >/dev/null || true
+          sleep "$delay"
+
+          echo "Sending message to Telegram..."
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+               -H 'Content-Type: application/json' \
+               -d "$payload"
+
+      - uses: actions/setup-node@v4
+        if: ${{ steps.changes.outputs.index_needed == 'true' || steps.changes.outputs.resources_index_needed == 'true' || steps.changes.outputs.sitemap_needed == 'true' || steps.changes.outputs.build_needed == 'true' || steps.changes.outputs.wiki == 'true' }}
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        if: ${{ steps.changes.outputs.index_needed == 'true' || steps.changes.outputs.resources_index_needed == 'true' || steps.changes.outputs.sitemap_needed == 'true' || steps.changes.outputs.build_needed == 'true' || steps.changes.outputs.wiki == 'true' }}
+        run: npm ci
+
+      - name: Sync wiki
+        if: ${{ steps.changes.outputs.wiki == 'true' }}
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WIKI_PUSH_TOKEN:-}" ]; then
+            echo "WIKI_PUSH_TOKEN missing; skipping wiki sync."
+            exit 0
+          fi
+          node scripts/syncWiki.mjs
+
+      - name: Rebuild song index
+        if: ${{ steps.changes.outputs.index_needed == 'true' }}
+        run: npm run build-index
+
+      - name: Rebuild resources index
+        if: ${{ steps.changes.outputs.resources_index_needed == 'true' }}
+        run: npm run build-resources-index
+
+      - name: Generate sitemap
+        if: ${{ steps.changes.outputs.sitemap_needed == 'true' }}
+        run: npm run generate:sitemap
+
+      - name: Build site into /docs
+        if: ${{ steps.changes.outputs.build_needed == 'true' }}
+        env:
+          VITE_COMMIT_SHA: ${{ github.sha }}
+        run: npm run build
+
+      - name: Commit and push generated assets
+        if: ${{ steps.changes.outputs.index_needed == 'true' || steps.changes.outputs.resources_index_needed == 'true' || steps.changes.outputs.sitemap_needed == 'true' || steps.changes.outputs.build_needed == 'true' || steps.changes.outputs.wiki == 'true' }}
+        shell: bash
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A docs src/data/*.json public/sitemap.xml public/robots.txt || true
+
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+
+          git commit -m "chore: automation for $GITHUB_SHA"
+          git push
