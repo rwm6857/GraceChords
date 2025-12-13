@@ -123,6 +123,11 @@ jobs:
             commit_msg="$(git log -1 --pretty=%B || true)"
           fi
 
+          if ! printf '%s' "$commit_msg" | grep -Ei '\#post|\#announce|\[post\]|\[announce\]' >/dev/null; then
+            echo "No announce flag in commit message (#post / #announce); skipping Telegram."
+            exit 0
+          fi
+
           changed_files=$(printf '%s\n' "${{ steps.changes.outputs.changed_files }}")
           summary=""
 
