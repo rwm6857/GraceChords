@@ -619,7 +619,8 @@ function SongsEditor({ onStageSong, prefill }){
         country: metaOverride.country || '',
         tags: metaOverride.tags || '',
         youtube: metaOverride.youtube || '',
-        mp3: metaOverride.mp3 || ''
+        mp3: metaOverride.mp3 || '',
+        added: metaOverride.added || ''
       })
       const fname = filenameOverride || suggestCanonicalFilename(docTitle)
       const final = appendDisclaimerIfMissing(out)
@@ -654,7 +655,16 @@ function SongsEditor({ onStageSong, prefill }){
   const isExisting = !!editingFile
 
   function handleStageChanges(){
-    const built = buildCanonical()
+    let rawText = text
+    if (!isExisting) {
+      const m = parseMeta(rawText)
+      if (!m.added) {
+        const iso = new Date().toISOString()
+        rawText = setOrInsertMeta(rawText, 'added', iso)
+        setText(rawText)
+      }
+    }
+    const built = buildCanonical(rawText, parseMeta(rawText), editingFile)
     if (!built) return
 
     if (!isExisting) {

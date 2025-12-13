@@ -6,6 +6,7 @@ import heroDark from '../assets/dashboard-hero-worship-angled.png'
 import heroLight from '../assets/dashboard-hero-worship-angled-light.png'
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
+import resourcesData from '../data/resources.json'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -200,6 +201,25 @@ export default function HomeDashboard(){
     blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
   }
 
+  const latestSongs = useMemo(() => {
+    const all = (indexData?.items || []).map(s => {
+      const addedRaw = s.addedAt || s.added
+      const addedMs = addedRaw ? Date.parse(addedRaw) : 0
+      return { ...s, addedMs }
+    }).filter(s => !isIncompleteSong(s))
+    all.sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
+    return all.slice(0, 5)
+  }, [])
+
+  const latestPosts = useMemo(() => {
+    const posts = (resourcesData?.items || []).map(p => ({
+      ...p,
+      dateMs: parseDateMs(p.date)
+    }))
+    posts.sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
+    return posts.slice(0, 2)
+  }, [])
+
   return (
     <div className="HomeDashboard">
       <Helmet>
@@ -382,6 +402,36 @@ export default function HomeDashboard(){
           </div>
         </div>
       </section>
+
+      <section className="home-latest" style={{ marginTop: 8, marginBottom: 40 }}>
+        <div className="container" style={{ padding: '0 12px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
+            <h2 className="home-section-title" style={{ margin: 0 }}>Latest</h2>
+          </div>
+          <div className="home-latest__grid">
+            <div className="home-latest__col">
+              <div className="home-latest__header">
+                <h3>Latest Songs</h3>
+              </div>
+              <div className="home-latest__list">
+                {latestSongs.length ? latestSongs.map(song => (
+                  <SongMiniCard key={song.id} song={song} />
+                )) : <p className="Small" style={{ opacity: 0.8 }}>No songs yet.</p>}
+              </div>
+            </div>
+            <div className="home-latest__col home-latest__col--posts">
+              <div className="home-latest__header">
+                <h3>Latest Posts</h3>
+              </div>
+              <div className="home-latest__posts">
+                {latestPosts.length ? latestPosts.map(post => (
+                  <PostMiniCard key={post.slug} post={post} />
+                )) : <p className="Small" style={{ opacity: 0.8 }}>No posts yet.</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
@@ -410,4 +460,51 @@ function QuickCard({ to, title, desc, onClick }){
       <p className="tool-card__desc">{desc}</p>
     </button>
   )
+}
+
+function SongMiniCard({ song }){
+  const tags = song.tags || []
+  const shownTags = tags.slice(0, 3)
+  const extra = tags.length - shownTags.length
+  const author = Array.isArray(song.authors) ? song.authors[0] : ''
+  return (
+    <Link to={`/song/${song.id}`} className="home-mini-card card">
+      <div className="home-mini-card__title">{song.title}</div>
+      <div className="home-mini-card__meta Small">
+        {song.originalKey ? <span className="home-mini-card__pill">Key {song.originalKey}</span> : null}
+        {author ? <span className="home-mini-card__pill">{author}</span> : null}
+      </div>
+      <div className="home-mini-card__tags">
+        {shownTags.map(t => (
+          <span key={t} className="gc-tag gc-tag--gray Small">{t}</span>
+        ))}
+        {extra > 0 ? <span className="gc-tag gc-tag--gray Small">+{extra}</span> : null}
+      </div>
+    </Link>
+  )
+}
+
+function PostMiniCard({ post }){
+  const summary = post.summary || ''
+  return (
+    <Link to={`/resources/${post.slug}`} className="home-post-card card">
+      <div className="home-post-card__title">{post.title}</div>
+      <p className="home-post-card__summary line-clamp-3">{summary}</p>
+    </Link>
+  )
+}
+
+function isIncompleteSong(song){
+  const v = song?.incomplete
+  if (typeof v === 'boolean') return v
+  if (v === undefined || v === null) return false
+  const s = String(v).trim().toLowerCase()
+  if (!s) return false
+  return ['1','true','yes','y','on'].includes(s)
+}
+
+function parseDateMs(val){
+  if (!val) return 0
+  const t = Date.parse(val)
+  return Number.isNaN(t) ? 0 : t
 }

@@ -8,6 +8,7 @@ export type MetaExtras = {
   youtube?: string
   mp3?: string
   pptx?: string
+  added?: string
 }
 
 function stripDecorations(title: string){
@@ -32,6 +33,7 @@ export function convertToCanonicalChordPro(raw: string, extras?: Partial<MetaExt
       ...(extras?.youtube ? { youtube: extras.youtube } : {}),
       ...(extras?.mp3 ? { mp3: extras.mp3 } : {}),
       ...(extras?.pptx ? { pptx: extras.pptx } : {}),
+      ...(extras?.added ? { added: extras.added } : {}),
     }
   }
 

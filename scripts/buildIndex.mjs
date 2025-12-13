@@ -15,7 +15,19 @@ for(const filename of files){
   const text = await fs.readFile(full, 'utf8')
   const meta = parseMeta(text)
   const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
-    items.push({ id, title: meta.title || id || filename.replace(/\.chordpro$/,''), filename, originalKey: meta.key || '', tags: (meta.tags||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean), country: meta.country||'' })
+  const addedAt = parseAdded(meta.added || meta.addedat)
+  const incomplete = parseBoolean(meta.incomplete || meta.draft || meta.hidden)
+  items.push({
+    id,
+    title: meta.title || id || filename.replace(/\.chordpro$/,''),
+    filename,
+    originalKey: meta.key || '',
+    tags: (meta.tags||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean),
+    authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean),
+    country: meta.country||'',
+    addedAt: addedAt || undefined,
+    incomplete
+  })
 }
 function normalizeTitleForSort(title = ''){
   const t = String(title || '').trim()
@@ -36,3 +48,15 @@ await fs.writeFile(outFile, JSON.stringify({ generatedAt: new Date().toISOString
 console.log(`Wrote ${items.length} songs to ${outFile}`)
 
 function parseMeta(text){ const meta={}; const re=/^\{\s*([^:}]+)\s*:\s*([^}]*)\s*\}\s*$/gm; let m; while((m=re.exec(text))){ meta[m[1].trim().toLowerCase()] = m[2].trim() } return meta }
+function parseBoolean(val){
+  if (val === undefined || val === null) return false
+  const v = String(val).trim().toLowerCase()
+  if (!v) return false
+  return ['1','true','yes','y','on'].includes(v)
+}
+function parseAdded(val){
+  if (!val) return ''
+  const d = new Date(val)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString()
+}
