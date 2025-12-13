@@ -258,10 +258,10 @@ export default function Songs(){
         <meta property="og:type" content="website" />
         <meta property="og:title" content={SONGS_TITLE} />
         <meta property="og:description" content={SONGS_DESCRIPTION} />
-        <meta property="og:url" content={`${SITE_URL}/#/songs`} />
+        <meta property="og:url" content={`${SITE_URL}/?view=songs`} />
         <meta property="og:site_name" content="GraceChords" />
         <meta property="og:image" content={OG_IMAGE_URL} />
-        <link rel="canonical" href={`${SITE_URL}/#/songs`} />
+        <link rel="canonical" href={`${SITE_URL}/?view=songs`} />
       </Helmet>
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>

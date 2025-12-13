@@ -1,8 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import resourcesData from '../data/resources.json'
+import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
+import resourcesData from '../data/resources.json'
 import { stripMarkdown } from '../utils/markdown'
+
+const SITE_URL = 'https://gracechords.com'
+const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
+const PAGE_TITLE = 'Resources — Guides, Tutorials, and Tools | GraceChords'
+const PAGE_DESCRIPTION = 'Guides, tutorials, and worship resources for teams and believers. Search by topic and tags, and read posts with practical tips from GraceChords.'
 
 export default function Resources(){
   const items = useMemo(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')), [])
@@ -48,6 +54,18 @@ export default function Resources(){
 
   return (
     <div className="HomePage">
+      <Helmet>
+        <title>{PAGE_TITLE}</title>
+        <meta name="description" content={PAGE_DESCRIPTION} />
+        <meta name="keywords" content="worship resources, worship tutorials, guides, church tech, GraceChords resources" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={PAGE_TITLE} />
+        <meta property="og:description" content={PAGE_DESCRIPTION} />
+        <meta property="og:url" content={`${SITE_URL}/?view=resources`} />
+        <meta property="og:site_name" content="GraceChords" />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <link rel="canonical" href={`${SITE_URL}/?view=resources`} />
+      </Helmet>
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
           <h1>Resources</h1>

@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from 'react-router-dom'
 import resourcesData from '../data/resources.json'
-import { mdToHtml, parseFrontmatter } from '../utils/markdown'
+import { mdToHtml, parseFrontmatter, stripMarkdown } from '../utils/markdown'
+
+const SITE_URL = 'https://gracechords.com'
+const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function ResourcePost(){
   const { slug } = useParams()
@@ -35,14 +39,45 @@ export default function ResourcePost(){
     const arr = (resourcesData?.items || []).filter(it => it.slug !== slug && it.tags?.some(t => tags.has(t)))
     return arr.slice(0, 3)
   }, [slug, meta, item])
+  const title = meta.title || item?.title || slug
+  const description = useMemo(() => {
+    const base = meta.summary || item?.summary
+    if (base) return base
+    const txt = stripMarkdown(raw)
+    if (txt.length > 220) return `${txt.slice(0, 220).trim()}…`
+    return txt || 'GraceChords resource article.'
+  }, [meta, item, raw])
+  const canonicalUrl = `${SITE_URL}/?resource=${encodeURIComponent(slug || '')}`
 
   return (
     <div className="container">
+      <Helmet>
+        <title>{title ? `${title} | GraceChords Resources` : 'GraceChords Resources'}</title>
+        <meta name="description" content={description} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={title || 'GraceChords Resources'} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content="GraceChords" />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <link rel="canonical" href={canonicalUrl} />
+        {meta.tags?.length ? <meta name="keywords" content={meta.tags.join(', ')} /> : null}
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: title,
+          description,
+          author: meta.author || item?.author || 'GraceChords',
+          datePublished: meta.date || item?.date,
+          dateModified: meta.date || item?.date,
+          url: canonicalUrl
+        })}</script>
+      </Helmet>
       {err ? (
         <div className="alert error">{err}</div>
       ) : null}
       <article className="card" style={{ padding: 12 }}>
-        <h1 style={{ margin: '4px 0' }}>{meta.title || item?.title || slug}</h1>
+        <h1 style={{ margin: '4px 0' }}>{title}</h1>
         <div className="Small" style={{ opacity: 0.8 }}>
           by {meta.author || item?.author || '—'} • {fmtDate(meta.date || item?.date)}
         </div>
@@ -74,4 +109,3 @@ export default function ResourcePost(){
 function fmtDate(s){
   try { return new Date(s).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) } catch { return s }
 }
-

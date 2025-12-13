@@ -53,7 +53,7 @@ function buildSongSeo(entry, parsed, id){
     )
   }
   const keywords = keywordParts.join(', ')
-  const url = `${SITE_URL}/#/song/${encodeURIComponent(routeSlug)}`
+  const url = `${SITE_URL}/?song=${encodeURIComponent(routeSlug)}`
   const authors = Array.isArray(entry?.authors) ? entry.authors.filter(Boolean) : []
   const names = authors.length ? authors.join(', ') : ''
   const ld = {

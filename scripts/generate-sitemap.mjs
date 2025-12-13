@@ -8,12 +8,13 @@ const indexData = await readJson(path.join(root, 'src', 'data', 'index.json'))
 const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
 
 const staticRoutes = [
-  '/#/about',
-  '/#/songs',
-  '/#/setlist',
-  '/#/songbook',
-  '/#/resources',
-  '/#/bundle'
+  '/', // home
+  '/?view=about',
+  '/?view=songs',
+  '/?view=setlist',
+  '/?view=songbook',
+  '/?view=resources',
+  '/?view=bundle'
 ]
 
 const urlMap = new Map()
@@ -53,23 +54,19 @@ function clampDateToToday(ms){
   return candidate > todayStr ? todayStr : candidate
 }
 
-function addUrl(loc, lastmod = todayStr){
-  if (!loc) return
-  const safeLoc = String(loc)
+function addUrl(path, lastmod = todayStr){
+  if (!path) return
+  const safeLoc = path.startsWith('http') ? path : `${BASE_URL}${path}`
   const safeDate = clampDateToToday(lastmod)
   urlMap.set(safeLoc, safeDate)
 }
 
-// Homepage (canonical, non-hash)
-addUrl(`${BASE_URL}/`, todayStr)
-
-// Hash-based static routes
-for (const p of staticRoutes) addUrl(`${BASE_URL}${p}`, todayStr)
+for (const p of staticRoutes) addUrl(p, todayStr)
 
 for (const song of (indexData?.items || [])) {
   const slug = song?.id || song?.filename?.replace(/\.chordpro$/, '')
   if (!slug) continue
-  const loc = `${BASE_URL}/#/song/${encodeSlug(slug)}`
+  const loc = `/?song=${encodeSlug(slug)}`
   const songFile = song?.filename ? path.join(root, 'public', 'songs', song.filename) : null
   const mtime = songFile ? await fileLastMod(songFile) : null
   addUrl(loc, clampDateToToday(mtime))
@@ -77,7 +74,7 @@ for (const song of (indexData?.items || [])) {
 
 for (const res of (resourcesData?.items || [])) {
   if (!res?.slug) continue
-  const loc = `${BASE_URL}/#/resources/${encodeSlug(res.slug)}`
+  const loc = `/?resource=${encodeSlug(res.slug)}`
   const resFile = res?.filename ? path.join(root, 'public', 'resources', res.filename) : null
   const mtime = resFile ? await fileLastMod(resFile) : null
   addUrl(loc, clampDateToToday(mtime))
