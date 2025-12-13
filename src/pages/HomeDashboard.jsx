@@ -208,7 +208,7 @@ export default function HomeDashboard(){
       return { ...s, addedMs }
     }).filter(s => !isIncompleteSong(s))
     all.sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
-    return all.slice(0, 5)
+    return all.slice(0, 6)
   }, [])
 
   const latestPosts = useMemo(() => {
