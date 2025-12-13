@@ -113,18 +113,21 @@ jobs:
             exit 0
           fi
 
-          if echo "${{ github.event.head_commit.message }}" | grep -Ei '\[skip announce\]|\[no announce\]' >/dev/null; then
-            echo "Skipping Telegram due to commit flag."
-            exit 0
-          fi
-
           commit_msg="${{ github.event.head_commit.message }}"
           if [ -z "$commit_msg" ]; then
             commit_msg="$(git log -1 --pretty=%B || true)"
           fi
-
-          if ! printf '%s' "$commit_msg" | grep -Ei '\#post|\#announce|\[post\]|\[announce\]' >/dev/null; then
-            echo "No announce flag in commit message (#post / #announce); skipping Telegram."
+          announce_flag=false
+          # Always announce when songs or resources changed
+          if [ "${{ steps.changes.outputs.index_needed }}" = "true" ] || [ "${{ steps.changes.outputs.resources_index_needed }}" = "true" ]; then
+            announce_flag=true
+          fi
+          # Allow manual opt-in via commit message
+          if printf '%s' "$commit_msg" | grep -Ei '\#post|\#announce|\[post\]|\[announce\]' >/dev/null; then
+            announce_flag=true
+          fi
+          if [ "$announce_flag" != "true" ]; then
+            echo "No announce flag and no song/resource changes; skipping Telegram."
             exit 0
           fi
 

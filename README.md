@@ -239,6 +239,7 @@ Song files (`/songs/**`) and the index (`/src/data/index.json`) are fetched with
 ## Usage Notes
 - **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
 - **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), 1/2‑column reading view, collapsible media.
+- **Editor shortcut**: floating pencil button (bottom-right) opens the editor. On song/resource pages it preloads that item; on the song/resources list it starts a new entry of that type; elsewhere it opens a new song draft.
 - **Setlist**: `/setlist` lets you build/reorder sets, choose keys, save/load by name (modal), share a link, and export PDF/PPTX. Headers are sticky within each pane; panes scroll independently.
 - **Songbook**: builder mirrors Setlist layout and width; sticky header with inline search and “Add all”. Export always includes a TOC; optional cover image.
 - **PDFs**: vector text with Noto Sans; sections stay together; layout auto‑switches to two columns when needed.

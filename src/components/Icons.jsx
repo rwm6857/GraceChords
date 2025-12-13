@@ -58,6 +58,7 @@ export const TrashIcon = (p)=> <S {...p}><polyline points="3 6 5 6 21 6"/><path 
 export const PrintIcon = (p)=> <S {...p}><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="2"/></S>
 export const MinusIcon = (p)=> <S {...p}><path d="M5 12h14"/></S>
 export const LinkIcon = (p)=> <S {...p}><path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0 0-7.07 5 5 0 0 0-7.07 0L10 5"/><path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 1 0 7.07 7.07L14 19"/></S>
+export const PencilIcon = (p)=> <S {...p}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="m15 5 3 3"/></S>
 
 // Search (magnifying glass)
 export const SearchIcon = (p)=> (

@@ -18,6 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoute'
 import Toast from './components/Toast'
 import SiteDisclaimer from './components/SiteDisclaimer'
+import EditorFab from './components/EditorFab'
 
 export default function App(){
   return (
@@ -58,6 +59,7 @@ function Layout(){
       <main id="main" className="Route">
         <Outlet />
       </main>
+      <EditorFab />
     </div>
   )
 }

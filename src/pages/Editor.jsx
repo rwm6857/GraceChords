@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import indexData from '../data/index.json'
 import { ResourceEditor } from './AdminResources.jsx'
 import { KEYS, keyRoot } from '../utils/chordpro'
@@ -82,7 +82,12 @@ export default function Editor(){
 }
 
 function EditorPanel({ authorName }){
-  const [activeTab, setActiveTab] = useState('songs')
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'posts' || tab === 'resources') return 'posts'
+    return 'songs'
+  })
   const [staged, setStaged] = useState(() => {
     try {
       const raw = sessionStorage.getItem('editor:staged')
@@ -111,6 +116,21 @@ function EditorPanel({ authorName }){
   const [validatingToken, setValidatingToken] = useState(false)
   const [, setThemeTick] = useState(0)
   const isDark = (currentTheme && typeof currentTheme === 'function') ? (currentTheme() === 'dark') : false
+  const songParam = searchParams.get('song')
+  const resParam = searchParams.get('resource')
+  const newSongParam = searchParams.get('newSong')
+  const newResParam = searchParams.get('newResource')
+  const tabParam = searchParams.get('tab')
+
+  useEffect(() => {
+    if (tabParam === 'posts' || tabParam === 'resources') {
+      setActiveTab('posts')
+    } else if (tabParam === 'songs') {
+      setActiveTab('songs')
+    } else if (resParam || newResParam) {
+      setActiveTab('posts')
+    }
+  }, [tabParam, resParam, newResParam])
 
   useEffect(() => {
     const existing = localStorage.getItem('ghToken')
@@ -290,9 +310,15 @@ function EditorPanel({ authorName }){
 
         <div className="gc-editor-shell">
           {activeTab === 'songs' ? (
-            <SongsEditor onStageSong={onStageSong} />
+            <SongsEditor
+              onStageSong={onStageSong}
+              prefill={songParam ? { kind: 'existing', id: songParam } : (newSongParam ? { kind: 'new' } : null)}
+            />
           ) : (
-            <PostsEditor onStagePost={onStagePost} />
+            <PostsEditor
+              onStagePost={onStagePost}
+              prefill={resParam ? { kind: 'existing', slug: resParam } : (newResParam ? { kind: 'new' } : null)}
+            />
           )}
 
           <section className="gc-editor-panel gc-editor-panel--staged gc-staged-card">
@@ -371,7 +397,7 @@ function EditorPanel({ authorName }){
 )
 }
 
-function SongsEditor({ onStageSong }){
+function SongsEditor({ onStageSong, prefill }){
   const [text, setText] = useState(INITIAL_TEXT)
   const [meta, setMeta] = useState({})
   useEffect(() => { setMeta(parseMeta(text)) }, [text])
@@ -401,6 +427,11 @@ function SongsEditor({ onStageSong }){
   const [searchIndex, setSearchIndex] = useState(-1)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleteReasonInput, setDeleteReasonInput] = useState('')
+  const [prefillApplied, setPrefillApplied] = useState(false)
+
+  useEffect(() => {
+    setPrefillApplied(false)
+  }, [prefill?.id, prefill?.kind])
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
@@ -413,6 +444,31 @@ function SongsEditor({ onStageSong }){
     }).slice(0, 12)
   }, [items, searchQuery])
   useEffect(() => { setSearchIndex(-1) }, [searchQuery])
+
+  useEffect(() => {
+    if (prefillApplied) return
+    if (!prefill) return
+    const kind = prefill.kind
+    const id = prefill.id
+    if (kind === 'existing' && id) {
+      const target = items.find(s =>
+        String(s.id) === String(id) ||
+        s.filename === id ||
+        s.filename?.replace(/\.chordpro$/, '') === String(id)
+      )
+      if (target) {
+        handleSelectSong(target)
+        setPrefillApplied(true)
+        return
+      }
+      setPrefillApplied(true)
+      return
+    }
+    if (kind === 'new') {
+      handleNewSong()
+      setPrefillApplied(true)
+    }
+  }, [prefill, prefillApplied, items])
 
   async function handleSelectSong(it){
     if (!it) return
@@ -837,7 +893,7 @@ function SongsEditor({ onStageSong }){
   )
 }
 
-function PostsEditor({ onStagePost }){
+function PostsEditor({ onStagePost, prefill }){
   const [draft, setDraft] = useState(null)
   const [changeSummary, setChangeSummary] = useState('')
   const [deleteReason, setDeleteReason] = useState('')
@@ -892,6 +948,7 @@ function PostsEditor({ onStagePost }){
       showGhTools={false}
       wrapInContainer={false}
       panelize
+      prefill={prefill}
       onDraftChange={setDraft}
       actions={({ draft: currentDraft, newPost }) => {
         const d = currentDraft || draft

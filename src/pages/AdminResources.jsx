@@ -32,7 +32,7 @@ export default function AdminResources(){
   return <ResourceEditor />
 }
 
-export function ResourceEditor({ actions, onDraftChange, showGhTools = true, heading = 'Admin: Resources', wrapInContainer = true, panelize = false }){
+export function ResourceEditor({ actions, onDraftChange, showGhTools = true, heading = 'Admin: Resources', wrapInContainer = true, panelize = false, prefill = null }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
   const [slug, setSlug] = useState('')
   const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
@@ -87,6 +87,11 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
   const [busy, setBusy] = useState(false)
   const [defaultBranch, setDefaultBranch] = useState('main')
   const [ghUser, setGhUser] = useState(null)
+  const [prefillApplied, setPrefillApplied] = useState(false)
+
+  useEffect(() => {
+    setPrefillApplied(false)
+  }, [prefill?.slug, prefill?.kind])
 
   function composeFile(currentMeta = meta, currentBody = body){
     const fm = [
@@ -163,6 +168,25 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
       onDraftChange(draft)
     }
   }, [draft, onDraftChange])
+
+  useEffect(() => {
+    if (prefillApplied) return
+    if (!prefill) return
+    if (prefill.kind === 'existing' && prefill.slug) {
+      const target = list.find(it => it.slug === prefill.slug)
+      if (target) {
+        loadExisting(target)
+        setPrefillApplied(true)
+        return
+      }
+      setPrefillApplied(true)
+      return
+    }
+    if (prefill.kind === 'new') {
+      newPost()
+      setPrefillApplied(true)
+    }
+  }, [prefill, prefillApplied, list])
 
   const customActions = typeof actions === 'function' ? actions({ draft, newPost }) : actions
 

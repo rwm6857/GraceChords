@@ -201,6 +201,32 @@
     color:#ffffff !important;
     -webkit-text-fill-color:#ffffff !important;
   }
+  /* Floating editor shortcut */
+  .gc-editor-fab{
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    width:54px;
+    height:54px;
+    border-radius:999px;
+    background: var(--primary);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 10px 25px rgba(0,0,0,0.18);
+    text-decoration:none;
+    z-index:1200;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .gc-editor-fab:hover{
+    transform: translateY(-2px) scale(1.02);
+    box-shadow:0 14px 32px rgba(0,0,0,0.22);
+    filter: brightness(.98);
+  }
+  .gc-editor-fab:active{
+    transform: translateY(0) scale(.98);
+  }
   .gc-drawer__footer{
     margin-top:auto;
     padding-top:16px;
