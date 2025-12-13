@@ -23,6 +23,9 @@ function bootstrapHashFromQuery(){
   }
   if (target) {
     window.location.hash = target.replace(/^#/, '')
+    // Clean the query from the URL once we've mapped into the hash route
+    const cleanUrl = `${window.location.origin}${window.location.pathname}${window.location.hash}`
+    window.history.replaceState(null, '', cleanUrl)
   }
 }
 

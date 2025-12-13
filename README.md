@@ -136,16 +136,17 @@ GraceChords includes a lightweight resources/blog system for worship teams.
   Markdown content…
   ```
 
-- Index page: `/#/resources` — grid of cards, search (title/summary, falls back to content), tag filters.
-- Post page: `/#/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes).
+- Index page: `/#/resources` — grid of cards, search (title/summary, falls back to content), tag filters. Public URLs in the sitemap use `/?view=resources` for crawler friendliness; the app maps them into the hash route on load.
+- Post page: `/#/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes). Public URLs in the sitemap use `/?resource=:slug` and are immediately mapped into the hash route for rendering.
 - Admin editor: `/#/admin/resources` — create/edit posts with live preview and PR publishing (uses the same GitHub token flow as songs). Requires the “Edits Author” field.
+  - Song URLs in the sitemap use `/?song=:id` for crawler friendliness; the app maps them into `#/song/:id` on load to keep the existing hash router working.
 
 Build & CI
 - Rebuild resources index after adding/editing `.md` files:
   ```bash
   npm run build-resources-index
   ```
-- CI workflow `.github/workflows/update-resources.yml` watches `public/resources/**`, runs the index builder, and commits `src/data/resources.json`. That commit triggers the site build workflow to update `docs/`.
+- CI automation: see “CI & Automation” section (below) for the single unified workflow that rebuilds indexes, sitemap, docs, and Telegram posts when needed.
 
 ## PDF Fonts
 Place the following font files in `src/assets/fonts/` so the PDF exporter can bundle them (they are imported with `?url` and registered at runtime):
@@ -193,12 +194,15 @@ Notes
 - Output filenames use underscores by default (e.g., `above_all.chordpro`).
 
 ## CI & Automation
-- Build to `docs/` (site code changes): `build-to-docs.yml` runs on changes under `src/**`, `index.html`, `404.html`, `vite.config.js`, `package*.json`, and `public/**` (excluding `public/songs/**` and `public/wiki/**`). Uses Node 20 and commits `docs/` with `VITE_COMMIT_SHA=${{ github.sha }}`.
-- Song changes → index then build: `update-index.yml` runs on `public/songs/**`, executes `node scripts/buildIndex.mjs`, commits `src/data/index.json`. That commit triggers the site build workflow above.
-- Resource changes → index then build: `update-resources.yml` runs on `public/resources/**`, executes `node scripts/buildResourcesIndex.mjs`, commits `src/data/resources.json`. That commit triggers the site build workflow above.
-- Wiki changes → sync then build: `wiki-sync.yml` runs on `public/wiki/**`, executes `node scripts/syncWiki.mjs` (requires `WIKI_PUSH_TOKEN` secret), then builds and commits `docs/`.
-- Docs-only commits are ignored by the build workflow.
-- Concurrency: the build workflow cancels in-progress runs to avoid overlapping `docs/` commits.
+- Single workflow: `.github/workflows/automation.yml` runs on pushes to `main` (and manual dispatch) and decides what to do based on changed files.
+  - Telegram (opt-in): send only when the commit message contains `#post`/`#announce` (`[post]`/`[announce]` also work). Skips if Telegram secrets are missing.
+  - Wiki: if `public/wiki/**` changes, runs `scripts/syncWiki.mjs` (needs `WIKI_PUSH_TOKEN`).
+  - Indexes: if `public/songs/**` or `scripts/buildIndex.mjs` change, runs `npm run build-index`. If `public/resources/**` or `scripts/buildResourcesIndex.mjs` change, runs `npm run build-resources-index`.
+  - Sitemap: runs `npm run generate:sitemap` when song/resource data or sitemap script changes.
+  - Build: runs `npm run build` with `VITE_COMMIT_SHA=${{ github.sha }}` when code or generated data/sitemap changed.
+  - Commit: stages `docs/`, `src/data/*.json`, and `public/sitemap.xml`/`public/robots.txt` into a single commit (`chore: automation for <sha>`).
+  - Concurrency: one automation run per branch (`automation-${ref}`), canceling in-progress duplicates.
+- Bot-origin pushes are ignored to avoid loops.
 
 **PDF Export (MVP Engine)**
 - **Engine:** single-song, setlist, and songbook exporters live at `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
