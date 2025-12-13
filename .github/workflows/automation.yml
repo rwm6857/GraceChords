@@ -99,7 +99,7 @@ jobs:
           echo "build_needed=$build_needed" >> "$GITHUB_OUTPUT"
 
       - name: Share update to Telegram
-        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' && github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -107,6 +107,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "Telegram secrets missing; skipping send."
+            exit 0
+          fi
 
           if echo "${{ github.event.head_commit.message }}" | grep -Ei '\[skip announce\]|\[no announce\]' >/dev/null; then
             echo "Skipping Telegram due to commit flag."
