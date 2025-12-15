@@ -59,6 +59,11 @@
 .gc-staged-card__actions { display:flex; gap:8px; justify-content:flex-end; }
 .gc-staged-floating { position:fixed; right:16px; bottom:16px; background:var(--primary); color:var(--primary-text); border:none; padding:12px 14px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,0.2); cursor:pointer; z-index:20; }
 
+.gc-mdx-editor { border:1px solid var(--border); border-radius:var(--radius-2); overflow:hidden; background:var(--card); min-height:70vh; }
+.gc-mdx-editor__surface { min-height:70vh; background:inherit; }
+.gc-mdx-editor__content { min-height:68vh; padding:12px; }
+.gc-mdx-toolbar { position:sticky; top:0; background:var(--card); z-index:3; border-bottom:1px solid var(--border); }
+
 .gc-editor-help-tab { position:fixed; right:0.5rem; top:50%; transform:translateY(-50%); z-index:40; writing-mode:vertical-rl; text-orientation:mixed; padding:0.4rem 0.3rem; border-radius:999px 0 0 999px; font-size:0.8rem; letter-spacing:0.04em; cursor:pointer; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.25); transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease; border:none; }
 .gc-editor-help-tab:hover { transform:translateY(-50%) translateX(-1px); }
 .gc-editor-help-drawer { position:fixed; top:4.25rem; right:0; width:min(320px, 80vw); bottom:1rem; padding:1rem; overflow-y:auto; border-radius:1rem 0 0 1rem; box-shadow:0 16px 40px rgba(0,0,0,0.35); z-index:39; border:1px solid var(--border); }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import indexData from '../data/index.json'
-import { ResourceEditor } from './AdminResources.jsx'
+import resourcesData from '../data/resources.json'
 import { KEYS, keyRoot } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serialize'
@@ -18,6 +18,8 @@ import { showToast } from '../utils/toast'
 import '../styles/admin.css'
 import Toolbar from '../components/ui/Toolbar'
 import { currentTheme, toggleTheme } from '../utils/theme'
+import { mdToHtml, parseFrontmatter, slugifyKebab } from '../utils/markdown'
+import PostMdxEditor from '../components/editor/PostMdxEditor'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
 
@@ -227,7 +229,7 @@ function EditorPanel({ authorName }){
       for(const item of staged){
         if(item.action === 'delete-request') continue
         const basePath = item.kind === 'song' ? 'public/songs' : 'public/resources'
-        const path = `${basePath}/${item.filename}`
+        const path = item.path || `${basePath}/${item.filename}`
         const existingSha = await GH.getFileSha({ owner, repo, path, ref: branchName })
         const msg = item.action === 'add' ? `add: ${item.filename}` : `update: ${item.filename}`
         await GH.putFile({
@@ -235,7 +237,7 @@ function EditorPanel({ authorName }){
           repo,
           branch: branchName,
           path,
-          contentBase64: GH.toBase64(item.content || ''),
+          contentBase64: item.contentIsBase64 ? (item.content || '') : GH.toBase64(item.content || ''),
           message: msg,
           sha: existingSha,
         })
@@ -350,6 +352,7 @@ function EditorPanel({ authorName }){
                       <td>{s.title}</td>
                       <td><code>{s.filename}</code></td>
                       <td>
+                        {s.path ? <div className="Small"><code>{s.path}</code></div> : null}
                         {s.changeSummary || s.deleteReason || ''}
                       </td>
                       <td>
@@ -904,41 +907,216 @@ function SongsEditor({ onStageSong, prefill }){
 }
 
 function PostsEditor({ onStagePost, prefill }){
-  const [draft, setDraft] = useState(null)
+  const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
+  const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+  const [slugInput, setSlugInput] = useState('')
+  const [body, setBody] = useState('')
+  const [assets, setAssets] = useState([])
+  const [editingSlug, setEditingSlug] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchIndex, setSearchIndex] = useState(-1)
   const [changeSummary, setChangeSummary] = useState('')
   const [deleteReason, setDeleteReason] = useState('')
+  const [prefillApplied, setPrefillApplied] = useState(false)
+  const editorRef = useRef(null)
+  const prevSlugRef = useRef(slugifyKebab(meta.title || 'untitled'))
 
-  function stageAdd(currentDraft){
-    if(!currentDraft) return
-    if(currentDraft.isExisting){
+  useEffect(() => {
+    setPrefillApplied(false)
+  }, [prefill?.slug, prefill?.kind])
+
+  const finalSlug = useMemo(() => slugifyKebab(slugInput || meta.title || 'untitled'), [slugInput, meta.title])
+  const filename = `${finalSlug}.md`
+  const previewHtml = useMemo(() => mdToHtml(body), [body])
+  const isExisting = !!editingSlug
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    return list.filter(p => {
+      const title = String(p.title || '').toLowerCase()
+      const tags = (p.tags || []).map(t => String(t).toLowerCase()).join(' ')
+      const author = String(p.author || '').toLowerCase()
+      return title.includes(q) || tags.includes(q) || author.includes(q)
+    }).slice(0, 12)
+  }, [list, searchQuery])
+  useEffect(() => { setSearchIndex(-1) }, [searchQuery])
+
+  useEffect(() => {
+    if (prefillApplied) return
+    if (!prefill) return
+    if (prefill.kind === 'existing' && prefill.slug) {
+      const target = list.find(it => it.slug === prefill.slug)
+      if (target) {
+        loadExisting(target)
+        setPrefillApplied(true)
+        return
+      }
+      setPrefillApplied(true)
+      return
+    }
+    if (prefill.kind === 'new') {
+      handleNewPost()
+      setPrefillApplied(true)
+    }
+  }, [prefill, prefillApplied, list])
+
+  useEffect(() => {
+    const prev = prevSlugRef.current
+    const next = finalSlug
+    if (prev && next && prev !== next && assets.length) {
+      const oldPrefix = `/uploads/resources/${prev}/`
+      const newPrefix = `/uploads/resources/${next}/`
+      setAssets(existing => existing.map(asset => {
+        const updatedPath = (asset.path || '')
+          .split(`public${oldPrefix}`).join(`public${newPrefix}`)
+          .split(oldPrefix).join(newPrefix)
+        return { ...asset, path: updatedPath }
+      }))
+      setBody(b => b ? b.split(oldPrefix).join(newPrefix) : b)
+    }
+    prevSlugRef.current = next
+  }, [finalSlug, assets.length])
+
+  function composeFile(currentMeta = meta, currentBody = body){
+    const safeTags = Array.isArray(currentMeta.tags)
+      ? currentMeta.tags
+      : String(currentMeta.tags || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
+    const fm = [
+      '---',
+      `title: "${String(currentMeta.title || '').replace(/"/g,'\\"')}"`,
+      `author: "${String(currentMeta.author || '').replace(/"/g,'\\"')}"`,
+      `date: "${currentMeta.date || ''}"`,
+      `tags: ${JSON.stringify(safeTags)} `,
+      `summary: "${String(currentMeta.summary || '').replace(/"/g,'\\"')}"`,
+      '---',
+      '',
+    ].join('\n')
+    return fm + (currentBody || '')
+  }
+
+  function handleNewPost(){
+    setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+    setSlugInput('')
+    setBody('')
+    setAssets([])
+    setEditingSlug('')
+    setChangeSummary('')
+    setDeleteReason('')
+    setSearchQuery('')
+    setSearchIndex(-1)
+  }
+
+  async function loadExisting(post){
+    if (!post) return
+    try {
+      const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/,'') + '/'
+      const url = `${base}resources/${post.slug}.md`
+      const txt = await fetchTextCached(url)
+      const fm = parseFrontmatter(txt)
+      setMeta({
+        title: String(fm.meta.title || post.title || ''),
+        author: String(fm.meta.author || post.author || ''),
+        date: String(fm.meta.date || post.date || new Date().toISOString().slice(0,10)),
+        tags: Array.isArray(fm.meta.tags)
+          ? fm.meta.tags
+          : String(fm.meta.tags || (Array.isArray(post.tags) ? post.tags.join(',') : post.tags) || '')
+              .split(/[,;]/)
+              .map(t => t.trim())
+              .filter(Boolean),
+        summary: String(fm.meta.summary || post.summary || ''),
+      })
+      setSlugInput(post.slug || '')
+      setBody(fm.content || '')
+      setAssets([])
+      setEditingSlug(post.slug || '')
+      setChangeSummary('')
+      setDeleteReason('')
+      setSearchQuery('')
+      setSearchIndex(-1)
+    } catch (e) {
+      console.error(e)
+      alert(`Failed to load ${post.slug}`)
+    }
+  }
+
+  function setTitle(v){
+    setMeta(m => ({ ...m, title: v }))
+    setSlugInput(s => s || slugifyKebab(v))
+  }
+  function setAuthor(v){ setMeta(m => ({ ...m, author: v })) }
+  function setDate(v){ setMeta(m => ({ ...m, date: v })) }
+  function setSummary(v){ setMeta(m => ({ ...m, summary: v })) }
+  function setTagsValue(v){
+    const arr = String(v || '').split(/[,;]/).map(s => s.trim()).filter(Boolean)
+    setMeta(m => ({ ...m, tags: arr }))
+  }
+  function setSlugValue(v){
+    setSlugInput(slugifyKebab(v))
+  }
+
+  function handleAddAsset(asset){
+    if (!asset?.path) return
+    setAssets(prev => {
+      const idx = prev.findIndex(a => a.path === asset.path)
+      if (idx >= 0) {
+        const copy = prev.slice()
+        copy[idx] = { ...copy[idx], ...asset }
+        return copy
+      }
+      return [...prev, asset]
+    })
+  }
+
+  const draft = useMemo(() => ({
+    slug: finalSlug,
+    filename,
+    meta,
+    body,
+    content: composeFile(),
+    isExisting,
+  }), [finalSlug, filename, meta, body, isExisting])
+
+  function buildItems(currentDraft, action){
+    if (!currentDraft) return []
+    const main = {
+      kind: 'post',
+      action,
+      title: currentDraft.meta?.title || 'Untitled',
+      filename: currentDraft.filename,
+      path: `public/resources/${currentDraft.filename}`,
+      content: currentDraft.content,
+      changeSummary: action === 'edit' ? (changeSummary || '') : '',
+    }
+    const assetItems = assets.map(asset => ({
+      ...asset,
+      kind: asset.kind || 'asset',
+      action: asset.action || 'add',
+      title: `${currentDraft.meta?.title || 'Untitled'} asset`,
+      filename: asset.filename || asset.path?.split('/').pop(),
+    }))
+    return [main, ...assetItems]
+  }
+
+  function stageAdd(currentDraft = draft){
+    if(!currentDraft || currentDraft.isExisting){
       showToast?.('Use Stage Edit for existing posts.') ?? alert('Use Stage Edit for existing posts.')
       return
     }
-    onStagePost([{
-      kind: 'post',
-      action: 'add',
-      title: currentDraft.meta?.title || 'Untitled',
-      filename: currentDraft.filename,
-      content: currentDraft.content,
-    }])
+    onStagePost(buildItems(currentDraft, 'add'))
+    handleNewPost()
   }
 
-  function stageEdit(currentDraft){
+  function stageEdit(currentDraft = draft){
     if(!currentDraft?.isExisting){
       showToast?.('Load an existing post to stage an edit.') ?? alert('Load an existing post to stage an edit.')
       return
     }
-    onStagePost([{
-      kind: 'post',
-      action: 'edit',
-      title: currentDraft.meta?.title || 'Untitled',
-      filename: currentDraft.filename,
-      content: currentDraft.content,
-      changeSummary: changeSummary || '',
-    }])
+    onStagePost(buildItems(currentDraft, 'edit'))
+    handleNewPost()
   }
 
-  function stageDelete(currentDraft){
+  function stageDelete(currentDraft = draft){
     if(!currentDraft?.isExisting){
       showToast?.('Load an existing post to request deletion.') ?? alert('Load an existing post to request deletion.')
       return
@@ -947,54 +1125,174 @@ function PostsEditor({ onStagePost, prefill }){
       kind: 'post',
       action: 'delete-request',
       title: currentDraft.meta?.title || 'Untitled',
-      filename: currentDraft.filename,
+      filename: `${editingSlug || currentDraft.slug}.md`,
+      path: `public/resources/${editingSlug || currentDraft.slug}.md`,
       deleteReason: deleteReason || '',
     }])
+    handleNewPost()
   }
 
+  function extractYouTubeId(raw = ''){
+    const s = String(raw || '').trim()
+    if (!s) return ''
+    const direct = /^[a-zA-Z0-9_-]{6,}$/.test(s) ? s : ''
+    if (direct) return direct
+    const m = /(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{6,})/.exec(s)
+    return m ? m[1] : ''
+  }
+
+  function handleEmbedVideo(){
+    const input = prompt('Enter YouTube URL or ID for the embed:')
+    const id = extractYouTubeId(input)
+    if (!id) {
+      alert('Enter a valid YouTube URL or ID.')
+      return
+    }
+    const snippet = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>\n\n`
+    if (editorRef.current?.insertMarkdown) {
+      editorRef.current.insertMarkdown(snippet)
+    } else {
+      setBody(b => `${(b || '').trimEnd()}\n\n${snippet}`)
+    }
+  }
+
+  const searchLabel = isExisting ? `Editing ${editingSlug}.md` : 'New post'
+
   return (
-    <ResourceEditor
-      heading="Posts"
-      showGhTools={false}
-      wrapInContainer={false}
-      panelize
-      prefill={prefill}
-      onDraftChange={setDraft}
-      actions={({ draft: currentDraft, newPost }) => {
-        const d = currentDraft || draft
-        return (
-          <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <Button onClick={newPost}><PlusIcon /> New</Button>
-              <Button onClick={()=> stageAdd(d)} disabled={!d}><PlusIcon /> Stage Add</Button>
+    <div className="gc-song-editor gc-post-editor">
+      <section className="gc-editor-panel gc-editor-panel--selector">
+        <div className="gc-song-selector">
+          <Button onClick={handleNewPost} iconLeft={<PlusIcon />}>New Post</Button>
+          <div className="gc-song-selector__search">
+            <input
+              type="search"
+              placeholder="Search existing posts…"
+              value={searchQuery}
+              onChange={e=> setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (!searchResults.length) return
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setSearchIndex(i => Math.max(i - 1, 0))
+                } else if (e.key === 'Enter') {
+                  e.preventDefault()
+                  const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
+                  loadExisting(choice)
+                } else if (e.key === 'Escape') {
+                  setSearchIndex(-1)
+                }
+              }}
+            />
+            {searchResults.length > 0 && (
+              <ul className="gc-song-selector__results">
+                {searchResults.map((post, idx) => (
+                  <li
+                    key={post.slug}
+                    className={searchIndex === idx ? 'is-active' : ''}
+                    onMouseEnter={()=> setSearchIndex(idx)}
+                    onMouseDown={()=> loadExisting(post)}
+                  >
+                    {post.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {isExisting ? (
+            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>{searchLabel}</span>
+          ) : (
+            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>{searchLabel}</span>
+          )}
+        </div>
+      </section>
+
+      <section className="gc-editor-panel gc-editor-panel--meta" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop: 12}}>
+        <label>Title
+          <input value={meta.title} onChange={e=> setTitle(e.target.value)} />
+        </label>
+        <label>Author
+          <input value={meta.author} onChange={e=> setAuthor(e.target.value)} />
+        </label>
+        <label>Date
+          <input type="date" value={meta.date} onChange={e=> setDate(e.target.value)} />
+        </label>
+        <label>Tags (comma-separated)
+          <input value={(meta.tags||[]).join(', ')} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
+        </label>
+        <label>Summary
+          <input value={meta.summary} onChange={e=> setSummary(e.target.value)} />
+        </label>
+        <label>Slug
+          <input value={slugInput || finalSlug} onChange={e=> setSlugValue(e.target.value)} placeholder="auto from title" />
+        </label>
+      </section>
+
+      <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
+        <div className="gc-editor-toolbar">
+          <div className="gc-quick-row" style={{ gap:10 }}>
+            <strong>Post content</strong>
+            <span className="Small" style={{ opacity:0.85 }}>Markdown + inline HTML allowed</span>
+          </div>
+          <div className="gc-quick-sections">
+            <Button onClick={handleEmbedVideo}><PlusIcon /> Embed Video</Button>
+          </div>
+        </div>
+
+        <div className="gc-editor-split">
+          <div className="gc-editor-pane gc-editor-pane--input">
+            <PostMdxEditor
+              ref={editorRef}
+              markdown={body}
+              onChange={setBody}
+              slug={finalSlug}
+              onAddAsset={handleAddAsset}
+              assetNames={assets.map(a => a.filename)}
+            />
+          </div>
+          <div className="gc-editor-pane gc-editor-pane--preview">
+            <div className="card" style={{ minHeight:'70vh', overflow:'auto', padding: 10 }}>
+              <div className="Small" style={{ opacity: 0.9, marginBottom: 6 }}>
+                {meta.title ? <div><strong>{meta.title}</strong></div> : null}
+                <div>by {meta.author || '—'} • {meta.date || '—'}</div>
+                {meta.tags?.length ? (
+                  <div className="Small" style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop: 4 }}>
+                    {meta.tags.map(t => <span key={t} className="gc-tag gc-tag--gray">{t}</span>)}
+                  </div>
+                ) : null}
+                {meta.summary ? <div style={{ marginTop: 4 }}>{meta.summary}</div> : null}
+              </div>
+              <div className="PostBody" dangerouslySetInnerHTML={{ __html: previewHtml }} />
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-              <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span>Filename</span>
-                <input readOnly value={d?.filename || ''} style={{ width: 240 }} placeholder="slug.md" />
-              </label>
-              {d?.isExisting ? (
-                <span className="badge" style={{ background:'#fde68a', color:'#92400e' }} title="Editing existing file">Editing</span>
-              ) : (
-                <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }} title="New file will be created">New</span>
-              )}
-            </div>
-            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-              <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span>What changed?</span>
-                <input value={changeSummary} onChange={e=> setChangeSummary(e.target.value)} placeholder="Content, tags…" disabled={!d?.isExisting} />
-              </label>
-              <Button className="gc-btn gc-btn--primary" onClick={()=> stageEdit(d)} disabled={!d?.isExisting}><SearchIcon /> Stage Edit</Button>
-              <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span>Removal reason</span>
-                <input value={deleteReason} onChange={e=> setDeleteReason(e.target.value)} placeholder="Why remove this post?" disabled={!d?.isExisting} />
-              </label>
-              <Button className="gc-btn gc-btn--primary" onClick={()=> stageDelete(d)} disabled={!d?.isExisting}><TrashIcon /> Stage Deletion</Button>
-            </div>
-          </Toolbar>
-        )
-      }}
-    />
+          </div>
+        </div>
+
+        <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <Button onClick={handleNewPost}><PlusIcon /> New</Button>
+            <Button onClick={()=> stageAdd(draft)} disabled={draft?.isExisting}><PlusIcon /> Stage Add</Button>
+            <Button className="gc-btn gc-btn--primary" onClick={()=> stageEdit(draft)} disabled={!draft?.isExisting}><SearchIcon /> Stage Edit</Button>
+            <Button className="gc-btn gc-btn--primary" onClick={()=> stageDelete(draft)} disabled={!draft?.isExisting}><TrashIcon /> Stage Deletion</Button>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', minWidth:0 }}>
+            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span>Filename</span>
+              <input readOnly value={draft?.filename || ''} style={{ width: 200 }} placeholder="slug.md" />
+            </label>
+            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span>What changed?</span>
+              <input value={changeSummary} onChange={e=> setChangeSummary(e.target.value)} placeholder="Content, tags…" disabled={!draft?.isExisting} />
+            </label>
+            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span>Removal reason</span>
+              <input value={deleteReason} onChange={e=> setDeleteReason(e.target.value)} placeholder="Why remove this post?" disabled={!draft?.isExisting} />
+            </label>
+          </div>
+        </Toolbar>
+      </section>
+    </div>
   )
 }
 
