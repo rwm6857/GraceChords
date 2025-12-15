@@ -3,6 +3,7 @@ title: "Welcome to GraceChords!"
 author: "Ryan Moore"
 date: "2025-12-15"
 tags: ["guide","evergreen","worship"] 
+summary: "Our first post! Come see what GraceChords has to offer and how it can serve you while you serve your church."
 ---
 Hello, and welcome to GraceChords. This platform exists to serve churches with *simple, accessible, and volunteer-focused worship resources*. If you're a worship leader, worship team member, or home group that wants clean, easy-to-use lead sheets without complexity or paywalls -- you're in the right place.&#x20;
 
