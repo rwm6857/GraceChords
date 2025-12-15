@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-12-15T21:20:57.020Z",
+  "generatedAt": "2025-12-15T21:27:09.264Z",
   "items": [
     {
       "slug": "philosophy-of-simplicity-in-worship",
@@ -25,32 +25,6 @@
       ],
       "summary": "Our first post! Come see what GraceChords has to offer and how it can serve you while you serve your church.",
       "filename": "welcome-to-gracechords.md"
-    },
-    {
-      "slug": "leading-worship-confidence",
-      "title": "Leading Worship with Confidence",
-      "author": "Ryan Moore",
-      "date": "2025-09-10",
-      "tags": [
-        "leadership",
-        "vocals",
-        "confidence"
-      ],
-      "summary": "Practical tips for overcoming stage fear and leading with clarity.",
-      "filename": "leading-worship-confidence.md"
-    },
-    {
-      "slug": "team-rehearsal-guide",
-      "title": "Worship Team Rehearsal Guide",
-      "author": "GraceChords Admin",
-      "date": "2025-09-05",
-      "tags": [
-        "band",
-        "practice",
-        "teamwork"
-      ],
-      "summary": "A structured plan to make rehearsals more efficient and Spirit-led.",
-      "filename": "team-rehearsal-guide.md"
     }
   ]
 }
