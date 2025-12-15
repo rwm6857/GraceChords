@@ -27,13 +27,11 @@ for(const filename of files){
   if (incomplete) {
     incompleteReport.push({
       title: meta.title || id || filename.replace(/\.chordpro$/,''),
-      filename,
       reasons: analysis.reasons
     })
   } else if (analysis.optionalMissing.length) {
     optionalReport.push({
       title: meta.title || id || filename.replace(/\.chordpro$/,''),
-      filename,
       missing: analysis.optionalMissing
     })
   }
@@ -70,13 +68,18 @@ console.log(`Wrote ${items.length} songs to ${outFile}`)
 
 // Write human-readable report
 const reportLines = []
+const incompleteCount = incompleteReport.length
+const completeCount = items.length - incompleteCount
 reportLines.push('GraceChords Song Metadata Report')
 reportLines.push(`Generated: ${new Date().toISOString()}`)
+reportLines.push(`Total songs: ${items.length}`)
+reportLines.push(`Complete: ${completeCount}`)
+reportLines.push(`Incomplete: ${incompleteCount}`)
 reportLines.push('')
 if (incompleteReport.length) {
   reportLines.push('Incomplete songs (missing key and/or lyrics/chords):')
   for (const it of incompleteReport.sort((a,b)=> a.title.localeCompare(b.title))) {
-    reportLines.push(`- ${it.title} (${it.filename}) — ${it.reasons.join('; ')}`)
+    reportLines.push(`- ${it.title} — ${it.reasons.join('; ')}`)
   }
 } else {
   reportLines.push('Incomplete songs (missing key and/or lyrics/chords): none')
@@ -85,7 +88,7 @@ reportLines.push('')
 if (optionalReport.length) {
   reportLines.push('Complete songs with missing optional metadata (not hidden):')
   for (const it of optionalReport.sort((a,b)=> a.title.localeCompare(b.title))) {
-    reportLines.push(`- ${it.title} (${it.filename}) — missing ${it.missing.join(', ')}`)
+    reportLines.push(`- ${it.title} — missing ${it.missing.join(', ')}`)
   }
 } else {
   reportLines.push('Complete songs with missing optional metadata: none')
