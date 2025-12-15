@@ -18,7 +18,7 @@ import { showToast } from '../utils/toast'
 import '../styles/admin.css'
 import Toolbar from '../components/ui/Toolbar'
 import { currentTheme, toggleTheme } from '../utils/theme'
-import { mdToHtml, parseFrontmatter, slugifyKebab } from '../utils/markdown'
+import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
 import PostMdxEditor from '../components/editor/PostMdxEditor'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
@@ -909,7 +909,6 @@ function SongsEditor({ onStageSong, prefill }){
 function PostsEditor({ onStagePost, prefill }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
   const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
-  const [slugInput, setSlugInput] = useState('')
   const [body, setBody] = useState('')
   const [assets, setAssets] = useState([])
   const [editingSlug, setEditingSlug] = useState('')
@@ -925,9 +924,13 @@ function PostsEditor({ onStagePost, prefill }){
     setPrefillApplied(false)
   }, [prefill?.slug, prefill?.kind])
 
-  const finalSlug = useMemo(() => slugifyKebab(slugInput || meta.title || 'untitled'), [slugInput, meta.title])
+  const finalSlug = useMemo(() => slugifyKebab(meta.title || 'untitled'), [meta.title])
   const filename = `${finalSlug}.md`
-  const previewHtml = useMemo(() => mdToHtml(body), [body])
+  const summaryFromBody = useMemo(() => {
+    const lines = (body || '').trim().split('\n').map(l => l.trim()).filter(Boolean)
+    const snippet = lines.slice(0, 3).join(' ')
+    return snippet.slice(0, 220)
+  }, [body])
   const isExisting = !!editingSlug
 
   const searchResults = useMemo(() => {
@@ -982,13 +985,14 @@ function PostsEditor({ onStagePost, prefill }){
     const safeTags = Array.isArray(currentMeta.tags)
       ? currentMeta.tags
       : String(currentMeta.tags || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
+    const summary = summaryFromBody || ''
     const fm = [
       '---',
       `title: "${String(currentMeta.title || '').replace(/"/g,'\\"')}"`,
       `author: "${String(currentMeta.author || '').replace(/"/g,'\\"')}"`,
       `date: "${currentMeta.date || ''}"`,
       `tags: ${JSON.stringify(safeTags)} `,
-      `summary: "${String(currentMeta.summary || '').replace(/"/g,'\\"')}"`,
+      `summary: "${String(summary || '').replace(/"/g,'\\"')}"`,
       '---',
       '',
     ].join('\n')
@@ -997,7 +1001,6 @@ function PostsEditor({ onStagePost, prefill }){
 
   function handleNewPost(){
     setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
-    setSlugInput('')
     setBody('')
     setAssets([])
     setEditingSlug('')
@@ -1026,7 +1029,6 @@ function PostsEditor({ onStagePost, prefill }){
               .filter(Boolean),
         summary: String(fm.meta.summary || post.summary || ''),
       })
-      setSlugInput(post.slug || '')
       setBody(fm.content || '')
       setAssets([])
       setEditingSlug(post.slug || '')
@@ -1042,17 +1044,12 @@ function PostsEditor({ onStagePost, prefill }){
 
   function setTitle(v){
     setMeta(m => ({ ...m, title: v }))
-    setSlugInput(s => s || slugifyKebab(v))
   }
   function setAuthor(v){ setMeta(m => ({ ...m, author: v })) }
   function setDate(v){ setMeta(m => ({ ...m, date: v })) }
-  function setSummary(v){ setMeta(m => ({ ...m, summary: v })) }
   function setTagsValue(v){
     const arr = String(v || '').split(/[,;]/).map(s => s.trim()).filter(Boolean)
     setMeta(m => ({ ...m, tags: arr }))
-  }
-  function setSlugValue(v){
-    setSlugInput(slugifyKebab(v))
   }
 
   function handleAddAsset(asset){
@@ -1121,12 +1118,13 @@ function PostsEditor({ onStagePost, prefill }){
       showToast?.('Load an existing post to request deletion.') ?? alert('Load an existing post to request deletion.')
       return
     }
+    const targetSlug = editingSlug || currentDraft.slug || finalSlug
     onStagePost([{
       kind: 'post',
       action: 'delete-request',
       title: currentDraft.meta?.title || 'Untitled',
-      filename: `${editingSlug || currentDraft.slug}.md`,
-      path: `public/resources/${editingSlug || currentDraft.slug}.md`,
+      filename: `${targetSlug}.md`,
+      path: `public/resources/${targetSlug}.md`,
       deleteReason: deleteReason || '',
     }])
     handleNewPost()
@@ -1156,7 +1154,7 @@ function PostsEditor({ onStagePost, prefill }){
     }
   }
 
-  const searchLabel = isExisting ? `Editing ${editingSlug}.md` : 'New post'
+  const searchLabel = isExisting ? `Editing ${(editingSlug || finalSlug)}.md` : 'New post'
 
   return (
     <div className="gc-song-editor gc-post-editor">
@@ -1222,11 +1220,8 @@ function PostsEditor({ onStagePost, prefill }){
         <label>Tags (comma-separated)
           <input value={(meta.tags||[]).join(', ')} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
         </label>
-        <label>Summary
-          <input value={meta.summary} onChange={e=> setSummary(e.target.value)} />
-        </label>
-        <label>Slug
-          <input value={slugInput || finalSlug} onChange={e=> setSlugValue(e.target.value)} placeholder="auto from title" />
+        <label>Summary (auto)
+          <input value={summaryFromBody} readOnly placeholder="First lines of post" />
         </label>
       </section>
 
@@ -1241,7 +1236,7 @@ function PostsEditor({ onStagePost, prefill }){
           </div>
         </div>
 
-        <div className="gc-editor-split">
+        <div className="gc-editor-split is-single">
           <div className="gc-editor-pane gc-editor-pane--input">
             <PostMdxEditor
               ref={editorRef}
@@ -1251,21 +1246,6 @@ function PostsEditor({ onStagePost, prefill }){
               onAddAsset={handleAddAsset}
               assetNames={assets.map(a => a.filename)}
             />
-          </div>
-          <div className="gc-editor-pane gc-editor-pane--preview">
-            <div className="card" style={{ minHeight:'70vh', overflow:'auto', padding: 10 }}>
-              <div className="Small" style={{ opacity: 0.9, marginBottom: 6 }}>
-                {meta.title ? <div><strong>{meta.title}</strong></div> : null}
-                <div>by {meta.author || '—'} • {meta.date || '—'}</div>
-                {meta.tags?.length ? (
-                  <div className="Small" style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop: 4 }}>
-                    {meta.tags.map(t => <span key={t} className="gc-tag gc-tag--gray">{t}</span>)}
-                  </div>
-                ) : null}
-                {meta.summary ? <div style={{ marginTop: 4 }}>{meta.summary}</div> : null}
-              </div>
-              <div className="PostBody" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-            </div>
           </div>
         </div>
 

@@ -60,9 +60,13 @@
 .gc-staged-floating { position:fixed; right:16px; bottom:16px; background:var(--primary); color:var(--primary-text); border:none; padding:12px 14px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,0.2); cursor:pointer; z-index:20; }
 
 .gc-mdx-editor { border:1px solid var(--border); border-radius:var(--radius-2); overflow:hidden; background:var(--card); min-height:70vh; }
-.gc-mdx-editor__surface { min-height:70vh; background:inherit; }
-.gc-mdx-editor__content { min-height:68vh; padding:12px; }
+.gc-mdx-editor__surface { min-height:70vh; background:inherit; color:var(--text); }
+.gc-mdx-editor__content { min-height:68vh; padding:12px; color:var(--text); }
+.gc-mdx-editor__content a { color: var(--primary); }
 .gc-mdx-toolbar { position:sticky; top:0; background:var(--card); z-index:3; border-bottom:1px solid var(--border); }
+.gc-mdx-editor :where(.mdxeditor-toolbar, .mdxeditor-button, .mdxeditor-split-button){ color:var(--text); background:var(--card); border-color:var(--border); }
+.gc-mdx-editor :where(.mdxeditor-toolbar){ box-shadow:none; }
+.gc-mdx-editor :where(.mdxeditor-button:hover, .mdxeditor-split-button:hover){ background:var(--btn); }
 
 .gc-editor-help-tab { position:fixed; right:0.5rem; top:50%; transform:translateY(-50%); z-index:40; writing-mode:vertical-rl; text-orientation:mixed; padding:0.4rem 0.3rem; border-radius:999px 0 0 999px; font-size:0.8rem; letter-spacing:0.04em; cursor:pointer; user-select:none; box-shadow:0 4px 10px rgba(0,0,0,0.25); transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease; border:none; }
 .gc-editor-help-tab:hover { transform:translateY(-50%) translateX(-1px); }
