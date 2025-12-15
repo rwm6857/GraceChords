@@ -112,14 +112,16 @@ function parseAdded(val){
 function analyzeSong(text, meta){
   const lines = (text || '').split(/\r?\n/)
   let hasLyrics = false
-  let hasChords = false
+  const chordRe = /\[[^\]]+\]/
+  let hasChords = chordRe.test(text || '')
   for (const raw of lines){
     const line = raw.trim()
     if (!line) continue
     if (line.startsWith('{') && line.endsWith('}')) continue // directive
     if (/^\s*#/.test(line)) continue // comment
-    if (/\[[A-G][#b]?[^]]*\]/.test(line)) hasChords = true
-    if (/[A-Za-z]/.test(line)) hasLyrics = true
+    // remove chord tokens then test for letters
+    const noChords = line.replace(chordRe, '').trim()
+    if (/[A-Za-z]/.test(noChords)) hasLyrics = true
     if (hasLyrics && hasChords) break
   }
   const reasons = []

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-12-15T02:50:00.818Z",
+  "generatedAt": "2025-12-15T03:01:44.685Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -198,7 +198,7 @@
         "Beth Redman"
       ],
       "country": "USA",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "blow-the-trumpet-in-zion",
@@ -475,7 +475,7 @@
         "Charlie Hall"
       ],
       "country": "USA",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "global-church-of-christ",
@@ -724,7 +724,7 @@
         "Tim Hughes"
       ],
       "country": "USA",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "holy-forever",
@@ -1018,7 +1018,7 @@
       ],
       "authors": [],
       "country": "Morocco",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "it-is-well-with-my-soul",
@@ -1141,7 +1141,7 @@
         "Chris Tomlin"
       ],
       "country": "USA",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "kernel-of-wheat",
@@ -1762,7 +1762,7 @@
       ],
       "authors": [],
       "country": "Pakistan",
-      "incomplete": true
+      "incomplete": false
     },
     {
       "id": "sing-sing-sing",
