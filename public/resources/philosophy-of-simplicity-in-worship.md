@@ -3,6 +3,7 @@ title: "Philosophy of Simplicity in Worship"
 author: "Ryan Moore"
 date: "2025-12-15"
 tags: ["worship","theology"] 
+summary: "The heart behind GraceChords: worship as response, simplicity as care, and tools that quietly serve the Church"
 ---
 > "God is spirit, and those who worship him must worship in spirit and truth."
 > (John 4:24, ESV)
