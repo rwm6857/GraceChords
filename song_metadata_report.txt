@@ -1,0 +1,117 @@
+GraceChords Song Metadata Report
+Generated: 2025-12-15T02:48:12.246Z
+
+Incomplete songs (missing key and/or lyrics/chords):
+- ‘Tis So Sweet to Trust in Jesus (tis_so_sweet_to_trust_in_jesus.chordpro) — missing chords
+- Blessed be Your Name (blessed_be_your_name.chordpro) — missing chords
+- Give us Clean Hands (give_us_clean_hands.chordpro) — missing chords
+- Great is Thy Faithfulness (great_is_thy_faithfulness.chordpro) — missing chords
+- Hail to the Brightness of Zion's Glad Morning (hail_to_the_brightness_of_zion_s_glad_morning.chordpro) — missing chords
+- Hallelujah (Your Love is Amazing) (hallelujah.chordpro) — missing key; missing lyrics; missing chords
+- Happy Day (happy_day.chordpro) — missing chords
+- He Abides (he_abides.chordpro) — missing chords
+- He is the King (he_is_the_king.chordpro) — missing chords
+- Here I am to Worship (here_i_am_to_worship.chordpro) — missing chords
+- Hosanna (Praise is Rising) (hosanna.chordpro) — missing key; missing lyrics; missing chords
+- How Great is our God (how_great_is_our_god.chordpro) — missing key; missing lyrics; missing chords
+- How Great Thou Art (how_great_thou_art.chordpro) — missing chords
+- I Am Thine O Lord (i_am_thine_o_lord.chordpro) — missing chords
+- I Could Sing of Your Love Forever (i_could_sing_of_your_love_forever.chordpro) — missing key; missing lyrics; missing chords
+- I Hear Thy Welcome Voice (i_hear_thy_welcome_voice.chordpro) — missing key; missing lyrics; missing chords
+- I Thank God (i_thank_god.chordpro) — missing key; missing lyrics; missing chords
+- In Jesus’ Name (in_jesus_name.chordpro) — missing chords
+- In the Name of the Lord (in_the_name_of_the_lord.chordpro) — missing chords
+- It Is Well With My Soul (it_is_well_with_my_soul.chordpro) — missing chords
+- Jesus I Need You (jesus_i_need_you.chordpro) — missing key; missing lyrics; missing chords
+- Jesus We Love You (jesus_we_love_you.chordpro) — missing key; missing lyrics; missing chords
+- Joy to the World (Unspeakable Joy) (joy_to_the_world_unspeakable_joy.chordpro) — missing chords
+- King of Kings, Majesty (king_of_kings_majesty.chordpro) — missing chords
+- King of my Heart (king_of_my_heart.chordpro) — missing key; missing lyrics; missing chords
+- Lamb (lamb.chordpro) — missing key; missing lyrics; missing chords
+- Let Your Glory Fall (let_your_glory_fall.chordpro) — missing key; missing lyrics; missing chords
+- Lord I Lift Your Name on High (lord_i_lift_your_name_on_high.chordpro) — missing key; missing lyrics; missing chords
+- Lord I Offer My Life (lord_i_offer_my_life.chordpro) — missing key; missing lyrics; missing chords
+- Majesty (Here I Am) (majesty.chordpro) — missing key; missing lyrics; missing chords
+- Mighty to Save (mighty_to_save.chordpro) — missing key; missing lyrics; missing chords
+- New Acts (new_acts.chordpro) — missing chords
+- No Chains on Me (no_chains_on_me.chordpro) — missing key; missing lyrics; missing chords
+- No Longer Slaves (no_longer_slaves.chordpro) — missing key; missing lyrics; missing chords
+- O Come to the Altar (o_come_to_the_altar.chordpro) — missing key; missing lyrics; missing chords
+- On That Day (on_that_day_japanese.chordpro) — missing chords
+- One Way (one_way.chordpro) — missing key; missing lyrics; missing chords
+- Reckless Love (reckless_love.chordpro) — missing key; missing lyrics; missing chords
+- Refiner's Fire (refiners_fire.chordpro) — missing key; missing lyrics; missing chords
+- Revelations 5:13 (revelations_5_13.chordpro) — missing chords
+- Righteous Powers (righteous_powers.chordpro) — missing chords
+- Rise and Shout (rise_and_shout.chordpro) — missing chords
+- Run to the Father (run_to_the_father.chordpro) — missing key; missing lyrics; missing chords
+- Savior of Peace (savior_of_peace.chordpro) — missing chords
+- Set a Fire (set_a_fire.chordpro) — missing key; missing lyrics; missing chords
+- Shout to the Lord (shout_to_the_lord.chordpro) — missing lyrics; missing chords
+- Shouting Victory (shouting_victory.chordpro) — missing chords
+- Sing Sing Sing (sing_sing_sing.chordpro) — missing chords
+- Singing I Go (singing_i_go.chordpro) — missing chords
+- Stand Up, Stand Up for Jesus (stand_up_stand_up_for_jesus.chordpro) — missing chords
+- Still (still.chordpro) — missing key; missing lyrics; missing chords
+- Stronger (stronger.chordpro) — missing key; missing lyrics; missing chords
+- Take Me In (take_me_in.chordpro) — missing key; missing lyrics; missing chords
+- Thank You Jesus for the Blood (thank_you_jesus_for_the_blood.chordpro) — missing key; missing lyrics; missing chords
+- There Is a Cloud (there_is_a_cloud.chordpro) — missing key; missing lyrics; missing chords
+- Touch of Heaven (touch_of_heaven.chordpro) — missing key; missing lyrics; missing chords
+- Where Jesus is Tis Heaven (where_jesus_is_tis_heaven.chordpro) — missing chords
+- With All My Heart (with_all_my_heart.chordpro) — missing key; missing lyrics; missing chords
+- Worthy is the Lamb (worthy_is_the_lamb.chordpro) — missing key; missing lyrics; missing chords
+
+Complete songs with missing optional metadata (not hidden):
+- All That’s Within Me (all_thats_within_me.chordpro) — missing authors
+- Amazing Grace (amazing_grace.chordpro) — missing country
+- Calling (calling.chordpro) — missing authors
+- Come to Us, Emmanuel (come_to_us_emmanuel.chordpro) — missing authors
+- Dear Brother (dear_brother.chordpro) — missing authors
+- Dreams of Heaven (dreams_of_heaven.chordpro) — missing authors
+- Elohim is Our Refuge (elohim_is_our_refuge.chordpro) — missing authors
+- Everlasting Grace (everlasting_grace.chordpro) — missing authors
+- Father We Ask (father_we_ask.chordpro) — missing authors
+- Global Church of Christ (global_church_of_christ.chordpro) — missing authors
+- Glorious King (glorious_king.chordpro) — missing authors
+- God of Our Fathers (god_of_our_fathers.chordpro) — missing authors
+- Goodbye Yesterday (goodbye_yesterday.chordpro) — missing country
+- Great is the Lord (great_is_the_lord.chordpro) — missing authors
+- Here I Am (here_i_am.chordpro) — missing authors
+- Holy Spirit Come (holy_spirit_come.chordpro) — missing authors, youtube
+- Hope of the Nations (hope_of_the_nations.chordpro) — missing authors
+- I Enter in the Holy Place (i_enter_in_the_holy_place.chordpro) — missing authors, youtube
+- I Lift My Eyes (i_lift_my_eyes.chordpro) — missing authors
+- I Will Follow You (i_will_follow_you.chordpro) — missing authors
+- In Jesus’ Name (InterCP Int’l Ver.) (in_jesus_name_intercp.chordpro) — missing youtube
+- Jesus Lamb of God (jesus_lamb_of_god.chordpro) — missing authors, youtube
+- Jesus Our Refuge (jesus_our_refuge.chordpro) — missing authors
+- Jesus You Have Set Me Free (jesus_you_have_set_me_free.chordpro) — missing authors, youtube
+- John 3:16 (john_3_16.chordpro) — missing authors, youtube
+- Kernel of Wheat (kernel_of_wheat.chordpro) — missing authors, youtube
+- King of Kings (InterCP Int’l Ver.) (king_of_kings_intercp_int_l_ver.chordpro) — missing youtube
+- Let Us Sing to the Lord (let_us_sing_to_the_lord.chordpro) — missing authors
+- Lion of Judah (lion_of_judah.chordpro) — missing authors
+- Lord I Give You My Heart (lord_i_give_you_my_heart.chordpro) — missing authors, country, youtube
+- Lord We Seek (lord_we_seek.chordpro) — missing authors
+- Maranatha (maranatha.chordpro) — missing authors
+- My God, You Alone (my_god_you_alone.chordpro) — missing authors, youtube
+- My Savior King (my_savior_king.chordpro) — missing authors
+- No Chains on Me (InterCP Int'l Ver.) (no_chains_on_me_intercp_int_l_ver.chordpro) — missing youtube
+- On That Day (on_that_day.chordpro) — missing authors, youtube
+- Once Again (once_again.chordpro) — missing authors, youtube
+- Open Up the Doors of Heaven (open_up_the_doors_of_heaven.chordpro) — missing authors
+- Preaching the Cross (preaching_the_cross.chordpro) — missing authors, youtube
+- Seek, Hope, and Pray (seek_hope_and_pray.chordpro) — missing authors
+- Shalom Jerusalem (shalom_jerusalem.chordpro) — missing authors, youtube
+- Sing Sing Sing (InterCP Int’l Ver.) (sing_sing_sing_intercp_int_l_ver.chordpro) — missing youtube
+- Sitting in the Shadow of Death (sitting_in_the_shadow_of_death.chordpro) — missing authors
+- Spirit Come (spirit_come.chordpro) — missing authors, youtube
+- The Love of the Cross (the_love_of_the_cross.chordpro) — missing authors, youtube
+- The Revival (the_revival.chordpro) — missing authors
+- The Throne (the_throne.chordpro) — missing authors
+- Up and Fight Against the Devil (up_and_fight_against_the_devil.chordpro) — missing authors
+- What a Beautiful Name (InterCP Int’l Ver.) (what_a_beautiful_name_intercp_int_l_ver.chordpro) — missing youtube
+- You Endured the Cross (you_endured_the_cross.chordpro) — missing authors
+- Your Grace Is Enough (your_grace_is_enough.chordpro) — missing youtube
+- Your Great Love (your_great_love.chordpro) — missing authors, youtube
