@@ -1,12 +1,29 @@
 {
-  "generatedAt": "seed",
+  "generatedAt": "2025-12-15T14:56:32.198Z",
   "items": [
+    {
+      "slug": "welcome-to-gracechords",
+      "title": "Welcome to GraceChords!",
+      "author": "Ryan Moore",
+      "date": "2025-12-15",
+      "tags": [
+        "guide",
+        "evergreen",
+        "worship"
+      ],
+      "summary": "",
+      "filename": "welcome-to-gracechords.md"
+    },
     {
       "slug": "leading-worship-confidence",
       "title": "Leading Worship with Confidence",
       "author": "Ryan Moore",
       "date": "2025-09-10",
-      "tags": ["leadership", "vocals", "confidence"],
+      "tags": [
+        "leadership",
+        "vocals",
+        "confidence"
+      ],
       "summary": "Practical tips for overcoming stage fear and leading with clarity.",
       "filename": "leading-worship-confidence.md"
     },
@@ -15,10 +32,13 @@
       "title": "Worship Team Rehearsal Guide",
       "author": "GraceChords Admin",
       "date": "2025-09-05",
-      "tags": ["band", "practice", "teamwork"],
+      "tags": [
+        "band",
+        "practice",
+        "teamwork"
+      ],
       "summary": "A structured plan to make rehearsals more efficient and Spirit-led.",
       "filename": "team-rehearsal-guide.md"
     }
   ]
 }
-
