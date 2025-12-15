@@ -13,10 +13,9 @@ import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
-import { CloudUploadIcon, PlusIcon, TrashIcon, SearchIcon, HomeIcon, Sun, Moon } from '../components/Icons'
+import { CloudUploadIcon, PlusIcon, TrashIcon, HomeIcon, Sun, Moon } from '../components/Icons'
 import { showToast } from '../utils/toast'
 import '../styles/admin.css'
-import Toolbar from '../components/ui/Toolbar'
 import { currentTheme, toggleTheme } from '../utils/theme'
 import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
 import PostMdxEditor from '../components/editor/PostMdxEditor'
@@ -908,15 +907,18 @@ function SongsEditor({ onStageSong, prefill }){
 
 function PostsEditor({ onStagePost, prefill }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
-  const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+  const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[] })
   const [body, setBody] = useState('')
   const [assets, setAssets] = useState([])
   const [editingSlug, setEditingSlug] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchIndex, setSearchIndex] = useState(-1)
   const [changeSummary, setChangeSummary] = useState('')
-  const [deleteReason, setDeleteReason] = useState('')
   const [prefillApplied, setPrefillApplied] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteReasonInput, setDeleteReasonInput] = useState('')
+  const [originalMeta, setOriginalMeta] = useState(null)
+  const [originalBody, setOriginalBody] = useState('')
   const editorRef = useRef(null)
   const prevSlugRef = useRef(slugifyKebab(meta.title || 'untitled'))
 
@@ -926,11 +928,6 @@ function PostsEditor({ onStagePost, prefill }){
 
   const finalSlug = useMemo(() => slugifyKebab(meta.title || 'untitled'), [meta.title])
   const filename = `${finalSlug}.md`
-  const summaryFromBody = useMemo(() => {
-    const lines = (body || '').trim().split('\n').map(l => l.trim()).filter(Boolean)
-    const snippet = lines.slice(0, 3).join(' ')
-    return snippet.slice(0, 220)
-  }, [body])
   const isExisting = !!editingSlug
 
   const searchResults = useMemo(() => {
@@ -985,14 +982,12 @@ function PostsEditor({ onStagePost, prefill }){
     const safeTags = Array.isArray(currentMeta.tags)
       ? currentMeta.tags
       : String(currentMeta.tags || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
-    const summary = summaryFromBody || ''
     const fm = [
       '---',
       `title: "${String(currentMeta.title || '').replace(/"/g,'\\"')}"`,
       `author: "${String(currentMeta.author || '').replace(/"/g,'\\"')}"`,
       `date: "${currentMeta.date || ''}"`,
       `tags: ${JSON.stringify(safeTags)} `,
-      `summary: "${String(summary || '').replace(/"/g,'\\"')}"`,
       '---',
       '',
     ].join('\n')
@@ -1000,12 +995,13 @@ function PostsEditor({ onStagePost, prefill }){
   }
 
   function handleNewPost(){
-    setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+    setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[] })
     setBody('')
     setAssets([])
     setEditingSlug('')
     setChangeSummary('')
-    setDeleteReason('')
+    setOriginalMeta(null)
+    setOriginalBody('')
     setSearchQuery('')
     setSearchIndex(-1)
   }
@@ -1027,13 +1023,23 @@ function PostsEditor({ onStagePost, prefill }){
               .split(/[,;]/)
               .map(t => t.trim())
               .filter(Boolean),
-        summary: String(fm.meta.summary || post.summary || ''),
       })
       setBody(fm.content || '')
       setAssets([])
       setEditingSlug(post.slug || '')
       setChangeSummary('')
-      setDeleteReason('')
+      setOriginalMeta({
+        title: String(fm.meta.title || post.title || ''),
+        author: String(fm.meta.author || post.author || ''),
+        date: String(fm.meta.date || post.date || new Date().toISOString().slice(0,10)),
+        tags: Array.isArray(fm.meta.tags)
+          ? fm.meta.tags
+          : String(fm.meta.tags || (Array.isArray(post.tags) ? post.tags.join(',') : post.tags) || '')
+              .split(/[,;]/)
+              .map(t => t.trim())
+              .filter(Boolean),
+      })
+      setOriginalBody(fm.content || '')
       setSearchQuery('')
       setSearchIndex(-1)
     } catch (e) {
@@ -1074,7 +1080,7 @@ function PostsEditor({ onStagePost, prefill }){
     isExisting,
   }), [finalSlug, filename, meta, body, isExisting])
 
-  function buildItems(currentDraft, action){
+  function buildItems(currentDraft, action, summaryOverride = ''){
     if (!currentDraft) return []
     const main = {
       kind: 'post',
@@ -1083,7 +1089,7 @@ function PostsEditor({ onStagePost, prefill }){
       filename: currentDraft.filename,
       path: `public/resources/${currentDraft.filename}`,
       content: currentDraft.content,
-      changeSummary: action === 'edit' ? (changeSummary || '') : '',
+      changeSummary: action === 'edit' ? (summaryOverride || changeSummary || '') : '',
     }
     const assetItems = assets.map(asset => ({
       ...asset,
@@ -1104,16 +1110,27 @@ function PostsEditor({ onStagePost, prefill }){
     handleNewPost()
   }
 
+  function detectChangeSummary(currentDraft){
+    const changes = []
+    if ((currentDraft.meta?.title || '') !== (originalMeta?.title || '')) changes.push('Title')
+    const metaChanged = ['author','date','tags'].some(k => JSON.stringify(currentDraft.meta?.[k] || '') !== JSON.stringify(originalMeta?.[k] || ''))
+    if (metaChanged) changes.push('Metadata')
+    if ((currentDraft.body || '') !== (originalBody || '')) changes.push('Content')
+    return changes.length ? changes.join(' + ') : 'Minor edit'
+  }
+
   function stageEdit(currentDraft = draft){
     if(!currentDraft?.isExisting){
       showToast?.('Load an existing post to stage an edit.') ?? alert('Load an existing post to stage an edit.')
       return
     }
-    onStagePost(buildItems(currentDraft, 'edit'))
+    const autoSummary = detectChangeSummary(currentDraft)
+    setChangeSummary(autoSummary)
+    onStagePost(buildItems({ ...currentDraft, changeSummary: autoSummary }, 'edit', autoSummary))
     handleNewPost()
   }
 
-  function stageDelete(currentDraft = draft){
+  function stageDelete(currentDraft = draft, reason = ''){
     if(!currentDraft?.isExisting){
       showToast?.('Load an existing post to request deletion.') ?? alert('Load an existing post to request deletion.')
       return
@@ -1125,7 +1142,7 @@ function PostsEditor({ onStagePost, prefill }){
       title: currentDraft.meta?.title || 'Untitled',
       filename: `${targetSlug}.md`,
       path: `public/resources/${targetSlug}.md`,
-      deleteReason: deleteReason || '',
+      deleteReason: reason || '',
     }])
     handleNewPost()
   }
@@ -1220,9 +1237,6 @@ function PostsEditor({ onStagePost, prefill }){
         <label>Tags (comma-separated)
           <input value={(meta.tags||[]).join(', ')} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
         </label>
-        <label>Summary (auto)
-          <input value={summaryFromBody} readOnly placeholder="First lines of post" />
-        </label>
       </section>
 
       <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
@@ -1249,29 +1263,37 @@ function PostsEditor({ onStagePost, prefill }){
           </div>
         </div>
 
-        <Toolbar style={{ position:'sticky', bottom: 0, marginTop: 12, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap' }}>
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            <Button onClick={handleNewPost}><PlusIcon /> New</Button>
-            <Button onClick={()=> stageAdd(draft)} disabled={draft?.isExisting}><PlusIcon /> Stage Add</Button>
-            <Button className="gc-btn gc-btn--primary" onClick={()=> stageEdit(draft)} disabled={!draft?.isExisting}><SearchIcon /> Stage Edit</Button>
-            <Button className="gc-btn gc-btn--primary" onClick={()=> stageDelete(draft)} disabled={!draft?.isExisting}><TrashIcon /> Stage Deletion</Button>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', minWidth:0 }}>
-            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span>Filename</span>
-              <input readOnly value={draft?.filename || ''} style={{ width: 200 }} placeholder="slug.md" />
-            </label>
-            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span>What changed?</span>
-              <input value={changeSummary} onChange={e=> setChangeSummary(e.target.value)} placeholder="Content, tags…" disabled={!draft?.isExisting} />
-            </label>
-            <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span>Removal reason</span>
-              <input value={deleteReason} onChange={e=> setDeleteReason(e.target.value)} placeholder="Why remove this post?" disabled={!draft?.isExisting} />
-            </label>
-          </div>
-        </Toolbar>
+        <div className="gc-stage-actions">
+          <Button variant="primary" onClick={()=> draft?.isExisting ? stageEdit(draft) : stageAdd(draft)} disabled={!draft}>
+            Add Changes
+          </Button>
+          {isExisting && (
+            <Button onClick={()=> { setDeleteModalOpen(true); setDeleteReasonInput('') }} iconLeft={<TrashIcon />}>
+              Request Deletion
+            </Button>
+          )}
+        </div>
       </section>
+
+      {deleteModalOpen && (
+        <div className="modal">
+          <div className="modal-body">
+            <h3>Request Deletion</h3>
+            <label>Why should this post be removed?
+              <textarea
+                rows={3}
+                value={deleteReasonInput}
+                onChange={e=> setDeleteReasonInput(e.target.value)}
+                placeholder="Reason for deletion"
+              />
+            </label>
+            <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
+              <button className="btn" onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</button>
+              <button className="btn primary" onClick={()=> { setDeleteModalOpen(false); stageDelete(draft, deleteReasonInput) }} disabled={!deleteReasonInput.trim()}>Submit request</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
