@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-12-15T03:06:24.000Z",
+  "generatedAt": "2025-12-15T03:11:20.022Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -773,7 +773,7 @@
     {
       "id": "hosanna-praise-is-rising",
       "title": "Hosanna (Praise is Rising)",
-      "filename": "hosanna.chordpro",
+      "filename": "hosanna_praise_is_rising.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
@@ -1495,16 +1495,6 @@
       "authors": [],
       "country": "Japan",
       "incomplete": false
-    },
-    {
-      "id": "on-that-day",
-      "title": "On That Day",
-      "filename": "on_that_day_japanese.chordpro",
-      "originalKey": "A",
-      "tags": [],
-      "authors": [],
-      "country": "Japan",
-      "incomplete": true
     },
     {
       "id": "once-again",
