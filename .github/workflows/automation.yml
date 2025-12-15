@@ -118,8 +118,8 @@ jobs:
             commit_msg="$(git log -1 --pretty=%B || true)"
           fi
           announce_flag=false
-          # Always announce when songs or resources changed
-          if [ "${{ steps.changes.outputs.index_needed }}" = "true" ] || [ "${{ steps.changes.outputs.resources_index_needed }}" = "true" ]; then
+          # Always announce when SONG or RESOURCE files changed
+          if [ "${{ steps.changes.outputs.songs }}" = "true" ] || [ "${{ steps.changes.outputs.resources }}" = "true" ]; then
             announce_flag=true
           fi
           # Allow manual opt-in via commit message
