@@ -2,6 +2,7 @@
 
 - **User Guide**
   - [[Home-Search-and-Filters]]
+  - [[Song-Library]]
   - [[SongView]]
   - [[Worship-Mode]]
   - [[Slides-(PPTX)]]
