@@ -68,6 +68,13 @@ export function mdToHtml(md = ''){
   out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2" />')
   // Links
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+  // Bold / Italic
+  out = out.replace(/\*\*\*([^\*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+  out = out.replace(/___([^_]+)___/g, '<strong><em>$1</em></strong>')
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>')
+  out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>')
+  out = out.replace(/_([^_]+)_/g, '<em>$1</em>')
   // Paragraphs: wrap loose lines that are not already block-level
   out = out.split(/\n{2,}/).map(block => {
     const trimmed = block.trim()
@@ -81,4 +88,3 @@ export function mdToHtml(md = ''){
 function escapeHtml(s = ''){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 }
-

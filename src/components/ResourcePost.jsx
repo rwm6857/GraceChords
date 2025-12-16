@@ -77,7 +77,7 @@ export default function ResourcePost(){
         <div className="alert error">{err}</div>
       ) : null}
       <article className="card" style={{ padding: 12 }}>
-        <h1 style={{ margin: '4px 0' }}>{title}</h1>
+        <h1 style={{ margin: '4px 0', fontSize:'2.25rem', lineHeight:1.15 }}>{title}</h1>
         <div className="Small" style={{ opacity: 0.8 }}>
           by {meta.author || item?.author || '—'} • {fmtDate(meta.date || item?.date)}
         </div>
@@ -102,6 +102,9 @@ export default function ResourcePost(){
           </div>
         </div>
       ) : null}
+      <div className="Small" style={{ marginTop: 16, opacity: 0.8 }}>
+        Scripture quotations are from The ESV® Bible (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway Bibles, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.
+      </div>
     </div>
   )
 }

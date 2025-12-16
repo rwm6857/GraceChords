@@ -224,11 +224,18 @@ function EditorPanel({ authorName }){
       const repo = 'GraceChords'
       const { sha } = await GH.getRepoInfo({ owner, repo })
       await GH.createBranch({ owner, repo, fromSha: sha, newBranch: branchName })
-
+      let wrote = 0
       for(const item of staged){
         if(item.action === 'delete-request') continue
         const basePath = item.kind === 'song' ? 'public/songs' : 'public/resources'
         const path = item.path || `${basePath}/${item.filename}`
+        if(item.action === 'delete'){
+          const existingSha = await GH.getFileSha({ owner, repo, path, ref: branchName })
+    const msg = item.deleteReason ? `delete: ${item.filename} – ${item.deleteReason}` : `delete: ${item.filename}`
+    await GH.deleteFile({ owner, repo, branch: branchName, path, message: msg, sha: existingSha || undefined })
+    wrote += 1
+    continue
+        }
         const existingSha = await GH.getFileSha({ owner, repo, path, ref: branchName })
         const msg = item.action === 'add' ? `add: ${item.filename}` : `update: ${item.filename}`
         await GH.putFile({
@@ -240,6 +247,11 @@ function EditorPanel({ authorName }){
           message: msg,
           sha: existingSha,
         })
+        wrote += 1
+      }
+
+      if (wrote === 0) {
+        throw new Error('No file changes to commit. Add or edit a post before opening a PR (deletion requests alone are not committed).')
       }
 
       const pr = await GH.createPR({
@@ -704,7 +716,7 @@ function SongsEditor({ onStageSong, prefill }){
     if (!editingFile) return
     onStageSong([{
       kind: 'song',
-      action: 'delete-request',
+      action: 'delete',
       title: meta.title || 'Untitled',
       filename: editingFile,
       deleteReason: reason,
@@ -907,7 +919,8 @@ function SongsEditor({ onStageSong, prefill }){
 
 function PostsEditor({ onStagePost, prefill }){
   const [list] = useState(() => (resourcesData?.items || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')))
-  const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[] })
+  const [meta, setMeta] = useState({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+  const [tagsInput, setTagsInput] = useState('')
   const [body, setBody] = useState('')
   const [assets, setAssets] = useState([])
   const [editingSlug, setEditingSlug] = useState('')
@@ -982,12 +995,14 @@ function PostsEditor({ onStagePost, prefill }){
     const safeTags = Array.isArray(currentMeta.tags)
       ? currentMeta.tags
       : String(currentMeta.tags || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
+    const summary = currentMeta.summary || ''
     const fm = [
       '---',
       `title: "${String(currentMeta.title || '').replace(/"/g,'\\"')}"`,
       `author: "${String(currentMeta.author || '').replace(/"/g,'\\"')}"`,
       `date: "${currentMeta.date || ''}"`,
       `tags: ${JSON.stringify(safeTags)} `,
+      `summary: "${String(summary || '').replace(/"/g,'\\"')}"`,
       '---',
       '',
     ].join('\n')
@@ -995,7 +1010,8 @@ function PostsEditor({ onStagePost, prefill }){
   }
 
   function handleNewPost(){
-    setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[] })
+    setMeta({ title:'', author:'', date: new Date().toISOString().slice(0,10), tags:[], summary:'' })
+    setTagsInput('')
     setBody('')
     setAssets([])
     setEditingSlug('')
@@ -1023,7 +1039,13 @@ function PostsEditor({ onStagePost, prefill }){
               .split(/[,;]/)
               .map(t => t.trim())
               .filter(Boolean),
+        summary: String(fm.meta.summary || post.summary || ''),
       })
+      setTagsInput(
+        Array.isArray(fm.meta.tags)
+          ? fm.meta.tags.join(', ')
+          : String(fm.meta.tags || (Array.isArray(post.tags) ? post.tags.join(', ') : post.tags || ''))
+      )
       setBody(fm.content || '')
       setAssets([])
       setEditingSlug(post.slug || '')
@@ -1038,6 +1060,7 @@ function PostsEditor({ onStagePost, prefill }){
               .split(/[,;]/)
               .map(t => t.trim())
               .filter(Boolean),
+        summary: String(fm.meta.summary || post.summary || ''),
       })
       setOriginalBody(fm.content || '')
       setSearchQuery('')
@@ -1053,7 +1076,9 @@ function PostsEditor({ onStagePost, prefill }){
   }
   function setAuthor(v){ setMeta(m => ({ ...m, author: v })) }
   function setDate(v){ setMeta(m => ({ ...m, date: v })) }
+  function setSummary(v){ setMeta(m => ({ ...m, summary: v })) }
   function setTagsValue(v){
+    setTagsInput(v)
     const arr = String(v || '').split(/[,;]/).map(s => s.trim()).filter(Boolean)
     setMeta(m => ({ ...m, tags: arr }))
   }
@@ -1113,7 +1138,7 @@ function PostsEditor({ onStagePost, prefill }){
   function detectChangeSummary(currentDraft){
     const changes = []
     if ((currentDraft.meta?.title || '') !== (originalMeta?.title || '')) changes.push('Title')
-    const metaChanged = ['author','date','tags'].some(k => JSON.stringify(currentDraft.meta?.[k] || '') !== JSON.stringify(originalMeta?.[k] || ''))
+    const metaChanged = ['author','date','tags','summary'].some(k => JSON.stringify(currentDraft.meta?.[k] || '') !== JSON.stringify(originalMeta?.[k] || ''))
     if (metaChanged) changes.push('Metadata')
     if ((currentDraft.body || '') !== (originalBody || '')) changes.push('Content')
     return changes.length ? changes.join(' + ') : 'Minor edit'
@@ -1138,7 +1163,7 @@ function PostsEditor({ onStagePost, prefill }){
     const targetSlug = editingSlug || currentDraft.slug || finalSlug
     onStagePost([{
       kind: 'post',
-      action: 'delete-request',
+      action: 'delete',
       title: currentDraft.meta?.title || 'Untitled',
       filename: `${targetSlug}.md`,
       path: `public/resources/${targetSlug}.md`,
@@ -1234,17 +1259,16 @@ function PostsEditor({ onStagePost, prefill }){
         <label>Date
           <input type="date" value={meta.date} onChange={e=> setDate(e.target.value)} />
         </label>
-        <label>Tags (comma-separated)
-          <input value={(meta.tags||[]).join(', ')} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
+        <label>Tags
+          <input value={tagsInput} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
+        </label>
+        <label style={{ gridColumn:'1 / -1' }}>Summary
+          <input value={meta.summary} onChange={e=> setSummary(e.target.value)} placeholder="Optional short blurb shown in lists" />
         </label>
       </section>
 
       <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
-        <div className="gc-editor-toolbar">
-          <div className="gc-quick-row" style={{ gap:10 }}>
-            <strong>Post content</strong>
-            <span className="Small" style={{ opacity:0.85 }}>Markdown + inline HTML allowed</span>
-          </div>
+        <div className="gc-editor-toolbar" style={{ justifyContent:'flex-end' }}>
           <div className="gc-quick-sections">
             <Button onClick={handleEmbedVideo}><PlusIcon /> Embed Video</Button>
           </div>

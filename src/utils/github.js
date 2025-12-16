@@ -57,6 +57,13 @@ export async function putFile({ owner, repo, branch, path, contentBase64, messag
   })
 }
 
+export async function deleteFile({ owner, repo, branch, path, message, sha }){
+  return ghFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ message, branch, sha }),
+  })
+}
+
 export async function createPR({ owner, repo, head, base, title, body }){
   return ghFetch(`/repos/${owner}/${repo}/pulls`, {
     method: 'POST',

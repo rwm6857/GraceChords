@@ -59,9 +59,9 @@
 .gc-staged-card__actions { display:flex; gap:8px; justify-content:flex-end; }
 .gc-staged-floating { position:fixed; right:16px; bottom:16px; background:var(--primary); color:var(--primary-text); border:none; padding:12px 14px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,0.2); cursor:pointer; z-index:20; }
 
-.gc-mdx-editor { border:1px solid var(--border); border-radius:var(--radius-2); overflow:hidden; background:var(--card); min-height:70vh; }
-.gc-mdx-editor__surface { min-height:70vh; background:inherit; color:var(--text); }
-.gc-mdx-editor__content { min-height:68vh; padding:12px; color:var(--text); }
+.gc-mdx-editor { border:1px solid var(--border); border-radius:var(--radius-2); overflow:hidden; background:var(--card); height:76vh; max-height:80vh; }
+.gc-mdx-editor__surface { height:100%; display:flex; flex-direction:column; background:inherit; color:var(--text); }
+.gc-mdx-editor__content { flex:1; overflow:auto; padding:12px; color:var(--text); }
 .gc-mdx-editor__content a { color: var(--primary); }
 .gc-mdx-toolbar { position:sticky; top:0; background:var(--card); z-index:3; border-bottom:1px solid var(--border); }
 .gc-mdx-editor :where(.mdxeditor-toolbar, .mdxeditor-button, .mdxeditor-split-button){ color:var(--text); background:var(--card); border-color:var(--border); }
