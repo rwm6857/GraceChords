@@ -6,7 +6,7 @@
   - [[Worship-Mode]]
   - [[Slides-(PPTX)]]
   - [[Adding-and-Editing-Songs]]
-  - [[Setlists]]
+  - [[Setlist-Builder]]
   - [[Songbook-Builder]]
   - [[Bundle]]
   - [[Resources]]
