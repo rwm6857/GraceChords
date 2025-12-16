@@ -3,28 +3,28 @@
 /* Inter 24pt (preferred for UI/navigation/buttons) */
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter_24pt-Regular.ttf") format("truetype");
+  src: url("/fonts/Inter_24pt-Regular.ttf") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter_24pt-Medium.ttf") format("truetype");
+  src: url("/fonts/Inter_24pt-Medium.ttf") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter_24pt-SemiBold.ttf") format("truetype");
+  src: url("/fonts/Inter_24pt-SemiBold.ttf") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/Inter_24pt-Bold.ttf") format("truetype");
+  src: url("/fonts/Inter_24pt-Bold.ttf") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;

@@ -21,6 +21,7 @@ export default function HomeDashboard(){
   const containerRef = useRef(null)
   const blurTimer = useRef(null)
   const [theme, setTheme] = useState(() => currentTheme())
+  const [heroWebp, setHeroWebp] = useState({ light: null, dark: null })
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -53,6 +54,26 @@ export default function HomeDashboard(){
     })
     observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
     return () => observer.disconnect()
+  }, [])
+
+  // Prefer webp hero if available; fall back to existing PNG without breaking builds
+  useEffect(() => {
+    let cancelled = false
+    const globImports = import.meta.glob('../assets/dashboard-hero-worship-angled*.webp')
+    ;(async () => {
+      try {
+        const next = { light: null, dark: null }
+        for (const [path, loader] of Object.entries(globImports)) {
+          const mod = await loader()
+          if (path.includes('-light.webp')) next.light = mod?.default || next.light
+          else next.dark = mod?.default || next.dark
+        }
+        if (!cancelled) setHeroWebp(next)
+      } catch {
+        // ignore; png fallback will be used
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   function clearBlurTimer(){
@@ -124,6 +145,9 @@ export default function HomeDashboard(){
   const [songAction] = useState(() => pickRandom(songViewQuickActions))
   const [setlistAction] = useState(() => pickRandom(setlistQuickActions))
   const [songbookAction] = useState(() => pickRandom(songbookQuickActions))
+  const heroImg = theme === 'light'
+    ? (heroWebp.light || heroLight)
+    : (heroWebp.dark || heroDark)
 
   function handleSongAction(){
     if (!songAction) return
@@ -243,12 +267,25 @@ export default function HomeDashboard(){
           maxWidth: '100vw',
           borderRadius: 0,
           margin: '0 calc(50% - 50vw)',
-          padding: '24px 20px',
-          backgroundImage: `url(${theme === 'light' ? heroLight : heroDark})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 78%'
+          padding: '24px 20px'
         }}
       >
+        {/* Inline img keeps hero discoverable for LCP/PSI and allows fetchPriority */}
+        <picture className="home-hero__bg" aria-hidden="true">
+          {theme === 'light' && heroWebp.light ? (
+            <source type="image/webp" srcSet={heroWebp.light} />
+          ) : null}
+          {theme !== 'light' && heroWebp.dark ? (
+            <source type="image/webp" srcSet={heroWebp.dark} />
+          ) : null}
+          <img
+            src={heroImg}
+            alt=""
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
         <div
           aria-hidden="true"
           className="home-hero__overlay"

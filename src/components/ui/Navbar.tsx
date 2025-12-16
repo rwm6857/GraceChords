@@ -95,12 +95,16 @@ export default function Navbar(){
             src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
             alt="GraceChords"
             className="gc-brand__logo gc-brand__logo--wide"
+            width={240}
+            height={42}
           />
           {/* Square logo for mobile */}
           <img
             src={isDark ? '/gc-brand-square-dark.svg' : '/gc-brand-square-light.svg'}
             alt="GraceChords"
             className="gc-brand__logo gc-brand__logo--square"
+            width={60}
+            height={42}
           />
         </Link>
         {/* Hamburger on mobile/tablet */}

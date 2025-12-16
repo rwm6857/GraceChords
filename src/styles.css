@@ -716,6 +716,19 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
     rgba(255,255,255,0) 100%
   );
 }
+.home-hero__bg{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+}
+.home-hero__bg img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 78%;
+  display:block;
+}
 .home-hero__content{
   position: relative;
   z-index: 2;
