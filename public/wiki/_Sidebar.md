@@ -11,6 +11,7 @@
   - [[Songbook-Builder]]
   - [[Bundle]]
   - [[Resources]]
+  - [[Resources-Library]]
   - [[ChordPro-Guide]]
   - [[Importing-Lyrics]]
   - [[PDF-and-Printing]]
@@ -23,6 +24,7 @@
 - **Developer Guide**
   - [[Getting-Started]]
   - [[Project-Structure]]
+  - [[Editor-Guide]]
   - [[Development-Commands]]
   - [[Repository-Stats]]
   - [[Build-and-Deploy]]
