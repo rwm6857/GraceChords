@@ -1172,30 +1172,6 @@ function PostsEditor({ onStagePost, prefill }){
     handleNewPost()
   }
 
-  function extractYouTubeId(raw = ''){
-    const s = String(raw || '').trim()
-    if (!s) return ''
-    const direct = /^[a-zA-Z0-9_-]{6,}$/.test(s) ? s : ''
-    if (direct) return direct
-    const m = /(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{6,})/.exec(s)
-    return m ? m[1] : ''
-  }
-
-  function handleEmbedVideo(){
-    const input = prompt('Enter YouTube URL or ID for the embed:')
-    const id = extractYouTubeId(input)
-    if (!id) {
-      alert('Enter a valid YouTube URL or ID.')
-      return
-    }
-    const snippet = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>\n\n`
-    if (editorRef.current?.insertMarkdown) {
-      editorRef.current.insertMarkdown(snippet)
-    } else {
-      setBody(b => `${(b || '').trimEnd()}\n\n${snippet}`)
-    }
-  }
-
   const searchLabel = isExisting ? `Editing ${(editingSlug || finalSlug)}.md` : 'New post'
 
   return (
@@ -1268,12 +1244,6 @@ function PostsEditor({ onStagePost, prefill }){
       </section>
 
       <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
-        <div className="gc-editor-toolbar" style={{ justifyContent:'flex-end' }}>
-          <div className="gc-quick-sections">
-            <Button onClick={handleEmbedVideo}><PlusIcon /> Embed Video</Button>
-          </div>
-        </div>
-
         <div className="gc-editor-split is-single">
           <div className="gc-editor-pane gc-editor-pane--input">
             <PostMdxEditor

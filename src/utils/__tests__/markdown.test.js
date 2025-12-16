@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseFrontmatter, mdToHtml, stripMarkdown, slugifyKebab } from '../../utils/markdown'
+import { parseFrontmatter, mdToHtml, stripMarkdown, slugifyKebab, extractYoutubeId } from '../../utils/markdown'
 
 describe('markdown utils', () => {
   it('parseFrontmatter extracts meta and content', () => {
@@ -25,7 +25,7 @@ Body here.`
   })
 
   it('mdToHtml converts basic markdown constructs', () => {
-    const md = `## Header\n\n- Item 1\n- Item 2\n\n> A quote\n\n[Link](https://example.com) and ![Alt](img.png)\n\n\`inline\`\n\n\`\`\`\ncode block\n\`\`\``
+    const md = `## Header\n\n- Item 1\n- Item 2\n\n> A quote\n\n[Link](https://example.com) and ![Alt](img.png)\n\n\`inline\`\n\n\`\`\`\ncode block\n\`\`\`\n\n---`
     const html = mdToHtml(md)
     expect(html).toContain('<h2>Header</h2>')
     expect(html).toContain('<ul>')
@@ -35,6 +35,15 @@ Body here.`
     expect(html).toContain('<img alt="Alt" src="img.png"')
     expect(html).toContain('<code>inline</code>')
     expect(html).toMatch(/<pre><code>\s*code block\s*<\/code><\/pre>/)
+    expect(html).toContain('<hr />')
+  })
+
+  it('mdToHtml renders youtube directives and strips raw iframes', () => {
+    const md = `Intro\n\n::youtube{id="abc123XYZ"}\n\n<iframe src="https://evil.example/embed/123"></iframe>`
+    const html = mdToHtml(md)
+    expect(html).toContain('gc-embed--youtube')
+    expect(html).toContain('https://www.youtube.com/embed/abc123XYZ')
+    expect(html).not.toContain('evil.example')
   })
 
   it('stripMarkdown produces readable plain text', () => {
@@ -51,5 +60,11 @@ Body here.`
     expect(slugifyKebab('Leading Worship with Confidence!')).toBe('leading-worship-with-confidence')
     expect(slugifyKebab('I’ll Always Love You')).toBe('i-ll-always-love-you')
     expect(slugifyKebab('Názaré – São Paulo')).toBe('nazare-sao-paulo')
+  })
+
+  it('extractYoutubeId handles urls and ids', () => {
+    expect(extractYoutubeId('https://youtu.be/abcd1234xyz')).toBe('abcd1234xyz')
+    expect(extractYoutubeId('https://www.youtube.com/watch?v=QWErty12345')).toBe('QWErty12345')
+    expect(extractYoutubeId('plainID_123')).toBe('plainID_123')
   })
 })

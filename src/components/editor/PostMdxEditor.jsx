@@ -1,12 +1,15 @@
-import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
   CreateLink,
   InsertImage,
+  InsertThematicBreak,
   ListsToggle,
   MDXEditor,
   UndoRedo,
+  GenericDirectiveEditor,
+  directivesPlugin,
   headingsPlugin,
   imagePlugin,
   linkDialogPlugin,
@@ -14,10 +17,13 @@ import {
   listsPlugin,
   markdownShortcutPlugin,
   quotePlugin,
+  thematicBreakPlugin,
   toolbarPlugin,
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
-import { slugifyKebab } from '../../utils/markdown'
+import '../../styles/mdxeditor.css'
+import { extractYoutubeId, slugifyKebab } from '../../utils/markdown'
+import { currentTheme } from '../../utils/theme'
 
 function sanitizeFilename(name = '', mime = '', taken = []){
   const lower = String(name || '').toLowerCase()
@@ -60,6 +66,16 @@ const PostMdxEditor = forwardRef(function PostMdxEditor({
   assetNames = [],
 }, ref){
   const editorRef = useRef(null)
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      if (typeof currentTheme === 'function') return currentTheme() === 'dark'
+      if (window.matchMedia) return window.matchMedia('(prefers-color-scheme: dark)').matches
+    } catch {}
+    return false
+  })
+  const [videoInput, setVideoInput] = useState('')
+  const [videoOpen, setVideoOpen] = useState(false)
+  const [videoError, setVideoError] = useState('')
   const safeSlug = useMemo(() => slugifyKebab(slug || 'untitled') || 'untitled', [slug])
 
   useImperativeHandle(ref, () => ({
@@ -90,24 +106,113 @@ const PostMdxEditor = forwardRef(function PostMdxEditor({
     return `/uploads/resources/${safeSlug}/${filename}`
   }
 
+  const handleThemeChange = useCallback(() => {
+    try {
+      if (typeof currentTheme === 'function') {
+        setIsDark(currentTheme() === 'dark')
+        return
+      }
+    } catch {}
+    try {
+      if (window.matchMedia) {
+        setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    handleThemeChange()
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some(m => m.attributeName === 'data-theme')) {
+        handleThemeChange()
+      }
+    })
+    try {
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    } catch {}
+    let mq
+    const mqListener = (e) => setIsDark(Boolean(e?.matches))
+    try {
+      mq = window.matchMedia('(prefers-color-scheme: dark)')
+      mq?.addEventListener?.('change', mqListener)
+      mq?.addListener?.(mqListener) // safari fallback
+    } catch {}
+    return () => {
+      observer.disconnect()
+      try { mq?.removeEventListener?.('change', mqListener) } catch {}
+      try { mq?.removeListener?.(mqListener) } catch {}
+    }
+  }, [handleThemeChange])
+
+  const handleInsertYoutube = useCallback((id) => {
+    if (!id) return
+    const snippet = `\n\n::youtube{id="${id}"}\n\n`
+    if (editorRef.current?.insertMarkdown) {
+      editorRef.current.insertMarkdown(snippet)
+    } else {
+      onChange((markdown || '').replace(/\s*$/, '\n\n') + snippet)
+    }
+  }, [markdown, onChange])
+
+  const submitVideo = useCallback((e) => {
+    e?.preventDefault?.()
+    const id = extractYoutubeId(videoInput)
+    if (!id) {
+      setVideoError('Enter a valid YouTube URL or ID.')
+      return
+    }
+    setVideoError('')
+    handleInsertYoutube(id)
+    setVideoInput('')
+    setVideoOpen(false)
+  }, [videoInput, handleInsertYoutube])
+
+  const closeVideoDialog = useCallback(() => {
+    setVideoOpen(false)
+    setVideoError('')
+  }, [])
+
+  useEffect(() => {
+    function onKey(e){
+      if (e.key === 'Escape') {
+        closeVideoDialog()
+      }
+    }
+    if (videoOpen) {
+      window.addEventListener('keydown', onKey)
+    }
+    return () => window.removeEventListener('keydown', onKey)
+  }, [videoOpen, closeVideoDialog])
+
+  const youtubeDirectiveDescriptor = useMemo(() => ({
+    name: 'youtube',
+    testNode: (node) => node?.name === 'youtube',
+    attributes: ['id'],
+    hasChildren: false,
+    type: 'leafDirective',
+    Editor: GenericDirectiveEditor,
+  }), [])
+
   return (
-    <div className="gc-mdx-editor">
+    <div className="gc-mdxeditor gc-mdx-editor">
       <MDXEditor
         ref={editorRef}
         markdown={markdown}
         onChange={onChange}
-        className="gc-mdx-editor__surface"
-        contentEditableClassName="gc-mdx-editor__content"
+        className={`gc-mdxeditor__surface ${isDark ? 'dark-theme' : 'light-theme'}`}
+        contentEditableClassName="gc-mdxeditor__content gc-mdxeditor-prose"
         plugins={[
+          directivesPlugin({ directiveDescriptors: [youtubeDirectiveDescriptor] }),
           headingsPlugin(),
           listsPlugin(),
           quotePlugin(),
+          thematicBreakPlugin(),
           linkPlugin(),
           linkDialogPlugin(),
           markdownShortcutPlugin(),
           imagePlugin({ imageUploadHandler }),
           toolbarPlugin({
-            toolbarClassName: 'gc-mdx-toolbar',
+            toolbarClassName: 'gc-mdxeditor__toolbar',
             toolbarContents: () => (
               <>
                 <UndoRedo />
@@ -116,6 +221,36 @@ const PostMdxEditor = forwardRef(function PostMdxEditor({
                 <ListsToggle />
                 <CreateLink />
                 <InsertImage />
+                <InsertThematicBreak />
+                <div className="gc-mdxeditor__custom-group">
+                  <button
+                    type="button"
+                    className="mdxeditor-button gc-mdxeditor__button"
+                    onClick={() => setVideoOpen(v => !v)}
+                    aria-expanded={videoOpen}
+                    aria-label="Embed YouTube video"
+                  >
+                    Embed Video
+                  </button>
+                  {videoOpen && (
+                    <form className="gc-mdxeditor__popover" onSubmit={submitVideo}>
+                      <label className="gc-mdxeditor__popover-label">
+                        YouTube URL or ID
+                        <input
+                          autoFocus
+                          value={videoInput}
+                          onChange={e => { setVideoInput(e.target.value); setVideoError('') }}
+                          placeholder="https://youtu.be/abcd1234xyz or abcd1234xyz"
+                        />
+                      </label>
+                      {videoError ? <div className="gc-mdxeditor__popover-error">{videoError}</div> : null}
+                      <div className="gc-mdxeditor__popover-actions">
+                        <button type="button" className="gc-mdxeditor__button ghost" onClick={closeVideoDialog}>Cancel</button>
+                        <button type="submit" className="gc-mdxeditor__button primary">Insert</button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               </>
             )
           }),

@@ -32,6 +32,7 @@ export function slugifyKebab(s = ''){
 
 export function stripMarkdown(md = ''){
   let t = String(md || '')
+  t = t.replace(/^:{2,3}youtube[^\n]*$/gim, ' ')
   t = t.replace(/`{3}[\s\S]*?`{3}/g, ' ') // code blocks
   t = t.replace(/`[^`]*`/g, ' ') // inline code
   t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // images
@@ -43,11 +44,45 @@ export function stripMarkdown(md = ''){
   return t
 }
 
+export function extractYoutubeId(raw = ''){
+  const s = String(raw || '').trim()
+  if (!s) return ''
+  const ID_RE = /^[A-Za-z0-9_-]{6,24}$/
+  if (ID_RE.test(s)) return s.slice(0, 24)
+  try {
+    const url = new URL(s)
+    const searchId = url.searchParams.get('v') || url.searchParams.get('vi')
+    if (searchId && ID_RE.test(searchId)) return searchId.slice(0, 24)
+    const parts = url.pathname.split('/').filter(Boolean)
+    if (url.hostname.includes('youtu.be') && parts[0] && ID_RE.test(parts[0])) return parts[0].slice(0, 24)
+    const markers = ['embed', 'shorts', 'v', 'video']
+    const markerIdx = parts.findIndex(p => markers.includes(p))
+    if (markerIdx >= 0 && parts[markerIdx + 1] && ID_RE.test(parts[markerIdx + 1])) {
+      return parts[markerIdx + 1].slice(0, 24)
+    }
+    const tail = parts[parts.length - 1]
+    if (tail && ID_RE.test(tail)) return tail.slice(0, 24)
+  } catch {}
+  const legacy = /(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,24})/i.exec(s)
+  return legacy ? legacy[1].slice(0, 24) : ''
+}
+
 // Very light Markdown-to-HTML for blog posts (allows raw HTML passthrough)
 export function mdToHtml(md = ''){
   let out = String(md || '')
-  // Escape only angle brackets that are not starting known block HTML tags (basic heuristic)
-  // Retain iframes/imgs already present in MD
+
+  // Remove raw iframes; prefer directives for embeds
+  out = out.replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+
+  const youtubeIds = []
+  out = out.replace(/^\s*:{2,3}youtube\s*(\{[^}]*\})?\s*$/gim, (_, attrs = '') => {
+    const idMatch = /id\s*=\s*["']?([^"'\s}]+)["']?/i.exec(attrs) || /url\s*=\s*["']?([^"'\s}]+)["']?/i.exec(attrs)
+    const id = extractYoutubeId(idMatch ? idMatch[1] : '')
+    if (!id) return ''
+    youtubeIds.push(id)
+    return `@@GCYOUTUBE-${youtubeIds.length - 1}@@`
+  })
+
   // Headings
   out = out.replace(/^######\s?(.*)$/gm, '<h6>$1</h6>')
   out = out.replace(/^#####\s?(.*)$/gm, '<h5>$1</h5>')
@@ -57,6 +92,8 @@ export function mdToHtml(md = ''){
   out = out.replace(/^#\s?(.*)$/gm, '<h1>$1</h1>')
   // Blockquotes
   out = out.replace(/^>\s?(.*)$/gm, '<blockquote>$1</blockquote>')
+  // Horizontal rules / thematic breaks
+  out = out.replace(/^\s{0,3}(?:([-*_])( ?\1){2,})\s*$/gm, '<hr />')
   // Lists (very naive)
   out = out.replace(/^(?:- |\* )(.*)$/gm, '<li>$1</li>')
   out = out.replace(/(<li>[^<]*<\/li>\s*)+/g, m => `<ul>${m.replace(/\s*$/,'')}</ul>`) // wrap consecutive li
@@ -75,11 +112,20 @@ export function mdToHtml(md = ''){
   out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>')
   out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>')
   out = out.replace(/_([^_]+)_/g, '<em>$1</em>')
+
+  // Replace youtube placeholders with responsive embeds
+  out = out.replace(/@@GCYOUTUBE-(\d+)@@/g, (m, idxStr) => {
+    const id = youtubeIds[Number(idxStr)]
+    if (!id) return ''
+    const safeId = escapeHtml(id)
+    return `<div class="gc-embed gc-embed--youtube"><div class="gc-embed__ratio"><iframe src="https://www.youtube.com/embed/${safeId}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div>`
+  })
+
   // Paragraphs: wrap loose lines that are not already block-level
   out = out.split(/\n{2,}/).map(block => {
     const trimmed = block.trim()
     if (!trimmed) return ''
-    if (/^\s*<(h\d|ul|ol|li|pre|blockquote|img|iframe|p|table|hr)/i.test(trimmed)) return trimmed
+    if (/^\s*<(h\d|ul|ol|li|pre|blockquote|img|iframe|p|table|hr|div)/i.test(trimmed)) return trimmed
     return `<p>${trimmed.replace(/\n/g,'<br/>')}</p>`
   }).join('\n')
   return out

@@ -1,0 +1,216 @@
+.gc-mdxeditor{
+  --mdx-surface: var(--card);
+  --mdx-border: var(--border);
+  --mdx-text: var(--text);
+  --mdx-muted: var(--muted);
+  --mdx-primary: var(--primary);
+  --mdx-primary-text: var(--primary-text);
+  background: var(--mdx-surface);
+  color: var(--mdx-text);
+  border:1px solid var(--mdx-border);
+  border-radius: var(--radius-2);
+  overflow:hidden;
+  height:76vh;
+  max-height:80vh;
+}
+
+.gc-mdxeditor__surface{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background: inherit;
+}
+
+/* Override MDXEditor palette with GraceChords tokens */
+.gc-mdxeditor ._editorRoot_1e2ox_53{
+  --basePageBg: var(--mdx-surface);
+  --baseBase: var(--mdx-surface);
+  --baseBgSubtle: var(--btn);
+  --baseBg: var(--mdx-surface);
+  --baseBgHover: var(--btn);
+  --baseBgActive: var(--btn);
+  --baseLine: var(--mdx-border);
+  --baseBorder: var(--mdx-border);
+  --baseBorderHover: var(--mdx-border);
+  --baseSolid: var(--btn);
+  --baseSolidHover: var(--btn);
+  --baseText: var(--mdx-text);
+  --baseTextContrast: var(--mdx-text);
+  --accentBase: var(--mdx-surface);
+  --accentBgSubtle: var(--btn);
+  --accentBg: var(--btn);
+  --accentBgHover: var(--btn);
+  --accentBgActive: var(--btn);
+  --accentLine: var(--mdx-border);
+  --accentBorder: var(--mdx-border);
+  --accentBorderHover: var(--mdx-border);
+  --accentSolid: var(--mdx-primary);
+  --accentSolidHover: var(--mdx-primary);
+  --accentText: var(--mdx-primary);
+  --accentTextContrast: var(--mdx-primary-text);
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  background: var(--mdx-surface);
+  color: var(--mdx-text);
+  border-color: var(--mdx-border);
+}
+
+[data-theme="dark"] .gc-mdxeditor ._editorRoot_1e2ox_53,
+.gc-mdxeditor .dark-theme._editorRoot_1e2ox_53{
+  --baseBgSubtle: #111827;
+  --baseBgHover: #111827;
+  --baseBgActive: #0f172a;
+  --baseBorderHover: var(--mdx-border);
+  --baseTextContrast: var(--mdx-text);
+  --accentSolidHover: var(--mdx-primary);
+}
+
+.gc-mdxeditor ._toolbarRoot_1e2ox_162,
+.gc-mdxeditor__toolbar{
+  background: var(--mdx-surface);
+  border-bottom:1px solid var(--mdx-border);
+  box-shadow:none;
+  position:sticky;
+  top:0;
+  z-index:4;
+  gap:8px;
+}
+
+.gc-mdxeditor ._toolbarToggleItem_1e2ox_208,
+.gc-mdxeditor ._toolbarButton_1e2ox_239,
+.gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307,
+.gc-mdxeditor ._iconButton_1e2ox_457,
+.gc-mdxeditor__button{
+  background: var(--btn);
+  color: var(--mdx-text);
+  border:1px solid var(--mdx-border);
+  border-radius: var(--radius-1);
+  padding:6px 10px;
+}
+
+.gc-mdxeditor ._toolbarButton_1e2ox_239:hover,
+.gc-mdxeditor ._toolbarToggleItem_1e2ox_208:hover,
+.gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:hover,
+.gc-mdxeditor__button:hover{
+  background: var(--btn);
+  background: color-mix(in srgb, var(--btn) 80%, var(--primary) 20%);
+}
+
+.gc-mdxeditor ._activeToolbarButton_1e2ox_275,
+.gc-mdxeditor ._toolbarToggleItem_1e2ox_208[data-state="on"],
+.gc-mdxeditor__button.primary{
+  background: var(--mdx-primary);
+  color: var(--mdx-primary-text);
+  border-color: var(--mdx-primary);
+}
+
+.gc-mdxeditor__button.ghost{
+  background: transparent;
+  color: var(--mdx-text);
+  border-color: var(--mdx-border);
+}
+
+.gc-mdxeditor ._contentEditable_1e2ox_380,
+.gc-mdxeditor__content{
+  flex:1;
+  overflow:auto;
+  padding:12px;
+  background: var(--mdx-surface);
+  color: var(--mdx-text);
+}
+
+.gc-mdxeditor-prose{
+  line-height: 1.6;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--mdx-text);
+}
+.gc-mdxeditor-prose h1,
+.gc-mdxeditor-prose h2,
+.gc-mdxeditor-prose h3,
+.gc-mdxeditor-prose h4,
+.gc-mdxeditor-prose h5,
+.gc-mdxeditor-prose h6{
+  color: var(--mdx-text);
+  margin: 12px 0 8px;
+  font-weight:700;
+}
+.gc-mdxeditor-prose a{
+  color: var(--mdx-primary);
+}
+.gc-mdxeditor-prose p{ margin: 10px 0; }
+.gc-mdxeditor-prose blockquote{
+  border-left:3px solid var(--mdx-border);
+  padding-left:10px;
+  color: var(--mdx-muted);
+}
+.gc-mdxeditor-prose code{
+  background: var(--btn);
+  color: var(--mdx-text);
+  padding:2px 6px;
+  border-radius: var(--radius-1);
+}
+.gc-mdxeditor-prose pre{
+  background: var(--btn);
+  padding:10px;
+  border-radius: var(--radius-1);
+  overflow:auto;
+  border:1px solid var(--mdx-border);
+}
+
+.gc-mdxeditor ._dialogContent_1e2ox_603,
+.gc-mdxeditor ._popoverContent_1e2ox_638{
+  background: var(--mdx-surface);
+  color: var(--mdx-text);
+  border:1px solid var(--mdx-border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+}
+
+.gc-mdxeditor ._dialogOverlay_1e2ox_870{
+  background: rgba(0,0,0,0.45);
+}
+
+.gc-mdxeditor :where(input, textarea, select){
+  background: var(--card);
+  color: var(--mdx-text);
+  border:1px solid var(--mdx-border);
+}
+
+.gc-mdxeditor__custom-group{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+.gc-mdxeditor__popover{
+  position:absolute;
+  top:100%;
+  left:0;
+  margin-top:8px;
+  width: min(360px, 80vw);
+  padding:12px;
+  border:1px solid var(--mdx-border);
+  border-radius: var(--radius-2);
+  background: var(--card);
+  color: var(--text);
+  box-shadow:0 12px 32px rgba(0,0,0,0.28);
+  z-index: 30;
+}
+.gc-mdxeditor__popover-label{
+  display:block;
+  font-size:0.95rem;
+  margin-bottom:8px;
+}
+.gc-mdxeditor__popover input{
+  margin-top:4px;
+  width:100%;
+}
+.gc-mdxeditor__popover-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+.gc-mdxeditor__popover-error{
+  color:#ef4444;
+  font-size:0.9rem;
+  margin:4px 0 6px;
+}
