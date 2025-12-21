@@ -5,8 +5,14 @@ import heroDarkPng from '../assets/dashboard-hero-worship-angled.png'
 import heroLightPng from '../assets/dashboard-hero-worship-angled-light.png'
 import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
 import heroDarkWebp1200 from '../assets/dashboard-hero-worship-angled-1200.webp'
+import heroDarkWebp960 from '../assets/dashboard-hero-worship-angled-960.webp'
+import heroDarkWebp768 from '../assets/dashboard-hero-worship-angled-768.webp'
+import heroDarkWebp640 from '../assets/dashboard-hero-worship-angled-640.webp'
 import heroLightWebp from '../assets/dashboard-hero-worship-angled-light.webp'
 import heroLightWebp1200 from '../assets/dashboard-hero-worship-angled-light-1200.webp'
+import heroLightWebp960 from '../assets/dashboard-hero-worship-angled-light-960.webp'
+import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.webp'
+import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
 
@@ -121,8 +127,20 @@ export default function HomeDashboard(){
   const [songbookAction] = useState(() => pickRandom(songbookQuickActions))
   const heroImgPng = theme === 'light' ? heroLightPng : heroDarkPng
   const heroSrcSet = theme === 'light'
-    ? `${heroLightWebp1200} 1200w, ${heroLightWebp} 1318w`
-    : `${heroDarkWebp1200} 1200w, ${heroDarkWebp} 1318w`
+    ? [
+        `${heroLightWebp640} 640w`,
+        `${heroLightWebp768} 768w`,
+        `${heroLightWebp960} 960w`,
+        `${heroLightWebp1200} 1200w`,
+        `${heroLightWebp} 1318w`,
+      ].join(', ')
+    : [
+        `${heroDarkWebp640} 640w`,
+        `${heroDarkWebp768} 768w`,
+        `${heroDarkWebp960} 960w`,
+        `${heroDarkWebp1200} 1200w`,
+        `${heroDarkWebp} 1318w`,
+      ].join(', ')
 
   function handleSongAction(){
     if (!songAction) return
@@ -271,6 +289,7 @@ export default function HomeDashboard(){
       >
         {/* Inline picture keeps hero discoverable for LCP/PSI and lets webp be chosen without extra PNG fetch */}
         <picture className="home-hero__bg" aria-hidden="true">
+          {/* Multiple WebP sizes to avoid "image larger than necessary" and improve mobile LCP */}
           <source
             type="image/webp"
             srcSet={heroSrcSet}
@@ -508,7 +527,7 @@ function SongMiniCard({ song }){
     <Link to={`/song/${song.id}`} className="home-mini-card tool-card">
       <div className="home-mini-card__title">
         <strong>{song.title}{key}</strong>
-        {author ? <span className="home-mini-card__by"> by <em>{author}</em></span> : null}
+        {author ? <span className="home-mini-card__by"> by <span className="gc-emphasis">{author}</span></span> : null}
       </div>
       <div className="home-mini-card__tags">
         {shownTags.map(t => (

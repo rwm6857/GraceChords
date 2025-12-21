@@ -8,13 +8,7 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-Italic-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
+/* Avoid loading the large italic variable file in the critical path; browsers can synthesize italics if needed later */
 
 /* Inter 18pt (lyrics) */
 @font-face {
