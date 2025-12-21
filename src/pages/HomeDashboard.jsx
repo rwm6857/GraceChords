@@ -2,8 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import indexData from '../data/index.json'
-import heroDark from '../assets/dashboard-hero-worship-angled.png'
-import heroLight from '../assets/dashboard-hero-worship-angled-light.png'
+import heroDarkPng from '../assets/dashboard-hero-worship-angled.png'
+import heroLightPng from '../assets/dashboard-hero-worship-angled-light.png'
+import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
+import heroDarkWebp1200 from '../assets/dashboard-hero-worship-angled-1200.webp'
+import heroLightWebp from '../assets/dashboard-hero-worship-angled-light.webp'
+import heroLightWebp1200 from '../assets/dashboard-hero-worship-angled-light-1200.webp'
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
 import resourcesData from '../data/resources.json'
@@ -21,7 +25,6 @@ export default function HomeDashboard(){
   const containerRef = useRef(null)
   const blurTimer = useRef(null)
   const [theme, setTheme] = useState(() => currentTheme())
-  const [heroWebp, setHeroWebp] = useState({ light: null, dark: null })
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -56,25 +59,6 @@ export default function HomeDashboard(){
     return () => observer.disconnect()
   }, [])
 
-  // Prefer webp hero if available; fall back to existing PNG without breaking builds
-  useEffect(() => {
-    let cancelled = false
-    const globImports = import.meta.glob('../assets/dashboard-hero-worship-angled*.webp')
-    ;(async () => {
-      try {
-        const next = { light: null, dark: null }
-        for (const [path, loader] of Object.entries(globImports)) {
-          const mod = await loader()
-          if (path.includes('-light.webp')) next.light = mod?.default || next.light
-          else next.dark = mod?.default || next.dark
-        }
-        if (!cancelled) setHeroWebp(next)
-      } catch {
-        // ignore; png fallback will be used
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
 
   function clearBlurTimer(){
     if (blurTimer.current) {
@@ -145,9 +129,10 @@ export default function HomeDashboard(){
   const [songAction] = useState(() => pickRandom(songViewQuickActions))
   const [setlistAction] = useState(() => pickRandom(setlistQuickActions))
   const [songbookAction] = useState(() => pickRandom(songbookQuickActions))
-  const heroImg = theme === 'light'
-    ? (heroWebp.light || heroLight)
-    : (heroWebp.dark || heroDark)
+  const heroImgPng = theme === 'light' ? heroLightPng : heroDarkPng
+  const heroSrcSet = theme === 'light'
+    ? `${heroLightWebp1200} 1200w, ${heroLightWebp} 1318w`
+    : `${heroDarkWebp1200} 1200w, ${heroDarkWebp} 1318w`
 
   function handleSongAction(){
     if (!songAction) return
@@ -270,16 +255,15 @@ export default function HomeDashboard(){
           padding: '24px 20px'
         }}
       >
-        {/* Inline img keeps hero discoverable for LCP/PSI and allows fetchPriority */}
+        {/* Inline picture keeps hero discoverable for LCP/PSI and lets webp be chosen without extra PNG fetch */}
         <picture className="home-hero__bg" aria-hidden="true">
-          {theme === 'light' && heroWebp.light ? (
-            <source type="image/webp" srcSet={heroWebp.light} />
-          ) : null}
-          {theme !== 'light' && heroWebp.dark ? (
-            <source type="image/webp" srcSet={heroWebp.dark} />
-          ) : null}
+          <source
+            type="image/webp"
+            srcSet={heroSrcSet}
+            sizes="100vw"
+          />
           <img
-            src={heroImg}
+            src={heroImgPng}
             alt=""
             loading="eager"
             fetchPriority="high"
