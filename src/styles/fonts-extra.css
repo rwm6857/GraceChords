@@ -1,0 +1,28 @@
+/* Deferred font faces loaded after first paint to keep critical chain small */
+@font-face {
+  font-family: "Inter";
+  src:
+    url("/fonts/Inter_24pt-Medium.woff2") format("woff2"),
+    url("/fonts/Inter_24pt-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src:
+    url("/fonts/Inter_24pt-SemiBold.woff2") format("woff2"),
+    url("/fonts/Inter_24pt-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src:
+    url("/fonts/Inter_24pt-Bold.woff2") format("woff2"),
+    url("/fonts/Inter_24pt-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

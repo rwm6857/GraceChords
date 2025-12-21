@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import indexData from '../data/index.json'
 import heroDarkPng from '../assets/dashboard-hero-worship-angled.png'
 import heroLightPng from '../assets/dashboard-hero-worship-angled-light.png'
 import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
@@ -10,7 +9,6 @@ import heroLightWebp from '../assets/dashboard-hero-worship-angled-light.webp'
 import heroLightWebp1200 from '../assets/dashboard-hero-worship-angled-light-1200.webp'
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
-import resourcesData from '../data/resources.json'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -18,13 +16,16 @@ const MAX_SUGGESTIONS = 5
 
 export default function HomeDashboard(){
   const navigate = useNavigate()
-  const items = useMemo(() => indexData?.items || [], [])
+  const [items, setItems] = useState([])
   const [query, setQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const containerRef = useRef(null)
   const blurTimer = useRef(null)
   const [theme, setTheme] = useState(() => currentTheme())
+  const [latestSongs, setLatestSongs] = useState([])
+  const [latestPosts, setLatestPosts] = useState([])
+  const [listsReady, setListsReady] = useState(false)
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -48,17 +49,6 @@ export default function HomeDashboard(){
   useEffect(() => {
     if (!showSuggestions) setActiveIndex(-1)
   }, [showSuggestions, trimmed])
-
-  // Watch for theme changes via data-theme on <html>
-  useEffect(() => {
-    const el = document.documentElement
-    const observer = new MutationObserver(() => {
-      setTheme(currentTheme())
-    })
-    observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
-
 
   function clearBlurTimer(){
     if (blurTimer.current) {
@@ -210,23 +200,47 @@ export default function HomeDashboard(){
     blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
   }
 
-  const latestSongs = useMemo(() => {
-    const all = (indexData?.items || []).map(s => {
-      const addedRaw = s.addedAt || s.added
-      const addedMs = addedRaw ? Date.parse(addedRaw) : 0
-      return { ...s, addedMs }
-    }).filter(s => !isIncompleteSong(s))
-    all.sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
-    return all.slice(0, 6)
-  }, [])
-
-  const latestPosts = useMemo(() => {
-    const posts = (resourcesData?.items || []).map(p => ({
-      ...p,
-      dateMs: parseDateMs(p.date)
-    }))
-    posts.sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
-    return posts.slice(0, 3)
+  // Defer heavier work (JSON parsing, sorting, observer) until idle to keep LCP quick
+  // Defer heavy data prep and observers so first paint/LCP can happen quickly
+  useEffect(() => {
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(() => cb(), 1))
+    const cancel = window.cancelIdleCallback || clearTimeout
+    let observer = null
+    const idleId = idle(async () => {
+      try {
+        const [{ default: indexJson }, { default: resourcesJson }] = await Promise.all([
+          import('../data/index.json'),
+          import('../data/resources.json'),
+        ])
+        setItems(indexJson?.items || [])
+        const songsSorted = (indexJson?.items || [])
+          .map(s => {
+            const addedRaw = s.addedAt || s.added
+            const addedMs = addedRaw ? Date.parse(addedRaw) : 0
+            return { ...s, addedMs }
+          })
+          .filter(s => !isIncompleteSong(s))
+          .sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
+          .slice(0, 6)
+        setLatestSongs(songsSorted)
+        const postsSorted = (resourcesJson?.items || [])
+          .map(p => ({ ...p, dateMs: parseDateMs(p.date) }))
+          .sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
+          .slice(0, 3)
+        setLatestPosts(postsSorted)
+        setListsReady(true)
+      } catch {
+        setListsReady(true)
+      }
+      // Theme observer can wait until after paint
+      const el = document.documentElement
+      observer = new MutationObserver(() => setTheme(currentTheme()))
+      observer.observe(el, { attributes: true, attributeFilter: ['data-theme'] })
+    })
+    return () => {
+      cancel(idleId)
+      if (observer) observer.disconnect()
+    }
   }, [])
 
   return (
@@ -432,7 +446,9 @@ export default function HomeDashboard(){
                 <h3>Latest Songs</h3>
               </div>
               <div className="home-latest__list">
-                {latestSongs.length ? latestSongs.map(song => (
+                {!listsReady ? (
+                  <SongMiniSkeleton count={6} />
+                ) : latestSongs.length ? latestSongs.map(song => (
                   <SongMiniCard key={song.id} song={song} />
                 )) : <p className="Small" style={{ opacity: 0.8 }}>No songs yet.</p>}
               </div>
@@ -442,7 +458,9 @@ export default function HomeDashboard(){
                 <h3>Latest Posts</h3>
               </div>
               <div className="home-latest__posts">
-                {latestPosts.length ? latestPosts.map(post => (
+                {!listsReady ? (
+                  <PostMiniSkeleton count={3} />
+                ) : latestPosts.length ? latestPosts.map(post => (
                   <PostMiniCard key={post.slug} post={post} />
                 )) : <p className="Small" style={{ opacity: 0.8 }}>No posts yet.</p>}
               </div>
@@ -509,6 +527,33 @@ function PostMiniCard({ post }){
       <div className="home-post-card__title">{post.title}</div>
       <p className="home-post-card__summary line-clamp-3">{summary}</p>
     </Link>
+  )
+}
+
+function SongMiniSkeleton({ count = 4 }){
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="home-mini-card tool-card" aria-hidden="true" style={{ opacity:0.6 }}>
+          <div className="skeleton-line" style={{ width:'70%', height:16 }} />
+          <div className="skeleton-line" style={{ width:'40%', height:14, marginTop:8 }} />
+        </div>
+      ))}
+    </>
+  )
+}
+
+function PostMiniSkeleton({ count = 2 }){
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="home-post-card tool-card" aria-hidden="true" style={{ opacity:0.6 }}>
+          <div className="skeleton-line" style={{ width:'80%', height:16 }} />
+          <div className="skeleton-line" style={{ width:'90%', height:14, marginTop:8 }} />
+          <div className="skeleton-line" style={{ width:'60%', height:14, marginTop:6 }} />
+        </div>
+      ))}
+    </>
   )
 }
 
