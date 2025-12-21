@@ -7,7 +7,6 @@ import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
 import heroDarkWebp1200 from '../assets/dashboard-hero-worship-angled-1200.webp'
 import heroDarkWebp960 from '../assets/dashboard-hero-worship-angled-960.webp'
 import heroDarkWebp768 from '../assets/dashboard-hero-worship-angled-768.webp'
-import heroDarkWebp640 from '../assets/dashboard-hero-worship-angled-640.webp'
 import heroLightWebp from '../assets/dashboard-hero-worship-angled-light.webp'
 import heroLightWebp1200 from '../assets/dashboard-hero-worship-angled-light-1200.webp'
 import heroLightWebp960 from '../assets/dashboard-hero-worship-angled-light-960.webp'
@@ -135,7 +134,6 @@ export default function HomeDashboard(){
         `${heroLightWebp} 1318w`,
       ].join(', ')
     : [
-        `${heroDarkWebp640} 640w`,
         `${heroDarkWebp768} 768w`,
         `${heroDarkWebp960} 960w`,
         `${heroDarkWebp1200} 1200w`,
