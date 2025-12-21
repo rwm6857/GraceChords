@@ -38,11 +38,7 @@ import './styles/fonts.css'
 import './styles/cards.css'
 import './components/ui/ui.css'
 
-// Defer heavier font weights to idle to keep initial render quick
-const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1))
-idle(() => {
-  import('./styles/fonts-extra.css')
-})
+// Variable font already covers all weights; nothing extra to load after idle
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
