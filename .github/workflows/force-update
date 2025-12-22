@@ -1,0 +1,81 @@
+name: GraceChords Force Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Optional note for the run (shows in commit message)."
+        required: false
+        default: "manual force update"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: force-update-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  force_update:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Sync wiki (if token present)
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${WIKI_PUSH_TOKEN:-}" ]; then
+            echo "WIKI_PUSH_TOKEN missing; skipping wiki sync."
+            exit 0
+          fi
+          node scripts/syncWiki.mjs
+
+      - name: Rebuild song index
+        run: npm run build-index
+
+      - name: Rebuild resources index
+        run: npm run build-resources-index
+
+      - name: Generate sitemap
+        run: npm run generate:sitemap
+
+      - name: Build site into /docs
+        env:
+          VITE_COMMIT_SHA: ${{ github.sha }}
+        run: npm run build
+
+      - name: Commit and push generated assets (if changed)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Match what your automation commits
+          git add -A docs src/data/*.json public/sitemap.xml public/robots.txt || true
+
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+
+          msg="chore: force update (${{ github.event.inputs.reason }})"
+          git commit -m "$msg"
+          git push
