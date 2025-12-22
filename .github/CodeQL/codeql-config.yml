@@ -1,0 +1,8 @@
+name: "GraceChords CodeQL config"
+
+paths-ignore:
+  - docs/**
+  - dist/**
+  - build/**
+  - node_modules/**
+  - coverage/**
