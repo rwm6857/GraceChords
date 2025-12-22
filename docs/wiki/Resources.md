@@ -2,8 +2,8 @@
 
 GraceChords includes a lightweight resources/blog section for worship teams.
 
-- Index: `/#/resources`
-- Post: `/#/resources/:slug`
+- Index: `/resources`
+- Post: `/resources/:slug`
 
 ### Content Format
 

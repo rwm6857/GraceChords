@@ -9,7 +9,7 @@ Set up a local environment to develop or preview GraceChords.
 npm ci
 npm run dev
 ```
-The app uses Vite with a HashRouter, so routing works on GitHub Pages.
+The app uses Vite with a BrowserRouter plus prebuilt shell pages and a 404 redirect so deep links work on GitHub Pages.
 
 Environment
 - Create a local `.env` with `VITE_ADMIN_PW=your-password` to enable the Admin tools.

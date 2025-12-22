@@ -3,7 +3,7 @@ Step-by-step walkthrough to add new songs or edit existing ones in GraceChords.
 ## Add a New Song
 
 Option A — Use the Admin Tool (recommended)
-1) Open `/#/admin` and enter the password (`VITE_ADMIN_PW` in your `.env`).
+1) Open `/admin` and enter the password (`VITE_ADMIN_PW` in your `.env`).
 2) Paste or write your ChordPro text.
 3) Fill metadata at the top of the file:
    - `{title: ...}` (required), `{key: ...}` (original), optional `{capo: N}`, `{tags: ...}`, `{authors: ...}`, `{country: ...}`
@@ -34,7 +34,7 @@ Option C — Manual add
 ## Edit an Existing Song
 
 Option A — Use the Admin Tool
-1) Open `/#/admin`.
+1) Open `/admin`.
 2) Click **Load existing** and choose a song from the catalog.
 3) Make edits in the editor; adjust Original Key to keep quick chords accurate.
 4) Click **Stage** (shows an “Editing existing” badge and `update: <file>` message).

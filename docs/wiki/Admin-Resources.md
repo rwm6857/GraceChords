@@ -2,7 +2,7 @@
 
 The admin resources editor lets you create and publish blog-style guides for worship teams.
 
-- Open: `/#/admin/resources` (same admin password as songs)
+- Open: `/admin/resources` (same admin password as songs)
 - Requires: a GitHub token (repo scope) set in the browser via the “Set token” action
 
 ### Workflow
@@ -45,4 +45,3 @@ summary: "One-line summary shown on the card."
 - Embeds: You may include raw HTML iframes to embed videos (YouTube/Vimeo).
 - Images: Place absolute URLs or files hosted elsewhere; content under `public/resources/` is served as-is.
 - Slugs: Use short, kebab-case slugs for stable URLs.
-

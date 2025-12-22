@@ -5,8 +5,8 @@ Worship Mode is a full‑screen, touch‑friendly view for live performance. It 
 ### Opening Worship Mode
 - From a Song: click “Open in Worship Mode”.
 - From a Setlist: click “Open in Worship Mode” to load the current set.
-- Direct URL: `/#/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/#/worship/abba,above-all`.
- - Blank: `/#/worship` opens Worship Mode without a selection; add songs from Setlist to build a flow.
+- Direct URL: `/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/worship/abba,above-all`.
+ - Blank: `/worship` opens Worship Mode without a selection; add songs from Setlist to build a flow.
 
 ### Layout & Fitting
 - Single column; entire song rendered on one screen (no pagination).

@@ -24,7 +24,8 @@ Common commands for development, testing, indexing, and maintenance.
 - `npm run repair:meta` — repair or fill common metadata fields across songs
 
 ## SEO
-- `npm run generate:sitemap` — regenerate `public/sitemap.xml` (hash routes + all songs/resources)
+- `npm run generate:sitemap` — regenerate `public/sitemap.xml` (top-level routes + all songs/resources)
+- `node scripts/generate-seo-pages.mjs` — generate static SEO pages into `docs/` (runs during `npm run build`)
 
 ## Environment
 - `.env` — set `VITE_ADMIN_PW=your-password`
