@@ -58,12 +58,13 @@ npm run build
 ```
 Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
 
-Routing uses hash fragments (`/#/...`) so deep links work on static hosting.
+Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
 
 ## SEO & Sitemaps
 - Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in `src/components/Home.jsx` and `src/components/SongView.jsx`).
 - Song pages tagged `ICP` get an InterCP-specific meta extension (description/keywords/JSON-LD) plus a visible badge on the page.
-- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with main hash routes and all song/resource/resource detail URLs).
+- Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` (plus shell pages for top routes) so Google can crawl lyrics/content before JS runs.
+- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with top-level routes plus `/songs/:id` and `/resources/:slug`).
 - `public/sitemap.xml` and `public/robots.txt` are served from the site root on GitHub Pages; keep both committed.
 
 ## Worship/Perform Mode
@@ -72,7 +73,7 @@ Full‑screen, minimal UI optimized for live performance.
 Access
 - From a song: use the “Open in Worship Mode” button on the Song page.
 - From a set: use “Open in Worship Mode” in Setlist to load the current set.
-- Direct URL: `/#/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/#/worship/abba,above-all`.
+- Direct URL: `/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/worship/abba,above-all`.
 
 Layout & Fit
 - Renders an entire song on a single page (no pagination), single column.
@@ -100,7 +101,7 @@ Notes
 - Keep song IDs and filenames up to date by running `npm run build-index` after adding songs.
 
 ## Admin & Index Generation
-Set the admin password via an environment variable and open `/#/admin` to author songs in ChordPro. Use Stage to queue changes; you can either publish a PR or download a ZIP of staged files.
+Set the admin password via an environment variable and open `/admin` to author songs in ChordPro. Use Stage to queue changes; you can either publish a PR or download a ZIP of staged files.
 
 ```bash
 VITE_ADMIN_PW=your-password # in .env
@@ -136,10 +137,9 @@ GraceChords includes a lightweight resources/blog system for worship teams.
   Markdown content…
   ```
 
-- Index page: `/#/resources` — grid of cards, search (title/summary, falls back to content), tag filters. Public URLs in the sitemap use `/?view=resources` for crawler friendliness; the app maps them into the hash route on load.
-- Post page: `/#/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes). Public URLs in the sitemap use `/?resource=:slug` and are immediately mapped into the hash route for rendering.
-- Admin editor: `/#/admin/resources` — create/edit posts with live preview and PR publishing (uses the same GitHub token flow as songs). Requires the “Edits Author” field.
-  - Song URLs in the sitemap use `/?song=:id` for crawler friendliness; the app maps them into `#/song/:id` on load to keep the existing hash router working.
+- Index page: `/resources` — grid of cards, search (title/summary, falls back to content), tag filters.
+- Post page: `/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes).
+- Admin editor: `/admin/resources` — create/edit posts with live preview and PR publishing (uses the same GitHub token flow as songs). Requires the “Edits Author” field.
 
 Build & CI
 - Rebuild resources index after adding/editing `.md` files:

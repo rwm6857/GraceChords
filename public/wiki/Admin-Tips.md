@@ -1,4 +1,4 @@
-Practical tips for using the in‑app Admin editor (/#/admin) to author and update songs.
+Practical tips for using the in‑app Admin editor (/admin) to author and update songs.
 
 ## Workflow
 - Load existing or start a new song. Use Quick chords and Directives to speed up editing.

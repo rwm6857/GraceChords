@@ -1,6 +1,6 @@
 # Song Library
 
-Visit the in-app [Song Library](/#/songs) to browse, search, and filter all available charts.
+Visit the in-app [Song Library](/songs) to browse, search, and filter all available charts.
 
 ## Quick start
 - Open the Song Library and start typing to search by **title** or **tag**.
