@@ -30,6 +30,7 @@ export default function App(){
             <Route path="/songs" element={<Songs />} />
             <Route path="/about" element={<About />} />
             <Route path="/song/:id" element={<SongView />} />
+            <Route path="/songs/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
             <Route path="/setlist/:songIds" element={<Setlist />} />
             <Route path="/set/:code" element={<Setlist />} />

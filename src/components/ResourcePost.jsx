@@ -47,7 +47,7 @@ export default function ResourcePost(){
     if (txt.length > 220) return `${txt.slice(0, 220).trim()}…`
     return txt || 'GraceChords resource article.'
   }, [meta, item, raw])
-  const canonicalUrl = `${SITE_URL}/?resource=${encodeURIComponent(slug || '')}`
+  const canonicalUrl = `${SITE_URL}/resources/${encodeURIComponent(slug || '')}`
 
   return (
     <div className="container">

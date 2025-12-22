@@ -61,10 +61,10 @@ export default function Resources(){
         <meta property="og:type" content="website" />
         <meta property="og:title" content={PAGE_TITLE} />
         <meta property="og:description" content={PAGE_DESCRIPTION} />
-        <meta property="og:url" content={`${SITE_URL}/?view=resources`} />
+        <meta property="og:url" content={`${SITE_URL}/resources`} />
         <meta property="og:site_name" content="GraceChords" />
         <meta property="og:image" content={OG_IMAGE_URL} />
-        <link rel="canonical" href={`${SITE_URL}/?view=resources`} />
+        <link rel="canonical" href={`${SITE_URL}/resources`} />
       </Helmet>
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>

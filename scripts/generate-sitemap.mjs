@@ -9,12 +9,12 @@ const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.j
 
 const staticRoutes = [
   '/', // home
-  '/?view=about',
-  '/?view=songs',
-  '/?view=setlist',
-  '/?view=songbook',
-  '/?view=resources',
-  '/?view=bundle'
+  '/about',
+  '/songs',
+  '/setlist',
+  '/songbook',
+  '/resources',
+  '/bundle'
 ]
 
 const urlMap = new Map()
@@ -66,7 +66,7 @@ for (const p of staticRoutes) addUrl(p, todayStr)
 for (const song of (indexData?.items || [])) {
   const slug = song?.id || song?.filename?.replace(/\.chordpro$/, '')
   if (!slug) continue
-  const loc = `/?song=${encodeSlug(slug)}`
+  const loc = `/songs/${encodeSlug(slug)}`
   const songFile = song?.filename ? path.join(root, 'public', 'songs', song.filename) : null
   const mtime = songFile ? await fileLastMod(songFile) : null
   addUrl(loc, clampDateToToday(mtime))
@@ -74,7 +74,7 @@ for (const song of (indexData?.items || [])) {
 
 for (const res of (resourcesData?.items || [])) {
   if (!res?.slug) continue
-  const loc = `/?resource=${encodeSlug(res.slug)}`
+  const loc = `/resources/${encodeSlug(res.slug)}`
   const resFile = res?.filename ? path.join(root, 'public', 'resources', res.filename) : null
   const mtime = resFile ? await fileLastMod(resFile) : null
   addUrl(loc, clampDateToToday(mtime))
