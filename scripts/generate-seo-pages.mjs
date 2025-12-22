@@ -168,7 +168,9 @@ function replaceRoot(html, body){
 }
 
 function absolutizeAssetPaths(html){
-  return html.replace(/(href|src)=(['"])\\.\\//g, '$1=$2/')
+  return html
+    .replace(/href=(['"])\\.\\//g, 'href=$1/')
+    .replace(/src=(['"])\\.\\//g, 'src=$1/')
 }
 
 function buildLyricsBody(title, text){
