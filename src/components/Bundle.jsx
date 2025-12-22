@@ -6,6 +6,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/instrumental'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/toast'
+import { publicUrl } from '../utils/publicUrl'
 
 export default function Bundle(){
   const navigate = useNavigate()
@@ -33,7 +34,7 @@ export default function Bundle(){
       const promises = entries.map(it =>
         (async () => {
           const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
-          const res = await fetch(`${import.meta.env.BASE_URL}songs/${it.filename}`)
+          const res = await fetch(publicUrl(`songs/${it.filename}`))
           if(!res.ok) throw new Error(`Missing file ${it.filename}`)
           const text = await res.text()
           const doc = parseChordProOrLegacy(text)

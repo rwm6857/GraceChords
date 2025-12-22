@@ -15,6 +15,7 @@ import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import { CloudUploadIcon, PlusIcon, TrashIcon, HomeIcon, Sun, Moon } from '../components/Icons'
 import { showToast } from '../utils/toast'
+import { publicUrl } from '../utils/publicUrl'
 import '../styles/admin.css'
 import { currentTheme, toggleTheme } from '../utils/theme'
 import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
@@ -487,8 +488,7 @@ function SongsEditor({ onStageSong, prefill }){
   async function handleSelectSong(it){
     if (!it) return
     try {
-      const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-      const url = `${base}songs/${it.filename}`
+      const url = publicUrl(`songs/${it.filename}`)
       const body = await fetchTextCached(url)
       if (body) {
         setText(body)
@@ -1025,8 +1025,7 @@ function PostsEditor({ onStagePost, prefill }){
   async function loadExisting(post){
     if (!post) return
     try {
-      const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/,'') + '/'
-      const url = `${base}resources/${post.slug}.md`
+      const url = publicUrl(`resources/${post.slug}.md`)
       const txt = await fetchTextCached(url)
       const fm = parseFrontmatter(txt)
       setMeta({

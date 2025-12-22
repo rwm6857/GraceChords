@@ -3,6 +3,7 @@ import resourcesData from '../data/resources.json'
 import { parseFrontmatter, mdToHtml, slugifyKebab } from '../utils/markdown'
 import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
+import { publicUrl } from '../utils/publicUrl'
 import Toolbar from '../components/ui/Toolbar'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
@@ -52,8 +53,7 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
 
   async function loadExisting(s){
     if(!s) return
-    const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/,'') + '/'
-    const url = `${base}resources/${s.slug}.md`
+    const url = publicUrl(`resources/${s.slug}.md`)
     const txt = await fetchTextCached(url)
     const fm = parseFrontmatter(txt)
     setSlug(s.slug)

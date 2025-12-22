@@ -15,6 +15,7 @@ import { headOk, clearHeadCache } from '../utils/headCache'
 import { smartPreviewAndShareJPG } from '../utils/smartPreviewAndShareJPG'
 import Busy from './Busy'
 import Panel from './ui/Panel'
+import { publicUrl } from '../utils/publicUrl'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -149,8 +150,7 @@ export default function SongView(){
     if(!entry) return
     setErr('')
     setParsed(null)
-    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    fetch(`${base}songs/${entry.filename}`)
+    fetch(publicUrl(`songs/${entry.filename}`))
       .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
       .then(txt => {
         try {
@@ -207,9 +207,8 @@ export default function SongView(){
     const items = indexData?.items || []
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
-    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
     neighbors.forEach((n) => {
-      const url = `${base}songs/${n.filename}`
+      const url = publicUrl(`songs/${n.filename}`)
       fetchTextCached(url).catch((err) => {
         console.error(err)
         showToast(`Failed to load ${n.filename}`)
@@ -222,8 +221,7 @@ export default function SongView(){
     if (!entry) return
     setHasPptx(false)
     const slug = entry.filename.replace(/\.chordpro$/, '')
-    const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-    const url = `${base}pptx/${slug}.pptx`
+    const url = publicUrl(`pptx/${slug}.pptx`)
     setPptxUrl(url)
     let cancelled = false
     async function check(){

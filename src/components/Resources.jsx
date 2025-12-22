@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import resourcesData from '../data/resources.json'
 import { stripMarkdown } from '../utils/markdown'
+import { publicUrl } from '../utils/publicUrl'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -30,8 +31,7 @@ export default function Resources(){
       const next = {}
       for(const it of items){
         try {
-          const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/,'') + '/'
-          const res = await fetch(`${base}resources/${it.slug}.md`)
+          const res = await fetch(publicUrl(`resources/${it.slug}.md`))
           const txt = await res.text()
           const body = txt.replace(/^---[\s\S]*?---\n?/,'')
           next[it.slug] = stripMarkdown(body)

@@ -4,8 +4,8 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
-  // Set base to "./" if assets fail on GH Pages
-  base: '',
+  // Keep assets rooted at the site origin for absolute public paths.
+  base: '/',
   plugins: [
     react({
       // Make the React plugin handle .js files too (not just .jsx/.tsx)

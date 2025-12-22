@@ -8,6 +8,7 @@ import { compareSongsByTitle } from '../utils/sort'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
+import { publicUrl } from '../utils/publicUrl'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -152,7 +153,7 @@ export default function Songbook() {
       const songs = []
       for (const it of selectedEntries) {
         try {
-          const url = `${import.meta.env.BASE_URL}songs/${it.filename}`
+          const url = publicUrl(`songs/${it.filename}`)
           const txt = await fetchTextCached(url)
           const doc = parseChordProOrLegacy(txt)
           const blocks = (doc.sections || []).map((sec) => ({

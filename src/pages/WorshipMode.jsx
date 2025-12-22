@@ -9,6 +9,7 @@ import { transposeInstrumental, formatInstrumental } from '../utils/instrumental
 import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
+import { publicUrl } from '../utils/publicUrl'
 
 const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
@@ -230,8 +231,7 @@ export default function WorshipMode(){
       const out = []
       for (const s of targets) {
         try {
-          const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-          const res = await fetch(`${base}songs/${s.filename}`)
+          const res = await fetch(publicUrl(`songs/${s.filename}`))
           if (!res.ok) throw new Error(`Failed ${s.filename}`)
           const txt = await res.text()
           const doc = parseChordProOrLegacy(txt)
@@ -464,8 +464,7 @@ export default function WorshipMode(){
     try {
       const entry = (indexData?.items || []).find(it => String(it.id) === String(idToAdd))
       if (!entry) return
-      const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-      const res = await fetch(`${base}songs/${entry.filename}`)
+      const res = await fetch(publicUrl(`songs/${entry.filename}`))
       if (!res.ok) return
       const txt = await res.text()
       const doc = parseChordProOrLegacy(txt)

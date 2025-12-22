@@ -1,11 +1,12 @@
 // src/utils/pdf/fonts.js
+import { publicUrl } from '../publicUrl'
 
 // Small in-memory cache of fetched font data
 let fontDataPromise = null
 
 async function loadFontData() {
   if (fontDataPromise) return fontDataPromise
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/') + 'fonts/'
+  const base = publicUrl('fonts/')
   const files = [
     'NotoSans-Regular.ttf',
     'NotoSans-Bold.ttf',
@@ -45,7 +46,7 @@ export async function ensureFontsEmbedded(doc) {
 let canvasFontsPromise = null
 export async function ensureCanvasFonts() {
   if (canvasFontsPromise) return canvasFontsPromise
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/')
+  const base = publicUrl('fonts/')
   const specs = [
     { family: 'NotoSans', weight: '400', style: 'normal', file: 'NotoSans-Regular.ttf' },
     { family: 'NotoSans', weight: '700', style: 'normal', file: 'NotoSans-Bold.ttf' },
@@ -55,7 +56,7 @@ export async function ensureCanvasFonts() {
     { family: 'NotoSansMono', weight: '700', style: 'normal', file: 'NotoSansMono-Bold.ttf' }
   ]
   canvasFontsPromise = Promise.all(specs.map(async (s) => {
-    const face = new FontFace(s.family, `url(${base}fonts/${s.file})`, { weight: s.weight, style: s.style })
+    const face = new FontFace(s.family, `url(${base}${s.file})`, { weight: s.weight, style: s.style })
     const loaded = await face.load()
     document.fonts.add(loaded)
   })).then(() => ({ lyricFamily: 'NotoSans', chordFamily: 'NotoSansMono' }))
@@ -74,4 +75,3 @@ async function fetchAsBase64(url) {
     r.readAsDataURL(blob)
   })
 }
-

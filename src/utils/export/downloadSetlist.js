@@ -1,9 +1,5 @@
 import { combinePptxFiles } from './combinePptx'
-
-function normalizeBaseUrl(input) {
-  const base = input || '/'
-  return base.endsWith('/') ? base : `${base}/`
-}
+import { publicUrl } from '../publicUrl'
 
 function songToSlug(song) {
   if (!song) return ''
@@ -21,16 +17,15 @@ function songToSlug(song) {
 
 export async function downloadSetlistAsPptx(setlist = {}, options = {}) {
   const { name = 'Setlist', songs = [] } = setlist || {}
-  const { availablePptxMap = null, baseUrl = import.meta?.env?.BASE_URL || '/', onEmpty } = options
+  const { availablePptxMap = null, onEmpty } = options
 
-  const resolvedBase = normalizeBaseUrl(baseUrl)
   const songUrls = []
 
   for (const entry of songs) {
     const slug = songToSlug(entry)
     if (!slug) continue
     if (availablePptxMap && !availablePptxMap[slug]) continue
-    songUrls.push(`${resolvedBase}pptx/${slug}.pptx`)
+    songUrls.push(publicUrl(`pptx/${slug}.pptx`))
   }
 
   if (!songUrls.length) {

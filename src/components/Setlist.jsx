@@ -14,6 +14,7 @@ import { showToast } from '../utils/toast'
 import { headOk } from '../utils/headCache'
 import { encodeSet, decodeSet } from '../utils/setcode'
 import { downloadSetlistAsPptx } from '../utils/export/downloadSetlist'
+import { publicUrl } from '../utils/publicUrl'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -98,7 +99,7 @@ export default function Setlist(){
         const s = items.find(it=> it.id===sel.id)
         if(!s) continue
         const slug = s.filename.replace(/\.chordpro$/i, '')
-        const url = `${import.meta.env.BASE_URL}pptx/${slug}.pptx`
+        const url = publicUrl(`pptx/${slug}.pptx`)
         const ok = await headOk(url, slug)
         if(ok) found[slug] = true
       }
@@ -416,7 +417,7 @@ async function exportPdf() {
       if (!s) continue;
 
       try {
-        const url = `${import.meta.env.BASE_URL}songs/${s.filename}`;
+        const url = publicUrl(`songs/${s.filename}`)
         const txt = await fetchTextCached(url);
         const doc = parseChordProOrLegacy(txt);
 
@@ -486,13 +487,12 @@ async function exportPdf() {
         try {
           if (typeof window !== 'undefined' && window.location) {
             const origin = window.location.origin || ''
-            const base = (import.meta?.env?.BASE_URL || '/').replace(/^\./, '')
-            return `${origin}${base}`.replace(/\/+$/, '/')
+            return `${origin}/`
           }
         } catch {}
         return ''
       })()
-      const url = `${baseOrigin}#/setlist/${ids}?toKeys=${keys}`
+      const url = `${baseOrigin}setlist/${ids}?toKeys=${keys}`
       await navigator.clipboard.writeText(url)
       try { showToast?.('Link copied!') } catch {}
     } catch (e) { alert('Failed to copy link') }
@@ -512,7 +512,7 @@ async function exportPdf() {
       const slug = s.filename.replace(/\.chordpro$/i, '')
       if(!pptxMap[slug]) continue
       try{
-        const res = await fetch(`${import.meta.env.BASE_URL}pptx/${slug}.pptx`)
+        const res = await fetch(publicUrl(`pptx/${slug}.pptx`))
         if(!res.ok) continue
         const blob = await res.blob()
         added++
@@ -562,7 +562,7 @@ async function exportPdf() {
       }
       await downloadSetlistAsPptx(
         { name: name || 'Setlist', songs },
-        { baseUrl: import.meta.env.BASE_URL }
+        {}
       )
     } catch (err) {
       console.error(err)

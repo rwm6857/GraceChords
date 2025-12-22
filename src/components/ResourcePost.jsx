@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from 'react-router-dom'
 import resourcesData from '../data/resources.json'
 import { mdToHtml, parseFrontmatter, stripMarkdown } from '../utils/markdown'
+import { publicUrl } from '../utils/publicUrl'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -18,8 +19,7 @@ export default function ResourcePost(){
     let cancelled = false
     ;(async () => {
       try {
-        const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/,'') + '/'
-        const res = await fetch(`${base}resources/${slug}.md`)
+        const res = await fetch(publicUrl(`resources/${slug}.md`))
         if(!res.ok) throw new Error(`${res.status} ${res.statusText}`)
         const txt = await res.text()
         if (cancelled) return

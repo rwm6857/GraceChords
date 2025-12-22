@@ -10,6 +10,7 @@ import { downloadZip } from '../utils/zip'
 import indexData from '../data/index.json'
 import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
+import { publicUrl } from '../utils/publicUrl'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
@@ -202,8 +203,7 @@ function AdminPanel(){
     const it = items.find(s => String(s.id) === String(loadId))
     if (!it) return
     try {
-      const base = ((import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/')
-      const url = `${base}songs/${it.filename}`
+      const url = publicUrl(`songs/${it.filename}`)
       const body = await fetchTextCached(url)
       if (body) setText(body)
       setEditingFile(it.filename)

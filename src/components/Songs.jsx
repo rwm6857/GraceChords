@@ -6,6 +6,7 @@ import { compareSongsByTitle } from '../utils/sort'
 import indexData from '../data/index.json'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
+import { publicUrl } from '../utils/publicUrl'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -89,7 +90,7 @@ export default function Songs(){
       for (const s of shouldFetch) {
         try {
           fetchingRef.current.add(s.id)
-          const txt = await fetch(`${import.meta.env.BASE_URL}songs/${s.filename}`).then(r => r.text())
+          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then(r => r.text())
           if (cancelled) return
           next[s.id] = (txt || '').toLowerCase()
         } catch {}
