@@ -1,26 +1,41 @@
 {title: Worthy is the Lamb}
-{key: }
+{key: G}
+{country: USA}
 {authors: Hillsong Worship}
 {youtube: y7aZb9E8-PI}
-{tags: }
-{pptx: }
-{sov Verse 1}
-{eov}
+{tags: Slow, Worship, Cross}
 
-{sov Verse 1}
-{eov}
+{start_of_verse: Verse 1}
+[G]Thank you for the [C]cross, [G]Lord
+Thank you for the [C]price [D]You [G]paid
+Bearing all my [D]sin and [Em]shame
+In [D]love You [C]came
+And [Am]gave am[G]azing [D]grace
 
-{sov Verse 2}
-{eov}
+{end_of_verse}
 
-{soc Chorus}
-{eoc}
+{start_of_verse: Verse}
+Thank you for this love, Lord
+Thank you for the nail pierced hands
+Washed me in Your cleansing flow
+Now all I know
+Your forgiveness and embrace
 
-{soc PreChorus}
-{eoc}
+{end_of_verse}
 
-{sob Bridge}
-{eob}
+{start_of_chorus: Chorus}
+[G]Worthy is the [D]Lamb
+[Am]Seated [G]on the [C]throne
+[D]Crown You now with [G]many [C]crowns
+You [Am]reign vic[G]tori[D]ous
 
-{sot Tag}
-{eot}
+[G]High and lifted [D]up
+[Am]Jesus [G]Son of [C]God
+The [D]Darling of Heaven [G]cru[C]cipfi[D]ed
+Worthy is the [Am]Lamb [G] [C]
+Worthy is the [Am]Lamb [G] [D]
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
+# --- END DISCLAIMER ---
