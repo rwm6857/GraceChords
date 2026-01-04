@@ -76,10 +76,10 @@ describe('WorshipMode — mobile toolbar and snackbar', () => {
     await act(async () => { await Promise.resolve() })
     expect(screen.getAllByText('Abba').length).toBeGreaterThan(0)
     // Snackbar appears
-    expect(screen.getByText(/Swipe to see next\/previous song/i)).toBeInTheDocument()
+    expect(screen.getByText(/Swipe left\/right for songs/i)).toBeInTheDocument()
     // Advance timers ~3s to auto-dismiss
     await act(async () => { vi.advanceTimersByTime(3000) })
-    expect(screen.queryByText(/Swipe to see next\/previous song/i)).toBeNull()
+    expect(screen.queryByText(/Swipe left\/right for songs/i)).toBeNull()
     // Re-render should not show again because of localStorage flag
     vi.useRealTimers()
     render(
@@ -91,7 +91,7 @@ describe('WorshipMode — mobile toolbar and snackbar', () => {
     )
     await act(async () => { await Promise.resolve() })
     expect(screen.getAllByText('Abba').length).toBeGreaterThan(0)
-    expect(screen.queryByText(/Swipe to see next\/previous song/i)).toBeNull()
+    expect(screen.queryByText(/Swipe left\/right for songs/i)).toBeNull()
   })
 
   it('shows full toolbar and NEXT on desktop', async () => {

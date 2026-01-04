@@ -454,11 +454,23 @@ export default function WorshipMode(){
     const dt = Date.now() - t0.at
     if (dt < 800 && Math.abs(dx) > Math.max(60, Math.abs(dy) * 1.6)){
       if (dx < 0) next(); else prev()
+      return
+    }
+    if (dt < 500 && Math.abs(dy) > Math.max(90, Math.abs(dx) * 1.8)){
+      if (dy < 0) shiftKey(1); else shiftKey(-1)
     }
   }
 
   function next(){ setQ(''); setOpenSuggest(false); setIdx(i => Math.min((songs.length - 1), i + 1)) }
   function prev(){ setQ(''); setOpenSuggest(false); setIdx(i => Math.max(0, i - 1)) }
+  function shiftKey(dir){
+    setTranspose(t => {
+      const step = (halfStep ? 1 : 2)
+      const nt = t + (dir * step)
+      setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c })
+      return nt
+    })
+  }
 
   async function addSongAfterCurrent(idToAdd){
     try {
@@ -793,7 +805,7 @@ export default function WorshipMode(){
             <button
             className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(t => { const step = (halfStep ? 1 : 2); const nt = t - step; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              onClick={() => shiftKey(-1)}
               title="Lower key"
               aria-label="Lower key"
             >
@@ -803,7 +815,7 @@ export default function WorshipMode(){
             <button
             className="gc-btn"
               style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { setTranspose(t => { const step = (halfStep ? 1 : 2); const nt = t + step; setSongOffsets(arr => { const c = arr.slice(); c[idx] = nt; return c }); return nt }) }}
+              onClick={() => shiftKey(1)}
               title="Raise key"
               aria-label="Raise key"
             >
@@ -913,7 +925,7 @@ export default function WorshipMode(){
           </div>
         </div>
         {isMobile && showSwipeHint && (
-          <div className="worship__hint" role="status" aria-live="polite">Swipe to see next/previous song</div>
+          <div className="worship__hint" role="status" aria-live="polite">Swipe left/right for songs • up/down for key</div>
         )}
       </div>
     </div>
