@@ -1,6 +1,6 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
-import { getSiteDisclaimer, isDisclaimerEnabled } from '../config/disclaimer'
+import { getSiteDisclaimer, isDisclaimerEnabled, DISCLAIMER_EMAIL } from '../config/disclaimer'
 import { getCopyrightNotice } from '../config/copyright'
 
 export default function SiteDisclaimer(){
@@ -9,6 +9,8 @@ export default function SiteDisclaimer(){
   if (inWorship) return null
   if (!isDisclaimerEnabled()) return null
   const text = getSiteDisclaimer()
+  const linkText = 'email us'
+  const textParts = text.split(linkText)
   const copyright = getCopyrightNotice()
   return (
     <footer style={{ marginTop: '3rem' }}>
@@ -23,7 +25,17 @@ export default function SiteDisclaimer(){
           margin: '0 auto'
         }}
       >
-        <div>{text}</div>
+        <div>
+          {textParts.length === 2 ? (
+            <>
+              {textParts[0]}
+              <a href={`mailto:${DISCLAIMER_EMAIL}`}>{linkText}</a>
+              {textParts[1]}
+            </>
+          ) : (
+            text
+          )}
+        </div>
         <div style={{ height: '1em' }} aria-hidden="true" />
         <div>{copyright}</div>
       </div>

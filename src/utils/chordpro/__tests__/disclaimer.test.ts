@@ -3,7 +3,7 @@ import { hasDisclaimerCommentBlock, appendDisclaimerIfMissing } from '../../chor
 
 const BLOCK = [
   '# --- DISCLAIMER (GraceChords) ---',
-  '# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.',
+  '# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holder, email us for takedown requests.',
   '# --- END DISCLAIMER ---',
   ''
 ].join('\n')
@@ -26,4 +26,3 @@ describe('ChordPro disclaimer utils', () => {
     expect(out).toBe(txt)
   })
 })
-
