@@ -14,6 +14,7 @@ import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.
 import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
+import { isIncompleteSong } from '../utils/songStatus'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -572,15 +573,6 @@ function PostMiniSkeleton({ count = 2 }){
       ))}
     </>
   )
-}
-
-function isIncompleteSong(song){
-  const v = song?.incomplete
-  if (typeof v === 'boolean') return v
-  if (v === undefined || v === null) return false
-  const s = String(v).trim().toLowerCase()
-  if (!s) return false
-  return ['1','true','yes','y','on'].includes(s)
 }
 
 function parseDateMs(val){

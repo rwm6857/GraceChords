@@ -9,6 +9,7 @@ import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { publicUrl } from '../utils/publicUrl'
+import { isIncompleteSong } from '../utils/songStatus'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -31,7 +32,12 @@ export default function Songbook() {
     const arr = indexData?.items || []
     const seen = new Set()
     const uniq = []
-    for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
+    for (const s of arr) {
+      if (seen.has(s.id)) continue
+      if (isIncompleteSong(s)) continue
+      seen.add(s.id)
+      uniq.push(s)
+    }
     return uniq.slice().sort(byTitle)
   }, [])
 

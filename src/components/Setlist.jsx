@@ -15,6 +15,7 @@ import { headOk } from '../utils/headCache'
 import { encodeSet, decodeSet } from '../utils/setcode'
 import { downloadSetlistAsPptx } from '../utils/export/downloadSetlist'
 import { publicUrl } from '../utils/publicUrl'
+import { isIncompleteSong } from '../utils/songStatus'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -86,7 +87,12 @@ export default function Setlist(){
     const arr = indexData?.items || []
     const seen = new Set()
     const uniq = []
-    for (const s of arr) { if (!seen.has(s.id)) { seen.add(s.id); uniq.push(s) } }
+    for (const s of arr) {
+      if (seen.has(s.id)) continue
+      if (isIncompleteSong(s)) continue
+      seen.add(s.id)
+      uniq.push(s)
+    }
     setItems(uniq)
   },[])
 

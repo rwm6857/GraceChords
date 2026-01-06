@@ -7,6 +7,7 @@ import indexData from '../data/index.json'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
 import { publicUrl } from '../utils/publicUrl'
+import { isIncompleteSong } from '../utils/songStatus'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -22,6 +23,7 @@ export default function Songs(){
     const out = []
     for (const s of itemsRaw) {
       if (seen.has(s.id)) continue
+      if (isIncompleteSong(s)) continue
       seen.add(s.id)
       out.push(s)
     }
