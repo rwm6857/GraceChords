@@ -6,6 +6,7 @@ import { compareSongsByTitle } from '../utils/sort'
 import indexData from '../data/index.json'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
+import { Chip } from './ui/layout-kit'
 import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
 
@@ -303,13 +304,14 @@ export default function Songs(){
           <div className="row">
             {/* Tags: multi-select */}
             <div className="tagbar">
-              <button className={`gc-tag gc-tag--blue ${selectedTags.length===0 ? '' : ''}`} onClick={clearTags}>All</button>
+              <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>All</Chip>
               {allTags.map(t => (
-                <button
+                <Chip
                   key={t}
-                  className={`gc-tag ${selectedTags.includes(t) ? 'gc-tag--green':'gc-tag--gray'}`}
+                  variant="filter"
+                  selected={selectedTags.includes(t)}
                   onClick={()=> toggleTag(t)}
-                >{t}</button>
+                >{t}</Chip>
               ))}
             </div>
           </div>

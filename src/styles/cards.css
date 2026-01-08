@@ -2,32 +2,34 @@
 
 /* Core card pattern for lists (songs, resources, etc.) */
 .gc-card {
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: var(--radius-2);
-  padding: 0.75rem 1rem;
+  border: 1px solid var(--gc-separator);
+  background: var(--gc-surface-1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-3);
   text-decoration: none;
   color: inherit;
   width: 100%;
+  box-shadow: var(--gc-shadow-1);
   transition:
-    background-color 180ms ease,
-    color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease;
+    background-color var(--gc-dur) var(--gc-ease),
+    color var(--gc-dur) var(--gc-ease),
+    border-color var(--gc-dur) var(--gc-ease),
+    box-shadow var(--gc-dur) var(--gc-ease);
 }
 
 /* Optional subtle hover */
 .gc-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--gc-shadow-2);
+  background: var(--gc-surface-2);
 }
 
 /* Body / text elements */
 .gc-card__body { flex: 0 1 auto; min-width: 0; }
-.gc-card__title { font-weight: 600; line-height: 1.25; }
-.gc-card__meta { color: var(--muted); font-size: 0.9rem; margin-top: 0.125rem; }
+.gc-card__title { font-size: var(--gc-font-h2); font-weight: var(--gc-weight-h2); line-height: var(--gc-lh-h2); }
+.gc-card__meta { color: var(--gc-text-secondary); font-size: var(--gc-font-sub); margin-top: var(--space-1); }
 .gc-card__spacer { flex: 1 1 auto; }
 
 /* Tags inside cards */
@@ -40,31 +42,33 @@
 
 /* Pill tags – wired to theme tokens */
 .gc-tag {
-  border: 1px solid var(--border);
+  border: 1px solid var(--gc-separator);
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.8rem;
-  background: transparent;
-  color: var(--muted);
+  background: var(--gc-surface-2);
+  color: var(--gc-text-secondary);
   white-space: nowrap;
+  font-family: var(--gc-font-family);
 }
 
 /* Optional “accent” states, if you want */
 .gc-tag--blue {
-  background: rgba(37, 99, 235, 0.12);
-  border-color: rgba(37, 99, 235, 0.4);
-  color: #bfdbfe;
+  background: color-mix(in srgb, var(--gc-primary) 14%, var(--gc-surface-1));
+  border-color: color-mix(in srgb, var(--gc-primary) 40%, var(--gc-separator));
+  color: var(--gc-primary);
 }
 
 .gc-tag--green {
-  background: rgba(22, 163, 74, 0.12);
-  border-color: rgba(22, 163, 74, 0.4);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--gc-success) 14%, var(--gc-surface-1));
+  border-color: color-mix(in srgb, var(--gc-success) 40%, var(--gc-separator));
+  color: var(--gc-success);
 }
 
 .gc-tag--gray {
-  background: rgba(148, 163, 184, 0.06);
-  border-color: rgba(148, 163, 184, 0.35);
+  background: var(--gc-surface-2);
+  border-color: var(--gc-separator);
+  color: var(--gc-text-secondary);
 }
 
 /* No prefers-color-scheme override – theme is driven by [data-theme] */

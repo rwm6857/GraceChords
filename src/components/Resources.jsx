@@ -5,6 +5,7 @@ import Fuse from 'fuse.js'
 import resourcesData from '../data/resources.json'
 import { stripMarkdown } from '../utils/markdown'
 import { publicUrl } from '../utils/publicUrl'
+import { Chip } from './ui/layout-kit'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -115,7 +116,7 @@ export default function Resources(){
 
 function TagChip({ label, active, onClick }){
   return (
-    <button className={`gc-tag ${active ? 'gc-tag--blue' : 'gc-tag--gray'}`} onClick={onClick}>{label}</button>
+    <Chip variant="filter" selected={active} onClick={onClick}>{label}</Chip>
   )
 }
 

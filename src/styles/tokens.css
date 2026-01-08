@@ -1,0 +1,129 @@
+/* UIKit-inspired tokens (Apple system colors) for GraceChords */
+
+:root {
+  /* Typography */
+  --gc-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  --gc-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
+
+  /* Type scale */
+  --gc-font-title: clamp(32px, 4vw, 36px);
+  --gc-font-h2: 20px;
+  --gc-font-body: 16px;
+  --gc-font-sub: 14px;
+  --gc-font-cap: 12px;
+
+  --gc-weight-title: 700;
+  --gc-weight-h2: 700;
+  --gc-weight-body: 450;
+  --gc-weight-sub: 450;
+  --gc-weight-cap: 450;
+
+  --gc-lh-title: 1.15;
+  --gc-lh-h2: 1.25;
+  --gc-lh-body: 1.55;
+  --gc-lh-sub: 1.4;
+  --gc-lh-cap: 1.35;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --gc-dur-quick: 180ms;
+  --gc-dur: 220ms;
+
+  /* Focus ring */
+  --gc-focus-size: 2px;
+  --gc-focus-offset: 2px;
+
+  /* ===== Colors (Light) - Apple system palette ===== */
+  --gc-primary: #007AFF;
+  --gc-success: #34C759;
+  --gc-warning: #FF9500;
+  --gc-danger: #FF3B30;
+
+  /* Optional accents */
+  --gc-indigo: #5856D6;
+  --gc-purple: #AF52DE;
+  --gc-teal: #5AC8FA;
+  --gc-yellow: #FFCC00;
+
+  /* Neutrals / surfaces */
+  --gc-bg: #F2F2F7;
+  --gc-surface-1: #FFFFFF;
+  --gc-surface-2: #F2F2F7;
+  --gc-surface-3: #E5E5EA;
+
+  /* Text */
+  --gc-text: #000000;
+  --gc-text-secondary: #8E8E93;
+  --gc-text-tertiary: #AEAEB2;
+
+  /* Borders / separators */
+  --gc-separator: #D1D1D6;
+
+  /* Derived / common */
+  --gc-link: var(--gc-primary);
+  --gc-focus: var(--gc-primary);
+  --gc-selection-bg: rgba(0, 122, 255, 0.18);
+
+  /* Shadows (subtle; separators do most of the work) */
+  --gc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --gc-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --gc-shadow-3: 0 16px 44px rgba(0, 0, 0, 0.28);
+
+  /* Overlays */
+  --gc-overlay: rgba(0, 0, 0, 0.45);
+  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Dark theme (assumes app toggles [data-theme="dark"] on html or body) */
+[data-theme="dark"] {
+  --gc-primary: #0A84FF;
+  --gc-success: #30D158;
+  --gc-warning: #FF9F0A;
+  --gc-danger: #FF453A;
+
+  --gc-indigo: #5E5CE6;
+  --gc-purple: #BF5AF2;
+  --gc-teal: #64D2FF;
+  --gc-yellow: #FFD60A;
+
+  --gc-bg: #000000;
+  --gc-surface-1: #1C1C1E;
+  --gc-surface-2: #2C2C2E;
+  --gc-surface-3: #3A3A3C;
+
+  --gc-text: #FFFFFF;
+  --gc-text-secondary: #636366;
+  --gc-text-tertiary: #48484A;
+
+  --gc-separator: #48484A;
+
+  --gc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --gc-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --gc-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.6);
+
+  --gc-selection-bg: rgba(10, 132, 255, 0.22);
+
+  --gc-overlay: rgba(0, 0, 0, 0.6);
+  --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gc-dur-quick: 0ms;
+    --gc-dur: 0ms;
+  }
+}

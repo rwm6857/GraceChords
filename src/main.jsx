@@ -49,6 +49,7 @@ import './styles.css'
 import './styles/fonts.css'
 import './styles/cards.css'
 import './components/ui/ui.css'
+import './components/ui/layout-kit/layout-kit.css'
 
 // Variable font already covers all weights; nothing extra to load after idle
 
