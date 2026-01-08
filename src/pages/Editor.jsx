@@ -20,6 +20,7 @@ import '../styles/admin.css'
 import { currentTheme, toggleTheme } from '../utils/theme'
 import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
 import PostMdxEditor from '../components/editor/PostMdxEditor'
+import { Card } from '../components/ui/layout-kit'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
 
@@ -1242,17 +1243,19 @@ function PostsEditor({ onStagePost, prefill }){
         </label>
       </section>
 
-      <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
+      <section className="gc-editor gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
         <div className="gc-editor-split is-single">
           <div className="gc-editor-pane gc-editor-pane--input">
-            <PostMdxEditor
-              ref={editorRef}
-              markdown={body}
-              onChange={setBody}
-              slug={finalSlug}
-              onAddAsset={handleAddAsset}
-              assetNames={assets.map(a => a.filename)}
-            />
+            <Card className="gc-editor__card">
+              <PostMdxEditor
+                ref={editorRef}
+                markdown={body}
+                onChange={setBody}
+                slug={finalSlug}
+                onAddAsset={handleAddAsset}
+                assetNames={assets.map(a => a.filename)}
+              />
+            </Card>
           </div>
         </div>
 

@@ -93,11 +93,13 @@ input, select, textarea,
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  box-shadow: var(--gc-shadow-1);
+  box-shadow: none;
 }
 @media (max-width: 640px){ .card{ padding: var(--space-3); } }
 
-input,select,textarea{
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea{
   padding: var(--space-2) 12px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-md);
@@ -106,13 +108,17 @@ input,select,textarea{
   font-size: 16px; /* prevent iOS zoom */
   font-family: var(--gc-font-family);
 }
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select{
+  min-height: var(--gc-control-h);
+}
 
 .btn{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:8px;
-  min-height: 40px;
+  min-height: var(--gc-control-h);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   border:1px solid var(--gc-separator);
@@ -134,8 +140,8 @@ input,select,textarea{
 .iconbtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   padding:6px 10px;
-  min-height: 44px;
-  min-width: 44px;
+  min-height: var(--gc-control-h);
+  min-width: var(--gc-control-h);
   border-radius: var(--radius-md);
   background: var(--gc-surface-2);
   border:1px solid var(--gc-separator);
@@ -272,8 +278,10 @@ input,select,textarea{
 
 /* Compact icon buttons on very small screens */
 @media (max-width: 640px){
-  .iconbtn{ gap:6px; padding:6px 8px; min-height: 44px; min-width: 44px; }
-  .btn{ min-height: 44px; }
+  .iconbtn{ gap:6px; padding:6px 8px; min-height: var(--gc-control-h-mobile); min-width: var(--gc-control-h-mobile); }
+  .btn{ min-height: var(--gc-control-h-mobile); }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select{ min-height: var(--gc-control-h-mobile); }
 }
 
 /* Worship Mode: swipe hint snackbar */
@@ -854,7 +862,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   border: 1px solid var(--gc-separator);
   border-radius: var(--radius-lg);
   background: var(--gc-surface-1);
-  box-shadow: var(--gc-shadow-1);
+  box-shadow: none;
   transition:
     box-shadow var(--gc-dur-quick) var(--gc-ease),
     transform var(--gc-dur-quick) var(--gc-ease),
@@ -883,7 +891,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   line-height: 1.5;
 }
 .tool-card:hover{
-  box-shadow: var(--gc-shadow-2);
+  box-shadow: var(--gc-shadow-1);
   transform: translateY(-1px);
   background: var(--gc-surface-2);
   border-color: var(--gc-separator);

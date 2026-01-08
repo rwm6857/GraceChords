@@ -38,6 +38,10 @@
   --radius-lg: 16px;
   --radius-pill: 999px;
 
+  /* Control sizing */
+  --gc-control-h: 40px;
+  --gc-control-h-mobile: 44px;
+
   /* Motion */
   --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --gc-dur-quick: 180ms;

@@ -14,7 +14,7 @@ import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
 import Input from './ui/Input'
-import Toolbar from './ui/Toolbar'
+import { Field, Toolbar } from './ui/layout-kit'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/songbook.css'
 import PageContainer from './layout/PageContainer'
@@ -252,9 +252,8 @@ export default function Songbook() {
       </div>
 
       {/* Toolbar */}
-      <Toolbar className="card" style={{ marginTop: 8 }}>
-        <div className="Field" style={{ minWidth: 0 }}>
-          <label htmlFor="sb-cover">Upload Cover Image:</label>
+      <Toolbar className="gc-songbook-toolbar" style={{ marginTop: 8 }}>
+        <Field label="Upload Cover Image" className="gc-songbook-cover" style={{ minWidth: 0 }}>
           <input
             id="sb-cover"
             className="CoverInput"
@@ -263,8 +262,8 @@ export default function Songbook() {
             onChange={onCoverFile}
             style={isMobile ? { maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } : undefined}
           />
-        </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+        </Field>
+        <div className="gc-toolbar__actions">
           <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" iconLeft={<ClearIcon />}>
             <span className="text-when-wide">Clear</span>
           </Button>

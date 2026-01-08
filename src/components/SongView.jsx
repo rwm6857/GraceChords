@@ -16,6 +16,7 @@ import { smartPreviewAndShareJPG } from '../utils/smartPreviewAndShareJPG'
 import Busy from './Busy'
 import Panel from './ui/Panel'
 import { publicUrl } from '../utils/publicUrl'
+import { IconButton, Toolbar } from './ui/layout-kit'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -441,15 +442,15 @@ export default function SongView(){
       </div>
 
       {!isNarrow && (
-      <div className="toolbar card">
-        <div style={{display:'flex', alignItems:'center', gap:10}}>
+      <Toolbar className="gc-song-toolbar">
+        <div className="gc-toolbar__group">
           <KeySelector
             baseKey={baseKey}
             valueKey={toKey}
             onChange={(full) => setToKey(full)}
           />
-          <button
-            className={`gc-btn gc-btn--iconOnly gc-btn--primary`}
+          <IconButton
+            variant={twoColsView ? 'primary' : 'default'}
             aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
             title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
             onClick={() => {
@@ -459,17 +460,18 @@ export default function SongView(){
             }}
           >
             {twoColsView ? <OneColIcon /> : <TwoColIcon />}
-          </button>
-          <button
-            className={`gc-btn gc-btn--iconOnly ${showChords ? 'gc-btn--primary' : ''}`}
+          </IconButton>
+          <IconButton
+            variant={showChords ? 'primary' : 'default'}
             aria-label="Toggle chords"
             title="Toggle chords"
+            aria-pressed={showChords}
             onClick={() => setShowChords(v => !v)}
           >
             <EyeIcon />
-          </button>
+          </IconButton>
         </div>
-        <div style={{display:'flex', gap:10}}>
+        <div className="gc-toolbar__actions">
           <button
             className="btn primary iconbtn"
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
@@ -502,7 +504,7 @@ export default function SongView(){
             <MediaIcon /> <span className="text-when-wide">Open in Worship Mode</span>
           </Link>
         </div>
-      </div>
+      </Toolbar>
       )}
 
       <div

@@ -1,17 +1,28 @@
 .gc-mdxeditor{
-  --mdx-surface: var(--card);
-  --mdx-border: var(--border);
-  --mdx-text: var(--text);
-  --mdx-muted: var(--muted);
-  --mdx-primary: var(--primary);
+  --mdx-surface: var(--gc-surface-1);
+  --mdx-border: var(--gc-separator);
+  --mdx-text: var(--gc-text);
+  --mdx-muted: var(--gc-text-secondary);
+  --mdx-primary: var(--gc-primary);
   --mdx-primary-text: var(--primary-text);
   background: var(--mdx-surface);
   color: var(--mdx-text);
   border:1px solid var(--mdx-border);
-  border-radius: var(--radius-2);
+  border-radius: var(--radius-lg);
   overflow:hidden;
   height:76vh;
   max-height:80vh;
+  box-shadow: none;
+}
+
+.gc-editor .gc-mdxeditor{
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.gc-editor__card{
+  padding: 0;
 }
 
 .gc-mdxeditor__surface{
@@ -25,22 +36,22 @@
 .gc-mdxeditor ._editorRoot_1e2ox_53{
   --basePageBg: var(--mdx-surface);
   --baseBase: var(--mdx-surface);
-  --baseBgSubtle: var(--btn);
+  --baseBgSubtle: var(--gc-surface-2);
   --baseBg: var(--mdx-surface);
-  --baseBgHover: var(--btn);
-  --baseBgActive: var(--btn);
+  --baseBgHover: var(--gc-surface-2);
+  --baseBgActive: var(--gc-surface-2);
   --baseLine: var(--mdx-border);
   --baseBorder: var(--mdx-border);
   --baseBorderHover: var(--mdx-border);
-  --baseSolid: var(--btn);
-  --baseSolidHover: var(--btn);
+  --baseSolid: var(--gc-surface-2);
+  --baseSolidHover: var(--gc-surface-3);
   --baseText: var(--mdx-text);
   --baseTextContrast: var(--mdx-text);
   --accentBase: var(--mdx-surface);
-  --accentBgSubtle: var(--btn);
-  --accentBg: var(--btn);
-  --accentBgHover: var(--btn);
-  --accentBgActive: var(--btn);
+  --accentBgSubtle: var(--gc-surface-2);
+  --accentBg: var(--gc-surface-2);
+  --accentBgHover: var(--gc-surface-3);
+  --accentBgActive: var(--gc-surface-3);
   --accentLine: var(--mdx-border);
   --accentBorder: var(--mdx-border);
   --accentBorderHover: var(--mdx-border);
@@ -48,8 +59,8 @@
   --accentSolidHover: var(--mdx-primary);
   --accentText: var(--mdx-primary);
   --accentTextContrast: var(--mdx-primary-text);
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-body: var(--gc-font-family);
+  --font-mono: var(--gc-font-mono);
   background: var(--mdx-surface);
   color: var(--mdx-text);
   border-color: var(--mdx-border);
@@ -57,9 +68,9 @@
 
 [data-theme="dark"] .gc-mdxeditor ._editorRoot_1e2ox_53,
 .gc-mdxeditor .dark-theme._editorRoot_1e2ox_53{
-  --baseBgSubtle: #111827;
-  --baseBgHover: #111827;
-  --baseBgActive: #0f172a;
+  --baseBgSubtle: var(--gc-surface-2);
+  --baseBgHover: var(--gc-surface-3);
+  --baseBgActive: var(--gc-surface-3);
   --baseBorderHover: var(--mdx-border);
   --baseTextContrast: var(--mdx-text);
   --accentSolidHover: var(--mdx-primary);
@@ -67,13 +78,14 @@
 
 .gc-mdxeditor ._toolbarRoot_1e2ox_162,
 .gc-mdxeditor__toolbar{
-  background: var(--mdx-surface);
+  background: var(--gc-surface-2);
   border-bottom:1px solid var(--mdx-border);
   box-shadow:none;
   position:sticky;
   top:0;
   z-index:4;
   gap:8px;
+  padding: 6px;
 }
 
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208,
@@ -81,33 +93,46 @@
 .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307,
 .gc-mdxeditor ._iconButton_1e2ox_457,
 .gc-mdxeditor__button{
-  background: var(--btn);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: var(--gc-surface-1);
   color: var(--mdx-text);
   border:1px solid var(--mdx-border);
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-md);
+  min-height: var(--gc-control-h);
+  min-width: var(--gc-control-h);
   padding:6px 10px;
+}
+
+.gc-mdxeditor ._toolbarToggleItem_1e2ox_208:focus-visible,
+.gc-mdxeditor ._toolbarButton_1e2ox_239:focus-visible,
+.gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:focus-visible,
+.gc-mdxeditor ._iconButton_1e2ox_457:focus-visible,
+.gc-mdxeditor__button:focus-visible{
+  outline: var(--gc-focus-size) solid var(--gc-primary);
+  outline-offset: var(--gc-focus-offset);
 }
 
 .gc-mdxeditor ._toolbarButton_1e2ox_239:hover,
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208:hover,
 .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:hover,
 .gc-mdxeditor__button:hover{
-  background: var(--btn);
-  background: color-mix(in srgb, var(--btn) 80%, var(--primary) 20%);
+  background: var(--gc-surface-3);
 }
 
 .gc-mdxeditor ._activeToolbarButton_1e2ox_275,
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208[data-state="on"],
 .gc-mdxeditor__button.primary{
-  background: var(--mdx-primary);
-  color: var(--mdx-primary-text);
-  border-color: var(--mdx-primary);
+  background: var(--gc-surface-1);
+  color: var(--gc-primary);
+  border-color: color-mix(in srgb, var(--gc-primary) 55%, var(--gc-separator));
 }
 
 .gc-mdxeditor__button.ghost{
   background: transparent;
-  color: var(--mdx-text);
-  border-color: var(--mdx-border);
+  color: var(--gc-primary);
+  border-color: transparent;
 }
 
 .gc-mdxeditor ._contentEditable_1e2ox_380,
@@ -121,7 +146,7 @@
 
 .gc-mdxeditor-prose{
   line-height: 1.6;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--gc-font-family);
   color: var(--mdx-text);
 }
 .gc-mdxeditor-prose h1,
@@ -144,15 +169,15 @@
   color: var(--mdx-muted);
 }
 .gc-mdxeditor-prose code{
-  background: var(--btn);
+  background: var(--gc-surface-2);
   color: var(--mdx-text);
   padding:2px 6px;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-sm);
 }
 .gc-mdxeditor-prose pre{
-  background: var(--btn);
+  background: var(--gc-surface-2);
   padding:10px;
-  border-radius: var(--radius-1);
+  border-radius: var(--radius-sm);
   overflow:auto;
   border:1px solid var(--mdx-border);
 }
@@ -162,17 +187,19 @@
   background: var(--mdx-surface);
   color: var(--mdx-text);
   border:1px solid var(--mdx-border);
-  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: var(--gc-shadow-2);
 }
 
 .gc-mdxeditor ._dialogOverlay_1e2ox_870{
-  background: rgba(0,0,0,0.45);
+  background: var(--gc-overlay);
 }
 
 .gc-mdxeditor :where(input, textarea, select){
-  background: var(--card);
+  background: var(--gc-surface-1);
   color: var(--mdx-text);
   border:1px solid var(--mdx-border);
+  min-height: var(--gc-control-h);
+  border-radius: var(--radius-md);
 }
 
 .gc-mdxeditor__custom-group{
@@ -189,10 +216,10 @@
   width: min(360px, 80vw);
   padding:12px;
   border:1px solid var(--mdx-border);
-  border-radius: var(--radius-2);
-  background: var(--card);
-  color: var(--text);
-  box-shadow:0 12px 32px rgba(0,0,0,0.28);
+  border-radius: var(--radius-lg);
+  background: var(--gc-surface-1);
+  color: var(--gc-text);
+  box-shadow: var(--gc-shadow-2);
   z-index: 30;
 }
 .gc-mdxeditor__popover-label{
@@ -210,7 +237,21 @@
   gap:8px;
 }
 .gc-mdxeditor__popover-error{
-  color:#ef4444;
-  font-size:0.9rem;
+  color: var(--gc-danger);
+  font-size: var(--gc-font-sub);
   margin:4px 0 6px;
+}
+
+@media (max-width: 640px){
+  .gc-mdxeditor ._toolbarToggleItem_1e2ox_208,
+  .gc-mdxeditor ._toolbarButton_1e2ox_239,
+  .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307,
+  .gc-mdxeditor ._iconButton_1e2ox_457,
+  .gc-mdxeditor__button{
+    min-height: var(--gc-control-h-mobile);
+    min-width: var(--gc-control-h-mobile);
+  }
+  .gc-mdxeditor :where(input, textarea, select){
+    min-height: var(--gc-control-h-mobile);
+  }
 }

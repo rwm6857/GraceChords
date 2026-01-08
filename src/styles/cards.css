@@ -12,7 +12,7 @@
   text-decoration: none;
   color: inherit;
   width: 100%;
-  box-shadow: var(--gc-shadow-1);
+  box-shadow: none;
   transition:
     background-color var(--gc-dur) var(--gc-ease),
     color var(--gc-dur) var(--gc-ease),
@@ -22,7 +22,7 @@
 
 /* Optional subtle hover */
 .gc-card:hover {
-  box-shadow: var(--gc-shadow-2);
+  box-shadow: var(--gc-shadow-1);
   background: var(--gc-surface-2);
 }
 
