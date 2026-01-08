@@ -21,6 +21,13 @@ scripts/        # maintenance scripts (e.g., index generation)
 docs/           # Vite build output for GitHub Pages
 ```
 
+## UI Styling
+GraceChords uses a UIKit-inspired, token-driven UI kit.
+- Tokens live in `src/styles/tokens.css` and drive colors, type scale, spacing, radii, and motion.
+- Legacy aliases are mapped in `src/styles.css` (e.g., `--primary`, `--card`, `--text`) for back-compat.
+- Reusable primitives live in `src/components/ui/layout-kit/` and are styled in `layout-kit.css`.
+- Prefer `gc-*` classes and layout kit components for new UI. Avoid hardcoded colors.
+
 ## Repository Metrics
 As of 2025-11-03 (excluding `docs/`, `node_modules/`, and `.git/`):
 - Files: 546

@@ -22,6 +22,13 @@
 - Tests: place under `__tests__/` next to code; name `*.test.(js|jsx|ts)` or `*.spec.*`.
 - Paths and assets: keep song files lowercase with underscores (see `normalize` script).
 
+## UI Styling (UIKit Tokens + Layout Kit)
+- Tokens live in `src/styles/tokens.css`. Always use the `--gc-*` tokens for colors, spacing, radii, and type scale.
+- Legacy aliases in `src/styles.css` map older variables (e.g., `--primary`, `--card`) to tokens. Do not introduce new hardcoded hex values.
+- Reusable UI primitives live in `src/components/ui/layout-kit/` with `gc-*` classnames and `layout-kit.css`.
+- Prefer the layout kit components (Card, InsetCard, Toolbar, SegmentedControl, Chip, Field, IconButton, PageHeader) for new UI.
+- Back-compat classes (`.btn`, `.card`, `.iconbtn`, `.container`) must remain stable and match the kit styling.
+
 ## Testing Guidelines
 - Frameworks: Vitest + @testing-library/react, environment `happy-dom` (`src/setupTests.js`).
 - Write unit tests for utilities and component behavior; prefer accessible queries over `data-testid`.
