@@ -5,11 +5,6 @@
   gap: var(--space-4);
 }
 
-.readings-sub{
-  margin: var(--space-2) 0 0;
-  color: var(--gc-text-secondary);
-}
-
 .readings-toolbar{
   display:flex;
   align-items:center;
@@ -69,14 +64,31 @@
   list-style:none;
   padding:0;
   margin:0;
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-1);
+  display:flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.readings-list li{
-  padding: 6px 0;
+.readings-chip{
+  border:1px solid var(--gc-separator);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  background: var(--gc-surface-2);
   color: var(--gc-text);
+  font-size: var(--gc-font-sub);
+  cursor:pointer;
+  transition: background-color var(--gc-dur) var(--gc-ease), border-color var(--gc-dur) var(--gc-ease), color var(--gc-dur) var(--gc-ease);
+}
+
+.readings-chip:hover{
+  background: var(--gc-surface-3);
+}
+
+.readings-chip.is-active{
+  background: var(--gc-surface-1);
+  border-color: var(--gc-primary);
+  color: var(--gc-primary);
+  font-weight: 600;
 }
 
 .readings-reader{
@@ -91,9 +103,9 @@
 
 .readings-reader__header{
   display:flex;
+  flex-direction:column;
   align-items:flex-start;
-  justify-content:space-between;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin-bottom: var(--space-2);
 }
 
@@ -107,55 +119,53 @@
   font-size: var(--gc-font-sub);
 }
 
-.readings-reader__hint{
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-sub);
-}
-
 .readings-verses{
   display:flex;
   flex-direction:column;
-  gap: var(--space-1);
+  gap: 2px;
 }
 
 .readings-verse{
-  display:flex;
-  align-items:flex-start;
-  gap: var(--space-2);
-  width:100%;
-  text-align:left;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  border:1px solid var(--gc-separator);
-  background: var(--gc-surface-2);
+  display:grid;
+  grid-template-columns: 2.5rem 1fr;
+  column-gap: var(--space-3);
+  padding: 4px 4px;
   color: var(--gc-text);
   cursor:pointer;
-  transition: background-color var(--gc-dur) var(--gc-ease), border-color var(--gc-dur) var(--gc-ease);
+  transition: background-color var(--gc-dur) var(--gc-ease), color var(--gc-dur) var(--gc-ease);
 }
 
 .readings-verse:hover{
-  background: var(--gc-surface-3);
+  background: color-mix(in srgb, var(--gc-surface-2) 55%, transparent);
+}
+
+.readings-verse:focus-visible{
+  outline: var(--gc-focus-size) solid var(--gc-focus);
+  outline-offset: var(--gc-focus-offset);
 }
 
 .readings-verse.is-selected{
-  background: var(--gc-selection-bg);
-  border-color: var(--gc-primary);
+  background: color-mix(in srgb, var(--gc-primary) 12%, transparent);
 }
 
 .readings-verse__num{
   min-width: 28px;
   text-align:right;
-  font-weight:700;
+  font-weight:600;
   color: var(--gc-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .readings-verse__text{
   flex:1;
+  line-height: var(--gc-lh-body);
 }
 
-.readings-selection{
-  margin-top: var(--space-3);
-  color: var(--gc-text);
+.readings-verse.is-selected .readings-verse__text{
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .readings-status{

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { Passage } from './types'
-import { buildCopyText, formatReference, sortedVerses, toggleSelection } from './selection'
+import { buildCopyText, sortedVerses, toggleSelection } from './selection'
 
 type ChapterData = {
   book: string
@@ -91,8 +91,6 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
     readerRef.current?.focus()
   }
 
-  const referenceLabel = chapter ? formatReference(passage, selectionArray) : ''
-
   return (
     <div
       ref={readerRef}
@@ -102,13 +100,8 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
       onClick={(e) => { if (e.currentTarget === e.target) readerRef.current?.focus() }}
     >
       <header className="readings-reader__header">
-        <div>
-          <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
-          {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
-        </div>
-        {selectionArray.length ? (
-          <div className="readings-reader__hint">Select verses, then press Ctrl/Cmd+C to copy.</div>
-        ) : null}
+        <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
+        {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
       </header>
 
       {loading ? <p className="readings-status">Loading passage...</p> : null}
@@ -119,23 +112,24 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
           {versesInScope.map(({ num, text }) => {
             const isSelected = selection.has(num)
             return (
-              <button
+              <div
                 key={num}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className={`readings-verse ${isSelected ? 'is-selected' : ''}`.trim()}
                 onClick={() => handleVerseClick(num)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' '){
+                    e.preventDefault()
+                    handleVerseClick(num)
+                  }
+                }}
               >
                 <span className="readings-verse__num">{num}</span>
                 <span className="readings-verse__text">{text}</span>
-              </button>
+              </div>
             )
           })}
-        </div>
-      ) : null}
-
-      {selectionArray.length && referenceLabel ? (
-        <div className="readings-selection">
-          <strong>Selected:</strong> {referenceLabel}
         </div>
       ) : null}
       {copyStatus ? <div className="readings-status readings-status--muted">{copyStatus}</div> : null}

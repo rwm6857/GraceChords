@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/ui/layout-kit/PageHeader'
 import Toolbar from '../../components/ui/layout-kit/Toolbar'
 import PassageReader from './PassageReader'
-import { expandReadings } from './expandReadings'
+import { expandReading, expandReadings } from './expandReadings'
 import { addDays, getPlanForDate } from './useMcheyne'
 import { formatPassageLabel } from './selection'
 import type { Passage } from './types'
@@ -15,6 +15,20 @@ export default function ReadingsPage(){
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
   const passages = useMemo(() => expandReadings(planForDate.readings), [planForDate.readings])
+  const readingSegments = useMemo(() => {
+    let start = 0
+    return planForDate.readings.map((reading) => {
+      const parts = expandReading(reading)
+      const segment = {
+        reading,
+        start,
+        end: parts.length ? start + parts.length - 1 : start - 1,
+        length: parts.length,
+      }
+      start += parts.length
+      return segment
+    })
+  }, [planForDate.readings])
   const currentPassage: Passage | null = passages[passageIndex] || null
 
   useEffect(() => {
@@ -56,9 +70,10 @@ export default function ReadingsPage(){
 
   return (
     <div className="container readings-page">
-      <PageHeader title="Daily Bible Readings" subtitle="M\u2019Cheyne plan · Local ESV XML">
-        <p className="readings-sub">Plan day {planForDate.mmdd}</p>
-      </PageHeader>
+      <PageHeader
+        title="Daily Bible Reading"
+        subtitle="Reading the Bible following Robert Murray M'Cheyne's plan will take you through the entire Bible in a year, including the New Testament & Psalms twice. Read, meditate, and pray over the word in your church and family worship."
+      />
 
       <Toolbar className="readings-toolbar">
         <div className="readings-date">
@@ -84,7 +99,23 @@ export default function ReadingsPage(){
       <section className="readings-summary">
         <h2 className="readings-summary__title">Today&apos;s readings</h2>
         <ul className="readings-list">
-          {planForDate.readings.map((r) => <li key={r}>{r}</li>)}
+          {readingSegments.map((segment) => {
+            const isActive = segment.length > 0 && passageIndex >= segment.start && passageIndex <= segment.end
+            return (
+              <li key={segment.reading}>
+                <button
+                  type="button"
+                  className={`readings-chip ${isActive ? 'is-active' : ''}`.trim()}
+                  onClick={() => {
+                    if (segment.length > 0) setPassageIndex(segment.start)
+                  }}
+                  aria-current={isActive ? 'true' : 'false'}
+                >
+                  {segment.reading}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       </section>
 

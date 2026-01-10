@@ -10,7 +10,7 @@ export function expandReadings(readings: string[]): Passage[] {
   return readings.flatMap((raw) => expandReading(raw)).filter(Boolean)
 }
 
-function expandReading(raw: string): Passage[] {
+export function expandReading(raw: string): Passage[] {
   const trimmed = raw.trim()
   if (!trimmed) return []
 
