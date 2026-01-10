@@ -84,6 +84,7 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   function handleVerseClick(num: number){
     const next = toggleSelection(selection, num)
     onSelectionChange(next)
+    readerRef.current?.focus({ preventScroll: true } as any)
   }
 
   return (
@@ -127,16 +128,8 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
             return (
               <div
                 key={num}
-                role="button"
-                tabIndex={0}
                 className={`readings-verse ${isSelected ? 'is-selected' : ''}`.trim()}
                 onClick={() => handleVerseClick(num)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' '){
-                    e.preventDefault()
-                    handleVerseClick(num)
-                  }
-                }}
               >
                 <span className="readings-verse__num">{num}</span>
                 <span className="readings-verse__text">{text}</span>

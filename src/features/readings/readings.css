@@ -97,6 +97,11 @@
   touch-action: pan-y;
 }
 
+.readings-reader:hover{
+  background: var(--gc-surface-1);
+  box-shadow: var(--gc-shadow-1);
+}
+
 .readings-reader-anchor{
   scroll-margin-top: calc(var(--nav-h, 0px) + 72px);
 }
@@ -136,17 +141,8 @@
   column-gap: var(--space-3);
   padding: 4px 2px;
   color: var(--gc-text);
-  cursor:pointer;
-  transition: background-color var(--gc-dur) var(--gc-ease), color var(--gc-dur) var(--gc-ease);
-}
-
-.readings-verse:hover{
-  background: color-mix(in srgb, var(--gc-surface-2) 55%, transparent);
-}
-
-.readings-verse:focus-visible{
-  outline: var(--gc-focus-size) solid var(--gc-focus);
-  outline-offset: var(--gc-focus-offset);
+  cursor:text;
+  user-select: text;
 }
 
 .readings-verse.is-selected{
@@ -159,6 +155,8 @@
   font-weight:600;
   color: var(--gc-text-secondary);
   font-variant-numeric: tabular-nums;
+  font-size: var(--gc-font-cap);
+  line-height: var(--gc-lh-cap);
 }
 
 .readings-verse__text{
