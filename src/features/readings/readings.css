@@ -4,20 +4,20 @@
   display:flex;
   flex-direction:column;
   gap: var(--space-4);
+  overflow: visible;
 }
 
 .readings-dateblock{
   position: sticky;
-  top: calc(var(--nav-h, 0px) + var(--space-1));
-  z-index: 60;
+  top: var(--nav-h, 0px);
+  z-index: 50;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap: var(--space-2);
   padding: var(--space-2) 0 var(--space-2);
-  background: color-mix(in srgb, var(--gc-surface-1) 92%, transparent);
-  backdrop-filter: blur(8px) saturate(1.1);
-  border-bottom: 1px solid color-mix(in srgb, var(--gc-separator) 70%, transparent);
+  background: var(--gc-surface-1);
+  border-bottom: 1px solid var(--gc-separator);
 }
 
 .readings-date{
@@ -42,6 +42,7 @@
 .readings-datebtn{
   width: var(--gc-control-h);
   height: var(--gc-control-h);
+  border-radius: var(--radius-sm);
 }
 
 .readings-chips{
