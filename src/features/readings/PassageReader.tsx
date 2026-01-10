@@ -1,6 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import IconButton from '../../components/ui/layout-kit/IconButton'
-import { CopyIcon } from '../../components/Icons'
+import React, { useEffect, useMemo, useRef, useState, useCallback, useImperativeHandle } from 'react'
 import type { Passage } from './types'
 import { buildCopyText, sortedVerses, toggleSelection } from './selection'
 
@@ -14,14 +12,19 @@ type Props = {
   passage: Passage
   selection: Set<number>
   onSelectionChange: (next: Set<number>) => void
+  onNavigate?: (direction: 'prev' | 'next') => void
 }
 
-export default function PassageReader({ passage, selection, onSelectionChange }: Props){
+export type PassageReaderHandle = {
+  copy: () => void
+}
+
+const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function PassageReader({ passage, selection, onSelectionChange, onNavigate }, ref){
   const readerRef = useRef<HTMLDivElement | null>(null)
   const [chapter, setChapter] = useState<ChapterData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [copyStatus, setCopyStatus] = useState<string | null>(null)
+  const touchRef = useRef({ x: 0, y: 0, active: false })
 
   useEffect(() => {
     const url = `/esv/${encodeURIComponent(passage.book)}/${passage.chapter}.json`
@@ -45,11 +48,6 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
     return () => controller.abort()
   }, [passage.book, passage.chapter])
 
-  useEffect(() => {
-    // keep the container focusable for copy shortcut
-    readerRef.current?.focus({ preventScroll: true } as any)
-  }, [passage.book, passage.chapter])
-
   const versesInScope = useMemo(() => {
     if (!chapter) return []
     const entries = Object.entries(chapter.verses || {})
@@ -61,21 +59,18 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
 
   const selectionArray = useMemo(() => sortedVerses(selection), [selection])
 
-  useEffect(() => {
-    setCopyStatus(null)
-  }, [passage.book, passage.chapter, selectionArray.length])
-
-  async function handleCopy(){
+  const handleCopy = useCallback(async () => {
     if (!chapter || !selectionArray.length) return
     const text = buildCopyText(passage, selectionArray, chapter.verses)
     if (!text) return
     try {
       await navigator.clipboard.writeText(text)
-      setCopyStatus('Copied to clipboard')
-    } catch (err: any) {
-      setCopyStatus(err?.message || 'Copy failed')
-    }
-  }
+    } catch {}
+  }, [chapter, selectionArray, passage])
+
+  useImperativeHandle(ref, () => ({
+    copy: () => { handleCopy() },
+  }), [handleCopy])
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>){
     if ((e.metaKey || e.ctrlKey) && (e.key === 'c' || e.key === 'C')){
@@ -89,8 +84,6 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
   function handleVerseClick(num: number){
     const next = toggleSelection(selection, num)
     onSelectionChange(next)
-    // keep focus for keyboard copy
-    readerRef.current?.focus()
   }
 
   return (
@@ -99,23 +92,29 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
       className="gc-card readings-reader"
       tabIndex={0}
       onKeyDown={onKeyDown}
-      onClick={(e) => { if (e.currentTarget === e.target) readerRef.current?.focus() }}
+      onTouchStart={(e) => {
+        if (e.touches.length !== 1) return
+        touchRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          active: true,
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (!touchRef.current.active) return
+        const touch = e.changedTouches[0]
+        const dx = touch.clientX - touchRef.current.x
+        const dy = touch.clientY - touchRef.current.y
+        touchRef.current.active = false
+        if (Math.abs(dx) < 50) return
+        if (Math.abs(dx) < Math.abs(dy) * 1.2) return
+        if (dx < 0) onNavigate?.('next')
+        else onNavigate?.('prev')
+      }}
     >
       <header className="readings-reader__header">
-        <div className="readings-reader__heading">
-          <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
-          {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
-        </div>
-        {selectionArray.length ? (
-          <IconButton
-            variant="ghost"
-            label="Copy selected verses"
-            onClick={handleCopy}
-            className="readings-copy"
-          >
-            <CopyIcon />
-          </IconButton>
-        ) : null}
+        <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
+        {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
       </header>
 
       {loading ? <p className="readings-status">Loading passage...</p> : null}
@@ -146,10 +145,11 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
           })}
         </div>
       ) : null}
-      {copyStatus ? <div className="readings-status readings-status--muted">{copyStatus}</div> : null}
     </div>
   )
-}
+})
+
+export default PassageReader
 
 function isVerseInRange(verse: number, passage: Passage){
   if (!passage.range) return true

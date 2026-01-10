@@ -1,34 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import PageHeader from '../../components/ui/layout-kit/PageHeader'
 import Toolbar from '../../components/ui/layout-kit/Toolbar'
-import PassageReader from './PassageReader'
-import { expandReading, expandReadings } from './expandReadings'
+import PassageReader, { type PassageReaderHandle } from './PassageReader'
+import { expandReadings } from './expandReadings'
 import { addDays, getPlanForDate } from './useMcheyne'
 import { formatPassageLabel } from './selection'
 import type { Passage } from './types'
 import './readings.css'
+import { CopyIcon } from '../../components/Icons'
 
 export default function ReadingsPage(){
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selection, setSelection] = useState<Set<number>>(new Set())
+  const readerRef = useRef<PassageReaderHandle | null>(null)
+  const readerTopRef = useRef<HTMLDivElement | null>(null)
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
   const passages = useMemo(() => expandReadings(planForDate.readings), [planForDate.readings])
-  const readingSegments = useMemo(() => {
-    let start = 0
-    return planForDate.readings.map((reading) => {
-      const parts = expandReading(reading)
-      const segment = {
-        reading,
-        start,
-        end: parts.length ? start + parts.length - 1 : start - 1,
-        length: parts.length,
-      }
-      start += parts.length
-      return segment
-    })
-  }, [planForDate.readings])
   const currentPassage: Passage | null = passages[passageIndex] || null
 
   useEffect(() => {
@@ -39,6 +28,11 @@ export default function ReadingsPage(){
   useEffect(() => {
     setSelection(new Set())
   }, [passageIndex])
+
+  useEffect(() => {
+    if (!readerTopRef.current) return
+    readerTopRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [passageIndex, planForDate.mmdd])
 
   function updateDate(next: Date){
     setDate(next)
@@ -66,8 +60,6 @@ export default function ReadingsPage(){
 
   const dateLabel = date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   const inputDate = formatInputDate(date)
-  const passageLabel = currentPassage ? formatPassageLabel(currentPassage) : 'No passage'
-
   return (
     <div className="container readings-page">
       <PageHeader
@@ -87,47 +79,51 @@ export default function ReadingsPage(){
         <div className="readings-date__label">{dateLabel}</div>
       </Toolbar>
 
-      <Toolbar className="readings-toolbar">
-        <button type="button" className="gc-btn gc-btn--icon" onClick={() => goToPassage(-1)} aria-label="Previous passage">&lt;</button>
-        <div className="readings-passagename" aria-live="polite">
-          {passageLabel}
-          {passages.length ? <span className="readings-count">({passageIndex + 1}/{passages.length})</span> : null}
-        </div>
-        <button type="button" className="gc-btn gc-btn--icon" onClick={() => goToPassage(1)} aria-label="Next passage">&gt;</button>
-      </Toolbar>
-
-      <section className="readings-summary">
-        <h2 className="readings-summary__title">Today&apos;s readings</h2>
-        <ul className="readings-list">
-          {readingSegments.map((segment) => {
-            const isActive = segment.length > 0 && passageIndex >= segment.start && passageIndex <= segment.end
+      <div className="readings-chips">
+        <ul className="readings-list" aria-label="Passages">
+          {passages.map((passage, idx) => {
+            const isActive = idx === passageIndex
             return (
-              <li key={segment.reading}>
+              <li key={`${passage.book}-${passage.chapter}-${idx}`}>
                 <button
                   type="button"
                   className={`readings-chip ${isActive ? 'is-active' : ''}`.trim()}
-                  onClick={() => {
-                    if (segment.length > 0) setPassageIndex(segment.start)
-                  }}
+                  onClick={() => setPassageIndex(idx)}
                   aria-current={isActive ? 'true' : 'false'}
                 >
-                  {segment.reading}
+                  {formatPassageLabel(passage)}
                 </button>
               </li>
             )
           })}
         </ul>
-      </section>
+      </div>
 
       {currentPassage ? (
-        <PassageReader
-          passage={currentPassage}
-          selection={selection}
-          onSelectionChange={setSelection}
-        />
+        <>
+          <div ref={readerTopRef} className="readings-reader-anchor" />
+          <PassageReader
+            ref={readerRef}
+            passage={currentPassage}
+            selection={selection}
+            onSelectionChange={setSelection}
+            onNavigate={(direction) => goToPassage(direction === 'next' ? 1 : -1)}
+          />
+        </>
       ) : (
         <div className="gc-card readings-status readings-status--error">No passages found for this day.</div>
       )}
+
+      <button
+        type="button"
+        className={`readings-copy-fab ${selection.size ? 'is-visible' : ''}`.trim()}
+        onClick={() => readerRef.current?.copy()}
+        aria-label="Copy selected verses"
+        aria-hidden={!selection.size}
+        tabIndex={selection.size ? 0 : -1}
+      >
+        <CopyIcon />
+      </button>
     </div>
   )
 }
