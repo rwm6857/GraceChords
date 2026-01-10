@@ -4,20 +4,24 @@
   display:flex;
   flex-direction:column;
   gap: var(--space-4);
-  overflow: visible;
 }
 
 .readings-dateblock{
   position: sticky;
   top: var(--nav-h, 0px);
-  z-index: 50;
+  z-index: 55;
   display:flex;
   flex-direction:column;
   align-items:center;
   gap: var(--space-2);
-  padding: var(--space-2) 0 var(--space-2);
+  width: 100%;
+  align-self: stretch;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
   background: var(--gc-surface-1);
-  border-bottom: 1px solid var(--gc-separator);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--gc-shadow-1);
 }
 
 .readings-date{
@@ -36,13 +40,12 @@
   background: var(--gc-surface-2);
   color: var(--gc-text);
   text-align:center;
-  font-weight: 600;
+  font-weight: var(--gc-weight-body);
 }
 
 .readings-datebtn{
   width: var(--gc-control-h);
   height: var(--gc-control-h);
-  border-radius: var(--radius-sm);
 }
 
 .readings-chips{
@@ -101,14 +104,6 @@
   box-shadow: var(--gc-shadow-1);
   touch-action: pan-y;
   background: var(--gc-surface-1);
-}
-
-.readings-reader:hover{
-  background: var(--gc-surface-1);
-  box-shadow: var(--gc-shadow-1);
-}
-.readings-reader-anchor{
-  scroll-margin-top: calc(var(--nav-h, 0px) + 72px);
 }
 
 .readings-reader:focus-visible{

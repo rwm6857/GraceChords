@@ -14,7 +14,6 @@ export default function ReadingsPage(){
   const [passageIndex, setPassageIndex] = useState(0)
   const [selection, setSelection] = useState<Set<number>>(new Set())
   const readerRef = useRef<PassageReaderHandle | null>(null)
-  const readerTopRef = useRef<HTMLDivElement | null>(null)
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
   const passages = useMemo(() => expandReadings(planForDate.readings), [planForDate.readings])
@@ -28,11 +27,6 @@ export default function ReadingsPage(){
   useEffect(() => {
     setSelection(new Set())
   }, [passageIndex])
-
-  useEffect(() => {
-    if (!readerTopRef.current) return
-    readerTopRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' })
-  }, [passageIndex, planForDate.mmdd])
 
   function updateDate(next: Date){
     setDate(next)
@@ -68,14 +62,24 @@ export default function ReadingsPage(){
 
       <section className="readings-dateblock">
         <div className="readings-date">
-          <IconButton label="Previous day" className="readings-datebtn" onClick={() => goToRelativeDay(-1)}>
+          <IconButton
+            label="Previous day"
+            className="readings-datebtn"
+            onClick={() => goToRelativeDay(-1)}
+            onMouseDown={(e) => e.preventDefault()}
+          >
             <ArrowLeft />
           </IconButton>
           <label className="readings-date__picker">
             <span className="sr-only">Select date</span>
             <input type="date" value={inputDate} onChange={handleDateChange} aria-label="Pick date" />
           </label>
-          <IconButton label="Next day" className="readings-datebtn" onClick={() => goToRelativeDay(1)}>
+          <IconButton
+            label="Next day"
+            className="readings-datebtn"
+            onClick={() => goToRelativeDay(1)}
+            onMouseDown={(e) => e.preventDefault()}
+          >
             <ArrowRight />
           </IconButton>
         </div>
@@ -89,6 +93,7 @@ export default function ReadingsPage(){
                     type="button"
                     className={`readings-chip ${isActive ? 'is-active' : ''}`.trim()}
                     onClick={() => setPassageIndex(idx)}
+                    onMouseDown={(e) => e.preventDefault()}
                     aria-current={isActive ? 'true' : 'false'}
                   >
                     {formatPassageLabel(passage)}
@@ -102,7 +107,6 @@ export default function ReadingsPage(){
 
       {currentPassage ? (
         <>
-          <div ref={readerTopRef} className="readings-reader-anchor" />
           <PassageReader
             ref={readerRef}
             passage={currentPassage}
