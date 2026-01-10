@@ -12,9 +12,8 @@ import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
-import Button from './ui/Button'
 import Input from './ui/Input'
-import { Field, Toolbar } from './ui/layout-kit'
+import { Button, Card, Field, IconButton, PageHeader, Toolbar } from './ui/layout-kit'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/songbook.css'
 import PageContainer from './layout/PageContainer'
@@ -245,17 +244,33 @@ export default function Songbook() {
   return (
     <PageContainer>
       <Busy busy={busy} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 4 }}>
-        <div />
-        <h1 style={{ margin: 0 }}>Songbook Builder</h1>
-        <div />
-      </div>
+      <PageHeader
+        title="Songbook Builder"
+        actions={(
+          <div className="gc-toolbar__actions">
+            <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" leftIcon={<ClearIcon />}>
+              <span className="text-when-wide">Clear</span>
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleExport}
+              onMouseEnter={prefetchPdf}
+              onFocus={prefetchPdf}
+              disabled={!selectedEntries.length || busy}
+              loading={busy}
+              title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
+              leftIcon={<DownloadIcon />}
+            >
+              {isMobile ? 'PDF' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}
+            </Button>
+          </div>
+        )}
+      />
 
       {/* Toolbar */}
       <Toolbar className="gc-songbook-toolbar" style={{ marginTop: 8 }}>
         <Field label="Upload Cover Image" className="gc-songbook-cover" style={{ minWidth: 0 }}>
           <input
-            id="sb-cover"
             className="CoverInput"
             type="file"
             accept="image/*"
@@ -263,29 +278,13 @@ export default function Songbook() {
             style={isMobile ? { maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } : undefined}
           />
         </Field>
-        <div className="gc-toolbar__actions">
-          <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" iconLeft={<ClearIcon />}>
-            <span className="text-when-wide">Clear</span>
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleExport}
-            onMouseEnter={prefetchPdf}
-            onFocus={prefetchPdf}
-            disabled={!selectedEntries.length || busy}
-            title={!selectedEntries.length ? 'Select some songs first' : 'Export PDF'}
-            iconLeft={<DownloadIcon />}
-          >
-            {busy ? 'Exporting…' : (isMobile ? 'PDF' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>)}
-          </Button>
-        </div>
       </Toolbar>
 
       {/* Two-pane region */}
       <div className="BuilderPage" style={{ marginTop: 8 }}>
         <div className="BuilderLeft">
           <section className="setlist-section songbook-add" data-role="add">
-            <div className="card setlist-pane">
+            <Card className="setlist-pane">
               <div
                 className={['BuilderHeader', 'section-header'].filter(Boolean).join(' ')}
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
@@ -301,7 +300,7 @@ export default function Songbook() {
                   onClick={selectAllFiltered}
                   disabled={!filteredCount}
                   title="Add all filtered"
-                  iconLeft={<PlusIcon />}
+                  leftIcon={<PlusIcon />}
                   variant="primary"
                   style={{ marginLeft: 'auto' }}
                 >
@@ -340,23 +339,23 @@ export default function Songbook() {
                         subtitle={subtitle}
                         rightSlot={
                           checked ? (
-                            <Button
+                            <IconButton
+                              variant="destructive"
                               aria-label="Remove"
                               title="Remove"
                               onClick={(e) => { e.stopPropagation(); toggleOne(s.id, false) }}
-                              iconLeft={<MinusIcon />}
-                              iconOnly
-                              style={{ color: '#b91c1c' }}
-                            />
+                            >
+                              <MinusIcon />
+                            </IconButton>
                           ) : (
-                            <Button
+                            <IconButton
+                              variant="primary"
                               aria-label="Add"
                               title="Add"
-                              variant="primary"
                               onClick={(e) => { e.stopPropagation(); toggleOne(s.id, true) }}
-                              iconLeft={<PlusIcon />}
-                              iconOnly
-                            />
+                            >
+                              <PlusIcon />
+                            </IconButton>
                           )
                         }
                         onClick={() => toggleOne(s.id, !checked)}
@@ -365,14 +364,14 @@ export default function Songbook() {
                   })}
                 </div>
               </div>
-            </div>
+            </Card>
           </section>
         </div>
 
         {/* Right pane */}
         <div className="BuilderRight" style={{ minHeight: 0, display:'flex', flexDirection:'column' }}>
           <section className="setlist-section songbook-current" data-role="current">
-            <div className="card setlist-pane">
+            <Card className="setlist-pane">
               <div className="BuilderHeader section-header">
                 <strong>Current selection ({selectedEntries.length})</strong>
               </div>
@@ -393,7 +392,7 @@ export default function Songbook() {
                   ))}
                 </ol>
               </div>
-            </div>
+            </Card>
           </section>
         </div>
       </div>

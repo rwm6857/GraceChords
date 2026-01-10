@@ -91,8 +91,7 @@
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208,
 .gc-mdxeditor ._toolbarButton_1e2ox_239,
 .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307,
-.gc-mdxeditor ._iconButton_1e2ox_457,
-.gc-mdxeditor__button{
+.gc-mdxeditor ._iconButton_1e2ox_457{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -108,31 +107,22 @@
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208:focus-visible,
 .gc-mdxeditor ._toolbarButton_1e2ox_239:focus-visible,
 .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:focus-visible,
-.gc-mdxeditor ._iconButton_1e2ox_457:focus-visible,
-.gc-mdxeditor__button:focus-visible{
+.gc-mdxeditor ._iconButton_1e2ox_457:focus-visible{
   outline: var(--gc-focus-size) solid var(--gc-primary);
   outline-offset: var(--gc-focus-offset);
 }
 
 .gc-mdxeditor ._toolbarButton_1e2ox_239:hover,
 .gc-mdxeditor ._toolbarToggleItem_1e2ox_208:hover,
-.gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:hover,
-.gc-mdxeditor__button:hover{
+.gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307:hover{
   background: var(--gc-surface-3);
 }
 
 .gc-mdxeditor ._activeToolbarButton_1e2ox_275,
-.gc-mdxeditor ._toolbarToggleItem_1e2ox_208[data-state="on"],
-.gc-mdxeditor__button.primary{
+.gc-mdxeditor ._toolbarToggleItem_1e2ox_208[data-state="on"]{
   background: var(--gc-surface-1);
   color: var(--gc-primary);
   border-color: color-mix(in srgb, var(--gc-primary) 55%, var(--gc-separator));
-}
-
-.gc-mdxeditor__button.ghost{
-  background: transparent;
-  color: var(--gc-primary);
-  border-color: transparent;
 }
 
 .gc-mdxeditor ._contentEditable_1e2ox_380,
@@ -246,8 +236,7 @@
   .gc-mdxeditor ._toolbarToggleItem_1e2ox_208,
   .gc-mdxeditor ._toolbarButton_1e2ox_239,
   .gc-mdxeditor ._toolbarButtonSelectTrigger_1e2ox_307,
-  .gc-mdxeditor ._iconButton_1e2ox_457,
-  .gc-mdxeditor__button{
+  .gc-mdxeditor ._iconButton_1e2ox_457{
     min-height: var(--gc-control-h-mobile);
     min-width: var(--gc-control-h-mobile);
   }

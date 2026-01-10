@@ -257,8 +257,8 @@
   .gc-toolbar{ position:sticky; top:0; z-index:50; background: var(--gc-surface-1); border:1px solid var(--gc-separator); border-radius:var(--radius-lg); padding:8px 12px; display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
 
   /* Panel */
-  .gc-panel{ border:1px solid var(--gc-separator); border-radius:var(--radius-lg); overflow:hidden; background: var(--gc-surface-1); }
-  .gc-panel__header{ display:flex; justify-content:space-between; align-items:center; padding:var(--space-3); cursor:pointer; }
+  .gc-panel{ border:0; border-radius:var(--radius-lg); overflow:hidden; background: transparent; }
+  .gc-panel__header{ display:flex; justify-content:space-between; align-items:center; padding:var(--space-2) 0; cursor:pointer; }
   .gc-panel__content{ overflow:hidden; max-height:0; opacity:.0; transition:max-height var(--gc-dur) var(--gc-ease), opacity var(--gc-dur-quick) var(--gc-ease); }
   .gc-panel__content.open{ max-height:2000px; opacity:1; }
 /* end */

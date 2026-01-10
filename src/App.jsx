@@ -6,6 +6,7 @@ import SongView from './components/SongView'
 import Admin from './components/Admin'
 const Editor = React.lazy(() => import('./components/Editor'))
 const Setlist = React.lazy(() => import('./components/Setlist'))
+const ReadingsPage = React.lazy(() => import('./features/readings/ReadingsPage'))
 import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
 const About = React.lazy(() => import('./components/About'))
@@ -34,6 +35,7 @@ export default function App(){
             <Route path="/setlist" element={<Setlist />} />
             <Route path="/setlist/:songIds" element={<Setlist />} />
             <Route path="/set/:code" element={<Setlist />} />
+            <Route path="/readings" element={<ReadingsPage />} />
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />
             <Route path="/resources" element={<Resources />} />

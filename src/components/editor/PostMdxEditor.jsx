@@ -24,6 +24,7 @@ import '@mdxeditor/editor/style.css'
 import '../../styles/mdxeditor.css'
 import { extractYoutubeId, slugifyKebab } from '../../utils/markdown'
 import { currentTheme } from '../../utils/theme'
+import { Button } from '../ui/layout-kit'
 
 function sanitizeFilename(name = '', mime = '', taken = []){
   const lower = String(name || '').toLowerCase()
@@ -223,15 +224,15 @@ const PostMdxEditor = forwardRef(function PostMdxEditor({
                 <InsertImage />
                 <InsertThematicBreak />
                 <div className="gc-mdxeditor__custom-group">
-                  <button
-                    type="button"
-                    className="mdxeditor-button gc-mdxeditor__button"
+                  <Button
+                    size="sm"
+                    variant="tertiary"
                     onClick={() => setVideoOpen(v => !v)}
                     aria-expanded={videoOpen}
                     aria-label="Embed YouTube video"
                   >
                     Embed Video
-                  </button>
+                  </Button>
                   {videoOpen && (
                     <form className="gc-mdxeditor__popover" onSubmit={submitVideo}>
                       <label className="gc-mdxeditor__popover-label">
@@ -245,8 +246,8 @@ const PostMdxEditor = forwardRef(function PostMdxEditor({
                       </label>
                       {videoError ? <div className="gc-mdxeditor__popover-error">{videoError}</div> : null}
                       <div className="gc-mdxeditor__popover-actions">
-                        <button type="button" className="gc-mdxeditor__button ghost" onClick={closeVideoDialog}>Cancel</button>
-                        <button type="submit" className="gc-mdxeditor__button primary">Insert</button>
+                        <Button size="sm" variant="ghost" onClick={closeVideoDialog}>Cancel</Button>
+                        <Button size="sm" variant="primary" type="submit">Insert</Button>
                       </div>
                     </form>
                   )}

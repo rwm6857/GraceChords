@@ -1,16 +1,24 @@
 import React from 'react'
 
 export default function IconButton({
-  variant = 'default',
+  variant = 'secondary',
   label,
   as: Component = 'button',
   className = '',
   children,
   ...rest
 }){
+  const variantMap = {
+    default: 'secondary',
+    danger: 'destructive',
+  }
+  const resolvedVariant = variantMap[variant] || variant
   const cls = [
+    'gc-btn',
+    'gc-btn--icon',
+    resolvedVariant ? `gc-btn--${resolvedVariant}` : '',
+    resolvedVariant ? `gc-iconbtn--${resolvedVariant}` : '',
     'gc-iconbtn',
-    variant !== 'default' ? `gc-iconbtn--${variant}` : '',
     className,
   ].filter(Boolean).join(' ')
   const props = { ...rest }

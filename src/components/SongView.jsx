@@ -16,7 +16,7 @@ import { smartPreviewAndShareJPG } from '../utils/smartPreviewAndShareJPG'
 import Busy from './Busy'
 import Panel from './ui/Panel'
 import { publicUrl } from '../utils/publicUrl'
-import { IconButton, Toolbar } from './ui/layout-kit'
+import { Button, Card, Chip, IconButton, InsetCard, PageHeader, Toolbar } from './ui/layout-kit'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -317,9 +317,9 @@ export default function SongView(){
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
 
   const pptxButton = hasPptx ? (
-    <a className="btn" href={pptxUrl} download>
+    <Button href={pptxUrl} download>
       Download PPTX
-    </a>
+    </Button>
   ) : null
 
   const buildSong = () => normalizeSongInput({
@@ -415,99 +415,88 @@ export default function SongView(){
     <div className="container" style={isNarrow ? { paddingBottom: 'calc(84px + var(--safe-b))' } : undefined}>
       {helmet}
       <Busy busy={busy} />
-      <div className="songpage__top">
-        <div style={{flex:1}}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
-            <h1 className="songpage__title" style={{ margin:0 }}>{title}</h1>
-            {isIcpSong && (
-              <span
-                className="songpage__meta"
-                style={{
-                  fontSize: '0.85rem',
-                  padding: '4px 10px',
-                  borderRadius: 999,
-                  border: '1px solid #e5e7eb',
-                  background: '#f9fafb',
-                  color: '#6b7280',
-                  whiteSpace: 'nowrap',
-                  marginLeft: 'auto'
+      <PageHeader
+        title={title}
+        subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
+        actions={!isNarrow ? (
+          <Toolbar className="gc-song-toolbar">
+            <div className="gc-toolbar__group">
+              <KeySelector
+                baseKey={baseKey}
+                valueKey={toKey}
+                onChange={(full) => setToKey(full)}
+              />
+              <IconButton
+                variant={twoColsView ? 'primary' : 'secondary'}
+                aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+                title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+                onClick={() => {
+                  const next = !twoColsView
+                  setTwoColsView(next)
+                  try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
                 }}
               >
-                InterCP All Nations Worship
-              </span>
-            )}
+                {twoColsView ? <OneColIcon /> : <TwoColIcon />}
+              </IconButton>
+              <IconButton
+                variant={showChords ? 'primary' : 'secondary'}
+                aria-label="Toggle chords"
+                title="Toggle chords"
+                aria-pressed={showChords}
+                onClick={() => setShowChords(v => !v)}
+              >
+                <EyeIcon />
+              </IconButton>
+            </div>
+            <div className="gc-toolbar__actions">
+              <Button
+                variant="primary"
+                leftIcon={<DownloadIcon />}
+                onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
+                onMouseEnter={prefetchPdf}
+                onFocus={prefetchPdf}
+                loading={busy}
+                title="Download PDF"
+              >
+                <span className="text-when-wide">Download PDF</span>
+                <span className="text-when-narrow">PDF</span>
+              </Button>
+              <Button
+                leftIcon={<DownloadIcon />}
+                disabled={jpgDisabled}
+                onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
+                onMouseEnter={prefetchJpg}
+                onFocus={prefetchJpg}
+                title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
+              >
+                <span className="text-when-wide">Download JPG</span>
+                <span className="text-when-narrow">JPG</span>
+              </Button>
+              <Button
+                as={Link}
+                to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
+                leftIcon={<MediaIcon />}
+                title="Open in Worship Mode"
+              >
+                <span className="text-when-wide">Open in Worship Mode</span>
+              </Button>
+            </div>
+          </Toolbar>
+        ) : null}
+      >
+        {(isIcpSong || entry?.tags?.length) && (
+          <div className="gc-song-tags">
+            {isIcpSong ? (
+              <Chip variant="tag" selected className="gc-chip--indigo">InterCP All Nations Worship</Chip>
+            ) : null}
+            {(entry?.tags || []).map(t => (
+              <Chip key={t} variant="tag">{t}</Chip>
+            ))}
           </div>
-          <div className="songpage__meta">Key: <strong>{baseKey}</strong>{parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}{entry.tags?.length ? ` • ${entry.tags.join(', ')}` : ''}</div>
-        </div>
-      </div>
+        )}
+      </PageHeader>
 
-      {!isNarrow && (
-      <Toolbar className="gc-song-toolbar">
-        <div className="gc-toolbar__group">
-          <KeySelector
-            baseKey={baseKey}
-            valueKey={toKey}
-            onChange={(full) => setToKey(full)}
-          />
-          <IconButton
-            variant={twoColsView ? 'primary' : 'default'}
-            aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
-            title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
-            onClick={() => {
-              const next = !twoColsView
-              setTwoColsView(next)
-              try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
-            }}
-          >
-            {twoColsView ? <OneColIcon /> : <TwoColIcon />}
-          </IconButton>
-          <IconButton
-            variant={showChords ? 'primary' : 'default'}
-            aria-label="Toggle chords"
-            title="Toggle chords"
-            aria-pressed={showChords}
-            onClick={() => setShowChords(v => !v)}
-          >
-            <EyeIcon />
-          </IconButton>
-        </div>
-        <div className="gc-toolbar__actions">
-          <button
-            className="btn primary iconbtn"
-            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
-            onMouseEnter={prefetchPdf}
-            onFocus={prefetchPdf}
-            disabled={busy}
-            title="Download PDF"
-          >
-            {busy ? 'Exporting…' : <>
-              <DownloadIcon /> <span className="text-when-wide">Download PDF</span>
-              <span className="text-when-narrow">PDF</span>
-            </>}
-          </button>
-          <button
-            className="btn iconbtn"
-            disabled={jpgDisabled}
-            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
-            onMouseEnter={prefetchJpg}
-            onFocus={prefetchJpg}
-            title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
-          >
-            <DownloadIcon /> <span className="text-when-wide">Download JPG</span>
-            <span className="text-when-narrow">JPG</span>
-          </button>
-          <Link
-            className="btn iconbtn"
-            to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
-            title="Open in Worship Mode"
-          >
-            <MediaIcon /> <span className="text-when-wide">Open in Worship Mode</span>
-          </Link>
-        </div>
-      </Toolbar>
-      )}
-
-      <div
+      <Card
         className="songpage__sheet"
         style={!isNarrow && twoColsView ? { columnCount: 2, columnGap: '24px' } : undefined}
       >
@@ -549,35 +538,33 @@ export default function SongView(){
                         })}
           </div>
         ))}
-      </div>
-
-      <div className="divider" />
+      </Card>
 
       {(() => {
         const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
         const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
         return (metaYoutube || metaMp3 || hasPptx)
       })() && (
-        <div style={{ marginTop: 12 }}>
+        <Card className="gc-media-panel" style={{ marginTop: 12 }}>
           <Panel
             title={<span style={{ display:'inline-flex', alignItems:'center', gap:8 }}><MediaIcon /> Media</span>}
             open={showMedia}
             onToggle={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
           >
             {pptxButton && (
-              <div className="media__card" style={{marginTop:10}}>
+              <InsetCard className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Lyric Slides (PPTX)</div>
                 <div style={{ marginTop: 12 }}>
                   {pptxButton}
                 </div>
-              </div>
+              </InsetCard>
             )}
 
             {(() => {
               const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
               return metaYoutube
             })() && (
-              <div className="media__card" style={{marginTop:10}}>
+              <InsetCard className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Reference Video</div>
                 {(() => {
                  const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
@@ -587,31 +574,30 @@ export default function SongView(){
                       <LiteYouTube id={ytId} />
                     </div>
                   ) : (
-                    <a
-                      style={{ marginTop: 12, display: 'inline-block' }}
-                      className="btn"
+                    <Button
                       href={String(metaYoutube)}
                       target="_blank"
                       rel="noopener noreferrer"
-                     >
+                      style={{ marginTop: 12 }}
+                    >
                       Open on YouTube
-                    </a>
+                    </Button>
                    )
                 })()}
-              </div>
+              </InsetCard>
             )}
 
             {(() => {
               const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
               return metaMp3
             })() && (
-              <div className="media__card" style={{marginTop:10}}>
+              <InsetCard className="media__card" style={{marginTop:10}}>
                 <div className="media__label">Audio</div>
                 <audio controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
-              </div>
+              </InsetCard>
             )}
           </Panel>
-        </div>
+        </Card>
       )}
       {/* Mobile action bar */}
       {isNarrow && (
@@ -623,10 +609,10 @@ export default function SongView(){
             title="Key"
             style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}
           />
-          <button className="gc-btn" style={{ flex:'1 0 0' }} onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></button>
-          <button className="gc-btn gc-btn--primary" onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><DownloadIcon /><span className="text-when-narrow">PDF</span></button>
-          <button className="gc-btn gc-btn--primary" disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><DownloadIcon /><span className="text-when-narrow">JPG</span></button>
-          <Link className="gc-btn" to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} title="Open in Worship Mode"><MediaIcon /><span className="text-when-narrow">Worship</span></Link>
+          <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
+          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><span className="text-when-narrow">PDF</span></Button>
+          <Button variant="primary" leftIcon={<DownloadIcon />} disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><span className="text-when-narrow">JPG</span></Button>
+          <Button as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Open in Worship Mode"><span className="text-when-narrow">Worship</span></Button>
         </div>
       )}
     </div>

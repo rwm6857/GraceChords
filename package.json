@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build-index && npm run build-resources-index && vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
+    "build": "npm run build-index && npm run build-resources-index && npm run build:esv && vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
     "preview": "vite preview",
     "stats": "node scripts/repoStats.mjs",
     "build-index": "node scripts/buildIndex.mjs",
     "build:index": "node scripts/buildIndex.mjs",
     "build-resources-index": "node scripts/buildResourcesIndex.mjs",
+    "build:esv": "node scripts/esv-xml-to-json.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
@@ -19,7 +20,8 @@
     "convert:short": "node scripts/convertChordProAll.mjs",
     "ingest": "node scripts/ingestToChordpro.mjs",
     "repair:meta": "node scripts/repairMeta.mjs",
-    "generate:sitemap": "node scripts/generate-sitemap.mjs"
+    "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "generate:mcheyne": "node scripts/generate-mcheyne-plan.mjs"
   },
   "dependencies": {
     "@mdxeditor/editor": "^3.52.1",

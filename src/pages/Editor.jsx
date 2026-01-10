@@ -11,8 +11,6 @@ import { formatInstrumental } from '../utils/instrumental'
 import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
-import Input from '../components/ui/Input'
-import Button from '../components/ui/Button'
 import { CloudUploadIcon, PlusIcon, TrashIcon, HomeIcon, Sun, Moon } from '../components/Icons'
 import { showToast } from '../utils/toast'
 import { publicUrl } from '../utils/publicUrl'
@@ -20,7 +18,17 @@ import '../styles/admin.css'
 import { currentTheme, toggleTheme } from '../utils/theme'
 import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
 import PostMdxEditor from '../components/editor/PostMdxEditor'
-import { Card } from '../components/ui/layout-kit'
+import {
+  Button,
+  Card,
+  Chip,
+  Field,
+  IconButton,
+  InsetCard,
+  PageHeader,
+  SegmentedControl,
+  Toolbar,
+} from '../components/ui/layout-kit'
 
 const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_ADMIN_PW || ''
 
@@ -63,20 +71,35 @@ export default function Editor(){
   if(!isAuthed){
     return (
       <div className="container" style={{ maxWidth: 520 }}>
-        <h1>GraceChords Editor</h1>
-        <p>Enter your author name and password to continue.</p>
-        <form onSubmit={submit} className="card" style={{ display:'grid', gap:10, padding:16 }}>
-          <label>Author name
-            <Input value={authorName} onChange={e=> setAuthorName(e.target.value)} placeholder="Your name" required />
-          </label>
-          <label>Password
-            <Input type="password" value={pw} onChange={e=> setPw(e.target.value)} placeholder="Password" required />
-          </label>
+        <PageHeader
+          title="GraceChords Editor"
+          subtitle="Enter your author name and password to continue."
+        />
+        <Card as="form" onSubmit={submit} className="gc-editor-login">
+          <Field label="Author name">
+            <input
+              className="gc-input"
+              value={authorName}
+              onChange={e=> setAuthorName(e.target.value)}
+              placeholder="Your name"
+              required
+            />
+          </Field>
+          <Field label="Password">
+            <input
+              className="gc-input"
+              type="password"
+              value={pw}
+              onChange={e=> setPw(e.target.value)}
+              placeholder="Password"
+              required
+            />
+          </Field>
           {error ? <div className="alert error Small">{error}</div> : null}
-          <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
+          <div className="gc-editor-login__actions">
             <Button variant="primary" type="submit">Enter</Button>
           </div>
-        </form>
+        </Card>
       </div>
     )
   }
@@ -280,48 +303,52 @@ function EditorPanel({ authorName }){
     <div className="gc-editor-page">
       <div className="container gc-editor">
         <EditorHelpTab />
-        <header className="gc-editor__header">
-          <div className="gc-editor__title">
-            <h1>GraceChords Editor</h1>
-            <span className="gc-editor__author">
-              Author: {authorName}
-              <span style={{ marginLeft: 8, display:'inline-flex', alignItems:'center', gap:4 }}>
-                Token {ghUser ? (
-                  <span title={`Token OK: ${ghUser.login}`} style={{ color:'var(--primary)' }}>✔</span>
-                ) : (
-                  <span title="Token missing or invalid" style={{ color:'#ef4444' }}>✘</span>
-                )}
-              </span>
-            </span>
+        <PageHeader
+          title="GraceChords Editor"
+          subtitle={`Author: ${authorName}`}
+          actions={(
+            <div className="gc-editor-header__actions">
+              <IconButton
+                as={Link}
+                to="/"
+                label="Back to home"
+                title="Back to home"
+              >
+                <HomeIcon size={18} />
+              </IconButton>
+              <IconButton
+                label="Toggle theme"
+                aria-label="Toggle theme"
+                onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </IconButton>
+            </div>
+          )}
+        >
+          <div className="gc-editor__meta-row">
+            <Chip
+              variant="tag"
+              className={ghUser ? 'gc-chip--success' : 'gc-chip--danger'}
+              title={ghUser ? `Token OK: ${ghUser.login}` : 'Token missing or invalid'}
+            >
+              {ghUser ? 'Token OK' : 'Token required'}
+            </Chip>
           </div>
-          <nav className="gc-editor__tabs" aria-label="Editor tabs">
-            <button
-              className={`gc-editor__tab ${activeTab==='songs' ? 'is-active' : ''}`}
-              onClick={()=> setActiveTab('songs')}
-            >
-              🎵 Song Editor
-            </button>
-            <button
-              className={`gc-editor__tab ${activeTab==='posts' ? 'is-active' : ''}`}
-              onClick={()=> setActiveTab('posts')}
-            >
-              📄 Post Editor
-            </button>
-          </nav>
-          <div className="gc-editor__actions">
-            <Link to="/" className="gc-editor__iconbtn" title="Back to home" aria-label="Back to home">
-              <HomeIcon size={18} />
-            </Link>
-            <button
-              className="gc-editor__iconbtn"
-              aria-label="Toggle theme"
-              onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-        </header>
+        </PageHeader>
+
+        <Toolbar className="gc-editor-tabs" aria-label="Editor tabs">
+          <SegmentedControl
+            options={[
+              { value: 'songs', label: '🎵 Song Editor' },
+              { value: 'posts', label: '📄 Post Editor' },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Editor tab selection"
+          />
+        </Toolbar>
 
         <div className="gc-editor-shell">
           {activeTab === 'songs' ? (
@@ -336,15 +363,18 @@ function EditorPanel({ authorName }){
             />
           )}
 
-          <section className="gc-editor-panel gc-editor-panel--staged gc-staged-card">
-            <div className="Row" style={{ alignItems:'center', gap:8 }}>
-              <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
-              <div className="spacer" />
-              <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
-              <Button variant="primary" onClick={handleOpenPrClick} disabled={!staged.length}>
-                <CloudUploadIcon /> Open PR
-              </Button>
-            </div>
+          <Card className="gc-editor-panel gc-editor-panel--staged gc-staged-card">
+            <Toolbar className="gc-staged-toolbar">
+              <div className="gc-toolbar__group">
+                <h3 style={{ margin: 0 }}>Staged changes <span className="Small">({staged.length})</span></h3>
+              </div>
+              <div className="gc-toolbar__actions">
+                <Button onClick={clearStaged} disabled={!staged.length}>Clear all</Button>
+                <Button variant="primary" leftIcon={<CloudUploadIcon />} onClick={handleOpenPrClick} disabled={!staged.length}>
+                  Open PR
+                </Button>
+              </div>
+            </Toolbar>
             <div style={{ width:'100%', marginTop: 8, overflow:'auto' }}>
               <table className="Table Small" style={{ width:'100%' }}>
                 <thead>
@@ -369,7 +399,7 @@ function EditorPanel({ authorName }){
                         {s.changeSummary || s.deleteReason || ''}
                       </td>
                       <td>
-                        <button className="btn small" onClick={()=> removeStaged(idx)}>Remove</button>
+                        <Button size="sm" variant="tertiary" onClick={()=> removeStaged(idx)}>Remove</Button>
                       </td>
                     </tr>
                   ))}
@@ -381,13 +411,13 @@ function EditorPanel({ authorName }){
                 </tbody>
               </table>
             </div>
-          </section>
+          </Card>
         </div>
 
         {staged.length > 0 && (
-          <button className="gc-staged-floating" onClick={handleOpenPrClick}>
+          <Button className="gc-staged-floating" variant="primary" onClick={handleOpenPrClick}>
             Staged: {staged.length} – Review / Open PR
-          </button>
+          </Button>
         )}
 
         <AdminPrModal
@@ -729,132 +759,153 @@ function SongsEditor({ onStageSong, prefill }){
 
   return (
     <div className="gc-song-editor">
-      <section className="gc-editor-panel gc-editor-panel--selector">
-        <div className="gc-song-selector">
-          <Button onClick={handleNewSong} iconLeft={<PlusIcon />}>New Song</Button>
-          <div className="gc-song-selector__search">
-            <input
-              type="search"
-              placeholder="Search existing songs…"
-              value={searchQuery}
-              onChange={e=> setSearchQuery(e.target.value)}
-              onKeyDown={e => {
-                if (!searchResults.length) return
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault()
-                  setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault()
-                  setSearchIndex(i => Math.max(i - 1, 0))
-                } else if (e.key === 'Enter') {
-                  e.preventDefault()
-                  const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
-                  handleSelectSong(choice)
-                } else if (e.key === 'Escape') {
-                  setSearchIndex(-1)
-                }
-              }}
-            />
-            {searchResults.length > 0 && (
-              <ul className="gc-song-selector__results">
-                {searchResults.map((song, idx) => (
-                  <li
-                    key={song.id}
-                    className={searchIndex === idx ? 'is-active' : ''}
-                    onMouseEnter={()=> setSearchIndex(idx)}
-                    onMouseDown={()=> handleSelectSong(song)}
-                  >
-                    {song.title}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {editingFile ? (
-            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>Editing {editingFile}</span>
-          ) : (
-            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>New song</span>
+      <Toolbar className="gc-song-selector">
+        <Button onClick={handleNewSong} leftIcon={<PlusIcon />}>New Song</Button>
+        <div className="gc-song-selector__search">
+          <input
+            className="gc-input"
+            type="search"
+            placeholder="Search existing songs…"
+            aria-label="Search existing songs"
+            value={searchQuery}
+            onChange={e=> setSearchQuery(e.target.value)}
+            onKeyDown={e => {
+              if (!searchResults.length) return
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                setSearchIndex(i => Math.max(i - 1, 0))
+              } else if (e.key === 'Enter') {
+                e.preventDefault()
+                const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
+                handleSelectSong(choice)
+              } else if (e.key === 'Escape') {
+                setSearchIndex(-1)
+              }
+            }}
+          />
+          {searchResults.length > 0 && (
+            <ul className="gc-song-selector__results">
+              {searchResults.map((song, idx) => (
+                <li
+                  key={song.id}
+                  className={searchIndex === idx ? 'is-active' : ''}
+                  onMouseEnter={()=> setSearchIndex(idx)}
+                  onMouseDown={()=> handleSelectSong(song)}
+                >
+                  {song.title}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </section>
+        <div className="gc-toolbar__actions">
+          {editingFile ? (
+            <Chip variant="tag" className="gc-chip--warning">Editing {editingFile}</Chip>
+          ) : (
+            <Chip variant="tag" className="gc-chip--success">New song</Chip>
+          )}
+        </div>
+      </Toolbar>
 
-      <section className="gc-editor-panel gc-editor-panel--meta" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop: 12}}>
-        <label>Title
-          <input
-            value={meta.title||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'title', e.target.value))}
-          />
-        </label>
+      <Card className="gc-editor-panel gc-editor-panel--meta">
+        <div className="gc-editor-meta-grid">
+          <Field label="Title">
+            <input
+              className="gc-input"
+              value={meta.title||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'title', e.target.value))}
+            />
+          </Field>
 
-        <label>Original Key
-          <input
-            value={meta.key||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'key', e.target.value))}
-            placeholder="e.g., C, Am, Dm, F#m"
-          />
-        </label>
+          <Field label="Original Key">
+            <input
+              className="gc-input"
+              value={meta.key||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'key', e.target.value))}
+              placeholder="e.g., C, Am, Dm, F#m"
+            />
+          </Field>
 
-        <label>Authors
-          <input
-            value={meta.authors||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'authors', e.target.value))}
-          />
-        </label>
+          <Field label="Authors">
+            <input
+              className="gc-input"
+              value={meta.authors||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'authors', e.target.value))}
+            />
+          </Field>
 
-        <label>Country
-          <input
-            value={meta.country||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'country', e.target.value))}
-          />
-        </label>
+          <Field label="Country">
+            <input
+              className="gc-input"
+              value={meta.country||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'country', e.target.value))}
+            />
+          </Field>
 
-        <label>Tags
-          <input
-            value={meta.tags||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'tags', e.target.value))}
-            placeholder="Fast, Slow, Hymn, Holiday"
-          />
-        </label>
+          <Field label="Tags">
+            <input
+              className="gc-input"
+              value={meta.tags||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'tags', e.target.value))}
+              placeholder="Fast, Slow, Hymn, Holiday"
+            />
+          </Field>
 
-        <label>YouTube (ID or URL)
-          <input
-            value={meta.youtube||''}
-            onChange={e=> setText(t=> setOrInsertMeta(t, 'youtube', e.target.value))}
-            placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/..."
-          />
-        </label>
-      </section>
+          <Field label="YouTube (ID or URL)">
+            <input
+              className="gc-input"
+              value={meta.youtube||''}
+              onChange={e=> setText(t=> setOrInsertMeta(t, 'youtube', e.target.value))}
+              placeholder="e.g. dQw4w9WgXcQ or https://youtu.be/..."
+            />
+          </Field>
+        </div>
+      </Card>
 
-      <section className="gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
-        <div className="gc-editor-toolbar">
-          <div className="gc-quick-row">
+      <Card className="gc-editor-panel gc-editor-panel--body">
+        <Toolbar className="gc-editor-toolbar">
+          <div className="gc-toolbar__group gc-quick-row">
             <strong>Quick Chords</strong>
             {quickChords.map((sym, i) => (
-              <button key={sym} className="gc-btn gc-btn--sm" onClick={()=> insertAtCursor(`[${sym}]`)} title={`Insert [${sym}] (Alt+${i+1})`}>{sym}</button>
+              <Button
+                key={sym}
+                size="sm"
+                variant="tertiary"
+                onClick={()=> insertAtCursor(`[${sym}]`)}
+                title={`Insert [${sym}] (Alt+${i+1})`}
+              >
+                {sym}
+              </Button>
             ))}
           </div>
-          <div className="gc-quick-sections">
+          <div className="gc-toolbar__group gc-quick-sections">
             <strong>Quick Sections</strong>
-            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Verse')}>Verse</button>
-            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Chorus')}>Chorus</button>
-            <button className="gc-btn gc-btn--sm" onClick={()=> insertSectionHeader('Bridge')}>Bridge</button>
+            <Button size="sm" variant="tertiary" onClick={()=> insertSectionHeader('Verse')}>Verse</Button>
+            <Button size="sm" variant="tertiary" onClick={()=> insertSectionHeader('Chorus')}>Chorus</Button>
+            <Button size="sm" variant="tertiary" onClick={()=> insertSectionHeader('Bridge')}>Bridge</Button>
           </div>
-          <label className="gc-preview-toggle">
-            <input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview
-          </label>
-        </div>
+          <div className="gc-toolbar__actions">
+            <label className="gc-preview-toggle">
+              <input type="checkbox" checked={showPreview} onChange={e=> setShowPreview(e.target.checked)} /> Preview
+            </label>
+          </div>
+        </Toolbar>
 
         <div className={`gc-editor-split ${showPreview ? '' : 'is-single'}`}>
-          <div className="gc-editor-pane gc-editor-pane--input">
+          <InsetCard className="gc-editor-pane gc-editor-pane--input">
             <textarea
               ref={editorRef}
               value={text}
               onChange={e=> setText(e.target.value)}
-              style={{width:'100%', minHeight:'70vh', height:'70vh', fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace'}}
+              className="gc-input gc-editor-textarea"
+              style={{ fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}
             />
-          </div>
+          </InsetCard>
           {showPreview && (
-            <div className="gc-editor-pane gc-editor-pane--preview">
+            <InsetCard className="gc-editor-pane gc-editor-pane--preview">
               <div className="Small" style={{ marginBottom:8, fontFamily:'\"Roboto Mono\", ui-monospace, Menlo, Consolas, monospace' }}>
                 {parsed?.meta?.title ? <div style={{ fontWeight:700 }}>{parsed.meta.title}</div> : null}
                 {parsed?.meta?.key || parsed?.meta?.originalkey ? <div style={{ fontStyle:'italic' }}>Key of {parsed.meta.key || parsed.meta.originalkey}</div> : null}
@@ -878,22 +929,26 @@ function SongsEditor({ onStageSong, prefill }){
                   </div>
                 ))}
               </div>
-            </div>
+            </InsetCard>
           )}
         </div>
 
-        <div className="gc-stage-actions">
-          <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
-            Add Changes
-          </Button>
-          {isExisting && (
-            <Button onClick={()=> setDeleteModalOpen(true)} iconLeft={<TrashIcon />}>
+        <Toolbar className="gc-stage-actions">
+          <div className="gc-toolbar__group">
+            <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
+              Add Changes
+            </Button>
+            {isExisting && (
+            <Button onClick={()=> setDeleteModalOpen(true)} leftIcon={<TrashIcon />}>
               Request Deletion
             </Button>
-          )}
-          <span className="Small" style={{ marginLeft: 'auto' }}>Files save as .chordpro</span>
-        </div>
-      </section>
+            )}
+          </div>
+          <div className="gc-toolbar__actions">
+            <span className="Small">Files save as .chordpro</span>
+          </div>
+        </Toolbar>
+      </Card>
 
       {deleteModalOpen && (
         <div className="modal">
@@ -905,11 +960,12 @@ function SongsEditor({ onStageSong, prefill }){
                 value={deleteReasonInput}
                 onChange={e=> setDeleteReasonInput(e.target.value)}
                 placeholder="Reason for deletion"
+                className="gc-input"
               />
             </label>
             <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
-              <button className="btn" onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</button>
-              <button className="btn primary" onClick={()=> confirmDeletion(deleteReasonInput)} disabled={!deleteReasonInput.trim()}>Submit request</button>
+              <Button onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</Button>
+              <Button variant="primary" onClick={()=> confirmDeletion(deleteReasonInput)} disabled={!deleteReasonInput.trim()}>Submit request</Button>
             </div>
           </div>
         </div>
@@ -1176,74 +1232,78 @@ function PostsEditor({ onStagePost, prefill }){
 
   return (
     <div className="gc-song-editor gc-post-editor">
-      <section className="gc-editor-panel gc-editor-panel--selector">
-        <div className="gc-song-selector">
-          <Button onClick={handleNewPost} iconLeft={<PlusIcon />}>New Post</Button>
-          <div className="gc-song-selector__search">
-            <input
-              type="search"
-              placeholder="Search existing posts…"
-              value={searchQuery}
-              onChange={e=> setSearchQuery(e.target.value)}
-              onKeyDown={e => {
-                if (!searchResults.length) return
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault()
-                  setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault()
-                  setSearchIndex(i => Math.max(i - 1, 0))
-                } else if (e.key === 'Enter') {
-                  e.preventDefault()
-                  const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
-                  loadExisting(choice)
-                } else if (e.key === 'Escape') {
-                  setSearchIndex(-1)
-                }
-              }}
-            />
-            {searchResults.length > 0 && (
-              <ul className="gc-song-selector__results">
-                {searchResults.map((post, idx) => (
-                  <li
-                    key={post.slug}
-                    className={searchIndex === idx ? 'is-active' : ''}
-                    onMouseEnter={()=> setSearchIndex(idx)}
-                    onMouseDown={()=> loadExisting(post)}
-                  >
-                    {post.title}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {isExisting ? (
-            <span className="badge" style={{ background:'#fde68a', color:'#92400e' }}>{searchLabel}</span>
-          ) : (
-            <span className="badge" style={{ background:'#d1fae5', color:'#065f46' }}>{searchLabel}</span>
+      <Toolbar className="gc-song-selector">
+        <Button onClick={handleNewPost} leftIcon={<PlusIcon />}>New Post</Button>
+        <div className="gc-song-selector__search">
+          <input
+            className="gc-input"
+            type="search"
+            placeholder="Search existing posts…"
+            aria-label="Search existing posts"
+            value={searchQuery}
+            onChange={e=> setSearchQuery(e.target.value)}
+            onKeyDown={e => {
+              if (!searchResults.length) return
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                setSearchIndex(i => Math.min(i + 1, searchResults.length - 1))
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                setSearchIndex(i => Math.max(i - 1, 0))
+              } else if (e.key === 'Enter') {
+                e.preventDefault()
+                const choice = searchIndex >=0 ? searchResults[searchIndex] : searchResults[0]
+                loadExisting(choice)
+              } else if (e.key === 'Escape') {
+                setSearchIndex(-1)
+              }
+            }}
+          />
+          {searchResults.length > 0 && (
+            <ul className="gc-song-selector__results">
+              {searchResults.map((post, idx) => (
+                <li
+                  key={post.slug}
+                  className={searchIndex === idx ? 'is-active' : ''}
+                  onMouseEnter={()=> setSearchIndex(idx)}
+                  onMouseDown={()=> loadExisting(post)}
+                >
+                  {post.title}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </section>
+        <div className="gc-toolbar__actions">
+          {isExisting ? (
+            <Chip variant="tag" className="gc-chip--warning">{searchLabel}</Chip>
+          ) : (
+            <Chip variant="tag" className="gc-chip--success">{searchLabel}</Chip>
+          )}
+        </div>
+      </Toolbar>
 
-      <section className="gc-editor-panel gc-editor-panel--meta" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop: 12}}>
-        <label>Title
-          <input value={meta.title} onChange={e=> setTitle(e.target.value)} />
-        </label>
-        <label>Author
-          <input value={meta.author} onChange={e=> setAuthor(e.target.value)} />
-        </label>
-        <label>Date
-          <input type="date" value={meta.date} onChange={e=> setDate(e.target.value)} />
-        </label>
-        <label>Tags
-          <input value={tagsInput} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
-        </label>
-        <label style={{ gridColumn:'1 / -1' }}>Summary
-          <input value={meta.summary} onChange={e=> setSummary(e.target.value)} placeholder="Optional short blurb shown in lists" />
-        </label>
-      </section>
+      <Card className="gc-editor-panel gc-editor-panel--meta">
+        <div className="gc-editor-meta-grid">
+          <Field label="Title">
+            <input className="gc-input" value={meta.title} onChange={e=> setTitle(e.target.value)} />
+          </Field>
+          <Field label="Author">
+            <input className="gc-input" value={meta.author} onChange={e=> setAuthor(e.target.value)} />
+          </Field>
+          <Field label="Date">
+            <input className="gc-input" type="date" value={meta.date} onChange={e=> setDate(e.target.value)} />
+          </Field>
+          <Field label="Tags">
+            <input className="gc-input" value={tagsInput} onChange={e=> setTagsValue(e.target.value)} placeholder="leadership, vocals" />
+          </Field>
+          <Field label="Summary" className="gc-editor-meta-span">
+            <input className="gc-input" value={meta.summary} onChange={e=> setSummary(e.target.value)} placeholder="Optional short blurb shown in lists" />
+          </Field>
+        </div>
+      </Card>
 
-      <section className="gc-editor gc-editor-panel gc-editor-panel--body" style={{ marginTop: 12 }}>
+      <Card className="gc-editor gc-editor-panel gc-editor-panel--body">
         <div className="gc-editor-split is-single">
           <div className="gc-editor-pane gc-editor-pane--input">
             <Card className="gc-editor__card">
@@ -1259,17 +1319,19 @@ function PostsEditor({ onStagePost, prefill }){
           </div>
         </div>
 
-        <div className="gc-stage-actions">
-          <Button variant="primary" onClick={()=> draft?.isExisting ? stageEdit(draft) : stageAdd(draft)} disabled={!draft}>
-            Add Changes
-          </Button>
-          {isExisting && (
-            <Button onClick={()=> { setDeleteModalOpen(true); setDeleteReasonInput('') }} iconLeft={<TrashIcon />}>
+        <Toolbar className="gc-stage-actions">
+          <div className="gc-toolbar__group">
+            <Button variant="primary" onClick={()=> draft?.isExisting ? stageEdit(draft) : stageAdd(draft)} disabled={!draft}>
+              Add Changes
+            </Button>
+            {isExisting && (
+            <Button onClick={()=> { setDeleteModalOpen(true); setDeleteReasonInput('') }} leftIcon={<TrashIcon />}>
               Request Deletion
             </Button>
           )}
-        </div>
-      </section>
+          </div>
+        </Toolbar>
+      </Card>
 
       {deleteModalOpen && (
         <div className="modal">
@@ -1281,11 +1343,12 @@ function PostsEditor({ onStagePost, prefill }){
                 value={deleteReasonInput}
                 onChange={e=> setDeleteReasonInput(e.target.value)}
                 placeholder="Reason for deletion"
+                className="gc-input"
               />
             </label>
             <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
-              <button className="btn" onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</button>
-              <button className="btn primary" onClick={()=> { setDeleteModalOpen(false); stageDelete(draft, deleteReasonInput) }} disabled={!deleteReasonInput.trim()}>Submit request</button>
+              <Button onClick={()=> { setDeleteModalOpen(false); setDeleteReasonInput('') }}>Cancel</Button>
+              <Button variant="primary" onClick={()=> { setDeleteModalOpen(false); stageDelete(draft, deleteReasonInput) }} disabled={!deleteReasonInput.trim()}>Submit request</Button>
             </div>
           </div>
         </div>
@@ -1308,19 +1371,20 @@ function EditorHelpTab(){
   }, [open])
   return (
     <>
-      <button
+      <Button
         className="gc-editor-help-tab"
+        variant="primary"
         onClick={()=> setOpen(o => !o)}
         aria-expanded={open}
         aria-label="Open editor help"
       >
         {' Editor Help '}
-      </button>
+      </Button>
       {open && (
         <div className="gc-editor-help-drawer">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
             <strong>Editor Help</strong>
-            <button className="btn small" onClick={()=> setOpen(false)} aria-label="Close help">✕</button>
+            <Button size="sm" variant="ghost" onClick={()=> setOpen(false)} aria-label="Close help">✕</Button>
           </div>
           <div className="gc-help__content Small" style={{ marginTop:8 }}>
             <h3>Editor basics</h3>
@@ -1352,21 +1416,22 @@ function TokenModal({ open, tokenInput, setTokenInput, tokenError, validating, o
         <p className="Small" style={{ opacity:0.85 }}>
           Paste a GitHub personal access token (repo scope) to send changes as a pull request. It is stored only in this browser.
         </p>
-        <label>Token
+        <Field label="Token">
           <input
+            className="gc-input"
             type="password"
             value={tokenInput}
             onChange={e => setTokenInput(e.target.value)}
             placeholder="ghp_..."
             autoFocus
           />
-        </label>
+        </Field>
         {tokenError ? <div className="alert error Small">{tokenError}</div> : null}
         <div className="Row" style={{ justifyContent:'flex-end', gap:8 }}>
-          <button className="btn" onClick={onClose} disabled={validating}>Cancel</button>
-          <button className="btn primary" onClick={()=> onSubmit(tokenInput)} disabled={validating}>
+          <Button onClick={onClose} disabled={validating}>Cancel</Button>
+          <Button variant="primary" onClick={()=> onSubmit(tokenInput)} disabled={validating}>
             {validating ? 'Validating…' : 'Save token'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
