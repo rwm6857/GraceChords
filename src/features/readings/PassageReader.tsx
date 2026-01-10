@@ -113,11 +113,6 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
         else onNavigate?.('prev')
       }}
     >
-      <header className="readings-reader__header">
-        <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
-        {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
-      </header>
-
       {loading ? <p className="readings-status">Loading passage...</p> : null}
       {error ? <p className="readings-status readings-status--error">{error}</p> : null}
 
@@ -149,10 +144,4 @@ function isVerseInRange(verse: number, passage: Passage){
   if (verse < passage.range.start) return false
   if (passage.range.end == null) return true
   return verse <= passage.range.end
-}
-
-function rangeLabel(range: { start: number, end: number | null }){
-  if (range.end === null) return `Verses ${range.start}-end`
-  if (range.start === range.end) return `Verse ${range.start}`
-  return `Verses ${range.start}-${range.end}`
 }

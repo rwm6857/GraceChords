@@ -6,33 +6,33 @@
   gap: var(--space-4);
 }
 
-.readings-toolbar{
+.readings-dateblock{
   display:flex;
-  align-items:center;
-  gap: var(--space-3);
-  justify-content:space-between;
-  margin-bottom: var(--space-2);
+  flex-direction:column;
+  gap: var(--space-2);
 }
 
 .readings-date{
   display:flex;
   align-items:center;
   gap: var(--space-2);
-  flex-wrap: wrap;
+  justify-content:center;
 }
 
 .readings-date__picker input{
   min-height: var(--gc-control-h);
+  min-width: 140px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-md);
   padding: 8px 10px;
   background: var(--gc-surface-1);
   color: var(--gc-text);
+  text-align:center;
 }
 
-.readings-date__label{
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-sub);
+.readings-datebtn{
+  width: var(--gc-control-h);
+  height: var(--gc-control-h);
 }
 
 .readings-chips{
@@ -52,6 +52,7 @@
   display:flex;
   flex-wrap: nowrap;
   gap: var(--space-2);
+  justify-content: center;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -111,24 +112,6 @@
   outline-offset: var(--gc-focus-offset);
 }
 
-.readings-reader__header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.readings-reader__book{
-  font-size: var(--gc-font-h2);
-  font-weight: var(--gc-weight-h2);
-}
-
-.readings-reader__range{
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-sub);
-}
-
 .readings-verses{
   display:flex;
   flex-direction:column;
@@ -185,8 +168,7 @@
 }
 
 @media (max-width: 720px){
-  .readings-toolbar{ flex-direction: column; align-items: flex-start; }
-  .readings-date__label{ width: 100%; }
+  .readings-date{ width: 100%; }
 }
 
 .readings-copy-fab{
