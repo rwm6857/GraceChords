@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import IconButton from '../../components/ui/layout-kit/IconButton'
+import { CopyIcon } from '../../components/Icons'
 import type { Passage } from './types'
 import { buildCopyText, sortedVerses, toggleSelection } from './selection'
 
@@ -100,8 +102,20 @@ export default function PassageReader({ passage, selection, onSelectionChange }:
       onClick={(e) => { if (e.currentTarget === e.target) readerRef.current?.focus() }}
     >
       <header className="readings-reader__header">
-        <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
-        {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
+        <div className="readings-reader__heading">
+          <div className="readings-reader__book">{passage.book} {passage.chapter}</div>
+          {passage.range ? <div className="readings-reader__range">{rangeLabel(passage.range)}</div> : null}
+        </div>
+        {selectionArray.length ? (
+          <IconButton
+            variant="ghost"
+            label="Copy selected verses"
+            onClick={handleCopy}
+            className="readings-copy"
+          >
+            <CopyIcon />
+          </IconButton>
+        ) : null}
       </header>
 
       {loading ? <p className="readings-status">Loading passage...</p> : null}
