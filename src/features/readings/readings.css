@@ -37,20 +37,21 @@
 }
 
 .readings-date__picker input{
-  min-height: var(--gc-control-h);
+  min-height: 34px;
   min-width: 140px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-pill);
-  padding: 6px 14px;
+  padding: 4px 12px;
   background: var(--gc-surface-2);
   color: var(--gc-text);
   text-align:center;
   font-weight: var(--gc-weight-body);
+  font-size: var(--gc-font-sub);
 }
 
 .readings-datebtn{
-  width: var(--gc-control-h);
-  height: var(--gc-control-h);
+  width: 34px;
+  height: 34px;
 }
 
 .readings-chips{

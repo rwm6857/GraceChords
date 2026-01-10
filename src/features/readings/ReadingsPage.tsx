@@ -79,7 +79,7 @@ export default function ReadingsPage(){
             onClick={() => goToRelativeDay(-1)}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <ArrowLeft />
+            <ArrowLeft size={16} />
           </IconButton>
           <label className="readings-date__picker">
             <span className="sr-only">Select date</span>
@@ -91,7 +91,7 @@ export default function ReadingsPage(){
             onClick={() => goToRelativeDay(1)}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <ArrowRight />
+            <ArrowRight size={16} />
           </IconButton>
         </div>
         <div className="readings-chips">
