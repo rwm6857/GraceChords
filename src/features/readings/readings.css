@@ -24,6 +24,11 @@
   box-shadow: var(--gc-shadow-1);
 }
 
+#root.readings-root,
+.Route.readings-route{
+  overflow: visible;
+}
+
 .readings-date{
   display:flex;
   align-items:center;
@@ -104,6 +109,13 @@
   box-shadow: var(--gc-shadow-1);
   touch-action: pan-y;
   background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+}
+
+.readings-reader:hover{
+  background: var(--gc-surface-1);
+  box-shadow: var(--gc-shadow-1);
+  border-color: var(--gc-separator);
 }
 
 .readings-reader:focus-visible{

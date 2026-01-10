@@ -20,6 +20,17 @@ export default function ReadingsPage(){
   const currentPassage: Passage | null = passages[passageIndex] || null
 
   useEffect(() => {
+    const root = document.getElementById('root')
+    const main = document.getElementById('main')
+    root?.classList.add('readings-root')
+    main?.classList.add('readings-route')
+    return () => {
+      root?.classList.remove('readings-root')
+      main?.classList.remove('readings-route')
+    }
+  }, [])
+
+  useEffect(() => {
     setPassageIndex(0)
     setSelection(new Set())
   }, [planForDate.mmdd])
