@@ -29,6 +29,13 @@ export function formatPassageLabel(passage: Passage){
   return `${book} ${passage.chapter}:${start}-${end}`
 }
 
+export function passageId(passage: Passage){
+  if (!passage.range) return `${passage.book}|${passage.chapter}|all`
+  const { start, end } = passage.range
+  const suffix = end == null ? `${start}-end` : `${start}-${end}`
+  return `${passage.book}|${passage.chapter}|${suffix}`
+}
+
 export function buildCopyText(passage: Passage, verses: number[], verseMap: Record<string, string>){
   if (!verses.length) return ''
   const ordered = verses.filter((v) => verseMap[String(v)] != null)

@@ -5,7 +5,7 @@ import IconButton from '../ui/layout-kit/IconButton'
 import PassageReader, { type PassageReaderHandle } from './PassageReader'
 import { expandReadings } from './expandReadings'
 import { addDays, getPlanForDate } from './useMcheyne'
-import { formatPassageLabel } from './selection'
+import { formatPassageLabel, passageId } from './selection'
 import type { Passage } from './types'
 import './readings.css'
 import { CopyIcon, ArrowLeft, ArrowRight } from '../Icons'
@@ -16,7 +16,7 @@ const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 export default function ReadingsPage(){
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
-  const [selection, setSelection] = useState<Set<number>>(new Set())
+  const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>(() => ({}))
   const readerRef = useRef<PassageReaderHandle | null>(null)
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
@@ -34,14 +34,11 @@ export default function ReadingsPage(){
     }
   }, [])
 
+  const dateKey = formatInputDate(date)
   useEffect(() => {
     setPassageIndex(0)
-    setSelection(new Set())
-  }, [planForDate.mmdd])
-
-  useEffect(() => {
-    setSelection(new Set())
-  }, [passageIndex])
+    setSelectionsByPassage(loadSelections(dateKey))
+  }, [planForDate.mmdd, dateKey])
 
   function updateDate(next: Date){
     setDate(next)
@@ -67,7 +64,12 @@ export default function ReadingsPage(){
     })
   }
 
-  const inputDate = formatInputDate(date)
+  const inputDate = dateKey
+  const currentPassageId = currentPassage ? passageId(currentPassage) : null
+  const currentSelection = useMemo(() => {
+    if (!currentPassageId) return new Set<number>()
+    return selectionsByPassage[currentPassageId] || new Set<number>()
+  }, [currentPassageId, selectionsByPassage])
   return (
     <div className="container readings-page">
       <Helmet>
@@ -142,8 +144,17 @@ export default function ReadingsPage(){
           <PassageReader
             ref={readerRef}
             passage={currentPassage}
-            selection={selection}
-            onSelectionChange={setSelection}
+            selection={currentSelection}
+            onSelectionChange={(next) => {
+              if (!currentPassageId) return
+              setSelectionsByPassage((prev) => {
+                const updated = { ...prev }
+                if (next.size) updated[currentPassageId] = next
+                else delete updated[currentPassageId]
+                persistSelections(dateKey, updated)
+                return updated
+              })
+            }}
             onNavigate={(direction) => goToPassage(direction === 'next' ? 1 : -1)}
           />
         </>
@@ -153,11 +164,11 @@ export default function ReadingsPage(){
 
       <button
         type="button"
-        className={`readings-copy-fab ${selection.size ? 'is-visible' : ''}`.trim()}
+        className={`readings-copy-fab ${currentSelection.size ? 'is-visible' : ''}`.trim()}
         onClick={() => readerRef.current?.copy()}
         aria-label="Copy selected verses"
-        aria-hidden={!selection.size}
-        tabIndex={selection.size ? 0 : -1}
+        aria-hidden={!currentSelection.size}
+        tabIndex={currentSelection.size ? 0 : -1}
       >
         <CopyIcon />
       </button>
@@ -170,4 +181,42 @@ function formatInputDate(date: Date){
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
+}
+
+function loadSelections(dateKey: string){
+  if (typeof window === 'undefined') return {}
+  const key = storageKey(dateKey)
+  const raw = window.localStorage.getItem(key)
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || parsed.date !== dateKey || typeof parsed.passages !== 'object') return {}
+    const result: Record<string, Set<number>> = {}
+    for (const [pid, verses] of Object.entries(parsed.passages)){
+      if (!Array.isArray(verses)) continue
+      result[pid] = new Set(verses.map((v) => Number(v)).filter((v) => !Number.isNaN(v)))
+    }
+    return result
+  } catch {
+    return {}
+  }
+}
+
+function persistSelections(dateKey: string, selections: Record<string, Set<number>>){
+  if (typeof window === 'undefined') return
+  const payload = {
+    version: 1,
+    date: dateKey,
+    passages: Object.fromEntries(
+      Object.entries(selections).map(([pid, set]) => [
+        pid,
+        Array.from(set).sort((a, b) => a - b),
+      ])
+    ),
+  }
+  window.localStorage.setItem(storageKey(dateKey), JSON.stringify(payload))
+}
+
+function storageKey(dateKey: string){
+  return `gracechords.readings.selection.v1.${dateKey}`
 }
