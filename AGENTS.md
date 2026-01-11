@@ -1,10 +1,11 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/`: React app (components, pages, utils, styles, tests). Key areas: `src/utils/pdf_mvp`, `src/utils/pdf`, `src/utils/chordpro`, `src/data/index.json`.
-- `public/`: user content and static assets — songs in `public/songs/`, UI fonts in `public/fonts/`, optional slides in `public/pptx/`.
+- `src/`: React app (components, pages, utils, styles, tests). Key areas: `src/components/readings` (Daily Word), `src/utils/pdf_mvp`, `src/utils/pdf`, `src/utils/chordpro`, `src/data/index.json`.
+- `public/`: user content and static assets — songs in `public/songs/`, UI fonts in `public/fonts/`, optional slides in `public/pptx/`, generated ESV JSON in `public/esv/`.
 - `scripts/`: maintenance tasks (index build, filename normalization, wiki sync).
 - `docs/`: Vite build output for GitHub Pages. Do not edit by hand.
+- `ESV.xml` lives at repo root (not committed) and is required for `build:esv`.
 
 ## Build, Test, and Development Commands
 - `npm ci`: install exact dependencies.
@@ -12,6 +13,7 @@
 - `npm run build`: produce static site into `docs/`.
 - `npm run preview`: preview the production build locally.
 - `npm run build-index`: generate `src/data/index.json` from `public/songs/`.
+- `npm run build:esv`: generate `public/esv/<Book>/<Chapter>.json` from `ESV.xml` at repo root.
 - `npm run normalize`: normalize song/PPTX filenames into canonical forms.
 - `npm test` / `npm run test:watch`: run Vitest (happy-dom + Testing Library).
 - `npm run test:mvp`: run PDF MVP engine safeguards.

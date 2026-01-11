@@ -9,6 +9,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 - 📦 Bundle download for predefined groups of songs
 - 🛠️ Admin interface for authoring songs and rebuilding the index
 - 📚 Resources (blog-style posts) with search, tags, and an admin editor
+- 📖 Daily Word reading view (M’Cheyne plan) with local ESV text, verse selection, and copy
 - 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
  - 🧭 SongView 1/2‑column reading view (site‑side)
 - 🎤 Worship/Perform Mode — full‑screen, touch‑friendly view with auto‑fit text, swipe/arrow navigation, and quick transpose
@@ -17,9 +18,11 @@ GraceChords is a React + Vite single-page application for managing and playing a
 ```
 src/            # components, hooks, utilities, tests
 public/         # ChordPro files and font assets
+public/esv/     # generated ESV chapter JSON (Daily Word)
 scripts/        # maintenance scripts (e.g., index generation)
 docs/           # Vite build output for GitHub Pages
 ```
+`ESV.xml` should be placed at the repo root (not committed) to generate `public/esv/`.
 
 ## UI Styling
 GraceChords uses a UIKit-inspired, token-driven UI kit.
@@ -63,6 +66,11 @@ Generate the static site into `docs/` and push to the `main` branch to serve via
 npm run build
 # commit & push -> serve from /docs
 ```
+Daily Word requires local ESV chapter JSON. Place `ESV.xml` at the project root and run:
+```bash
+npm run build:esv
+```
+`npm run build` already includes this step.
 Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
 
 Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
