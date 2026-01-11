@@ -31,17 +31,6 @@ GraceChords uses a UIKit-inspired, token-driven UI kit.
 - Reusable primitives live in `src/components/ui/layout-kit/` and are styled in `layout-kit.css`.
 - Prefer `gc-*` classes and layout kit components for new UI. Avoid hardcoded colors.
 
-## Repository Metrics
-As of 2025-11-03 (excluding `docs/`, `node_modules/`, and `.git/`):
-- Files: 546
-- Lines (text files): 27,524
-- Characters (text files): 1,034,429
-
-Refresh locally:
-```bash
-npm run stats
-```
-
 ## Installation
 Use Node.js 20 LTS and install dependencies with `npm ci`:
 ```bash
