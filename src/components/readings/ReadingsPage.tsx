@@ -71,7 +71,7 @@ export default function ReadingsPage(){
     return selectionsByPassage[currentPassageId] || new Set<number>()
   }, [currentPassageId, selectionsByPassage])
   return (
-    <div className="container readings-page">
+    <div className="readings-page">
       <Helmet>
         <title>GraceChords — Daily Word</title>
         <meta
