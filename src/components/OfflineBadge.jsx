@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function OfflineBadge(){
+export default function OfflineBadge({ forceText = false }){
   const [ready, setReady] = React.useState(false)
   React.useEffect(() => {
     let cancelled = false
@@ -34,7 +34,7 @@ export default function OfflineBadge(){
       }}
     >
       <span aria-hidden style={{fontWeight:700}}>✓</span>
-      <span className="text-when-wide">Available offline</span>
+      <span className={forceText ? '' : 'text-when-wide'}>Available offline</span>
     </span>
   )
 }

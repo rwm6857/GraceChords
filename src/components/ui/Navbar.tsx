@@ -161,7 +161,7 @@ export default function Navbar(){
               <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
             </div>
             <div className="gc-drawer__footer">
-              <OfflineBadge />
+              <OfflineBadge forceText />
               <button
                 className="gc-btn gc-btn--secondary"
                 aria-label="Toggle dark mode"
