@@ -10,6 +10,7 @@
   - [[Setlists]]
   - [[Songbook-Builder]]
   - [[Bundle]]
+  - [[Daily-Word]]
   - [[Resources]]
   - [[Resources-Library]]
   - [[ChordPro-Guide]]

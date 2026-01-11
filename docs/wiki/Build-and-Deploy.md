@@ -4,6 +4,7 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 - Source is built by Vite into `docs/` for GitHub Pages
 - GitHub Actions commit the built `docs/` back to `main`
 - Adding songs/resources updates indices automatically
+- Daily Word uses local ESV chapter JSON generated from `ESV.xml` (see `npm run build:esv`, included in `npm run build`)
 - Wiki content lives in this repo under `public/wiki/` and syncs to the GitHub Wiki
 - SEO assets (sitemap/robots) live in `public/`; regenerate sitemap with `npm run generate:sitemap`
 
@@ -40,6 +41,7 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 ## Local Build & Preview
 ```bash
 npm ci
+npm run build:esv # requires ESV.xml at repo root
 VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
 npm run preview # http://localhost:4173
 ```

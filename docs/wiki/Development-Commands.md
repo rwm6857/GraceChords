@@ -5,6 +5,7 @@ Common commands for development, testing, indexing, and maintenance.
 - `npm run dev` — start Vite dev server (`http://localhost:5173`)
 - `npm run build` — build static site into `docs/`
 - `npm run preview` — preview the production build locally
+- `npm run build:esv` — generate Daily Word ESV chapter JSON under `public/esv/` from `ESV.xml` at repo root
 
 ## Tests
 - `npm test` — run vitest
