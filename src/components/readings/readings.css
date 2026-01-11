@@ -40,22 +40,34 @@
   justify-content:center;
 }
 
-.readings-date__picker input{
-  min-height: 34px;
+.readings-date__picker{
+  position: relative;
+}
+
+.readings-date__input{
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.readings-date__button{
+  min-height: 30px;
   min-width: 140px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-pill);
-  padding: 4px 12px;
+  padding: 3px 10px;
   background: var(--gc-surface-2);
   color: var(--gc-text);
-  text-align:center;
+  font-size: var(--gc-font-cap);
   font-weight: var(--gc-weight-body);
-  font-size: var(--gc-font-sub);
+  text-align: center;
+  cursor: pointer;
 }
 
 .readings-datebtn{
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 }
 
 .readings-chips{
@@ -139,8 +151,8 @@
 
 .readings-verse{
   display:grid;
-  grid-template-columns: 2.5rem 1fr;
-  column-gap: var(--space-2);
+  grid-template-columns: 2rem 1fr;
+  column-gap: 6px;
   padding: 4px 0;
   color: var(--gc-text);
   cursor:text;

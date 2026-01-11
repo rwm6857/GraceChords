@@ -18,6 +18,7 @@ export default function ReadingsPage(){
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>(() => ({}))
   const readerRef = useRef<PassageReaderHandle | null>(null)
+  const dateInputRef = useRef<HTMLInputElement | null>(null)
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
   const passages = useMemo(() => expandReadings(planForDate.readings), [planForDate.readings])
@@ -64,7 +65,19 @@ export default function ReadingsPage(){
     })
   }
 
+  function openDatePicker(){
+    const input = dateInputRef.current
+    if (!input) return
+    if (typeof input.showPicker === 'function') {
+      input.showPicker()
+      return
+    }
+    input.focus({ preventScroll: true } as any)
+    input.click()
+  }
+
   const inputDate = dateKey
+  const displayDate = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
   const currentPassageId = currentPassage ? passageId(currentPassage) : null
   const currentSelection = useMemo(() => {
     if (!currentPassageId) return new Set<number>()
@@ -102,19 +115,34 @@ export default function ReadingsPage(){
             onClick={() => goToRelativeDay(-1)}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} />
           </IconButton>
-          <label className="readings-date__picker">
-            <span className="sr-only">Select date</span>
-            <input type="date" value={inputDate} onChange={handleDateChange} aria-label="Pick date" />
-          </label>
+          <div className="readings-date__picker">
+            <input
+              ref={dateInputRef}
+              className="readings-date__input"
+              type="date"
+              value={inputDate}
+              onChange={handleDateChange}
+              aria-label="Pick date"
+            />
+            <button
+              type="button"
+              className="readings-date__button"
+              onClick={openDatePicker}
+              onMouseDown={(e) => e.preventDefault()}
+              aria-label={`Pick date ${displayDate}`}
+            >
+              {displayDate}
+            </button>
+          </div>
           <IconButton
             label="Next day"
             className="readings-datebtn"
             onClick={() => goToRelativeDay(1)}
             onMouseDown={(e) => e.preventDefault()}
           >
-            <ArrowRight size={16} />
+            <ArrowRight size={14} />
           </IconButton>
         </div>
         <div className="readings-chips">
