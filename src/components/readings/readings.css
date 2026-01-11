@@ -4,10 +4,10 @@
   margin: 0 auto;
   padding-top: var(--space-4);
   padding-bottom: var(--space-6);
-  padding-inline: clamp(10px, 3.5vw, 22px);
+  padding-inline: clamp(6px, 2vw, 14px);
   display:flex;
   flex-direction:column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .readings-dateblock{
@@ -17,11 +17,11 @@
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   width: 100%;
   align-self: stretch;
-  padding: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-3);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-2);
   background: var(--gc-surface-1);
   border: 1px solid var(--gc-separator);
   border-radius: var(--radius-lg);
@@ -60,6 +60,7 @@
 
 .readings-chips{
   width: 100%;
+  padding-inline: var(--space-2);
 }
 
 .readings-list{
@@ -115,8 +116,8 @@
   touch-action: pan-y;
   background: var(--gc-surface-1);
   border: 1px solid var(--gc-separator);
-  padding: var(--space-3);
-  padding-inline: var(--space-3);
+  padding: var(--space-2);
+  padding-inline: var(--space-2);
 }
 
 .readings-reader:hover{
@@ -166,7 +167,6 @@
 }
 
 .readings-verse.is-selected .readings-verse__text{
-  font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
