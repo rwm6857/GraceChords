@@ -1,6 +1,6 @@
 /**
  * One-time generator for the M’Cheyne reading plan.
- * Outputs: src/features/readings/data/mcheyne.plan.json
+ * Outputs: src/components/readings/data/mcheyne.plan.json
  *
  * Run:
  *   npm run generate:mcheyne
@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const SOURCE_URL = "https://bibleplan.org/plans/mcheyne/";
-const OUT_PATH = path.resolve("src/features/readings/data/mcheyne.plan.json");
+const OUT_PATH = path.resolve("src/components/readings/data/mcheyne.plan.json");
 
 function pad2(n) {
   return String(n).padStart(2, "0");

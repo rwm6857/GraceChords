@@ -1,7 +1,7 @@
-Daily Word is the Bible reading view at `/readings`. It follows Robert Murray M'Cheyne's plan and uses local ESV text (no external API).
+Daily Word is the Bible reading view at `/reading`. It follows Robert Murray M'Cheyne's plan and uses local ESV text (no external API).
 
 ## Using Daily Word
-- Open `/readings` from the navbar ("Daily Word").
+- Open `/reading` from the navbar ("Daily Word").
 - The date selector controls which day of the plan is shown.
 - Passage chips list the expanded readings for that day. Tap or click a chip to jump to that passage.
 - Swipe left/right in the reading area to move between passages.

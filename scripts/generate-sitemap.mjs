@@ -13,6 +13,7 @@ const staticRoutes = [
   '/songs',
   '/setlist',
   '/songbook',
+  '/reading',
   '/resources',
   '/bundle'
 ]

@@ -7,7 +7,7 @@ export default function EditorFab(){
   const path = location.pathname || ''
 
   const hide = useMemo(() => {
-    const prefixes = ['/editor', '/admin', '/admin/resources', '/worship', '/readings']
+    const prefixes = ['/editor', '/admin', '/admin/resources', '/worship', '/reading']
     return prefixes.some(p => path.startsWith(p))
   }, [path])
 

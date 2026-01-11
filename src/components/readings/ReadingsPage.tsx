@@ -84,10 +84,10 @@ export default function ReadingsPage(){
           property="og:description"
           content="Daily Bible reading following Robert Murray M'Cheyne's plan. Global Alliance Prayer (GAP) invites you to read, meditate, and pray together."
         />
-        <meta property="og:url" content={`${SITE_URL}/readings`} />
+        <meta property="og:url" content={`${SITE_URL}/reading`} />
         <meta property="og:site_name" content="GraceChords" />
         <meta property="og:image" content={OG_IMAGE_URL} />
-        <link rel="canonical" href={`${SITE_URL}/readings`} />
+        <link rel="canonical" href={`${SITE_URL}/reading`} />
       </Helmet>
       <PageHeader
         title="Daily Bible Reading"
@@ -218,5 +218,5 @@ function persistSelections(dateKey: string, selections: Record<string, Set<numbe
 }
 
 function storageKey(dateKey: string){
-  return `gracechords.readings.selection.v1.${dateKey}`
+  return `gracechords.reading.selection.v1.${dateKey}`
 }
