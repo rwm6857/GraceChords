@@ -6,7 +6,7 @@ import SongView from './components/SongView'
 import Admin from './components/Admin'
 const Editor = React.lazy(() => import('./components/Editor'))
 const Setlist = React.lazy(() => import('./components/Setlist'))
-const ReadingsPage = React.lazy(() => import('./features/readings/ReadingsPage'))
+const ReadingsPage = React.lazy(() => import('./components/readings/ReadingsPage'))
 import Bundle from './components/Bundle'
 const Songbook = React.lazy(() => import('./components/Songbook'))
 const About = React.lazy(() => import('./components/About'))
