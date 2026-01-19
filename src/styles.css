@@ -922,9 +922,9 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   line-height: 1.5;
 }
 .tool-card:hover{
-  box-shadow: var(--gc-shadow-1);
-  transform: translateY(-1px);
-  background: var(--gc-surface-2);
+  box-shadow: none;
+  transform: none;
+  background: var(--gc-surface-1);
   border-color: var(--gc-separator);
 }
 .gc-emphasis{

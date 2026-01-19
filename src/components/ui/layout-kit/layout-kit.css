@@ -145,10 +145,13 @@
 .gc-inset-card{
   background: var(--gc-surface-2);
 }
-.gc-card:hover,
+.gc-card:not(.gc-song-card):hover{
+  background: var(--gc-surface-1);
+  box-shadow: none;
+}
 .gc-inset-card:hover{
   background: var(--gc-surface-2);
-  box-shadow: var(--gc-shadow-1);
+  box-shadow: none;
 }
 .gc-card__title{
   font-size: var(--gc-font-h2);

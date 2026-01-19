@@ -20,8 +20,8 @@
     box-shadow var(--gc-dur) var(--gc-ease);
 }
 
-/* Optional subtle hover */
-.gc-card:hover {
+/* Optional subtle hover (song cards only) */
+.gc-card.gc-song-card:hover {
   box-shadow: var(--gc-shadow-1);
   background: var(--gc-surface-2);
 }

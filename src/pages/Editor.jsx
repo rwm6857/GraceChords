@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import indexData from '../data/index.json'
 import resourcesData from '../data/resources.json'
 import { KEYS, keyRoot } from '../utils/chordpro'
+import { compareSongsByTitle } from '../utils/sort'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serialize'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
@@ -250,6 +251,14 @@ function EditorPanel({ authorName }){
       const repo = 'GraceChords'
       const { sha } = await GH.getRepoInfo({ owner, repo })
       await GH.createBranch({ owner, repo, fromSha: sha, newBranch: branchName })
+      const songChanges = staged.filter(item =>
+        item.kind === 'song' && ['add', 'edit', 'delete'].includes(item.action)
+      )
+      let nextIndexJson = null
+      if (songChanges.length) {
+        const nextIndex = applySongChangesToIndex(indexData, songChanges)
+        nextIndexJson = JSON.stringify(nextIndex, null, 2)
+      }
       let wrote = 0
       for(const item of staged){
         if(item.action === 'delete-request') continue
@@ -271,6 +280,20 @@ function EditorPanel({ authorName }){
           path,
           contentBase64: item.contentIsBase64 ? (item.content || '') : GH.toBase64(item.content || ''),
           message: msg,
+          sha: existingSha,
+        })
+        wrote += 1
+      }
+      if (nextIndexJson) {
+        const indexPath = 'src/data/index.json'
+        const existingSha = await GH.getFileSha({ owner, repo, path: indexPath, ref: branchName })
+        await GH.putFile({
+          owner,
+          repo,
+          branch: branchName,
+          path: indexPath,
+          contentBase64: GH.toBase64(nextIndexJson),
+          message: `update: index.json`,
           sha: existingSha,
         })
         wrote += 1
@@ -304,52 +327,51 @@ function EditorPanel({ authorName }){
       <div className="gc-editor-page">
       <div className="container gc-editor">
         <EditorHelpTab />
-        <PageHeader
-          title="GraceChords Editor"
-          subtitle={`Author: ${authorName}`}
-          actions={(
-            <div className="gc-editor-header__actions">
-              <SegmentedControl
-                className="gc-editor-header__tabs"
-                options={[
-                  { value: 'songs', label: '🎵 Song Editor' },
-                  { value: 'posts', label: '📄 Post Editor' },
-                ]}
-                value={activeTab}
-                onChange={setActiveTab}
-                ariaLabel="Editor tab selection"
-              />
-              <div className="gc-editor-header__icons">
-                <IconButton
-                  as={Link}
-                  to="/"
-                  label="Back to home"
-                  title="Back to home"
+        <header className="gc-page-header gc-editor-header">
+          <div className="gc-editor-header__grid">
+            <div className="gc-editor-header__left">
+              <h1 className="gc-page-header__title">GraceChords Editor</h1>
+              <p className="gc-page-header__subtitle">Author: {authorName}</p>
+              <div className="gc-editor__meta-row">
+                <Chip
+                  variant="tag"
+                  className={ghUser ? 'gc-chip--success' : 'gc-chip--danger'}
+                  title={ghUser ? `Token OK: ${ghUser.login}` : 'Token missing or invalid'}
                 >
-                  <HomeIcon size={18} />
-                </IconButton>
-                <IconButton
-                  label="Toggle theme"
-                  aria-label="Toggle theme"
-                  onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
-                  title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                >
-                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                </IconButton>
+                  {ghUser ? 'Token OK' : 'Token required'}
+                </Chip>
               </div>
             </div>
-          )}
-        >
-          <div className="gc-editor__meta-row">
-            <Chip
-              variant="tag"
-              className={ghUser ? 'gc-chip--success' : 'gc-chip--danger'}
-              title={ghUser ? `Token OK: ${ghUser.login}` : 'Token missing or invalid'}
-            >
-              {ghUser ? 'Token OK' : 'Token required'}
-            </Chip>
+            <SegmentedControl
+              className="gc-editor-header__tabs"
+              options={[
+                { value: 'songs', label: '🎵 Song Editor' },
+                { value: 'posts', label: '📄 Post Editor' },
+              ]}
+              value={activeTab}
+              onChange={setActiveTab}
+              ariaLabel="Editor tab selection"
+            />
+            <div className="gc-editor-header__icons">
+              <IconButton
+                as={Link}
+                to="/"
+                label="Back to home"
+                title="Back to home"
+              >
+                <HomeIcon size={18} />
+              </IconButton>
+              <IconButton
+                label="Toggle theme"
+                aria-label="Toggle theme"
+                onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </IconButton>
+            </div>
           </div>
-        </PageHeader>
+        </header>
 
         <div className="gc-editor-shell">
           {activeTab === 'songs' ? (
@@ -447,6 +469,7 @@ function EditorPanel({ authorName }){
 function SongsEditor({ onStageSong, prefill }){
   const [text, setText] = useState(INITIAL_TEXT)
   const [meta, setMeta] = useState({})
+  const [isStaging, setIsStaging] = useState(false)
   useEffect(() => { setMeta(parseMeta(text)) }, [text])
   const editorRef = useRef(null)
 
@@ -700,48 +723,110 @@ function SongsEditor({ onStageSong, prefill }){
   const canStage = Boolean((meta.title || '').trim() || strippedText)
   const isExisting = !!editingFile
 
-  function handleStageChanges(){
-    let rawText = text
-    if (!isExisting) {
-      const m = parseMeta(rawText)
-      if (!m.added) {
-        const iso = new Date().toISOString()
-        rawText = setOrInsertMeta(rawText, 'added', iso)
-        setText(rawText)
+  async function handleStageChanges(){
+    if (isStaging) return
+    setIsStaging(true)
+    try {
+      let rawText = text
+      if (!isExisting) {
+        const m = parseMeta(rawText)
+        if (!m.added) {
+          const iso = new Date().toISOString()
+          rawText = setOrInsertMeta(rawText, 'added', iso)
+          setText(rawText)
+        }
       }
-    }
-    const built = buildCanonical(rawText, parseMeta(rawText), editingFile)
-    if (!built) return
+      const metaNow = parseMeta(rawText)
+      const titleChanged = isExisting && (metaNow.title || '').trim() !== (originalMeta?.title || '').trim()
+      const built = buildCanonical(rawText, metaNow, titleChanged ? '' : editingFile)
+      if (!built) return
 
-    if (!isExisting) {
-      onStageSong([{
-        kind: 'song',
-        action: 'add',
-        title: built.title,
-        filename: built.filename,
-        content: built.content,
-      }])
+      if (!isExisting) {
+        onStageSong([{
+          kind: 'song',
+          action: 'add',
+          title: built.title,
+          filename: built.filename,
+          content: built.content,
+        }])
+        handleNewSong()
+        return
+      }
+
+      const changedParts = []
+      if ((meta.title || '').trim() !== (originalMeta?.title || '').trim()) changedParts.push('Title')
+      const metaFields = ['authors','tags','key','country','youtube']
+      const metaChanged = metaFields.some(f => (meta[f] || '').trim() !== (originalMeta?.[f] || '').trim())
+      if (metaChanged) changedParts.push('Metadata')
+      if ((built.content || '') !== (originalContent || '')) changedParts.push('Content')
+      const changeSummary = changedParts.length ? changedParts.join(' + ') : 'Minor edit'
+
+      const stageItems = []
+      if (titleChanged && built.filename && built.filename !== editingFile) {
+        stageItems.push({
+          kind: 'song',
+          action: 'add',
+          title: built.title,
+          filename: built.filename,
+          content: built.content,
+          changeSummary,
+        })
+        stageItems.push({
+          kind: 'song',
+          action: 'delete',
+          title: originalMeta?.title || built.title,
+          filename: editingFile,
+          deleteReason: `Renamed to ${built.filename}`,
+        })
+        try {
+          const oldSlug = String(editingFile || '').replace(/\.chordpro$/, '')
+          const newSlug = String(built.filename || '').replace(/\.chordpro$/, '')
+          if (oldSlug && newSlug && oldSlug !== newSlug) {
+            const pptxUrl = publicUrl(`pptx/${oldSlug}.pptx`)
+            const res = await fetch(pptxUrl)
+            if (res.ok) {
+              const buf = await res.arrayBuffer()
+              let binary = ''
+              const bytes = new Uint8Array(buf)
+              for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+              const base64 = btoa(binary)
+              stageItems.push({
+                kind: 'pptx',
+                action: 'add',
+                title: `${built.title} slides`,
+                filename: `${newSlug}.pptx`,
+                path: `public/pptx/${newSlug}.pptx`,
+                content: base64,
+                contentIsBase64: true,
+              })
+              stageItems.push({
+                kind: 'pptx',
+                action: 'delete',
+                title: `${originalMeta?.title || built.title} slides`,
+                filename: `${oldSlug}.pptx`,
+                path: `public/pptx/${oldSlug}.pptx`,
+                deleteReason: `Renamed to ${newSlug}.pptx`,
+              })
+            }
+          }
+        } catch (e) {
+          console.warn('PPTX rename check failed', e)
+        }
+      } else {
+        stageItems.push({
+          kind: 'song',
+          action: 'edit',
+          title: built.title,
+          filename: editingFile,
+          content: built.content,
+          changeSummary,
+        })
+      }
+      onStageSong(stageItems)
       handleNewSong()
-      return
+    } finally {
+      setIsStaging(false)
     }
-
-    const changedParts = []
-    if ((meta.title || '').trim() !== (originalMeta?.title || '').trim()) changedParts.push('Title')
-    const metaFields = ['authors','tags','key','country','youtube']
-    const metaChanged = metaFields.some(f => (meta[f] || '').trim() !== (originalMeta?.[f] || '').trim())
-    if (metaChanged) changedParts.push('Metadata')
-    if ((built.content || '') !== (originalContent || '')) changedParts.push('Content')
-    const changeSummary = changedParts.length ? changedParts.join(' + ') : 'Minor edit'
-
-    onStageSong([{
-      kind: 'song',
-      action: 'edit',
-      title: built.title,
-      filename: editingFile,
-      content: built.content,
-      changeSummary,
-    }])
-    handleNewSong()
   }
 
   function confirmDeletion(reason){
@@ -936,8 +1021,8 @@ function SongsEditor({ onStageSong, prefill }){
 
         <Toolbar className="gc-stage-actions">
           <div className="gc-toolbar__group">
-            <Button variant="primary" onClick={handleStageChanges} disabled={!canStage}>
-              Add Changes
+            <Button variant="primary" onClick={handleStageChanges} disabled={!canStage || isStaging}>
+              {isStaging ? 'Staging…' : 'Add Changes'}
             </Button>
             {isExisting && (
             <Button onClick={()=> setDeleteModalOpen(true)} leftIcon={<TrashIcon />}>
@@ -1560,4 +1645,83 @@ function parseMeta(t){
     m[key] = val
   }
   return m
+}
+
+function parseList(val){
+  return String(val || '')
+    .split(/[,;]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+}
+
+function parseAdded(val){
+  if (!val) return ''
+  const d = new Date(val)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString()
+}
+
+function analyzeIncomplete(text = '', meta = {}){
+  const lines = String(text || '').split(/\r?\n/)
+  let hasLyrics = false
+  const chordRe = /\[[^\]]+\]/
+  let hasChords = chordRe.test(text || '')
+  for (const raw of lines){
+    const line = raw.trim()
+    if (!line) continue
+    if (line.startsWith('{') && line.endsWith('}')) continue
+    if (/^\s*#/.test(line)) continue
+    const noChords = line.replace(chordRe, '').trim()
+    if (/[A-Za-z]/.test(noChords)) hasLyrics = true
+    if (hasLyrics && hasChords) break
+  }
+  if (!meta.key) return true
+  if (!hasLyrics) return true
+  if (!hasChords) return true
+  return false
+}
+
+function buildIndexEntryFromContent(filename, content){
+  const meta = parseMeta(content)
+  const id = String(meta.id || (meta.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+    .replace(/(^-|-$)/g, '')
+  const title = meta.title || id || String(filename || '').replace(/\.chordpro$/,'')
+  const addedAt = parseAdded(meta.added || meta.addedat)
+  return {
+    id,
+    title,
+    filename,
+    originalKey: meta.key || '',
+    tags: parseList(meta.tags),
+    authors: parseList(meta.authors),
+    country: meta.country || '',
+    addedAt: addedAt || undefined,
+    incomplete: analyzeIncomplete(content, meta),
+  }
+}
+
+function applySongChangesToIndex(indexBase, stagedItems){
+  const nextItems = Array.isArray(indexBase?.items)
+    ? indexBase.items.map(it => ({ ...it }))
+    : []
+  for (const item of stagedItems) {
+    if (item.kind !== 'song') continue
+    if (item.action === 'delete') {
+      const fname = item.filename
+      const idx = nextItems.findIndex(it => it.filename === fname)
+      if (idx >= 0) nextItems.splice(idx, 1)
+      continue
+    }
+    if (item.action === 'add' || item.action === 'edit') {
+      const entry = buildIndexEntryFromContent(item.filename, item.content || '')
+      const existingIdx = nextItems.findIndex(it => it.filename === item.filename || it.id === entry.id)
+      if (existingIdx >= 0) nextItems.splice(existingIdx, 1, entry)
+      else nextItems.push(entry)
+    }
+  }
+  nextItems.sort(compareSongsByTitle)
+  return {
+    generatedAt: new Date().toISOString(),
+    items: nextItems,
+  }
 }
