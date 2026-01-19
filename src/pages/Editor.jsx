@@ -8,6 +8,7 @@ import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serializ
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import { formatInstrumental } from '../utils/instrumental'
+import { resolveChordCollisions } from '../utils/chords'
 import { fetchTextCached } from '../utils/fetchCache'
 import * as GH from '../utils/github'
 import AdminPrModal from '../components/admin/AdminPrModal'
@@ -300,7 +301,7 @@ function EditorPanel({ authorName }){
   }
 
   return (
-    <div className="gc-editor-page">
+      <div className="gc-editor-page">
       <div className="container gc-editor">
         <EditorHelpTab />
         <PageHeader
@@ -308,22 +309,34 @@ function EditorPanel({ authorName }){
           subtitle={`Author: ${authorName}`}
           actions={(
             <div className="gc-editor-header__actions">
-              <IconButton
-                as={Link}
-                to="/"
-                label="Back to home"
-                title="Back to home"
-              >
-                <HomeIcon size={18} />
-              </IconButton>
-              <IconButton
-                label="Toggle theme"
-                aria-label="Toggle theme"
-                onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </IconButton>
+              <SegmentedControl
+                className="gc-editor-header__tabs"
+                options={[
+                  { value: 'songs', label: '🎵 Song Editor' },
+                  { value: 'posts', label: '📄 Post Editor' },
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+                ariaLabel="Editor tab selection"
+              />
+              <div className="gc-editor-header__icons">
+                <IconButton
+                  as={Link}
+                  to="/"
+                  label="Back to home"
+                  title="Back to home"
+                >
+                  <HomeIcon size={18} />
+                </IconButton>
+                <IconButton
+                  label="Toggle theme"
+                  aria-label="Toggle theme"
+                  onClick={()=> { toggleTheme(); setThemeTick(x => x + 1) }}
+                  title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                </IconButton>
+              </div>
             </div>
           )}
         >
@@ -337,18 +350,6 @@ function EditorPanel({ authorName }){
             </Chip>
           </div>
         </PageHeader>
-
-        <Toolbar className="gc-editor-tabs" aria-label="Editor tabs">
-          <SegmentedControl
-            options={[
-              { value: 'songs', label: '🎵 Song Editor' },
-              { value: 'posts', label: '📄 Post Editor' },
-            ]}
-            value={activeTab}
-            onChange={setActiveTab}
-            ariaLabel="Editor tab selection"
-          />
-        </Toolbar>
 
         <div className="gc-editor-shell">
           {activeTab === 'songs' ? (
@@ -1448,7 +1449,7 @@ function InstrumentalPreviewLine({ spec }){
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontFamily: 'var(--gc-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -1484,14 +1485,34 @@ function MeasuredPreviewLine({ plain, chords, comment }){
     const cs = window.getComputedStyle(lyr)
 
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    const offsets = (chords || []).map(c => ({
-      left: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: c.sym
+    const hostW = hostRef.current.getBoundingClientRect().width || 0
+    const spaceW = ctx.measureText(' ').width || 0
+    const measured = (chords || []).map(c => ({
+      x: ctx.measureText(plain.slice(0, c.index)).width,
+      sym: c.sym,
+      w: 0,
     }))
 
-    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+    measured.forEach(m => { m.w = ctx.measureText(m.sym || '').width })
+    resolveChordCollisions(measured, spaceW)
+    measured.sort((a,b)=> a.x - b.x)
+    for (let i = 1; i < measured.length - 1; i++) {
+      const L = measured[i-1], M = measured[i], R = measured[i+1]
+      const gapLM = M.x - (L.x + L.w)
+      const gapMR = R.x - (M.x + M.w)
+      if (gapLM < spaceW && gapMR < spaceW) {
+        L.x = Math.min(L.x, M.x - spaceW - L.w)
+        R.x = Math.max(R.x, M.x + M.w + spaceW)
+      }
+    }
+    const offsets = measured.map(m => ({
+      left: hostW > 0 ? Math.min(Math.max(0, m.x), Math.max(0, hostW - m.w - 2)) : Math.max(0, m.x),
+      sym: m.sym
+    }))
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
@@ -1509,7 +1530,7 @@ function MeasuredPreviewLine({ plain, chords, comment }){
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,
-              fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontFamily: 'var(--gc-font-chords)',
               fontWeight: 700
             }}>{c.sym}</span>
           ))}

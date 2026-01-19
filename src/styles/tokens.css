@@ -4,6 +4,8 @@
   /* Typography */
   --gc-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
   --gc-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Fira Mono", "Roboto Mono", monospace;
+  --gc-font-lyrics: "Noto Sans", "Inter 18", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --gc-font-chords: "Noto Sans Mono", "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Roboto Mono", monospace;
 
   /* Type scale */
   --gc-font-title: clamp(32px, 4vw, 36px);

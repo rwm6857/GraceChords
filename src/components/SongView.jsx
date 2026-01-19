@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
+import { resolveChordCollisions } from '../utils/chords'
 import KeySelector from './KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -711,7 +712,7 @@ function InstrumentalLine({ spec, steps, split, preferFlat }) {
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontFamily: 'var(--gc-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -747,28 +748,46 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
     const cs = window.getComputedStyle(lyr)
 
     // Lyrics font for width measurement
-    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    const lyricFont = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    ctx.font = lyricFont
     const hostW = hostRef.current.getBoundingClientRect().width || 0
+    const spaceW = ctx.measureText(' ').width || 0
 
-    // Measure pixel offsets for each chord; clamp to container to avoid spill
-    let offsets = (showChords ? chords : []).map(c => ({
-      left: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: transposeSymPrefer(c.sym, steps, preferFlat)
+    // Measure pixel offsets for each chord and resolve collisions
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFontSize = cs.fontSize // match lyric size
+    const chordFont = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+
+    const chordEntries = (showChords ? chords : []).map(c => ({
+      x: ctx.measureText(plain.slice(0, c.index)).width,
+      sym: transposeSymPrefer(c.sym, steps, preferFlat),
+      w: 0,
+    }))
+    ctx.font = chordFont
+    chordEntries.forEach(entry => { entry.w = ctx.measureText(entry.sym || '').width })
+    resolveChordCollisions(chordEntries, spaceW)
+    // Special-case triple overlaps: keep center fixed, nudge outer two
+    chordEntries.sort((a,b)=> a.x - b.x)
+    for (let i = 1; i < chordEntries.length - 1; i++) {
+      const L = chordEntries[i-1], M = chordEntries[i], R = chordEntries[i+1]
+      const gapLM = M.x - (L.x + L.w)
+      const gapMR = R.x - (M.x + M.w)
+      if (gapLM < spaceW && gapMR < spaceW) {
+        L.x = Math.min(L.x, M.x - spaceW - L.w)
+        R.x = Math.max(R.x, M.x + M.w + spaceW)
+      }
+    }
+
+    const offsets = chordEntries.map(c => ({
+      left: hostW > 0 ? Math.min(Math.max(0, c.x), Math.max(0, hostW - c.w - 2)) : Math.max(0, c.x),
+      sym: c.sym
     }))
 
     // Estimate chord ascent to reserve vertical space
-    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
-    const chordFontSize = cs.fontSize // match lyric size
-    ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+    ctx.font = chordFont
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
-
-    // Clamp chords near line end (2px safety)
-    offsets = offsets.map(o => {
-      const w = ctx.measureText(o.sym).width
-      const maxLeft = Math.max(0, hostW - w - 2)
-      return { ...o, left: Math.min(o.left, maxLeft) }
-    })
 
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
@@ -800,7 +819,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,
-              fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontFamily: 'var(--gc-font-chords)',
               fontWeight: 700
             }}>{c.sym}</span>
           ))}

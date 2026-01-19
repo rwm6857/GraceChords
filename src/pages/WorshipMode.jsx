@@ -943,7 +943,7 @@ function InstrumentalRow({ spec, steps, split, preferFlat }){
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontFamily: 'var(--gc-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -982,7 +982,8 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
       return { sym, x: left, w: 0 }
     })
 
-    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
     measured.forEach(m => { m.w = ctx.measureText(m.sym).width })
@@ -1028,7 +1029,7 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
       {showChords && state.offsets.length>0 && (
         <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
           {state.offsets.map((c, i)=>(
-            <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`, fontWeight: 700 }}>
+            <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: 'var(--gc-font-chords)', fontWeight: 700 }}>
               {c.sym}
             </span>
           ))}

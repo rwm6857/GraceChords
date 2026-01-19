@@ -172,7 +172,7 @@ select{
 
 .meta { color: var(--muted); font-size: var(--gc-font-cap); }
 
-.lyrics { line-height: 1.35; font-family: var(--gc-font-family); font-size: 18px; }
+.lyrics { line-height: 1.35; font-family: var(--gc-font-lyrics); font-size: 18px; }
 @media (max-width: 640px){ .lyrics { line-height: 1.28; } }
 .gc-seo-lyrics{
   white-space: pre-wrap;
@@ -228,6 +228,11 @@ select{
 .songpage__block{
   break-inside: auto;
   width: 100%;
+}
+.songpage__sheet--two .songpage__block{
+  break-inside: avoid;
+  page-break-inside: avoid;
+  column-break-inside: avoid;
 }
 .section {
   font-weight: 700;          /* bold */

@@ -37,6 +37,9 @@
 @media (max-width: 720px){
   .gc-editor-meta-grid { grid-template-columns:1fr; }
 }
+@media (min-width: 1100px){
+  .gc-editor-meta-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
 
 .gc-song-editor { position: relative; overflow: visible; }
 .gc-song-selector { position:relative; }
@@ -47,16 +50,45 @@
 .gc-song-selector__results li:hover,
 .gc-song-selector__results li.is-active { background:var(--gc-surface-2); font-weight:600; }
 
-.gc-editor-toolbar { margin-bottom: var(--space-3); }
+.gc-editor-toolbar {
+  margin-bottom: var(--space-3);
+  width: 100%;
+  justify-content: space-between;
+}
+.gc-editor-toolbar .gc-quick-row { margin-right: auto; }
+.gc-editor-toolbar .gc-quick-sections { margin-left: auto; }
 .gc-quick-row, .gc-quick-sections { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .gc-preview-toggle { display:flex; gap:6px; align-items:center; white-space:nowrap; }
 .gc-preview-toggle input { width:auto; margin:0; }
 
-.gc-editor-split { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:stretch; margin-top: var(--space-3); }
+.gc-editor-split { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:12px; align-items:stretch; margin-top: var(--space-3); width:100%; }
 .gc-editor-split.is-single { grid-template-columns:1fr; }
-.gc-editor-pane { min-width:0; }
+.gc-editor-pane { min-width:0; width:100%; }
 .gc-editor-textarea { width:100%; min-height:70vh; height:70vh; resize:none; border:0; background: transparent; padding:0; }
 .gc-editor-pane--preview { overflow:auto; min-height:70vh; max-height:70vh; }
+
+.gc-editor .gc-page-header__main { align-items: center; }
+.gc-editor .gc-page-header__actions {
+  flex: 1 1 auto;
+  width: 100%;
+}
+.gc-editor-header__actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+.gc-editor-header__tabs { justify-self: center; }
+.gc-editor-header__icons { display:flex; gap:8px; align-items:center; justify-self: end; }
+@media (max-width: 820px){
+  .gc-editor-header__actions {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .gc-editor-header__tabs { justify-self: start; }
+  .gc-editor-header__icons { justify-self: start; }
+}
 
 .gc-stage-actions { margin-top: var(--space-3); }
 

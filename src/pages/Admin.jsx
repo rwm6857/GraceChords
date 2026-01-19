@@ -6,6 +6,7 @@ import { serializeChordPro, slugifyUnderscore } from '../utils/chordpro/serializ
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import { convertToCanonicalChordPro, suggestCanonicalFilename } from '../utils/chordpro/convert'
 import { lintChordPro } from '../utils/chordpro/lint'
+import { resolveChordCollisions } from '../utils/chords'
 import { downloadZip } from '../utils/zip'
 import indexData from '../data/index.json'
 import { fetchTextCached } from '../utils/fetchCache'
@@ -685,7 +686,7 @@ function InstrumentalPreviewLine({ spec }){
           key={idx}
           style={{
             whiteSpace: 'pre',
-            fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+            fontFamily: 'var(--gc-font-chords)',
             fontWeight: 700,
             fontSize: 'inherit',
             lineHeight: 1.35,
@@ -722,15 +723,35 @@ function MeasuredPreviewLine({ plain, chords, comment }){
 
     // Measure with lyrics font (critical alignment rule)
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    const offsets = (chords || []).map(c => ({
-      left: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: c.sym
+    const hostW = hostRef.current.getBoundingClientRect().width || 0
+    const spaceW = ctx.measureText(' ').width || 0
+    const measured = (chords || []).map(c => ({
+      x: ctx.measureText(plain.slice(0, c.index)).width,
+      sym: c.sym,
+      w: 0,
     }))
 
     // Estimate chord ascent with mono bold (for reserved space)
-    const chordFontFamily = `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
+    const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
+    const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
     ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+    measured.forEach(m => { m.w = ctx.measureText(m.sym || '').width })
+    resolveChordCollisions(measured, spaceW)
+    measured.sort((a,b)=> a.x - b.x)
+    for (let i = 1; i < measured.length - 1; i++) {
+      const L = measured[i-1], M = measured[i], R = measured[i+1]
+      const gapLM = M.x - (L.x + L.w)
+      const gapMR = R.x - (M.x + M.w)
+      if (gapLM < spaceW && gapMR < spaceW) {
+        L.x = Math.min(L.x, M.x - spaceW - L.w)
+        R.x = Math.max(R.x, M.x + M.w + spaceW)
+      }
+    }
+    const offsets = measured.map(m => ({
+      left: hostW > 0 ? Math.min(Math.max(0, m.x), Math.max(0, hostW - m.w - 2)) : Math.max(0, m.x),
+      sym: m.sym
+    }))
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
 
@@ -748,7 +769,7 @@ function MeasuredPreviewLine({ plain, chords, comment }){
             <span key={i} style={{
               position:'absolute',
               left: `${c.left}px`,
-              fontFamily: `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
+              fontFamily: 'var(--gc-font-chords)',
               fontWeight: 700
             }}>{c.sym}</span>
           ))}
