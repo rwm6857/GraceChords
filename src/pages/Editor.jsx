@@ -332,26 +332,7 @@ function EditorPanel({ authorName }){
             <div className="gc-editor-header__left">
               <h1 className="gc-page-header__title">GraceChords Editor</h1>
               <p className="gc-page-header__subtitle">Author: {authorName}</p>
-              <div className="gc-editor__meta-row">
-                <Chip
-                  variant="tag"
-                  className={ghUser ? 'gc-chip--success' : 'gc-chip--danger'}
-                  title={ghUser ? `Token OK: ${ghUser.login}` : 'Token missing or invalid'}
-                >
-                  {ghUser ? 'Token OK' : 'Token required'}
-                </Chip>
-              </div>
             </div>
-            <SegmentedControl
-              className="gc-editor-header__tabs"
-              options={[
-                { value: 'songs', label: '🎵 Song Editor' },
-                { value: 'posts', label: '📄 Post Editor' },
-              ]}
-              value={activeTab}
-              onChange={setActiveTab}
-              ariaLabel="Editor tab selection"
-            />
             <div className="gc-editor-header__icons">
               <IconButton
                 as={Link}
@@ -369,6 +350,28 @@ function EditorPanel({ authorName }){
               >
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </IconButton>
+            </div>
+            <div className="gc-editor-header__midline">
+              <div className="gc-editor-header__token">
+                <Chip
+                  variant="tag"
+                  className={ghUser ? 'gc-chip--success' : 'gc-chip--danger'}
+                  title={ghUser ? `Token OK: ${ghUser.login}` : 'Token missing or invalid'}
+                >
+                  {ghUser ? 'Token OK' : 'Token required'}
+                </Chip>
+              </div>
+              <SegmentedControl
+                className="gc-editor-header__tabs"
+                options={[
+                  { value: 'songs', label: '🎵 Song Editor' },
+                  { value: 'posts', label: '📄 Post Editor' },
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+                ariaLabel="Editor tab selection"
+              />
+              <div className="gc-editor-header__spacer" />
             </div>
           </div>
         </header>
@@ -1463,6 +1466,7 @@ function EditorHelpTab(){
         onClick={()=> setOpen(o => !o)}
         aria-expanded={open}
         aria-label="Open editor help"
+        style={{ position:'fixed', right:'0.75rem', left:'auto', top:'50%', transform:'translateY(-50%)' }}
       >
         {' Editor Help '}
       </Button>
