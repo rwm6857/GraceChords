@@ -95,6 +95,11 @@ input, select, textarea,
   padding: var(--space-4);
   box-shadow: none;
 }
+.card:hover{
+  background: var(--gc-surface-1);
+  box-shadow: none;
+  transform: none;
+}
 @media (max-width: 640px){ .card{ padding: var(--space-3); } }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),

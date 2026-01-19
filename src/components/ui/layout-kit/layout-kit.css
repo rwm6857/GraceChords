@@ -145,13 +145,19 @@
 .gc-inset-card{
   background: var(--gc-surface-2);
 }
-.gc-card:not(.gc-song-card):hover{
-  background: var(--gc-surface-1);
-  box-shadow: none;
+.gc-card:hover{
+  background: var(--gc-surface-1) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.gc-card.gc-song-card:hover{
+  background: var(--gc-surface-2) !important;
+  box-shadow: var(--gc-shadow-1) !important;
 }
 .gc-inset-card:hover{
-  background: var(--gc-surface-2);
-  box-shadow: none;
+  background: var(--gc-surface-2) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 .gc-card__title{
   font-size: var(--gc-font-h2);
