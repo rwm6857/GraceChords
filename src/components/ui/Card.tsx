@@ -32,7 +32,7 @@ export const SongCard = React.forwardRef<any, SongCardProps>(function SongCard({
   ...rest
 }, ref){
   const Cmp: any = to ? (Component as any) : Component
-  const props: any = { className: `gc-card ${className}`.trim(), onClick, ref, ...rest }
+  const props: any = { className: `gc-card gc-song-card ${className}`.trim(), onClick, ref, ...rest }
   if (to) props.to = to
   return (
     // @ts-ignore

@@ -21,7 +21,15 @@
 .gc-editor__meta-row { display:flex; gap:8px; align-items:center; margin-top: var(--space-2); flex-wrap:wrap; }
 .gc-editor-tabs { margin-bottom: var(--space-3); }
 .gc-editor-shell { max-width:1200px; margin:0 auto 2rem; display:flex; flex-direction:column; gap: var(--space-4); }
-.gc-editor-panel { background: var(--gc-surface-1); border:1px solid var(--gc-separator); border-radius: var(--radius-lg); padding: var(--space-3); }
+.gc-editor-panel {
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 .gc-editor-panel:hover,
 .gc-editor__card:hover { background: var(--gc-surface-1); box-shadow: none; }
 .gc-editor-meta-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap: var(--space-3); }

@@ -89,7 +89,13 @@ export default function SongView(){
   const [showChords, setShowChords] = useState(true)
   const [showMedia, setShowMedia] = useState(false)
   const [twoColsView, setTwoColsView] = useState(() => {
-    try { return localStorage.getItem('songView:twoCols') === '1' } catch { return false }
+    try {
+      const saved = localStorage.getItem('songView:twoCols')
+      if (saved === null) return true
+      return saved === '1'
+    } catch {
+      return true
+    }
   })
   const [err, setErr] = useState('')
   const [hasPptx, setHasPptx] = useState(false)
@@ -316,12 +322,6 @@ export default function SongView(){
   const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
 
-  const pptxButton = hasPptx ? (
-    <Button href={pptxUrl} download>
-      Download PPTX
-    </Button>
-  ) : null
-
   const buildSong = () => normalizeSongInput({
     title,
     key: toKey,
@@ -472,6 +472,18 @@ export default function SongView(){
                 <span className="text-when-wide">Download JPG</span>
                 <span className="text-when-narrow">JPG</span>
               </Button>
+              {hasPptx && (
+                <Button
+                  href={pptxUrl}
+                  download
+                  leftIcon={<DownloadIcon />}
+                  aria-label="Download PPTX"
+                  title="Download PPTX"
+                >
+                  <span className="text-when-wide">Download PPTX</span>
+                  <span className="text-when-narrow">PPTX</span>
+                </Button>
+              )}
               <Button
                 as={Link}
                 to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
@@ -497,11 +509,10 @@ export default function SongView(){
       </PageHeader>
 
       <Card
-        className="songpage__sheet"
-        style={!isNarrow && twoColsView ? { columnCount: 2, columnGap: '24px' } : undefined}
+        className={`songpage__sheet ${(!isNarrow && twoColsView) ? 'songpage__sheet--two' : ''}`.trim()}
       >
         {(parsed.blocks || []).map((block, bi)=> (
-          <div key={bi} style={!isNarrow && twoColsView ? { breakInside: 'avoid' } : undefined}>
+          <div key={bi} className="songpage__block">
             <div className="section">{block.section ? `[${block.section}]` : ''}</div>
                         {(block.lines || []).map((ln, li) => {
                                 const key = `${bi}-${li}`
@@ -543,7 +554,7 @@ export default function SongView(){
       {(() => {
         const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
         const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
-        return (metaYoutube || metaMp3 || hasPptx)
+        return (metaYoutube || metaMp3)
       })() && (
         <Card className="gc-media-panel" style={{ marginTop: 12 }}>
           <Panel
@@ -551,51 +562,44 @@ export default function SongView(){
             open={showMedia}
             onToggle={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
           >
-            {pptxButton && (
-              <InsetCard className="media__card" style={{marginTop:10}}>
-                <div className="media__label">Lyric Slides (PPTX)</div>
-                <div style={{ marginTop: 12 }}>
-                  {pptxButton}
-                </div>
-              </InsetCard>
-            )}
+            <div className="media__stack">
+              {(() => {
+                const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+                return metaYoutube
+              })() && (
+                <InsetCard className="media__card">
+                  <div className="media__label">Reference Video</div>
+                  {(() => {
+                   const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
+                   const ytId = extractYouTubeId(metaYoutube)
+                   return ytId ? (
+                      <div style={{ marginTop: 12 }}>
+                        <LiteYouTube id={ytId} />
+                      </div>
+                    ) : (
+                      <Button
+                        href={String(metaYoutube)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ marginTop: 12 }}
+                      >
+                        Open on YouTube
+                      </Button>
+                     )
+                  })()}
+                </InsetCard>
+              )}
 
-            {(() => {
-              const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-              return metaYoutube
-            })() && (
-              <InsetCard className="media__card" style={{marginTop:10}}>
-                <div className="media__label">Reference Video</div>
-                {(() => {
-                 const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-                 const ytId = extractYouTubeId(metaYoutube)
-                 return ytId ? (
-                    <div style={{ marginTop: 12 }}>
-                      <LiteYouTube id={ytId} />
-                    </div>
-                  ) : (
-                    <Button
-                      href={String(metaYoutube)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ marginTop: 12 }}
-                    >
-                      Open on YouTube
-                    </Button>
-                   )
-                })()}
-              </InsetCard>
-            )}
-
-            {(() => {
-              const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
-              return metaMp3
-            })() && (
-              <InsetCard className="media__card" style={{marginTop:10}}>
-                <div className="media__label">Audio</div>
-                <audio controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
-              </InsetCard>
-            )}
+              {(() => {
+                const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
+                return metaMp3
+              })() && (
+                <InsetCard className="media__card">
+                  <div className="media__label">Audio</div>
+                  <audio className="media__audio" controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
+                </InsetCard>
+              )}
+            </div>
           </Panel>
         </Card>
       )}
@@ -612,6 +616,9 @@ export default function SongView(){
           <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
           <Button variant="primary" leftIcon={<DownloadIcon />} onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><span className="text-when-narrow">PDF</span></Button>
           <Button variant="primary" leftIcon={<DownloadIcon />} disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><span className="text-when-narrow">JPG</span></Button>
+          {hasPptx && (
+            <Button variant="primary" leftIcon={<DownloadIcon />} href={pptxUrl} download aria-label="Download PPTX" title="Download PPTX"><span className="text-when-narrow">PPTX</span></Button>
+          )}
           <Button as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Open in Worship Mode"><span className="text-when-narrow">Worship</span></Button>
         </div>
       )}

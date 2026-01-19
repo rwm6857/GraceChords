@@ -14,7 +14,7 @@ const SongCard = React.forwardRef(function SongCard({
   ...rest
 }, ref) {
   const Cmp = to ? Link : Component
-  const props = { className: `gc-card ${className}`.trim(), onClick, ref, ...rest }
+  const props = { className: `gc-card gc-song-card ${className}`.trim(), onClick, ref, ...rest }
   if (to) props.to = to
   return (
     <Cmp {...props}>
