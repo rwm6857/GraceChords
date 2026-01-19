@@ -214,11 +214,14 @@ select{
 
 .songpage__sheet{
   margin-top:12px;
-  display: block;
+  display: block !important;
   width: 100%;
 }
+.songpage__sheet.gc-card{
+  display: block !important;
+}
 .songpage__sheet--two{
-  column-count: 2;
+  column-count: 2 !important;
   column-gap: var(--space-5);
   column-fill: auto;
 }
@@ -358,7 +361,7 @@ select{
   display:grid;
   gap:0.875rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  margin-top:10px;
+  margin-top: var(--space-4);
 }
 /* Cap at 4 columns on very wide screens */
 @media (min-width:1500px){ .HomeGrid{ grid-template-columns: repeat(4, minmax(0,1fr)); } }
@@ -514,6 +517,19 @@ html, body, #root { height: 100%; }
   min-height:0;
   max-height:none;
   flex:1 1 auto;
+}
+.setlist-pane:hover{
+  background: var(--gc-surface-1);
+  box-shadow: none;
+}
+.setlist-pane.gc-card:hover{
+  background: var(--gc-surface-1);
+  box-shadow: none;
+}
+.songbook-add > .setlist-pane:hover,
+.songbook-current > .setlist-pane:hover{
+  background: var(--gc-surface-1);
+  box-shadow: none;
 }
 .setlist-section{
   display:flex;

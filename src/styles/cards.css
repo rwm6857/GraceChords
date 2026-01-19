@@ -92,4 +92,14 @@
   padding: 2px 6px;
 }
 
+/* Add contrast for song cards inside setlist/songbook panes */
+.setlist-section .gc-song-card {
+  background: var(--gc-surface-2);
+  border-color: var(--gc-separator);
+}
+.setlist-section .gc-song-card:hover {
+  background: var(--gc-surface-3);
+  box-shadow: var(--gc-shadow-1);
+}
+
 /* No prefers-color-scheme override – theme is driven by [data-theme] */

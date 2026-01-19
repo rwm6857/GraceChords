@@ -91,7 +91,7 @@ export default function Resources(){
       </div>
 
       <div className="HomeResults" role="region" aria-label="Resource results">
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12, marginTop:12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12, marginTop:16 }}>
           {filtered.map(it => (
             <article key={it.slug} className="gc-card" style={{ flexDirection:'column', gap:8 }}>
               <h3 className="gc-card__title" style={{ margin:'4px 0' }}>
