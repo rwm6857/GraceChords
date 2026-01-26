@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-26T20:34:13.374Z",
+  "generatedAt": "2026-01-26T20:35:56.188Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -15,6 +15,20 @@
         "Jonas Myrin"
       ],
       "country": "USA",
+      "incomplete": false
+    },
+    {
+      "id": "a-mighty-fortress-is-our-god",
+      "title": "A Mighty Fortress Is Our God",
+      "filename": "a_mighty_fortress_is_our_god.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "hymn"
+      ],
+      "authors": [
+        "Martin Luther"
+      ],
+      "country": "Germany",
       "incomplete": false
     },
     {
@@ -35,6 +49,20 @@
       "incomplete": false
     },
     {
+      "id": "abba-father",
+      "title": "Abba Father",
+      "filename": "abba_father.chordpro",
+      "originalKey": "E",
+      "tags": [
+        "Oldie"
+      ],
+      "authors": [
+        "Shaun Groves"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
       "id": "above-all",
       "title": "Above All",
       "filename": "above_all.chordpro",
@@ -50,6 +78,21 @@
         "Lenny LeBlanc"
       ],
       "country": "USA",
+      "incomplete": false
+    },
+    {
+      "id": "agnus-dei",
+      "title": "Agnus Dei",
+      "filename": "agnus_dei.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Praise"
+      ],
+      "authors": [
+        "Michael W. Smith",
+        "Mac Pawel"
+      ],
+      "country": "USD",
       "incomplete": false
     },
     {
@@ -81,6 +124,21 @@
       "incomplete": false
     },
     {
+      "id": "amazing-love",
+      "title": "Amazing Love",
+      "filename": "amazing_love.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Slow",
+        "Oldie"
+      ],
+      "authors": [
+        "Billy James Foote"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
       "id": "ancient-of-days",
       "title": "Ancient Of Days",
       "filename": "ancient_of_days.chordpro",
@@ -94,6 +152,20 @@
       "authors": [
         "Jamie Harvill",
         "Gary Sadler"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
+      "id": "another-in-the-fire",
+      "title": "Another In The Fire",
+      "filename": "another_in_the_fire.chordpro",
+      "originalKey": "Am",
+      "tags": [
+        "Slow"
+      ],
+      "authors": [
+        "Hillsong"
       ],
       "country": "USA",
       "incomplete": false
@@ -113,6 +185,52 @@
       "incomplete": false
     },
     {
+      "id": "at-the-cross-love-ran-red-key-g",
+      "title": "At the Cross (Love Ran Red)\n{key: G",
+      "filename": "at_the_cross.chordpro",
+      "originalKey": "",
+      "tags": [
+        "Slow",
+        "Cross"
+      ],
+      "authors": [
+        "Chris Tomlin"
+      ],
+      "country": "USA",
+      "incomplete": true
+    },
+    {
+      "id": "away-in-a-manger",
+      "title": "Away In A Manger",
+      "filename": "away_in_a_manger.chordpro",
+      "originalKey": "F",
+      "tags": [
+        "Hymn",
+        "Christmas"
+      ],
+      "authors": [
+        "James Ramsey Murray",
+        "John T. MacFarland"
+      ],
+      "country": "",
+      "incomplete": false
+    },
+    {
+      "id": "awesome-god",
+      "title": "Awesome God",
+      "filename": "awesome_god.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Oldie"
+      ],
+      "authors": [
+        "Rich Mullins"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
       "id": "battle-belongs",
       "title": "Battle Belongs",
       "filename": "battle_belongs.chordpro",
@@ -125,6 +243,37 @@
         "Phil Wickham"
       ],
       "country": "USA",
+      "incomplete": false
+    },
+    {
+      "id": "be-lifted-high",
+      "title": "Be Lifted High",
+      "filename": "be_lifted_high.chordpro",
+      "originalKey": "Dm",
+      "tags": [
+        "Slow",
+        "Praise"
+      ],
+      "authors": [
+        "Bethel"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
+      "id": "be-thou-my-vision",
+      "title": "Be Thou My Vision",
+      "filename": "be_thou_my_vision.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Hymn"
+      ],
+      "authors": [
+        "Eleanor Henrietta Hull",
+        "Mary Elizabeth Byrne",
+        "Andy Melvin"
+      ],
+      "country": "Ireland",
       "incomplete": false
     },
     {
@@ -157,6 +306,20 @@
       "incomplete": false
     },
     {
+      "id": "because-he-lives",
+      "title": "Because He Lives",
+      "filename": "because_he_lives.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Hymn"
+      ],
+      "authors": [
+        "Celtic Worship"
+      ],
+      "country": "",
+      "incomplete": false
+    },
+    {
       "id": "better-word",
       "title": "Better Word",
       "filename": "better_word.chordpro",
@@ -175,12 +338,13 @@
       "id": "blessed-assurance",
       "title": "Blessed Assurance",
       "filename": "blessed_assurance.chordpro",
-      "originalKey": "C",
+      "originalKey": "D",
       "tags": [
         "Hymn"
       ],
       "authors": [
-        "Fanny J. Crosby"
+        "Phoebe P. Knapp",
+        "Fanny Jane Crosby"
       ],
       "country": "USA",
       "incomplete": false
@@ -213,6 +377,20 @@
         "Paul Wilbur"
       ],
       "country": "Israel",
+      "incomplete": false
+    },
+    {
+      "id": "broken-vessels",
+      "title": "Broken Vessels",
+      "filename": "broken_vessels.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow"
+      ],
+      "authors": [
+        "Hillsong"
+      ],
+      "country": "USA",
       "incomplete": false
     },
     {
