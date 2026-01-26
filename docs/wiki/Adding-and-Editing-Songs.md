@@ -13,13 +13,15 @@ Option A — Use the Admin Tool (recommended)
 6) Choose a filename (underscores, lowercase) if prompted.
 7) Enter your name in **Edits Author** and click **Publish** to open a PR, or **Download** to save a ZIP for manual copy.
 
-Option B — Import via CLI (DOCX/PDF/TXT)
+Option B — Import via CLI (DOCX/PDF/images)
 ```bash
-# Install optional parsers if needed
-npm i -D mammoth pdf-parse
+# Use the ingest CLI (recommended)
+cd scripts/ingest
+npm i
+npm run build
 
-# Convert a document into a ChordPro skeleton
-npm run ingest -- path/to/file.docx
+npx gc-ingest ingest /path/to/file.docx
+npx gc-ingest ingest /path/to/file.pdf
 
 # Normalize names and rebuild the index
 npm run normalize && npm run build-index

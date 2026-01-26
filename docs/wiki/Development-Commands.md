@@ -20,7 +20,12 @@ Common commands for development, testing, indexing, and maintenance.
 - `npm run build-resources-index` — generate `src/data/resources.json` from `public/resources/`
 
 ## Import & Repair Utilities
-- `npm run ingest -- <file...>` — import DOCX/PDF/TXT to ChordPro skeleton (see [[Importing-Lyrics]])
+- `npx gc-ingest` — ingest inbox (`scripts/ingest/_ingest_inbox/`) with staging output
+- `npx gc-ingest ingest <file>` — ingest a single PDF/DOCX/image
+- `npx gc-ingest compare` — compare staged output to `public/songs/`
+- `npm run ingest -- <file...>` — legacy DOCX/PDF/TXT import (see [[Importing-Lyrics]])
+
+See [[Ingestion-CLI]] for full usage and reports.
 - `npm run convert:short` — convert existing songs to short directive style
 - `npm run repair:meta` — repair or fill common metadata fields across songs
 
