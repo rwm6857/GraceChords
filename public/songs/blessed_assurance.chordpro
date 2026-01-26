@@ -1,42 +1,34 @@
 {title: Blessed Assurance}
-{key: C}
-{authors: Fanny J. Crosby}
+{key: D}
+{authors: Phoebe P. Knapp, Fanny Jane Crosby}
 {country: USA}
 {tags: Hymn}
-{youtube: uMLOlYWM03g}
+{youtube: DRA-pK63x3U}
 
-{start_of_verse: Verse}
-Blessed [C]assurance, [F]Jesus is [C]mine!
-O what a [Am7]fore[G]taste of [D]glory di[G]vine!
-Heir of sal[C]vation, [F]purchase of [C]God
-Born of his [Dm]Spirit, [G]washed in his [C]blood
+{sov Verse 1}
+[A]Blessed Assu[D]rance, Je[G]sus is [D]mine!
+[Bm]O what [A]a foretas[E7]te of [A]glory [A7]divine!
+[D]Heir of Salva[G]tion, purchase of [D]God,
+[Em]Born of His Sp[A]irit, washed in His [D]blood.
 
-{end_of_verse}
+{eov}
+{soc}
+[A]This is my [D]story, [G]this is my [D]song,
+[G]Praising my [E]Saviour all the [A]day [A7]long;
+[D]This is my [G]story, this is my [D]song,
+[Em]Praising my [A]Saviour all the day [D]long.
 
-{start_of_chorus: Chorus}
-This is my [C]story, [F]this is my [C]song,
-Praising my [Am7]Savi[G]or [D]all the day [G]long
-[G7]This is my [C]story, [F]this is my [C]song,
-Praising my [Dm]Savior [G]all the day [C]long
+{eoc}
+{sov Verse 2}
+[A]Perfect subm[D]ission, pe[G]rfect [D]delight!
+[Bm]Visio[A]ns of rapt[E7]ure now burst in [A]my sig[A7]ht;
+[D]Angels descen[G]ding, bring from abo[D]ve
+[Em]Echoes of me[A]rcy, whispers of [D]love.
 
-{end_of_chorus}
-
-{start_of_verse: Verse 2}
-Perfect submission, perfect delight 
-Visions of rapture now burst on my sight 
-Angels descending bring from above 
-Echoes of mercy, whispers of love 
-
-{end_of_verse}
-
-{start_of_verse: Verse 3}
-Perfect submission, all is at rest 
-I in my Savior am happy and blessed 
-Watching and waiting, looking above 
-Filled with his goodness, lost in his love 
-
-{end_of_verse}
-
-# --- DISCLAIMER (GraceChords) ---
-# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
-# --- END DISCLAIMER ---
+{eov}
+{sov Verse 3}
+[A]Perfect subm[D]ission, [G]all is at [D]rest,
+[Bm]I in [A]my [E7]Savior am happy [A]and bless[A7]ed;
+[D]Watching and wait[G]ing, looking [D]above,
+[Em]Filled with His [A]goodness, lost in His [D]love.
+{eov}
