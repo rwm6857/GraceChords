@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<song>
+  <title>Only Lyrics</title>
+  <author>Example Writer</author>
+  <presentation>V1 C</presentation>
+  <lyrics>
+[V1]
+.This is a lyric line
+Another lyric line
+
+[C]
+No chords here either
+  </lyrics>
+</song>

@@ -21,4 +21,11 @@ export type ExtractionResult = {
     ocrConfidenceAvg?: number
   }
   extractor: string
+  meta?: {
+    title?: string
+    authors?: string[]
+    key?: string
+    presentation?: string
+    hasChords?: boolean
+  }
 }

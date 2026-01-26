@@ -1,6 +1,7 @@
 import { basename, join } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import { ingestFile, listSupportedFiles } from './ingest.js'
+import type { IngestResult } from './ingest.js'
 import { slugifyTitle } from './utils/slug.js'
 import { fileExists } from './utils/fs.js'
 import { normalizeChordToken } from './utils/chords.js'
@@ -479,6 +480,8 @@ export function compareChordPro(
 export async function compareAgainstLibrary(options: CompareOptions) {
   const inputs = await listSupportedFiles(options.inputsDir)
   const results: CompareResult[] = []
+  const isSkipped = (result: IngestResult): result is { skipped: true; reason: string; title: string } =>
+    (result as { skipped?: boolean }).skipped === true
 
   for (const input of inputs) {
     const inputSlug = slugifyTitle(basename(input))
@@ -489,6 +492,14 @@ export async function compareAgainstLibrary(options: CompareOptions) {
 
     if (options.doIngest) {
       const ingestResult = await ingestFile(input, {})
+      if (isSkipped(ingestResult)) {
+        results.push({
+          slug: inputSlug,
+          title: ingestResult.title || inputSlug,
+          status: 'skipped'
+        })
+        continue
+      }
       stagingDir = ingestResult.stagingDir
       title = ingestResult.title
     }

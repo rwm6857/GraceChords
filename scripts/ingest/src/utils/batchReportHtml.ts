@@ -11,12 +11,22 @@ export function renderBatchReportHtml(items: BatchReportItem[]): string {
   const ready = items.filter((item) => item.report.status === 'ready').length
   const needsReview = items.filter((item) => item.report.status === 'needs_review').length
   const likelyBad = items.filter((item) => item.report.status === 'likely_bad').length
+  const extractorCounts = new Map<string, number>()
+  items.forEach((item) => {
+    const key = item.report.extractor || 'unknown'
+    extractorCounts.set(key, (extractorCounts.get(key) || 0) + 1)
+  })
+  const extractorSummary = Array.from(extractorCounts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([name, count]) => `${escapeHtml(name)}: ${count}`)
+    .join(', ')
 
   const summary = `<div class="summary">
     <div><strong>Total:</strong> ${total}</div>
     <div><strong>Ready:</strong> ${ready}</div>
     <div><strong>Needs review:</strong> ${needsReview}</div>
     <div><strong>Likely bad:</strong> ${likelyBad}</div>
+    ${extractorSummary ? `<div class="summary-span"><strong>Extractors:</strong> ${extractorSummary}</div>` : ''}
   </div>`
 
   const sections = items
@@ -58,6 +68,7 @@ export function renderBatchReportHtml(items: BatchReportItem[]): string {
     body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; padding: 24px; background: #f7f5ef; color: #1c1b1a; }
     h1 { margin: 0 0 12px; }
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .summary-span { grid-column: 1 / -1; }
     .card { background: #fff; border-radius: 12px; border: 1px solid #e0d8cc; padding: 12px 16px; margin-bottom: 12px; }
     summary { cursor: pointer; display: flex; justify-content: space-between; gap: 12px; font-weight: 600; }
     .badge { background: #eee6d9; padding: 4px 10px; border-radius: 999px; font-size: 12px; }

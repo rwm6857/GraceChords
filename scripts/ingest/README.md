@@ -2,6 +2,10 @@
 
 This folder contains a standalone Node + TypeScript CLI for ingesting song sources into GraceChords.
 
+Supported inputs:
+- PDF, DOCX, images (PNG/JPG/WEBP)
+- OpenSong XML files (`.txt`, `.xml`, or extensionless XML)
+
 ## Setup
 
 ```bash
@@ -25,6 +29,7 @@ Optional system dependencies:
 npx gc-ingest ingest ../../somefile.docx --title "Amazing Grace" --authors "John Newton"
 
 npx gc-ingest batch ../../incoming --concurrency 2
+npx gc-ingest batch ../../opensong-txts --concurrency 4
 
 npx gc-ingest compare
 npx gc-ingest compare --do-ingest
@@ -36,11 +41,15 @@ npx gc-ingest compare --sections
 npx gc-ingest compare --export-json
 npx gc-ingest compare --export-md
 
+npx gc-ingest stats
+
 npx gc-ingest normalize ../../scripts/ingest/_ingest_staging/amazing_grace
 
 npx gc-ingest approve ../../scripts/ingest/_ingest_staging/amazing_grace --to ../../public/songs --run-index
 
 npx gc-ingest report ../../scripts/ingest/_ingest_staging/amazing_grace
+
+npx gc-ingest export
 ```
 
 ## Staging Output
@@ -56,7 +65,7 @@ Each ingest writes to `scripts/ingest/_ingest_staging/<slug>/`:
 
 ## Default inbox
 
-If you run `gc-ingest` with no arguments, it will batch ingest everything in:\n\n- `scripts/ingest/_ingest_inbox/`\n\nThis folder is git-ignored; drop PDFs/DOCX/images there for quick processing.
+If you run `gc-ingest` with no arguments, it will batch ingest everything in:\n\n- `scripts/ingest/_ingest_inbox/`\n\nThis folder is git-ignored; drop PDFs/DOCX/images there for quick processing. OpenSong files with no detected chords are skipped (no staging output).
 
 ## Cleanup
 
@@ -65,6 +74,22 @@ npx gc-ingest --cleanup
 ```
 
 Prompts before clearing `scripts/ingest/_ingest_inbox/` and `scripts/ingest/_ingest_staging/`.
+
+## Export normalized files
+
+```bash
+npx gc-ingest export
+```
+
+Copies all staged `normalized/*.chordpro` files into:
+
+- `scripts/ingest/_ingest_exports/`
+
+Use `--clean` to clear the export folder before copying:
+
+```bash
+npx gc-ingest export --clean
+```
 
 ## Compare
 

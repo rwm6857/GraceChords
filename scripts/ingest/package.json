@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "commander": "^12.1.0",
+    "fast-xml-parser": "^4.4.1",
     "mammoth": "^1.10.0",
     "node-html-parser": "^6.1.13",
     "tesseract.js": "^5.1.0"

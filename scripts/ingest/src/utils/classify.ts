@@ -2,7 +2,7 @@ import { isChordToken } from './chords.js'
 
 export type LineType = 'chords' | 'lyrics' | 'heading' | 'blank'
 
-const HEADING_RE = /^(verse|chorus|bridge|tag|intro|outro)(\s+\d+)?[.:]?$/i
+const HEADING_RE = /^(verse|chorus|bridge|tag|intro|outro|pre[-\s]?chorus)(\s+\d+)?[.:]?$/i
 
 export function classifyLine(text: string): LineType {
   const trimmed = text.trim()
@@ -34,14 +34,20 @@ export function classifyLine(text: string): LineType {
 
 export function headingToDirective(heading: string): { start: string; end: string } | null {
   const trimmed = heading.trim()
-  const match = trimmed.match(/^(verse|chorus|bridge|tag|intro|outro)(\s+\d+)?[.:]?$/i)
+  const match = trimmed.match(/^(verse|chorus|bridge|tag|intro|outro|pre[-\s]?chorus)(\s+\d+)?[.:]?$/i)
   if (!match) return null
 
   const label = match[1].toLowerCase()
   const number = (match[2] || '').trim()
 
   if (label === 'chorus') {
-    return { start: '{soc}', end: '{eoc}' }
+    const name = number ? `Chorus ${number}` : ''
+    return { start: name ? `{soc ${name}}` : '{soc}', end: '{eoc}' }
+  }
+
+  if (label === 'pre-chorus' || label === 'pre chorus' || label === 'prechorus') {
+    const name = number ? `Pre-Chorus ${number}` : 'Pre-Chorus'
+    return { start: `{soc ${name}}`, end: '{eoc}' }
   }
 
   if (label === 'verse') {

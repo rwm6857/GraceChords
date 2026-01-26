@@ -6,6 +6,45 @@ import { fileURLToPath } from 'node:url'
 import type { ExtractionResult, ExtractedLine, WordBox } from '../utils/types.js'
 import { extractFromImage } from './image.js'
 
+function median(values: number[]): number {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2
+  }
+  return sorted[mid]
+}
+
+function insertBlankLinesForGaps(lines: ExtractedLine[]): ExtractedLine[] {
+  if (lines.length < 2) return lines
+  const gaps: number[] = []
+  for (let i = 1; i < lines.length; i += 1) {
+    const prev = lines[i - 1]
+    const next = lines[i]
+    if (typeof prev.y !== 'number' || typeof next.y !== 'number') continue
+    const gap = next.y - prev.y
+    if (gap > 0) gaps.push(gap)
+  }
+  const typicalGap = median(gaps)
+  if (!typicalGap) return lines
+  const threshold = Math.max(typicalGap * 1.6, 12)
+
+  const output: ExtractedLine[] = []
+  for (let i = 0; i < lines.length; i += 1) {
+    const current = lines[i]
+    output.push(current)
+    const next = lines[i + 1]
+    if (!next) continue
+    if (typeof current.y !== 'number' || typeof next.y !== 'number') continue
+    const gap = next.y - current.y
+    if (gap > threshold && gap < typicalGap * 6) {
+      output.push({ text: '', y: current.y + gap / 2, source: current.source })
+    }
+  }
+  return output
+}
+
 function groupWordsIntoLines(words: WordBox[]): ExtractedLine[] {
   const sorted = [...words].sort((a, b) => a.y - b.y || a.x - b.x)
   const lines: { y: number; words: WordBox[] }[] = []
@@ -20,11 +59,12 @@ function groupWordsIntoLines(words: WordBox[]): ExtractedLine[] {
     }
   }
 
-  return lines.map((line) => {
+  const assembled = lines.map((line) => {
     const wordsSorted = line.words.sort((a, b) => a.x - b.x)
     const text = wordsSorted.map((w) => w.text).join(' ')
     return { text, y: line.y, words: wordsSorted, source: 'pdf' }
   })
+  return insertBlankLinesForGaps(assembled)
 }
 
 async function runPython(pdfPath: string): Promise<WordBox[]> {
@@ -95,7 +135,7 @@ async function extractFromPdfOcr(path: string, warnings: string[]): Promise<Extr
     }
 
     return {
-      lines,
+      lines: insertBlankLinesForGaps(lines),
       warnings,
       stats: { ocrConfidenceAvg: confCount > 0 ? confSum / confCount : undefined },
       extractor: 'pdf-ocr'

@@ -1,11 +1,19 @@
 #!/usr/bin/env node
-import { resolve, join } from 'node:path'
+import { resolve, join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createInterface } from 'node:readline/promises'
 import { spawn } from 'node:child_process'
 import { rm, mkdir, writeFile, rename, readFile } from 'node:fs/promises'
 import { Command } from 'commander'
-import { ingestFile, normalizeStaging, approveStaging, loadReport, listSupportedFiles } from './ingest.js'
+import {
+  ingestFile,
+  normalizeStaging,
+  approveStaging,
+  loadReport,
+  listSupportedFiles,
+  exportNormalized
+} from './ingest.js'
+import type { IngestResult } from './ingest.js'
 import { compareAgainstLibrary } from './compare.js'
 import { renderCompareReportHtml } from './utils/compareReportHtml.js'
 import { renderBatchReportHtml } from './utils/batchReportHtml.js'
@@ -16,6 +24,7 @@ const distDir = fileURLToPath(new URL('.', import.meta.url))
 const packageRoot = resolve(distDir, '..')
 const defaultInbox = resolve(packageRoot, '_ingest_inbox')
 const stagingRoot = resolve(packageRoot, '_ingest_staging')
+const exportRoot = resolve(packageRoot, '_ingest_exports')
 
 const colors = {
   reset: '\x1b[0m',
@@ -74,6 +83,10 @@ function formatSongSummary(input: {
   return `${colorize('•', 'dim')} ${colorize(input.title, 'bold')} ${colorize('—', 'dim')} ${scoreText} ${statusText}${warningText}\n  ${colorize('staged:', 'dim')} ${input.stagingDir}`
 }
 
+function isSkipped(result: IngestResult): result is { skipped: true; reason: string; title: string } {
+  return (result as { skipped?: boolean }).skipped === true
+}
+
 async function promptYesNo(question: string): Promise<boolean> {
   if (!process.stdin.isTTY) return false
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -109,6 +122,12 @@ program
   .option('--tags <tags>', 'comma-separated tags')
   .action(async (pathOrUrl, options) => {
     const result = await ingestFile(pathOrUrl, options)
+    if (isSkipped(result)) {
+      console.log(
+        `${colorize('•', 'dim')} ${colorize(result.title || 'Untitled', 'bold')} ${colorize('—', 'dim')} ${colorize('skipped', 'dim')} ${colorize(`(${result.reason})`, 'dim')}`
+      )
+      return
+    }
     const summary = formatSongSummary({
       title: result.title,
       score: result.report.score,
@@ -143,6 +162,10 @@ program
       stagingDir: string
       report: any
     }> = []
+    const failures: Array<{ file: string; error: string }> = []
+    const skipped: Array<{ file: string; title: string; reason: string }> = []
+
+    console.log(colorize(`Found ${files.length} ingestable files.`, 'dim'))
 
     const worker = async () => {
       while (index < files.length) {
@@ -150,6 +173,17 @@ program
         index += 1
         try {
           const result = await ingestFile(file, {})
+          if (isSkipped(result)) {
+            skipped.push({
+              file,
+              title: result.title || 'Untitled',
+              reason: result.reason || 'skipped'
+            })
+            console.log(
+              `${colorize('•', 'dim')} ${colorize(result.title || 'Untitled', 'bold')} ${colorize('—', 'dim')} ${colorize('skipped', 'dim')} ${colorize(`(${result.reason || 'skipped'})`, 'dim')}`
+            )
+            continue
+          }
           summaries.push({
             title: result.title,
             score: result.report.score,
@@ -168,25 +202,65 @@ program
             })
           )
         } catch (error) {
-          console.error(`Failed ${file}: ${(error as Error).message}`)
+          const message = (error as Error).message || String(error)
+          failures.push({ file, error: message })
+          console.error(`Failed ${file}: ${message}`)
         }
       }
     }
 
     await Promise.all(Array.from({ length: concurrency }, () => worker()))
 
+    console.log(
+      colorize(
+        `Completed: ${summaries.length} succeeded, ${failures.length} failed, ${skipped.length} skipped.`,
+        'dim'
+      )
+    )
+
     if (summaries.length > 0) {
       const warningCounts = new Map<string, number>()
+      const extractorCounts = new Map<string, number>()
       summaries.forEach((summary) => {
         summary.warnings.forEach((warning) => {
           warningCounts.set(warning, (warningCounts.get(warning) || 0) + 1)
         })
+        const extractor = summary.report?.extractor || 'unknown'
+        extractorCounts.set(extractor, (extractorCounts.get(extractor) || 0) + 1)
       })
+
+      if (extractorCounts.size > 0) {
+        const list = Array.from(extractorCounts.entries())
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .map(([name, count]) => `${name}: ${count}`)
+          .join(', ')
+        console.log(`\n${colorize('Extractors:', 'dim')} ${list}`)
+      }
 
       if (warningCounts.size > 0) {
         console.log(`\n${colorize('Warnings summary:', 'dim')}`)
         for (const [warning, count] of warningCounts.entries()) {
           console.log(`- ${warning} (${count})`)
+        }
+      }
+
+      if (failures.length > 0) {
+        console.log(`\n${colorize('Failures:', 'dim')} ${failures.length}`)
+        failures.slice(0, 10).forEach((failure) => {
+          console.log(`- ${failure.file}: ${failure.error}`)
+        })
+        if (failures.length > 10) {
+          console.log(colorize(`...and ${failures.length - 10} more`, 'dim'))
+        }
+      }
+
+      if (skipped.length > 0) {
+        console.log(`\n${colorize('Skipped:', 'dim')} ${skipped.length}`)
+        skipped.slice(0, 10).forEach((entry) => {
+          console.log(`- ${entry.title}: ${entry.reason}`)
+        })
+        if (skipped.length > 10) {
+          console.log(colorize(`...and ${skipped.length - 10} more`, 'dim'))
         }
       }
 
@@ -230,6 +304,28 @@ program
   .action(async (stagingSongDir) => {
     const report = await loadReport(stagingSongDir)
     console.log(JSON.stringify(report, null, 2))
+  })
+
+program
+  .command('export')
+  .option('--from <dir>', 'staging directory (default ingest staging)')
+  .option('--to <dir>', 'export directory (default ingest exports)')
+  .option('--clean', 'clear export directory before copying')
+  .action(async (options) => {
+    const fromDir = options.from ? resolve(options.from) : stagingRoot
+    const toDir = options.to ? resolve(options.to) : exportRoot
+    if (options.clean) {
+      await clearDirectory(toDir)
+    }
+    const result = await exportNormalized(fromDir, toDir)
+    console.log(
+      `${colorize('Exported', 'dim')} ${result.copied} normalized file${result.copied === 1 ? '' : 's'} to ${toDir}`
+    )
+    if (result.skipped > 0) {
+      console.log(
+        `${colorize('Skipped', 'dim')} ${result.skipped} staging folder${result.skipped === 1 ? '' : 's'} without normalized output`
+      )
+    }
   })
 
 program
@@ -345,6 +441,27 @@ program
 
     const open = await promptYesNo('Open compare report HTML? [y/N] ')
     if (open) openFile(reportPath)
+  })
+
+program
+  .command('stats')
+  .option('--inbox <dir>', 'inbox folder (default ingest inbox)')
+  .action(async (options) => {
+    const inboxDir = options.inbox ? resolve(options.inbox) : defaultInbox
+    const entries = await listSupportedFiles(inboxDir)
+    const totals: Record<string, number> = {}
+    entries.forEach((entry) => {
+      const ext = extname(entry).toLowerCase()
+      const key = ext || '(extensionless)'
+      totals[key] = (totals[key] || 0) + 1
+    })
+    const total = entries.length
+    const breakdown = Object.entries(totals)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([ext, count]) => `${ext}: ${count}`)
+      .join(', ')
+    console.log(`Total ingestable files: ${total}`)
+    if (breakdown) console.log(`By extension: ${breakdown}`)
   })
 
 program.option('--cleanup', 'clear inbox and staging output')

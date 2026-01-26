@@ -1,5 +1,5 @@
 import { basename, extname, join, resolve, dirname } from 'node:path'
-import { readFile, writeFile, readdir, stat, rename } from 'node:fs/promises'
+import { readFile, writeFile, readdir, stat, rename, rm } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { classifyLine } from './utils/classify.js'
 import { alignChordLineToLyrics, alignChordWordsToLyrics } from './utils/align.js'
@@ -8,6 +8,7 @@ import { normalizeChordPro } from './utils/normalize.js'
 import { renderPreviewHtml } from './utils/preview.js'
 import { slugifyTitle } from './utils/slug.js'
 import { scoreExtraction } from './utils/report.js'
+import type { Report } from './utils/report.js'
 import { renderReportHtml } from './utils/reportHtml.js'
 import { copyFileSafe, ensureDir, fileExists, readText, writeText } from './utils/fs.js'
 import type { ExtractedLine, ExtractionResult } from './utils/types.js'
@@ -15,19 +16,35 @@ import { extractPdfHeader } from './utils/pdfHeader.js'
 import { extractFromDocx } from './extractors/docx.js'
 import { extractFromImage } from './extractors/image.js'
 import { extractFromPdf } from './extractors/pdf.js'
+import { extractOpenSong, isOpenSongXml } from './extractors/opensong.js'
+import { extractFromText } from './extractors/text.js'
 
 export type IngestOptions = {
   title?: string
   authors?: string
   key?: string
   tags?: string
+  presentation?: string
 }
+
+export type IngestResult =
+  | {
+      stagingDir: string
+      report: Report
+      title: string
+    }
+  | {
+      skipped: true
+      reason: string
+      title: string
+    }
 
 const distDir = fileURLToPath(new URL('.', import.meta.url))
 const packageRoot = resolve(distDir, '..')
 const STAGING_ROOT = resolve(packageRoot, '_ingest_staging')
+const runSlugCounts = new Map<string, number>()
 
-const SUPPORTED_EXTENSIONS = ['.docx', '.pdf', '.png', '.jpg', '.jpeg', '.webp']
+const SUPPORTED_EXTENSIONS = ['.docx', '.pdf', '.png', '.jpg', '.jpeg', '.webp', '.txt', '.xml', '']
 
 function isUrl(input: string): boolean {
   return /^https?:\/\//i.test(input)
@@ -45,11 +62,47 @@ function extensionFromPath(path: string): string {
   return extname(path).toLowerCase()
 }
 
+async function renameToUnique(stagingDir: string, finalSlug: string): Promise<{ slug: string; path: string }> {
+  await ensureDir(STAGING_ROOT)
+  const runCount = runSlugCounts.get(finalSlug) || 0
+  let attempt = runCount
+  while (attempt < 1000) {
+    const suffix = attempt === 0 ? '' : `_${attempt}`
+    const targetDir = join(STAGING_ROOT, `${finalSlug}${suffix}`)
+    try {
+      if (await fileExists(targetDir)) {
+        if (attempt === runCount) {
+          await rm(targetDir, { recursive: true, force: true })
+        } else {
+          attempt += 1
+          continue
+        }
+      }
+      await rename(stagingDir, targetDir)
+      runSlugCounts.set(finalSlug, attempt + 1)
+      return { slug: basename(targetDir), path: targetDir }
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code === 'ENOTEMPTY' || code === 'EEXIST') {
+        attempt += 1
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error(`Unable to allocate unique staging dir for ${finalSlug}`)
+}
+
 async function chooseExtractor(path: string): Promise<ExtractionResult> {
   const ext = extensionFromPath(path)
   if (ext === '.docx') return await extractFromDocx(path)
   if (ext === '.pdf') return await extractFromPdf(path)
   if (['.png', '.jpg', '.jpeg', '.webp'].includes(ext)) return await extractFromImage(path)
+  if (ext === '.txt' || ext === '.xml' || ext === '') {
+    const raw = await readText(path)
+    if (isOpenSongXml(raw)) return await extractOpenSong(path)
+    return await extractFromText(path)
+  }
   return {
     lines: [],
     warnings: [`Unsupported file extension: ${ext}`],
@@ -58,7 +111,7 @@ async function chooseExtractor(path: string): Promise<ExtractionResult> {
   }
 }
 
-function buildDraft(
+export function buildDraft(
   lines: ExtractedLine[],
   options: IngestOptions,
   warnings: string[]
@@ -66,9 +119,10 @@ function buildDraft(
   const output: string[] = []
   const metaLines: string[] = []
   if (options.title) metaLines.push(`{title: ${options.title}}`)
-  if (options.authors) metaLines.push(`{artist: ${options.authors}}`)
+  if (options.authors) metaLines.push(`{authors: ${options.authors}}`)
   if (options.key) metaLines.push(`{key: ${options.key}}`)
-  if (options.tags) metaLines.push(`{tag: ${options.tags}}`)
+  if (options.tags) metaLines.push(`{tags: ${options.tags}}`)
+  if (options.presentation) metaLines.push(`{comment: presentation: ${options.presentation}}`)
   if (metaLines.length > 0) output.push(...metaLines, '')
 
   let mappingAttempts = 0
@@ -157,7 +211,7 @@ function buildDraft(
   return { text: output.join('\n').trimEnd() + '\n', stats }
 }
 
-export async function ingestFile(pathOrUrl: string, options: IngestOptions = {}) {
+export async function ingestFile(pathOrUrl: string, options: IngestOptions = {}): Promise<IngestResult> {
   await ensureDir(STAGING_ROOT)
 
   let inputPath = pathOrUrl
@@ -200,29 +254,42 @@ export async function ingestFile(pathOrUrl: string, options: IngestOptions = {})
   }
 
   const extraction = await chooseExtractor(inputPath)
+  const extractedMeta = extraction.meta || {}
   let extractedLines = extraction.lines
   let headerTitle: string | undefined
   let headerKey: string | undefined
+  let headerAuthors: string | undefined
+  let headerPresentation: string | undefined
   if (extraction.extractor.startsWith('pdf')) {
     const header = extractPdfHeader(extractedLines)
     extractedLines = header.lines
     headerTitle = header.title
     headerKey = header.key
+    headerAuthors = header.authors
+  } else if (extraction.extractor === 'opensong') {
+    headerTitle = extractedMeta.title
+    headerKey = extractedMeta.key
+    headerAuthors = extractedMeta.authors?.join(', ')
+    headerPresentation = extractedMeta.presentation
   }
   const warnings = [...extraction.warnings]
+
+  if (extraction.extractor === 'opensong' && extractedMeta.hasChords === false) {
+    await rm(stagingDir, { recursive: true, force: true })
+    return {
+      skipped: true,
+      reason: 'no_chords',
+      title: headerTitle || slugifyTitle(sourceName).replace(/_/g, ' ') || 'Untitled'
+    }
+  }
 
   const inferredTitle = options.title || headerTitle || slugifyTitle(sourceName).replace(/_/g, ' ')
   const finalSlug = slugifyTitle(options.title || headerTitle || inferredTitle) || slug
 
   if (finalSlug !== slug) {
-    let targetDir = join(STAGING_ROOT, finalSlug)
-    if (await fileExists(targetDir)) {
-      targetDir = join(STAGING_ROOT, `${finalSlug}_${Date.now()}`)
-    }
-    await ensureDir(STAGING_ROOT)
-    await rename(stagingDir, targetDir)
-    slug = basename(targetDir)
-    stagingDir = targetDir
+    const renamed = await renameToUnique(stagingDir, finalSlug)
+    slug = renamed.slug
+    stagingDir = renamed.path
     sourceDir = join(stagingDir, 'source')
   } else {
     slug = finalSlug
@@ -237,7 +304,9 @@ export async function ingestFile(pathOrUrl: string, options: IngestOptions = {})
     {
       ...options,
       title: options.title || headerTitle || inferredTitle,
-      key: options.key || headerKey
+      authors: options.authors || headerAuthors,
+      key: options.key || headerKey,
+      presentation: options.presentation || headerPresentation
     },
     warnings
   )
@@ -245,7 +314,12 @@ export async function ingestFile(pathOrUrl: string, options: IngestOptions = {})
   const draftPath = join(draftDir, `${slug}_draft.chordpro`)
   await writeText(draftPath, draftResult.text)
 
-  const normalized = normalizeChordPro(draftResult.text, { title: options.title || headerTitle || inferredTitle })
+  const normalized = normalizeChordPro(draftResult.text, {
+    title: options.title || headerTitle || inferredTitle,
+    key: options.key || headerKey,
+    authors: options.authors || headerAuthors,
+    tags: options.tags
+  })
   const normalizedPath = join(normalizedDir, `${slug}.chordpro`)
   await writeText(normalizedPath, normalized)
 
@@ -324,6 +398,31 @@ export async function loadReport(stagingDir: string) {
   return JSON.parse(raw)
 }
 
+export async function exportNormalized(fromDir: string, toDir: string): Promise<{
+  copied: number
+  skipped: number
+}> {
+  await ensureDir(toDir)
+  const entries = await readdir(fromDir)
+  let copied = 0
+  let skipped = 0
+  for (const entry of entries) {
+    if (entry.startsWith('.')) continue
+    const full = join(fromDir, entry)
+    const info = await stat(full)
+    if (!info.isDirectory()) continue
+    const normalizedPath = join(full, 'normalized', `${entry}.chordpro`)
+    if (await fileExists(normalizedPath)) {
+      const targetPath = join(toDir, `${entry}.chordpro`)
+      await copyFileSafe(normalizedPath, targetPath)
+      copied += 1
+    } else {
+      skipped += 1
+    }
+  }
+  return { copied, skipped }
+}
+
 async function runNpmBuildIndex(root: string): Promise<void> {
   const { spawn } = await import('node:child_process')
   await new Promise<void>((resolvePromise, reject) => {
@@ -359,10 +458,23 @@ export async function listSupportedFiles(folder: string): Promise<string[]> {
   const entries = await readdir(folder)
   const files: string[] = []
   for (const entry of entries) {
+    if (entry.startsWith('.')) continue
     const full = join(folder, entry)
     const info = await stat(full)
     if (!info.isFile()) continue
+    if (info.size === 0) continue
     const ext = extensionFromPath(entry)
+    if (ext === '' || ext === '.xml') {
+      try {
+        const raw = await readText(full)
+        if (isOpenSongXml(raw)) {
+          files.push(full)
+        }
+      } catch {
+        // ignore unreadable files
+      }
+      continue
+    }
     if (SUPPORTED_EXTENSIONS.includes(ext)) {
       files.push(full)
     }
