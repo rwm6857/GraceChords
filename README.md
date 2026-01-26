@@ -174,8 +174,22 @@ The normalizer converts hyphens/spaces to underscores (e.g., `all-in-all.chordpr
 ## Disclaimer Controls
 Set `VITE_ENABLE_DISCLAIMER=0` to disable the site footer, ChordPro comment block appending, and PDF footers. Optionally set `VITE_CONTACT_EMAIL=you@example.com` to append a contact line in site/ChordPro disclaimers.
 
-## Importing Lyrics (DOCX/PDF/TXT → ChordPro)
-Convert documents into a ChordPro skeleton with section blocks. Default output uses short ChordPro directives.
+## Importing Lyrics (DOCX/PDF/Images → ChordPro)
+Recommended: use the standalone ingest CLI under `scripts/ingest/` (supports DOCX/PDF/images + OCR, staging, normalization, and compare reports).
+
+```bash
+cd scripts/ingest
+npm i
+npm run build
+
+# drop sources into scripts/ingest/_ingest_inbox and run:
+npx gc-ingest
+
+# or ingest a single file
+npx gc-ingest ingest /path/to/song.pdf
+```
+
+Legacy: Convert documents into a ChordPro skeleton with section blocks. Default output uses short ChordPro directives.
 
 ```bash
 # DOCX → ChordPro (directives default)
@@ -189,6 +203,7 @@ npm run ingest -- path/to/song.pdf --plain
 ```
 
 Notes
+- The ingest CLI writes staged output under `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
 - Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
 - Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
 - Output directory must exist. By default it is `public/songs`. Use `--out <dir>` to override.

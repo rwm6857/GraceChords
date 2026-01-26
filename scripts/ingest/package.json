@@ -1,0 +1,24 @@
+{
+  "name": "gc-ingest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "gc-ingest": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "mammoth": "^1.10.0",
+    "node-html-parser": "^6.1.13",
+    "tesseract.js": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

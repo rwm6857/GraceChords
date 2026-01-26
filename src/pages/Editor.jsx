@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import resourcesData from '../data/resources.json'
 import { KEYS, keyRoot } from '../utils/chordpro'
@@ -506,16 +507,31 @@ function SongsEditor({ onStageSong, prefill }){
     setPrefillApplied(false)
   }, [prefill?.id, prefill?.kind])
 
+  const fuse = useMemo(() => new Fuse(items, {
+    includeScore: true,
+    threshold: 0.35,
+    ignoreLocation: true,
+    keys: [
+      { name: 'title', weight: 0.7 },
+      { name: 'tags', weight: 0.25 },
+      { name: 'authors', weight: 0.15 },
+    ],
+  }), [items])
+
   const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return []
-    return items.filter(s => {
-      const title = String(s.title || '').toLowerCase()
-      const tags = (s.tags || []).map(t => String(t).toLowerCase()).join(' ')
-      const authors = (s.authors || []).map(a => String(a).toLowerCase()).join(' ')
-      return title.includes(q) || tags.includes(q) || authors.includes(q)
-    }).slice(0, 12)
-  }, [items, searchQuery])
+    const raw = searchQuery.trim()
+    if (!raw) return []
+    const q = raw.toLowerCase()
+    const scored = fuse.search(raw).map(r => ({ item: r.item, score: r.score ?? 1 }))
+    scored.sort((a, b) => {
+      const aStart = String(a.item?.title || '').toLowerCase().startsWith(q) ? 1 : 0
+      const bStart = String(b.item?.title || '').toLowerCase().startsWith(q) ? 1 : 0
+      if (aStart !== bStart) return bStart - aStart
+      if (a.score !== b.score) return a.score - b.score
+      return compareSongsByTitle(a.item, b.item)
+    })
+    return scored.slice(0, 12).map(r => r.item)
+  }, [fuse, searchQuery])
   useEffect(() => { setSearchIndex(-1) }, [searchQuery])
 
   useEffect(() => {
@@ -1089,16 +1105,31 @@ function PostsEditor({ onStagePost, prefill }){
   const filename = `${finalSlug}.md`
   const isExisting = !!editingSlug
 
+  const fuse = useMemo(() => new Fuse(list, {
+    includeScore: true,
+    threshold: 0.35,
+    ignoreLocation: true,
+    keys: [
+      { name: 'title', weight: 0.7 },
+      { name: 'tags', weight: 0.2 },
+      { name: 'author', weight: 0.1 },
+    ],
+  }), [list])
+
   const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return []
-    return list.filter(p => {
-      const title = String(p.title || '').toLowerCase()
-      const tags = (p.tags || []).map(t => String(t).toLowerCase()).join(' ')
-      const author = String(p.author || '').toLowerCase()
-      return title.includes(q) || tags.includes(q) || author.includes(q)
-    }).slice(0, 12)
-  }, [list, searchQuery])
+    const raw = searchQuery.trim()
+    if (!raw) return []
+    const q = raw.toLowerCase()
+    const scored = fuse.search(raw).map(r => ({ item: r.item, score: r.score ?? 1 }))
+    scored.sort((a, b) => {
+      const aStart = String(a.item?.title || '').toLowerCase().startsWith(q) ? 1 : 0
+      const bStart = String(b.item?.title || '').toLowerCase().startsWith(q) ? 1 : 0
+      if (aStart !== bStart) return bStart - aStart
+      if (a.score !== b.score) return a.score - b.score
+      return String(a.item?.title || '').localeCompare(String(b.item?.title || ''), undefined, { sensitivity: 'base' })
+    })
+    return scored.slice(0, 12).map(r => r.item)
+  }, [fuse, searchQuery])
   useEffect(() => { setSearchIndex(-1) }, [searchQuery])
 
   useEffect(() => {

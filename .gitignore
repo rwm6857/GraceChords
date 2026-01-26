@@ -8,6 +8,8 @@ node_modules/
 .vite/
 coverage/
 dist/
+scripts/ingest/_ingest_staging/
+scripts/ingest/_ingest_inbox/
 
 # Local env and tooling
 .env

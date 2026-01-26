@@ -1,6 +1,25 @@
-Import lyrics from PDF/DOCX/TXT into a ChordPro skeleton that you can edit and add chords to later.
+Import lyrics from PDF/DOCX/images into a ChordPro skeleton that you can edit and add chords to later.
 
-## CLI usage
+## Recommended: gc-ingest CLI
+The modern ingestion workflow lives under `scripts/ingest/` and supports OCR, staging, normalization, and compare reports.
+
+```bash
+cd scripts/ingest
+npm i
+npm run build
+
+# drop files into scripts/ingest/_ingest_inbox/
+npx gc-ingest
+
+# single file
+npx gc-ingest ingest /path/to/song.pdf
+```
+
+Staged output lands in `scripts/ingest/_ingest_staging/<slug>/` with `drafts/`, `normalized/`, and HTML previews.
+
+See [[Ingestion-CLI]] for full usage details.
+
+## Legacy CLI usage (npm run ingest)
 ```bash
 # DOCX → ChordPro (default output to public/songs/)
 npm run ingest -- path/to/file.docx
@@ -19,7 +38,7 @@ npm run ingest -- song.pdf --plain
 - DOCX: `npm i -D mammoth`
 - PDF:  `npm i -D pdf-parse`
 
-Images (OCR) are not enabled by default. If needed, consider installing the `tesseract` CLI locally and pre‑converting to text.
+Images (OCR) are not enabled by default in the legacy CLI. Use gc-ingest for OCR support.
 
 ## Output
 - Title is guessed from the first non‑header line.
