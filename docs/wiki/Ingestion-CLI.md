@@ -47,6 +47,10 @@ npx gc-ingest compare --strict-chords
 npx gc-ingest compare --chords --lyrics --sections
 npx gc-ingest compare --export-json --export-md
 
+# export all normalized outputs to a flat folder
+npx gc-ingest export
+npx gc-ingest export --clean
+
 # cleanup inbox + staging (keeps folders)
 npx gc-ingest --cleanup
 ```
@@ -56,6 +60,9 @@ npx gc-ingest --cleanup
 - JSON/MD exports when enabled:
   - `compare_report.json`
   - `compare_summary.md`
+
+## Export outputs
+- Flat export directory: `scripts/ingest/_ingest_exports/`
 
 ## Notes
 - Use `gc-ingest compare` to iterate on alignment and normalization heuristics.
