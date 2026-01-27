@@ -1,11 +1,13 @@
 GraceChords Song Metadata Report
-Generated: 2025-12-15T03:03:53.983Z
-Total songs: 156
-Complete: 103
-Incomplete: 53
+Generated: 2026-01-26T23:34:33.566Z
+Total songs: 167
+Complete: 115
+Incomplete: 52
 
 Incomplete songs (missing key and/or lyrics/chords):
 - ‘Tis So Sweet to Trust in Jesus — missing chords
+- At the Cross (Love Ran Red)
+{key: G — missing key
 - Great is Thy Faithfulness — missing chords
 - Hail to the Brightness of Zion's Glad Morning — missing chords
 - Hallelujah (Your Love is Amazing) — missing key; missing lyrics; missing chords
@@ -35,7 +37,6 @@ Incomplete songs (missing key and/or lyrics/chords):
 - No Chains on Me — missing key; missing lyrics; missing chords
 - No Longer Slaves — missing key; missing lyrics; missing chords
 - O Come to the Altar — missing key; missing lyrics; missing chords
-- On That Day — missing chords
 - One Way — missing key; missing lyrics; missing chords
 - Reckless Love — missing key; missing lyrics; missing chords
 - Refiner's Fire — missing key; missing lyrics; missing chords
@@ -57,11 +58,12 @@ Incomplete songs (missing key and/or lyrics/chords):
 - Touch of Heaven — missing key; missing lyrics; missing chords
 - Where Jesus is Tis Heaven — missing chords
 - With All My Heart — missing key; missing lyrics; missing chords
-- Worthy is the Lamb — missing key; missing lyrics; missing chords
 
 Complete songs with missing optional metadata (not hidden):
 - All That’s Within Me — missing authors
 - Amazing Grace — missing country
+- Away In A Manger — missing country
+- Because He Lives — missing country
 - Calling — missing authors
 - Come to Us, Emmanuel — missing authors
 - Dear Brother — missing authors

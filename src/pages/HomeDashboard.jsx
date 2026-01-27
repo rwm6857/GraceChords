@@ -15,6 +15,7 @@ import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.
 import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
 import { isIncompleteSong } from '../utils/songStatus'
+import { buildTagMap, canonicalizeTags } from '../utils/tags'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -229,9 +230,17 @@ export default function HomeDashboard(){
           import('../data/index.json'),
           import('../data/resources.json'),
         ])
-        setItems(indexJson?.items || [])
-        const songsSorted = (indexJson?.items || [])
-          .map(s => {
+        const indexItems = indexJson?.items || []
+        const tagMap = buildTagMap(indexItems)
+        const normalizeSong = (song) => {
+          const { keys, labels } = canonicalizeTags(song.tags || [], tagMap)
+          return { ...song, tags: labels, tagKeys: keys }
+        }
+        const normalizedItems = indexItems.map(normalizeSong)
+
+        setItems(normalizedItems)
+        const songsSorted = normalizedItems
+          .map((s) => {
             const addedRaw = s.addedAt || s.added
             const addedMs = addedRaw ? Date.parse(addedRaw) : 0
             return { ...s, addedMs }

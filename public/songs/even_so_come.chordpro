@@ -1,44 +1,51 @@
 {title: Even So Come}
-{key: G}
-{tags: Slow, Praise, Contemporary}
-{country: USA}
+{key: A}
 {authors: Passion}
-{youtube: Y2WUJf3Q2O0}
+{country: USA}
+{tags: Fast}
+{youtube: fBHcvJhc6Pk}
 
-{start_of_verse: Verse 1}
+{sov Verse 1}
 [Am]All of creation, all of the earth
 [Em]Make straight a highway, a path for the Lord
-[G]Jesus is [Gsus]com -[G]ing [D]soon
+[G]Jesus is coming [D]soon
+
+{eov}
+{sov Verse 2}
 [Am]Call back the sinner, wake up the saint
 [Em]Let every nation, shout of Your fame
-[G]Jesus is [Gsus]com -[G]ing [D]soon
+[G]Jesus is coming [D]soon
 
+{eov}
+{soc}
+[Em]Like a bride waiting for [C]her groom, we'll [G]be a church ready for [Bm]You
+[Em]Every heart lon[C]ging for our [G]King, we [Bm]sing:
+[C]Even so come, [G]Lord Jesus [D]come
+[C]Even so come, [G]Lord Jesus [D]come
 
-{end_of_verse}
-
-{start_of_chorus: Chorus}
-[Em]Like a bride [C]waiting for her [G]groom
-We'll be a [Bm]church ready for You
-[Em]Every heart [C]longing for our [G]King we [Bm]sing
-Even so [C]come, Lord [G]Jesus [D]come
-Even so [C]come, Lord [G]Jesus [D]come
-
-{end_of_chorus}
-
-{start_of_verse: Verse 2}
+{eoc}
+{sov Verse 3}
 [Am]There will be justice, all will be new
 [Em]Your name forever, faithful and true
-[G]Jesus is [Gsus]com -[G]ing [D]soon
+[G]Jesus is coming [D]soon
 
-{end_of_verse}
+{eov}
+{sob Bridge}
+[C]So we wait, [Em]we wait for [D]You
+[C]God we wait, [Em]You're coming [D]soon
 
-{start_of_bridge: Bridge}
-So we [C]wait, we [Em]wait for [Dadd4]You
-God we [C]wait, You're [Em]coming [Dadd4]soon
-So we [C]wait, we [Em]wait for [Dadd4]You
-God we [C]wait, You're [Em]coming [Dadd4]soon
-{end_of_bridge}
+{eob}
+{soc Chorus 2}
+[Em]Like a bride waiting for [C]her groom, we'll [G]be a church ready for [Bm]You
+[Em]Every heart lon[C]ging for our [G]King, we [Bm]sing
+[Em]Like a bride waiting for [C]her groom, we'll be a [G]church, we'll be ready for [Bm]You
+[Em]Every heart lon[C]ging for our [G]King, we [Bm]sing:
+[C]Even so come, [G]Lord Jesus [D]come
+[C]Even so come, [G]Lord Jesus [D]come
 
-# --- DISCLAIMER (GraceChords) ---
-# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holders: contact us for takedown requests.
-# --- END DISCLAIMER ---
+{eoc}
+{sob Outro}
+OUTRO: (quietly)
+[C]Even so come, [G]Lord Jesus [D]come
+[C]Even so come, [G]Lord Jesus [D]come
+{eob}

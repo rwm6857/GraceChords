@@ -9,6 +9,7 @@ import Input from './ui/Input'
 import { Chip } from './ui/layout-kit'
 import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
+import { buildTagMap, canonicalizeTags, normalizeTagKey, tagLabelFromKey } from '../utils/tags'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -19,6 +20,8 @@ export default function Songs(){
   const itemsRaw = indexData?.items || []
   const [searchParams] = useSearchParams()
   const initialQ = searchParams.get('q') || ''
+  const tagMap = useMemo(() => buildTagMap(itemsRaw), [itemsRaw])
+  const ICP_KEY = normalizeTagKey('ICP')
   const items = useMemo(() => {
     const seen = new Set()
     const out = []
@@ -26,10 +29,11 @@ export default function Songs(){
       if (seen.has(s.id)) continue
       if (isIncompleteSong(s)) continue
       seen.add(s.id)
-      out.push(s)
+      const { keys, labels } = canonicalizeTags(s.tags || [], tagMap)
+      out.push({ ...s, tags: labels, tagKeys: keys })
     }
     return out
-  }, [itemsRaw])
+  }, [itemsRaw, tagMap])
 
   // -------- Search & filters --------
   const [q, setQ] = useState(initialQ)
@@ -37,10 +41,19 @@ export default function Songs(){
   const resultsRef = useRef(null)
   const qLower = q.trim().toLowerCase()
   const allTags = useMemo(() => {
-    const set = new Set()
-    for (const s of items) (s.tags || []).forEach(t => set.add(t))
-    return Array.from(set).sort((a,b)=> a.localeCompare(b))
-  }, [items])
+    const seen = new Set()
+    const options = []
+    for (const s of items) {
+      for (const key of s.tagKeys || []) {
+        if (!key || seen.has(key)) continue
+        seen.add(key)
+        options.push({ key, label: tagMap.get(key) || tagLabelFromKey(key) })
+      }
+    }
+    return options.sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+    )
+  }, [items, tagMap])
 
   const [selectedTags, setSelectedTags] = useState([]) // multi-select (ANY match)
   const [lyricsOn, setLyricsOn] = useState(false)
@@ -69,12 +82,14 @@ export default function Songs(){
 
   function tagPass(s){
     if (!selectedTags.length) return true
-    const tags = s.tags || []
+    const tags = s.tagKeys || []
     // ANY semantics: include if a song has at least one selected tag
     return selectedTags.some(t => tags.includes(t))
   }
   function icpPass(s){
-    return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP')
+    if (!icpOnly) return true
+    const tags = s.tagKeys || []
+    return tags.includes(ICP_KEY)
   }
 
   // Prefetch lyrics only when toggle is ON and there is a query
@@ -246,8 +261,8 @@ export default function Songs(){
   }, [])
 
   // UI helpers
-  function toggleTag(t){
-    setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x!==t) : [...prev, t])
+  function toggleTag(key){
+    setSelectedTags(prev => prev.includes(key) ? prev.filter(x => x!==key) : [...prev, key])
   }
   function clearTags(){ setSelectedTags([]) }
 
@@ -305,13 +320,13 @@ export default function Songs(){
             {/* Tags: multi-select */}
             <div className="tagbar">
               <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>All</Chip>
-              {allTags.map(t => (
+              {allTags.map((t) => (
                 <Chip
-                  key={t}
+                  key={t.key}
                   variant="filter"
-                  selected={selectedTags.includes(t)}
-                  onClick={()=> toggleTag(t)}
-                >{t}</Chip>
+                  selected={selectedTags.includes(t.key)}
+                  onClick={() => toggleTag(t.key)}
+                >{t.label}</Chip>
               ))}
             </div>
           </div>

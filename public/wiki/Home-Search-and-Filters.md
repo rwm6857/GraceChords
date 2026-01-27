@@ -4,6 +4,7 @@ Find songs quickly on the Home page with sticky search and filter tools.
 - Results scroll inside a container while the NavBar stays visible
 - Search matches titles, tags, and authors; optional lyrics mode
 - Filter by tags
+- Tags are case-insensitive and display in sentence case (acronyms like ICP stay uppercase)
 - Keyboard: `/` focuses search, arrow keys navigate results, Enter opens
 
 1. Start typing to search titles, tags, and authors.

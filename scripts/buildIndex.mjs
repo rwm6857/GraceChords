@@ -14,6 +14,29 @@ const items = []
 const incompleteReport = []
 const optionalReport = []
 
+const ACRONYM_TAG_KEYS = new Set(['icp'])
+function normalizeTagKey(tag){
+  return String(tag || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+function tagLabelFromKey(key){
+  if (!key) return ''
+  if (ACRONYM_TAG_KEYS.has(key)) return key.toUpperCase()
+  return key.charAt(0).toUpperCase() + key.slice(1)
+}
+function parseTags(val){
+  const raw = String(val || '')
+  if (!raw.trim()) return []
+  const seen = new Set()
+  const out = []
+  for (const part of raw.split(/[,;]/)) {
+    const key = normalizeTagKey(part)
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push(tagLabelFromKey(key))
+  }
+  return out
+}
+
 for(const filename of files){
   const full = path.join(songsDir, filename)
   const text = await fs.readFile(full, 'utf8')
@@ -41,7 +64,7 @@ for(const filename of files){
     title: meta.title || id || filename.replace(/\.chordpro$/,''),
     filename,
     originalKey: meta.key || '',
-    tags: (meta.tags||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean),
+    tags: parseTags(meta.tags),
     authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean),
     country: meta.country||'',
     addedAt: addedAt || undefined,
