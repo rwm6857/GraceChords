@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-31T15:39:17.031Z",
+  "generatedAt": "2026-02-01T02:35:33.472Z",
   "items": [
     {
       "id": "10-000-reasons",
@@ -1837,6 +1837,21 @@
       "incomplete": true
     },
     {
+      "id": "man-of-sorrows",
+      "title": "Man of Sorrows",
+      "filename": "man_of_sorrows.chordpro",
+      "originalKey": "F",
+      "tags": [
+        "Slow",
+        "Cross"
+      ],
+      "authors": [
+        "Hillsong"
+      ],
+      "country": "USA",
+      "incomplete": false
+    },
+    {
       "id": "maranatha",
       "title": "Maranatha",
       "filename": "maranatha.chordpro",
@@ -2549,13 +2564,16 @@
       "id": "with-all-my-heart",
       "title": "With All My Heart",
       "filename": "with_all_my_heart.chordpro",
-      "originalKey": "",
-      "tags": [],
+      "originalKey": "E",
+      "tags": [
+        "Slow",
+        "Oldie"
+      ],
       "authors": [
         "Babbie Mason"
       ],
-      "country": "",
-      "incomplete": true
+      "country": "USA",
+      "incomplete": false
     },
     {
       "id": "worthy-is-the-lamb",
