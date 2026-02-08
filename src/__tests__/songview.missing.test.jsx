@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { describe, test, expect, vi, afterEach } from 'vitest'
 
 vi.mock('../utils/toast', () => ({ showToast: vi.fn() }))
@@ -20,11 +21,13 @@ describe('SongView missing file', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/song/abba']}>
-        <Routes>
-          <Route path="/song/:id" element={<SongView />} />
-        </Routes>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/song/abba']}>
+          <Routes>
+            <Route path="/song/:id" element={<SongView />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
     )
 
     await screen.findByText('Error: Song file not found: abba.chordpro')

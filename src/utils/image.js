@@ -1,13 +1,23 @@
 // src/utils/image.js
-import { chooseBestLayout } from './pdf/pdfLayout'
-import { ensureCanvasFonts } from './pdf/fonts'
-import { slugifyUnderscore } from './chordpro/serialize'
+import { chooseBestLayout } from './pdf/pdfLayout.js'
+import { ensureCanvasFonts } from './pdf/fonts.js'
 import { formatInstrumental } from './instrumental.js'
-export { ensureCanvasFonts } from './pdf/fonts'
+export { ensureCanvasFonts } from './pdf/fonts.js'
+
+function slugifyUnderscore(s) {
+  return (s || '')
+    .toLowerCase()
+    .replace(/[^\w]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+}
 
 // Render a planned layout to a Canvas2D
-export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150 }) {
-  const canvas = document.createElement('canvas')
+export function renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi = 150, createCanvas } = {}) {
+  const canvas = createCanvas
+    ? createCanvas(pxWidth, pxHeight)
+    : (typeof document !== 'undefined' ? document.createElement('canvas') : null)
+  if (!canvas) throw new Error('Canvas unavailable. Provide createCanvas in options.')
   canvas.width = pxWidth
   canvas.height = pxHeight
   const ctx = canvas.getContext('2d')
@@ -85,13 +95,20 @@ export async function downloadSingleSongJpg(song, options = {}) {
   const dpi = options.dpi || 150
   const widthIn = options.widthInches || 8.5
   const heightIn = options.heightInches || 11
+  const createCanvas = options.createCanvas
+  const providedFonts = options.fonts
+  const quality = typeof options.quality === 'number' ? options.quality : 0.92
   const pxWidth = Math.round(widthIn * dpi)
   const pxHeight = Math.round(heightIn * dpi)
-  const fonts = await ensureCanvasFonts()
+  const fonts = providedFonts || await ensureCanvasFonts()
   const { lyricFamily, chordFamily } = fonts
   let plan = options.plan
   if (!plan) {
-    const measureCtx = document.createElement('canvas').getContext('2d')
+    const measureCanvas = createCanvas
+      ? createCanvas(1, 1)
+      : (typeof document !== 'undefined' ? document.createElement('canvas') : null)
+    if (!measureCanvas) throw new Error('Canvas unavailable. Provide createCanvas in options.')
+    const measureCtx = measureCanvas.getContext('2d')
     const makeMeasureLyricAt = (pt) => (text) => {
       measureCtx.font = `${pt}px ${lyricFamily}`
       return measureCtx.measureText(text || '').width
@@ -106,7 +123,7 @@ export async function downloadSingleSongJpg(song, options = {}) {
   if (plan.layout.pages.length > 1) {
     return { error: 'MULTI_PAGE', plan }
   }
-  const canvas = renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi })
+  const canvas = renderPlanToCanvas(plan, { pxWidth, pxHeight, dpi, createCanvas })
   const slug = slugifyUnderscore(String(options.slug || song.slug || song.title || 'untitled'))
   const filename = `${slug}.jpg`
   const blob = await new Promise((resolve, reject) => {
@@ -117,11 +134,21 @@ export async function downloadSingleSongJpg(song, options = {}) {
           else reject(new Error('Failed to generate JPG blob'))
         },
         'image/jpeg',
-        0.92
+        quality
       )
+      return
+    }
+    if (typeof canvas.toBuffer === 'function') {
+      try {
+        const buf = canvas.toBuffer('image/jpeg', { quality })
+        resolve(new Blob([buf], { type: 'image/jpeg' }))
+      } catch (err) {
+        reject(err)
+      }
+      return
     } else {
       try {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
         const parts = dataUrl.split(',')
         const mimeMatch = parts[0]?.match(/:(.*?);/)
         const binary = atob(parts[1] || '')

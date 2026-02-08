@@ -92,7 +92,8 @@ describe('WorshipMode', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText('Abba')).toBeInTheDocument()
-    const btn = screen.getByRole('button', { name: /Toggle dark mode/ })
+    fireEvent.click(screen.getByRole('button', { name: /Open settings/i }))
+    const btn = await screen.findByRole('button', { name: /Toggle dark mode/ })
     const before = document.documentElement.getAttribute('data-theme') || 'light'
     fireEvent.click(btn)
     const after = document.documentElement.getAttribute('data-theme')

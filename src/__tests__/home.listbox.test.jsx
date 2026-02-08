@@ -1,37 +1,58 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HashRouter } from 'react-router-dom'
-import Home from '../components/Home.jsx'
+import { HelmetProvider } from 'react-helmet-async'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import HomeDashboard from '../pages/HomeDashboard.jsx'
+
+vi.mock('../data/index.json', () => ({
+  default: {
+    items: [
+      { id: 'alpha', title: 'Alpha Song', tags: [], authors: [] },
+      { id: 'alabaster', title: 'Alabaster Praise', tags: [], authors: [] }
+    ]
+  }
+}))
+
+vi.mock('../data/resources.json', () => ({
+  default: { items: [] }
+}))
 
 describe('Home search accessibility', () => {
+  beforeEach(() => {
+    window.requestIdleCallback = (cb) => { cb(); return 0 }
+    window.cancelIdleCallback = () => {}
+  })
+
   test('results listbox navigable with arrows', async () => {
     render(
-      <HashRouter>
-        <Home />
-      </HashRouter>
+      <HelmetProvider>
+        <HashRouter>
+          <HomeDashboard />
+        </HashRouter>
+      </HelmetProvider>
     )
 
     const user = userEvent.setup()
-    const search = await screen.findByLabelText(/search/i)
-    const listbox = screen.getByRole('listbox')
+    const search = await screen.findByLabelText(/search worship songs/i)
+    await user.click(search)
+    await user.type(search, 'Al')
+    const listbox = await screen.findByRole('listbox')
     expect(listbox).toBeInTheDocument()
 
-    await user.click(search)
     await user.keyboard('{ArrowDown}')
-    const options = screen.getAllByRole('option')
-    const first = options[0]
-    expect(first).toHaveFocus()
-    expect(first).toHaveAttribute('aria-selected', 'true')
+    let options = screen.getAllByRole('option')
+    expect(search).toHaveAttribute('aria-activedescendant', 'home-sugg-0')
+    expect(options[0]).toHaveAttribute('aria-selected', 'true')
 
     await user.keyboard('{ArrowDown}')
-    const second = screen.getAllByRole('option')[1]
-    expect(second).toHaveFocus()
-    expect(second).toHaveAttribute('aria-selected', 'true')
+    options = screen.getAllByRole('option')
+    expect(search).toHaveAttribute('aria-activedescendant', 'home-sugg-1')
+    expect(options[1]).toHaveAttribute('aria-selected', 'true')
 
     await user.keyboard('{ArrowUp}')
-    expect(first).toHaveFocus()
-
-    await user.keyboard('{ArrowUp}')
-    expect(search).toHaveFocus()
+    options = screen.getAllByRole('option')
+    expect(search).toHaveAttribute('aria-activedescendant', 'home-sugg-0')
+    expect(options[0]).toHaveAttribute('aria-selected', 'true')
   })
 })

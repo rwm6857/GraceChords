@@ -39,7 +39,15 @@ export type IngestResult =
       title: string
     }
 
-const distDir = fileURLToPath(new URL('.', import.meta.url))
+const distDir = (() => {
+  try {
+    const url = import.meta?.url
+    if (url && url.startsWith('file:')) {
+      return fileURLToPath(new URL('.', url))
+    }
+  } catch {}
+  return resolve(process.cwd(), 'scripts/ingest/src')
+})()
 const packageRoot = resolve(distDir, '..')
 const STAGING_ROOT = resolve(packageRoot, '_ingest_staging')
 const runSlugCounts = new Map<string, number>()

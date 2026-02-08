@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { extractOpenSong } from '../extractors/opensong.js'
 import { buildDraft } from '../ingest.js'
 
-const withChordsPath = fileURLToPath(
-  new URL('../../fixtures/opensong/opensong_with_chords.xmltxt', import.meta.url)
-)
-const noChordsPath = fileURLToPath(
-  new URL('../../fixtures/opensong/opensong_no_chords.xmltxt', import.meta.url)
-)
-const missingTitlePath = fileURLToPath(
-  new URL('../../fixtures/opensong/opensong_missing_title.xmltxt', import.meta.url)
-)
+const fixturePath = (name: string) => {
+  const url = import.meta?.url
+  if (url && url.startsWith('file:')) {
+    return fileURLToPath(new URL(`../../fixtures/opensong/${name}`, url))
+  }
+  return resolve(process.cwd(), 'scripts/ingest/fixtures/opensong', name)
+}
+
+const withChordsPath = fixturePath('opensong_with_chords.xmltxt')
+const noChordsPath = fixturePath('opensong_no_chords.xmltxt')
+const missingTitlePath = fixturePath('opensong_missing_title.xmltxt')
 
 describe('extractOpenSong', () => {
   it('extracts metadata, preserves sections, and strips leading dots', async () => {

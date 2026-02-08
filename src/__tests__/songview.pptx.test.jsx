@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import SongView from '../components/SongView.jsx'
 import { clearHeadCache } from '../utils/headCache.js'
@@ -37,11 +38,13 @@ describe('SongView PPTX button', () => {
   test('shows PPTX download when available', async () => {
     mockFetch(true)
     render(
-      <MemoryRouter initialEntries={['/song/abba']}>
-        <Routes>
-          <Route path="/song/:id" element={<SongView />} />
-        </Routes>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/song/abba']}>
+          <Routes>
+            <Route path="/song/:id" element={<SongView />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
     )
     expect(await screen.findByRole('link', { name: /download pptx/i })).toBeInTheDocument()
   })
@@ -49,11 +52,13 @@ describe('SongView PPTX button', () => {
   test('hides PPTX download when missing', async () => {
     mockFetch(false)
     render(
-      <MemoryRouter initialEntries={['/song/abba']}>
-        <Routes>
-          <Route path="/song/:id" element={<SongView />} />
-        </Routes>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/song/abba']}>
+          <Routes>
+            <Route path="/song/:id" element={<SongView />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
     )
     // Ensure we are on the song page (title rendered)
     await screen.findByRole('heading', { name: /test/i })

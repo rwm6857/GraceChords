@@ -11,7 +11,7 @@ import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp
 import { resolveChordCollisions } from '../utils/chords'
 import { publicUrl } from '../utils/publicUrl'
 
-const PT_WINDOW = [20, 19, 18, 17, 16, 15, 14]
+const PT_WINDOW = [18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
 const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
@@ -611,7 +611,7 @@ export default function WorshipMode(){
               <div className="gc-drawer__links" style={{ gap:12 }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Theme</div>
-                  <button className="gc-btn" onClick={() => { toggleTheme(); setThemeBump(x => x + 1) }} title={currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="Toggle theme">
+                  <button className="gc-btn" onClick={() => { toggleTheme(); setThemeBump(x => x + 1) }} title={currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="Toggle dark mode">
                     {currentTheme() === 'dark' ? <Sun /> : <Moon />} <span className="text-when-wide">{currentTheme() === 'dark' ? ' Light' : ' Dark'}</span>
                   </button>
                 </div>
