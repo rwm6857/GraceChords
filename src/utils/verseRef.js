@@ -104,17 +104,14 @@ export function parseVerseReference(raw){
   const input = String(raw || '').trim()
   if (!input) return { error: 'Enter a verse reference.' }
 
-  const digitIdx = input.search(/\d/)
-  if (digitIdx === -1) return { error: 'Include a chapter/verse (e.g., John 3:16).' }
-  const rawBook = input.slice(0, digitIdx).trim()
-  const rawRef = input.slice(digitIdx).trim()
-  if (!rawBook || !rawRef) return { error: 'Include both book and chapter/verse.' }
+  const { bookPart, refPart } = splitVerseInput(input)
+  if (!bookPart || !refPart) return { error: 'Include both book and chapter/verse.' }
 
-  const resolved = resolveBook(rawBook)
+  const resolved = resolveBook(bookPart)
   if (resolved.error) return resolved
 
-  const refNormalized = normalizeRef(rawRef)
-  const segments = parseRefSegments(refNormalized)
+  const refNormalized = normalizeRef(refPart)
+  const segments = parseRefSegments(refNormalized, resolved.book)
   if (!segments || !segments.length) return { error: 'Unable to parse verse reference.' }
 
   const refDisplay = refNormalized.replace(/,/g, ', ')
@@ -128,6 +125,31 @@ export function parseVerseReference(raw){
     id,
     segments,
   }
+}
+
+function splitVerseInput(input){
+  const raw = String(input || '')
+  if (!raw.trim()) return { bookPart: '', refPart: '' }
+  const colonIndex = raw.indexOf(':')
+  if (colonIndex > -1) {
+    let i = colonIndex - 1
+    while (i >= 0 && /\d/.test(raw[i])) i -= 1
+    const digitStart = i + 1
+    if (digitStart < colonIndex) {
+      return {
+        bookPart: raw.slice(0, digitStart).trim(),
+        refPart: raw.slice(digitStart).trim(),
+      }
+    }
+  }
+  const match = raw.match(/\s(\d+)(?=[\s:.,-]|$)/)
+  if (match && typeof match.index === 'number') {
+    return {
+      bookPart: raw.slice(0, match.index).trim(),
+      refPart: raw.slice(match.index + 1).trim(),
+    }
+  }
+  return { bookPart: raw.trim(), refPart: '' }
 }
 
 export function suggestBookName(raw){
@@ -192,7 +214,15 @@ function normalizeRef(rawRef){
     .replace(/\s*-\s*/g, '-')
 }
 
-function parseRefSegments(ref){
+const SINGLE_CHAPTER_BOOKS = new Set([
+  'Obadiah',
+  'Philemon',
+  '2 John',
+  '3 John',
+  'Jude',
+])
+
+function parseRefSegments(ref, book){
   const clean = String(ref || '').trim()
   if (!clean) return null
   const compact = clean.replace(/\s+/g, '')
@@ -203,7 +233,33 @@ function parseRefSegments(ref){
 
   const addRange = (chapter, range) => {
     if (!chapter || Number.isNaN(chapter)) return
-    segments.push({ chapter, ranges: range ? [range] : null })
+    if (!range) {
+      segments.push({ chapter, ranges: null })
+      return
+    }
+    const last = segments[segments.length - 1]
+    if (last && last.chapter === chapter && Array.isArray(last.ranges)) {
+      last.ranges.push(range)
+      return
+    }
+    segments.push({ chapter, ranges: [range] })
+  }
+
+  if (!hasColon && SINGLE_CHAPTER_BOOKS.has(book)) {
+    for (const part of parts) {
+      let match = part.match(/^(\d+)-(\d+)$/)
+      if (match) {
+        addRange(1, { start: parseInt(match[1], 10), end: parseInt(match[2], 10) })
+        continue
+      }
+      match = part.match(/^(\d+)$/)
+      if (match) {
+        addRange(1, { start: parseInt(match[1], 10), end: parseInt(match[1], 10) })
+        continue
+      }
+      return null
+    }
+    return segments
   }
 
   for (const part of parts) {

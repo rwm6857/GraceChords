@@ -838,9 +838,7 @@ async function exportPdf() {
                         padding:'10px 12px',
                         fontFamily:'var(--gc-font-family)',
                         color:'var(--gc-text-secondary)',
-                        lineHeight:1.2,
-                        display:'flex',
-                        alignItems:'center',
+                        lineHeight:'normal',
                         whiteSpace:'pre',
                         overflow:'hidden',
                         textOverflow:'ellipsis',
@@ -869,7 +867,7 @@ async function exportPdf() {
                       }
                     }}
                     className="gc-input"
-                    style={{ width:'100%', background:'transparent', position:'relative', zIndex:1, lineHeight:1.2 }}
+                    style={{ width:'100%', background:'transparent', position:'relative', zIndex:1, lineHeight:'normal' }}
                   />
                 </div>
                 <span className="gc-select" style={{ width:'100%' }}>
