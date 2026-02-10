@@ -510,6 +510,19 @@ async function planForSong(song){
   const doc = createDoc()
   const songTitle = song?.title || 'Untitled'
   const songKey = song?.key || song?.originalKey || ''
+  const forceColumns = song?.pdfColumns === 1 ? 1 : null
+
+  if (forceColumns === 1) {
+    for(const pt of SIZE_WINDOW){
+      doc.setFontSize(pt)
+      if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){
+        return planOnePage(doc, sections, 1, pt, songTitle, songKey)
+      }
+    }
+    const pt = 15
+    doc.setFontSize(pt)
+    return planMultiPage(doc, sections, pt, songTitle, songKey)
+  }
   for(const pt of SIZE_WINDOW){
     doc.setFontSize(pt)
     if (canPackOnePage(doc, sections, 1, pt, songTitle, songKey)){

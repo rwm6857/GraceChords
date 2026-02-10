@@ -53,6 +53,23 @@ function safeDecodeURIComponent(value){
   try { return decodeURIComponent(value) } catch { return value }
 }
 
+function buildVerseGhost(input, suggestion){
+  if (!suggestion) return ''
+  const raw = String(input || '')
+  if (!raw.trim()) return ''
+  const digitIdx = raw.search(/\d/)
+  const bookPart = (digitIdx === -1 ? raw : raw.slice(0, digitIdx)).trim()
+  if (!bookPart) return ''
+  const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const bookKey = normalize(bookPart)
+  const suggestKey = normalize(suggestion)
+  if (!suggestKey.startsWith(bookKey)) return ''
+  const ref = digitIdx === -1 ? '' : raw.slice(digitIdx).trim()
+  const composed = ref ? `${suggestion} ${ref}` : `${suggestion} `
+  if (normalize(raw) === normalize(composed)) return ''
+  return composed
+}
+
 export default function Setlist(){
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
@@ -449,8 +466,93 @@ async function exportPdf() {
   try {
     const { downloadMultiSongPdf } = await loadPdfLib();
     const songs = [];
+    const chapterCache = verseCacheRef.current;
+
+    async function loadChapter(book, chapter){
+      const key = `${book}::${chapter}`
+      if (chapterCache.has(key)) return chapterCache.get(key)
+      try {
+        const res = await fetch(publicUrl(`esv/${encodeURIComponent(book)}/${chapter}.json`))
+        if (!res.ok) throw new Error('Missing chapter')
+        const json = await res.json()
+        chapterCache.set(key, json)
+        return json
+      } catch {
+        chapterCache.set(key, null)
+        return null
+      }
+    }
+
+    function listVerseNumbers(chapterData){
+      return Object.keys(chapterData?.verses || {})
+        .map((n) => Number(n))
+        .filter((n) => !Number.isNaN(n))
+        .sort((a, b) => a - b)
+    }
 
     for (const sel of list) {
+      if (isVerseId(sel.id)) {
+        const parsed = parseVerseId(sel.id)
+        if (!parsed) {
+          showToast('Please check verse reference.')
+          continue
+        }
+        try {
+          const segments = parsed.segments || []
+          const multiChapter = segments.length > 1
+          const lines = []
+          const seen = new Set()
+
+          for (const segment of segments) {
+            const chapterData = await loadChapter(parsed.book, segment.chapter)
+            if (!chapterData?.verses) continue
+            const verseMap = chapterData.verses || {}
+            const allNums = listVerseNumbers(chapterData)
+            const max = allNums.length ? allNums[allNums.length - 1] : 0
+            if (!segment.ranges) {
+              for (const num of allNums) {
+                const key = `${segment.chapter}:${num}`
+                if (seen.has(key)) continue
+                const text = verseMap[String(num)]
+                if (!text) continue
+                const label = multiChapter ? `${segment.chapter}:${num}` : `${num}`
+                lines.push({ plain: `${label} ${text}` })
+                seen.add(key)
+              }
+              continue
+            }
+            for (const range of segment.ranges) {
+              const start = range.start
+              const end = range.end == null ? max : range.end
+              for (let v = start; v <= end; v += 1) {
+                const key = `${segment.chapter}:${v}`
+                if (seen.has(key)) continue
+                const text = verseMap[String(v)]
+                if (!text) continue
+                const label = multiChapter ? `${segment.chapter}:${v}` : `${v}`
+                lines.push({ plain: `${label} ${text}` })
+                seen.add(key)
+              }
+            }
+          }
+
+          if (!lines.length) {
+            showToast(`No verses found for ${parsed.refDisplay}`)
+            continue
+          }
+
+          songs.push({
+            title: parsed.refDisplay || parsed.id,
+            key: '',
+            pdfColumns: 1,
+            sections: [{ label: '', lines }],
+          })
+        } catch (err) {
+          console.error(err)
+          showToast(`Failed to load ${parsed.refDisplay}`)
+        }
+        continue
+      }
       const s = items.find((it) => it.id === sel.id);
       if (!s) continue;
 
@@ -586,14 +688,9 @@ async function exportPdf() {
   }
 
   function applyVerseSuggestion(){
-    if (!verseSuggest) return
-    const digitIdx = String(verseInput || '').search(/\d/)
-    if (digitIdx === -1) {
-      setVerseInput(`${verseSuggest} `)
-      return
-    }
-    const ref = String(verseInput || '').slice(digitIdx).trim()
-    setVerseInput(`${verseSuggest} ${ref}`)
+    const ghost = buildVerseGhost(verseInput, verseSuggest)
+    if (!ghost) return
+    setVerseInput(ghost)
   }
 
   async function bundlePptx(){
@@ -703,26 +800,47 @@ async function exportPdf() {
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
           <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
             <h3 style={{ marginTop: 0, marginBottom: 8 }}>Add Verse</h3>
-            <label style={{ display:'block', margin:'8px 0' }}>
+            <label className="gc-field" style={{ margin:'8px 0' }}>
               <span className="gc-label">Bible verse</span>
-              <Input
-                value={verseInput}
-                onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
-                placeholder="John 3:16"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addVerseFromInput(verseInput)
-                  }
-                }}
-                style={{ width:'100%' }}
-              />
-            </label>
-            {verseSuggest ? (
-              <div className="meta" style={{ marginTop: 4 }}>
-                Suggestion: <Button size="sm" variant="secondary" onClick={applyVerseSuggestion} type="button">{verseSuggest}</Button>
+              <div style={{ position:'relative' }}>
+                {buildVerseGhost(verseInput, verseSuggest) ? (
+                  <div
+                    aria-hidden
+                    style={{
+                      position:'absolute',
+                      inset:0,
+                      padding:'10px 12px',
+                      fontFamily:'var(--gc-font-family)',
+                      color:'var(--gc-text-secondary)',
+                      whiteSpace:'pre',
+                      overflow:'hidden',
+                      textOverflow:'ellipsis',
+                      pointerEvents:'none',
+                    }}
+                  >
+                    {buildVerseGhost(verseInput, verseSuggest)}
+                  </div>
+                ) : null}
+                <input
+                  value={verseInput}
+                  onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
+                  placeholder="John 3:16"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Tab' && buildVerseGhost(verseInput, verseSuggest)) {
+                      e.preventDefault()
+                      applyVerseSuggestion()
+                      return
+                    }
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addVerseFromInput(verseInput)
+                    }
+                  }}
+                  className="gc-input"
+                  style={{ width:'100%', background:'transparent', position:'relative', zIndex:1 }}
+                />
               </div>
-            ) : null}
+            </label>
             {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}
             <div style={{ marginTop: 12 }}>
               <Select label="Translation" disabled>
@@ -813,11 +931,9 @@ async function exportPdf() {
         <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
           <section className="setlist-section setlist-current" data-role="current">
             <div className="card setlist-pane">
-              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')}>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <strong>Current setlist ({list.length})</strong>
-                  <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>Add Verse</Button>
-                </div>
+              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
+                <strong>Current setlist ({list.length})</strong>
+                <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>Add Verse</Button>
               </div>
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
                 {list.map((sel, idx)=>{
