@@ -1,5 +1,6 @@
 import indexData from '../data/index.json'
 import { KEYS } from './chordpro'
+import { parseVerseReference, makeVerseId, parseVerseId, isVerseId } from './verseRef'
 
 const KEY_CHARS = 'ABCDEFGHIJKL' // 12 symbols for 12 semitone keys (maps to KEYS index)
 
@@ -58,6 +59,12 @@ export function encodeSet(list){
   const { idToCode } = buildMaps(items)
   let out = ''
   for(const sel of (list || [])){
+    if (isVerseId(sel.id)) {
+      const parsed = parseVerseId(sel.id)
+      if (!parsed) continue
+      out += `V${encodeVerseEntry(parsed)}`
+      continue
+    }
     const code = idToCode.get(String(sel.id))
     if(!code) continue
     out += code + keyToChar(sel.toKey)
@@ -69,19 +76,74 @@ export function decodeSet(code){
   const items = (indexData?.items || [])
   const { codeToId } = buildMaps(items)
   const s = String(code || '').trim()
-  if(!s || (s.length % 5) !== 0) return { error: 'Invalid code length', entries: [] }
+  if(!s) return { error: 'Invalid code length', entries: [] }
   const entries = []
-  for(let i=0; i<s.length; i+=5){
+  let i = 0
+  while (i < s.length){
+    const next = s[i]
+    if (next === 'V'){
+      const res = decodeVerseEntry(s.slice(i + 1))
+      if (res.error) return { error: res.error, entries: [] }
+      entries.push({ id: makeVerseId(res), toKey: '' })
+      i += res.len + 1
+      continue
+    }
     const block = s.slice(i, i+5)
+    if (block.length < 5) return { error: 'Invalid code length', entries: [] }
     const idCode = block.slice(0,4)
     const keyChar = block.slice(4)
     const id = codeToId.get(idCode)
     if(!id) return { error: `Unknown song code: ${idCode}`, entries: [] }
     const key = charToKey(keyChar)
     entries.push({ id, toKey: key })
+    i += 5
   }
   return { entries }
 }
 
-export default { encodeSet, decodeSet, keyToChar, charToKey }
+function encodeVerseEntry(parsed){
+  const bookKey = encodeString(parsed.book)
+  const refKey = encodeString(parsed.refKey || parsed.ref)
+  return `${toBase36(bookKey.length, 2)}${bookKey}${toBase36(refKey.length, 3)}${refKey}`
+}
 
+function decodeVerseEntry(encoded){
+  if (!encoded || encoded.length < 5) return { error: 'Invalid verse code' }
+  const bookLen = parseInt(encoded.slice(0, 2), 36)
+  if (!bookLen || encoded.length < 2 + bookLen + 3) return { error: 'Invalid verse code' }
+  const book = decodeString(encoded.slice(2, 2 + bookLen))
+  const refLen = parseInt(encoded.slice(2 + bookLen, 5 + bookLen), 36)
+  const startRef = 5 + bookLen
+  const endRef = startRef + refLen
+  if (!refLen || encoded.length < endRef) return { error: 'Invalid verse code' }
+  const refKey = decodeString(encoded.slice(startRef, endRef))
+  const ref = String(refKey || '').replace(/~/g, ',')
+  const parsed = parseVerseReference(`${book} ${ref}`.trim())
+  if (parsed.error) return { error: parsed.error }
+  return { book: parsed.book, refKey: parsed.refKey, len: endRef }
+}
+
+function encodeString(value){
+  return String(value || '').replace(/-/g, '--').replace(/~/g, '-t').replace(/%/g, '-p')
+}
+
+function decodeString(value){
+  let out = ''
+  for (let i = 0; i < value.length; i += 1){
+    const ch = value[i]
+    if (ch !== '-') { out += ch; continue }
+    const next = value[i + 1]
+    if (next === '-') { out += '-'; i += 1; continue }
+    if (next === 't') { out += '~'; i += 1; continue }
+    if (next === 'p') { out += '%'; i += 1; continue }
+    out += ch
+  }
+  return out
+}
+
+function toBase36(num, width){
+  const safe = Math.max(0, Math.min(1295, Number(num) || 0))
+  return safe.toString(36).toUpperCase().padStart(width, '0')
+}
+
+export default { encodeSet, decodeSet, keyToChar, charToKey }

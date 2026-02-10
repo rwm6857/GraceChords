@@ -7,10 +7,9 @@ export default function WorshipSetRoute(){
   const target = useMemo(() => {
     const { entries, error } = decodeSet(code || '')
     if (error || !entries.length) return { to: '/setlist', replace: true }
-    const ids = entries.map(e => e.id).join(',')
-    const toKeys = entries.map(e => encodeURIComponent(e.toKey)).join(',')
+    const ids = entries.map(e => encodeURIComponent(e.id)).join(',')
+    const toKeys = entries.map(e => encodeURIComponent(e.toKey || '')).join(',')
     return { to: `/worship/${ids}?toKeys=${toKeys}`, replace: true }
   }, [code])
   return <Navigate to={target.to} replace={target.replace} />
 }
-

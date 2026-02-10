@@ -10,17 +10,22 @@ import { applyTheme, currentTheme, toggleTheme } from '../utils/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
 import { resolveChordCollisions } from '../utils/chords'
 import { publicUrl } from '../utils/publicUrl'
+import { isVerseId, parseVerseId } from '../utils/verseRef'
 
 const PT_WINDOW = [18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
 const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
+function safeDecodeURIComponent(value){
+  try { return decodeURIComponent(value) } catch { return value }
+}
+
 export default function WorshipMode(){
   const { songIds = '' } = useParams()
   const navigate = useNavigate()
-  const ids = useMemo(() => songIds.split(',').map(s => s.trim()).filter(Boolean), [songIds])
+  const ids = useMemo(() => songIds.split(',').map(s => safeDecodeURIComponent(s.trim())).filter(Boolean), [songIds])
 
-  const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections }]
+  const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections, type }]
   const [idx, setIdx] = useState(0)
   const [transpose, setTranspose] = useState(0)
   const [songOffsets, setSongOffsets] = useState([]) // per-song current offsets (semitones)
@@ -212,7 +217,7 @@ export default function WorshipMode(){
     const qs = new URLSearchParams(location.search || '')
     return {
       toKey: qs.get('toKey') || '',
-      toKeys: (qs.get('toKeys') || '').split(',').map(s => decodeURIComponent(s)).filter(Boolean),
+      toKeys: (qs.get('toKeys') || '').split(',').map(s => safeDecodeURIComponent(s)),
     }
   }, [location.search])
 
@@ -227,9 +232,79 @@ export default function WorshipMode(){
       const canRestore = !!(saved && saved.idsString === idsString && (Date.now() - (saved.ts || 0) <= SESSION_TTL_MS))
 
       const items = indexData?.items || []
-      const targets = ids.map(id => items.find(it => String(it.id) === id)).filter(Boolean)
       const out = []
-      for (const s of targets) {
+      const chapterCache = new Map()
+
+      async function loadChapter(book, chapter){
+        const key = `${book}::${chapter}`
+        if (chapterCache.has(key)) return chapterCache.get(key)
+        try {
+          const res = await fetch(publicUrl(`esv/${encodeURIComponent(book)}/${chapter}.json`))
+          if (!res.ok) throw new Error('Failed verse data')
+          const json = await res.json()
+          chapterCache.set(key, json)
+          return json
+        } catch (err) {
+          console.error(err)
+          chapterCache.set(key, null)
+          return null
+        }
+      }
+
+      function listChapterVerses(chapterData){
+        return Object.keys(chapterData?.verses || {})
+          .map((n) => Number(n))
+          .filter((n) => !Number.isNaN(n))
+          .sort((a, b) => a - b)
+      }
+
+      function buildVerseLines(chapterData, segment){
+        const all = listChapterVerses(chapterData)
+        if (!segment.ranges) return all
+        const max = all.length ? all[all.length - 1] : 0
+        const outNums = []
+        for (const range of segment.ranges) {
+          const start = range.start
+          const end = range.end == null ? max : range.end
+          for (let v = start; v <= end; v += 1) {
+            if (chapterData?.verses?.[String(v)]) outNums.push(v)
+          }
+        }
+        return outNums
+      }
+
+      for (const id of ids) {
+        if (isVerseId(id)) {
+          const parsed = parseVerseId(id)
+          if (!parsed) continue
+          const segments = parsed.segments || []
+          const multiChapter = segments.length > 1
+          const lines = []
+          for (const segment of segments) {
+            const chapterData = await loadChapter(parsed.book, segment.chapter)
+            if (!chapterData) continue
+            const nums = buildVerseLines(chapterData, segment)
+            for (const num of nums) {
+              lines.push({
+                verse: true,
+                chapter: segment.chapter,
+                number: num,
+                text: chapterData.verses[String(num)] || '',
+                showChapter: multiChapter,
+              })
+            }
+          }
+          out.push({
+            id: parsed.id,
+            title: parsed.refDisplay,
+            baseKey: null,
+            type: 'verse',
+            sections: [{ label: '', lines }],
+          })
+          continue
+        }
+        const s = items.find(it => String(it.id) === id)
+        if (!s) continue
         try {
           const res = await fetch(publicUrl(`songs/${s.filename}`))
           if (!res.ok) throw new Error(`Failed ${s.filename}`)
@@ -262,7 +337,7 @@ export default function WorshipMode(){
               };
             }),
           }))
-          out.push({ id: s.id, title, baseKey, sections })
+          out.push({ id: s.id, title, baseKey, sections, type: 'song' })
           // offsets computed after load
         } catch (err) {
           console.error(err)
@@ -273,9 +348,14 @@ export default function WorshipMode(){
         let baseOffs = out.map(() => 0)
         let offs = out.map(() => 0)
         if (query.toKeys && query.toKeys.length === out.length) {
-          baseOffs = out.map((song, i) => stepsBetween(song.baseKey, query.toKeys[i]))
+          baseOffs = out.map((song, i) => {
+            if (song?.type === 'verse') return 0
+            const targetKey = query.toKeys[i]
+            if (!targetKey) return 0
+            return stepsBetween(song.baseKey, targetKey)
+          })
           offs = baseOffs.slice()
-        } else if (query.toKey && out.length === 1) {
+        } else if (query.toKey && out.length === 1 && out[0]?.type !== 'verse') {
           baseOffs = [stepsBetween(out[0].baseKey, query.toKey)]
           offs = baseOffs.slice()
         }
@@ -302,7 +382,8 @@ export default function WorshipMode(){
         setBaseOffsets(baseOffs)
         setSongOffsets(offs)
         setIdx(startIdx)
-        setTranspose((offs[startIdx] ?? baseOffs[startIdx] ?? 0))
+        const initial = out[startIdx]
+        setTranspose(initial?.type === 'verse' ? 0 : (offs[startIdx] ?? baseOffs[startIdx] ?? 0))
         // Mobile swipe hint once per device
         try {
           const seen = localStorage.getItem('worship:swipeHintShown') === '1'
@@ -329,12 +410,13 @@ export default function WorshipMode(){
     const viewport = viewportRef.current
     const content = contentRef.current
     if (!viewport || !content) return
+    const forceSingle = songs[idx]?.type === 'verse'
 
     const prevSize = content.style.fontSize
     const prevCols = content.style.columnCount
     const prevGap = content.style.columnGap
     try {
-      const colPref = isMobile ? [1, 2] : [2, 1]
+      const colPref = forceSingle ? [1] : (isMobile ? [1, 2] : [2, 1])
       for (const pt of PT_WINDOW) {
         for (const cc of colPref) {
           content.style.fontSize = `${pt}px`
@@ -369,6 +451,11 @@ export default function WorshipMode(){
     const viewport = viewportRef.current
     const content = contentRef.current
     if (!viewport || !content) return
+    const forceSingle = songs[idx]?.type === 'verse'
+    if (forceSingle) {
+      setCols(1)
+      return
+    }
     const prevSize = content.style.fontSize
     const prevCols = content.style.columnCount
     const prevGap = content.style.columnGap
@@ -404,12 +491,17 @@ export default function WorshipMode(){
       content.style.columnCount = prevCols
       content.style.columnGap = prevGap
     }
-  }, [fontPx, autoSize, cols])
+  }, [fontPx, autoSize, cols, idx, songs])
 
   // Keep transpose in sync when song changes
   useEffect(() => {
+    const entry = songs[idx]
+    if (entry?.type === 'verse') {
+      setTranspose(0)
+      return
+    }
     setTranspose((songOffsets[idx] ?? baseOffsets[idx] ?? 0))
-  }, [idx])
+  }, [idx, songs])
   // Persist session for accidental refresh recovery
   useEffect(() => {
     const payload = {
@@ -464,6 +556,7 @@ export default function WorshipMode(){
   function next(){ setQ(''); setOpenSuggest(false); setIdx(i => Math.min((songs.length - 1), i + 1)) }
   function prev(){ setQ(''); setOpenSuggest(false); setIdx(i => Math.max(0, i - 1)) }
   function shiftKey(dir){
+    if (songs[idx]?.type === 'verse') return
     setTranspose(t => {
       const step = (halfStep ? 1 : 2)
       const nt = t + (dir * step)
@@ -494,9 +587,9 @@ export default function WorshipMode(){
       // Insert after current index
       setSongs(prev => {
         const copy = prev.slice()
-        copy.splice(Math.min(prev.length, idx + 1), 0, { id: entry.id, title, baseKey, sections })
+        copy.splice(Math.min(prev.length, idx + 1), 0, { id: entry.id, title, baseKey, sections, type: 'song' })
         // Update URL for persistence
-        const newIds = copy.map(s => s.id)
+        const newIds = copy.map(s => encodeURIComponent(s.id))
         navigate(`/worship/${newIds.join(',')}`)
         return copy
       })
@@ -517,10 +610,12 @@ export default function WorshipMode(){
   }
 
   const cur = songs[idx]
-  const toKey = useMemo(() => (cur ? transposeSymPrefer(cur.baseKey, transpose, false) : 'C'), [cur?.baseKey, transpose])
-  const baseRootRaw = (cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
+  const isVerse = cur?.type === 'verse'
+  const toKey = useMemo(() => (cur && !isVerse ? transposeSymPrefer(cur.baseKey, transpose, false) : ''), [cur?.baseKey, transpose, isVerse])
+  const baseRootRaw = (!isVerse && cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
-  const steps = useMemo(() => (cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey])
+  const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey, isVerse])
+  const displayCols = isVerse ? 1 : cols
 
   useEffect(() => {
     // Ensure theme attribute applied so background matches choice
@@ -565,7 +660,7 @@ export default function WorshipMode(){
             canReset={elapsedSec > 0}
             sizeCss="clamp(20px, 4vw, 28px)"
           />
-          {(() => {
+          {!isVerse && (() => {
             const base = cur?.baseKey || ''
             const baseRootRaw = (String(base).match(/^([A-G][#b]?)/) || [,''])[1]
             const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
@@ -615,13 +710,15 @@ export default function WorshipMode(){
                     {currentTheme() === 'dark' ? <Sun /> : <Moon />} <span className="text-when-wide">{currentTheme() === 'dark' ? ' Light' : ' Dark'}</span>
                   </button>
                 </div>
+                {!isVerse && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                    <div>Chords</div>
+                    <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
+                      <EyeIcon /> <span className="text-when-wide">{showChords ? ' On' : ' Off'}</span>
+                    </button>
+                  </div>
+                )}
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                  <div>Chords</div>
-                  <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
-                    <EyeIcon /> <span className="text-when-wide">{showChords ? ' On' : ' Off'}</span>
-                  </button>
-                </div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Show stopwatch</div>
                   <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
                     <input type="checkbox" checked={showStopwatch} onChange={e => setShowStopwatch(e.target.checked)} />
@@ -637,107 +734,117 @@ export default function WorshipMode(){
                 </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Columns</div>
-                  <div style={{ display:'flex', gap:8 }}>
-                    <button
-                      className={`gc-btn ${cols === 1 ? 'gc-btn--primary' : ''}`}
-                      aria-label="Use 1 column"
-                      onClick={() => {
-                        const target = 1
-                        setAutoSize(false)
-                        const viewport = viewportRef.current
-                        const content = contentRef.current
-                        if (!viewport || !content) { setCols(target); return }
-                        const prevSize = content.style.fontSize
-                        const prevCols = content.style.columnCount
-                        const prevGap = content.style.columnGap
-                        try {
-                          let pt = fontPx || 20
-                          for (;;) {
-                            content.style.fontSize = `${pt}px`
-                            content.style.columnCount = String(target)
-                            content.style.columnGap = target === 2 ? '20px' : '0px'
-                            // eslint-disable-next-line no-unused-expressions
-                            content.offsetHeight
-                            const headerH = headerRef.current?.offsetHeight || 0
-                            const barH = barRef.current?.offsetHeight || 0
-                            const avail = (viewport.clientHeight - headerH - barH)
-                            if (content.scrollHeight <= avail || pt <= 12) break
-                            pt -= 1
+                  {isVerse ? (
+                    <span className="meta">Locked to 1 column</span>
+                  ) : (
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button
+                        className={`gc-btn ${cols === 1 ? 'gc-btn--primary' : ''}`}
+                        aria-label="Use 1 column"
+                        onClick={() => {
+                          const target = 1
+                          setAutoSize(false)
+                          const viewport = viewportRef.current
+                          const content = contentRef.current
+                          if (!viewport || !content) { setCols(target); return }
+                          const prevSize = content.style.fontSize
+                          const prevCols = content.style.columnCount
+                          const prevGap = content.style.columnGap
+                          try {
+                            let pt = fontPx || 20
+                            for (;;) {
+                              content.style.fontSize = `${pt}px`
+                              content.style.columnCount = String(target)
+                              content.style.columnGap = target === 2 ? '20px' : '0px'
+                              // eslint-disable-next-line no-unused-expressions
+                              content.offsetHeight
+                              const headerH = headerRef.current?.offsetHeight || 0
+                              const barH = barRef.current?.offsetHeight || 0
+                              const avail = (viewport.clientHeight - headerH - barH)
+                              if (content.scrollHeight <= avail || pt <= 12) break
+                              pt -= 1
+                            }
+                            setCols(target)
+                            setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
+                          } finally {
+                            content.style.fontSize = prevSize
+                            content.style.columnCount = prevCols
+                            content.style.columnGap = prevGap
                           }
-                          setCols(target)
-                          setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
-                        } finally {
-                          content.style.fontSize = prevSize
-                          content.style.columnCount = prevCols
-                          content.style.columnGap = prevGap
-                        }
-                      }}
-                    >
-                      <OneColIcon /> <span className="text-when-wide">1</span>
-                    </button>
-                    <button
-                      className={`gc-btn ${cols === 2 ? 'gc-btn--primary' : ''}`}
-                      aria-label="Use 2 columns"
-                      onClick={() => {
-                        const target = 2
-                        setAutoSize(false)
-                        const viewport = viewportRef.current
-                        const content = contentRef.current
-                        if (!viewport || !content) { setCols(target); return }
-                        const prevSize = content.style.fontSize
-                        const prevCols = content.style.columnCount
-                        const prevGap = content.style.columnGap
-                        try {
-                          let pt = fontPx || 20
-                          for (;;) {
-                            content.style.fontSize = `${pt}px`
-                            content.style.columnCount = String(target)
-                            content.style.columnGap = target === 2 ? '20px' : '0px'
-                            // eslint-disable-next-line no-unused-expressions
-                            content.offsetHeight
-                            const headerH = headerRef.current?.offsetHeight || 0
-                            const barH = barRef.current?.offsetHeight || 0
-                            const avail = (viewport.clientHeight - headerH - barH)
-                            if (content.scrollHeight <= avail || pt <= 12) break
-                            pt -= 1
+                        }}
+                      >
+                        <OneColIcon /> <span className="text-when-wide">1</span>
+                      </button>
+                      <button
+                        className={`gc-btn ${cols === 2 ? 'gc-btn--primary' : ''}`}
+                        aria-label="Use 2 columns"
+                        onClick={() => {
+                          const target = 2
+                          setAutoSize(false)
+                          const viewport = viewportRef.current
+                          const content = contentRef.current
+                          if (!viewport || !content) { setCols(target); return }
+                          const prevSize = content.style.fontSize
+                          const prevCols = content.style.columnCount
+                          const prevGap = content.style.columnGap
+                          try {
+                            let pt = fontPx || 20
+                            for (;;) {
+                              content.style.fontSize = `${pt}px`
+                              content.style.columnCount = String(target)
+                              content.style.columnGap = target === 2 ? '20px' : '0px'
+                              // eslint-disable-next-line no-unused-expressions
+                              content.offsetHeight
+                              const headerH = headerRef.current?.offsetHeight || 0
+                              const barH = barRef.current?.offsetHeight || 0
+                              const avail = (viewport.clientHeight - headerH - barH)
+                              if (content.scrollHeight <= avail || pt <= 12) break
+                              pt -= 1
+                            }
+                            setCols(target)
+                            setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
+                          } finally {
+                            content.style.fontSize = prevSize
+                            content.style.columnCount = prevCols
+                            content.style.columnGap = prevGap
                           }
-                          setCols(target)
-                          setFontPx(prev => Math.max(12, Math.min(prev || pt, pt)))
-                        } finally {
-                          content.style.fontSize = prevSize
-                          content.style.columnCount = prevCols
-                          content.style.columnGap = prevGap
-                        }
-                      }}
-                    >
-                      <TwoColIcon /> <span className="text-when-wide">2</span>
-                    </button>
+                        }}
+                      >
+                        <TwoColIcon /> <span className="text-when-wide">2</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {!isVerse && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                    <div>Transpose increment</div>
+                    <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
+                      <input type="checkbox" checked={halfStep} onChange={e => setHalfStep(e.target.checked)} />
+                      <span>Half-step</span>
+                    </label>
                   </div>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                  <div>Transpose increment</div>
-                  <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
-                    <input type="checkbox" checked={halfStep} onChange={e => setHalfStep(e.target.checked)} />
-                    <span>Half-step</span>
-                  </label>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                  <div>Set key</div>
-                  <KeySelector
-                    baseKey={cur?.baseKey || 'C'}
-                    valueKey={toKey}
-                    disabled={!cur}
-                    onChange={(full) => {
-                      const off = stepsBetween(cur?.baseKey, full)
-                      setSongOffsets(arr => { const c = arr.slice(); c[idx] = off; return c })
-                      setTranspose(off)
-                    }}
-                  />
-                </div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                  <div>Reset key</div>
-                  <button className="gc-btn" onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }} aria-label="Reset key"><RemoveIcon /> <span className="text-when-wide">Reset</span></button>
-                </div>
+                )}
+                {!isVerse && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                    <div>Set key</div>
+                    <KeySelector
+                      baseKey={cur?.baseKey || 'C'}
+                      valueKey={toKey}
+                      disabled={!cur}
+                      onChange={(full) => {
+                        const off = stepsBetween(cur?.baseKey, full)
+                        setSongOffsets(arr => { const c = arr.slice(); c[idx] = off; return c })
+                        setTranspose(off)
+                      }}
+                    />
+                  </div>
+                )}
+                {!isVerse && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                    <div>Reset key</div>
+                    <button className="gc-btn" onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }} aria-label="Reset key"><RemoveIcon /> <span className="text-when-wide">Reset</span></button>
+                  </div>
+                )}
               </div>
               <div className="gc-drawer__footer">
                 <button className="gc-btn" onClick={() => setOpenSettings(false)}>Done</button>
@@ -754,43 +861,47 @@ export default function WorshipMode(){
             flex:'1 1 auto', minHeight:0, overflow:'auto', padding:'10px 16px 12px',
             fontSize: fontPx ? `${fontPx}px` : undefined,
             lineHeight: 1.35,
-            columnCount: cols,
-            columnGap: cols === 2 ? '20px' : undefined,
+            columnCount: displayCols,
+            columnGap: displayCols === 2 ? '20px' : undefined,
             maxHeight: availH ? `${availH}px` : undefined,
           }}
         >
           {cur ? (
-            <div className="worship__song" style={{maxWidth:1200, margin:'0 auto'}}>
-              {(cur.sections || []).map((sec, si) => (
-                <div key={si} style={{breakInside:'avoid'}}>
-                  {sec.label ? <div className="section">[{sec.label}]</div> : null}
-                  {(sec.lines || []).map((ln, li) => (
-                    ln.instrumental ? (
-                      showChords ? (
-                        <InstrumentalRow
+            cur.type === 'verse' ? (
+              <VerseView sections={cur.sections || []} />
+            ) : (
+              <div className="worship__song" style={{maxWidth:1200, margin:'0 auto'}}>
+                {(cur.sections || []).map((sec, si) => (
+                  <div key={si} style={{breakInside:'avoid'}}>
+                    {sec.label ? <div className="section">[{sec.label}]</div> : null}
+                    {(sec.lines || []).map((ln, li) => (
+                      ln.instrumental ? (
+                        showChords ? (
+                          <InstrumentalRow
+                            key={`${si}-${li}`}
+                            spec={ln.instrumental}
+                            steps={steps}
+                            preferFlat={preferFlat}
+                            split={displayCols === 2}
+                          />
+                        ) : null
+                      ) : ln.comment ? (
+                        <div key={`${si}-${li}`} className="comment">{ln.plain}</div>
+                      ) : (
+                        <ChordLine
                           key={`${si}-${li}`}
-                          spec={ln.instrumental}
+                          plain={ln.plain}
+                          chords={ln.chords}
                           steps={steps}
                           preferFlat={preferFlat}
-                          split={cols === 2}
+                          showChords={showChords}
                         />
-                      ) : null
-                    ) : ln.comment ? (
-                      <div key={`${si}-${li}`} className="comment">{ln.plain}</div>
-                    ) : (
-                      <ChordLine
-                        key={`${si}-${li}`}
-                        plain={ln.plain}
-                        chords={ln.chords}
-                        steps={steps}
-                        preferFlat={preferFlat}
-                        showChords={showChords}
-                      />
-                    )
-                  ))}
-                </div>
-              ))}
-            </div>
+                      )
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )
           ) : null}
         </div>
 
@@ -808,6 +919,7 @@ export default function WorshipMode(){
               onClick={() => shiftKey(-1)}
               title="Lower key"
               aria-label="Lower key"
+              disabled={isVerse}
             >
               <ArrowDown />{!isMobile ? <span className="text-when-wide"> Key Down</span> : null}
             </button>
@@ -818,6 +930,7 @@ export default function WorshipMode(){
               onClick={() => shiftKey(1)}
               title="Raise key"
               aria-label="Raise key"
+              disabled={isVerse}
             >
               <ArrowUp />{!isMobile ? <span className="text-when-wide"> Key Up</span> : null}
             </button>
@@ -828,6 +941,7 @@ export default function WorshipMode(){
               onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }}
               title="Reset key"
               aria-label="Reset key"
+              disabled={isVerse}
             >
               <RemoveIcon />{!isMobile ? <span className="text-when-wide"> Reset</span> : null}
             </button>
@@ -863,7 +977,7 @@ export default function WorshipMode(){
             </div>
           )}
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            {isMobile && (
+            {isMobile && !isVerse && (
               <button
                 className="gc-btn gc-btn--iconOnly"
                 style={{minWidth:44, minHeight:44}}
@@ -1036,6 +1150,24 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
         </div>
       )}
       <div className="lyrics" style={{whiteSpace:'pre-wrap', overflowWrap:'anywhere', fontSize:'inherit'}}>{plain}</div>
+    </div>
+  )
+}
+
+function VerseView({ sections }){
+  const lines = (sections || []).flatMap((sec) => sec.lines || [])
+  if (!lines.length) return null
+  return (
+    <div style={{maxWidth:900, margin:'0 auto', display:'grid', gap:10}}>
+      {lines.map((ln, idx) => {
+        const label = ln.showChapter ? `${ln.chapter}:${ln.number}` : `${ln.number}`
+        return (
+          <div key={idx} style={{display:'flex', gap:10, alignItems:'flex-start'}}>
+            <span style={{minWidth: ln.showChapter ? 46 : 28, opacity:.6, fontWeight:600}}>{label}</span>
+            <span style={{flex:1, whiteSpace:'pre-wrap', overflowWrap:'anywhere'}}>{ln.text}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }

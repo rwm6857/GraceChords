@@ -16,6 +16,7 @@ import { encodeSet, decodeSet } from '../utils/setcode'
 import { downloadSetlistAsPptx } from '../utils/export/downloadSetlist'
 import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
+import { parseVerseReference, suggestBookName, isVerseId, parseVerseId } from '../utils/verseRef'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Button from './ui/Button'
@@ -46,6 +47,10 @@ function createSelection(input){
 
 function hydrateSelections(entries = []){
   return entries.map(entry => createSelection(entry)).filter(Boolean)
+}
+
+function safeDecodeURIComponent(value){
+  try { return decodeURIComponent(value) } catch { return value }
 }
 
 export default function Setlist(){
@@ -81,6 +86,11 @@ export default function Setlist(){
   const [selectedId, setSelectedId] = useState('')
   const [loadOpen, setLoadOpen] = useState(false)
   const [loadChoice, setLoadChoice] = useState('')
+  const [verseOpen, setVerseOpen] = useState(false)
+  const [verseInput, setVerseInput] = useState('')
+  const [verseError, setVerseError] = useState('')
+  const [verseSuggest, setVerseSuggest] = useState('')
+  const verseCacheRef = useRef(new Map())
 
   // load catalog (dedupe by id to avoid duplicate keys/results)
   useEffect(()=>{
@@ -144,7 +154,7 @@ export default function Setlist(){
     // Update list and canonicalize to param-style URL
     const decoded = entries.map(e => ({ id: e.id, toKey: e.toKey }))
     setList(hydrateSelections(decoded))
-    const ids = decoded.map(e => e.id).join(',')
+    const ids = decoded.map(e => encodeURIComponent(e.id)).join(',')
     const keys = decoded.map(e => encodeURIComponent(e.toKey || '')).join(',')
     navigate(`/setlist/${ids}?toKeys=${keys}`, { replace: true })
   }, [routeCode])
@@ -152,10 +162,13 @@ export default function Setlist(){
   // Load set from param-style route (/setlist/:songIds?toKeys=...)
   useEffect(() => {
     if (!routeSongIds) return
-    const ids = (routeSongIds || '').split(',').map(s => s.trim()).filter(Boolean)
+    const ids = (routeSongIds || '')
+      .split(',')
+      .map(s => safeDecodeURIComponent(s.trim()))
+      .filter(Boolean)
     if (!ids.length) return
     const qs = new URLSearchParams(location.search || '')
-    const toKeys = (qs.get('toKeys') || '').split(',').map(s => decodeURIComponent(s)).filter(Boolean)
+    const toKeys = (qs.get('toKeys') || '').split(',').map(s => safeDecodeURIComponent(s))
     const out = ids.map((id, i) => ({ id, toKey: toKeys[i] || '' }))
     setList(hydrateSelections(out))
   }, [routeSongIds, location.search])
@@ -168,7 +181,7 @@ export default function Setlist(){
         if (routeCode || routeSongIds) navigate('/setlist', { replace: true })
         return
       }
-      const ids = list.map(e => e.id).join(',')
+      const ids = list.map(e => encodeURIComponent(e.id)).join(',')
       const keys = list.map(e => encodeURIComponent(e.toKey || '')).join(',')
       const currentIds = routeSongIds || ''
       const currentKeys = new URLSearchParams(location.search || '').get('toKeys') || ''
@@ -238,6 +251,25 @@ export default function Setlist(){
     if (!s) return
     const entry = createSelection({ id: s.id, toKey: s.originalKey || s.key || 'C' })
     setList(prev => [...prev, entry])
+  }
+  async function addVerseFromInput(input){
+    const parsed = parseVerseReference(input)
+    if (parsed.error) {
+      setVerseError('Please check verse reference.')
+      return false
+    }
+    const validation = await validateVerseReference(parsed)
+    if (!validation.ok) {
+      setVerseError(validation.message)
+      return false
+    }
+    const entry = createSelection({ id: parsed.id, toKey: '' })
+    if (!entry) return false
+    setList(prev => [...prev, entry])
+    setVerseInput('')
+    setVerseError('')
+    setVerseOpen(false)
+    return true
   }
   function removeSong(uid){
     setList(prev => prev.filter(x => x.uid !== uid))
@@ -487,7 +519,7 @@ async function exportPdf() {
   // Copy set link (generates code on demand)
   async function copySetLink(){
     try {
-      const ids = list.map(e => e.id).join(',')
+      const ids = list.map(e => encodeURIComponent(e.id)).join(',')
       const keys = list.map(e => encodeURIComponent(e.toKey || '')).join(',')
       const baseOrigin = (() => {
         try {
@@ -502,6 +534,66 @@ async function exportPdf() {
       await navigator.clipboard.writeText(url)
       try { showToast?.('Link copied!') } catch {}
     } catch (e) { alert('Failed to copy link') }
+  }
+
+  useEffect(() => {
+    if (!verseOpen) return
+    const rawBook = String(verseInput || '').split(/\d/)[0].trim()
+    const suggestion = suggestBookName(rawBook)
+    setVerseSuggest(suggestion || '')
+  }, [verseInput, verseOpen])
+
+  async function validateVerseReference(parsed){
+    if (!parsed?.book || !parsed?.segments?.length) return { ok: false, message: 'Please check verse reference.' }
+
+    async function loadChapter(book, chapter){
+      const key = `${book}::${chapter}`
+      const cache = verseCacheRef.current
+      if (cache.has(key)) return cache.get(key)
+      try {
+        const res = await fetch(publicUrl(`esv/${encodeURIComponent(book)}/${chapter}.json`))
+        if (!res.ok) throw new Error('Missing chapter')
+        const json = await res.json()
+        cache.set(key, json)
+        return json
+      } catch {
+        cache.set(key, null)
+        return null
+      }
+    }
+
+    let foundAny = false
+    for (const segment of parsed.segments) {
+      const chapterData = await loadChapter(parsed.book, segment.chapter)
+      if (!chapterData?.verses) return { ok: false, message: 'No verse found.' }
+      const verseMap = chapterData.verses || {}
+      const verseKeys = Object.keys(verseMap)
+      if (!segment.ranges) {
+        if (verseKeys.length) foundAny = true
+        continue
+      }
+      for (const range of segment.ranges) {
+        const start = range.start
+        const end = range.end ?? start
+        if (!verseMap[String(start)] || !verseMap[String(end)]) {
+          return { ok: false, message: 'Please check verse reference.' }
+        }
+        foundAny = true
+      }
+    }
+    if (!foundAny) return { ok: false, message: 'No verse found.' }
+    return { ok: true }
+  }
+
+  function applyVerseSuggestion(){
+    if (!verseSuggest) return
+    const digitIdx = String(verseInput || '').search(/\d/)
+    if (digitIdx === -1) {
+      setVerseInput(`${verseSuggest} `)
+      return
+    }
+    const ref = String(verseInput || '').slice(digitIdx).trim()
+    setVerseInput(`${verseSuggest} ${ref}`)
   }
 
   async function bundlePptx(){
@@ -606,6 +698,44 @@ async function exportPdf() {
           </div>
         </div>
       ) : null}
+      {/* Add Verse modal */}
+      {verseOpen ? (
+        <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
+          <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Add Verse</h3>
+            <label style={{ display:'block', margin:'8px 0' }}>
+              <span className="gc-label">Bible verse</span>
+              <Input
+                value={verseInput}
+                onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
+                placeholder="John 3:16"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addVerseFromInput(verseInput)
+                  }
+                }}
+                style={{ width:'100%' }}
+              />
+            </label>
+            {verseSuggest ? (
+              <div className="meta" style={{ marginTop: 4 }}>
+                Suggestion: <Button size="sm" variant="secondary" onClick={applyVerseSuggestion} type="button">{verseSuggest}</Button>
+              </div>
+            ) : null}
+            {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}
+            <div style={{ marginTop: 12 }}>
+              <Select label="Translation" disabled>
+                <option>ESV</option>
+              </Select>
+            </div>
+            <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
+              <Button onClick={() => { setVerseOpen(false); setVerseError('') }}>Cancel</Button>
+              <Button variant="primary" onClick={() => addVerseFromInput(verseInput)}>Add Verse</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <Busy busy={busy} />
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 12, marginBottom: 4}}>
         <div />
@@ -621,7 +751,7 @@ async function exportPdf() {
             <Button onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress || 'Export PPT'}</Button>
             <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>PPT ZIP</Button>
             <Button onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
-            <Button as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
+            <Button as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
           </div>
         </Toolbar>
       ) : (
@@ -641,7 +771,7 @@ async function exportPdf() {
               <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
               <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">Export PPT</span><span className="text-when-narrow">Export PPT</span></>}</Button>
               <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">PPT ZIP</span><span className="text-when-narrow">PPT ZIP</span></>}</Button>
-              <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> s.id).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey)).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
+              <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
             </div>
           </div>
         </Toolbar>
@@ -684,10 +814,36 @@ async function exportPdf() {
           <section className="setlist-section setlist-current" data-role="current">
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')}>
-                <strong>Current setlist ({list.length})</strong>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <strong>Current setlist ({list.length})</strong>
+                  <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>Add Verse</Button>
+                </div>
               </div>
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
                 {list.map((sel, idx)=>{
+                  const isVerse = isVerseId(sel.id)
+                  if (isVerse) {
+                    const parsed = parseVerseId(sel.id)
+                    const title = parsed?.refDisplay || sel.id
+                    return (
+                      <SongCard
+                        key={sel.uid || `${sel.id}-${idx}`}
+                        draggable
+                        onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.uid || sel.id)); e.dataTransfer.effectAllowed = 'move' }}
+                        onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                        onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
+                        title={title}
+                        subtitle="ESV"
+                        rightSlot={
+                          <div style={{display:'flex', alignItems:'center', gap:6}}>
+                            <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
+                            <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
+                            <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                          </div>
+                        }
+                      />
+                    )
+                  }
                   const s = items.find(it=> it.id===sel.id)
                   if(!s) return null
                   return (
@@ -724,6 +880,14 @@ async function exportPdf() {
             <h2 style={{fontSize:'20pt', margin:'0 0 8pt 0'}}>{name}</h2>
             <ol style={{fontSize:'12pt', lineHeight:1.4, paddingLeft:'1.2em'}}>
               {list.map((sel, idxPrint) => {
+                if (isVerseId(sel.id)) {
+                  const parsed = parseVerseId(sel.id)
+                  return (
+                    <li key={sel.uid || `${sel.id}-${idxPrint}`}>
+                      {parsed?.refDisplay || sel.id}
+                    </li>
+                  )
+                }
                 const s = items.find(it=> it.id===sel.id)
                 if (!s) return null
                 return (
