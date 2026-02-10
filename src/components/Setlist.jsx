@@ -802,51 +802,56 @@ async function exportPdf() {
             <h3 style={{ marginTop: 0, marginBottom: 8 }}>Add Verse</h3>
             <label className="gc-field" style={{ margin:'8px 0' }}>
               <span className="gc-label">Bible verse</span>
-              <div style={{ position:'relative' }}>
-                {buildVerseGhost(verseInput, verseSuggest) ? (
-                  <div
-                    aria-hidden
-                    style={{
-                      position:'absolute',
-                      inset:0,
-                      padding:'10px 12px',
-                      fontFamily:'var(--gc-font-family)',
-                      color:'var(--gc-text-secondary)',
-                      whiteSpace:'pre',
-                      overflow:'hidden',
-                      textOverflow:'ellipsis',
-                      pointerEvents:'none',
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                <div style={{ position:'relative', flex:1 }}>
+                  {buildVerseGhost(verseInput, verseSuggest) ? (
+                    <div
+                      aria-hidden
+                      style={{
+                        position:'absolute',
+                        inset:0,
+                        padding:'10px 12px',
+                        fontFamily:'var(--gc-font-family)',
+                        color:'var(--gc-text-secondary)',
+                        whiteSpace:'pre',
+                        overflow:'hidden',
+                        textOverflow:'ellipsis',
+                        pointerEvents:'none',
+                      }}
+                    >
+                      {buildVerseGhost(verseInput, verseSuggest)}
+                    </div>
+                  ) : null}
+                  <input
+                    value={verseInput}
+                    onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
+                    placeholder="John 3:16"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab' && buildVerseGhost(verseInput, verseSuggest)) {
+                        e.preventDefault()
+                        applyVerseSuggestion()
+                        return
+                      }
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addVerseFromInput(verseInput)
+                      }
                     }}
-                  >
-                    {buildVerseGhost(verseInput, verseSuggest)}
-                  </div>
-                ) : null}
-                <input
-                  value={verseInput}
-                  onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
-                  placeholder="John 3:16"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Tab' && buildVerseGhost(verseInput, verseSuggest)) {
-                      e.preventDefault()
-                      applyVerseSuggestion()
-                      return
-                    }
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addVerseFromInput(verseInput)
-                    }
-                  }}
-                  className="gc-input"
-                  style={{ width:'100%', background:'transparent', position:'relative', zIndex:1 }}
-                />
+                    className="gc-input"
+                    style={{ width:'100%', background:'transparent', position:'relative', zIndex:1 }}
+                  />
+                </div>
+                <div style={{ minWidth: 110 }}>
+                  <span className="gc-label" style={{ display:'block', marginBottom:6 }}>Translation</span>
+                  <span className="gc-select" style={{ width:'100%' }}>
+                    <select disabled style={{ width:'100%' }}>
+                      <option>ESV</option>
+                    </select>
+                  </span>
+                </div>
               </div>
             </label>
             {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}
-            <div style={{ marginTop: 12 }}>
-              <Select label="Translation" disabled>
-                <option>ESV</option>
-              </Select>
-            </div>
             <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
               <Button onClick={() => { setVerseOpen(false); setVerseError('') }}>Cancel</Button>
               <Button variant="primary" onClick={() => addVerseFromInput(verseInput)}>Add Verse</Button>
