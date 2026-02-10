@@ -53,21 +53,42 @@ function safeDecodeURIComponent(value){
   try { return decodeURIComponent(value) } catch { return value }
 }
 
-function buildVerseGhost(input, suggestion){
-  if (!suggestion) return ''
+function splitVerseInput(input){
   const raw = String(input || '')
-  if (!raw.trim()) return ''
-  const digitIdx = raw.search(/\d/)
-  const bookPart = (digitIdx === -1 ? raw : raw.slice(0, digitIdx)).trim()
-  if (!bookPart) return ''
+  if (!raw.trim()) return { bookPart: '', refPart: '' }
+  const colonIndex = raw.indexOf(':')
+  if (colonIndex > -1) {
+    let i = colonIndex - 1
+    while (i >= 0 && /\d/.test(raw[i])) i -= 1
+    const digitStart = i + 1
+    if (digitStart < colonIndex) {
+      return {
+        bookPart: raw.slice(0, digitStart).trim(),
+        refPart: raw.slice(digitStart).trim(),
+      }
+    }
+  }
+  const match = raw.match(/\s(\d+)(?=[\s:.,-]|$)/)
+  if (match && typeof match.index === 'number') {
+    return {
+      bookPart: raw.slice(0, match.index).trim(),
+      refPart: raw.slice(match.index + 1).trim(),
+    }
+  }
+  return { bookPart: raw.trim(), refPart: '' }
+}
+
+function buildVerseCompletion(input, suggestion){
+  if (!suggestion) return null
+  const raw = String(input || '')
+  if (!raw.trim()) return null
+  const { bookPart, refPart } = splitVerseInput(raw)
+  if (!bookPart) return null
   const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const bookKey = normalize(bookPart)
-  const suggestKey = normalize(suggestion)
-  if (!suggestKey.startsWith(bookKey)) return ''
-  const ref = digitIdx === -1 ? '' : raw.slice(digitIdx).trim()
-  const composed = ref ? `${suggestion} ${ref}` : `${suggestion} `
-  if (normalize(raw) === normalize(composed)) return ''
-  return composed
+  const composed = refPart ? `${suggestion} ${refPart}` : `${suggestion} `
+  if (!normalize(composed).startsWith(normalize(raw))) return null
+  if (composed.length <= raw.length) return null
+  return { composed, prefix: raw, remainder: composed.slice(raw.length) }
 }
 
 export default function Setlist(){
@@ -640,7 +661,7 @@ async function exportPdf() {
 
   useEffect(() => {
     if (!verseOpen) return
-    const rawBook = String(verseInput || '').split(/\d/)[0].trim()
+    const rawBook = splitVerseInput(verseInput).bookPart
     const suggestion = suggestBookName(rawBook)
     setVerseSuggest(suggestion || '')
   }, [verseInput, verseOpen])
@@ -688,9 +709,9 @@ async function exportPdf() {
   }
 
   function applyVerseSuggestion(){
-    const ghost = buildVerseGhost(verseInput, verseSuggest)
-    if (!ghost) return
-    setVerseInput(ghost)
+    const completion = buildVerseCompletion(verseInput, verseSuggest)
+    if (!completion) return
+    setVerseInput(completion.composed)
   }
 
   async function bundlePptx(){
@@ -800,11 +821,15 @@ async function exportPdf() {
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
           <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
             <h3 style={{ marginTop: 0, marginBottom: 8 }}>Add Verse</h3>
-            <label className="gc-field" style={{ margin:'8px 0' }}>
-              <span className="gc-label">Bible verse</span>
-              <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-                <div style={{ position:'relative', flex:1 }}>
-                  {buildVerseGhost(verseInput, verseSuggest) ? (
+            <div className="gc-field" style={{ margin:'8px 0' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 140px', gap:8, alignItems:'center' }}>
+                <label className="gc-label" htmlFor="verse-input">Bible verse</label>
+                <label className="gc-label" htmlFor="verse-translation">Translation</label>
+                <div style={{ position:'relative' }}>
+                  {(() => {
+                    const completion = buildVerseCompletion(verseInput, verseSuggest)
+                    if (!completion) return null
+                    return (
                     <div
                       aria-hidden
                       style={{
@@ -813,21 +838,27 @@ async function exportPdf() {
                         padding:'10px 12px',
                         fontFamily:'var(--gc-font-family)',
                         color:'var(--gc-text-secondary)',
+                        lineHeight:1.2,
+                        display:'flex',
+                        alignItems:'center',
                         whiteSpace:'pre',
                         overflow:'hidden',
                         textOverflow:'ellipsis',
                         pointerEvents:'none',
                       }}
                     >
-                      {buildVerseGhost(verseInput, verseSuggest)}
+                      <span style={{ visibility:'hidden' }}>{completion.prefix}</span>
+                      <span>{completion.remainder}</span>
                     </div>
-                  ) : null}
+                    )
+                  })()}
                   <input
+                    id="verse-input"
                     value={verseInput}
                     onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
                     placeholder="John 3:16"
                     onKeyDown={(e) => {
-                      if (e.key === 'Tab' && buildVerseGhost(verseInput, verseSuggest)) {
+                      if (e.key === 'Tab' && buildVerseCompletion(verseInput, verseSuggest)) {
                         e.preventDefault()
                         applyVerseSuggestion()
                         return
@@ -838,19 +869,16 @@ async function exportPdf() {
                       }
                     }}
                     className="gc-input"
-                    style={{ width:'100%', background:'transparent', position:'relative', zIndex:1 }}
+                    style={{ width:'100%', background:'transparent', position:'relative', zIndex:1, lineHeight:1.2 }}
                   />
                 </div>
-                <div style={{ minWidth: 110 }}>
-                  <span className="gc-label" style={{ display:'block', marginBottom:6 }}>Translation</span>
-                  <span className="gc-select" style={{ width:'100%' }}>
-                    <select disabled style={{ width:'100%' }}>
-                      <option>ESV</option>
-                    </select>
-                  </span>
-                </div>
+                <span className="gc-select" style={{ width:'100%' }}>
+                  <select id="verse-translation" disabled style={{ width:'100%' }}>
+                    <option>ESV</option>
+                  </select>
+                </span>
               </div>
-            </label>
+            </div>
             {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}
             <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
               <Button onClick={() => { setVerseOpen(false); setVerseError('') }}>Cancel</Button>
