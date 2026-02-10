@@ -221,6 +221,16 @@ export default function WorshipMode(){
     }
   }, [location.search])
 
+  const setlistUrl = useMemo(() => {
+    if (!ids.length) return '/setlist'
+    const encodedIds = ids.map((id) => encodeURIComponent(id)).join(',')
+    const keys = (query.toKeys && query.toKeys.length === ids.length)
+      ? query.toKeys
+      : ids.map(() => '')
+    const encodedKeys = keys.map(k => encodeURIComponent(k || '')).join(',')
+    return `/setlist/${encodedIds}?toKeys=${encodedKeys}`
+  }, [ids.join('|'), query.toKeys.join('|')])
+
   // Load songs by ids
   useEffect(() => {
     let cancelled = false
@@ -681,6 +691,15 @@ export default function WorshipMode(){
           style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px' }}
         >
           <HomeIcon />
+        </button>
+        <button
+          className="iconbtn"
+          aria-label="Back to setlist"
+          title="Back to setlist"
+          onClick={() => navigate(setlistUrl)}
+          style={{ position:'fixed', top:10, left:64, zIndex:5, padding:'10px 12px' }}
+        >
+          <ArrowLeft />
         </button>
         {/* Top-right settings (opens menu) */}
         <button
