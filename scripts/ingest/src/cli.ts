@@ -7,6 +7,7 @@ import { rm, mkdir, writeFile, rename, readFile } from 'node:fs/promises'
 import { Command } from 'commander'
 import {
   ingestFile,
+  ingestSongbook,
   normalizeStaging,
   approveStaging,
   loadReport,
@@ -143,6 +144,73 @@ program
 
     const reportPath = join(result.stagingDir, 'report.html')
     const open = await promptYesNo('Open report HTML? [y/N] ')
+    if (open) openFile(reportPath)
+  })
+
+program
+  .command('ingest-songbook')
+  .argument('<pathOrUrl>', 'songbook PDF path or URL')
+  .option('--authors <authors>', 'artist/author')
+  .option('--key <key>', 'song key override')
+  .option('--tags <tags>', 'comma-separated tags')
+  .action(async (pathOrUrl, options) => {
+    const result = await ingestSongbook(pathOrUrl, options)
+
+    if (result.songs.length === 0) {
+      console.log(colorize('No songs were extracted from this PDF songbook.', 'orange'))
+      if (result.warnings.length > 0) {
+        console.log(colorize('Warnings:', 'dim'))
+        result.warnings.forEach((warning) => console.log(`- ${warning}`))
+      }
+      return
+    }
+
+    result.songs.forEach((song) => {
+      console.log(
+        formatSongSummary({
+          title: `${song.number}. ${song.title} (${song.language})`,
+          score: song.report.score,
+          status: song.report.status,
+          stagingDir: song.stagingDir,
+          warningCount: song.report.warnings.length
+        })
+      )
+    })
+
+    console.log(
+      colorize(
+        `Songbook ingest complete: ${result.songs.length} staged, ${result.skipped.length} skipped.`,
+        'dim'
+      )
+    )
+
+    if (result.skipped.length > 0) {
+      console.log(colorize('Skipped:', 'dim'))
+      result.skipped.slice(0, 20).forEach((entry) => {
+        console.log(`- ${entry.number}. ${entry.title} (${entry.language}): ${entry.reason}`)
+      })
+      if (result.skipped.length > 20) {
+        console.log(colorize(`...and ${result.skipped.length - 20} more`, 'dim'))
+      }
+    }
+
+    if (result.warnings.length > 0) {
+      console.log(colorize('Extractor warnings:', 'dim'))
+      result.warnings.forEach((warning) => console.log(`- ${warning}`))
+    }
+
+    const reportPath = join(stagingRoot, 'batch_report.html')
+    await mkdir(stagingRoot, { recursive: true })
+    const reportHtml = renderBatchReportHtml(
+      result.songs.map((song) => ({
+        title: `${song.number}. ${song.title} (${song.language})`,
+        stagingDir: song.stagingDir,
+        report: song.report
+      }))
+    )
+    await writeFile(reportPath, reportHtml, 'utf8')
+
+    const open = await promptYesNo('Open songbook batch report HTML? [y/N] ')
     if (open) openFile(reportPath)
   })
 

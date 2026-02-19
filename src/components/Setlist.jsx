@@ -26,6 +26,15 @@ import Input from './ui/Input'
 import Toolbar from './ui/Toolbar'
 import PageContainer from './layout/PageContainer'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/quickActions'
+import { Chip } from './ui/layout-kit'
+import {
+  buildSongCatalog,
+  getLanguageChipLabel,
+  hasGroupLanguage,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+  writeSongLanguagePreference,
+} from '../utils/songCatalog'
 
 // Lazy pdf exporter
 let pdfLibPromise
@@ -95,6 +104,12 @@ export default function Setlist(){
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const allSongsById = catalog.byId
+  const languageChipCodes = catalog.translationLanguages || []
+  const [selectedLanguage, setSelectedLanguage] = useState(() =>
+    resolveInitialSongLanguage(languageChipCodes.length ? languageChipCodes : catalog.allLanguages)
+  )
   // existing state
   const [name, setName] = useState('New Setlist')
   const [q, setQ] = useState('')
@@ -130,19 +145,36 @@ export default function Setlist(){
   const [verseSuggest, setVerseSuggest] = useState('')
   const verseCacheRef = useRef(new Map())
 
-  // load catalog (dedupe by id to avoid duplicate keys/results)
+  useEffect(() => {
+    writeSongLanguagePreference(selectedLanguage)
+  }, [selectedLanguage])
+
+  // load catalog entries by selected song language
   useEffect(()=>{
-    const arr = indexData?.items || []
-    const seen = new Set()
-    const uniq = []
-    for (const s of arr) {
-      if (seen.has(s.id)) continue
-      if (isIncompleteSong(s)) continue
-      seen.add(s.id)
-      uniq.push(s)
+    const out = []
+    for (const group of catalog.groups || []) {
+      let display = resolveGroupEntry(group, selectedLanguage)
+      if (!display) continue
+      if (isIncompleteSong(display)) {
+        const fallback = group.variants.find((v) => !isIncompleteSong(v))
+        if (!fallback) continue
+        display = fallback
+      }
+      out.push({
+        ...display,
+        hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
+        searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+        searchTags: Array.from(new Set(group.variants.flatMap((v) => v.tags || []))),
+        searchAuthors: Array.from(new Set(group.variants.flatMap((v) => v.authors || []))),
+      })
     }
-    setItems(uniq)
-  },[])
+    setItems(out)
+  }, [catalog.groups, selectedLanguage])
+
+  function getSongById(songId){
+    if (!songId) return null
+    return allSongsById.get(String(songId)) || null
+  }
 
   // check available PPTX files for current set
   useEffect(() => {
@@ -150,7 +182,7 @@ export default function Setlist(){
     async function check(){
       const found = {}
       for(const sel of list){
-        const s = items.find(it=> it.id===sel.id)
+        const s = getSongById(sel.id)
         if(!s) continue
         const slug = s.filename.replace(/\.chordpro$/i, '')
         const url = publicUrl(`pptx/${slug}.pptx`)
@@ -161,7 +193,7 @@ export default function Setlist(){
     }
     check()
     return () => { cancelled = true }
-  }, [list, items])
+  }, [list, allSongsById])
 
   useEffect(() => {
     try {
@@ -277,11 +309,21 @@ export default function Setlist(){
   }, [location.state, items.map(s => s.id).join('|')])
 
   // search
-  const fuse = useMemo(()=> new Fuse(items, { keys: ['title','tags'], threshold:0.4 }), [items])
+  const fuse = useMemo(() => new Fuse(items, {
+    keys: ['title', 'tags', 'searchTitles', 'searchTags', 'searchAuthors'],
+    threshold: 0.4
+  }), [items])
   function icpPass(s){ return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP') }
   const results = useMemo(() => {
-    const base = q ? fuse.search(q).map(r=> r.item) : items.slice().sort((a,b)=> a.title.localeCompare(b.title))
-    return base.filter(icpPass)
+    const base = q ? fuse.search(q).map((r) => r.item) : items.slice()
+    const filtered = base.filter(icpPass)
+    filtered.sort((a, b) => {
+      if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
+        return a.hasSelectedLanguage ? -1 : 1
+      }
+      return String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' })
+    })
+    return filtered
   }, [q, fuse, items, icpOnly])
 
   // list mutators
@@ -425,7 +467,7 @@ export default function Setlist(){
   // quick transpose (entire set)
   function transposeSet(delta){
     setList(prev => prev.map(sel => {
-      const s = items.find(it=> it.id===sel.id)
+      const s = getSongById(sel.id)
       const from = sel.toKey || s?.originalKey || 'C'
       const preferFlat = /b/.test(String(s?.originalKey || ''))
       return { ...sel, toKey: transposeSymPrefer(from, delta, preferFlat) }
@@ -433,7 +475,7 @@ export default function Setlist(){
   }
   function resetSetKeys(){
     setList(prev => prev.map(sel => {
-      const s = items.find(it=> it.id===sel.id)
+      const s = getSongById(sel.id)
       return { ...sel, toKey: s?.originalKey || 'C' }
     }))
   }
@@ -574,7 +616,7 @@ async function exportPdf() {
         }
         continue
       }
-      const s = items.find((it) => it.id === sel.id);
+      const s = getSongById(sel.id)
       if (!s) continue;
 
       try {
@@ -722,7 +764,7 @@ async function exportPdf() {
     let added = 0
     for(let i=0; i<list.length; i++){
       const sel = list[i]
-      const s = items.find(it=> it.id===sel.id)
+      const s = getSongById(sel.id)
       if(!s){ setPptxProgress(`Bundling ${i+1}/${list.length}…`); continue }
       setPptxProgress(`Bundling ${i+1}/${list.length}…`)
       const slug = s.filename.replace(/\.chordpro$/i, '')
@@ -756,7 +798,7 @@ async function exportPdf() {
       const songs = []
       const missing = []
       for (const sel of list) {
-        const s = items.find(it => it.id === sel.id)
+        const s = getSongById(sel.id)
         if (!s) continue
         const slug = s.filename.replace(/\.chordpro$/i, '')
         if (!pptxMap[slug]) {
@@ -938,6 +980,24 @@ async function exportPdf() {
                   <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
                 </label>
               </div>
+              {languageChipCodes.length > 0 ? (
+                <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ paddingTop: 0, display:'flex', alignItems:'center', gap:8 }}>
+                  <span className="meta">Language</span>
+                  <div className="tagbar">
+                    {languageChipCodes.map((code) => (
+                      <Chip
+                        key={code}
+                        variant="filter"
+                        selected={selectedLanguage === code}
+                        onClick={() => setSelectedLanguage(code)}
+                        title={`Use ${getLanguageChipLabel(code)} where available`}
+                      >
+                        {getLanguageChipLabel(code)}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--addSongs'].join(' ')}>
                 {!fuse ? (
                   <div>Loading search…</div>
@@ -991,7 +1051,7 @@ async function exportPdf() {
                       />
                     )
                   }
-                  const s = items.find(it=> it.id===sel.id)
+                  const s = getSongById(sel.id)
                   if(!s) return null
                   return (
                     <SongCard
@@ -1035,7 +1095,7 @@ async function exportPdf() {
                     </li>
                   )
                 }
-                const s = items.find(it=> it.id===sel.id)
+                const s = getSongById(sel.id)
                 if (!s) return null
                 return (
                   <li key={sel.uid || `${sel.id}-${idxPrint}`}>

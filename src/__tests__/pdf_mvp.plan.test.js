@@ -55,4 +55,24 @@ describe('MVP PDF planner', () => {
     expect(summary.columns).toBe(1)
     expect(summary.size).toBeGreaterThanOrEqual(12)
   })
+
+  it('plans songs with Turkish letters (including uppercase dotted/dotless I)', async () => {
+    const song = {
+      title: 'Rab Bizi Gönder',
+      key: 'A',
+      lyricsBlocks: [
+        {
+          section: 'Verse',
+          lines: [
+            { plain: 'ıüşiçöğ IÜŞİÇÖĞ', chordPositions: [{ sym: 'A', index: 0 }] },
+            { plain: 'Bizi İsa için gönder', chordPositions: [{ sym: 'D', index: 0 }] },
+          ],
+        },
+      ],
+    }
+    const { summary } = await planSingleSong(song)
+    expect(summary.pages).toBe(1)
+    expect(summary.columns).toBe(1)
+    expect(summary.size).toBeGreaterThanOrEqual(12)
+  })
 })

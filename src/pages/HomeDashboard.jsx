@@ -16,6 +16,12 @@ import { currentTheme } from '../utils/theme'
 import { filterByTag, pickRandom } from '../utils/quickActions'
 import { isIncompleteSong } from '../utils/songStatus'
 import { buildTagMap, canonicalizeTags } from '../utils/tags'
+import {
+  buildSongCatalog,
+  hasGroupLanguage,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+} from '../utils/songCatalog'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -23,6 +29,7 @@ const MAX_SUGGESTIONS = 5
 
 export default function HomeDashboard(){
   const navigate = useNavigate()
+  const [songLanguage] = useState(() => resolveInitialSongLanguage())
   const [items, setItems] = useState([])
   const [query, setQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -41,9 +48,10 @@ export default function HomeDashboard(){
     const scored = []
     for (const s of items) {
       const title = (s.title || '').toLowerCase()
+      const altTitles = (s.searchTitles || []).map((t) => String(t).toLowerCase())
       const tags = (s.tags || []).map(t => String(t).toLowerCase())
       const authors = (s.authors || []).map(a => String(a).toLowerCase())
-      const haystack = [title, ...tags, ...authors].join(' ')
+      const haystack = [title, ...altTitles, ...tags, ...authors].join(' ')
       if (title.includes(q) || haystack.includes(q)) {
         const starts = title.startsWith(q) ? 1 : 0
         scored.push({ s, starts })
@@ -168,7 +176,10 @@ export default function HomeDashboard(){
   function findExactMatch(term){
     const q = term.trim().toLowerCase()
     if (!q) return null
-    return items.find(s => String(s.title || '').toLowerCase() === q) || null
+    return items.find((s) =>
+      String(s.title || '').toLowerCase() === q ||
+      (s.searchTitles || []).some((t) => String(t || '').toLowerCase() === q)
+    ) || null
   }
 
   function handleSubmit(){
@@ -231,12 +242,35 @@ export default function HomeDashboard(){
           import('../data/resources.json'),
         ])
         const indexItems = indexJson?.items || []
-        const tagMap = buildTagMap(indexItems)
+        const catalog = buildSongCatalog(indexItems)
+        const prefLang = resolveInitialSongLanguage(
+          catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages,
+          songLanguage
+        )
+        const displayItems = []
+        for (const group of catalog.groups || []) {
+          let display = resolveGroupEntry(group, prefLang)
+          if (!display) continue
+          if (isIncompleteSong(display)) {
+            const fallback = group.variants.find((v) => !isIncompleteSong(v))
+            if (!fallback) continue
+            display = fallback
+          }
+          displayItems.push({
+            ...display,
+            hasSelectedLanguage: hasGroupLanguage(group, prefLang),
+            searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+            searchAuthors: Array.from(new Set(group.variants.flatMap((v) => v.authors || []))),
+            searchTags: Array.from(new Set(group.variants.flatMap((v) => v.tags || []))),
+          })
+        }
+
+        const tagMap = buildTagMap(displayItems)
         const normalizeSong = (song) => {
           const { keys, labels } = canonicalizeTags(song.tags || [], tagMap)
           return { ...song, tags: labels, tagKeys: keys }
         }
-        const normalizedItems = indexItems.map(normalizeSong)
+        const normalizedItems = displayItems.map(normalizeSong)
 
         setItems(normalizedItems)
         const songsSorted = normalizedItems
@@ -267,7 +301,7 @@ export default function HomeDashboard(){
       cancel(idleId)
       if (observer) observer.disconnect()
     }
-  }, [])
+  }, [songLanguage])
 
   return (
     <div className="HomeDashboard">

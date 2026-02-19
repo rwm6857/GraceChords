@@ -10,6 +10,15 @@ import { Chip } from './ui/layout-kit'
 import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
 import { buildTagMap, canonicalizeTags, normalizeTagKey, tagLabelFromKey } from '../utils/tags'
+import {
+  buildGroupSearchText,
+  buildSongCatalog,
+  getLanguageChipLabel,
+  hasGroupLanguage,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+  writeSongLanguagePreference,
+} from '../utils/songCatalog'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -18,25 +27,55 @@ const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churc
 
 export default function Songs(){
   const itemsRaw = indexData?.items || []
+  const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
+  const languageChipCodes = catalog.translationLanguages || []
+  const [selectedLanguage, setSelectedLanguage] = useState(() =>
+    resolveInitialSongLanguage(languageChipCodes.length ? languageChipCodes : catalog.allLanguages)
+  )
   const [searchParams] = useSearchParams()
   const initialQ = searchParams.get('q') || ''
-  const tagMap = useMemo(() => buildTagMap(itemsRaw), [itemsRaw])
+  const [q, setQ] = useState(initialQ)
+
+  useEffect(() => {
+    writeSongLanguagePreference(selectedLanguage)
+  }, [selectedLanguage])
+
+  const tagMap = useMemo(() => buildTagMap(catalog.items), [catalog.items])
   const ICP_KEY = normalizeTagKey('ICP')
+
   const items = useMemo(() => {
-    const seen = new Set()
     const out = []
-    for (const s of itemsRaw) {
-      if (seen.has(s.id)) continue
-      if (isIncompleteSong(s)) continue
-      seen.add(s.id)
-      const { keys, labels } = canonicalizeTags(s.tags || [], tagMap)
-      out.push({ ...s, tags: labels, tagKeys: keys })
+    for (const group of catalog.groups || []) {
+      let display = resolveGroupEntry(group, selectedLanguage)
+      if (!display) continue
+      if (isIncompleteSong(display)) {
+        const fallback = group.variants.find((v) => !isIncompleteSong(v))
+        if (!fallback) continue
+        display = fallback
+      }
+      const { keys, labels } = canonicalizeTags(display.tags || [], tagMap)
+      const searchTags = Array.from(
+        new Set(group.variants.flatMap((v) => v.tags || []))
+      )
+      const searchAuthors = Array.from(
+        new Set(group.variants.flatMap((v) => v.authors || []))
+      )
+      out.push({
+        ...display,
+        tags: labels,
+        tagKeys: keys,
+        hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
+        hasTranslations: group.variants.length > 1,
+        group,
+        searchTags,
+        searchAuthors,
+        searchText: buildGroupSearchText(group),
+        searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+      })
     }
     return out
-  }, [itemsRaw, tagMap])
+  }, [catalog.groups, selectedLanguage, tagMap])
 
-  // -------- Search & filters --------
-  const [q, setQ] = useState(initialQ)
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
   const qLower = q.trim().toLowerCase()
@@ -55,7 +94,7 @@ export default function Songs(){
     )
   }, [items, tagMap])
 
-  const [selectedTags, setSelectedTags] = useState([]) // multi-select (ANY match)
+  const [selectedTags, setSelectedTags] = useState([])
   const [lyricsOn, setLyricsOn] = useState(false)
   const [icpOnly, setIcpOnly] = useState(() => {
     try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
@@ -64,27 +103,28 @@ export default function Songs(){
     try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
   }, [icpOnly])
 
-  // Lyrics cache (id -> lowercased source text) — used ONLY when lyricsOn is true
   const [lyricsCache, setLyricsCache] = useState({})
   const fetchingRef = useRef(new Set())
 
-  // Build Fuse with tuned weights (title > tags > authors)
   const fuse = useMemo(() => new Fuse(items, {
     includeScore: true,
     threshold: 0.35,
     ignoreLocation: true,
     keys: [
-      { name: 'title',  weight: 0.7 },
-      { name: 'tags',   weight: 0.25 },
-      { name: 'authors',weight: 0.15 }
+      { name: 'title',        weight: 0.65 },
+      { name: 'searchTitles', weight: 0.6 },
+      { name: 'tags',         weight: 0.25 },
+      { name: 'searchTags',   weight: 0.2 },
+      { name: 'authors',      weight: 0.15 },
+      { name: 'searchAuthors',weight: 0.1 },
+      { name: 'searchText',   weight: 0.05 },
     ]
   }), [items])
 
   function tagPass(s){
     if (!selectedTags.length) return true
     const tags = s.tagKeys || []
-    // ANY semantics: include if a song has at least one selected tag
-    return selectedTags.some(t => tags.includes(t))
+    return selectedTags.some((t) => tags.includes(t))
   }
   function icpPass(s){
     if (!icpOnly) return true
@@ -92,13 +132,12 @@ export default function Songs(){
     return tags.includes(ICP_KEY)
   }
 
-  // Prefetch lyrics only when toggle is ON and there is a query
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
     const shouldFetch = items
       .filter(tagPass)
       .filter(icpPass)
-      .filter(s => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
+      .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
       .slice(0, 200)
     if (!shouldFetch.length) return
 
@@ -108,49 +147,53 @@ export default function Songs(){
       for (const s of shouldFetch) {
         try {
           fetchingRef.current.add(s.id)
-          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then(r => r.text())
+          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then((r) => r.text())
           if (cancelled) return
           next[s.id] = (txt || '').toLowerCase()
         } catch {}
       }
       if (!cancelled && Object.keys(next).length) {
-        setLyricsCache(prev => ({ ...prev, ...next }))
+        setLyricsCache((prev) => ({ ...prev, ...next }))
       }
     })()
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTags.join(',')])
+  }, [lyricsOn, qLower, items, selectedTags.join('|'), icpOnly])
 
-  // Compute results (Fuse + tag filter; optionally union lyrics matches ONLY when lyricsOn)
-  const results = useMemo(() => {
-    let scoreMap = new Map()
+  const resultParts = useMemo(() => {
+    const scoreMap = new Map()
     let list
 
     if (qLower.length) {
       const rs = fuse.search(qLower)
-      list = rs.map(r => {
+      list = rs.map((r) => {
         scoreMap.set(r.item.id, r.score ?? 0)
         return r.item
       })
     } else {
-      list = items.slice().sort(compareSongsByTitle)
+      list = items.slice()
     }
 
-    // Tag filter + ICP-only filter
     list = list.filter(tagPass).filter(icpPass)
 
-    // Lyrics union strictly when toggle is ON
     if (lyricsOn && qLower.length) {
-      const extra = items.filter(tagPass).filter(icpPass).filter(s => {
-        const txt = lyricsCache[s.id]
-        return typeof txt === 'string' ? txt.includes(qLower) : false
-      })
-      const byId = new Set(list.map(i => i.id))
-      for (const s of extra) if (!byId.has(s.id)) list.push(s)
+      const extra = items
+        .filter(tagPass)
+        .filter(icpPass)
+        .filter((s) => {
+          const txt = lyricsCache[s.id]
+          return typeof txt === 'string' ? txt.includes(qLower) : false
+        })
+      const byId = new Set(list.map((i) => i.id))
+      for (const s of extra) {
+        if (!byId.has(s.id)) list.push(s)
+      }
     }
 
-    // Starts-with boost + stable ordering by score then title
     list.sort((a, b) => {
+      if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
+        return a.hasSelectedLanguage ? -1 : 1
+      }
       const aSW = qLower && a.title.toLowerCase().startsWith(qLower) ? 1 : 0
       const bSW = qLower && b.title.toLowerCase().startsWith(qLower) ? 1 : 0
       if (aSW !== bSW) return bSW - aSW
@@ -162,9 +205,19 @@ export default function Songs(){
       return compareSongsByTitle(a, b)
     })
 
-    return list
-  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join(','), icpOnly])
+    const translated = []
+    const fallback = []
+    for (const item of list) {
+      if (item.hasSelectedLanguage) translated.push(item)
+      else fallback.push(item)
+    }
+    return { translated, fallback }
+  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join('|'), icpOnly])
 
+  const results = useMemo(
+    () => [...resultParts.translated, ...resultParts.fallback],
+    [resultParts]
+  )
   const [activeIndex, setActiveIndex] = useState(-1)
   const optionRefs = useRef([])
   const resetRef = useRef(false)
@@ -206,10 +259,10 @@ export default function Songs(){
   function onResultsKeyDown(e){
     if(e.key === 'ArrowDown'){
       e.preventDefault()
-      setActiveIndex(i => Math.min(i + 1, results.length - 1))
+      setActiveIndex((i) => Math.min(i + 1, results.length - 1))
     } else if(e.key === 'ArrowUp'){
       e.preventDefault()
-      setActiveIndex(i => {
+      setActiveIndex((i) => {
         if(i <= 0){
           searchRef.current?.focus()
           return -1
@@ -238,7 +291,6 @@ export default function Songs(){
     }
   }, [results])
 
-  // Sync query param -> input when it changes (e.g., from /songs?q=term navigation)
   useEffect(() => {
     const nextQ = searchParams.get('q') || ''
     setQ(nextQ)
@@ -252,7 +304,6 @@ export default function Songs(){
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    // Only auto-focus on desktop to avoid iOS keyboard pop
     try {
       const isDesktop = window.matchMedia && window.matchMedia('(min-width: 821px)').matches
       if (isDesktop) searchRef.current?.focus()
@@ -260,9 +311,8 @@ export default function Songs(){
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  // UI helpers
   function toggleTag(key){
-    setSelectedTags(prev => prev.includes(key) ? prev.filter(x => x!==key) : [...prev, key])
+    setSelectedTags((prev) => prev.includes(key) ? prev.filter((x) => x!==key) : [...prev, key])
   }
   function clearTags(){ setSelectedTags([]) }
 
@@ -283,8 +333,23 @@ export default function Songs(){
         <link rel="canonical" href={`${SITE_URL}/songs`} />
       </Helmet>
       <div className="HomeHeader">
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
-          <h1 title="Browse Songs">Songs</h1>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap'}}>
+          <h1 title="Browse Songs" style={{ marginBottom: 0 }}>Songs</h1>
+          {languageChipCodes.length > 0 ? (
+            <div className="tagbar" aria-label="Song language">
+              {languageChipCodes.map((code) => (
+                <Chip
+                  key={code}
+                  variant="filter"
+                  selected={selectedLanguage === code}
+                  onClick={() => setSelectedLanguage(code)}
+                  title={`Show ${getLanguageChipLabel(code)} songs`}
+                >
+                  {getLanguageChipLabel(code)}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="card" style={{display:'grid', gap:10}}>
@@ -292,7 +357,7 @@ export default function Songs(){
             id="search"
             ref={searchRef}
             value={q}
-            onChange={e=> setQ(e.target.value)}
+            onChange={(e)=> setQ(e.target.value)}
             onKeyDown={onSearchKeyDown}
             placeholder="Search title/tags/authors…"
             aria-label="Search songs"
@@ -302,7 +367,7 @@ export default function Songs(){
               <input
                 type="checkbox"
                 checked={lyricsOn}
-                onChange={e=> setLyricsOn(e.target.checked)}
+                onChange={(e)=> setLyricsOn(e.target.checked)}
               />
               <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
             </label>
@@ -310,14 +375,13 @@ export default function Songs(){
               <input
                 type="checkbox"
                 checked={icpOnly}
-                onChange={e=> setIcpOnly(e.target.checked)}
+                onChange={(e)=> setIcpOnly(e.target.checked)}
               />
               <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
             </label>
           </div>
 
           <div className="row">
-            {/* Tags: multi-select */}
             <div className="tagbar">
               <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>All</Chip>
               {allTags.map((t) => (
@@ -333,31 +397,52 @@ export default function Songs(){
         </div>
       </div>
 
-      {/* Results list */}
       <div
         className="HomeResults"
         role="region"
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
-        {!fuse ? <div>Loading search…</div> : (
-          <div className="HomeGrid" role="listbox" aria-label="Song results">
-            {results.map((s, i) => (
+        <div className="HomeGrid" role="listbox" aria-label="Song results">
+          {resultParts.translated.map((s, i) => (
+            <SongCard
+              as={Link}
+              key={s.id}
+              to={`/song/${s.id}`}
+              role="option"
+              ref={(el) => (optionRefs.current[i] = el)}
+              tabIndex={i === activeIndex ? 0 : -1}
+              aria-selected={i === activeIndex}
+              className={i === activeIndex ? 'active' : ''}
+              title={s.title}
+              subtitle={`${s.originalKey || '—'}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+            />
+          ))}
+
+          {resultParts.translated.length > 0 && resultParts.fallback.length > 0 ? (
+            <div className="gc-translation-divider" role="separator">
+              <span>No Translation in Selected Language</span>
+            </div>
+          ) : null}
+
+          {resultParts.fallback.map((s, i) => {
+            const idx = i + resultParts.translated.length
+            return (
               <SongCard
                 as={Link}
                 key={s.id}
                 to={`/song/${s.id}`}
                 role="option"
-                ref={el => (optionRefs.current[i] = el)}
-                tabIndex={i === activeIndex ? 0 : -1}
-                aria-selected={i === activeIndex}
-                className={i === activeIndex ? 'active' : ''}
+                ref={(el) => (optionRefs.current[idx] = el)}
+                tabIndex={idx === activeIndex ? 0 : -1}
+                aria-selected={idx === activeIndex}
+                className={idx === activeIndex ? 'active' : ''}
                 title={s.title}
                 subtitle={`${s.originalKey || '—'}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
               />
-            ))}
-          </div>
-        )}
+            )
+          })}
+        </div>
       </div>
     </div>
   )

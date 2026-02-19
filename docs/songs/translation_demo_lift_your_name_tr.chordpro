@@ -1,0 +1,29 @@
+{title: Adını Yüceltiriz}
+{id: lift-your-name-tr}
+{song_id: lift-your-name}
+{lang: tr}
+{key: E}
+{authors: GraceChords Test Team}
+{country: Türkiye}
+{tags: Praise, Fast}
+
+{start_of_verse: Kıta 1}
+[E]Tek bir sesle [B]toplandık
+[C#m]Sevinçte hep [A]uyandık
+[E]Her nefeste, her [B]ezgide
+[A]İsa yalnız [B]Sen yükselsin [E]
+{end_of_verse}
+
+{start_of_chorus: Nakarat}
+[E]Adını [B]yüceltiriz
+[C#m]Övgüyle [A]yanarız
+[E]Ebedi Kral [B]hükümdar
+[A]İsa [B]yalnız Sen [E]yükselsin
+{end_of_chorus}
+
+{start_of_bridge: Köprü}
+[A]Kutsaldır [E]Kuzu
+[B]Tahtta [C#m]oturan
+[A]Tüm yaratılış [E]söyler
+[B]Yalnız [E]Seni
+{end_of_bridge}

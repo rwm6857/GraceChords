@@ -24,6 +24,7 @@ const PASSWORD = import.meta.env.VITE_ADMIN_PW
 
 const INITIAL_TEXT = `{title: }
 {key: }
+{lang: en}
 {authors: }
 {country: }
 {tags: }

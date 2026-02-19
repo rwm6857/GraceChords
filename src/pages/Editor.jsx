@@ -22,6 +22,11 @@ import { currentTheme, toggleTheme } from '../utils/theme'
 import { parseFrontmatter, slugifyKebab } from '../utils/markdown'
 import PostMdxEditor from '../components/editor/PostMdxEditor'
 import {
+  buildMetaPresence,
+  inheritTranslationMetadata,
+  stripSongIndexInternalFields,
+} from '../utils/songMetadata'
+import {
   Button,
   Card,
   Chip,
@@ -37,6 +42,7 @@ const EDITOR_PASSWORD = import.meta.env.VITE_EDITOR_PW || import.meta.env.VITE_A
 
 const INITIAL_TEXT = `{title: }
 {key: }
+{lang: en}
 {authors: }
 {country: }
 {tags: }
@@ -1509,12 +1515,13 @@ function EditorHelpTab(){
           </div>
           <div className="gc-help__content Small" style={{ marginTop:8 }}>
             <h3>Editor basics</h3>
-            <p>Fill metadata (title, key, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
+            <p>Fill metadata (title, key, lang, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
             <p>New Song + search lets you start fresh or load an existing song to edit.</p>
             <h3>ChordPro tips</h3>
             <p>Place chords in square brackets like <code>[G]</code>. Section headers use short codes such as <code>{'{sov Verse}'}</code> … <code>{'{eov}'}</code>.</p>
             <pre className="Small" style={{ whiteSpace:'pre-wrap' }}>{`{title: Example}
 {key: G}
+{lang: en}
 {sov Verse}
 [G]Amazing [C]grace
 {eov}`}</pre>
@@ -1696,7 +1703,7 @@ function parseAdded(val){
   return d.toISOString()
 }
 
-function analyzeIncomplete(text = '', meta = {}){
+function analyzeSongContent(text = ''){
   const lines = String(text || '').split(/\r?\n/)
   let hasLyrics = false
   const chordRe = /\[[^\]]+\]/
@@ -1707,31 +1714,71 @@ function analyzeIncomplete(text = '', meta = {}){
     if (line.startsWith('{') && line.endsWith('}')) continue
     if (/^\s*#/.test(line)) continue
     const noChords = line.replace(chordRe, '').trim()
-    if (/[A-Za-z]/.test(noChords)) hasLyrics = true
+    if (/\p{L}/u.test(noChords)) hasLyrics = true
     if (hasLyrics && hasChords) break
   }
-  if (!meta.key) return true
-  if (!hasLyrics) return true
-  if (!hasChords) return true
-  return false
+  return { hasLyrics, hasChords }
 }
 
 function buildIndexEntryFromContent(filename, content){
   const meta = parseMeta(content)
+  const normalizeLang = (value) => {
+    const aliases = {
+      en: 'en',
+      eng: 'en',
+      tr: 'tr',
+      tur: 'tr',
+      ar: 'ar',
+      ara: 'ar',
+      es: 'es',
+      spa: 'es',
+      sp: 'es',
+    }
+    const raw = String(value || '').trim().toLowerCase()
+    if (!raw) return 'en'
+    const base = raw.split(/[-_]/)[0]
+    return aliases[raw] || aliases[base] || base || 'en'
+  }
+  const slugify = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
   const id = String(meta.id || (meta.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'))
     .replace(/(^-|-$)/g, '')
+  const songId = slugify(
+    meta.song_id ||
+    meta.songid ||
+    meta.translation_group ||
+    meta.translationgroup ||
+    meta.group ||
+    meta.translation_of ||
+    meta.translationof ||
+    id
+  ) || id
+  // Canonical language tag is `{lang: xx}`.
+  // Keep legacy key support while existing files migrate.
+  const language = normalizeLang(meta.lang || meta.language || meta.locale || 'en')
   const title = meta.title || id || String(filename || '').replace(/\.chordpro$/,'')
   const addedAt = parseAdded(meta.added || meta.addedat)
+  const analysis = analyzeSongContent(content)
   return {
     id,
+    songId,
+    language,
     title,
     filename,
     originalKey: meta.key || '',
     tags: parseList(meta.tags),
     authors: parseList(meta.authors),
     country: meta.country || '',
+    youtube: meta.youtube || '',
+    mp3: meta.mp3 || '',
+    pptx: meta.pptx || '',
     addedAt: addedAt || undefined,
-    incomplete: analyzeIncomplete(content, meta),
+    incomplete: !meta.key || !analysis.hasLyrics || !analysis.hasChords,
+    _metaPresence: buildMetaPresence(meta),
+    _analysis: analysis,
   }
 }
 
@@ -1754,9 +1801,29 @@ function applySongChangesToIndex(indexBase, stagedItems){
       else nextItems.push(entry)
     }
   }
-  nextItems.sort(compareSongsByTitle)
+  inheritTranslationMetadata(nextItems)
+  for (const item of nextItems) {
+    const analysis = item?._analysis
+    if (!analysis) continue
+    const reasons = []
+    if (!String(item.originalKey || '').trim()) reasons.push('missing key')
+    if (!analysis.hasLyrics) reasons.push('missing lyrics')
+    if (!analysis.hasChords) reasons.push('missing chords')
+    item.incomplete = reasons.length > 0
+  }
+  nextItems.sort((a, b) => {
+    const bySong = compareSongsByTitle({ title: a.songId || a.id || '' }, { title: b.songId || b.id || '' })
+    if (bySong !== 0) return bySong
+    if ((a.language || '') !== (b.language || '')) {
+      return String(a.language || '').localeCompare(String(b.language || ''))
+    }
+    return compareSongsByTitle(a, b)
+  })
+  const outputItems = stripSongIndexInternalFields(nextItems)
   return {
     generatedAt: new Date().toISOString(),
-    items: nextItems,
+    languages: Array.from(new Set(outputItems.map(it => String(it.language || 'en'))))
+      .sort((a, b) => String(a).localeCompare(String(b))),
+    items: outputItems,
   }
 }

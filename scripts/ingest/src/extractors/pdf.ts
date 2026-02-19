@@ -22,6 +22,7 @@ function insertBlankLinesForGaps(lines: ExtractedLine[]): ExtractedLine[] {
   for (let i = 1; i < lines.length; i += 1) {
     const prev = lines[i - 1]
     const next = lines[i]
+    if (prev.page !== undefined && next.page !== undefined && prev.page !== next.page) continue
     if (typeof prev.y !== 'number' || typeof next.y !== 'number') continue
     const gap = next.y - prev.y
     if (gap > 0) gaps.push(gap)
@@ -36,24 +37,33 @@ function insertBlankLinesForGaps(lines: ExtractedLine[]): ExtractedLine[] {
     output.push(current)
     const next = lines[i + 1]
     if (!next) continue
+    if (current.page !== undefined && next.page !== undefined && current.page !== next.page) continue
     if (typeof current.y !== 'number' || typeof next.y !== 'number') continue
     const gap = next.y - current.y
     if (gap > threshold && gap < typicalGap * 6) {
-      output.push({ text: '', y: current.y + gap / 2, source: current.source })
+      output.push({
+        text: '',
+        y: current.y + gap / 2,
+        source: current.source,
+        page: current.page
+      })
     }
   }
   return output
 }
 
 function groupWordsIntoLines(words: WordBox[]): ExtractedLine[] {
-  const sorted = [...words].sort((a, b) => a.y - b.y || a.x - b.x)
-  const lines: { y: number; words: WordBox[] }[] = []
+  const sorted = [...words].sort(
+    (a, b) => (a.page || 1) - (b.page || 1) || a.y - b.y || a.x - b.x
+  )
+  const lines: { page: number; y: number; words: WordBox[] }[] = []
   const threshold = 8
 
   for (const word of sorted) {
+    const page = word.page || 1
     const last = lines[lines.length - 1]
-    if (!last || Math.abs(word.y - last.y) > threshold) {
-      lines.push({ y: word.y, words: [word] })
+    if (!last || page !== last.page || Math.abs(word.y - last.y) > threshold) {
+      lines.push({ page, y: word.y, words: [word] })
     } else {
       last.words.push(word)
     }
@@ -62,7 +72,7 @@ function groupWordsIntoLines(words: WordBox[]): ExtractedLine[] {
   const assembled = lines.map((line) => {
     const wordsSorted = line.words.sort((a, b) => a.x - b.x)
     const text = wordsSorted.map((w) => w.text).join(' ')
-    return { text, y: line.y, words: wordsSorted, source: 'pdf' }
+    return { text, y: line.y, words: wordsSorted, source: 'pdf', page: line.page }
   })
   return insertBlankLinesForGaps(assembled)
 }
@@ -123,9 +133,8 @@ async function extractFromPdfOcr(path: string, warnings: string[]): Promise<Extr
     for (let index = 0; index < files.length; index += 1) {
       const filePath = join(outputDir, files[index])
       const result = await extractFromImage(filePath)
-      const offset = index * 10000
       result.lines.forEach((line) => {
-        lines.push({ ...line, y: (line.y || 0) + offset, source: 'pdf-ocr' })
+        lines.push({ ...line, page: index + 1, source: 'pdf-ocr' })
       })
       if (typeof result.stats.ocrConfidenceAvg === 'number') {
         confSum += result.stats.ocrConfidenceAvg

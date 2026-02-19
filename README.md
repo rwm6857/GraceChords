@@ -187,6 +187,9 @@ npx gc-ingest
 
 # or ingest a single file
 npx gc-ingest ingest /path/to/song.pdf
+
+# ingest a multi-song PDF songbook (bilingual-aware splitter)
+npx gc-ingest ingest-songbook /path/to/songbook.pdf
 ```
 
 Legacy: Convert documents into a ChordPro skeleton with section blocks. Default output uses short ChordPro directives.
@@ -204,6 +207,7 @@ npm run ingest -- path/to/song.pdf --plain
 
 Notes
 - The ingest CLI writes staged output under `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
+- `ingest-songbook` is designed for large multi-page PDFs: it keeps page order, ignores cover/TOC-style pages, and splits numbered Turkish/English song pairs into separate staged songs when detected.
 - Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
 - Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
 - Output directory must exist. By default it is `public/songs`. Use `--out <dir>` to override.

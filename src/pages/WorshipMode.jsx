@@ -11,6 +11,11 @@ import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp
 import { resolveChordCollisions } from '../utils/chords'
 import { publicUrl } from '../utils/publicUrl'
 import { isVerseId, parseVerseId } from '../utils/verseRef'
+import {
+  buildSongCatalog,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+} from '../utils/songCatalog'
 
 const PT_WINDOW = [18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
@@ -24,6 +29,12 @@ export default function WorshipMode(){
   const { songIds = '' } = useParams()
   const navigate = useNavigate()
   const ids = useMemo(() => songIds.split(',').map(s => safeDecodeURIComponent(s.trim())).filter(Boolean), [songIds])
+  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const allSongsById = catalog.byId
+  const selectedLanguage = useMemo(
+    () => resolveInitialSongLanguage(catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages),
+    [catalog]
+  )
 
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections, type }]
   const [idx, setIdx] = useState(0)
@@ -63,12 +74,29 @@ export default function WorshipMode(){
   const [q, setQ] = useState('')
   const [openSuggest, setOpenSuggest] = useState(false)
   const searchRef = useRef(null)
-  const items = indexData?.items || []
+  const quickAddItems = useMemo(() => {
+    const out = []
+    for (const group of catalog.groups || []) {
+      const display = resolveGroupEntry(group, selectedLanguage)
+      if (!display) continue
+      out.push({
+        ...display,
+        searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+      })
+    }
+    return out
+  }, [catalog.groups, selectedLanguage])
   const titleResults = useMemo(() => {
     if (!q.trim()) return []
     const s = q.trim().toLowerCase()
-    return items.filter(it => (it.title || '').toLowerCase().includes(s)).slice(0, 5)
-  }, [q, items])
+    return quickAddItems
+      .filter((it) => {
+        const title = String(it.title || '').toLowerCase()
+        if (title.includes(s)) return true
+        return (it.searchTitles || []).some((t) => String(t || '').toLowerCase().includes(s))
+      })
+      .slice(0, 5)
+  }, [q, quickAddItems])
 
   // Close suggestions on outside click/tap
   useEffect(() => {
@@ -241,7 +269,6 @@ export default function WorshipMode(){
       const idsString = ids.join(',')
       const canRestore = !!(saved && saved.idsString === idsString && (Date.now() - (saved.ts || 0) <= SESSION_TTL_MS))
 
-      const items = indexData?.items || []
       const out = []
       const chapterCache = new Map()
 
@@ -313,7 +340,7 @@ export default function WorshipMode(){
           })
           continue
         }
-        const s = items.find(it => String(it.id) === id)
+        const s = allSongsById.get(String(id))
         if (!s) continue
         try {
           const res = await fetch(publicUrl(`songs/${s.filename}`))
@@ -407,7 +434,7 @@ export default function WorshipMode(){
     }
     load()
     return () => { cancelled = true }
-  }, [songIds, query.toKey, query.toKeys.join('|')])
+  }, [songIds, query.toKey, query.toKeys.join('|'), allSongsById])
 
   // Clear pending swipe-hint timer on unmount
   useEffect(() => {
@@ -577,7 +604,7 @@ export default function WorshipMode(){
 
   async function addSongAfterCurrent(idToAdd){
     try {
-      const entry = (indexData?.items || []).find(it => String(it.id) === String(idToAdd))
+      const entry = allSongsById.get(String(idToAdd))
       if (!entry) return
       const res = await fetch(publicUrl(`songs/${entry.filename}`))
       if (!res.ok) return

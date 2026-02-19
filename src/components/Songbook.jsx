@@ -10,10 +10,18 @@ import { fetchTextCached } from '../utils/fetchCache'
 import { showToast } from '../utils/toast'
 import { publicUrl } from '../utils/publicUrl'
 import { isIncompleteSong } from '../utils/songStatus'
+import {
+  buildSongCatalog,
+  getLanguageChipLabel,
+  hasGroupLanguage,
+  resolveGroupEntry,
+  resolveInitialSongLanguage,
+  writeSongLanguagePreference,
+} from '../utils/songCatalog'
 import Busy from './Busy'
 import { SongCard } from './ui/Card'
 import Input from './ui/Input'
-import { Button, Card, Field, IconButton, PageHeader, Toolbar } from './ui/layout-kit'
+import { Button, Card, Chip, Field, IconButton, PageHeader, Toolbar } from './ui/layout-kit'
 import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from './Icons'
 import '../styles/songbook.css'
 import PageContainer from './layout/PageContainer'
@@ -26,37 +34,69 @@ const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'
 function byTitle(a, b) { return compareSongsByTitle(a, b) }
 
 export default function Songbook() {
-  // Catalog from index.json (uses .items + .filename)
+  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const allSongsById = catalog.byId
+  const languageChipCodes = catalog.translationLanguages || []
+  const [selectedLanguage, setSelectedLanguage] = useState(() =>
+    resolveInitialSongLanguage(languageChipCodes.length ? languageChipCodes : catalog.allLanguages)
+  )
   const items = useMemo(() => {
-    const arr = indexData?.items || []
-    const seen = new Set()
-    const uniq = []
-    for (const s of arr) {
-      if (seen.has(s.id)) continue
-      if (isIncompleteSong(s)) continue
-      seen.add(s.id)
-      uniq.push(s)
+    const out = []
+    for (const group of catalog.groups || []) {
+      let display = resolveGroupEntry(group, selectedLanguage)
+      if (!display) continue
+      if (isIncompleteSong(display)) {
+        const fallback = group.variants.find((v) => !isIncompleteSong(v))
+        if (!fallback) continue
+        display = fallback
+      }
+      out.push({
+        ...display,
+        hasSelectedLanguage: hasGroupLanguage(group, selectedLanguage),
+        searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
+        searchTags: Array.from(new Set(group.variants.flatMap((v) => v.tags || []))),
+        searchAuthors: Array.from(new Set(group.variants.flatMap((v) => v.authors || []))),
+      })
     }
-    return uniq.slice().sort(byTitle)
-  }, [])
+    return out.slice().sort((a, b) => {
+      if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
+        return a.hasSelectedLanguage ? -1 : 1
+      }
+      return byTitle(a, b)
+    })
+  }, [catalog.groups, selectedLanguage])
 
   const location = useLocation()
   const navigate = useNavigate()
   const quickAppliedRef = useRef(false)
 
+  useEffect(() => {
+    writeSongLanguagePreference(selectedLanguage)
+  }, [selectedLanguage])
+
   // Search (match Setlist semantics).
   const [q, setQ] = useState('')
 
-  const fuse = useMemo(() => new Fuse(items, { keys: ['title','tags','authors'], threshold:0.4 }), [items])
+  const fuse = useMemo(() => new Fuse(items, {
+    keys: ['title', 'tags', 'authors', 'searchTitles', 'searchTags', 'searchAuthors'],
+    threshold: 0.4
+  }), [items])
   const results = useMemo(() => {
-    return q ? fuse.search(q).map(r => r.item) : items.slice().sort(byTitle)
+    const base = q ? fuse.search(q).map((r) => r.item) : items.slice()
+    base.sort((a, b) => {
+      if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
+        return a.hasSelectedLanguage ? -1 : 1
+      }
+      return byTitle(a, b)
+    })
+    return base
   }, [items, fuse, q])
 
   // Selection
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const selectedEntries = useMemo(
-    () => results.filter((s) => selectedIds.has(s.id)).slice().sort(byTitle),
-    [results, selectedIds]
+    () => Array.from(selectedIds).map((id) => allSongsById.get(id)).filter(Boolean).slice().sort(byTitle),
+    [selectedIds, allSongsById]
   )
   const filteredCount = results.length
   const selectedCount = selectedIds.size
@@ -308,6 +348,24 @@ export default function Songbook() {
                   <span className="text-when-narrow">All</span>
                 </Button>
               </div>
+              {languageChipCodes.length > 0 ? (
+                <div className={['BuilderHeader', 'section-header'].filter(Boolean).join(' ')} style={{ paddingTop: 0, display:'flex', alignItems:'center', gap:8 }}>
+                  <span className="meta">Language</span>
+                  <div className="tagbar">
+                    {languageChipCodes.map((code) => (
+                      <Chip
+                        key={code}
+                        variant="filter"
+                        selected={selectedLanguage === code}
+                        onClick={() => setSelectedLanguage(code)}
+                        title={`Use ${getLanguageChipLabel(code)} where available`}
+                      >
+                        {getLanguageChipLabel(code)}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div
                 className={['BuilderScroll', 'setlist-scroll', 'pane--addSongs'].join(' ')}

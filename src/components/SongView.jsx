@@ -1,6 +1,6 @@
 // src/components/SongView.jsx
-import React, { useEffect, useRef, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { resolveChordCollisions } from '../utils/chords'
@@ -18,6 +18,14 @@ import Busy from './Busy'
 import Panel from './ui/Panel'
 import { publicUrl } from '../utils/publicUrl'
 import { Button, Card, Chip, IconButton, InsetCard, PageHeader, Toolbar } from './ui/layout-kit'
+import {
+  buildSongCatalog,
+  getEntryById,
+  getGroupByEntryId,
+  getLanguageChipLabel,
+  resolveGroupEntry,
+  writeSongLanguagePreference,
+} from '../utils/songCatalog'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -26,6 +34,7 @@ let imageLibPromise
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
+const SONG_CATALOG = buildSongCatalog(indexData?.items || [])
 
 function buildSongSeo(entry, parsed, id){
   const slugFromFile = entry?.filename ? entry.filename.replace(/\.chordpro$/, '') : ''
@@ -63,7 +72,7 @@ function buildSongSeo(entry, parsed, id){
     '@context': 'https://schema.org',
     '@type': 'MusicComposition',
     name: title,
-    inLanguage: 'en',
+    inLanguage: entry?.language || 'en',
     url,
     isFamilyFriendly: true,
     publisher: 'GraceChords'
@@ -84,7 +93,10 @@ function buildSongSeo(entry, parsed, id){
 
 export default function SongView(){
   const { id } = useParams()
-  const [entry, setEntry] = useState(null)
+  const navigate = useNavigate()
+  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [id])
+  const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [id])
+  const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
   const [toKey, setToKey] = useState('C')
   const [showChords, setShowChords] = useState(true)
@@ -114,6 +126,13 @@ export default function SongView(){
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
   const isIcpSong = !!songSeo.isIcpSong
+  const mediaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube || entry?.youtube || ''
+  const mediaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3 || entry?.mp3 || ''
+
+  useEffect(() => {
+    if (!entry?.language) return
+    writeSongLanguagePreference(entry.language)
+  }, [entry?.id, entry?.language])
 
 
   useEffect(() => {
@@ -146,12 +165,6 @@ export default function SongView(){
     }
     return pdfPlanPromise
   }
-
-  // find the index item
-  useEffect(()=>{
-    const it = (indexData?.items || []).find(x => String(x.id) === String(id)) || null
-    setEntry(it)
-  }, [id])
 
   // load & parse chordpro
   useEffect(()=>{
@@ -212,7 +225,7 @@ export default function SongView(){
   // prefetch neighbor songs (no await here)
   useEffect(() => {
     if (!entry) return
-    const items = indexData?.items || []
+    const items = SONG_CATALOG.items || []
     const i = items.findIndex(x => x.id === entry.id)
     const neighbors = [items[i-1], items[i+1]].filter(Boolean)
     neighbors.forEach((n) => {
@@ -410,6 +423,16 @@ export default function SongView(){
     }
   }
 
+  function handleLanguageSelect(language){
+    if (!translationGroup) return
+    const next = resolveGroupEntry(translationGroup, language)
+    if (!next) return
+    writeSongLanguagePreference(language)
+    if (next.id !== entry?.id) {
+      navigate(`/song/${encodeURIComponent(next.id)}`)
+    }
+  }
+
   
 
   return (
@@ -417,7 +440,26 @@ export default function SongView(){
       {helmet}
       <Busy busy={busy} />
       <PageHeader
-        title={title}
+        title={
+          <div className="gc-song-title-row">
+            <span>{title}</span>
+            {translationLanguages.length > 1 ? (
+              <span className="gc-song-language-chips" aria-label="Song language">
+                {translationLanguages.map((code) => (
+                  <Chip
+                    key={code}
+                    variant="filter"
+                    selected={entry?.language === code}
+                    onClick={() => handleLanguageSelect(code)}
+                    title={`Switch to ${getLanguageChipLabel(code)}`}
+                  >
+                    {getLanguageChipLabel(code)}
+                  </Chip>
+                ))}
+              </span>
+            ) : null}
+          </div>
+        }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
         actions={!isNarrow ? (
           <Toolbar className="gc-song-toolbar">
@@ -552,11 +594,7 @@ export default function SongView(){
         ))}
       </Card>
 
-      {(() => {
-        const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-        const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
-        return (metaYoutube || metaMp3)
-      })() && (
+      {(mediaYoutube || mediaMp3) && (
         <Card className="gc-media-panel" style={{ marginTop: 12 }}>
           <Panel
             title={<span style={{ display:'inline-flex', alignItems:'center', gap:8 }}><MediaIcon /> Media</span>}
@@ -564,22 +602,18 @@ export default function SongView(){
             onToggle={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
           >
             <div className="media__stack">
-              {(() => {
-                const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-                return metaYoutube
-              })() && (
+              {mediaYoutube && (
                 <InsetCard className="media__card">
                   <div className="media__label">Reference Video</div>
                   {(() => {
-                   const metaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube
-                   const ytId = extractYouTubeId(metaYoutube)
+                   const ytId = extractYouTubeId(mediaYoutube)
                    return ytId ? (
                       <div style={{ marginTop: 12 }}>
                         <LiteYouTube id={ytId} />
                       </div>
                     ) : (
                       <Button
-                        href={String(metaYoutube)}
+                        href={String(mediaYoutube)}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ marginTop: 12 }}
@@ -591,13 +625,10 @@ export default function SongView(){
                 </InsetCard>
               )}
 
-              {(() => {
-                const metaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3
-                return metaMp3
-              })() && (
+              {mediaMp3 && (
                 <InsetCard className="media__card">
                   <div className="media__label">Audio</div>
-                  <audio className="media__audio" controls src={(parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3)} />
+                  <audio className="media__audio" controls src={mediaMp3} />
                 </InsetCard>
               )}
             </div>

@@ -1,14 +1,13 @@
 GraceChords Song Metadata Report
-Generated: 2026-01-26T23:34:33.566Z
-Total songs: 167
-Complete: 115
-Incomplete: 52
+Generated: 2026-02-18T19:04:37.844Z
+Total songs: 199
+Complete: 149
+Incomplete: 50
 
 Incomplete songs (missing key and/or lyrics/chords):
 - ‘Tis So Sweet to Trust in Jesus — missing chords
 - At the Cross (Love Ran Red)
 {key: G — missing key
-- Great is Thy Faithfulness — missing chords
 - Hail to the Brightness of Zion's Glad Morning — missing chords
 - Hallelujah (Your Love is Amazing) — missing key; missing lyrics; missing chords
 - Happy Day — missing chords
@@ -57,9 +56,9 @@ Incomplete songs (missing key and/or lyrics/chords):
 - There Is a Cloud — missing key; missing lyrics; missing chords
 - Touch of Heaven — missing key; missing lyrics; missing chords
 - Where Jesus is Tis Heaven — missing chords
-- With All My Heart — missing key; missing lyrics; missing chords
 
 Complete songs with missing optional metadata (not hidden):
+- Adını Yüceltiriz — missing youtube
 - All That’s Within Me — missing authors
 - Amazing Grace — missing country
 - Away In A Manger — missing country
@@ -70,12 +69,17 @@ Complete songs with missing optional metadata (not hidden):
 - Dreams of Heaven — missing authors
 - Elohim is Our Refuge — missing authors
 - Everlasting Grace — missing authors
+- Faithful Through Night — missing youtube
 - Father We Ask — missing authors
+- Gece Boyu Sadık — missing youtube
 - Global Church of Christ — missing authors
 - Glorious King — missing authors
 - God of Our Fathers — missing authors
+- God Rest Ye Merry Gentlemen — missing authors, country
 - Goodbye Yesterday — missing country
+- Grace on Grace — missing youtube
 - Great is the Lord — missing authors
+- Hark! The Herald Angels Sing — missing country
 - Here I Am — missing authors
 - Holy Spirit Come — missing authors, youtube
 - Hope of the Nations — missing authors
@@ -91,9 +95,11 @@ Complete songs with missing optional metadata (not hidden):
 - Kernel of Wheat — missing authors, youtube
 - King of Kings (InterCP Int’l Ver.) — missing youtube
 - Let Us Sing to the Lord — missing authors
+- Lift Your Name — missing youtube
 - Lion of Judah — missing authors
 - Lord I Give You My Heart — missing authors, country, youtube
 - Lord We Seek — missing authors
+- Lütuf Üstüne Lütuf — missing youtube
 - Maranatha — missing authors
 - My God, You Alone — missing authors, youtube
 - My Savior King — missing authors
@@ -102,7 +108,10 @@ Complete songs with missing optional metadata (not hidden):
 - Once Again — missing authors, youtube
 - Open Up the Doors of Heaven — missing authors
 - Preaching the Cross — missing authors, youtube
+- Rab Bizi Gönder — missing youtube
+- River of Hope — missing youtube
 - Seek, Hope, and Pray — missing authors
+- Send Us Lord — missing youtube
 - Shalom Jerusalem — missing authors, youtube
 - Shouting Victory — missing authors
 - Sing Sing Sing (InterCP Int’l Ver.) — missing youtube
@@ -111,6 +120,7 @@ Complete songs with missing optional metadata (not hidden):
 - The Love of the Cross — missing authors, youtube
 - The Revival — missing authors
 - The Throne — missing authors
+- Umut Nehri — missing youtube
 - Up and Fight Against the Devil — missing authors
 - What a Beautiful Name (InterCP Int’l Ver.) — missing youtube
 - You Endured the Cross — missing authors

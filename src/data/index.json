@@ -1,8 +1,18 @@
 {
+<<<<<<< HEAD
   "generatedAt": "2026-02-10T03:41:15.342Z",
+=======
+  "generatedAt": "2026-02-18T19:04:37.842Z",
+  "languages": [
+    "en",
+    "tr"
+  ],
+>>>>>>> 3805ee29 (Added song translation support -- ignore the handful of test songs added. Looking forward to all nations worship)
   "items": [
     {
       "id": "10-000-reasons",
+      "songId": "10-000-reasons",
+      "language": "en",
       "title": "10,000 Reasons",
       "filename": "10_000_reasons.chordpro",
       "originalKey": "C",
@@ -15,10 +25,15 @@
         "Jonas Myrin"
       ],
       "country": "USA",
+      "youtube": "XtwIT8JjddM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "a-mighty-fortress-is-our-god",
+      "songId": "a-mighty-fortress-is-our-god",
+      "language": "en",
       "title": "A Mighty Fortress Is Our God",
       "filename": "a_mighty_fortress_is_our_god.chordpro",
       "originalKey": "D",
@@ -29,10 +44,15 @@
         "Martin Luther"
       ],
       "country": "Germany",
+      "youtube": "vyedsfF6hNk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "abba",
+      "songId": "abba",
+      "language": "en",
       "title": "Abba",
       "filename": "abba.chordpro",
       "originalKey": "Am",
@@ -46,10 +66,15 @@
         "Avraham Fried"
       ],
       "country": "Israel",
+      "youtube": "nSkHruWwsos",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "abba-father",
+      "songId": "abba-father",
+      "language": "en",
       "title": "Abba Father",
       "filename": "abba_father.chordpro",
       "originalKey": "E",
@@ -60,10 +85,15 @@
         "Shaun Groves"
       ],
       "country": "USA",
+      "youtube": "a9AGE94ybKU",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "above-all",
+      "songId": "above-all",
+      "language": "en",
       "title": "Above All",
       "filename": "above_all.chordpro",
       "originalKey": "A",
@@ -78,10 +108,15 @@
         "Lenny LeBlanc"
       ],
       "country": "USA",
+      "youtube": "LtJK5oqAh_8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "agnus-dei",
+      "songId": "agnus-dei",
+      "language": "en",
       "title": "Agnus Dei",
       "filename": "agnus_dei.chordpro",
       "originalKey": "A",
@@ -93,10 +128,15 @@
         "Mac Pawel"
       ],
       "country": "USD",
+      "youtube": "HPBmFwBSGb0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "all-that-s-within-me",
+      "songId": "all-that-s-within-me",
+      "language": "en",
       "title": "All That’s Within Me",
       "filename": "all_thats_within_me.chordpro",
       "originalKey": "A",
@@ -107,10 +147,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "MzZIyH9XTuY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "amazing-grace",
+      "songId": "amazing-grace",
+      "language": "en",
       "title": "Amazing Grace",
       "filename": "amazing_grace.chordpro",
       "originalKey": "D",
@@ -121,10 +166,15 @@
         "John Newton"
       ],
       "country": "",
+      "youtube": "HHx05uZHj1I",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "amazing-love",
+      "songId": "amazing-love",
+      "language": "en",
       "title": "Amazing Love",
       "filename": "amazing_love.chordpro",
       "originalKey": "D",
@@ -136,10 +186,15 @@
         "Billy James Foote"
       ],
       "country": "USA",
+      "youtube": "gV-15Gf5KqY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "ancient-of-days",
+      "songId": "ancient-of-days",
+      "language": "en",
       "title": "Ancient Of Days",
       "filename": "ancient_of_days.chordpro",
       "originalKey": "D",
@@ -154,10 +209,15 @@
         "Gary Sadler"
       ],
       "country": "USA",
+      "youtube": "kvG8pjLXcoQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "another-in-the-fire",
+      "songId": "another-in-the-fire",
+      "language": "en",
       "title": "Another In The Fire",
       "filename": "another_in_the_fire.chordpro",
       "originalKey": "Am",
@@ -168,10 +228,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "zmNc0L7Ac5c",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "as-the-deer",
+      "songId": "as-the-deer",
+      "language": "en",
       "title": "As the Deer",
       "filename": "as_the_deer.chordpro",
       "originalKey": "E",
@@ -182,10 +247,15 @@
         "Martin J. Nystrom"
       ],
       "country": "USA",
+      "youtube": "TF-2OZ8n8LM",
+      "mp3": "RVQmZCK4Fiw",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "at-the-cross-love-ran-red-key-g",
+      "songId": "at-the-cross-love-ran-red-key-g",
+      "language": "en",
       "title": "At the Cross (Love Ran Red)\n{key: G",
       "filename": "at_the_cross.chordpro",
       "originalKey": "",
@@ -197,10 +267,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "Zev5tHjCB_s",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "away-in-a-manger",
+      "songId": "away-in-a-manger",
+      "language": "en",
       "title": "Away In A Manger",
       "filename": "away_in_a_manger.chordpro",
       "originalKey": "F",
@@ -213,10 +288,15 @@
         "John T. MacFarland"
       ],
       "country": "",
+      "youtube": "GjtYtBGrP6Y",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "awesome-god",
+      "songId": "awesome-god",
+      "language": "en",
       "title": "Awesome God",
       "filename": "awesome_god.chordpro",
       "originalKey": "A",
@@ -228,10 +308,15 @@
         "Rich Mullins"
       ],
       "country": "USA",
+      "youtube": "2w2b033DXCw",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "battle-belongs",
+      "songId": "battle-belongs",
+      "language": "en",
       "title": "Battle Belongs",
       "filename": "battle_belongs.chordpro",
       "originalKey": "F",
@@ -243,10 +328,15 @@
         "Phil Wickham"
       ],
       "country": "USA",
+      "youtube": "jtAkN4-13F0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "be-lifted-high",
+      "songId": "be-lifted-high",
+      "language": "en",
       "title": "Be Lifted High",
       "filename": "be_lifted_high.chordpro",
       "originalKey": "Dm",
@@ -258,10 +348,15 @@
         "Bethel"
       ],
       "country": "USA",
+      "youtube": "L-pYsmdOz5g",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "be-thou-my-vision",
+      "songId": "be-thou-my-vision",
+      "language": "en",
       "title": "Be Thou My Vision",
       "filename": "be_thou_my_vision.chordpro",
       "originalKey": "D",
@@ -274,10 +369,15 @@
         "Andy Melvin"
       ],
       "country": "Ireland",
+      "youtube": "Optrm7lF16s",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "beautiful-one",
+      "songId": "beautiful-one",
+      "language": "en",
       "title": "Beautiful One",
       "filename": "beautiful_one.chordpro",
       "originalKey": "G",
@@ -288,10 +388,15 @@
         "Tim Hughes"
       ],
       "country": "USA",
+      "youtube": "3PZMfqsXuUg",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "beautiful-savior",
+      "songId": "beautiful-savior",
+      "language": "en",
       "title": "Beautiful Savior",
       "filename": "beautiful_savior.chordpro",
       "originalKey": "A",
@@ -303,10 +408,15 @@
         "Planetshakers"
       ],
       "country": "USA",
+      "youtube": "JqqQnLyH_l0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "because-he-lives",
+      "songId": "because-he-lives",
+      "language": "en",
       "title": "Because He Lives",
       "filename": "because_he_lives.chordpro",
       "originalKey": "G",
@@ -317,10 +427,15 @@
         "Celtic Worship"
       ],
       "country": "",
+      "youtube": "RFIr8-gH55E",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "better-word",
+      "songId": "better-word",
+      "language": "en",
       "title": "Better Word",
       "filename": "better_word.chordpro",
       "originalKey": "B",
@@ -332,10 +447,15 @@
         "Leeland"
       ],
       "country": "USA",
+      "youtube": "Zs8f0Vr2M4A",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "blessed-assurance",
+      "songId": "blessed-assurance",
+      "language": "en",
       "title": "Blessed Assurance",
       "filename": "blessed_assurance.chordpro",
       "originalKey": "D",
@@ -347,10 +467,15 @@
         "Fanny Jane Crosby"
       ],
       "country": "USA",
+      "youtube": "DRA-pK63x3U",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "blessed-be-your-name",
+      "songId": "blessed-be-your-name",
+      "language": "en",
       "title": "Blessed be Your Name",
       "filename": "blessed_be_your_name.chordpro",
       "originalKey": "A",
@@ -362,10 +487,15 @@
         "Beth Redman"
       ],
       "country": "USA",
+      "youtube": "Pn6-lfoJ1x0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "blow-the-trumpet-in-zion",
+      "songId": "blow-the-trumpet-in-zion",
+      "language": "en",
       "title": "Blow the Trumpet in Zion",
       "filename": "blow_the_trumpet_in_zion.chordpro",
       "originalKey": "Dm",
@@ -377,10 +507,15 @@
         "Paul Wilbur"
       ],
       "country": "Israel",
+      "youtube": "cW4Kb8AE2Ps",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "broken-vessels",
+      "songId": "broken-vessels",
+      "language": "en",
       "title": "Broken Vessels",
       "filename": "broken_vessels.chordpro",
       "originalKey": "G",
@@ -391,10 +526,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "uz9xKtRhpjc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "build-my-life",
+      "songId": "build-my-life",
+      "language": "en",
       "title": "Build my life",
       "filename": "build_my_life.chordpro",
       "originalKey": "G",
@@ -405,10 +545,15 @@
         "Pat Barrett"
       ],
       "country": "USA",
+      "youtube": "Z32HiCoFzlU",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "calling",
+      "songId": "calling",
+      "language": "en",
       "title": "Calling",
       "filename": "calling.chordpro",
       "originalKey": "B",
@@ -420,10 +565,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "LxCRbD0yJnE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "christ-be-magnified",
+      "songId": "christ-be-magnified",
+      "language": "en",
       "title": "Christ be Magnified",
       "filename": "christ_be_magnified.chordpro",
       "originalKey": "A",
@@ -437,10 +587,15 @@
         "Ethan Hulse"
       ],
       "country": "USA",
+      "youtube": "pQYHcG-6w0E",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "christ-is-enough",
+      "songId": "christ-is-enough",
+      "language": "en",
       "title": "Christ Is Enough",
       "filename": "christ_is_enough.chordpro",
       "originalKey": "Bm",
@@ -452,10 +607,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "teUxQpnhezY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "close-to-thee",
+      "songId": "close-to-thee",
+      "language": "en",
       "title": "Close to Thee",
       "filename": "close_to_thee.chordpro",
       "originalKey": "G",
@@ -467,25 +627,15 @@
         "Fanny Crosby"
       ],
       "country": "USA",
-      "incomplete": false
-    },
-    {
-      "id": "come-to-us-emmanuel",
-      "title": "Come to Us, Emmanuel",
-      "filename": "come_to_us_emmanuel.chordpro",
-      "originalKey": "C",
-      "tags": [
-        "Slow",
-        "Nations",
-        "Mission",
-        "ICP"
-      ],
-      "authors": [],
-      "country": "Uzbekistan",
+      "youtube": "8g88DKwJNd8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "come-now-is-the-time-to-worship",
+      "songId": "come-now-is-the-time-to-worship",
+      "language": "en",
       "title": "Come, Now is the Time to Worship",
       "filename": "come_now_is_the_time_to_worship.chordpro",
       "originalKey": "D",
@@ -498,10 +648,35 @@
         "Brian Doerkson"
       ],
       "country": "USA",
+      "youtube": "NPWq8eM4lu8",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "come-to-us-emmanuel",
+      "songId": "come-to-us-emmanuel",
+      "language": "en",
+      "title": "Come to Us, Emmanuel",
+      "filename": "come_to_us_emmanuel.chordpro",
+      "originalKey": "C",
+      "tags": [
+        "Slow",
+        "Nations",
+        "Mission",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "Uzbekistan",
+      "youtube": "NmLlk_eo7kc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "cornerstone",
+      "songId": "cornerstone",
+      "language": "en",
       "title": "Cornerstone",
       "filename": "cornerstone.chordpro",
       "originalKey": "Db",
@@ -514,10 +689,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "izrk-erhDdk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "create-in-me-a-clean-heart",
+      "songId": "create-in-me-a-clean-heart",
+      "language": "en",
       "title": "Create In Me A Clean Heart",
       "filename": "create_in_me_a_clean_heart.chordpro",
       "originalKey": "G",
@@ -529,10 +709,15 @@
         "Keith Green"
       ],
       "country": "USA",
+      "youtube": "b7Hk3WFUMvo",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "creation-is-awaiting",
+      "songId": "creation-is-awaiting",
+      "language": "en",
       "title": "Creation is Awaiting",
       "filename": "creation_is_awaiting.chordpro",
       "originalKey": "A",
@@ -546,10 +731,15 @@
         "Christ Bowater"
       ],
       "country": "USA",
+      "youtube": "MrvxMnmECpY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "dancing-generation",
+      "songId": "dancing-generation",
+      "language": "en",
       "title": "Dancing Generation",
       "filename": "dancing_generation.chordpro",
       "originalKey": "D",
@@ -561,10 +751,15 @@
         "Matt Redman"
       ],
       "country": "USA",
+      "youtube": "qEwFjQ3I-Os",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "dancing-on-the-grave",
+      "songId": "dancing-on-the-grave",
+      "language": "en",
       "title": "Dancing on the grave",
       "filename": "dancing_on_the_grave.chordpro",
       "originalKey": "Em",
@@ -575,10 +770,15 @@
         "Christ for the Nations"
       ],
       "country": "USA",
+      "youtube": "1F-6SzFJycA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "days-of-elijah-intercp-ver",
+      "songId": "days-of-elijah-intercp-ver",
+      "language": "en",
       "title": "Days of Elijah (InterCP Ver.)",
       "filename": "days_of_elijah.chordpro",
       "originalKey": "A",
@@ -591,10 +791,15 @@
         "Robin Mark"
       ],
       "country": "Israel",
+      "youtube": "ca9LnzJnpjQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "dear-brother",
+      "songId": "dear-brother",
+      "language": "en",
       "title": "Dear Brother",
       "filename": "dear_brother.chordpro",
       "originalKey": "Am",
@@ -606,10 +811,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "om7jr5OJiP0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "deep-cries-out",
+      "songId": "deep-cries-out",
+      "language": "en",
       "title": "Deep Cries Out",
       "filename": "deep_cries_out.chordpro",
       "originalKey": "C",
@@ -620,10 +830,15 @@
         "William Matthews"
       ],
       "country": "USA",
+      "youtube": "U8hVR5Ptnq0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "do-it-again",
+      "songId": "do-it-again",
+      "language": "en",
       "title": "Do It Again",
       "filename": "do_it_again.chordpro",
       "originalKey": "Eb",
@@ -635,10 +850,15 @@
         "Elevation Worship"
       ],
       "country": "USA",
+      "youtube": "ZOBIPb-6PTc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "draw-me-close-to-you",
+      "songId": "draw-me-close-to-you",
+      "language": "en",
       "title": "Draw Me Close To You",
       "filename": "draw_me_close_to_you.chordpro",
       "originalKey": "A",
@@ -650,10 +870,15 @@
         "Kelly Carpenter"
       ],
       "country": "USA",
+      "youtube": "h561DdhNutQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "dreams-of-heaven",
+      "songId": "dreams-of-heaven",
+      "language": "en",
       "title": "Dreams of Heaven",
       "filename": "dreams_of_heaven.chordpro",
       "originalKey": "A",
@@ -664,10 +889,15 @@
       ],
       "authors": [],
       "country": "China",
+      "youtube": "exHGRix34CE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "elohim-is-our-refuge",
+      "songId": "elohim-is-our-refuge",
+      "language": "en",
       "title": "Elohim is Our Refuge",
       "filename": "elohim_is_our_refuge.chordpro",
       "originalKey": "Am",
@@ -678,10 +908,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "pg2tFM22PSI",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "even-so-come",
+      "songId": "even-so-come",
+      "language": "en",
       "title": "Even So Come",
       "filename": "even_so_come.chordpro",
       "originalKey": "A",
@@ -692,10 +927,15 @@
         "Passion"
       ],
       "country": "USA",
+      "youtube": "fBHcvJhc6Pk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "ever-be",
+      "songId": "ever-be",
+      "language": "en",
       "title": "Ever Be",
       "filename": "ever_be.chordpro",
       "originalKey": "D",
@@ -707,10 +947,15 @@
         "Bethel Music"
       ],
       "country": "USA",
+      "youtube": "BhasSpSBdEE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "everlasting-god",
+      "songId": "everlasting-god",
+      "language": "en",
       "title": "Everlasting God",
       "filename": "everlasting_god.chordpro",
       "originalKey": "B",
@@ -723,10 +968,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "JSHRThrP1O0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "everlasting-grace",
+      "songId": "everlasting-grace",
+      "language": "en",
       "title": "Everlasting Grace",
       "filename": "everlasting_grace.chordpro",
       "originalKey": "D",
@@ -737,10 +987,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "70aCGyaN-Fo",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "every-praise",
+      "songId": "every-praise",
+      "language": "en",
       "title": "Every Praise",
       "filename": "every_praise.chordpro",
       "originalKey": "G",
@@ -753,10 +1008,55 @@
         "Hezekiah Walker"
       ],
       "country": "USA",
+      "youtube": "ITwsmJDGX0c",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "faithful-through-night-en",
+      "songId": "faithful-through-night",
+      "language": "en",
+      "title": "Faithful Through Night",
+      "filename": "translation_demo_faithful_through_night_en.chordpro",
+      "originalKey": "C",
+      "tags": [
+        "Slow",
+        "Prayer"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "faithful-through-night-tr",
+      "songId": "faithful-through-night",
+      "language": "tr",
+      "title": "Gece Boyu Sadık",
+      "filename": "translation_demo_faithful_through_night_tr.chordpro",
+      "originalKey": "C",
+      "tags": [
+        "Slow",
+        "Prayer"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "Türkiye",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "father-we-ask",
+      "songId": "father-we-ask",
+      "language": "en",
       "title": "Father We Ask",
       "filename": "father_we_ask.chordpro",
       "originalKey": "G",
@@ -768,10 +1068,15 @@
       ],
       "authors": [],
       "country": "Russia",
+      "youtube": "tOg3Lshvjnc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "fierce",
+      "songId": "fierce",
+      "language": "en",
       "title": "Fierce",
       "filename": "fierce.chordpro",
       "originalKey": "G",
@@ -783,10 +1088,15 @@
         "Jesus Culture"
       ],
       "country": "USA",
+      "youtube": "II1JKBuz-AY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "for-all-you-ve-done",
+      "songId": "for-all-you-ve-done",
+      "language": "en",
       "title": "For All You've Done",
       "filename": "for_all_you_ve_done.chordpro",
       "originalKey": "E",
@@ -798,10 +1108,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "XTlHrmNAMQk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "for-the-lord-is-marching-on",
+      "songId": "for-the-lord-is-marching-on",
+      "language": "en",
       "title": "For the Lord is Marching On",
       "filename": "for_the_lord_is_marching_on.chordpro",
       "originalKey": "Dm",
@@ -814,10 +1129,15 @@
         "Kent Henry"
       ],
       "country": "USA",
+      "youtube": "Cx7yM0i0UqA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "forever",
+      "songId": "forever",
+      "language": "en",
       "title": "Forever",
       "filename": "forever.chordpro",
       "originalKey": "A",
@@ -829,10 +1149,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "d6xxWGWpaUQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "give-me-jesus",
+      "songId": "give-me-jesus",
+      "language": "en",
       "title": "Give me Jesus",
       "filename": "give_me_jesus.chordpro",
       "originalKey": "G",
@@ -844,10 +1169,15 @@
         "Abbie Gamboa"
       ],
       "country": "USA",
+      "youtube": "YEenBiBh91A",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "give-thanks-with-a-grateful-heart",
+      "songId": "give-thanks-with-a-grateful-heart",
+      "language": "en",
       "title": "Give Thanks With a Grateful Heart",
       "filename": "give_thanks_with_a_grateful_heart.chordpro",
       "originalKey": "G",
@@ -859,10 +1189,15 @@
         "Henry Smith"
       ],
       "country": "USA",
+      "youtube": "blbslHDgceY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "give-us-clean-hands",
+      "songId": "give-us-clean-hands",
+      "language": "en",
       "title": "Give us Clean Hands",
       "filename": "give_us_clean_hands.chordpro",
       "originalKey": "G",
@@ -875,10 +1210,15 @@
         "Charlie Hall"
       ],
       "country": "USA",
+      "youtube": "O5h02YcA6-0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "global-church-of-christ",
+      "songId": "global-church-of-christ",
+      "language": "en",
       "title": "Global Church of Christ",
       "filename": "global_church_of_christ.chordpro",
       "originalKey": "B",
@@ -889,10 +1229,15 @@
       ],
       "authors": [],
       "country": "China",
+      "youtube": "lPU6c-Eg5Z4",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "glorify-your-name",
+      "songId": "glorify-your-name",
+      "language": "en",
       "title": "Glorify Your Name",
       "filename": "glorify_your_name.chordpro",
       "originalKey": "A",
@@ -904,10 +1249,15 @@
         "Darlene Zscech"
       ],
       "country": "USA",
+      "youtube": "r9v6fpFQ6n4",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "glorious-king",
+      "songId": "glorious-king",
+      "language": "en",
       "title": "Glorious King",
       "filename": "glorious_king.chordpro",
       "originalKey": "A",
@@ -919,10 +1269,15 @@
       ],
       "authors": [],
       "country": "Egypt",
+      "youtube": "VW_LxsRCO-U",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "god-of-our-fathers",
+      "songId": "god-of-our-fathers",
+      "language": "en",
       "title": "God of Our Fathers",
       "filename": "god_of_our_fathers.chordpro",
       "originalKey": "C",
@@ -933,10 +1288,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "iH1VxYFdFgE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "god-of-wonders",
+      "songId": "god-of-wonders",
+      "language": "en",
       "title": "God of Wonders",
       "filename": "god_of_wonders.chordpro",
       "originalKey": "G",
@@ -950,10 +1310,15 @@
         "Third Day"
       ],
       "country": "USA",
+      "youtube": "r9orlWiaDfM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "god-rest-ye-merry-gentlemen",
+      "songId": "god-rest-ye-merry-gentlemen",
+      "language": "en",
       "title": "God Rest Ye Merry Gentlemen",
       "filename": "god_rest_ye_merry_gentlemen.chordpro",
       "originalKey": "G",
@@ -963,10 +1328,15 @@
       ],
       "authors": [],
       "country": "",
+      "youtube": "u5KpZBQ6yGE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "good-good-father",
+      "songId": "good-good-father",
+      "language": "en",
       "title": "Good Good Father",
       "filename": "good_good_father.chordpro",
       "originalKey": "A",
@@ -979,10 +1349,15 @@
         "Tony Brown"
       ],
       "country": "USA",
+      "youtube": "nC2gZMNrdmw",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "goodbye-yesterday",
+      "songId": "goodbye-yesterday",
+      "language": "en",
       "title": "Goodbye Yesterday",
       "filename": "goodbye_yesterday.chordpro",
       "originalKey": "G",
@@ -994,10 +1369,15 @@
         "Elevation Worship"
       ],
       "country": "",
+      "youtube": "rM8lL3C6bss",
+      "mp3": "",
+      "pptx": "qOD9M95_fS0",
       "incomplete": false
     },
     {
       "id": "goodness-of-god",
+      "songId": "goodness-of-god",
+      "language": "en",
       "title": "Goodness of God",
       "filename": "goodness_of_god.chordpro",
       "originalKey": "Ab",
@@ -1013,10 +1393,55 @@
         "Brian Johnson"
       ],
       "country": "USA",
+      "youtube": "IvSuGyJQ6oM",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "grace-on-grace-en",
+      "songId": "grace-on-grace",
+      "language": "en",
+      "title": "Grace on Grace",
+      "filename": "translation_demo_grace_on_grace_en.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Worship",
+        "Slow"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "grace-on-grace-tr",
+      "songId": "grace-on-grace",
+      "language": "tr",
+      "title": "Lütuf Üstüne Lütuf",
+      "filename": "translation_demo_grace_on_grace_tr.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Worship",
+        "Slow"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "Türkiye",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "great-are-you-lord",
+      "songId": "great-are-you-lord",
+      "language": "en",
       "title": "Great are You Lord",
       "filename": "great_are_you_lord.chordpro",
       "originalKey": "A",
@@ -1031,10 +1456,15 @@
         "David Leonard"
       ],
       "country": "USA",
+      "youtube": "ZZqV6i98SkA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "great-is-the-lord",
+      "songId": "great-is-the-lord",
+      "language": "en",
       "title": "Great is the Lord",
       "filename": "great_is_the_lord.chordpro",
       "originalKey": "G",
@@ -1045,10 +1475,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "ojZ6cvW1iUg",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "great-is-thy-faithfulness",
+      "songId": "great-is-thy-faithfulness",
+      "language": "en",
       "title": "Great Is Thy Faithfulness",
       "filename": "great_is_thy_faithfulness.chordpro",
       "originalKey": "A",
@@ -1059,30 +1494,30 @@
         "Thomas O. Chisholm"
       ],
       "country": "USA",
+      "youtube": "ErwiBz1QA4o",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "hail-to-the-brightness-of-zion-s-glad-morning",
+      "songId": "hail-to-the-brightness-of-zion-s-glad-morning",
+      "language": "en",
       "title": "Hail to the Brightness of Zion's Glad Morning",
       "filename": "hail_to_the_brightness_of_zion_s_glad_morning.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": "",
-      "incomplete": true
-    },
-    {
-      "id": "hallelujah-your-love-is-amazing",
-      "title": "Hallelujah (Your Love is Amazing)",
-      "filename": "hallelujah.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [],
-      "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "hallelujah-what-a-savior",
+      "songId": "hallelujah-what-a-savior",
+      "language": "en",
       "title": "Hallelujah, What a Savior!",
       "filename": "hallelujah_what_a_savior.chordpro",
       "originalKey": "A",
@@ -1093,20 +1528,45 @@
         "Philip Bliss"
       ],
       "country": "USA",
+      "youtube": "GCRtq1XOAOo",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
+      "id": "hallelujah-your-love-is-amazing",
+      "songId": "hallelujah-your-love-is-amazing",
+      "language": "en",
+      "title": "Hallelujah (Your Love is Amazing)",
+      "filename": "hallelujah.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [],
+      "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": true
+    },
+    {
       "id": "happy-day",
+      "songId": "happy-day",
+      "language": "en",
       "title": "Happy Day",
       "filename": "happy_day.chordpro",
       "originalKey": "C",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "hark-the-herald-angels-sing",
+      "songId": "hark-the-herald-angels-sing",
+      "language": "en",
       "title": "Hark! The Herald Angels Sing",
       "filename": "hark_the_herald_angels_sing.chordpro",
       "originalKey": "F",
@@ -1119,20 +1579,30 @@
         "Charles Wesley"
       ],
       "country": "",
+      "youtube": "3P97yj-f4sc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "he-abides",
+      "songId": "he-abides",
+      "language": "en",
       "title": "He Abides",
       "filename": "he_abides.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "he-is-the-king",
+      "songId": "he-is-the-king",
+      "language": "en",
       "title": "He is the King",
       "filename": "he_is_the_king.chordpro",
       "originalKey": "Bm",
@@ -1143,10 +1613,15 @@
       ],
       "authors": [],
       "country": "Indonesia",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "he-knows-my-name",
+      "songId": "he-knows-my-name",
+      "language": "en",
       "title": "He knows my name",
       "filename": "he_knows_my_name.chordpro",
       "originalKey": "D",
@@ -1158,10 +1633,15 @@
         "Maranatha Singers"
       ],
       "country": "USA",
+      "youtube": "hXsiWoyjw60",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "heart-of-worship",
+      "songId": "heart-of-worship",
+      "language": "en",
       "title": "Heart of Worship",
       "filename": "heart_of_worship.chordpro",
       "originalKey": "D",
@@ -1172,10 +1652,15 @@
         "Matt Redman"
       ],
       "country": "USA",
+      "youtube": "PH-snsXw1as",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "here-i-am",
+      "songId": "here-i-am",
+      "language": "en",
       "title": "Here I Am",
       "filename": "here_i_am.chordpro",
       "originalKey": "Em",
@@ -1186,10 +1671,15 @@
       ],
       "authors": [],
       "country": "China",
+      "youtube": "wDHDEheWApg",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "here-i-am-again",
+      "songId": "here-i-am-again",
+      "language": "en",
       "title": "Here I Am Again",
       "filename": "here_i_am_again.chordpro",
       "originalKey": "E",
@@ -1202,10 +1692,15 @@
         "Tommy Walker"
       ],
       "country": "USA",
+      "youtube": "tvnDQ7zZ3sg",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "here-i-am-to-worship",
+      "songId": "here-i-am-to-worship",
+      "language": "en",
       "title": "Here I am to Worship",
       "filename": "here_i_am_to_worship.chordpro",
       "originalKey": "E",
@@ -1218,10 +1713,15 @@
         "Tim Hughes"
       ],
       "country": "USA",
+      "youtube": "w5J4kQpzP0U",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "holy-forever",
+      "songId": "holy-forever",
+      "language": "en",
       "title": "Holy Forever",
       "filename": "holy_forever.chordpro",
       "originalKey": "Db",
@@ -1233,10 +1733,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "IkHgxKemCRk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "holy-spirit-come",
+      "songId": "holy-spirit-come",
+      "language": "en",
       "title": "Holy Spirit Come",
       "filename": "holy_spirit_come.chordpro",
       "originalKey": "F",
@@ -1248,10 +1753,15 @@
       ],
       "authors": [],
       "country": "India",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "hope-of-the-nations",
+      "songId": "hope-of-the-nations",
+      "language": "en",
       "title": "Hope of the Nations",
       "filename": "hope_of_the_nations.chordpro",
       "originalKey": "F",
@@ -1262,20 +1772,30 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "HSodY0OEZcI",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "hosanna-praise-is-rising",
+      "songId": "hosanna-praise-is-rising",
+      "language": "en",
       "title": "Hosanna (Praise is Rising)",
       "filename": "hosanna_praise_is_rising.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "how-great-is-our-god",
+      "songId": "how-great-is-our-god",
+      "language": "en",
       "title": "How Great is our God",
       "filename": "how_great_is_our_god.chordpro",
       "originalKey": "",
@@ -1286,20 +1806,30 @@
         "Ed Cash"
       ],
       "country": "",
+      "youtube": "KBD18rsVJHk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "how-great-thou-art",
+      "songId": "how-great-thou-art",
+      "language": "en",
       "title": "How Great Thou Art",
       "filename": "how_great_thou_art.chordpro",
       "originalKey": "A",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "i-am-free",
+      "songId": "i-am-free",
+      "language": "en",
       "title": "I Am Free",
       "filename": "i_am_free.chordpro",
       "originalKey": "D",
@@ -1312,20 +1842,30 @@
         "Newsboys"
       ],
       "country": "USA",
+      "youtube": "_MbcYyOsF50",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "i-am-thine-o-lord",
+      "songId": "i-am-thine-o-lord",
+      "language": "en",
       "title": "I Am Thine O Lord",
       "filename": "i_am_thine_o_lord.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "i-could-sing-of-your-love-forever",
+      "songId": "i-could-sing-of-your-love-forever",
+      "language": "en",
       "title": "I Could Sing of Your Love Forever",
       "filename": "i_could_sing_of_your_love_forever.chordpro",
       "originalKey": "",
@@ -1334,10 +1874,15 @@
         "Martin Smith"
       ],
       "country": "",
+      "youtube": "ZE33ejdgWIY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "i-enter-in-the-holy-place",
+      "songId": "i-enter-in-the-holy-place",
+      "language": "en",
       "title": "I Enter in the Holy Place",
       "filename": "i_enter_in_the_holy_place.chordpro",
       "originalKey": "F",
@@ -1348,10 +1893,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "i-exalt-thee",
+      "songId": "i-exalt-thee",
+      "language": "en",
       "title": "I Exalt Thee",
       "filename": "i_exalt_thee.chordpro",
       "originalKey": "D",
@@ -1364,10 +1914,15 @@
         "Pete Sanchez"
       ],
       "country": "USA",
+      "youtube": "O7xAVwrKYwU",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "i-give-you-my-heart",
+      "songId": "i-give-you-my-heart",
+      "language": "en",
       "title": "I Give You My Heart",
       "filename": "i_give_you_my_heart.chordpro",
       "originalKey": "G",
@@ -1379,20 +1934,30 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "9bQY2komrnA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "i-hear-thy-welcome-voice",
+      "songId": "i-hear-thy-welcome-voice",
+      "language": "en",
       "title": "I Hear Thy Welcome Voice",
       "filename": "i_hear_thy_welcome_voice.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "i-lift-my-eyes",
+      "songId": "i-lift-my-eyes",
+      "language": "en",
       "title": "I Lift My Eyes",
       "filename": "i_lift_my_eyes.chordpro",
       "originalKey": "C",
@@ -1404,57 +1969,15 @@
       ],
       "authors": [],
       "country": "Iran",
-      "incomplete": false
-    },
-    {
-      "id": "i-pledge-allegiance-to-the-lamb",
-      "title": "I Pledge Allegiance to the Lamb",
-      "filename": "i_pledge_allegiance_to_the_lamb.chordpro",
-      "originalKey": "G",
-      "tags": [
-        "Slow",
-        "Commitment",
-        "ICP"
-      ],
-      "authors": [
-        "Ray Boltz"
-      ],
-      "country": "USA",
-      "incomplete": false
-    },
-    {
-      "id": "i-thank-god",
-      "title": "I Thank God",
-      "filename": "i_thank_god.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Dante Bowe",
-        "Aaron Moses",
-        "Jesse Cline",
-        "Maryanne George",
-        "Chuck Butler"
-      ],
-      "country": "",
-      "incomplete": true
-    },
-    {
-      "id": "i-will-follow-you",
-      "title": "I Will Follow You",
-      "filename": "i_will_follow_you.chordpro",
-      "originalKey": "A",
-      "tags": [
-        "Slow",
-        "Commitment",
-        "Nations",
-        "ICP"
-      ],
-      "authors": [],
-      "country": "China",
+      "youtube": "1zEDAE9E4p8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "i-ll-always-love-you",
+      "songId": "i-ll-always-love-you",
+      "language": "en",
       "title": "I’ll Always Love You",
       "filename": "i_ll_always_love_you.chordpro",
       "originalKey": "A",
@@ -1467,10 +1990,77 @@
         "Tim Hughes"
       ],
       "country": "USA",
+      "youtube": "ggCtbgiN3wQ",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "i-pledge-allegiance-to-the-lamb",
+      "songId": "i-pledge-allegiance-to-the-lamb",
+      "language": "en",
+      "title": "I Pledge Allegiance to the Lamb",
+      "filename": "i_pledge_allegiance_to_the_lamb.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Slow",
+        "Commitment",
+        "ICP"
+      ],
+      "authors": [
+        "Ray Boltz"
+      ],
+      "country": "USA",
+      "youtube": "zslyvZeU-IE",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "i-thank-god",
+      "songId": "i-thank-god",
+      "language": "en",
+      "title": "I Thank God",
+      "filename": "i_thank_god.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Dante Bowe",
+        "Aaron Moses",
+        "Jesse Cline",
+        "Maryanne George",
+        "Chuck Butler"
+      ],
+      "country": "",
+      "youtube": "LM1qrx0Huds",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": true
+    },
+    {
+      "id": "i-will-follow-you",
+      "songId": "i-will-follow-you",
+      "language": "en",
+      "title": "I Will Follow You",
+      "filename": "i_will_follow_you.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Slow",
+        "Commitment",
+        "Nations",
+        "ICP"
+      ],
+      "authors": [],
+      "country": "China",
+      "youtube": "cAyhAFaWPzE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "in-jesus-name",
+      "songId": "in-jesus-name",
+      "language": "en",
       "title": "In Jesus’ Name",
       "filename": "in_jesus_name.chordpro",
       "originalKey": "D",
@@ -1482,10 +2072,15 @@
         "Darlene Zschech"
       ],
       "country": "USA",
+      "youtube": "Z6ikG3w5zvs",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "in-jesus-name-intercp-int-l-ver",
+      "songId": "in-jesus-name-intercp-int-l-ver",
+      "language": "en",
       "title": "In Jesus’ Name (InterCP Int’l Ver.)",
       "filename": "in_jesus_name_intercp.chordpro",
       "originalKey": "D",
@@ -1498,10 +2093,15 @@
         "Darlene Zschech"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "in-the-name-of-the-lord",
+      "songId": "in-the-name-of-the-lord",
+      "language": "en",
       "title": "In the Name of the Lord",
       "filename": "in_the_name_of_the_lord.chordpro",
       "originalKey": "D",
@@ -1512,20 +2112,30 @@
       ],
       "authors": [],
       "country": "Morocco",
+      "youtube": "uRkc1BPDEIM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "it-is-well-with-my-soul",
+      "songId": "it-is-well-with-my-soul",
+      "language": "en",
       "title": "It Is Well With My Soul",
       "filename": "it_is_well_with_my_soul.chordpro",
       "originalKey": "C",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "jesus-i-need-you",
+      "songId": "jesus-i-need-you",
+      "language": "en",
       "title": "Jesus I Need You",
       "filename": "jesus_i_need_you.chordpro",
       "originalKey": "",
@@ -1537,10 +2147,15 @@
         "Joel Davies"
       ],
       "country": "",
+      "youtube": "RzjZ-MR3PIM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "jesus-lamb-of-god",
+      "songId": "jesus-lamb-of-god",
+      "language": "en",
       "title": "Jesus Lamb of God",
       "filename": "jesus_lamb_of_god.chordpro",
       "originalKey": "G",
@@ -1551,10 +2166,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "jesus-our-refuge",
+      "songId": "jesus-our-refuge",
+      "language": "en",
       "title": "Jesus Our Refuge",
       "filename": "jesus_our_refuge.chordpro",
       "originalKey": "A",
@@ -1565,35 +2185,15 @@
       ],
       "authors": [],
       "country": "China",
-      "incomplete": false
-    },
-    {
-      "id": "jesus-we-love-you",
-      "title": "Jesus We Love You",
-      "filename": "jesus_we_love_you.chordpro",
-      "originalKey": "",
-      "tags": [],
-      "authors": [
-        "Bethel Music"
-      ],
-      "country": "",
-      "incomplete": true
-    },
-    {
-      "id": "jesus-you-have-set-me-free",
-      "title": "Jesus You Have Set Me Free",
-      "filename": "jesus_you_have_set_me_free.chordpro",
-      "originalKey": "G",
-      "tags": [
-        "Fast",
-        "Praise"
-      ],
-      "authors": [],
-      "country": "Korea",
+      "youtube": "l2mF0I9MW90",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "jesus-we-enthrone-you",
+      "songId": "jesus-we-enthrone-you",
+      "language": "en",
       "title": "Jesus, We Enthrone You",
       "filename": "jesus_we_enthrone_you.chordpro",
       "originalKey": "A",
@@ -1605,10 +2205,50 @@
         "Don Moen"
       ],
       "country": "USA",
+      "youtube": "2gJuedStPWM",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "jesus-we-love-you",
+      "songId": "jesus-we-love-you",
+      "language": "en",
+      "title": "Jesus We Love You",
+      "filename": "jesus_we_love_you.chordpro",
+      "originalKey": "",
+      "tags": [],
+      "authors": [
+        "Bethel Music"
+      ],
+      "country": "",
+      "youtube": "7oS2gb9W-Z4",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": true
+    },
+    {
+      "id": "jesus-you-have-set-me-free",
+      "songId": "jesus-you-have-set-me-free",
+      "language": "en",
+      "title": "Jesus You Have Set Me Free",
+      "filename": "jesus_you_have_set_me_free.chordpro",
+      "originalKey": "G",
+      "tags": [
+        "Fast",
+        "Praise"
+      ],
+      "authors": [],
+      "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "john-3-16",
+      "songId": "john-3-16",
+      "language": "en",
       "title": "John 3:16",
       "filename": "john_3_16.chordpro",
       "originalKey": "G",
@@ -1620,10 +2260,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "joy-to-the-world-unspeakable-joy",
+      "songId": "joy-to-the-world-unspeakable-joy",
+      "language": "en",
       "title": "Joy to the World (Unspeakable Joy)",
       "filename": "joy_to_the_world_unspeakable_joy.chordpro",
       "originalKey": "D",
@@ -1635,10 +2280,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "rqxMvvptf9I",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "kernel-of-wheat",
+      "songId": "kernel-of-wheat",
+      "language": "en",
       "title": "Kernel of Wheat",
       "filename": "kernel_of_wheat.chordpro",
       "originalKey": "Dm",
@@ -1650,10 +2300,15 @@
       ],
       "authors": [],
       "country": "China",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "king-of-kings",
+      "songId": "king-of-kings",
+      "language": "en",
       "title": "King of Kings",
       "filename": "king_of_kings.chordpro",
       "originalKey": "D",
@@ -1665,10 +2320,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "iPOTxUSJBPk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "king-of-kings-intercp-int-l-ver",
+      "songId": "king-of-kings-intercp-int-l-ver",
+      "language": "en",
       "title": "King of Kings (InterCP Int’l Ver.)",
       "filename": "king_of_kings_intercp_int_l_ver.chordpro",
       "originalKey": "D",
@@ -1681,20 +2341,30 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "king-of-kings-majesty",
+      "songId": "king-of-kings-majesty",
+      "language": "en",
       "title": "King of Kings, Majesty",
       "filename": "king_of_kings_majesty.chordpro",
       "originalKey": "A",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "king-of-my-heart",
+      "songId": "king-of-my-heart",
+      "language": "en",
       "title": "King of my Heart",
       "filename": "king_of_my_heart.chordpro",
       "originalKey": "",
@@ -1704,20 +2374,30 @@
         "Sarah McMillan"
       ],
       "country": "",
+      "youtube": "OfJRX-8SXOs",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "lamb",
+      "songId": "lamb",
+      "language": "en",
       "title": "Lamb",
       "filename": "lamb.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "let-us-sing-to-the-lord",
+      "songId": "let-us-sing-to-the-lord",
+      "language": "en",
       "title": "Let Us Sing to the Lord",
       "filename": "let_us_sing_to_the_lord.chordpro",
       "originalKey": "Em",
@@ -1728,10 +2408,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "dkCGYVQMI4Y",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "let-your-glory-fall",
+      "songId": "let-your-glory-fall",
+      "language": "en",
       "title": "Let Your Glory Fall",
       "filename": "let_your_glory_fall.chordpro",
       "originalKey": "",
@@ -1740,10 +2425,55 @@
         "Vineyard / Don Moen"
       ],
       "country": "",
+      "youtube": "Gm3o0iS5YxY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
+      "id": "lift-your-name-en",
+      "songId": "lift-your-name",
+      "language": "en",
+      "title": "Lift Your Name",
+      "filename": "translation_demo_lift_your_name_en.chordpro",
+      "originalKey": "E",
+      "tags": [
+        "Praise",
+        "Fast"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "lift-your-name-tr",
+      "songId": "lift-your-name",
+      "language": "tr",
+      "title": "Adını Yüceltiriz",
+      "filename": "translation_demo_lift_your_name_tr.chordpro",
+      "originalKey": "E",
+      "tags": [
+        "Praise",
+        "Fast"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "Türkiye",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
       "id": "lion-of-judah",
+      "songId": "lion-of-judah",
+      "language": "en",
       "title": "Lion of Judah",
       "filename": "lion_of_judah.chordpro",
       "originalKey": "C",
@@ -1754,10 +2484,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "n1HTVCa4L60",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "living-hope",
+      "songId": "living-hope",
+      "language": "en",
       "title": "Living Hope",
       "filename": "living_hope.chordpro",
       "originalKey": "A",
@@ -1770,10 +2505,15 @@
         "Brian Johnson"
       ],
       "country": "USA",
+      "youtube": "ifFovH-dhHw",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "lord-i-give-you-my-heart",
+      "songId": "lord-i-give-you-my-heart",
+      "language": "en",
       "title": "Lord I Give You My Heart",
       "filename": "lord_i_give_you_my_heart.chordpro",
       "originalKey": "G",
@@ -1783,10 +2523,15 @@
       ],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "lord-i-lift-your-name-on-high",
+      "songId": "lord-i-lift-your-name-on-high",
+      "language": "en",
       "title": "Lord I Lift Your Name on High",
       "filename": "lord_i_lift_your_name_on_high.chordpro",
       "originalKey": "",
@@ -1795,10 +2540,15 @@
         "Rick Founds"
       ],
       "country": "",
+      "youtube": "U6I7-6Yi2Gk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "lord-i-offer-my-life",
+      "songId": "lord-i-offer-my-life",
+      "language": "en",
       "title": "Lord I Offer My Life",
       "filename": "lord_i_offer_my_life.chordpro",
       "originalKey": "",
@@ -1808,10 +2558,15 @@
         "Don Moen"
       ],
       "country": "",
+      "youtube": "bnHla1qRx8Q",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "lord-we-seek",
+      "songId": "lord-we-seek",
+      "language": "en",
       "title": "Lord We Seek",
       "filename": "lord_we_seek.chordpro",
       "originalKey": "A",
@@ -1822,10 +2577,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "P5fpvFyHueE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "majesty-here-i-am",
+      "songId": "majesty-here-i-am",
+      "language": "en",
       "title": "Majesty (Here I Am)",
       "filename": "majesty.chordpro",
       "originalKey": "",
@@ -1834,10 +2594,15 @@
         "Delirious?"
       ],
       "country": "",
+      "youtube": "SwJ9Xq0Q6xk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "man-of-sorrows",
+      "songId": "man-of-sorrows",
+      "language": "en",
       "title": "Man of Sorrows",
       "filename": "man_of_sorrows.chordpro",
       "originalKey": "F",
@@ -1849,10 +2614,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "YHtEX1Eko_A",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "maranatha",
+      "songId": "maranatha",
+      "language": "en",
       "title": "Maranatha",
       "filename": "maranatha.chordpro",
       "originalKey": "A",
@@ -1863,10 +2633,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "VDNhMhj2GhQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "mighty-to-save",
+      "songId": "mighty-to-save",
+      "language": "en",
       "title": "Mighty to Save",
       "filename": "mighty_to_save.chordpro",
       "originalKey": "",
@@ -1876,10 +2651,15 @@
         "Reuben Morgan"
       ],
       "country": "",
+      "youtube": "SBGQ9nWUp7E",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "more-love-to-thee",
+      "songId": "more-love-to-thee",
+      "language": "en",
       "title": "More Love to Thee",
       "filename": "more_love_to_thee.chordpro",
       "originalKey": "G",
@@ -1892,10 +2672,15 @@
         "Tommy Walker"
       ],
       "country": "USA",
+      "youtube": "dnhCMThVADg",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "my-god-you-alone",
+      "songId": "my-god-you-alone",
+      "language": "en",
       "title": "My God, You Alone",
       "filename": "my_god_you_alone.chordpro",
       "originalKey": "E",
@@ -1906,10 +2691,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "my-savior-king",
+      "songId": "my-savior-king",
+      "language": "en",
       "title": "My Savior King",
       "filename": "my_savior_king.chordpro",
       "originalKey": "G",
@@ -1921,10 +2711,15 @@
       ],
       "authors": [],
       "country": "India",
+      "youtube": "6dN4zE1LKS8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "new-acts",
+      "songId": "new-acts",
+      "language": "en",
       "title": "New Acts",
       "filename": "new_acts.chordpro",
       "originalKey": "D",
@@ -1935,20 +2730,30 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "vfmjVphiCiY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "no-chains-on-me",
+      "songId": "no-chains-on-me",
+      "language": "en",
       "title": "No Chains on Me",
       "filename": "no_chains_on_me.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "no-chains-on-me-intercp-int-l-ver",
+      "songId": "no-chains-on-me-intercp-int-l-ver",
+      "language": "en",
       "title": "No Chains on Me (InterCP Int'l Ver.)",
       "filename": "no_chains_on_me_intercp_int_l_ver.chordpro",
       "originalKey": "B",
@@ -1960,10 +2765,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "no-longer-slaves",
+      "songId": "no-longer-slaves",
+      "language": "en",
       "title": "No Longer Slaves",
       "filename": "no_longer_slaves.chordpro",
       "originalKey": "",
@@ -1974,10 +2784,15 @@
         "Brian Johnson"
       ],
       "country": "",
+      "youtube": "f8TkUMJtK5k",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "o-come-to-the-altar",
+      "songId": "o-come-to-the-altar",
+      "language": "en",
       "title": "O Come to the Altar",
       "filename": "o_come_to_the_altar.chordpro",
       "originalKey": "",
@@ -1989,10 +2804,15 @@
         "Wade Joye"
       ],
       "country": "",
+      "youtube": "rYQ5yXCc_CA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "on-that-day",
+      "songId": "on-that-day",
+      "language": "en",
       "title": "On That Day",
       "filename": "on_that_day.chordpro",
       "originalKey": "A",
@@ -2003,10 +2823,15 @@
       ],
       "authors": [],
       "country": "Japan",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "once-again",
+      "songId": "once-again",
+      "language": "en",
       "title": "Once Again",
       "filename": "once_again.chordpro",
       "originalKey": "A",
@@ -2019,10 +2844,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "one-way",
+      "songId": "one-way",
+      "language": "en",
       "title": "One Way",
       "filename": "one_way.chordpro",
       "originalKey": "",
@@ -2032,10 +2862,15 @@
         "Jonathon Douglass"
       ],
       "country": "",
+      "youtube": "IPuUIUWE8h8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "open-up-the-doors-of-heaven",
+      "songId": "open-up-the-doors-of-heaven",
+      "language": "en",
       "title": "Open Up the Doors of Heaven",
       "filename": "open_up_the_doors_of_heaven.chordpro",
       "originalKey": "A",
@@ -2046,10 +2881,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "FcPd7dDEUZQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "our-god",
+      "songId": "our-god",
+      "language": "en",
       "title": "Our God",
       "filename": "our_god.chordpro",
       "originalKey": "G",
@@ -2060,10 +2900,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "O5d_gm9zrnY",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "praise",
+      "songId": "praise",
+      "language": "en",
       "title": "Praise",
       "filename": "praise.chordpro",
       "originalKey": "A",
@@ -2075,10 +2920,15 @@
         "Elevation Worship"
       ],
       "country": "USA",
+      "youtube": "w8Gxut0odyc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "preaching-the-cross",
+      "songId": "preaching-the-cross",
+      "language": "en",
       "title": "Preaching the Cross",
       "filename": "preaching_the_cross.chordpro",
       "originalKey": "Bm",
@@ -2090,10 +2940,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "psalm-150",
+      "songId": "psalm-150",
+      "language": "en",
       "title": "Psalm 150",
       "filename": "psalm_150.chordpro",
       "originalKey": "Dm",
@@ -2106,10 +2961,15 @@
         "MIQDEM"
       ],
       "country": "Israel",
+      "youtube": "DKR86Pha-kc",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "reckless-love",
+      "songId": "reckless-love",
+      "language": "en",
       "title": "Reckless Love",
       "filename": "reckless_love.chordpro",
       "originalKey": "",
@@ -2120,20 +2980,30 @@
         "Ran Jackson"
       ],
       "country": "",
+      "youtube": "Sc6SSHuZvQE",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "refiner-s-fire",
+      "songId": "refiner-s-fire",
+      "language": "en",
       "title": "Refiner's Fire",
       "filename": "refiners_fire.chordpro",
       "originalKey": "",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "revelations-5-13",
+      "songId": "revelations-5-13",
+      "language": "en",
       "title": "Revelations 5:13",
       "filename": "revelations_5_13.chordpro",
       "originalKey": "A",
@@ -2144,30 +3014,85 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "righteous-powers",
+      "songId": "righteous-powers",
+      "language": "en",
       "title": "Righteous Powers",
       "filename": "righteous_powers.chordpro",
       "originalKey": "E",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "rise-and-shout",
+      "songId": "rise-and-shout",
+      "language": "en",
       "title": "Rise and Shout",
       "filename": "rise_and_shout.chordpro",
       "originalKey": "AM",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
+      "id": "river-of-hope-en",
+      "songId": "river-of-hope",
+      "language": "en",
+      "title": "River of Hope",
+      "filename": "translation_demo_river_of_hope_en.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Missions",
+        "Worship"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "river-of-hope-tr",
+      "songId": "river-of-hope",
+      "language": "tr",
+      "title": "Umut Nehri",
+      "filename": "translation_demo_river_of_hope_tr.chordpro",
+      "originalKey": "D",
+      "tags": [
+        "Missions",
+        "Worship"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "Türkiye",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
       "id": "run-to-the-father",
+      "songId": "run-to-the-father",
+      "language": "en",
       "title": "Run to the Father",
       "filename": "run_to_the_father.chordpro",
       "originalKey": "",
@@ -2178,10 +3103,15 @@
         "Ran Jackson"
       ],
       "country": "",
+      "youtube": "HVPUQd0wM3E",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "savior-of-peace",
+      "songId": "savior-of-peace",
+      "language": "en",
       "title": "Savior of Peace",
       "filename": "savior_of_peace.chordpro",
       "originalKey": "A",
@@ -2192,10 +3122,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "seek-hope-and-pray",
+      "songId": "seek-hope-and-pray",
+      "language": "en",
       "title": "Seek, Hope, and Pray",
       "filename": "seek_hope_and_pray.chordpro",
       "originalKey": "F",
@@ -2206,10 +3141,55 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "lyQZK7A5oBE",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "send-us-lord-en",
+      "songId": "send-us-lord",
+      "language": "en",
+      "title": "Send Us Lord",
+      "filename": "translation_demo_send_us_lord_en.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Missions",
+        "Commitment"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
+      "incomplete": false
+    },
+    {
+      "id": "send-us-lord-tr",
+      "songId": "send-us-lord",
+      "language": "tr",
+      "title": "Rab Bizi Gönder",
+      "filename": "translation_demo_send_us_lord_tr.chordpro",
+      "originalKey": "A",
+      "tags": [
+        "Missions",
+        "Commitment"
+      ],
+      "authors": [
+        "GraceChords Test Team"
+      ],
+      "country": "Türkiye",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "set-a-fire",
+      "songId": "set-a-fire",
+      "language": "en",
       "title": "Set a Fire",
       "filename": "set_a_fire.chordpro",
       "originalKey": "",
@@ -2218,10 +3198,15 @@
         "Will Reagan"
       ],
       "country": "",
+      "youtube": "EB0t_0gN9xI",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "shalom-jerusalem",
+      "songId": "shalom-jerusalem",
+      "language": "en",
       "title": "Shalom Jerusalem",
       "filename": "shalom_jerusalem.chordpro",
       "originalKey": "Bm",
@@ -2233,10 +3218,15 @@
       ],
       "authors": [],
       "country": "Israel",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "shout-to-the-lord",
+      "songId": "shout-to-the-lord",
+      "language": "en",
       "title": "Shout to the Lord",
       "filename": "shout_to_the_lord.chordpro",
       "originalKey": "A",
@@ -2248,10 +3238,15 @@
         "Darlene Zschech"
       ],
       "country": "USA",
+      "youtube": "IUZEtVbJT5c",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "shouting-victory",
+      "songId": "shouting-victory",
+      "language": "en",
       "title": "Shouting Victory",
       "filename": "shouting_victory.chordpro",
       "originalKey": "G",
@@ -2261,20 +3256,30 @@
       ],
       "authors": [],
       "country": "Pakistan",
+      "youtube": "4xlWNvw5eDA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "sing-sing-sing",
+      "songId": "sing-sing-sing",
+      "language": "en",
       "title": "Sing Sing Sing",
       "filename": "sing_sing_sing.chordpro",
       "originalKey": "D",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "sing-sing-sing-intercp-int-l-ver",
+      "songId": "sing-sing-sing-intercp-int-l-ver",
+      "language": "en",
       "title": "Sing Sing Sing (InterCP Int’l Ver.)",
       "filename": "sing_sing_sing_intercp_int_l_ver.chordpro",
       "originalKey": "D",
@@ -2287,20 +3292,30 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "singing-i-go",
+      "songId": "singing-i-go",
+      "language": "en",
       "title": "Singing I Go",
       "filename": "singing_i_go.chordpro",
       "originalKey": "F",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "sitting-in-the-shadow-of-death",
+      "songId": "sitting-in-the-shadow-of-death",
+      "language": "en",
       "title": "Sitting in the Shadow of Death",
       "filename": "sitting_in_the_shadow_of_death.chordpro",
       "originalKey": "A",
@@ -2311,10 +3326,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "ylc62ICvXPk",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "spirit-come",
+      "songId": "spirit-come",
+      "language": "en",
       "title": "Spirit Come",
       "filename": "spirit_come.chordpro",
       "originalKey": "D",
@@ -2325,20 +3345,30 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "stand-up-stand-up-for-jesus",
+      "songId": "stand-up-stand-up-for-jesus",
+      "language": "en",
       "title": "Stand Up, Stand Up for Jesus",
       "filename": "stand_up_stand_up_for_jesus.chordpro",
       "originalKey": "A",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "still",
+      "songId": "still",
+      "language": "en",
       "title": "Still",
       "filename": "still.chordpro",
       "originalKey": "",
@@ -2347,10 +3377,15 @@
         "Hillsong Worship"
       ],
       "country": "",
+      "youtube": "Y3Gx7x4F1n8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "stronger",
+      "songId": "stronger",
+      "language": "en",
       "title": "Stronger",
       "filename": "stronger.chordpro",
       "originalKey": "",
@@ -2359,10 +3394,15 @@
         "Hillsong Worship"
       ],
       "country": "",
+      "youtube": "oLURpdAjTiM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "take-me-in",
+      "songId": "take-me-in",
+      "language": "en",
       "title": "Take Me In",
       "filename": "take_me_in.chordpro",
       "originalKey": "",
@@ -2371,10 +3411,15 @@
         "Kutless"
       ],
       "country": "",
+      "youtube": "rC8Ww2i_3Ts",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "thank-you-jesus-for-the-blood",
+      "songId": "thank-you-jesus-for-the-blood",
+      "language": "en",
       "title": "Thank You Jesus for the Blood",
       "filename": "thank_you_jesus_for_the_blood.chordpro",
       "originalKey": "",
@@ -2387,10 +3432,15 @@
         "Bryan McCleery"
       ],
       "country": "",
+      "youtube": "GWT6Nk5K8AQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "the-love-of-the-cross",
+      "songId": "the-love-of-the-cross",
+      "language": "en",
       "title": "The Love of the Cross",
       "filename": "the_love_of_the_cross.chordpro",
       "originalKey": "G",
@@ -2402,10 +3452,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "the-revival",
+      "songId": "the-revival",
+      "language": "en",
       "title": "The Revival",
       "filename": "the_revival.chordpro",
       "originalKey": "G",
@@ -2416,10 +3471,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "Xzjm4TAX4mA",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "the-throne",
+      "songId": "the-throne",
+      "language": "en",
       "title": "The Throne",
       "filename": "the_throne.chordpro",
       "originalKey": "Fm",
@@ -2432,10 +3492,15 @@
       ],
       "authors": [],
       "country": "Taiwan",
+      "youtube": "q9hZ7dvPf2E",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "there-is-a-cloud",
+      "songId": "there-is-a-cloud",
+      "language": "en",
       "title": "There Is a Cloud",
       "filename": "there_is_a_cloud.chordpro",
       "originalKey": "",
@@ -2446,20 +3511,30 @@
         "Mack Brock"
       ],
       "country": "",
+      "youtube": "P4rNIiCMERw",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "tis-so-sweet-to-trust-in-jesus",
+      "songId": "tis-so-sweet-to-trust-in-jesus",
+      "language": "en",
       "title": "‘Tis So Sweet to Trust in Jesus",
       "filename": "tis_so_sweet_to_trust_in_jesus.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "touch-of-heaven",
+      "songId": "touch-of-heaven",
+      "language": "en",
       "title": "Touch of Heaven",
       "filename": "touch_of_heaven.chordpro",
       "originalKey": "",
@@ -2470,10 +3545,15 @@
         "Scott Ligertwood"
       ],
       "country": "",
+      "youtube": "Ey3pMkTqZ5o",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "under-the-blood",
+      "songId": "under-the-blood",
+      "language": "en",
       "title": "Under The Blood",
       "filename": "under_the_blood.chordpro",
       "originalKey": "A",
@@ -2487,10 +3567,15 @@
         "Marty Nystrom"
       ],
       "country": "USA",
+      "youtube": "P_VsIJisZj8",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "up-and-fight-against-the-devil",
+      "songId": "up-and-fight-against-the-devil",
+      "language": "en",
       "title": "Up and Fight Against the Devil",
       "filename": "up_and_fight_against_the_devil.chordpro",
       "originalKey": "B",
@@ -2501,10 +3586,15 @@
       ],
       "authors": [],
       "country": "USA",
+      "youtube": "xlmiVPuIJL4",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "we-will-keep-our-faith-alive",
+      "songId": "we-will-keep-our-faith-alive",
+      "language": "en",
       "title": "We Will Keep Our Faith Alive",
       "filename": "we_will_keep_our_faith_alive.chordpro",
       "originalKey": "G",
@@ -2517,10 +3607,15 @@
         "Don Besig"
       ],
       "country": "USA",
+      "youtube": "qX09rVRD0gM",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "what-a-beautiful-name",
+      "songId": "what-a-beautiful-name",
+      "language": "en",
       "title": "What a Beautiful Name",
       "filename": "what_a_beautiful_name.chordpro",
       "originalKey": "D",
@@ -2532,10 +3627,15 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "q5GbDeQvYKU",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "what-a-beautiful-name-intercp-int-l-ver",
+      "songId": "what-a-beautiful-name-intercp-int-l-ver",
+      "language": "en",
       "title": "What a Beautiful Name (InterCP Int’l Ver.)",
       "filename": "what_a_beautiful_name_intercp_int_l_ver.chordpro",
       "originalKey": "E",
@@ -2548,20 +3648,30 @@
         "Hillsong"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "where-jesus-is-tis-heaven",
+      "songId": "where-jesus-is-tis-heaven",
+      "language": "en",
       "title": "Where Jesus is Tis Heaven",
       "filename": "where_jesus_is_tis_heaven.chordpro",
       "originalKey": "G",
       "tags": [],
       "authors": [],
       "country": "",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": true
     },
     {
       "id": "with-all-my-heart",
+      "songId": "with-all-my-heart",
+      "language": "en",
       "title": "With All My Heart",
       "filename": "with_all_my_heart.chordpro",
       "originalKey": "E",
@@ -2573,10 +3683,15 @@
         "Babbie Mason"
       ],
       "country": "USA",
+      "youtube": "3CD8NOWuoJU",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "worthy-is-the-lamb",
+      "songId": "worthy-is-the-lamb",
+      "language": "en",
       "title": "Worthy is the Lamb",
       "filename": "worthy_is_the_lamb.chordpro",
       "originalKey": "G",
@@ -2589,10 +3704,15 @@
         "Hillsong Worship"
       ],
       "country": "USA",
+      "youtube": "y7aZb9E8-PI",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "worthy-of-it-all",
+      "songId": "worthy-of-it-all",
+      "language": "en",
       "title": "Worthy of it All",
       "filename": "worthy_of_it_all.chordpro",
       "originalKey": "G",
@@ -2605,10 +3725,15 @@
         "Ryan Hall"
       ],
       "country": "USA",
+      "youtube": "z2ZkCf5j1nQ",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "you-are-my-all-in-all",
+      "songId": "you-are-my-all-in-all",
+      "language": "en",
       "title": "You are my All in All",
       "filename": "all_in_all.chordpro",
       "originalKey": "G",
@@ -2620,10 +3745,15 @@
         "Dennis Jernigan"
       ],
       "country": "USA",
+      "youtube": "dPqu8lD8LB0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "you-deserve-the-glory",
+      "songId": "you-deserve-the-glory",
+      "language": "en",
       "title": "You Deserve the Glory",
       "filename": "you_deserve_the_glory.chordpro",
       "originalKey": "G",
@@ -2636,10 +3766,15 @@
         "Tim Hughes"
       ],
       "country": "USA",
+      "youtube": "bZK2g0G2i4s",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "you-endured-the-cross",
+      "songId": "you-endured-the-cross",
+      "language": "en",
       "title": "You Endured the Cross",
       "filename": "you_endured_the_cross.chordpro",
       "originalKey": "G",
@@ -2650,10 +3785,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "lti8WJisc2k",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "your-grace-is-enough",
+      "songId": "your-grace-is-enough",
+      "language": "en",
       "title": "Your Grace Is Enough",
       "filename": "your_grace_is_enough.chordpro",
       "originalKey": "G",
@@ -2666,10 +3806,15 @@
         "Chris Tomlin"
       ],
       "country": "USA",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "your-great-love",
+      "songId": "your-great-love",
+      "language": "en",
       "title": "Your Great Love",
       "filename": "your_great_love.chordpro",
       "originalKey": "G",
@@ -2680,10 +3825,15 @@
       ],
       "authors": [],
       "country": "Korea",
+      "youtube": "",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     },
     {
       "id": "your-love-awakens-me",
+      "songId": "your-love-awakens-me",
+      "language": "en",
       "title": "Your Love Awakens Me",
       "filename": "your_love_awakens_me.chordpro",
       "originalKey": "B",
@@ -2695,6 +3845,9 @@
         "Josh Farro"
       ],
       "country": "USA",
+      "youtube": "0fZ-tBR7LJ0",
+      "mp3": "",
+      "pptx": "",
       "incomplete": false
     }
   ]

@@ -7,14 +7,15 @@ def extract_with_pdfplumber(path):
     import pdfplumber
     words = []
     with pdfplumber.open(path) as pdf:
-        for page in pdf.pages:
+        for page_index, page in enumerate(pdf.pages, start=1):
             for w in page.extract_words():
                 words.append({
                     "text": w.get("text", ""),
                     "x": float(w.get("x0", 0)),
                     "y": float(w.get("top", 0)),
                     "w": float(w.get("x1", 0)) - float(w.get("x0", 0)),
-                    "h": float(w.get("bottom", 0)) - float(w.get("top", 0))
+                    "h": float(w.get("bottom", 0)) - float(w.get("top", 0)),
+                    "page": page_index
                 })
     return words
 
@@ -23,7 +24,7 @@ def extract_with_pymupdf(path):
     import fitz
     words = []
     doc = fitz.open(path)
-    for page in doc:
+    for page_index, page in enumerate(doc, start=1):
         for w in page.get_text("words"):
             x0, y0, x1, y1, text = w[0], w[1], w[2], w[3], w[4]
             words.append({
@@ -31,7 +32,8 @@ def extract_with_pymupdf(path):
                 "x": float(x0),
                 "y": float(y0),
                 "w": float(x1 - x0),
-                "h": float(y1 - y0)
+                "h": float(y1 - y0),
+                "page": page_index
             })
     doc.close()
     return words

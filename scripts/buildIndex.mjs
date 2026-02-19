@@ -1,5 +1,10 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import {
+  buildMetaPresence,
+  inheritTranslationMetadata,
+  stripSongIndexInternalFields,
+} from '../src/utils/songMetadata.js'
 
 const root = process.cwd()
 const songsDir = path.join(root, 'public', 'songs')
@@ -11,9 +16,6 @@ const files = (await fs.readdir(songsDir))
   .filter(f=> !/^test_/i.test(f))
 
 const items = []
-const incompleteReport = []
-const optionalReport = []
-
 const ACRONYM_TAG_KEYS = new Set(['icp'])
 function normalizeTagKey(tag){
   return String(tag || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -37,38 +39,71 @@ function parseTags(val){
   return out
 }
 
+const LANGUAGE_ALIASES = {
+  en: 'en',
+  eng: 'en',
+  tr: 'tr',
+  tur: 'tr',
+  ar: 'ar',
+  ara: 'ar',
+  es: 'es',
+  spa: 'es',
+  sp: 'es',
+}
+function normalizeLanguageCode(value, fallback = 'en'){
+  const raw = String(value || '').trim().toLowerCase()
+  if (!raw) return fallback
+  if (LANGUAGE_ALIASES[raw]) return LANGUAGE_ALIASES[raw]
+  const base = raw.split(/[-_]/)[0]
+  return LANGUAGE_ALIASES[base] || base || fallback
+}
+function slugify(value){
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 for(const filename of files){
   const full = path.join(songsDir, filename)
   const text = await fs.readFile(full, 'utf8')
   const meta = parseMeta(text)
-  const id = (meta.id || (meta.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).replace(/(^-|-$)/g,'')
+  const fallbackId = slugify(meta.title || filename.replace(/\.chordpro$/i, '')) || filename.replace(/\.chordpro$/i, '')
+  const id = slugify(meta.id || fallbackId) || fallbackId
+  const songIdRaw =
+    meta.song_id ||
+    meta.songid ||
+    meta.translation_group ||
+    meta.translationgroup ||
+    meta.group ||
+    meta.translation_of ||
+    meta.translationof
+  const songId = slugify(songIdRaw || id) || id
+  // Canonical language tag is `{lang: xx}`.
+  // Keep legacy key support while existing files migrate.
+  const language = normalizeLanguageCode(meta.lang || meta.language || meta.locale || 'en')
   const addedAt = parseAdded(meta.added || meta.addedat)
 
   const analysis = analyzeSong(text, meta)
-  const incomplete = analysis.incomplete
-
-  if (incomplete) {
-    incompleteReport.push({
-      title: meta.title || id || filename.replace(/\.chordpro$/,''),
-      reasons: analysis.reasons
-    })
-  } else if (analysis.optionalMissing.length) {
-    optionalReport.push({
-      title: meta.title || id || filename.replace(/\.chordpro$/,''),
-      missing: analysis.optionalMissing
-    })
-  }
 
   items.push({
     id,
+    songId,
+    language,
     title: meta.title || id || filename.replace(/\.chordpro$/,''),
     filename,
     originalKey: meta.key || '',
     tags: parseTags(meta.tags),
     authors: (meta.authors||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean),
     country: meta.country||'',
+    youtube: meta.youtube || '',
+    mp3: meta.mp3 || '',
+    pptx: meta.pptx || '',
     addedAt: addedAt || undefined,
-    incomplete
+    incomplete: false,
+    _metaPresence: buildMetaPresence(meta),
+    _analysis: analysis,
   })
 }
 function normalizeTitleForSort(title = ''){
@@ -84,18 +119,56 @@ function compareSongsByTitle(a, b){
   if (aNum !== bNum) return aNum ? -1 : 1
   return aa.localeCompare(bb, undefined, { sensitivity: 'base' })
 }
-items.sort(compareSongsByTitle)
+items.sort((a, b) => {
+  const bySong = compareSongsByTitle({ title: a.songId }, { title: b.songId })
+  if (bySong !== 0) return bySong
+  if (a.language !== b.language) return a.language.localeCompare(b.language)
+  return compareSongsByTitle(a, b)
+})
+inheritTranslationMetadata(items)
+
+const incompleteReport = []
+const optionalReport = []
+for (const item of items) {
+  const analysis = item._analysis || { hasLyrics: true, hasChords: true }
+  const reasons = []
+  if (!item.originalKey) reasons.push('missing key')
+  if (!analysis.hasLyrics) reasons.push('missing lyrics')
+  if (!analysis.hasChords) reasons.push('missing chords')
+  item.incomplete = reasons.length > 0
+  if (item.incomplete) {
+    incompleteReport.push({
+      title: item.title || item.id || item.filename || 'Untitled',
+      reasons,
+    })
+    continue
+  }
+  const missing = []
+  if (!(item.tags || []).length) missing.push('tags')
+  if (!(item.authors || []).length) missing.push('authors')
+  if (!item.country) missing.push('country')
+  if (!item.youtube) missing.push('youtube')
+  if (missing.length) {
+    optionalReport.push({
+      title: item.title || item.id || item.filename || 'Untitled',
+      missing,
+    })
+  }
+}
+
 await fs.mkdir(path.dirname(outFile), { recursive: true })
-await fs.writeFile(outFile, JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2), 'utf8')
-console.log(`Wrote ${items.length} songs to ${outFile}`)
+const outputItems = stripSongIndexInternalFields(items)
+const languages = Array.from(new Set(outputItems.map((s) => s.language))).sort((a, b) => a.localeCompare(b))
+await fs.writeFile(outFile, JSON.stringify({ generatedAt: new Date().toISOString(), languages, items: outputItems }, null, 2), 'utf8')
+console.log(`Wrote ${outputItems.length} songs to ${outFile}`)
 
 // Write human-readable report
 const reportLines = []
 const incompleteCount = incompleteReport.length
-const completeCount = items.length - incompleteCount
+const completeCount = outputItems.length - incompleteCount
 reportLines.push('GraceChords Song Metadata Report')
 reportLines.push(`Generated: ${new Date().toISOString()}`)
-reportLines.push(`Total songs: ${items.length}`)
+reportLines.push(`Total songs: ${outputItems.length}`)
 reportLines.push(`Complete: ${completeCount}`)
 reportLines.push(`Incomplete: ${incompleteCount}`)
 reportLines.push('')
@@ -135,7 +208,7 @@ function parseAdded(val){
   return d.toISOString()
 }
 
-function analyzeSong(text, meta){
+function analyzeSong(text){
   const lines = (text || '').split(/\r?\n/)
   let hasLyrics = false
   const chordRe = /\[[^\]]+\]/
@@ -147,18 +220,8 @@ function analyzeSong(text, meta){
     if (/^\s*#/.test(line)) continue // comment
     // remove chord tokens then test for letters
     const noChords = line.replace(chordRe, '').trim()
-    if (/[A-Za-z]/.test(noChords)) hasLyrics = true
+    if (/\p{L}/u.test(noChords)) hasLyrics = true
     if (hasLyrics && hasChords) break
   }
-  const reasons = []
-  if (!meta.key) reasons.push('missing key')
-  if (!hasLyrics) reasons.push('missing lyrics')
-  if (!hasChords) reasons.push('missing chords')
-  const incomplete = reasons.length > 0
-  const optionalMissing = []
-  if (!meta.tags) optionalMissing.push('tags')
-  if (!meta.authors) optionalMissing.push('authors')
-  if (!meta.country) optionalMissing.push('country')
-  if (!meta.youtube) optionalMissing.push('youtube')
-  return { incomplete, reasons, optionalMissing }
+  return { hasLyrics, hasChords }
 }

@@ -5,6 +5,7 @@ export type WordBox = {
   w: number
   h: number
   conf?: number
+  page?: number
 }
 
 export type ExtractedLine = {
@@ -12,6 +13,7 @@ export type ExtractedLine = {
   y?: number
   words?: WordBox[]
   source?: string
+  page?: number
 }
 
 export type ExtractionResult = {

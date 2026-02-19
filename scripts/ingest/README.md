@@ -27,6 +27,7 @@ Optional system dependencies:
 
 ```bash
 npx gc-ingest ingest ../../somefile.docx --title "Amazing Grace" --authors "John Newton"
+npx gc-ingest ingest-songbook ../../Revival_Songbook_SE.pdf
 
 npx gc-ingest batch ../../incoming --concurrency 2
 npx gc-ingest batch ../../opensong-txts --concurrency 4
@@ -51,6 +52,20 @@ npx gc-ingest report ../../scripts/ingest/_ingest_staging/amazing_grace
 
 npx gc-ingest export
 ```
+
+## Songbook PDF ingest
+
+Use `ingest-songbook` for multi-page songbooks that contain many numbered songs (including mixed Turkish/English sections):
+
+```bash
+npx gc-ingest ingest-songbook /absolute/path/to/songbook.pdf
+```
+
+What it does:
+- keeps PDF page order (no cross-page line mixing)
+- detects numbered song markers like `12. TITLE`
+- skips non-song pages (cover/contents pages with no chord/lyric signal)
+- splits bilingual sections into separate staged songs when possible (same number, Turkish/English titles)
 
 ## Staging Output
 

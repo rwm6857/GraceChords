@@ -192,6 +192,8 @@ select{
 .songpage__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
 .songpage__title{ margin:0; font-size: var(--font-title); line-height: var(--gc-lh-title); font-family: var(--gc-font-family); font-weight: var(--gc-weight-title); }
 .songpage__meta{ color:var(--muted); font-size:13px; margin-top:4px }
+.gc-song-title-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.gc-song-language-chips{ display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .gc-song-tags{ display:flex; flex-wrap:wrap; gap: var(--space-2); margin-top: var(--space-2); }
 
 /* Song title strip: Stopwatch — Title — Clock (single line) */
@@ -384,6 +386,25 @@ select{
 }
 .HomeGrid li::marker, .HomeGrid li::before{
   content:none !important;
+}
+.gc-translation-divider{
+  grid-column: 1 / -1;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin: 8px 0 2px;
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+}
+.gc-translation-divider::before,
+.gc-translation-divider::after{
+  content:'';
+  height:1px;
+  background: var(--gc-separator);
+  flex:1 1 auto;
+}
+.gc-translation-divider > span{
+  white-space: nowrap;
 }
 
 

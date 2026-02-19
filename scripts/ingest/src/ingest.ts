@@ -13,6 +13,8 @@ import { renderReportHtml } from './utils/reportHtml.js'
 import { copyFileSafe, ensureDir, fileExists, readText, writeText } from './utils/fs.js'
 import type { ExtractedLine, ExtractionResult } from './utils/types.js'
 import { extractPdfHeader } from './utils/pdfHeader.js'
+import { splitSongbookLines } from './utils/songbook.js'
+import type { SongLanguage } from './utils/songbook.js'
 import { extractFromDocx } from './extractors/docx.js'
 import { extractFromImage } from './extractors/image.js'
 import { extractFromPdf } from './extractors/pdf.js'
@@ -38,6 +40,24 @@ export type IngestResult =
       reason: string
       title: string
     }
+
+export type SongbookIngestResult = {
+  source: string
+  songs: Array<{
+    number: number
+    language: SongLanguage
+    title: string
+    stagingDir: string
+    report: Report
+  }>
+  skipped: Array<{
+    number: number
+    language: SongLanguage
+    title: string
+    reason: string
+  }>
+  warnings: string[]
+}
 
 const distDir = (() => {
   try {
@@ -217,6 +237,186 @@ export function buildDraft(
   }
 
   return { text: output.join('\n').trimEnd() + '\n', stats }
+}
+
+function mergeTags(...parts: Array<string | undefined>): string | undefined {
+  const values = parts
+    .flatMap((part) => (part || '').split(','))
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+  if (values.length === 0) return undefined
+  return Array.from(new Set(values)).join(', ')
+}
+
+async function stageSongFromExtractedLines(input: {
+  sourcePath: string
+  sourceName: string
+  title: string
+  lines: ExtractedLine[]
+  extractor: string
+  warnings: string[]
+  extractionStats: ExtractionResult['stats']
+  options: IngestOptions
+  key?: string
+  authors?: string
+  presentation?: string
+  slugHint?: string
+}): Promise<IngestResult> {
+  const initialSlug = slugifyTitle(input.slugHint || input.title || input.sourceName) || `song_${Date.now()}`
+  const tempSlug = `${initialSlug}_tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  let slug = tempSlug
+  let stagingDir = join(STAGING_ROOT, slug)
+  const sourceDir = join(stagingDir, 'source')
+
+  await ensureDir(sourceDir)
+  await copyFileSafe(input.sourcePath, join(sourceDir, input.sourceName))
+
+  const finalSlug = slugifyTitle(input.slugHint || input.title || initialSlug) || initialSlug
+  const renamed = await renameToUnique(stagingDir, finalSlug)
+  slug = renamed.slug
+  stagingDir = renamed.path
+
+  const draftDir = join(stagingDir, 'drafts')
+  const normalizedDir = join(stagingDir, 'normalized')
+  await ensureDir(draftDir)
+  await ensureDir(normalizedDir)
+
+  const warnings = [...input.warnings]
+  const finalTitle = input.title
+  const finalTags = mergeTags(input.options.tags)
+
+  const draftResult = buildDraft(
+    input.lines,
+    {
+      ...input.options,
+      title: finalTitle,
+      authors: input.options.authors || input.authors,
+      key: input.options.key || input.key,
+      tags: finalTags,
+      presentation: input.options.presentation || input.presentation
+    },
+    warnings
+  )
+
+  const draftPath = join(draftDir, `${slug}_draft.chordpro`)
+  await writeText(draftPath, draftResult.text)
+
+  const normalized = normalizeChordPro(draftResult.text, {
+    title: finalTitle,
+    key: input.options.key || input.key,
+    authors: input.options.authors || input.authors,
+    tags: finalTags
+  })
+  await writeText(join(normalizedDir, `${slug}.chordpro`), normalized)
+
+  const reportStats = {
+    ...draftResult.stats,
+    ocrConfidenceAvg: input.extractionStats.ocrConfidenceAvg
+  }
+  const report = scoreExtraction({
+    stats: reportStats,
+    warnings,
+    extractor: input.extractor
+  })
+
+  await writeText(join(stagingDir, 'report.json'), JSON.stringify({ ...report, title: finalTitle }, null, 2))
+  await writeText(join(stagingDir, 'report.html'), renderReportHtml({ ...report, title: finalTitle }))
+  await writeText(join(stagingDir, 'preview.html'), renderPreviewHtml(normalized))
+
+  return {
+    stagingDir,
+    report,
+    title: finalTitle
+  }
+}
+
+export async function ingestSongbook(pathOrUrl: string, options: IngestOptions = {}): Promise<SongbookIngestResult> {
+  await ensureDir(STAGING_ROOT)
+
+  let sourceName = basename(pathOrUrl)
+  if (isUrl(pathOrUrl)) {
+    const url = new URL(pathOrUrl)
+    sourceName = basename(url.pathname) || 'songbook.pdf'
+  }
+  const extension = extensionFromPath(sourceName)
+  if (extension !== '.pdf') {
+    throw new Error(`Songbook ingest currently supports PDF only. Got: ${extension || '(none)'}`)
+  }
+
+  const sourceTempDir = join(STAGING_ROOT, `_songbook_src_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`)
+  await ensureDir(sourceTempDir)
+  const sourcePath = join(sourceTempDir, sourceName)
+
+  try {
+    if (isUrl(pathOrUrl)) {
+      await downloadToFile(pathOrUrl, sourcePath)
+    } else {
+      await copyFileSafe(resolve(pathOrUrl), sourcePath)
+    }
+
+    const extraction = await chooseExtractor(sourcePath)
+    const songs = splitSongbookLines(extraction.lines)
+
+    const stagedSongs: SongbookIngestResult['songs'] = []
+    const skipped: SongbookIngestResult['skipped'] = []
+
+    for (const song of songs) {
+      const title = normalizeSongTitle(song.title)
+      if (!title || song.lines.length === 0) {
+        skipped.push({
+          number: song.number,
+          language: song.language,
+          title: song.title || `Song ${song.number}`,
+          reason: 'empty_song'
+        })
+        continue
+      }
+
+      const tags = mergeTags(options.tags, `songbook:${song.number}`, `lang:${song.language}`)
+      const result = await stageSongFromExtractedLines({
+        sourcePath,
+        sourceName,
+        title,
+        lines: song.lines,
+        extractor: extraction.extractor,
+        warnings: extraction.warnings,
+        extractionStats: extraction.stats,
+        options: { ...options, title: undefined, tags },
+        slugHint: `${String(song.number).padStart(3, '0')}_${title}`
+      })
+
+      if ('skipped' in result) {
+        skipped.push({
+          number: song.number,
+          language: song.language,
+          title,
+          reason: result.reason
+        })
+        continue
+      }
+
+      stagedSongs.push({
+        number: song.number,
+        language: song.language,
+        title,
+        stagingDir: result.stagingDir,
+        report: result.report
+      })
+    }
+
+    return {
+      source: sourceName,
+      songs: stagedSongs,
+      skipped,
+      warnings: extraction.warnings
+    }
+  } finally {
+    await rm(sourceTempDir, { recursive: true, force: true })
+  }
+}
+
+function normalizeSongTitle(input: string): string {
+  return input.replace(/\s+/g, ' ').trim()
 }
 
 export async function ingestFile(pathOrUrl: string, options: IngestOptions = {}): Promise<IngestResult> {
