@@ -1,13 +1,9 @@
 {
-<<<<<<< HEAD
-  "generatedAt": "2026-02-10T03:41:15.342Z",
-=======
-  "generatedAt": "2026-02-18T19:04:37.842Z",
+  "generatedAt": "2026-02-19T00:30:20.084Z",
   "languages": [
     "en",
     "tr"
   ],
->>>>>>> 3805ee29 (Added song translation support -- ignore the handful of test songs added. Looking forward to all nations worship)
   "items": [
     {
       "id": "10-000-reasons",
