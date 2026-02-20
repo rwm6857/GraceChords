@@ -313,6 +313,11 @@
   color: color-mix(in srgb, var(--gc-text) 70%, var(--gc-text-secondary));
   border-color: color-mix(in srgb, var(--gc-separator) 80%, var(--gc-surface-3));
 }
+[data-theme="dark"] .gc-chip--filter.is-selected{
+  background: var(--gc-primary);
+  color: var(--primary-text);
+  border-color: var(--gc-primary);
+}
 
 @media (max-width: 640px){
   .gc-btn{ min-height: var(--gc-control-h-mobile); }
