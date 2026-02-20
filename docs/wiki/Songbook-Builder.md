@@ -3,6 +3,7 @@ Create a PDF songbook from selected songs without transposition. For broader pla
 ## At a glance
 - Checkbox list with search and filters like Home
 - Sticky header with inline search
+- Language chips select preferred translation variant for add/search lists
 - “Add all” respects current filters (primary, right-aligned)
 - Export is alphabetized and numbered
 - Always generates a table of contents; optional cover image
@@ -12,6 +13,8 @@ Create a PDF songbook from selected songs without transposition. For broader pla
 
 ## Selection
 - **Search** within the page header filters the visible songs using the same query behavior as the Home page.
+- Search also matches alternate titles/tags/authors across linked translations (`song_id` groups).
+- Results prioritize songs that have the selected language variant.
 - **Add all** selects every song matching the current filters (including tag filters); use this for quick bulk selection.
 - **Clear** removes all current selections so you can start fresh.
 - For a planning-focused alternative, see [[Setlists]] for how saved lists differ from ad-hoc songbooks.

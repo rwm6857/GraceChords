@@ -7,6 +7,7 @@ Option A — Use the Admin Tool (recommended)
 2) Paste or write your ChordPro text.
 3) Fill metadata at the top of the file:
    - `{title: ...}` (required), `{key: ...}` (original), optional `{capo: N}`, `{tags: ...}`, `{authors: ...}`, `{country: ...}`
+   - Translation fields (when applicable): `{song_id: ...}` and `{lang: ...}` (`en` if `lang` is omitted)
    - Optional media: `{youtube: ...}`, `{mp3: ...}`, `{pptx: <file>.pptx}` if a slide deck exists under `public/pptx/`
 4) Use Quick chords to insert `[C]`, `[Am]`, etc. Buttons adapt to the song’s key.
 5) Click **Stage** to queue the song for publishing.
@@ -33,6 +34,26 @@ Option C — Manual add
 2) Add metadata and content in ChordPro format (see [[ChordPro-Guide]]).
 3) Run `npm run normalize && npm run build-index`.
 
+## Add or Edit a Translation
+1) Create a separate `.chordpro` file for each language variant.
+2) Use the same `{song_id: ...}` across all variants in the same translation group.
+3) Set `{lang: ...}` on each file (`en`, `tr`, `ar`, `es`). If omitted, GraceChords treats it as English.
+4) Keep `{title: ...}` in each language file as its local title. Titles do not need to match across translations.
+5) Rebuild index: `npm run build-index`.
+
+Example:
+```chordpro
+{title: Send Us Lord}
+{song_id: send-us-lord}
+{lang: en}
+```
+
+```chordpro
+{title: Rab Bizi Gonder}
+{song_id: send-us-lord}
+{lang: tr}
+```
+
 ## Edit an Existing Song
 
 Option A — Use the Admin Tool
@@ -49,15 +70,22 @@ Option B — Edit the file directly
 
 ## Verify in the App
 1) Home — search and open the song; confirm title/key/tags.
-2) SongView — transpose (`[`/`]`), toggle chords (`c`), reading view (1/2‑column), export PDF/JPG.
-3) Setlist — add to a set, choose target key, export combined PDF/PPTX.
-4) Worship Mode — open via the Song or Setlist toolbar for full‑screen performance view.
+2) Song Library — confirm language chips appear, translation names render in selected language, and fallback divider appears for missing translations.
+3) SongView — switch language chips, transpose (`[`/`]`), toggle chords (`c`), reading view (1/2‑column), export PDF/JPG.
+4) Setlist/Songbook — confirm language chips and search use translated titles where available.
+5) Worship Mode — open via the Song or Setlist toolbar for full‑screen performance view.
 
 ## Naming & Index Tips
 - Use lowercase + underscores (spaces and dashes → `_`).
 - Run `npm run normalize` before building the index to fix names and copy any PPTX from `TO_RENAME/`.
 - Rebuild index after changes: `npm run build-index`.
 - Sorting places numeric titles first; otherwise case‑insensitive by title, ignoring leading punctuation.
+- For translation sorting, songs with a variant in the selected language appear first (A→Z), then songs without one (A→Z).
+
+## Translation metadata inheritance
+- English is the master/source of truth when available in a translation group.
+- Translation files inherit `key`, `tags`, `authors`, `country`, `youtube`, `mp3`, and `pptx` unless a non-empty override is set in the translation file.
+- Blank values in translation files still inherit from English.
 
 ## Optional: Slides (PPTX)
 - Place a deck at `public/pptx/<song_slug>.pptx` (same base name as the `.chordpro`).

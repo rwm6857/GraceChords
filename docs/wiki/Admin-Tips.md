@@ -14,7 +14,12 @@ Practical tips for using the in‑app Admin editor (/admin) to author and update
   - macOS: Ctrl+1..6
 
 ## Metadata
-- Title, Key, Authors, Country, Tags, YouTube, MP3 map to `{title: …}`, `{key: …}`, and `{meta: …}` entries. Spaces are preserved.
+- Standard fields map to ChordPro directives: `{title: ...}`, `{key: ...}`, `{tags: ...}`, `{authors: ...}`, `{country: ...}`, `{youtube: ...}`, `{mp3: ...}`.
+- Translation fields:
+  - `{song_id: ...}` links language variants into one translation group.
+  - `{lang: ...}` marks language (`en`, `tr`, `ar`, `es`). If missing, the app assumes English.
+- Translation titles can differ from English titles as long as `song_id` matches.
+- Metadata inheritance applies at index build time: non-English variants inherit English `key/tags/authors/country/youtube/mp3/pptx` unless they set non-empty overrides.
 - Filenames derive from the title id (underscore slug), but are editable in the staging table.
 
 ## Slides (PPTX)

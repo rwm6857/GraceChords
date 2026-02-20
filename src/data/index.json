@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "generatedAt": "2026-02-20T04:21:42.360Z",
-=======
-  "generatedAt": "2026-02-20T04:27:17.930Z",
->>>>>>> 379c6604 (Reworked translation ingestion and logic)
+  "generatedAt": "2026-02-20T05:02:06.403Z",
   "languages": [
     "en",
     "tr"
