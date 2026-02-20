@@ -538,7 +538,6 @@ export default function SongView(){
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
       >
-        {desktopToolbar}
         {(isIcpSong || entry?.tags?.length) && (
           <div className="gc-song-tags">
             {isIcpSong ? (
@@ -549,6 +548,7 @@ export default function SongView(){
             ))}
           </div>
         )}
+        {desktopToolbar}
       </PageHeader>
 
       <Card

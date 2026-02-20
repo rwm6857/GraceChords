@@ -3,6 +3,8 @@ import { normalizeChordLine } from './chords.js'
 
 export type NormalizeOptions = {
   title?: string
+  songId?: string
+  lang?: string
   key?: string
   authors?: string
   country?: string
@@ -75,45 +77,68 @@ type HeadingSectionInfo = {
   number?: string
 }
 
+function normalizeSectionLabel(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/ı/g, 'i')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]/g, '')
+}
+
+function sectionTypeFromLabel(rawLabel: string): HeadingSectionInfo['type'] | null {
+  const label = normalizeSectionLabel(rawLabel)
+
+  if (label === 'v' || label === 'verse' || label === 'kita') return 'verse'
+  if (label === 'c' || label === 'chorus' || label === 'nakarat' || label === 'refrain') return 'chorus'
+  if (label === 'b' || label === 'bridge' || label === 'kopru') return 'bridge'
+  if (label === 'p' || label === 'pre' || label === 'prech' || label === 'prechorus') {
+    return 'pre-chorus'
+  }
+  if (label === 'i' || label === 'intro' || label === 'giris') return 'intro'
+  if (label === 'o' || label === 'outro' || label === 'cikis') return 'outro'
+  if (label === 't' || label === 'tag') return 'tag'
+  return null
+}
+
+function parseSectionToken(raw: string): { type: HeadingSectionInfo['type']; number?: string } | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+
+  let label = trimmed
+  let number: string | undefined
+
+  const separated = trimmed.match(/^(.+?)[\s.:_-]+(\d+)$/u)
+  if (separated) {
+    label = separated[1].trim()
+    number = separated[2]
+  } else {
+    const compact = trimmed.match(/^([^\d]+?)(\d+)$/u)
+    if (compact) {
+      label = compact[1].trim()
+      number = compact[2]
+    }
+  }
+
+  if (!label) return null
+  const type = sectionTypeFromLabel(label)
+  if (!type) return null
+  return { type, number }
+}
+
 function parseOpenSongSection(line: string): OpenSongSectionInfo | null {
   const trimmed = line.trim()
-  const match = trimmed.match(/^\[([A-Za-z]+)(\d+)?\]$/)
+  const match = trimmed.match(/^\[([^\]]+)\]$/u)
   if (!match) return null
-
-  const rawLabel = match[1].toLowerCase()
-  const number = match[2] || undefined
-  const label = rawLabel.replace(/[^a-z]/g, '')
-
-  if (label === 'v' || label === 'verse') return { type: 'verse', number }
-  if (label === 'c' || label === 'chorus') return { type: 'chorus', number }
-  if (label === 'b' || label === 'bridge') return { type: 'bridge', number }
-  if (label === 'p' || label === 'pre' || label === 'prech' || label === 'prechorus') {
-    return { type: 'pre-chorus', number }
-  }
-  if (label === 'i' || label === 'intro') return { type: 'intro', number }
-  if (label === 'o' || label === 'outro') return { type: 'outro', number }
-  if (label === 't' || label === 'tag') return { type: 'tag', number }
-
-  return null
+  const parsed = parseSectionToken(match[1])
+  if (!parsed) return null
+  return { type: parsed.type, number: parsed.number }
 }
 
 function parseHeadingSection(line: string): HeadingSectionInfo | null {
   const trimmed = line.trim()
-  const match = trimmed.match(/^(verse|chorus|bridge|tag|intro|outro|pre[-\s]?chorus)(\s+\d+)?[.:]?$/i)
-  if (!match) return null
-
-  const rawLabel = match[1].toLowerCase()
-  const number = (match[2] || '').trim() || undefined
-
-  if (rawLabel.startsWith('pre')) return { type: 'pre-chorus', number }
-  if (rawLabel === 'verse') return { type: 'verse', number }
-  if (rawLabel === 'chorus') return { type: 'chorus', number }
-  if (rawLabel === 'bridge') return { type: 'bridge', number }
-  if (rawLabel === 'intro') return { type: 'intro', number }
-  if (rawLabel === 'outro') return { type: 'outro', number }
-  if (rawLabel === 'tag') return { type: 'tag', number }
-
-  return null
+  return parseSectionToken(trimmed)
 }
 
 function openSongSectionToDirective(
@@ -210,6 +235,8 @@ export function normalizeChordPro(input: string, options: NormalizeOptions = {})
 
   const meta = {
     title: options.title || '',
+    songId: options.songId || '',
+    lang: options.lang || '',
     key: options.key || '',
     authors: options.authors || '',
     country: options.country || '',
@@ -276,6 +303,14 @@ export function normalizeChordPro(input: string, options: NormalizeOptions = {})
         hasTitle = true
         continue
       }
+      if (key === 'song_id' || key === 'songid' || key === 'translation_group' || key === 'translationgroup') {
+        if (!options.songId && value) meta.songId = value
+        continue
+      }
+      if (key === 'lang' || key === 'language' || key === 'locale') {
+        if (!options.lang && value) meta.lang = value
+        continue
+      }
       if (key === 'key') {
         if (!options.key && value) meta.key = value
         continue
@@ -318,19 +353,25 @@ export function normalizeChordPro(input: string, options: NormalizeOptions = {})
     if (isIntroOrInstLine(cleaned)) {
       continue
     }
+    const headingInfo = parseHeadingSection(line)
+    if (headingInfo) {
+      closeSection()
+      const directive = headingSectionToDirective(headingInfo, headingTotals, headingSeen)
+      output.push(directive.start)
+      openSection = { end: directive.end, hasContent: false }
+      capitalizeNext = true
+      continue
+    }
+
     const lineType = classifyLine(cleaned)
     if (lineType === 'heading') {
       closeSection()
-      const headingInfo = parseHeadingSection(line)
-      const directive = headingInfo
-        ? headingSectionToDirective(headingInfo, headingTotals, headingSeen)
-        : headingToDirective(line)
-      if (directive) {
-        output.push(directive.start)
-        openSection = { end: directive.end, hasContent: false }
-        capitalizeNext = true
-        continue
-      }
+      const directive = headingToDirective(line)
+      if (!directive) continue
+      output.push(directive.start)
+      openSection = { end: directive.end, hasContent: false }
+      capitalizeNext = true
+      continue
     }
 
     if (lineType === 'blank') {
@@ -374,6 +415,8 @@ export function normalizeChordPro(input: string, options: NormalizeOptions = {})
 
   const headerLines = [
     `{title: ${meta.title}}`,
+    ...(meta.songId ? [`{song_id: ${meta.songId}}`] : []),
+    ...(meta.lang ? [`{lang: ${meta.lang}}`] : []),
     `{key: ${meta.key}}`,
     `{authors: ${meta.authors}}`,
     `{country: ${meta.country}}`,

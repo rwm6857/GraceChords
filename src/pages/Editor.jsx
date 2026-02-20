@@ -1515,11 +1515,13 @@ function EditorHelpTab(){
           </div>
           <div className="gc-help__content Small" style={{ marginTop:8 }}>
             <h3>Editor basics</h3>
-            <p>Fill metadata (title, key, lang, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
+            <p>Fill metadata (title, song_id, lang, key, authors, country, tags, YouTube). Use quick chords and quick sections to speed up typing.</p>
+            <p>For translations, keep the same <code>{'{song_id: ...}'}</code> and set per-file <code>{'{lang: ...}'}</code>. If <code>lang</code> is omitted, it defaults to English.</p>
             <p>New Song + search lets you start fresh or load an existing song to edit.</p>
             <h3>ChordPro tips</h3>
             <p>Place chords in square brackets like <code>[G]</code>. Section headers use short codes such as <code>{'{sov Verse}'}</code> … <code>{'{eov}'}</code>.</p>
             <pre className="Small" style={{ whiteSpace:'pre-wrap' }}>{`{title: Example}
+{song_id: example-song}
 {key: G}
 {lang: en}
 {sov Verse}

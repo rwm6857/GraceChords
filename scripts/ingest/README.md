@@ -66,6 +66,8 @@ What it does:
 - detects numbered song markers like `12. TITLE`
 - skips non-song pages (cover/contents pages with no chord/lyric signal)
 - splits bilingual sections into separate staged songs when possible (same number, Turkish/English titles)
+- maps Turkish section markers like `[KITA]`, `[NAKARAT]`, `[KÖPRÜ]` into the same ChordPro section directives as English markers
+- normalizes extracted song titles to Title Case while keeping the song number prefix in `{title: ...}`
 
 ## Staging Output
 

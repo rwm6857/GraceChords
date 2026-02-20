@@ -4,6 +4,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 
 ## Features
 - 🔍 Instant search with tag filters
+- 🌐 Translation-aware song catalog (`song_id` + language chips)
 - 🎸 Song view with key transposition, chord toggling, and single-song PDF download
 - 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export (sticky pane headers, independent scrolling, named saves, shareable links)
 - 📦 Bundle download for predefined groups of songs
@@ -123,6 +124,44 @@ Admin highlights:
 Manual publish (no PR):
 1) Stage → Download Staged → unzip → copy to `public/songs/` → `npm run build-index` → `npm run build`.
 
+## Song Translations
+GraceChords supports separate `.chordpro` files per language variant.
+
+- Link variants with `{song_id: <shared-id>}`.
+- Mark file language with `{lang: <code>}` (`en`, `tr`, `ar`, `es`).
+- If `{lang: ...}` is omitted, language defaults to English (`en`).
+- Translation titles can differ from English titles. Matching is by `song_id`, not by title text.
+
+Example:
+```chordpro
+{title: Send Us Lord}
+{song_id: send-us-lord}
+{lang: en}
+```
+
+```chordpro
+{title: Rab Bizi Gonder}
+{song_id: send-us-lord}
+{lang: tr}
+```
+
+Default and persistence behavior:
+- Song language defaults from UI/browser locale when possible.
+- User override is saved in `localStorage` under `pref:songLanguage`.
+- The same preference is reused across Song Library, SongView, Setlist, Songbook, Home suggestions, and Worship Mode resolution.
+
+Metadata inheritance behavior:
+- For each `song_id` group, English is treated as master/source of truth when present.
+- Translations inherit `key`, `tags`, `authors`, `country`, `youtube`, `mp3`, and `pptx` unless the translation sets a non-empty value for that field.
+- Blank values in translation files still inherit from English.
+
+Song Library behavior:
+- Language chips appear only for languages that have at least one real translation group.
+- Results are sorted in two blocks:
+  - songs with selected-language translation (A-Z)
+  - songs without selected-language translation (A-Z), under "No Translation in Selected Language"
+- Search matches alternate titles/tags/authors across all variants in a group.
+
 ## Resources (Guides/Articles)
 GraceChords includes a lightweight resources/blog system for worship teams.
 
@@ -160,6 +199,8 @@ Place the following font files in `src/assets/fonts/` so the PDF exporter can bu
 - `NotoSans-BoldItalic.ttf`
 - `NotoSansMono-Regular.ttf`
 - `NotoSansMono-Bold.ttf`
+
+These fonts cover multilingual glyphs used in translated charts, including Turkish characters.
 
 ## Normalization
 Keep filenames consistent and avoid duplicates before building the index:
@@ -208,6 +249,7 @@ npm run ingest -- path/to/song.pdf --plain
 Notes
 - The ingest CLI writes staged output under `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
 - `ingest-songbook` is designed for large multi-page PDFs: it keeps page order, ignores cover/TOC-style pages, and splits numbered Turkish/English song pairs into separate staged songs when detected.
+- Songbook ingest also maps Turkish section markers (`[KITA]`, `[NAKARAT]`, `[KÖPRÜ]`) to standard ChordPro section directives and normalizes titles to Title Case while keeping the song number.
 - Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
 - Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
 - Output directory must exist. By default it is `public/songs`. Use `--out <dir>` to override.

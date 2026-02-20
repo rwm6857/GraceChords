@@ -70,4 +70,14 @@ describe('OpenSong buildDraft integration', () => {
     )
     expect(/\[[A-G][^]]*\]/.test(draft.text)).toBe(false)
   })
+
+  it('writes lang and song_id metadata when provided', () => {
+    const draft = buildDraft(
+      [{ text: 'Hello world', source: 'pdf' }],
+      { title: 'Test Song', songId: 'revival_songbook_001', lang: 'tr' },
+      []
+    )
+    expect(draft.text).toContain('{song_id: revival_songbook_001}')
+    expect(draft.text).toContain('{lang: tr}')
+  })
 })

@@ -4,6 +4,7 @@ Build and export a worship set that remembers your choices.
 - Add songs and drag to reorder
 - Set per-song target keys
 - Saved to `localStorage` (named saves)
+- Language chips select preferred translation variant for add/search lists
 - Export PDF or PPTX
 - Share a link to the current set
 - Print a quick outline
@@ -14,6 +15,12 @@ Build and export a worship set that remembers your choices.
 4. Use **Export PDF** to merge charts or **Export PPTX** for slides (files are named with index order).
 5. Use **Share Set** to copy a link that restores the exact set and target keys.
 6. Print the set for a simple checklist (print-only outline is included).
+
+Translation behavior
+- Setlist add/search uses the same translation grouping model as Song Library.
+- Search matches alternate titles/tags/authors from all variants in each translation group.
+- Results prioritize songs available in the selected language.
+- Selected song language is persisted to `localStorage` (`pref:songLanguage`) and shared with Songs/SongView/Songbook.
 
 Toolbar
 - Title line shows the current set name (defaults to “New Setlist”).

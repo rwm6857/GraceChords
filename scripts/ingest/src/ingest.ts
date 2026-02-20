@@ -26,6 +26,8 @@ export type IngestOptions = {
   authors?: string
   key?: string
   tags?: string
+  lang?: string
+  songId?: string
   presentation?: string
 }
 
@@ -59,6 +61,29 @@ export type SongbookIngestResult = {
   warnings: string[]
 }
 
+const ENGLISH_SMALL_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'and',
+  'but',
+  'or',
+  'nor',
+  'for',
+  'so',
+  'yet',
+  'as',
+  'at',
+  'by',
+  'in',
+  'of',
+  'on',
+  'to',
+  'up',
+  'via',
+  'per'
+])
+
 const distDir = (() => {
   try {
     const url = import.meta?.url
@@ -88,6 +113,13 @@ async function downloadToFile(url: string, targetPath: string): Promise<void> {
 
 function extensionFromPath(path: string): string {
   return extname(path).toLowerCase()
+}
+
+function stemFromPath(path: string): string {
+  const file = basename(path)
+  const dot = file.lastIndexOf('.')
+  if (dot <= 0) return file
+  return file.slice(0, dot)
 }
 
 async function renameToUnique(stagingDir: string, finalSlug: string): Promise<{ slug: string; path: string }> {
@@ -147,6 +179,8 @@ export function buildDraft(
   const output: string[] = []
   const metaLines: string[] = []
   if (options.title) metaLines.push(`{title: ${options.title}}`)
+  if (options.songId) metaLines.push(`{song_id: ${options.songId}}`)
+  if (options.lang) metaLines.push(`{lang: ${options.lang}}`)
   if (options.authors) metaLines.push(`{authors: ${options.authors}}`)
   if (options.key) metaLines.push(`{key: ${options.key}}`)
   if (options.tags) metaLines.push(`{tags: ${options.tags}}`)
@@ -290,6 +324,8 @@ async function stageSongFromExtractedLines(input: {
     {
       ...input.options,
       title: finalTitle,
+      songId: input.options.songId,
+      lang: input.options.lang,
       authors: input.options.authors || input.authors,
       key: input.options.key || input.key,
       tags: finalTags,
@@ -305,7 +341,9 @@ async function stageSongFromExtractedLines(input: {
     title: finalTitle,
     key: input.options.key || input.key,
     authors: input.options.authors || input.authors,
-    tags: finalTags
+    tags: finalTags,
+    songId: input.options.songId,
+    lang: input.options.lang
   })
   await writeText(join(normalizedDir, `${slug}.chordpro`), normalized)
 
@@ -357,12 +395,13 @@ export async function ingestSongbook(pathOrUrl: string, options: IngestOptions =
     const extraction = await chooseExtractor(sourcePath)
     const songs = splitSongbookLines(extraction.lines)
 
+    const songbookSlug = slugifyTitle(stemFromPath(sourceName)) || 'songbook'
     const stagedSongs: SongbookIngestResult['songs'] = []
     const skipped: SongbookIngestResult['skipped'] = []
 
     for (const song of songs) {
-      const title = normalizeSongTitle(song.title)
-      if (!title || song.lines.length === 0) {
+      const titleBase = normalizeSongbookTitle(song.title, song.language)
+      if (!titleBase || song.lines.length === 0) {
         skipped.push({
           number: song.number,
           language: song.language,
@@ -372,24 +411,26 @@ export async function ingestSongbook(pathOrUrl: string, options: IngestOptions =
         continue
       }
 
-      const tags = mergeTags(options.tags, `songbook:${song.number}`, `lang:${song.language}`)
+      const songId = `${songbookSlug}_${String(song.number).padStart(3, '0')}`
+      const lang = song.language === 'unknown' ? undefined : song.language
+      const tags = mergeTags(options.tags)
       const result = await stageSongFromExtractedLines({
         sourcePath,
         sourceName,
-        title,
+        title: titleBase,
         lines: song.lines,
         extractor: extraction.extractor,
         warnings: extraction.warnings,
         extractionStats: extraction.stats,
-        options: { ...options, title: undefined, tags },
-        slugHint: `${String(song.number).padStart(3, '0')}_${title}`
+        options: { ...options, title: undefined, tags, songId, lang },
+        slugHint: `${String(song.number).padStart(3, '0')}_${titleBase}`
       })
 
       if ('skipped' in result) {
         skipped.push({
           number: song.number,
           language: song.language,
-          title,
+          title: titleBase,
           reason: result.reason
         })
         continue
@@ -398,7 +439,7 @@ export async function ingestSongbook(pathOrUrl: string, options: IngestOptions =
       stagedSongs.push({
         number: song.number,
         language: song.language,
-        title,
+        title: titleBase,
         stagingDir: result.stagingDir,
         report: result.report
       })
@@ -415,8 +456,37 @@ export async function ingestSongbook(pathOrUrl: string, options: IngestOptions =
   }
 }
 
-function normalizeSongTitle(input: string): string {
-  return input.replace(/\s+/g, ' ').trim()
+export function normalizeSongbookTitle(input: string, language: SongLanguage): string {
+  const trimmed = input.replace(/\s+/g, ' ').trim()
+  if (!trimmed) return ''
+
+  const locale =
+    language === 'tr' || /[çğıöşüÇĞİÖŞÜıİ]/.test(trimmed) ? 'tr-TR' : 'en-US'
+  const words = trimmed.split(' ')
+
+  const cased = words.map((word, index) => {
+    const lower = word.toLocaleLowerCase(locale)
+    const core = lower.replace(/^[^\p{L}0-9]+|[^\p{L}0-9]+$/gu, '')
+    const isEdge = index === 0 || index === words.length - 1
+
+    if (locale !== 'tr-TR' && core && ENGLISH_SMALL_WORDS.has(core) && !isEdge) {
+      return lower
+    }
+
+    let uppered = false
+    let result = ''
+    for (const char of lower) {
+      if (!uppered && /\p{L}/u.test(char)) {
+        result += char.toLocaleUpperCase(locale)
+        uppered = true
+      } else {
+        result += char
+      }
+    }
+    return result
+  })
+
+  return cased.join(' ')
 }
 
 export async function ingestFile(pathOrUrl: string, options: IngestOptions = {}): Promise<IngestResult> {

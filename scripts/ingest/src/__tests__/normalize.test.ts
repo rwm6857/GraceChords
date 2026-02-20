@@ -61,4 +61,29 @@ describe('normalizeChordPro', () => {
     const output = normalizeChordPro(input, { title: 'Test' })
     expect(output).toContain('Line one\n\nLine two\n\n{eov}\n{soc}')
   })
+
+  it('maps Turkish section markers to English ChordPro directives', () => {
+    const input = '[KITA 1]\nSatir bir\n\n[KÖPRÜ]\nSatir iki\n\n[NAKARAT]\nSatir uc\n'
+    const output = normalizeChordPro(input, { title: 'Test' })
+    expect(output).toContain('{sov}')
+    expect(output).toContain('{sob Bridge}')
+    expect(output).toContain('{soc}')
+    expect(output).toContain('{eov}')
+    expect(output).toContain('{eob}')
+    expect(output).toContain('{eoc}')
+  })
+
+  it('maps plain Turkish headings without brackets', () => {
+    const input = 'KITA 2\nSatir bir\nNAKARAT\nSatir iki\n'
+    const output = normalizeChordPro(input, { title: 'Test' })
+    expect(output).toContain('{sov}')
+    expect(output).toContain('{soc}')
+  })
+
+  it('keeps song_id and lang metadata in normalized output', () => {
+    const input = '{title: Test}\n{song_id: revival_songbook_001}\n{lang: tr}\nVerse\nLine one\n'
+    const output = normalizeChordPro(input, { title: 'Test' })
+    expect(output).toContain('{song_id: revival_songbook_001}')
+    expect(output).toContain('{lang: tr}')
+  })
 })

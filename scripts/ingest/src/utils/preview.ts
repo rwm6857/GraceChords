@@ -1,5 +1,14 @@
 import { normalizeChordLine } from './chords.js'
 
+const SECTION_LABEL_BY_TOKEN: Record<string, string> = {
+  sov: 'Verse',
+  soc: 'Chorus',
+  sob: 'Bridge',
+  soi: 'Intro',
+  soo: 'Outro',
+  sot: 'Tag'
+}
+
 export function renderPreviewHtml(chordpro: string): string {
   const lines = chordpro.split(/\r?\n/)
   const metadata: Record<string, string> = {}
@@ -17,7 +26,8 @@ export function renderPreviewHtml(chordpro: string): string {
       const token = directive[1]
       if (token.startsWith('so')) {
         const label = directive[2]?.trim() || ''
-        bodyLines.push(`\n## ${label || 'Section'}\n`)
+        const defaultLabel = SECTION_LABEL_BY_TOKEN[token] || 'Section'
+        bodyLines.push(`\n## ${label || defaultLabel}\n`)
       }
       continue
     }
