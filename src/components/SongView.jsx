@@ -29,7 +29,6 @@ import {
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
-let pdfPlanPromise
 let imageLibPromise
 
 const SITE_URL = 'https://gracechords.com'
@@ -114,9 +113,7 @@ export default function SongView(){
   const [hasPptx, setHasPptx] = useState(false)
   const [pptxUrl, setPptxUrl] = useState('')
   const [jpgDisabled, setJpgDisabled] = useState(false)
-  const [pdfLibPromiseState, setPdfLibPromiseState] = useState(pdfLibPromise)
   const [imageLibPromiseState, setImageLibPromiseState] = useState(imageLibPromise)
-  const [pdfPlanPromiseState, setPdfPlanPromise] = useState(pdfPlanPromise)
   const jpgAlerted = useRef(false)
   const [busy, setBusy] = useState(false)
   const lastPlan = useRef(null)
@@ -146,7 +143,6 @@ export default function SongView(){
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
       pdfLibPromise = import('../utils/pdf')
-      setPdfLibPromiseState(pdfLibPromise)
     }
     return pdfLibPromise
   }
@@ -156,14 +152,6 @@ export default function SongView(){
       setImageLibPromiseState(imageLibPromise)
     }
     return imageLibPromise
-  }
-
-  const loadPdfPlan = () => {
-    if (!pdfPlanPromise) {
-      pdfPlanPromise = import('../utils/pdf/pdfLayout.js')
-      setPdfPlanPromise(pdfPlanPromise)
-    }
-    return pdfPlanPromise
   }
 
   // load & parse chordpro
@@ -211,7 +199,7 @@ export default function SongView(){
           const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
           const needsCheck = blocks.length > 1 && lineCount > 40
           setJpgDisabled(needsCheck)
-          if (needsCheck) Promise.all([loadPdfPlan(), loadImageLib()])
+          if (needsCheck) loadImageLib()
           try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
         } catch(err){
           console.error(err)
@@ -276,7 +264,7 @@ export default function SongView(){
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
     if (!parsed) return
-    if (!pdfPlanPromiseState || !imageLibPromiseState) return
+    if (!imageLibPromiseState) return
     let cancelled = false
     async function check() {
       const ok = await checkJpgSupport()
@@ -285,7 +273,7 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
-  }, [parsed, toKey, pdfPlanPromiseState, pdfLibPromiseState, imageLibPromiseState])
+  }, [parsed, toKey, imageLibPromiseState])
 
   const helmet = (
     <Helmet>
@@ -365,17 +353,12 @@ export default function SongView(){
 
   async function checkJpgSupport(showAlert = false) {
     const song = buildSong()
-    const [{ chooseBestLayout }, { ensureCanvasFonts }] = await Promise.all([
-      loadPdfPlan(),
-      loadImageLib()
-    ])
+    const { planSongForJpg, ensureCanvasFonts } = await loadImageLib()
     const fonts = await ensureCanvasFonts()
-    const ctx = document.createElement('canvas').getContext('2d')
-    const makeLyric = (pt) => (text) => { ctx.font = `${pt}px ${fonts.lyricFamily}`; return ctx.measureText(text || '').width }
-    const makeChord = (pt) => (text) => { ctx.font = `bold ${pt}px ${fonts.chordFamily}`; return ctx.measureText(text || '').width }
-    const res = chooseBestLayout(song, { lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily }, makeLyric, makeChord)
-    lastPlan.current = res.plan
-    const ok = res.plan.layout.pages.length <= 1
+    const res = planSongForJpg(song, { fonts, lyricFamily: fonts.lyricFamily, chordFamily: fonts.chordFamily })
+    lastPlan.current = res?.plan || null
+    const pages = res?.summary?.pages ?? res?.plan?.layout?.pages?.length ?? 99
+    const ok = res?.error !== 'MULTI_PAGE' && pages <= 1
     if (!ok && showAlert && !jpgAlerted.current) {
       alert('JPG export supports single-page songs only for now.')
       jpgAlerted.current = true
@@ -385,7 +368,7 @@ export default function SongView(){
 
   function prefetchPdf() { loadPdfLib() }
   function prefetchJpg() {
-    Promise.all([loadPdfPlan(), loadImageLib()]).then(() => {
+    loadImageLib().then(() => {
       if (parsed) checkJpgSupport(false).then(ok => setJpgDisabled(!ok))
     })
   }
