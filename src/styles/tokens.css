@@ -41,8 +41,20 @@
   --radius-pill: 999px;
 
   /* Control sizing */
-  --gc-control-h: 40px;
+  --gc-control-h: 36px;
   --gc-control-h-mobile: 44px;
+  --gc-btn-gap: 6px;
+  --gc-btn-pad-y: 6px;
+  --gc-btn-pad-x: 12px;
+  --gc-btn-font-size: 15px;
+  --gc-btn-pad-y-sm: 5px;
+  --gc-btn-pad-x-sm: 9px;
+  --gc-btn-font-size-sm: 13px;
+  --gc-btn-pad-y-lg: 8px;
+  --gc-btn-pad-x-lg: 14px;
+  --gc-btn-font-size-lg: 16px;
+  --gc-btn-icon-pad: 6px;
+  --gc-btn-icon-size: 16px;
 
   /* Motion */
   --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);

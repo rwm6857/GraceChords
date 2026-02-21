@@ -122,9 +122,9 @@ select{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap: var(--gc-btn-gap);
   min-height: var(--gc-control-h);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--gc-btn-pad-y) var(--gc-btn-pad-x);
   border-radius: var(--radius-md);
   border:1px solid var(--gc-separator);
   background: var(--gc-surface-2);
@@ -132,6 +132,7 @@ select{
   cursor:pointer;
   font-family: var(--gc-font-family);
   font-weight: 600;
+  font-size: var(--gc-btn-font-size);
   transition: background-color var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease), color var(--gc-dur-quick) var(--gc-ease), transform var(--gc-dur-quick) var(--gc-ease);
 }
 .btn.primary{
@@ -144,12 +145,14 @@ select{
 
 .iconbtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:6px 10px;
+  gap: var(--gc-btn-gap);
+  padding: var(--gc-btn-icon-pad);
   min-height: var(--gc-control-h);
   min-width: var(--gc-control-h);
   border-radius: var(--radius-md);
   background: var(--gc-surface-2);
   border:1px solid var(--gc-separator);
+  font-size: var(--gc-btn-font-size);
   transition: background-color var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease), color var(--gc-dur-quick) var(--gc-ease);
 }
 
@@ -303,7 +306,7 @@ select{
 
 /* Compact icon buttons on very small screens */
 @media (max-width: 640px){
-  .iconbtn{ gap:6px; padding:6px 8px; min-height: var(--gc-control-h-mobile); min-width: var(--gc-control-h-mobile); }
+  .iconbtn{ gap: var(--gc-btn-gap); padding: calc(var(--gc-btn-icon-pad) + 1px); min-height: var(--gc-control-h-mobile); min-width: var(--gc-control-h-mobile); }
   .btn{ min-height: var(--gc-control-h-mobile); }
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select{ min-height: var(--gc-control-h-mobile); }
