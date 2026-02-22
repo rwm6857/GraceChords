@@ -198,6 +198,7 @@ select{
 .gc-song-title-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .gc-song-language-chips{ display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .gc-song-tags{ display:flex; flex-wrap:wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.gc-song-tags + .gc-song-toolbar{ margin-top: var(--space-2); }
 
 /* Song title strip: Stopwatch — Title — Clock (single line) */
 .songtitlebar{
@@ -223,7 +224,7 @@ select{
 [data-theme="dark"] .songtitlebar__side{ color: color-mix(in srgb, var(--gc-text) 80%, var(--gc-text-secondary)); }
 
 .songpage__sheet{
-  margin-top:12px;
+  margin-top: var(--space-2);
   display: block !important;
   width: 100%;
 }
