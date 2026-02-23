@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "generatedAt": "2026-02-23T04:46:38.057Z",
+=======
+  "generatedAt": "2026-02-23T04:52:45.979Z",
+>>>>>>> 963ac2b46 (Some language and UI cleanup)
   "languages": [
     "en",
     "tr"

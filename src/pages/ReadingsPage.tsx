@@ -175,7 +175,7 @@ export default function ReadingsPage(){
         <div className="readings-date">
           <IconButton
             label="Previous day"
-            className="readings-datebtn readings-datebtn--mobile"
+            className="readings-datebtn"
             onClick={() => goToRelativeDay(-1)}
             onMouseDown={(e) => e.preventDefault()}
           >
@@ -211,7 +211,7 @@ export default function ReadingsPage(){
           </div>
           <IconButton
             label="Next day"
-            className="readings-datebtn readings-datebtn--mobile"
+            className="readings-datebtn"
             onClick={() => goToRelativeDay(1)}
             onMouseDown={(e) => e.preventDefault()}
           >
@@ -219,14 +219,6 @@ export default function ReadingsPage(){
           </IconButton>
         </div>
         <div className="readings-chips-nav">
-          <IconButton
-            label="Previous day"
-            className="readings-datebtn readings-datebtn--desktop"
-            onClick={() => goToRelativeDay(-1)}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <ArrowLeft size={14} />
-          </IconButton>
           <div className="readings-chips">
             <ul className="readings-list" aria-label="Passages">
               {passages.map((passage, idx) => {
@@ -247,14 +239,6 @@ export default function ReadingsPage(){
               })}
             </ul>
           </div>
-          <IconButton
-            label="Next day"
-            className="readings-datebtn readings-datebtn--desktop"
-            onClick={() => goToRelativeDay(1)}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <ArrowRight size={14} />
-          </IconButton>
         </div>
       </section>
 

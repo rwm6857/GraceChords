@@ -69,7 +69,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Match what your automation commits
-          git add -A docs src/data/*.json public/sitemap.xml public/robots.txt || true
+          git add -A src/data/*.json public/sitemap.xml public/robots.txt || true
 
           if git diff --cached --quiet; then
             echo "No generated changes to commit"

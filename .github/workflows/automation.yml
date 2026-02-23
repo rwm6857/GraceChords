@@ -244,7 +244,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add -A docs src/data/*.json public/sitemap.xml public/robots.txt || true
+          git add -A src/data/*.json public/sitemap.xml public/robots.txt || true
 
           if git diff --cached --quiet; then
             echo "No generated changes to commit"

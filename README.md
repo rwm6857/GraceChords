@@ -21,7 +21,7 @@ src/            # components, hooks, utilities, tests
 public/         # ChordPro files and font assets
 public/bible/   # translation manifest + generated Bible chapter JSON
 scripts/        # maintenance scripts (e.g., index generation)
-docs/           # Vite build output for GitHub Pages
+docs/           # local Vite build output (gitignored)
 ```
 Bible XML source files should be placed under `BIBLE_XML/` (not committed) for import into `public/bible/<lang>/<id>/`.
 
@@ -51,11 +51,11 @@ For more detail, see the [Getting Started](../../wiki/Getting-Started) and [Cont
 
 ## Building & Deployment
 See the wiki page for details on CI/CD and wiki sync: ../../wiki/Build-and-Deploy
-Generate the static site into `docs/` and push to the `main` branch to serve via GitHub Pages:
+Generate the static site locally into `docs/` (gitignored):
 ```bash
 npm run build
-# commit & push -> serve from /docs
 ```
+GitHub Pages deploys automatically from the GitHub Actions workflow `.github/workflows/pages-deploy.yml` on pushes to `main` (no `docs/` commit required).
 Daily Word requires local Bible chapter JSON. Place XML files in `BIBLE_XML/` and run:
 ```bash
 npm run build:bibles
@@ -68,7 +68,7 @@ npm run build:bible -- --xml ./BIBLE_XML/EnglishNLTBible.xml
 ```
 
 This writes chapter files to `public/bible/<lang>/<id>/` and updates `public/bible/translations.json`.
-Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
+Keep the root `404.html` (SPA fallback) in the repo when deploying.
 
 Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
 
@@ -272,7 +272,8 @@ Notes
   - Indexes: if `public/songs/**` or `scripts/buildIndex.mjs` change, runs `npm run build-index`. If `public/resources/**` or `scripts/buildResourcesIndex.mjs` change, runs `npm run build-resources-index`.
   - Sitemap: runs `npm run generate:sitemap` when song/resource data or sitemap script changes.
   - Build: runs `npm run build` with `VITE_COMMIT_SHA=${{ github.sha }}` when code or generated data/sitemap changed.
-  - Commit: stages `docs/`, `src/data/*.json`, and `public/sitemap.xml`/`public/robots.txt` into a single commit (`chore: automation for <sha>`).
+  - Commit: stages `src/data/*.json` and `public/sitemap.xml`/`public/robots.txt` into a single commit (`chore: automation for <sha>`).
+  - Pages deploy: `.github/workflows/pages-deploy.yml` builds and deploys the site artifact to GitHub Pages without committing `docs/`.
   - Concurrency: one automation run per branch (`automation-${ref}`), canceling in-progress duplicates.
 - Bot-origin pushes are ignored to avoid loops.
 

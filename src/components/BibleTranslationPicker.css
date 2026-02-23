@@ -1,8 +1,9 @@
 .gc-translation-picker{
   position: relative;
   display: inline-flex;
-  min-width: 170px;
-  max-width: min(64vw, 360px);
+  width: auto;
+  min-width: 0;
+  max-width: none;
 }
 
 .gc-translation-picker.is-full{
@@ -13,8 +14,9 @@
 }
 
 .gc-translation-picker__button{
-  width: 100%;
+  width: auto;
   min-height: var(--gc-control-h);
+  min-width: 6.5ch;
   border-radius: var(--radius-md);
   border: 1px solid var(--gc-separator);
   background: var(--gc-surface-1);
@@ -47,7 +49,9 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  right: 0;
+  width: max-content;
+  min-width: max(100%, 280px);
+  max-width: min(92vw, 420px);
   max-height: min(55vh, 420px);
   overflow-y: auto;
   z-index: 120;

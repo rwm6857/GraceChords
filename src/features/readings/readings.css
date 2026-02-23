@@ -72,15 +72,11 @@
   height: 30px;
 }
 
-.readings-datebtn--mobile{
-  display: none;
-}
-
 .readings-translation{
   display:flex;
   align-items:center;
-  min-width: 170px;
-  max-width: min(64vw, 360px);
+  min-width: 0;
+  max-width: none;
 }
 
 .readings-chips{
@@ -247,31 +243,17 @@
 
   .readings-translation{
     grid-area: translation;
-    width: 100%;
-    max-width: 420px;
+    width: auto;
+    max-width: none;
     justify-self: center;
   }
 
-  .readings-translation .gc-translation-picker{
-    width: 100%;
-    max-width: none;
-    display: flex;
-  }
-
-  .readings-datebtn--mobile{
-    display: inline-flex;
-  }
-
-  .readings-datebtn--mobile:first-child{
+  .readings-datebtn:first-child{
     grid-area: prev;
   }
 
-  .readings-datebtn--mobile:last-child{
+  .readings-datebtn:last-child{
     grid-area: next;
-  }
-
-  .readings-datebtn--desktop{
-    display: none;
   }
 
   .readings-chips-nav{

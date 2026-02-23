@@ -62,8 +62,8 @@
       "id": "nkrv",
       "label": "NKRV",
       "name": "New Korean Revised Version",
-      "language": "kr",
-      "dataRoot": "bible/kr/nkrv"
+      "language": "ko",
+      "dataRoot": "bible/ko/nkrv"
     },
     {
       "id": "tlab",
