@@ -104,7 +104,7 @@ export default function ReadingsPage(){
       </Helmet>
       <PageHeader
         title="Daily Bible Reading"
-        subtitle="Reading the Bible following Robert Murray M'Cheyne's plan will take you through the entire Bible in a year, including the New Testament & Psalms twice. Read, meditate, and pray over the word in your church and family worship."
+        subtitle="Following Robert M. M'Cheyne's plan will take you through the entire Bible in a year, including the New Testament & Psalms twice."
       />
 
       <section className="readings-dateblock">
