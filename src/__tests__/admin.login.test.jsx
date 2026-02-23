@@ -11,7 +11,7 @@ describe('Admin login', () => {
 
   test('login fails with incorrect password', async () => {
     import.meta.env.VITE_ADMIN_PW = 'secret'
-    const { default: Admin } = await import('../components/Admin.jsx')
+    const { default: Admin } = await import('../pages/AdminPage.jsx')
     render(<Admin />)
 
     const input = screen.getByPlaceholderText(/password/i)
@@ -23,7 +23,7 @@ describe('Admin login', () => {
 
   test('login succeeds with correct password', async () => {
     import.meta.env.VITE_ADMIN_PW = 'secret'
-    const { default: Admin } = await import('../components/Admin.jsx')
+    const { default: Admin } = await import('../pages/AdminPage.jsx')
     render(<Admin />)
 
     const input = screen.getByPlaceholderText(/password/i)

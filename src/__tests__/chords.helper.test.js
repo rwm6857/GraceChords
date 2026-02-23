@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseChordLine, resolveChordCollisions } from '../utils/chords.js'
+import { parseChordLine, resolveChordCollisions } from '../utils/songs/chords.js'
 
 const m = (s = '') => s.length
 

@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import WorshipMode from '../WorshipMode'
+import WorshipMode from '../WorshipModePage'
 
 const SONGS = {
   abba: {

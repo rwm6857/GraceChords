@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fetchTextCached } from '../utils/fetchCache.js'
+import { fetchTextCached } from '../utils/network/fetchCache.js'
 
 describe('fetchTextCached', () => {
   it('retries fetching after a failure', async () => {

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import Songbook from '../components/Songbook.jsx'
+import Songbook from '../pages/SongbookPage.jsx'
 
 describe('Songbook filters', () => {
   test('filters songs by selected author present in index', async () => {

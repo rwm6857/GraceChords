@@ -1,6 +1,6 @@
 /**
  * One-time generator for the M’Cheyne reading plan.
- * Outputs: src/components/readings/data/mcheyne.plan.json
+ * Outputs: src/features/readings/data/mcheyne.plan.json
  *
  * Run:
  *   npm run generate:mcheyne
@@ -8,14 +8,15 @@
  * After running, COMMIT the generated JSON file.
  */
 
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs'
+import path from 'node:path'
+import { parseVerseReference } from '../src/utils/songs/verseRef.js'
 
-const SOURCE_URL = "https://bibleplan.org/plans/mcheyne/";
-const OUT_PATH = path.resolve("src/components/readings/data/mcheyne.plan.json");
+const SOURCE_URL = 'https://bibleplan.org/plans/mcheyne/'
+const OUT_PATH = path.resolve('src/features/readings/data/mcheyne.plan.json')
 
 function pad2(n) {
-  return String(n).padStart(2, "0");
+  return String(n).padStart(2, '0')
 }
 
 function monthNameToNum(name) {
@@ -32,40 +33,50 @@ function monthNameToNum(name) {
     october: 10,
     november: 11,
     december: 12,
-  };
-  const n = map[name.toLowerCase()];
-  if (!n) throw new Error(`Unknown month: ${name}`);
-  return n;
+  }
+  const n = map[name.toLowerCase()]
+  if (!n) throw new Error(`Unknown month: ${name}`)
+  return n
 }
 
 function decodeEntities(s) {
   return s
-    .replaceAll("&nbsp;", " ")
-    .replaceAll("&amp;", "&")
-    .replaceAll("&#39;", "'")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&#39;', '\'')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
 }
 
 function stripTagsKeepLines(html) {
   // Keep basic line breaks so we can regex across lines.
   return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<\/tr>/gi, "\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<[^>]+>/g, "");
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
 }
 
 function normalizeWhitespace(s) {
   // Preserve newlines, normalize spaces
   return s
-    .replace(/\r/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
+    .replace(/\r/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+}
+
+function toPlanReading(raw){
+  const input = String(raw || '').replace(/\s+/g, ' ').trim()
+  const parsed = parseVerseReference(input)
+  if (parsed.error) throw new Error(`Unable to parse reading "${input}": ${parsed.error}`)
+  return {
+    book: parsed.bookNumber,
+    ref: parsed.ref,
+  }
 }
 
 /**
@@ -76,59 +87,59 @@ function normalizeWhitespace(s) {
  * We capture: Month, Day, Family1, Family2, Secret1, Secret2
  */
 function parseBiblePlan(text) {
-  const items = [];
+  const items = []
 
   const re =
     /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)?\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:st|nd|rd|th)?:\s*Family:\s*([^|\n]+?)\s*\|\s*([^\n]+?)\s*Secret:\s*([^|\n]+?)\s*\|\s*([^\n]+?)(?=\n|$)/gi;
 
-  let m;
+  let m
   while ((m = re.exec(text)) !== null) {
-    const month = monthNameToNum(m[1]);
-    const day = Number(m[2]);
+    const month = monthNameToNum(m[1])
+    const day = Number(m[2])
 
-    const r1 = m[3].trim();
-    const r2 = m[4].trim();
-    const r3 = m[5].trim();
-    const r4 = m[6].trim();
+    const r1 = m[3].trim()
+    const r2 = m[4].trim()
+    const r3 = m[5].trim()
+    const r4 = m[6].trim()
 
     items.push({
       mmdd: `${pad2(month)}${pad2(day)}`,
-      readings: [r1, r2, r3, r4].map((s) => s.replace(/\s+/g, " ").trim()),
-    });
+      readings: [r1, r2, r3, r4].map((s) => toPlanReading(s)),
+    })
   }
 
   // De-dupe by mmdd (defensive)
-  const by = new Map();
+  const by = new Map()
   for (const it of items) {
-    if (!by.has(it.mmdd)) by.set(it.mmdd, it);
+    if (!by.has(it.mmdd)) by.set(it.mmdd, it)
   }
-  const out = [...by.values()].sort((a, b) => a.mmdd.localeCompare(b.mmdd));
+  const out = [...by.values()].sort((a, b) => a.mmdd.localeCompare(b.mmdd))
 
   if (out.length !== 365) {
-    throw new Error(`Parsed ${out.length} entries; expected 365.`);
+    throw new Error(`Parsed ${out.length} entries; expected 365.`)
   }
-  return out;
+  return out
 }
 
 async function main() {
   const res = await fetch(SOURCE_URL, {
-    headers: { "User-Agent": "GraceChords/plan-generator" },
-  });
+    headers: { 'User-Agent': 'GraceChords/plan-generator' },
+  })
   if (!res.ok) {
-    throw new Error(`Failed to fetch ${SOURCE_URL}: ${res.status} ${res.statusText}`);
+    throw new Error(`Failed to fetch ${SOURCE_URL}: ${res.status} ${res.statusText}`)
   }
 
-  const html = await res.text();
-  const text = normalizeWhitespace(decodeEntities(stripTagsKeepLines(html)));
+  const html = await res.text()
+  const text = normalizeWhitespace(decodeEntities(stripTagsKeepLines(html)))
 
-  const plan = parseBiblePlan(text);
+  const plan = parseBiblePlan(text)
 
-  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(plan, null, 2) + "\n", "utf8");
-  console.log(`Wrote ${plan.length} entries -> ${OUT_PATH}`);
+  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true })
+  fs.writeFileSync(OUT_PATH, `${JSON.stringify(plan, null, 2)}\n`, 'utf8')
+  console.log(`Wrote ${plan.length} entries -> ${OUT_PATH}`)
 }
 
 main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+  console.error(err)
+  process.exit(1)
+})

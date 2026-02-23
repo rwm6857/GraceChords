@@ -2,8 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import SongView from '../components/SongView.jsx'
-import { clearHeadCache } from '../utils/headCache.js'
+import SongView from '../pages/SongViewPage.jsx'
+import { clearHeadCache } from '../utils/network/headCache.js'
 
 function mockFetch(hasPptx) {
   const chordpro = '{title:Test}\n{youtube: https://youtu.be/abcdefghijk}\n[C]Line'

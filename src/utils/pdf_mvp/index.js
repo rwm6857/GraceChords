@@ -13,7 +13,7 @@
 import jsPDF from 'jspdf'
 import { applyFooterToAllPages } from '../pdf/footer'
 import { registerPdfFonts } from './fonts.js'
-import { formatInstrumental } from '../instrumental.js'
+import { formatInstrumental } from '../songs/instrumental.js'
 
 const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 } // 0.5 inch

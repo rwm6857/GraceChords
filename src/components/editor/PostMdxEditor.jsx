@@ -22,8 +22,8 @@ import {
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
 import '../../styles/mdxeditor.css'
-import { extractYoutubeId, slugifyKebab } from '../../utils/markdown'
-import { currentTheme } from '../../utils/theme'
+import { extractYoutubeId, slugifyKebab } from '../../utils/content/markdown'
+import { currentTheme } from '../../utils/app/theme'
 import { Button } from '../ui/layout-kit'
 
 function sanitizeFilename(name = '', mime = '', taken = []){

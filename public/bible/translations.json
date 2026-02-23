@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "defaultTranslation": "esv",
+  "translations": [
+    {
+      "id": "csb",
+      "label": "CSB",
+      "name": "Christian Standard Bible",
+      "language": "en",
+      "dataRoot": "bible/en/csb"
+    },
+    {
+      "id": "esv",
+      "label": "ESV",
+      "name": "English Standard Version",
+      "language": "en",
+      "dataRoot": "bible/en/esv"
+    },
+    {
+      "id": "kjv",
+      "label": "KJV",
+      "name": "King James Version",
+      "language": "en",
+      "dataRoot": "bible/en/kjv"
+    },
+    {
+      "id": "niv",
+      "label": "NIV",
+      "name": "New International Version",
+      "language": "en",
+      "dataRoot": "bible/en/niv"
+    },
+    {
+      "id": "nlt",
+      "label": "NLT",
+      "name": "New Living Translation",
+      "language": "en",
+      "dataRoot": "bible/en/nlt"
+    },
+    {
+      "id": "nvi",
+      "label": "NVI",
+      "name": "Nueva Versión Internacional",
+      "language": "es",
+      "dataRoot": "bible/es/nvi"
+    },
+    {
+      "id": "rv2020",
+      "label": "RV2020",
+      "name": "Reina Valera 2020",
+      "language": "es",
+      "dataRoot": "bible/es/rv2020"
+    },
+    {
+      "id": "atb",
+      "label": "ATB",
+      "name": "Alkitab Terjemahan Baru",
+      "language": "id",
+      "dataRoot": "bible/id/atb"
+    },
+    {
+      "id": "nkrv",
+      "label": "NKRV",
+      "name": "New Korean Revised Version",
+      "language": "kr",
+      "dataRoot": "bible/kr/nkrv"
+    },
+    {
+      "id": "tlab",
+      "label": "TLAB",
+      "name": "Tagalog Ang Biblia",
+      "language": "tl",
+      "dataRoot": "bible/tl/tlab"
+    },
+    {
+      "id": "ntb",
+      "label": "NTB",
+      "name": "TCL02 New Turkish Bible",
+      "language": "tr",
+      "dataRoot": "bible/tr/ntb"
+    },
+    {
+      "id": "yyc",
+      "label": "YYÇ",
+      "name": "Yeni Yaşam Ceviri",
+      "language": "tr",
+      "dataRoot": "bible/tr/yyc"
+    },
+    {
+      "id": "ytc",
+      "label": "YTC",
+      "name": "Yorumsuz Türkçe Çeviri",
+      "language": "tr",
+      "dataRoot": "bible/tr/ytc"
+    }
+  ]
+}

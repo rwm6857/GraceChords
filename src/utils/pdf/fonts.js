@@ -1,5 +1,5 @@
 // src/utils/pdf/fonts.js
-import { publicUrl } from '../publicUrl.js'
+import { publicUrl } from '../network/publicUrl.js'
 
 // Small in-memory cache of fetched font data
 let fontDataPromise = null

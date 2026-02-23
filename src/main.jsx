@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
-import { initTheme } from './utils/theme'
+import { initTheme } from './utils/app/theme'
 
 function bootstrapRouteFromQuery(){
   if (typeof window === 'undefined') return
@@ -45,11 +45,7 @@ bootstrapRouteFromQuery()
 initTheme()
 
 // Global styles
-import './styles.css'
-import './styles/fonts.css'
-import './styles/cards.css'
-import './components/ui/ui.css'
-import './components/ui/layout-kit/layout-kit.css'
+import './styles/index.css'
 
 // Variable font already covers all weights; nothing extra to load after idle
 

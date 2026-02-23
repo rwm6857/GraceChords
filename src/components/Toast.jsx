@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { onToast } from '../utils/toast';
+import { onToast } from '../utils/app/toast';
 
 export default function Toast(){
   const [items, setItems] = useState([]);

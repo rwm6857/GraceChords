@@ -6,7 +6,7 @@ import {
   downloadMultiSongPdf as downloadMultiSongPdfMvp,
   downloadSongbookPdf as downloadSongbookPdfMvp,
 } from "../pdf_mvp/index.js";
-import { formatInstrumental } from "../instrumental.js";
+import { formatInstrumental } from "../songs/instrumental.js";
 
 // Sections builder: convert a NormalizedSong into simple text "sections"
 // (no-split paragraphs). Chords are rendered inline by injecting

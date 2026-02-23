@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { parseChordPro } from '../utils/chordpro.js'
+import { parseChordPro } from '../utils/chordpro'
 import { chooseBestLayout } from '../utils/pdf/pdfLayout'
 
 // simple text width estimator

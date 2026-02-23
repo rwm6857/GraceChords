@@ -10,7 +10,7 @@ GraceChords is a React + Vite single-page application for managing and playing a
 - 📦 Bundle download for predefined groups of songs
 - 🛠️ Admin interface for authoring songs and rebuilding the index
 - 📚 Resources (blog-style posts) with search, tags, and an admin editor
-- 📖 Daily Word reading view (M’Cheyne plan) with local ESV text, verse selection, and copy
+- 📖 Daily Word reading view (M’Cheyne plan) with local Bible text, verse selection, and copy
 - 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
  - 🧭 SongView 1/2‑column reading view (site‑side)
 - 🎤 Worship/Perform Mode — full‑screen, touch‑friendly view with auto‑fit text, swipe/arrow navigation, and quick transpose
@@ -19,11 +19,11 @@ GraceChords is a React + Vite single-page application for managing and playing a
 ```
 src/            # components, hooks, utilities, tests
 public/         # ChordPro files and font assets
-public/esv/     # generated ESV chapter JSON (Daily Word)
+public/bible/   # translation manifest + generated Bible chapter JSON
 scripts/        # maintenance scripts (e.g., index generation)
 docs/           # Vite build output for GitHub Pages
 ```
-`ESV.xml` should be placed at the repo root (not committed) to generate `public/esv/`.
+Bible XML source files should be placed under `BIBLE_XML/` (not committed) for import into `public/bible/<lang>/<id>/`.
 
 ## UI Styling
 GraceChords uses a UIKit-inspired, token-driven UI kit.
@@ -56,17 +56,24 @@ Generate the static site into `docs/` and push to the `main` branch to serve via
 npm run build
 # commit & push -> serve from /docs
 ```
-Daily Word requires local ESV chapter JSON. Place `ESV.xml` at the project root and run:
+Daily Word requires local Bible chapter JSON. Place XML files in `BIBLE_XML/` and run:
 ```bash
-npm run build:esv
+npm run build:bibles
 ```
-`npm run build` already includes this step.
+Run this only when Bible XML files are added/updated.
+
+To ingest a single XML translation into the shared Bible structure:
+```bash
+npm run build:bible -- --xml ./BIBLE_XML/EnglishNLTBible.xml
+```
+
+This writes chapter files to `public/bible/<lang>/<id>/` and updates `public/bible/translations.json`.
 Keep `docs/CNAME` (custom domain) and the root `404.html` (SPA fallback) when deploying.
 
 Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
 
 ## SEO & Sitemaps
-- Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in `src/components/Home.jsx` and `src/components/SongView.jsx`).
+- Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in route pages such as `src/pages/HomeDashboardPage.jsx` and `src/pages/SongViewPage.jsx`).
 - Song pages tagged `ICP` get an InterCP-specific meta extension (description/keywords/JSON-LD) plus a visible badge on the page.
 - Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` (plus shell pages for top routes) so Google can crawl lyrics/content before JS runs.
 - Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with top-level routes plus `/songs/:id` and `/resources/:slug`).
@@ -97,7 +104,7 @@ Navigation
 - Desktop: Arrow Right/Left keys.
 
 Persistence
-- Theme: `gracechords.theme` (via `src/utils/theme.js`).
+- Theme: `gracechords.theme` (via `src/utils/app/theme.js`).
 - Worship settings: `worship:transpose`, `worship:showChords`, `worship:fontSize`.
 
 Notes

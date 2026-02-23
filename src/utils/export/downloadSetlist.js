@@ -1,5 +1,5 @@
 import { combinePptxFiles } from './combinePptx'
-import { publicUrl } from '../publicUrl'
+import { publicUrl } from '../network/publicUrl'
 
 function songToSlug(song) {
   if (!song) return ''

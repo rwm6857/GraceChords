@@ -2,9 +2,9 @@
 // Drop-in: telemetry + robust candidate enumeration/packing
 // NOTE: Removed import of measureSectionHeight to avoid circular import with ./index.js
 
-import { parseChordPro } from '../chordpro.js';
-import { resolveChordCollisions } from '../chords.js';
-import { splitInstrumental, formatInstrumental } from '../instrumental.js';
+import { parseChordPro } from '../chordpro';
+import { resolveChordCollisions } from '../songs/chords.js';
+import { splitInstrumental, formatInstrumental } from '../songs/instrumental.js';
 
 const PT_WINDOW = [16, 15, 14, 13, 12];
 

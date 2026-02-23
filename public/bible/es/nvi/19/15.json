@@ -1,0 +1,12 @@
+{
+  "bookNumber": 19,
+  "book": "Psalms",
+  "chapter": 15,
+  "verses": {
+    "1": "Salmo de David. ¿Quién, SEÑOR, puede habitar en tu santuario? ¿Quién puede vivir en tu santo monte?",
+    "2": "Sólo el de conducta intachable, que practica la justicia y de corazón dice la verdad;",
+    "3": "que no calumnia con la lengua, que no le hace mal a su prójimo ni le acarrea desgracias a su vecino;",
+    "4": "que desprecia al que Dios reprueba, pero honra al que teme al SEÑOR; que cumple lo prometido aunque salga perjudicado;",
+    "5": "que presta dinero sin ánimo de lucro, y no acepta sobornos que afecten al inocente. El que así actúa no caerá jamás."
+  }
+}

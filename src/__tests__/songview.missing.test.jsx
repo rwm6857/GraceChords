@@ -3,9 +3,9 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { describe, test, expect, vi, afterEach } from 'vitest'
 
-vi.mock('../utils/toast', () => ({ showToast: vi.fn() }))
-import { showToast } from '../utils/toast'
-import SongView from '../components/SongView.jsx'
+vi.mock('../utils/app/toast', () => ({ showToast: vi.fn() }))
+import { showToast } from '../utils/app/toast'
+import SongView from '../pages/SongViewPage.jsx'
 
 describe('SongView missing file', () => {
   afterEach(() => {

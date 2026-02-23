@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { HashRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import HomeDashboard from '../pages/HomeDashboard.jsx'
+import HomeDashboard from '../pages/HomeDashboardPage.jsx'
 
 vi.mock('../data/index.json', () => ({
   default: {

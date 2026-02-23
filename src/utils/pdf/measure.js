@@ -1,5 +1,5 @@
 // src/utils/pdf/measure.js
-import { resolveChordCollisions } from '../chords.js'
+import { resolveChordCollisions } from '../songs/chords.js'
 
 // Create a jsPDF text measurer bound to a font family/style
 export function makeMeasure(doc, family, style = 'normal') {

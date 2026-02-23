@@ -44,8 +44,8 @@ vi.mock('../../data/index.json', () => ({
   },
 }))
 
-import Songs from '../Songs'
-import SongView from '../SongView'
+import Songs from '../../pages/SongsPage'
+import SongView from '../../pages/SongViewPage'
 
 const SONG_TEXT = {
   'translation_demo_send_us_lord_en.chordpro': `{title: Send Us Lord}

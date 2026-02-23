@@ -2,9 +2,9 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { downloadSingleSongJpg } from '../src/utils/image.js'
-import { stepsBetween, transposeSymPrefer } from '../src/utils/chordpro.js'
-import { transposeInstrumental } from '../src/utils/instrumental.js'
+import { downloadSingleSongJpg } from '../src/utils/media/image.js'
+import { stepsBetween, transposeSymPrefer } from '../src/utils/chordpro/index.js'
+import { transposeInstrumental } from '../src/utils/songs/instrumental.js'
 
 const args = parseArgs(process.argv.slice(2))
 if (args.help || !args.out) {

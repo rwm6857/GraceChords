@@ -4,7 +4,7 @@ import {
   buildMetaPresence,
   inheritTranslationMetadata,
   stripSongIndexInternalFields,
-} from '../src/utils/songMetadata.js'
+} from '../src/utils/songs/songMetadata.js'
 
 const root = process.cwd()
 const songsDir = path.join(root, 'public', 'songs')

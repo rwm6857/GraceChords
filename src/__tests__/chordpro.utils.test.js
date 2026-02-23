@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro.js'
+import { parseChordPro, stepsBetween, transposeSym } from '../utils/chordpro'
 
 describe('stepsBetween', () => {
   it('handles simple up/down and wrap', () => {
