@@ -1,4 +1,4 @@
-Daily Word is the Bible reading view at `/reading`. It follows Robert Murray M'Cheyne's plan and uses local ESV text (no external API).
+Daily Word is the Bible reading view at `/reading`. It follows Robert Murray M'Cheyne's plan and uses local Bible text (no external API).
 
 ## Using Daily Word
 - Open `/reading` from the navbar ("Daily Word").
@@ -18,9 +18,10 @@ Selections are saved per calendar date in local storage and persist across passa
 - Selections reset automatically when the date changes.
 
 ## Data & Build
-Daily Word uses local ESV chapter JSON generated from `ESV.xml` at the repo root.
-- Generate JSON locally with `npm run build:esv`
-- The normal `npm run build` already includes `build:esv`
+Daily Word uses local chapter JSON generated from XML files in `BIBLE_XML/`.
+- Import all translations with `npm run build:bibles`
+- Import a single translation with `npm run build:bible -- --xml ./BIBLE_XML/FILE.xml`
+- `npm run build` does not run Bible ingestion automatically
 
 Related:
 [[Development-Commands]] [[Project-Structure]]
