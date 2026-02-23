@@ -17,7 +17,8 @@ import {
   writeBibleTranslationPreference,
   type BibleTranslation,
 } from '../utils/bible/translations'
-import { buildBibleTranslationGroups, translationOptionLabel } from '../utils/bible/translationMenu'
+import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
+import BibleTranslationPicker from '../components/BibleTranslationPicker'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -30,6 +31,7 @@ export default function ReadingsPage(){
   const [selectedTranslationId, setSelectedTranslationId] = useState(() => readBibleTranslationPreference())
   const readerRef = useRef<PassageReaderHandle | null>(null)
   const dateInputRef = useRef<HTMLInputElement | null>(null)
+  const datePickerRef = useRef<HTMLDivElement | null>(null)
 
   const planForDate = useMemo(() => getPlanForDate(date), [date])
   const passages = useMemo(() => expandReadings(planForDate.readings), [planForDate.readings])
@@ -92,6 +94,7 @@ export default function ReadingsPage(){
     const [year, month, day] = val.split('-').map((n) => parseInt(n, 10))
     if (!year || !month || !day) return
     updateDate(new Date(year, month - 1, day))
+    closeDatePicker()
   }
 
   function goToRelativeDay(delta: number){
@@ -117,6 +120,10 @@ export default function ReadingsPage(){
     input.click()
   }
 
+  function closeDatePicker(){
+    dateInputRef.current?.blur()
+  }
+
   const inputDate = dateKey
   const displayDate = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
   const currentPassageId = currentPassage ? passageId(currentPassage) : null
@@ -124,6 +131,22 @@ export default function ReadingsPage(){
     if (!currentPassageId) return new Set<number>()
     return selectionsByPassage[currentPassageId] || new Set<number>()
   }, [currentPassageId, selectionsByPassage])
+
+  useEffect(() => {
+    function onOutsidePointerDown(event: MouseEvent | TouchEvent){
+      const target = event.target as Node | null
+      if (!target) return
+      if (datePickerRef.current?.contains(target)) return
+      if (document.activeElement === dateInputRef.current) closeDatePicker()
+    }
+    document.addEventListener('mousedown', onOutsidePointerDown)
+    document.addEventListener('touchstart', onOutsidePointerDown, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', onOutsidePointerDown)
+      document.removeEventListener('touchstart', onOutsidePointerDown)
+    }
+  }, [])
+
   return (
     <div className="readings-page">
       <Helmet>
@@ -152,19 +175,20 @@ export default function ReadingsPage(){
         <div className="readings-date">
           <IconButton
             label="Previous day"
-            className="readings-datebtn"
+            className="readings-datebtn readings-datebtn--mobile"
             onClick={() => goToRelativeDay(-1)}
             onMouseDown={(e) => e.preventDefault()}
           >
             <ArrowLeft size={14} />
           </IconButton>
-          <div className="readings-date__picker">
+          <div ref={datePickerRef} className="readings-date__picker">
             <input
               ref={dateInputRef}
               className="readings-date__input"
               type="date"
               value={inputDate}
               onChange={handleDateChange}
+              onBlur={closeDatePicker}
               aria-label="Pick date"
             />
             <button
@@ -177,54 +201,60 @@ export default function ReadingsPage(){
               {displayDate}
             </button>
           </div>
+          <div className="readings-translation">
+            <BibleTranslationPicker
+              value={activeTranslation.id}
+              groups={translationGroups}
+              onChange={setSelectedTranslationId}
+              ariaLabel="Choose Bible translation"
+            />
+          </div>
           <IconButton
             label="Next day"
-            className="readings-datebtn"
+            className="readings-datebtn readings-datebtn--mobile"
             onClick={() => goToRelativeDay(1)}
             onMouseDown={(e) => e.preventDefault()}
           >
             <ArrowRight size={14} />
           </IconButton>
-          <label className="readings-translation">
-            <span className="readings-translation__label">Translation</span>
-            <span className="gc-select">
-              <select
-                value={activeTranslation.id}
-                onChange={(e) => setSelectedTranslationId(e.target.value)}
-                aria-label="Choose Bible translation"
-              >
-                {translationGroups.map((group) => (
-                  <optgroup key={group.languageCode} label={group.languageLabel}>
-                    {group.translations.map((translation) => (
-                      <option key={translation.id} value={translation.id}>
-                        {translationOptionLabel(translation)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </span>
-          </label>
         </div>
-        <div className="readings-chips">
-          <ul className="readings-list" aria-label="Passages">
-            {passages.map((passage, idx) => {
-              const isActive = idx === passageIndex
-              return (
-                <li key={`${passage.bookNumber}-${passage.chapter}-${idx}`}>
-                  <button
-                    type="button"
-                    className={`readings-chip ${isActive ? 'is-active' : ''}`.trim()}
-                    onClick={() => setPassageIndex(idx)}
-                    onMouseDown={(e) => e.preventDefault()}
-                    aria-current={isActive ? 'true' : 'false'}
-                  >
-                    {formatPassageLabel(passage)}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+        <div className="readings-chips-nav">
+          <IconButton
+            label="Previous day"
+            className="readings-datebtn readings-datebtn--desktop"
+            onClick={() => goToRelativeDay(-1)}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <ArrowLeft size={14} />
+          </IconButton>
+          <div className="readings-chips">
+            <ul className="readings-list" aria-label="Passages">
+              {passages.map((passage, idx) => {
+                const isActive = idx === passageIndex
+                return (
+                  <li key={`${passage.bookNumber}-${passage.chapter}-${idx}`}>
+                    <button
+                      type="button"
+                      className={`readings-chip ${isActive ? 'is-active' : ''}`.trim()}
+                      onClick={() => setPassageIndex(idx)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      aria-current={isActive ? 'true' : 'false'}
+                    >
+                      {formatPassageLabel(passage)}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+          <IconButton
+            label="Next day"
+            className="readings-datebtn readings-datebtn--desktop"
+            onClick={() => goToRelativeDay(1)}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <ArrowRight size={14} />
+          </IconButton>
         </div>
       </section>
 

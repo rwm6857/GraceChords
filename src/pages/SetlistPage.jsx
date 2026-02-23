@@ -26,7 +26,8 @@ import {
   resolveBibleTranslationLabel,
   writeBibleTranslationPreference,
 } from '../utils/bible/translations'
-import { buildBibleTranslationGroups, translationOptionLabel } from '../utils/bible/translationMenu'
+import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
+import BibleTranslationPicker from '../components/BibleTranslationPicker'
 import Busy from '../components/Busy'
 import { SongCard } from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -942,24 +943,14 @@ async function exportPdf() {
                     style={{ width:'100%', background:'transparent', position:'relative', zIndex:1, lineHeight:'normal' }}
                   />
                 </div>
-                <span className="gc-select" style={{ width:'100%' }}>
-                  <select
-                    id="verse-translation"
-                    value={verseTranslation}
-                    onChange={(e) => setVerseTranslation(e.target.value)}
-                    style={{ width:'100%' }}
-                  >
-                    {translationGroups.map((group) => (
-                      <optgroup key={group.languageCode} label={group.languageLabel}>
-                        {group.translations.map((translation) => (
-                          <option key={translation.id} value={translation.id}>
-                            {translationOptionLabel(translation)}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </span>
+                <BibleTranslationPicker
+                  id="verse-translation"
+                  value={verseTranslation}
+                  groups={translationGroups}
+                  onChange={setVerseTranslation}
+                  ariaLabel="Choose Bible translation"
+                  fullWidth
+                />
               </div>
             </div>
             {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}

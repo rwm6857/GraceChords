@@ -39,6 +39,7 @@
   gap: var(--space-2);
   justify-content:center;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .readings-date__picker{
@@ -71,24 +72,28 @@
   height: 30px;
 }
 
+.readings-datebtn--mobile{
+  display: none;
+}
+
 .readings-translation{
   display:flex;
   align-items:center;
-  gap: 6px;
-}
-
-.readings-translation__label{
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-font-cap);
-}
-
-.readings-translation select{
-  min-width: 230px;
+  min-width: 170px;
   max-width: min(64vw, 360px);
 }
 
 .readings-chips{
+  min-width: 0;
+  padding-inline: var(--space-1);
+}
+
+.readings-chips-nav{
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   padding-inline: var(--space-2);
 }
 
@@ -215,7 +220,88 @@
 }
 
 @media (max-width: 720px){
-  .readings-date{ width: 100%; }
+  .readings-page{
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .readings-dateblock{
+    position: static;
+    top: auto;
+  }
+
+  .readings-date{
+    width: 100%;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    grid-template-areas:
+      'prev date next'
+      'translation translation translation';
+    align-items: center;
+    justify-items: center;
+    row-gap: var(--space-2);
+  }
+
+  .readings-date__picker{
+    grid-area: date;
+  }
+
+  .readings-translation{
+    grid-area: translation;
+    width: 100%;
+    max-width: 420px;
+    justify-self: center;
+  }
+
+  .readings-translation .gc-translation-picker{
+    width: 100%;
+    max-width: none;
+    display: flex;
+  }
+
+  .readings-datebtn--mobile{
+    display: inline-flex;
+  }
+
+  .readings-datebtn--mobile:first-child{
+    grid-area: prev;
+  }
+
+  .readings-datebtn--mobile:last-child{
+    grid-area: next;
+  }
+
+  .readings-datebtn--desktop{
+    display: none;
+  }
+
+  .readings-chips-nav{
+    position: sticky;
+    bottom: 0;
+    z-index: 80;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--gc-surface-1);
+    border-top: 1px solid var(--gc-separator);
+    border-radius: 0;
+    box-shadow: 0 -6px 16px color-mix(in srgb, var(--gc-shadow-color) 16%, transparent);
+  }
+
+  .readings-chips{
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .readings-list{
+    justify-content: flex-start;
+    padding-inline: 8px;
+    gap: 8px;
+  }
+
+  .readings-copy-fab{
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .readings-copy-fab{
