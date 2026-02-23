@@ -217,7 +217,7 @@
 
 @media (max-width: 720px){
   .readings-page{
-    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   .readings-dateblock{
@@ -227,42 +227,35 @@
 
   .readings-date{
     width: 100%;
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr) 30px;
-    grid-template-areas:
-      'prev date next'
-      'translation translation translation';
+    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-items: center;
-    row-gap: var(--space-2);
-  }
-
-  .readings-date__picker{
-    grid-area: date;
+    justify-content: center;
+    gap: 8px;
   }
 
   .readings-translation{
-    grid-area: translation;
     width: auto;
     max-width: none;
-    justify-self: center;
+    justify-content: center;
   }
 
-  .readings-datebtn:first-child{
-    grid-area: prev;
+  .readings-datebtn{
+    display: none;
   }
 
-  .readings-datebtn:last-child{
-    grid-area: next;
+  .readings-date__button{
+    min-width: 128px;
   }
 
   .readings-chips-nav{
-    position: sticky;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
     z-index: 80;
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
+    width: auto;
+    margin: 0;
     padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
     background: var(--gc-surface-1);
     border-top: 1px solid var(--gc-separator);
@@ -277,7 +270,7 @@
 
   .readings-list{
     justify-content: flex-start;
-    padding-inline: 8px;
+    padding-inline: 6px;
     gap: 8px;
   }
 
