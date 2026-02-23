@@ -164,7 +164,7 @@ function normalizeTranslation(raw: unknown){
   const label = String(record.label || id.toUpperCase()).trim() || id.toUpperCase()
   const name = String(record.name || label).trim() || label
   const language = String(record.language || 'en').trim() || 'en'
-  const rootInput = String(record.dataRoot || `bibles/${id}`).trim()
+  const rootInput = String(record.dataRoot || `bible/en/${id}`).trim()
   const dataRoot = rootInput.replace(/^\/+/, '')
   if (!dataRoot) return null
   return { id, label, name, language, dataRoot }

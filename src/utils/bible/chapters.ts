@@ -36,7 +36,7 @@ async function resolveTranslation(translationId?: string){
       label: requestedId.toUpperCase(),
       name: requestedId.toUpperCase(),
       language: 'en',
-      dataRoot: `bibles/${requestedId}`,
+      dataRoot: `bible/en/${requestedId}`,
     }
   )
 }
