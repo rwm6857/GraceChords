@@ -85,13 +85,16 @@ function recoverFromMissingStylesheets(){
       .filter((node) => (node.getAttribute('href') || '').includes('/assets/'))
     if (!stylesheets.length) return
     const missingStylesheet = stylesheets.some((node) => node.sheet == null)
-    if (missingStylesheet && !alreadyRetried) {
+    const rootStyles = window.getComputedStyle(document.documentElement)
+    const missingThemeTokens = !String(rootStyles.getPropertyValue('--gc-primary') || '').trim()
+    const shouldRecover = missingStylesheet || missingThemeTokens
+    if (shouldRecover && !alreadyRetried) {
       url.searchParams.set('css_retry', '1')
       url.searchParams.set('v', String(Date.now()))
       window.location.replace(`${url.pathname}?${url.searchParams.toString()}${url.hash}`)
       return
     }
-    if (alreadyRetried && !missingStylesheet) {
+    if (alreadyRetried && !shouldRecover) {
       url.searchParams.delete('css_retry')
       url.searchParams.delete('v')
       const search = url.searchParams.toString()

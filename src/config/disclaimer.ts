@@ -3,10 +3,9 @@ export const DISCLAIMER_EMAIL = 'ryan@gracechords.com'
 
 export function getSiteDisclaimer(): string {
   return (
-    'All lyrics and music are the property of their respective owners. ' +
-    'GraceChords provides tools for personal worship and educational use only. ' +
-    'Do not repost or redistribute copyrighted lyrics/charts. ' +
-    'Rights holder, email us for takedown requests.'
+    'All lyrics are property of their respective owners. ' +
+    'GraceChords provides tools for personal and educational use only. ' +
+    'Rights holders, email us for takedown requests.'
   );
 }
 

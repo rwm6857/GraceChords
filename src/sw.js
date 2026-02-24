@@ -79,12 +79,22 @@ self.addEventListener('fetch', (event) => {
       const cached = await caches.match(request);
       const usableCached = isExpectedResponseForRequest(request, cached) ? cached : null;
       if (usableCached) return usableCached;
-      const response = await fetch(request);
-      const copy = response.clone();
-      if (shouldCache(request, response)) {
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      try {
+        const response = await fetch(request);
+        if (shouldCache(request, response)) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        }
+        const fallback = await resolveEntryAssetFallback(request, response);
+        if (fallback) return fallback;
+        return response;
+      } catch {
+        const fallback = await resolveEntryAssetFallback(request, null);
+        if (fallback) return fallback;
+        if (cached) return cached;
+        throw new Error('Network unavailable and no cached response');
       }
-      return response;
     })()
   );
 });
@@ -124,4 +134,50 @@ function isExpectedResponseForRequest(request, response) {
   }
   if (request.destination === 'image') return contentType.includes('image/');
   return true;
+}
+
+function isEntryAssetRequest(request, ext) {
+  try {
+    const url = new URL(request.url);
+    return new RegExp(`^/assets/index-[^/]+\\.${ext}$`).test(url.pathname);
+  } catch {
+    return false;
+  }
+}
+
+function isBrokenAssetResponse(request, response) {
+  if (!response) return true;
+  if (!response.ok) return true;
+  return !isExpectedResponseForRequest(request, response);
+}
+
+async function resolveEntryAssetFallback(request, response) {
+  const wantsCss = request.destination === 'style' && isEntryAssetRequest(request, 'css');
+  const wantsJs = request.destination === 'script' && isEntryAssetRequest(request, 'js');
+  if (!wantsCss && !wantsJs) return null;
+  if (!isBrokenAssetResponse(request, response)) return null;
+  return fetchLatestEntryAsset(wantsCss ? 'css' : 'js');
+}
+
+async function fetchLatestEntryAsset(type) {
+  try {
+    const probeUrl = `/?sw_asset_probe=${Date.now()}`;
+    const page = await fetch(probeUrl, { cache: 'no-store' });
+    if (!page.ok) return null;
+    const html = await page.text();
+    const regex = type === 'css'
+      ? /href=["'](\/assets\/index-[^"']+\.css)["']/i
+      : /src=["'](\/assets\/index-[^"']+\.js)["']/i;
+    const match = html.match(regex);
+    if (!match?.[1]) return null;
+    const assetUrl = new URL(match[1], self.location.origin).toString();
+    const asset = await fetch(assetUrl, { cache: 'no-store' });
+    if (!asset.ok) return null;
+    const assetRequest = new Request(assetUrl);
+    const assetCopy = asset.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(assetRequest, assetCopy));
+    return asset;
+  } catch {
+    return null;
+  }
 }
