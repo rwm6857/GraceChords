@@ -193,6 +193,15 @@ export default function ReadingsPage(){
               onBlur={closeDatePicker}
               aria-label={`Pick date ${displayDate}`}
             />
+            <button
+              type="button"
+              className="readings-date__button"
+              onClick={openDatePicker}
+              onMouseDown={(e) => e.preventDefault()}
+              aria-label={`Pick date ${displayDate}`}
+            >
+              {displayDate}
+            </button>
           </div>
           <IconButton
             label="Next day"

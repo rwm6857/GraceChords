@@ -130,8 +130,17 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
                 className={`readings-verse ${isSelected ? 'is-selected' : ''}`.trim()}
                 onClick={() => handleVerseClick(num)}
               >
-                <span className="readings-verse__num">{num}</span>
-                <span className="readings-verse__text">{text}</span>
+                {rtl ? (
+                  <>
+                    <span className="readings-verse__text">{text}</span>
+                    <span className="readings-verse__num">{num}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="readings-verse__num">{num}</span>
+                    <span className="readings-verse__text">{text}</span>
+                  </>
+                )}
               </div>
             )
           })}

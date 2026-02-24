@@ -48,21 +48,29 @@
 }
 
 .readings-date__input{
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.readings-date__button{
   min-height: 30px;
   min-width: 140px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-pill);
   padding: 3px 10px;
-  background: var(--gc-surface-1);
+  background: var(--gc-surface-2);
   color: var(--gc-text);
-  font-size: var(--gc-font-cap);
+  font-size: var(--gc-font-sub);
+  line-height: var(--gc-lh-sub);
   font-family: var(--gc-font-family);
-  font-weight: var(--gc-weight-body);
+  font-weight: 500;
   text-align: center;
   cursor: pointer;
 }
 
-.readings-date__input:focus-visible{
+.readings-date__button:focus-visible{
   outline: var(--gc-focus-size) solid var(--gc-focus);
   outline-offset: var(--gc-focus-offset);
 }
@@ -265,7 +273,7 @@
     display: none;
   }
 
-  .readings-date__input{
+  .readings-date__button{
     min-width: 128px;
   }
 
@@ -296,7 +304,7 @@
   }
 
   .readings-copy-fab{
-    bottom: calc(98px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(122px + env(safe-area-inset-bottom, 0px));
   }
 
   .readings-page{
