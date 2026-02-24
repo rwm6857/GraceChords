@@ -196,8 +196,8 @@
 }
 
 .readings-reader.is-rtl .readings-verse{
-  grid-template-columns: 1fr 2rem;
-  grid-template-areas: 'text num';
+  grid-template-columns: 2rem 1fr;
+  grid-template-areas: 'num text';
 }
 
 .readings-verse.is-selected{
@@ -303,12 +303,8 @@
     gap: 8px;
   }
 
-  .readings-copy-fab{
-    bottom: calc(122px + env(safe-area-inset-bottom, 0px));
-  }
-
   .readings-page{
-    padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(52px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -348,4 +344,11 @@
 .readings-copy-fab:hover{
   box-shadow: var(--gc-shadow-3);
   filter: brightness(.98);
+}
+
+@media (max-width: 720px){
+  .readings-copy-fab{
+    /* Keep FAB above the sticky passage-chip toolbar on mobile */
+    bottom: calc(122px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
+  }
 }
