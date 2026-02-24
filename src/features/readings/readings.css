@@ -349,6 +349,6 @@
 @media (max-width: 720px){
   .readings-copy-fab{
     /* Keep FAB above the sticky passage-chip toolbar on mobile */
-    bottom: calc(122px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
+    bottom: calc(68px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
   }
 }
