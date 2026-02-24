@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "generatedAt": "2026-02-24T04:19:58.624Z",
+=======
+  "generatedAt": "2026-02-24T13:51:56.089Z",
+>>>>>>> 1283befa9 (reader bug fix)
   "languages": [
     "en",
     "tr"

@@ -114,6 +114,17 @@ export default function ReadingsPage(){
     })
   }
 
+  function openDatePicker(){
+    const input = dateInputRef.current
+    if (!input) return
+    if (typeof input.showPicker === 'function') {
+      input.showPicker()
+      return
+    }
+    input.focus({ preventScroll: true } as any)
+    input.click()
+  }
+
   function closeDatePicker(){
     dateInputRef.current?.blur()
   }

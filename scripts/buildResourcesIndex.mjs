@@ -32,7 +32,7 @@ async function main(){
     })
   }
   items.sort((a,b) => (b.date || '').localeCompare(a.date || ''))
-  const out = { generatedAt: new Date().toISOString(), items }
+  const out = { items }
   await fs.writeFile(outFile, JSON.stringify(out, null, 2), 'utf8')
   console.log(`Wrote ${items.length} resources to ${outFile}`)
 }
@@ -65,4 +65,3 @@ function parseTags(val){
 }
 
 main().catch(err => { console.error(err); process.exit(1) })
-

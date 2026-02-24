@@ -1823,7 +1823,6 @@ function applySongChangesToIndex(indexBase, stagedItems){
   })
   const outputItems = stripSongIndexInternalFields(nextItems)
   return {
-    generatedAt: new Date().toISOString(),
     languages: Array.from(new Set(outputItems.map(it => String(it.language || 'en'))))
       .sort((a, b) => String(a).localeCompare(String(b))),
     items: outputItems,

@@ -18,7 +18,7 @@ const staticRoutes = [
   '/bundle'
 ]
 
-const urlMap = new Map()
+const urlSet = new Set()
 
 async function readJson(filePath){
   try {
@@ -30,62 +30,37 @@ async function readJson(filePath){
   }
 }
 
-async function fileLastMod(filePath){
-  try {
-    const stat = await fs.stat(filePath)
-    return stat.mtimeMs
-  } catch {
-    return null
-  }
-}
-
 function encodeSlug(raw){
   if (!raw) return ''
   return encodeURIComponent(String(raw))
 }
 
-function formatDateUTC(d){
-  return new Date(d).toISOString().split('T')[0]
-}
-
-const todayStr = formatDateUTC(Date.now())
-function clampDateToToday(ms){
-  if (!ms) return todayStr
-  const candidate = formatDateUTC(ms)
-  return candidate > todayStr ? todayStr : candidate
-}
-
-function addUrl(path, lastmod = todayStr){
+function addUrl(path){
   if (!path) return
   const safeLoc = path.startsWith('http') ? path : `${BASE_URL}${path}`
-  const safeDate = clampDateToToday(lastmod)
-  urlMap.set(safeLoc, safeDate)
+  urlSet.add(safeLoc)
 }
 
-for (const p of staticRoutes) addUrl(p, todayStr)
+for (const p of staticRoutes) addUrl(p)
 
 for (const song of (indexData?.items || [])) {
   const slug = song?.id || song?.filename?.replace(/\.chordpro$/, '')
   if (!slug) continue
   const loc = `/songs/${encodeSlug(slug)}`
-  const songFile = song?.filename ? path.join(root, 'public', 'songs', song.filename) : null
-  const mtime = songFile ? await fileLastMod(songFile) : null
-  addUrl(loc, clampDateToToday(mtime))
+  addUrl(loc)
 }
 
 for (const res of (resourcesData?.items || [])) {
   if (!res?.slug) continue
   const loc = `/resources/${encodeSlug(res.slug)}`
-  const resFile = res?.filename ? path.join(root, 'public', 'resources', res.filename) : null
-  const mtime = resFile ? await fileLastMod(resFile) : null
-  addUrl(loc, clampDateToToday(mtime))
+  addUrl(loc)
 }
 
 const xml = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-  ...Array.from(urlMap.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([loc, lastmod]) => (
-    `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n    <lastmod>${lastmod}</lastmod>\n  </url>`
+  ...Array.from(urlSet.values()).sort((a, b) => a.localeCompare(b)).map((loc) => (
+    `  <url>\n    <loc>${loc}</loc>\n    <changefreq>weekly</changefreq>\n  </url>`
   )),
   '</urlset>',
   ''
@@ -93,4 +68,4 @@ const xml = [
 
 await fs.mkdir(path.dirname(outPath), { recursive: true })
 await fs.writeFile(outPath, xml, 'utf8')
-console.log(`Wrote ${urlMap.size} URLs to ${outPath}`)
+console.log(`Wrote ${urlSet.size} URLs to ${outPath}`)

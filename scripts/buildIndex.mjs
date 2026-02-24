@@ -159,7 +159,7 @@ for (const item of items) {
 await fs.mkdir(path.dirname(outFile), { recursive: true })
 const outputItems = stripSongIndexInternalFields(items)
 const languages = Array.from(new Set(outputItems.map((s) => s.language))).sort((a, b) => a.localeCompare(b))
-await fs.writeFile(outFile, JSON.stringify({ generatedAt: new Date().toISOString(), languages, items: outputItems }, null, 2), 'utf8')
+await fs.writeFile(outFile, JSON.stringify({ languages, items: outputItems }, null, 2), 'utf8')
 console.log(`Wrote ${outputItems.length} songs to ${outFile}`)
 
 // Write human-readable report
