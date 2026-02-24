@@ -53,6 +53,29 @@ function registerServiceWorker(){
   })
 }
 
+function resetServiceWorkerIfRequested(){
+  if (typeof window === 'undefined') return
+  if (!('serviceWorker' in navigator)) return
+  const url = new URL(window.location.href)
+  if (url.searchParams.get('reset_sw') !== '1') return
+
+  ;(async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(registrations.map((registration) => registration.unregister()))
+      if ('caches' in window) {
+        const keys = await caches.keys()
+        await Promise.all(keys.filter((key) => key.startsWith('gracechords-')).map((key) => caches.delete(key)))
+      }
+    } catch {}
+
+    url.searchParams.delete('reset_sw')
+    url.searchParams.set('v', String(Date.now()))
+    const search = url.searchParams.toString()
+    window.location.replace(`${url.pathname}${search ? `?${search}` : ''}${url.hash}`)
+  })()
+}
+
 function recoverFromMissingStylesheets(){
   if (typeof window === 'undefined' || typeof document === 'undefined') return
   const url = new URL(window.location.href)
@@ -79,6 +102,7 @@ function recoverFromMissingStylesheets(){
 
 bootstrapRouteFromQuery()
 initTheme()
+resetServiceWorkerIfRequested()
 registerServiceWorker()
 recoverFromMissingStylesheets()
 

@@ -26,7 +26,13 @@ export default defineConfig({
     // Enable bundle analysis with ANALYZE=1 to find unused JS and split chunks safely
     process.env.ANALYZE ? visualizer({ filename: 'docs/stats.html', template: 'treemap' }) : null
   ],
-  build: { outDir: 'docs', chunkSizeWarningLimit: 1200 },
+  build: {
+    outDir: 'docs',
+    // Keep previous hashed assets so stale cached HTML can still load CSS/JS.
+    // This is important when a CDN caches HTML longer than expected.
+    emptyOutDir: false,
+    chunkSizeWarningLimit: 1200
+  },
   test: {
     environment: 'happy-dom',
     setupFiles: './src/setupTests.js',

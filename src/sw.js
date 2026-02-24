@@ -75,30 +75,53 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          if (shouldCache(request, response)) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-    })
+    (async () => {
+      const cached = await caches.match(request);
+      const usableCached = isExpectedResponseForRequest(request, cached) ? cached : null;
+      if (usableCached) return usableCached;
+      const response = await fetch(request);
+      const copy = response.clone();
+      if (shouldCache(request, response)) {
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })()
   );
 });
 
 function shouldCache(request, response) {
+  if (!response || !response.ok) return false;
+  if (!isExpectedResponseForRequest(request, response)) return false;
   return (
-    response && response.ok &&
     (request.destination === 'script' ||
       request.destination === 'style' ||
       request.destination === 'font' ||
+      request.destination === 'image' ||
       request.url.includes('/assets/') ||
       request.url.includes('/src/data/') ||
       // Cache individual song files
       request.url.includes('/songs/'))
   );
+}
+
+function isExpectedResponseForRequest(request, response) {
+  if (!response) return false;
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+  if (!contentType) return true;
+  if (contentType.includes('text/html')) {
+    return request.mode === 'navigate' || request.destination === 'document';
+  }
+  if (request.destination === 'style') return contentType.includes('text/css');
+  if (request.destination === 'script') {
+    return (
+      contentType.includes('javascript') ||
+      contentType.includes('ecmascript') ||
+      contentType.includes('application/x-javascript')
+    );
+  }
+  if (request.destination === 'font') {
+    return contentType.includes('font/') || contentType.includes('application/font');
+  }
+  if (request.destination === 'image') return contentType.includes('image/');
+  return true;
 }
