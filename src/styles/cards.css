@@ -75,13 +75,22 @@
 .gc-card.gc-song-card {
   padding: var(--space-3);
   gap: var(--space-2);
+  min-width: 0;
 }
 .gc-song-card .gc-card__title {
   font-size: var(--gc-font-body);
   line-height: var(--gc-lh-body);
+  overflow-wrap: anywhere;
 }
 .gc-song-card .gc-card__meta {
   font-size: var(--gc-font-sub);
+}
+.gc-song-card .gc-card__body{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.gc-song-card > :last-child{
+  flex-shrink: 0;
 }
 .gc-song-card .gc-card__tags {
   margin-top: var(--space-2);

@@ -55,6 +55,9 @@
   --gc-btn-font-size-lg: 16px;
   --gc-btn-icon-pad: 6px;
   --gc-btn-icon-size: 16px;
+  --gc-mobile-dock-z: 120;
+  --gc-mobile-sheet-z: 170;
+  --gc-mobile-dim-opacity: 0.48;
 
   /* Motion */
   --gc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);

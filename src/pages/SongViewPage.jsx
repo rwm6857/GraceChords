@@ -8,7 +8,7 @@ import { transposeInstrumental, formatInstrumental } from '../utils/songs/instru
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import indexData from '../data/index.json'
-import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
+import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon, SlidersIcon } from '../components/Icons'
 import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
@@ -17,6 +17,8 @@ import Busy from '../components/Busy'
 import Panel from '../components/ui/Panel'
 import { publicUrl } from '../utils/network/publicUrl'
 import { Button, Card, Chip, IconButton, InsetCard, PageHeader, Toolbar } from '../components/ui/layout-kit'
+import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
+import MobileDock from '../components/ui/mobile/MobileDock'
 import {
   buildSongCatalog,
   getEntryById,
@@ -119,6 +121,9 @@ export default function SongView(){
   const [isNarrow, setIsNarrow] = useState(() => {
     try { return window.innerWidth < 600 } catch { return false }
   })
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const mobileDockRef = useRef(null)
+  const [mobileDockHeight, setMobileDockHeight] = useState(96)
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
   const isIcpSong = !!songSeo.isIcpSong
@@ -138,6 +143,24 @@ export default function SongView(){
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  useEffect(() => {
+    if (!isNarrow && mobileActionsOpen) setMobileActionsOpen(false)
+  }, [isNarrow, mobileActionsOpen])
+
+  useEffect(() => {
+    if (!isNarrow) return
+    const el = mobileDockRef.current
+    if (!el) return
+    const update = () => {
+      try { setMobileDockHeight(el.offsetHeight || 96) } catch {}
+    }
+    update()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [isNarrow, hasPptx, jpgDisabled, toKey, showChords])
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
@@ -415,6 +438,12 @@ export default function SongView(){
     }
   }
 
+  function toggleColumns(){
+    const next = !twoColsView
+    setTwoColsView(next)
+    try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
+  }
+
   const desktopToolbar = !isNarrow ? (
     <Toolbar className="gc-song-toolbar">
       <div className="gc-toolbar__group">
@@ -427,11 +456,7 @@ export default function SongView(){
           variant={twoColsView ? 'primary' : 'secondary'}
           aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
           title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
-          onClick={() => {
-            const next = !twoColsView
-            setTwoColsView(next)
-            try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
-          }}
+          onClick={toggleColumns}
         >
           {twoColsView ? <OneColIcon /> : <TwoColIcon />}
         </IconButton>
@@ -494,7 +519,7 @@ export default function SongView(){
   ) : null
 
   return (
-    <div className="container" style={isNarrow ? { paddingBottom: 'calc(84px + var(--safe-b))' } : undefined}>
+    <div className="container" style={isNarrow ? { paddingBottom: `calc(${mobileDockHeight}px + var(--space-2))` } : undefined}>
       {helmet}
       <Busy busy={busy} />
       <PageHeader
@@ -619,23 +644,50 @@ export default function SongView(){
       )}
       {/* Mobile action bar */}
       {isNarrow && (
-        <div className="mobilebar" role="group" aria-label="Song actions" style={{ display:'flex', gap:8 }}>
+        <MobileDock ref={mobileDockRef} role="group" aria-label="Song actions">
           <KeySelector
             baseKey={baseKey}
             valueKey={toKey}
             onChange={(full) => setToKey(full)}
             title="Key"
-            style={{ flex:'1 0 0', padding:'6px 8px', borderRadius:6 }}
+            style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
-          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF"><span className="text-when-narrow">PDF</span></Button>
-          <Button variant="primary" leftIcon={<DownloadIcon />} disabled={jpgDisabled} onClick={(e)=>{ e.preventDefault(); handleDownloadJpg() }} title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}><span className="text-when-narrow">JPG</span></Button>
-          {hasPptx && (
-            <Button variant="primary" leftIcon={<DownloadIcon />} href={pptxUrl} download aria-label="Download PPTX" title="Download PPTX"><span className="text-when-narrow">PPTX</span></Button>
-          )}
-          <Button as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Open in Worship Mode"><span className="text-when-narrow">Worship</span></Button>
-        </div>
+          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF">PDF</Button>
+          <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Open in Worship Mode">Worship</Button>
+          <IconButton label="More actions" title="More actions" onClick={() => setMobileActionsOpen(true)}><SlidersIcon /></IconButton>
+        </MobileDock>
       )}
+      <MobileActionSheet
+        open={mobileActionsOpen}
+        onClose={() => setMobileActionsOpen(false)}
+        title="Song actions"
+      >
+        <div className="gc-mobile-actions">
+          <Button onClick={() => { toggleColumns(); setMobileActionsOpen(false) }} leftIcon={twoColsView ? <OneColIcon /> : <TwoColIcon />}>
+            {twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+          </Button>
+          <Button
+            leftIcon={<DownloadIcon />}
+            disabled={jpgDisabled}
+            onClick={(e)=>{ e.preventDefault(); handleDownloadJpg(); setMobileActionsOpen(false) }}
+            title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
+          >
+            JPG
+          </Button>
+          {hasPptx ? (
+            <Button
+              href={pptxUrl}
+              download
+              leftIcon={<DownloadIcon />}
+              aria-label="Download PPTX"
+              title="Download PPTX"
+            >
+              PPTX
+            </Button>
+          ) : null}
+        </div>
+      </MobileActionSheet>
     </div>
   )
 }

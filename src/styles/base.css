@@ -704,6 +704,75 @@ html, body, #root { height: 100%; }
 .RightSection { padding: .25rem 0; }
 .RightScroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
 
+.builder-pane{
+  min-width: 0;
+}
+
+.builder-mobile-actions{
+  display:none;
+}
+.builder-mobile-actions .gc-btn{
+  flex: 1 1 0;
+  justify-content:center;
+}
+.builder-mobile-actions .gc-btn--iconOnly{
+  flex: 0 0 auto;
+}
+
+.builder-search-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  min-width:0;
+}
+
+.builder-options-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  min-width:0;
+}
+
+.setlist-row-actions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+.setlist-row-actions .gc-btn{
+  flex-shrink:0;
+}
+.setlist-row-actions .gc-select{
+  min-width: 86px;
+}
+
+@media (max-width: 900px){
+  .gc-page.is-songbook{
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .builder-pane[hidden]{
+    display:none !important;
+  }
+  .builder-mobile-actions{
+    display:block;
+  }
+}
+
+@media (max-width: 640px){
+  .setlist-row-actions{
+    gap:4px;
+  }
+  .setlist-row-actions .gc-select{
+    min-width: 74px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
 
 
 /* Busy overlay spinner */

@@ -20,8 +20,10 @@ import {
 import Busy from '../components/Busy'
 import { SongCard } from '../components/ui/Card'
 import Input from '../components/ui/Input'
-import { Button, Card, Chip, Field, IconButton, PageHeader, Toolbar } from '../components/ui/layout-kit'
-import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon } from '../components/Icons'
+import { Button, Card, Chip, Field, IconButton, PageHeader } from '../components/ui/layout-kit'
+import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon, SlidersIcon } from '../components/Icons'
+import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
+import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import '../styles/songbook.css'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom } from '../utils/songs/quickActions'
@@ -152,13 +154,32 @@ export default function Songbook() {
   const [cover, setCover] = useState(null)
   const [busy, setBusy] = useState(false)
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
+  const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
+  const [mobileTab, setMobileTab] = useState(() => {
+    try { return localStorage.getItem('songbook:mobileTab') || 'add' } catch { return 'add' }
+  })
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
 
   // viewport listener
   useEffect(() => {
-    function onResize(){ try { setIsMobile(window.innerWidth <= 640) } catch {} }
+    function onResize(){
+      try {
+        const w = window.innerWidth
+        setIsMobile(w <= 640)
+        setIsStacked(w <= 900)
+      } catch {}
+    }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  useEffect(() => {
+    if (!isStacked && mobileActionsOpen) setMobileActionsOpen(false)
+  }, [isStacked, mobileActionsOpen])
+
+  useEffect(() => {
+    try { localStorage.setItem('songbook:mobileTab', mobileTab) } catch {}
+  }, [mobileTab])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || '')
@@ -270,6 +291,10 @@ export default function Songbook() {
     reader.readAsDataURL(f)
   }
 
+  function clearCover(){
+    setCover(null)
+  }
+
   // Render
   if (items.length === 0) {
     return (
@@ -281,15 +306,17 @@ export default function Songbook() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer className="is-songbook">
       <Busy busy={busy} />
       <PageHeader
         title="Songbook Builder"
         actions={(
           <div className="gc-toolbar__actions">
-            <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" leftIcon={<ClearIcon />}>
-              <span className="text-when-wide">Clear</span>
-            </Button>
+            {!isStacked ? (
+              <Button onClick={clearAll} disabled={!selectedCount} title="Clear selection" leftIcon={<ClearIcon />}>
+                <span className="text-when-wide">Clear</span>
+              </Button>
+            ) : null}
             <Button
               variant="primary"
               onClick={handleExport}
@@ -302,50 +329,72 @@ export default function Songbook() {
             >
               {isMobile ? 'PDF' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}
             </Button>
+            {isStacked ? (
+              <IconButton
+                label="More actions"
+                title="More actions"
+                onClick={() => setMobileActionsOpen(true)}
+              >
+                <SlidersIcon />
+              </IconButton>
+            ) : null}
           </div>
         )}
       />
 
-      {/* Toolbar */}
-      <Toolbar className="gc-songbook-toolbar" style={{ marginTop: 8 }}>
-        <Field label="Upload Cover Image" className="gc-songbook-cover" style={{ minWidth: 0 }}>
-          <input
-            className="CoverInput"
-            type="file"
-            accept="image/*"
-            onChange={onCoverFile}
-            style={isMobile ? { maxWidth: '50vw', textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap' } : undefined}
-          />
-        </Field>
-      </Toolbar>
+      {isStacked ? (
+        <MobilePaneTabs
+          value={mobileTab}
+          onChange={setMobileTab}
+          addLabel="Add songs"
+          currentLabel={`Current (${selectedEntries.length})`}
+        />
+      ) : null}
 
       {/* Two-pane region */}
-      <div className="BuilderPage" style={{ marginTop: 8 }}>
-        <div className="BuilderLeft">
+      <div className="BuilderPage gc-overflow-safe" style={{ marginTop: 8 }}>
+        <div className="BuilderLeft builder-pane" hidden={isStacked && mobileTab !== 'add'}>
           <section className="setlist-section songbook-add" data-role="add">
             <Card className="setlist-pane">
               <div
                 className={['BuilderHeader', 'section-header'].filter(Boolean).join(' ')}
-                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                style={{ display: 'grid', gap: 8 }}
               >
-                <strong style={{ whiteSpace: 'nowrap' }}>Add songs</strong>
-                <Input
-                  value={q}
-                  onChange={e => setQ(e.target.value)}
-                  placeholder="Search..."
-                  style={{ flex: 1, minWidth: 0 }}
-                />
-                <Button
-                  onClick={selectAllFiltered}
-                  disabled={!filteredCount}
-                  title="Add all filtered"
-                  leftIcon={<PlusIcon />}
-                  variant="primary"
-                  style={{ marginLeft: 'auto' }}
-                >
-                  <span className="text-when-wide">Add all ({filteredCount})</span>
-                  <span className="text-when-narrow">All</span>
-                </Button>
+                <div className="builder-search-row">
+                  <strong style={{ whiteSpace: 'nowrap' }}>Add songs</strong>
+                  <Input
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    placeholder="Search..."
+                    style={{ flex: 1, minWidth: 0 }}
+                  />
+                  {!isStacked ? (
+                    <Button
+                      onClick={selectAllFiltered}
+                      disabled={!filteredCount}
+                      title="Add all filtered"
+                      leftIcon={<PlusIcon />}
+                      variant="primary"
+                      style={{ marginLeft: 'auto' }}
+                    >
+                      <span className="text-when-wide">Add all ({filteredCount})</span>
+                      <span className="text-when-narrow">All</span>
+                    </Button>
+                  ) : null}
+                </div>
+                {isStacked ? (
+                  <div className="builder-options-row">
+                    <Button
+                      onClick={selectAllFiltered}
+                      disabled={!filteredCount}
+                      title="Add all filtered"
+                      leftIcon={<PlusIcon />}
+                      variant="primary"
+                    >
+                      Add all ({filteredCount})
+                    </Button>
+                  </div>
+                ) : null}
               </div>
               {languageChipCodes.length > 0 ? (
                 <div className={['BuilderHeader', 'section-header'].filter(Boolean).join(' ')} style={{ paddingTop: 0, display:'flex', alignItems:'center', gap:8 }}>
@@ -365,6 +414,22 @@ export default function Songbook() {
                   </div>
                 </div>
               ) : null}
+              <div className="gc-songbook-options">
+                <Field label="Upload Cover Image" className="gc-songbook-cover" style={{ minWidth: 0 }}>
+                  <input
+                    className="CoverInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={onCoverFile}
+                  />
+                </Field>
+                <div className="gc-songbook-options__meta">
+                  <span className="meta">{cover ? 'Cover image ready' : 'No cover image selected'}</span>
+                  {cover ? (
+                    <Button size="sm" onClick={clearCover} leftIcon={<ClearIcon />}>Clear Cover</Button>
+                  ) : null}
+                </div>
+              </div>
 
               <div
                 className={['BuilderScroll', 'setlist-scroll', 'pane--addSongs'].join(' ')}
@@ -372,14 +437,7 @@ export default function Songbook() {
                 role="region"
                 aria-label="Song list"
               >
-                <div
-                  className="gc-list"
-                  style={{
-                    display: 'grid',
-                    gap: '.5rem',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  }}
-                >
+                <div className="gc-list">
                   {results.map((s) => {
                     const checked = selectedIds.has(s.id)
                     const authorsLine = Array.isArray(s.authors)
@@ -426,7 +484,7 @@ export default function Songbook() {
         </div>
 
         {/* Right pane */}
-        <div className="BuilderRight" style={{ minHeight: 0, display:'flex', flexDirection:'column' }}>
+        <div className="BuilderRight builder-pane" style={{ minHeight: 0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab !== 'current'}>
           <section className="setlist-section songbook-current" data-role="current">
             <Card className="setlist-pane">
               <div className="BuilderHeader section-header">
@@ -438,21 +496,46 @@ export default function Songbook() {
                 aria-label="Selected songs"
                 style={{ minHeight: 0, flex: '1 1 auto', overflow: 'auto', marginTop: 6 }}
               >
-                <ol className="List" style={{ listStyle: 'decimal inside', margin: 0, padding: 0 }}>
-                  {selectedEntries.map((s) => (
-                    <li key={s.id}>
-                      {s.title}
-                      {Array.isArray(s.authors) && s.authors.length ? (
-                        <span className="Small"> — {s.authors.join(', ')}</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ol>
+                {selectedEntries.length ? (
+                  <div className="gc-songbook-selected-list">
+                    {selectedEntries.map((s) => (
+                      <SongCard
+                        key={s.id}
+                        title={s.title}
+                        subtitle={Array.isArray(s.authors) && s.authors.length ? s.authors.join(', ') : '—'}
+                        rightSlot={(
+                          <IconButton
+                            variant="destructive"
+                            aria-label={`Remove ${s.title}`}
+                            title="Remove"
+                            onClick={(e) => { e.stopPropagation(); toggleOne(s.id, false) }}
+                          >
+                            <MinusIcon />
+                          </IconButton>
+                        )}
+                        onClick={() => toggleOne(s.id, false)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="meta" style={{ margin: 0 }}>No songs selected yet.</p>
+                )}
               </div>
             </Card>
           </section>
         </div>
       </div>
+
+      <MobileActionSheet
+        open={mobileActionsOpen}
+        onClose={() => setMobileActionsOpen(false)}
+        title="Songbook actions"
+      >
+        <div className="gc-mobile-actions">
+          <Button onClick={() => { clearAll(); setMobileActionsOpen(false) }} disabled={!selectedCount} leftIcon={<ClearIcon />}>Clear selection</Button>
+          <Button onClick={() => { clearCover(); setMobileActionsOpen(false) }} disabled={!cover} leftIcon={<ClearIcon />}>Clear cover image</Button>
+        </div>
+      </MobileActionSheet>
     </PageContainer>
   )
 }

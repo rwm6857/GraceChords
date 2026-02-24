@@ -13,6 +13,8 @@ import { isVerseId, parseVerseId } from '../utils/songs/verseRef'
 import { fetchBibleChapter } from '../utils/bible/chapters'
 import { listBibleTranslations } from '../utils/bible/translations'
 import { isRtlBibleLanguage } from '../utils/bible/direction'
+import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
+import MobileDock from '../components/ui/mobile/MobileDock'
 import {
   buildSongCatalog,
   resolveGroupEntry,
@@ -56,7 +58,7 @@ export default function WorshipMode(){
   const contentRef = useRef(null)
   const headerRef = useRef(null)
   const barRef = useRef(null)
-  const touchRef = useRef({ x: 0, y: 0, at: 0 })
+  const touchRef = useRef({ x: 0, y: 0, at: 0, scrollTop: 0 })
   const [cols, setCols] = useState(() => { try { return (window.innerWidth < 768) ? 1 : 2 } catch { return 2 } })
   const [isWide, setIsWide] = useState(() => {
     try { const vw = window.innerWidth, vh = window.innerHeight; return (vw >= 900) || (vw / Math.max(1, vh) >= 1.2) } catch { return false }
@@ -65,7 +67,13 @@ export default function WorshipMode(){
   const [, setThemeBump] = useState(0)
   const [availH, setAvailH] = useState(null)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false)
+  const [mobileControlsPinned, setMobileControlsPinned] = useState(() => {
+    try { return localStorage.getItem('worship:mobileControlsPinned') === '1' } catch { return false }
+  })
+  const [chromeAwake, setChromeAwake] = useState(true)
   const hintTimerRef = useRef(0)
+  const chromeTimerRef = useRef(0)
   // Clock + Stopwatch runtime
   const [now, setNow] = useState(() => new Date())
   const [elapsedSec, setElapsedSec] = useState(0)
@@ -139,6 +147,27 @@ export default function WorshipMode(){
   // Persist settings
   useEffect(() => { try { localStorage.setItem('worship:clock24h', clock24h ? '1' : '0') } catch {} }, [clock24h])
   useEffect(() => { try { localStorage.setItem('worship:showStopwatch', showStopwatch ? '1' : '0') } catch {} }, [showStopwatch])
+  useEffect(() => { try { localStorage.setItem('worship:mobileControlsPinned', mobileControlsPinned ? '1' : '0') } catch {} }, [mobileControlsPinned])
+
+  function wakeChrome(){
+    if (!isMobile) return
+    setChromeAwake(true)
+    if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
+    if (mobileControlsPinned || openSettings || mobileMoreOpen) return
+    chromeTimerRef.current = setTimeout(() => setChromeAwake(false), 2500)
+  }
+
+  useEffect(() => {
+    if (!isMobile || mobileControlsPinned || openSettings || mobileMoreOpen) {
+      if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
+      setChromeAwake(true)
+      return
+    }
+    wakeChrome()
+    return () => {
+      if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
+    }
+  }, [isMobile, mobileControlsPinned, openSettings, mobileMoreOpen])
 
   // Clock: tick on minute boundary
   useEffect(() => {
@@ -451,6 +480,9 @@ export default function WorshipMode(){
   useEffect(() => {
     return () => { if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = 0 } }
   }, [])
+  useEffect(() => {
+    return () => { if (chromeTimerRef.current) { clearTimeout(chromeTimerRef.current); chromeTimerRef.current = 0 } }
+  }, [])
 
   // Fit-to-viewport with column preference: on wide screens, prefer 2 columns to keep larger text.
   useEffect(() => {
@@ -572,8 +604,8 @@ export default function WorshipMode(){
     function onKey(e){
       const tag = (e.target && e.target.tagName) || ''
       if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
-      if (e.key === 'ArrowRight') { e.preventDefault(); next() }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); prev() }
+      if (e.key === 'ArrowRight') { e.preventDefault(); wakeChrome(); next() }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); wakeChrome(); prev() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -583,21 +615,34 @@ export default function WorshipMode(){
   function onTouchStart(e){
     const t = e.changedTouches && e.changedTouches[0]
     if (!t) return
-    touchRef.current = { x: t.clientX, y: t.clientY, at: Date.now() }
+    wakeChrome()
+    touchRef.current = {
+      x: t.clientX,
+      y: t.clientY,
+      at: Date.now(),
+      scrollTop: contentRef.current?.scrollTop || 0,
+    }
   }
   function onTouchEnd(e){
     const t0 = touchRef.current
     const t = e.changedTouches && e.changedTouches[0]
     if (!t) return
+    wakeChrome()
     const dx = t.clientX - t0.x
     const dy = t.clientY - t0.y
     const dt = Date.now() - t0.at
-    if (dt < 800 && Math.abs(dx) > Math.max(60, Math.abs(dy) * 1.6)){
+    if (dt < 800 && Math.abs(dx) > Math.max(70, Math.abs(dy) * 1.7)){
       if (dx < 0) next(); else prev()
       return
     }
-    if (dt < 500 && Math.abs(dy) > Math.max(90, Math.abs(dx) * 1.8)){
-      if (dy < 0) shiftKey(1); else shiftKey(-1)
+    const verticalDominant = Math.abs(dy) > Math.max(120, Math.abs(dx) * 2.2)
+    const startsNearTopEdge = t0.y <= 80
+    const likelyPullToRefresh = dy > 0 && (t0.scrollTop <= 2 || t0.y <= 120)
+    if (dt < 550 && verticalDominant){
+      if (startsNearTopEdge) return
+      if (likelyPullToRefresh) return
+      if (dy < 0) shiftKey(1)
+      else shiftKey(-1)
     }
   }
 
@@ -664,6 +709,11 @@ export default function WorshipMode(){
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
   const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey, isVerse])
   const displayCols = isVerse ? 1 : cols
+  const chromeDimmed = isMobile && !mobileControlsPinned && !chromeAwake && !openSettings && !mobileMoreOpen
+
+  useEffect(() => {
+    if (!isMobile && mobileMoreOpen) setMobileMoreOpen(false)
+  }, [isMobile, mobileMoreOpen])
 
   useEffect(() => {
     // Ensure theme attribute applied so background matches choice
@@ -687,6 +737,7 @@ export default function WorshipMode(){
       <div
         ref={viewportRef}
         className="worship__viewport"
+        onPointerDownCapture={wakeChrome}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         style={{
@@ -696,7 +747,7 @@ export default function WorshipMode(){
         }}
       >
         {/* Title row: Stopwatch — Title — Clock */}
-        <div ref={headerRef} style={{padding:'10px 16px', textAlign:'center'}}>
+        <div ref={headerRef} style={{padding:'10px 16px', textAlign:'center', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)'}}>
           <TitleStrip
             title={cur?.title || ''}
             clockText={formatClock(now)}
@@ -707,6 +758,7 @@ export default function WorshipMode(){
             onReset={resetStopwatch}
             canReset={elapsedSec > 0}
             sizeCss="clamp(20px, 4vw, 28px)"
+            controlsInHeader={!isMobile}
           />
           {!isVerse && (() => {
             const base = cur?.baseKey || ''
@@ -726,7 +778,7 @@ export default function WorshipMode(){
           aria-label="Go home"
           title="Home"
           onClick={() => navigate('/')}
-          style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px' }}
+          style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
           <HomeIcon />
         </button>
@@ -735,7 +787,7 @@ export default function WorshipMode(){
           aria-label="Back to setlist"
           title="Back to setlist"
           onClick={() => navigate(setlistUrl)}
-          style={{ position:'fixed', top:10, left:64, zIndex:5, padding:'10px 12px' }}
+          style={{ position:'fixed', top:10, left:64, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
           <ArrowLeft />
         </button>
@@ -745,7 +797,7 @@ export default function WorshipMode(){
           aria-label="Open settings"
           title="Settings"
           onClick={() => setOpenSettings(true)}
-          style={{ position:'fixed', top:10, right:10, zIndex:6, padding:'10px 12px' }}
+          style={{ position:'fixed', top:10, right:10, zIndex:6, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
           <SlidersIcon />
         </button>
@@ -963,48 +1015,81 @@ export default function WorshipMode(){
         </div>
 
         {/* Toolbar */}
-        <div ref={barRef} className="worship__bar" role="toolbar" aria-label="Worship controls" style={{
-          position:'fixed', left:0, right:0, bottom:0,
-          display:'flex', gap:8, alignItems:'center', justifyContent:'space-between',
-          padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
-        }}>
-          <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            {/* Key down */}
+        {isMobile ? (
+          <MobileDock
+            ref={barRef}
+            className="worship__bar"
+            role="toolbar"
+            aria-label="Worship controls"
+            dimmed={chromeDimmed}
+          >
             <button
-            className="gc-btn"
-              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              className="gc-btn gc-btn--iconOnly"
+              style={{minWidth:44, minHeight:44}}
               onClick={() => shiftKey(-1)}
               title="Lower key"
               aria-label="Lower key"
               disabled={isVerse}
             >
-              <ArrowDown />{!isMobile ? <span className="text-when-wide"> Key Down</span> : null}
+              <ArrowDown />
             </button>
-            {/* Key up */}
             <button
-            className="gc-btn"
-              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
+              className="gc-btn gc-btn--iconOnly"
+              style={{minWidth:44, minHeight:44}}
               onClick={() => shiftKey(1)}
               title="Raise key"
               aria-label="Raise key"
               disabled={isVerse}
             >
-              <ArrowUp />{!isMobile ? <span className="text-when-wide"> Key Up</span> : null}
+              <ArrowUp />
             </button>
-            {/* Reset key */}
             <button
-            className="gc-btn"
-              style={{padding:'12px 16px', minWidth:44, minHeight:44}}
-              onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }}
-              title="Reset key"
-              aria-label="Reset key"
-              disabled={isVerse}
+              className={`gc-btn gc-btn--iconOnly ${idx > 0 ? 'gc-btn--primary' : ''}`}
+              style={{minWidth:44, minHeight:44}}
+              onClick={prev}
+              title="Previous song"
+              aria-label="Previous song"
+              disabled={idx <= 0}
             >
-              <RemoveIcon />{!isMobile ? <span className="text-when-wide"> Reset</span> : null}
+              <ArrowLeft />
             </button>
-          </div>
-          {/* Center quick search (hidden on mobile) */}
-          {!isMobile && (
+            <button
+              className={`gc-btn gc-btn--iconOnly ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`}
+              style={{minWidth:44, minHeight:44}}
+              onClick={next}
+              title="Next song"
+              aria-label="Next song"
+              disabled={idx >= songs.length - 1}
+            >
+              <ArrowRight />
+            </button>
+            <button
+              className="gc-btn gc-btn--iconOnly"
+              style={{minWidth:44, minHeight:44}}
+              onClick={() => setMobileMoreOpen(true)}
+              title="More controls"
+              aria-label="More controls"
+            >
+              <SlidersIcon />
+            </button>
+          </MobileDock>
+        ) : (
+          <div ref={barRef} className="worship__bar" role="toolbar" aria-label="Worship controls" style={{
+            position:'fixed', left:0, right:0, bottom:0,
+            display:'flex', gap:8, alignItems:'center', justifyContent:'space-between',
+            padding:'12px 14px', background:'var(--card)', borderTop:'1px solid var(--line)'
+          }}>
+            <div style={{display:'flex', gap:10, alignItems:'center'}}>
+              <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => shiftKey(-1)} title="Lower key" aria-label="Lower key" disabled={isVerse}>
+                <ArrowDown /><span className="text-when-wide"> Key Down</span>
+              </button>
+              <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => shiftKey(1)} title="Raise key" aria-label="Raise key" disabled={isVerse}>
+                <ArrowUp /><span className="text-when-wide"> Key Up</span>
+              </button>
+              <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }} title="Reset key" aria-label="Reset key" disabled={isVerse}>
+                <RemoveIcon /><span className="text-when-wide"> Reset</span>
+              </button>
+            </div>
             <div ref={searchRef} style={{position:'relative', flex:'1 1 40%', display:'flex', justifyContent:'center'}}>
               <input
                 value={q}
@@ -1032,69 +1117,78 @@ export default function WorshipMode(){
                 </div>
               )}
             </div>
-          )}
-          <div style={{display:'flex', gap:10, alignItems:'center'}}>
-            {isMobile && !isVerse && (
-              <button
-                className="gc-btn gc-btn--iconOnly"
-                style={{minWidth:44, minHeight:44}}
-                onClick={() => setShowChords(v => !v)}
-                title="Toggle chords"
-                aria-label="Toggle chords"
-              >
-                <EyeIcon />
+            <div style={{display:'flex', gap:10, alignItems:'center'}}>
+              {!isVerse && (
+                <button className="gc-btn gc-btn--iconOnly" style={{minWidth:44, minHeight:44}} onClick={() => setShowChords(v => !v)} title="Toggle chords" aria-label="Toggle chords">
+                  <EyeIcon />
+                </button>
+              )}
+              <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
+              <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
+              <button className={`gc-btn ${idx > 0 ? 'gc-btn--primary' : ''}`} style={{padding:'12px 18px', fontSize:16}} onClick={prev} title="Previous song" disabled={idx <= 0}>
+                ← BACK
               </button>
-            )}
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} title="Smaller font" aria-label="Smaller font">A−</button>
-            <button className="gc-btn" style={{padding:'12px 16px', minWidth:44, minHeight:44}} onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} title="Larger font" aria-label="Larger font">A+</button>
-            {isMobile && (
-              <>
-                <button
-                  className={`gc-btn gc-btn--iconOnly ${idx > 0 ? 'gc-btn--primary' : ''}`}
-                  style={{minWidth:44, minHeight:44}}
-                  onClick={prev}
-                  title="Previous song"
-                  aria-label="Previous song"
-                  disabled={idx <= 0}
-                >
-                  <ArrowLeft />
-                </button>
-                <button
-                  className={`gc-btn gc-btn--iconOnly ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`}
-                  style={{minWidth:44, minHeight:44}}
-                  onClick={next}
-                  title="Next song"
-                  aria-label="Next song"
-                  disabled={idx >= songs.length - 1}
-                >
-                  <ArrowRight />
-                </button>
-              </>
-            )}
-            {!isMobile && (
-              <>
-                <button
-                  className={`gc-btn ${idx > 0 ? 'gc-btn--primary' : ''}`}
-                  style={{padding:'12px 18px', fontSize:16}}
-                  onClick={prev}
-                  title="Previous song"
-                  disabled={idx <= 0}
-                >
-                  ← BACK
-                </button>
-                <button
-                  className={`gc-btn ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`}
-                  style={{padding:'12px 18px', fontSize:16}}
-                  onClick={next}
-                  title="Next song"
-                  disabled={idx >= songs.length - 1}
-                >
-                  NEXT →
-                </button>
-              </>
+              <button className={`gc-btn ${idx < songs.length - 1 ? 'gc-btn--primary' : ''}`} style={{padding:'12px 18px', fontSize:16}} onClick={next} title="Next song" disabled={idx >= songs.length - 1}>
+                NEXT →
+              </button>
+            </div>
+          </div>
+        )}
+        <MobileActionSheet
+          open={mobileMoreOpen}
+          onClose={() => setMobileMoreOpen(false)}
+          title="Worship controls"
+        >
+          <div className="gc-mobile-actions">
+            {!isVerse ? (
+              <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
+                <EyeIcon /> {showChords ? 'Hide chords' : 'Show chords'}
+              </button>
+            ) : null}
+            <button className="gc-btn" onClick={() => { setAutoSize(false); setFontPx(px => Math.max(10, (px || 20) - 1)) }} aria-label="Smaller font">A− Smaller</button>
+            <button className="gc-btn" onClick={() => { setAutoSize(false); setFontPx(px => Math.min(40, (px || 20) + 1)) }} aria-label="Larger font">A+ Larger</button>
+            {!isVerse ? (
+              <button className="gc-btn" onClick={() => { const b = (baseOffsets[idx] ?? 0); setTranspose(b); setSongOffsets(arr => { const c = arr.slice(); c[idx] = b; return c }) }} aria-label="Reset key">
+                <RemoveIcon /> Reset key
+              </button>
+            ) : null}
+            {showStopwatch ? (
+              <button className="gc-btn" onClick={toggleStopwatch} aria-label={isRunning ? 'Stop stopwatch' : 'Start stopwatch'}>
+                {isRunning ? <PauseIcon /> : <PlayIcon />} {isRunning ? 'Stop stopwatch' : 'Start stopwatch'}
+              </button>
+            ) : null}
+            {showStopwatch ? (
+              <button className="gc-btn" onClick={resetStopwatch} disabled={!elapsedSec} aria-label="Reset stopwatch">
+                <ResetIcon /> Reset stopwatch
+              </button>
+            ) : null}
+            <button className="gc-btn" onClick={() => setMobileControlsPinned(v => !v)} aria-label="Pin controls">
+              {mobileControlsPinned ? 'Unpin controls' : 'Pin controls'}
+            </button>
+          </div>
+          <div style={{ marginTop: 10, display:'grid', gap:8 }}>
+            <label className="meta" htmlFor="worship-mobile-add">Quick add song</label>
+            <input
+              id="worship-mobile-add"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Add song…"
+              aria-label="Quick add song"
+            />
+            {q.trim() && titleResults.length > 0 ? (
+              <div style={{ display:'grid', gap:8 }}>
+                {titleResults.map(s => (
+                  <div key={s.id} style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:8}}>
+                    <span style={{minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{s.title}</span>
+                    <button className="gc-btn gc-btn--iconOnly" aria-label={`Add ${s.title}`} onClick={() => addSongAfterCurrent(s.id)}><PlusIcon /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="meta">Type a song title to add it after the current song.</span>
             )}
           </div>
-        </div>
+        </MobileActionSheet>
         {isMobile && showSwipeHint && (
           <div className="worship__hint" role="status" aria-live="polite">Swipe left/right for songs • up/down for key</div>
         )}
@@ -1233,7 +1327,7 @@ function VerseView({ sections, rtl = false }){
 }
 
 /* ---------- Title strip for Worship Mode ---------- */
-function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset }){
+function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset, controlsInHeader = true }){
   const hostRef = useRef(null)
   const leftRef = useRef(null)
   const midWrapRef = useRef(null)
@@ -1305,7 +1399,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     }
     setDisplay({ text: mid.textContent || originalTitle, size: fontPx })
     setReady(true)
-  }, [originalTitle, clockText, stopwatchText, showStopwatch, isRunning, canReset, measureKey])
+  }, [originalTitle, clockText, stopwatchText, showStopwatch, isRunning, canReset, controlsInHeader, measureKey])
 
   useEffect(() => {
     const host = hostRef.current
@@ -1345,25 +1439,29 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
       {showStopwatch && (
         <span ref={rightRef} className="songtitlebar__side songtitlebar__side--right" aria-label="Stopwatch" title="Stopwatch">
           <span>{stopwatchText || '00:00'}</span>
-          <button
-            className="gc-btn gc-btn--iconOnly gc-btn--sm"
-            onClick={onToggleRun}
-            aria-label={isRunning ? 'Stop stopwatch' : 'Start stopwatch'}
-            title={isRunning ? 'Stop' : 'Start'}
-            style={playStyle}
-          >
-            {isRunning ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
-          </button>
-          <button
-            className="gc-btn gc-btn--iconOnly gc-btn--sm"
-            onClick={onReset}
-            aria-label="Reset stopwatch"
-            title="Reset"
-            disabled={!canReset}
-            style={resetStyle}
-          >
-            <ResetIcon size={14} />
-          </button>
+          {controlsInHeader ? (
+            <>
+              <button
+                className="gc-btn gc-btn--iconOnly gc-btn--sm"
+                onClick={onToggleRun}
+                aria-label={isRunning ? 'Stop stopwatch' : 'Start stopwatch'}
+                title={isRunning ? 'Stop' : 'Start'}
+                style={playStyle}
+              >
+                {isRunning ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
+              </button>
+              <button
+                className="gc-btn gc-btn--iconOnly gc-btn--sm"
+                onClick={onReset}
+                aria-label="Reset stopwatch"
+                title="Reset"
+                disabled={!canReset}
+                style={resetStyle}
+              >
+                <ResetIcon size={14} />
+              </button>
+            </>
+          ) : null}
         </span>
       )}
     </div>

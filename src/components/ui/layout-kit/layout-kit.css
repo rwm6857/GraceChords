@@ -328,6 +328,107 @@
   .gc-chip{ min-height: var(--gc-control-h-mobile); }
 }
 
+.gc-mobile-pane-tabs{
+  display:none;
+}
+
+@media (max-width: 900px){
+  .gc-mobile-pane-tabs{
+    display:flex;
+    width:100%;
+    margin: 8px 0 6px;
+  }
+  .gc-mobile-pane-tabs .gc-segmented{
+    width:100%;
+  }
+  .gc-mobile-pane-tabs .gc-segmented__item{
+    flex:1 1 0;
+    justify-content:center;
+  }
+}
+
+.gc-mobile-dock{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--gc-mobile-dock-z);
+  background: color-mix(in srgb, var(--gc-surface-1) 94%, transparent);
+  border-top: 1px solid var(--gc-separator);
+  box-shadow: 0 -2px 10px rgba(0,0,0,.15);
+  backdrop-filter: saturate(160%) blur(8px);
+  padding: var(--space-2) var(--space-3) calc(var(--space-2) + var(--safe-b));
+  transition: opacity var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-mobile-dock.is-dimmed{
+  opacity: var(--gc-mobile-dim-opacity);
+}
+.gc-mobile-dock__inner{
+  display:flex;
+  align-items:center;
+  gap: var(--space-2);
+  min-width:0;
+}
+
+.gc-mobile-actionsheet{
+  position: fixed;
+  inset: 0;
+  z-index: var(--gc-mobile-sheet-z);
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+}
+.gc-mobile-actionsheet__overlay{
+  position:absolute;
+  inset:0;
+  border:0;
+  background: var(--gc-overlay);
+  backdrop-filter: blur(6px);
+}
+.gc-mobile-actionsheet__panel{
+  position: relative;
+  width: 100%;
+  max-height: min(78dvh, 620px);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: 1px solid var(--gc-separator);
+  border-bottom: 0;
+  background: var(--gc-surface-1);
+  padding: var(--space-2) var(--space-3) calc(var(--space-4) + var(--safe-b));
+  display:flex;
+  flex-direction:column;
+  gap: var(--space-2);
+  overflow: hidden;
+}
+.gc-mobile-actionsheet__grab{
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  margin: 0 auto 2px;
+  background: color-mix(in srgb, var(--gc-text-secondary) 36%, transparent);
+}
+.gc-mobile-actionsheet__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--space-2);
+}
+.gc-mobile-actionsheet__title{
+  font-size: var(--gc-font-body);
+}
+.gc-mobile-actionsheet__body{
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+}
+.gc-mobile-actions{
+  display:grid;
+  gap: var(--space-2);
+}
+
+.gc-overflow-safe{
+  min-width: 0;
+  overflow-x: hidden;
+}
+
 @keyframes gc-spin{
   to { transform: rotate(360deg); }
 }

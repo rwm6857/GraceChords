@@ -17,9 +17,41 @@
   list-style: none;
   grid-template-columns: 1fr;
 }
-@media (min-width: 960px) {
+@media (min-width: 760px) {
+  .gc-list {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+@media (min-width: 1080px) {
   .gc-list {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+.gc-songbook-options{
+  margin-top: 8px;
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  background: var(--gc-surface-2);
+  display:grid;
+  gap: 8px;
+}
+.gc-songbook-options__meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+}
+.gc-songbook-selected-list{
+  display:grid;
+  gap: 8px;
+}
+
+@media (max-width: 640px){
+  .gc-songbook-options__meta{
+    align-items:flex-start;
+    flex-direction:column;
   }
 }
 

@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import indexData from '../data/index.json'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon } from '../components/Icons'
+import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -37,6 +37,8 @@ import Toolbar from '../components/ui/Toolbar'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
 import { Chip } from '../components/ui/layout-kit'
+import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
+import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import {
   buildSongCatalog,
   getLanguageChipLabel,
@@ -139,6 +141,10 @@ export default function Setlist(){
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
   const [isTablet, setIsTablet] = useState(() => { try { return window.innerWidth <= 820 } catch { return false } })
   const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
+  const [mobileTab, setMobileTab] = useState(() => {
+    try { return localStorage.getItem('setlist:mobileTab') || 'add' } catch { return 'add' }
+  })
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const originalHtmlOverflow = useRef('')
   const originalBodyOverflow = useRef('')
   const quickAppliedRef = useRef(false)
@@ -326,6 +332,14 @@ export default function Setlist(){
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  useEffect(() => {
+    try { localStorage.setItem('setlist:mobileTab', mobileTab) } catch {}
+  }, [mobileTab])
+
+  useEffect(() => {
+    if (!isStacked && mobileActionsOpen) setMobileActionsOpen(false)
+  }, [isStacked, mobileActionsOpen])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || '')
@@ -968,15 +982,13 @@ async function exportPdf() {
         <div />
       </div>
 
-      {/* Toolbar: mobile grid vs desktop/tablet full */}
+      {/* Toolbar: mobile condensed vs desktop/tablet full */}
       {isMobile ? (
         <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
-          <div className="setlist-actions--mobile" style={{ width:'100%' }}>
+          <div className="builder-mobile-actions" style={{ width:'100%', display:'flex', gap:8, alignItems:'center' }}>
             <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
-            <Button onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress || 'Export PPT'}</Button>
-            <Button onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>PPT ZIP</Button>
-            <Button onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
-            <Button as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
+            <Button as={Link} variant="primary" to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
+            <Button iconOnly title="More actions" aria-label="More actions" onClick={() => setMobileActionsOpen(true)} iconLeft={<SlidersIcon />} />
           </div>
         </Toolbar>
       ) : (
@@ -1001,18 +1013,30 @@ async function exportPdf() {
           </div>
         </Toolbar>
       )}
+      {isStacked ? (
+        <MobilePaneTabs
+          value={mobileTab}
+          onChange={setMobileTab}
+          addLabel="Add songs"
+          currentLabel={`Current (${list.length})`}
+        />
+      ) : null}
 
-      <div className="BuilderPage" style={{ marginTop: 8 }}>
-        <div className="BuilderLeft">
+      <div className="BuilderPage gc-overflow-safe" style={{ marginTop: 8 }}>
+        <div className="BuilderLeft builder-pane" hidden={isStacked && mobileTab !== 'add'}>
           <section className="setlist-section setlist-add" data-role="add">
             <div className="card setlist-pane">
-              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
-                <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
-                <label className="row" style={{gap:6, alignItems:'center'}}>
-                  <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                  <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-                </label>
+              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'grid', gap:8 }}>
+                <div className="builder-search-row">
+                  <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
+                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
+                </div>
+                <div className="builder-options-row">
+                  <label className="row" style={{gap:6, alignItems:'center'}}>
+                    <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
+                    <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
+                  </label>
+                </div>
               </div>
               {languageChipCodes.length > 0 ? (
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ paddingTop: 0, display:'flex', alignItems:'center', gap:8 }}>
@@ -1036,7 +1060,7 @@ async function exportPdf() {
                 {!fuse ? (
                   <div>Loading search…</div>
                 ) : (
-                  <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', marginTop:6 }}>
+                  <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', marginTop:6 }}>
                     {results.map(s=> (
                       <SongCard
                         key={s.id}
@@ -1053,7 +1077,7 @@ async function exportPdf() {
           </section>
         </div>
 
-        <div className="BuilderRight" style={{ minHeight:0, display:'flex', flexDirection:'column' }}>
+        <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab !== 'current'}>
           <section className="setlist-section setlist-current" data-role="current">
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
@@ -1077,7 +1101,7 @@ async function exportPdf() {
                         title={title}
                         subtitle={translationLabel}
                         rightSlot={
-                          <div style={{display:'flex', alignItems:'center', gap:6}}>
+                          <div className="setlist-row-actions" style={isMobile ? { flexWrap:'wrap', justifyContent:'flex-end' } : undefined}>
                             <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
                             <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
                             <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
@@ -1098,7 +1122,7 @@ async function exportPdf() {
                       title={s.title}
                       subtitle={`Original: ${s.originalKey || '—'}`}
                       rightSlot={
-                        <div style={{display:'flex', alignItems:'center', gap:6}}>
+                        <div className="setlist-row-actions" style={isMobile ? { flexWrap:'wrap', justifyContent:'flex-end' } : undefined}>
                           <KeySelector
                             variant='ui'
                             baseKey={s.originalKey || 'C'}
@@ -1144,6 +1168,21 @@ async function exportPdf() {
           </section>
         </div>
       </div>
+      <MobileActionSheet
+        open={mobileActionsOpen}
+        onClose={() => setMobileActionsOpen(false)}
+        title="Setlist actions"
+      >
+        <div className="gc-mobile-actions">
+          <Button onClick={() => { onSave(); setMobileActionsOpen(false) }} iconLeft={<SaveIcon />}>Save</Button>
+          <Button onClick={() => { onOpenLoad(); setMobileActionsOpen(false) }} iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}>Load</Button>
+          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>New</Button>
+          <Button onClick={() => { onDelete(); setMobileActionsOpen(false) }} iconLeft={<TrashIcon />} disabled={!currentId}>Delete</Button>
+          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
+          <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || 'Export PPT'}</Button>
+          <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || 'PPT ZIP'}</Button>
+        </div>
+      </MobileActionSheet>
     </PageContainer>
   )
 }
