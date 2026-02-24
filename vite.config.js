@@ -3,9 +3,14 @@ import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { visualizer } from 'rollup-plugin-visualizer'
 
+const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
+
 export default defineConfig({
   // Keep assets rooted at the site origin for absolute public paths.
   base: '/',
+  define: {
+    __SW_VERSION__: JSON.stringify(SW_VERSION),
+  },
   plugins: [
     react({
       // Make the React plugin handle .js files too (not just .jsx/.tsx)

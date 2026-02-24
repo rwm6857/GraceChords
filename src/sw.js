@@ -1,8 +1,8 @@
-// Include the current commit SHA in the cache name so that each deploy
-// invalidates previously cached assets and clients fetch the latest files.
-const CACHE_NAME = `gracechords-${
-  (import.meta.env && import.meta.env.VITE_COMMIT_SHA) || 'dev'
-}`;
+// Include the version query from registration URL so each deploy gets
+// an isolated cache namespace.
+const swUrl = new URL(self.location.href);
+const CACHE_VERSION = swUrl.searchParams.get('v') || 'dev';
+const CACHE_NAME = `gracechords-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/fonts/NotoSans-Regular.ttf',
   '/fonts/NotoSans-Bold.ttf',
@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
   // so edits to songs and the index show up without manual cache busting.
   if (request.url.includes('/songs/') || request.url.includes('/src/data/index.json')) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
@@ -63,7 +63,7 @@ self.addEventListener('fetch', (event) => {
   // Always try the network first for navigations (HTML documents)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));

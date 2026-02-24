@@ -44,27 +44,27 @@
 
 .readings-date__picker{
   position: relative;
+  min-width: 130px;
 }
 
 .readings-date__input{
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.readings-date__button{
   min-height: 30px;
   min-width: 140px;
   border:1px solid var(--gc-separator);
   border-radius: var(--radius-pill);
   padding: 3px 10px;
-  background: var(--gc-surface-2);
+  background: var(--gc-surface-1);
   color: var(--gc-text);
   font-size: var(--gc-font-cap);
+  font-family: var(--gc-font-family);
   font-weight: var(--gc-weight-body);
   text-align: center;
   cursor: pointer;
+}
+
+.readings-date__input:focus-visible{
+  outline: var(--gc-focus-size) solid var(--gc-focus);
+  outline-offset: var(--gc-focus-offset);
 }
 
 .readings-datebtn{
@@ -76,7 +76,16 @@
   display:flex;
   align-items:center;
   min-width: 0;
-  max-width: none;
+  max-width: min(52vw, 280px);
+}
+
+.readings-translation .gc-translation-picker{
+  min-width: 0;
+  max-width: 100%;
+}
+
+.readings-translation .gc-translation-picker__button{
+  max-width: 100%;
 }
 
 .readings-chips{
@@ -170,6 +179,7 @@
 .readings-verse{
   display:grid;
   grid-template-columns: 2rem 1fr;
+  grid-template-areas: 'num text';
   column-gap: 6px;
   padding: 4px 0;
   color: var(--gc-text);
@@ -177,11 +187,17 @@
   user-select: text;
 }
 
+.readings-reader.is-rtl .readings-verse{
+  grid-template-columns: 1fr 2rem;
+  grid-template-areas: 'text num';
+}
+
 .readings-verse.is-selected{
   background: color-mix(in srgb, var(--gc-primary) 12%, transparent);
 }
 
 .readings-verse__num{
+  grid-area: num;
   min-width: 28px;
   text-align:right;
   font-weight:600;
@@ -192,8 +208,17 @@
 }
 
 .readings-verse__text{
+  grid-area: text;
   flex:1;
   line-height: var(--gc-lh-body);
+}
+
+.readings-reader.is-rtl .readings-verse__num{
+  text-align:left;
+}
+
+.readings-reader.is-rtl .readings-verse__text{
+  text-align:right;
 }
 
 .readings-verse.is-selected .readings-verse__text{
@@ -216,10 +241,6 @@
 }
 
 @media (max-width: 720px){
-  .readings-page{
-    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-  }
-
   .readings-dateblock{
     position: static;
     top: auto;
@@ -236,7 +257,7 @@
 
   .readings-translation{
     width: auto;
-    max-width: none;
+    max-width: min(56vw, 250px);
     justify-content: center;
   }
 
@@ -244,7 +265,7 @@
     display: none;
   }
 
-  .readings-date__button{
+  .readings-date__input{
     min-width: 128px;
   }
 
@@ -275,7 +296,11 @@
   }
 
   .readings-copy-fab{
-    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(98px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .readings-page{
+    padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -299,6 +324,11 @@
   pointer-events: none;
   transition: opacity var(--gc-dur-quick) var(--gc-ease), transform var(--gc-dur-quick) var(--gc-ease);
   z-index: 1200;
+}
+
+.readings-copy-fab.is-rtl{
+  right: auto;
+  left: var(--space-4);
 }
 
 .readings-copy-fab.is-visible{

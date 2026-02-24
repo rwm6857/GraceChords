@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState, useCallback, useImperative
 import type { Passage } from './types'
 import { buildCopyText, sortedVerses, toggleSelection } from './selection'
 import { fetchBibleChapter, type ChapterData } from '../../utils/bible/chapters'
+import { isRtlBibleLanguage } from '../../utils/bible/direction'
 
 type Props = {
   passage: Passage
   translationId: string
   translationLabel: string
+  translationLanguage: string
   selection: Set<number>
   onSelectionChange: (next: Set<number>) => void
   onNavigate?: (direction: 'prev' | 'next') => void
@@ -17,7 +19,7 @@ export type PassageReaderHandle = {
 }
 
 const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function PassageReader(
-  { passage, translationId, translationLabel, selection, onSelectionChange, onNavigate },
+  { passage, translationId, translationLabel, translationLanguage, selection, onSelectionChange, onNavigate },
   ref
 ){
   const readerRef = useRef<HTMLDivElement | null>(null)
@@ -58,6 +60,7 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   }, [chapter, passage])
 
   const selectionArray = useMemo(() => sortedVerses(selection), [selection])
+  const rtl = useMemo(() => isRtlBibleLanguage(translationLanguage), [translationLanguage])
 
   const handleCopy = useCallback(async () => {
     if (!chapter || !selectionArray.length) return
@@ -90,7 +93,8 @@ const PassageReader = React.forwardRef<PassageReaderHandle, Props>(function Pass
   return (
     <div
       ref={readerRef}
-      className="gc-card readings-reader"
+      className={`gc-card readings-reader ${rtl ? 'is-rtl' : ''}`.trim()}
+      dir={rtl ? 'rtl' : 'ltr'}
       tabIndex={0}
       onKeyDown={onKeyDown}
       onTouchStart={(e) => {

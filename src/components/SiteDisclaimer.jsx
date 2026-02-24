@@ -6,6 +6,7 @@ import { getCopyrightNotice } from '../config/copyright'
 export default function SiteDisclaimer(){
   const { pathname, hash } = useLocation()
   const inWorship = (pathname && pathname.startsWith('/worship')) || (hash && hash.includes('/worship'))
+  const inReading = (pathname && pathname.startsWith('/reading')) || (hash && hash.includes('/reading'))
   if (inWorship) return null
   if (!isDisclaimerEnabled()) return null
   const text = getSiteDisclaimer()
@@ -13,7 +14,7 @@ export default function SiteDisclaimer(){
   const textParts = text.split(linkText)
   const copyright = getCopyrightNotice()
   return (
-    <footer style={{ marginTop: '3rem' }}>
+    <footer style={{ marginTop: inReading ? '1.5rem' : '3rem' }}>
       <div
         style={{
           fontSize: '0.85rem',

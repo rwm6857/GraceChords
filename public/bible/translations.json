@@ -3,6 +3,34 @@
   "defaultTranslation": "esv",
   "translations": [
     {
+      "id": "keh",
+      "label": "KEH",
+      "name": "Ketab El Hayat",
+      "language": "ar",
+      "dataRoot": "bible/ar/keh"
+    },
+    {
+      "id": "sab",
+      "label": "SAB",
+      "name": "Sharif Arabic Bible",
+      "language": "ar",
+      "dataRoot": "bible/ar/sab"
+    },
+    {
+      "id": "svd",
+      "label": "SVD",
+      "name": "Smith Van Dyck",
+      "language": "ar",
+      "dataRoot": "bible/ar/svd"
+    },
+    {
+      "id": "tbr17",
+      "label": "TBR17",
+      "name": "Tedim Bible Revision 2017",
+      "language": "ctd",
+      "dataRoot": "bible/ctd/tbr17"
+    },
+    {
       "id": "csb",
       "label": "CSB",
       "name": "Christian Standard Bible",
@@ -50,6 +78,13 @@
       "name": "Reina Valera 2020",
       "language": "es",
       "dataRoot": "bible/es/rv2020"
+    },
+    {
+      "id": "pcb",
+      "label": "PCB",
+      "name": "Persian Contemporary Bible",
+      "language": "fa",
+      "dataRoot": "bible/fa/pcb"
     },
     {
       "id": "atb",

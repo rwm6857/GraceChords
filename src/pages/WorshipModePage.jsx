@@ -11,6 +11,8 @@ import { resolveChordCollisions } from '../utils/songs/chords'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isVerseId, parseVerseId } from '../utils/songs/verseRef'
 import { fetchBibleChapter } from '../utils/bible/chapters'
+import { listBibleTranslations } from '../utils/bible/translations'
+import { isRtlBibleLanguage } from '../utils/bible/direction'
 import {
   buildSongCatalog,
   resolveGroupEntry,
@@ -271,6 +273,14 @@ export default function WorshipMode(){
 
       const out = []
       const chapterCache = new Map()
+      const translationLangById = new Map()
+
+      try {
+        const translationResult = await listBibleTranslations()
+        for (const item of translationResult?.translations || []) {
+          translationLangById.set(String(item.id || ''), String(item.language || ''))
+        }
+      } catch {}
 
       async function loadChapter(translationId, book, chapter){
         const key = `${translationId}::${book}::${chapter}`
@@ -312,6 +322,8 @@ export default function WorshipMode(){
         if (isVerseId(id)) {
           const parsed = parseVerseId(id)
           if (!parsed) continue
+          const translationLanguage = translationLangById.get(parsed.translation) || ''
+          const rtl = isRtlBibleLanguage(translationLanguage)
           const segments = parsed.segments || []
           const multiChapter = segments.length > 1
           const lines = []
@@ -334,6 +346,7 @@ export default function WorshipMode(){
             title: parsed.refDisplay,
             baseKey: null,
             type: 'verse',
+            rtl,
             sections: [{ label: '', lines }],
           })
           continue
@@ -912,7 +925,7 @@ export default function WorshipMode(){
         >
           {cur ? (
             cur.type === 'verse' ? (
-              <VerseView sections={cur.sections || []} />
+              <VerseView sections={cur.sections || []} rtl={!!cur.rtl} />
             ) : (
               <div className="worship__song" style={{maxWidth:1200, margin:'0 auto'}}>
                 {(cur.sections || []).map((sec, si) => (
@@ -1198,17 +1211,20 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
   )
 }
 
-function VerseView({ sections }){
+function VerseView({ sections, rtl = false }){
   const lines = (sections || []).flatMap((sec) => sec.lines || [])
   if (!lines.length) return null
   return (
-    <div style={{maxWidth:900, margin:'0 auto', display:'grid', gap:10}}>
+    <div
+      dir={rtl ? 'rtl' : 'ltr'}
+      style={{maxWidth:900, margin:'0 auto', display:'grid', gap:10}}
+    >
       {lines.map((ln, idx) => {
         const label = ln.showChapter ? `${ln.chapter}:${ln.number}` : `${ln.number}`
         return (
           <div key={idx} style={{display:'flex', gap:10, alignItems:'flex-start'}}>
-            <span style={{minWidth: ln.showChapter ? 46 : 28, opacity:.6, fontWeight:600}}>{label}</span>
-            <span style={{flex:1, whiteSpace:'pre-wrap', overflowWrap:'anywhere'}}>{ln.text}</span>
+            <span style={{minWidth: ln.showChapter ? 46 : 28, opacity:.6, fontWeight:600, textAlign: rtl ? 'left' : 'right'}}>{label}</span>
+            <span style={{flex:1, whiteSpace:'pre-wrap', overflowWrap:'anywhere', textAlign: rtl ? 'right' : 'left'}}>{ln.text}</span>
           </div>
         )
       })}

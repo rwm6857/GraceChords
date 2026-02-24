@@ -41,8 +41,46 @@ function bootstrapRouteFromQuery(){
   }
 }
 
+function registerServiceWorker(){
+  if (typeof window === 'undefined') return
+  if (!import.meta.env.PROD) return
+  if (!('serviceWorker' in navigator)) return
+  const version = encodeURIComponent(String(__SW_VERSION__ || 'dev'))
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`/sw.js?v=${version}`, { type: 'module' })
+      .catch(() => {})
+  })
+}
+
+function recoverFromMissingStylesheets(){
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  const url = new URL(window.location.href)
+  const alreadyRetried = url.searchParams.get('css_retry') === '1'
+  window.addEventListener('load', () => {
+    const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .filter((node) => (node.getAttribute('href') || '').includes('/assets/'))
+    if (!stylesheets.length) return
+    const missingStylesheet = stylesheets.some((node) => node.sheet == null)
+    if (missingStylesheet && !alreadyRetried) {
+      url.searchParams.set('css_retry', '1')
+      url.searchParams.set('v', String(Date.now()))
+      window.location.replace(`${url.pathname}?${url.searchParams.toString()}${url.hash}`)
+      return
+    }
+    if (alreadyRetried && !missingStylesheet) {
+      url.searchParams.delete('css_retry')
+      url.searchParams.delete('v')
+      const search = url.searchParams.toString()
+      window.history.replaceState(null, '', `${url.pathname}${search ? `?${search}` : ''}${url.hash}`)
+    }
+  }, { once: true })
+}
+
 bootstrapRouteFromQuery()
 initTheme()
+registerServiceWorker()
+recoverFromMissingStylesheets()
 
 // Global styles
 import './styles/index.css'

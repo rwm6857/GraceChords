@@ -19,6 +19,7 @@ import {
 } from '../utils/bible/translations'
 import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
 import BibleTranslationPicker from '../components/BibleTranslationPicker'
+import { isRtlBibleLanguage } from '../utils/bible/direction'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -73,6 +74,10 @@ export default function ReadingsPage(){
     || translations[0]
     || getFallbackBibleTranslations()[0]
   ), [translations, selectedTranslationId])
+  const isRtlTranslation = useMemo(
+    () => isRtlBibleLanguage(activeTranslation.language),
+    [activeTranslation.language]
+  )
   const selectionKey = `${dateKey}.${activeTranslation.id}`
   const translationGroups = useMemo(
     () => buildBibleTranslationGroups(translations),
@@ -107,17 +112,6 @@ export default function ReadingsPage(){
       const next = (idx + delta + passages.length) % passages.length
       return next
     })
-  }
-
-  function openDatePicker(){
-    const input = dateInputRef.current
-    if (!input) return
-    if (typeof input.showPicker === 'function') {
-      input.showPicker()
-      return
-    }
-    input.focus({ preventScroll: true } as any)
-    input.click()
   }
 
   function closeDatePicker(){
@@ -181,6 +175,14 @@ export default function ReadingsPage(){
           >
             <ArrowLeft size={14} />
           </IconButton>
+          <div className="readings-translation">
+            <BibleTranslationPicker
+              value={activeTranslation.id}
+              groups={translationGroups}
+              onChange={setSelectedTranslationId}
+              ariaLabel="Choose Bible translation"
+            />
+          </div>
           <div ref={datePickerRef} className="readings-date__picker">
             <input
               ref={dateInputRef}
@@ -189,24 +191,7 @@ export default function ReadingsPage(){
               value={inputDate}
               onChange={handleDateChange}
               onBlur={closeDatePicker}
-              aria-label="Pick date"
-            />
-            <button
-              type="button"
-              className="readings-date__button"
-              onClick={openDatePicker}
-              onMouseDown={(e) => e.preventDefault()}
               aria-label={`Pick date ${displayDate}`}
-            >
-              {displayDate}
-            </button>
-          </div>
-          <div className="readings-translation">
-            <BibleTranslationPicker
-              value={activeTranslation.id}
-              groups={translationGroups}
-              onChange={setSelectedTranslationId}
-              ariaLabel="Choose Bible translation"
             />
           </div>
           <IconButton
@@ -249,6 +234,7 @@ export default function ReadingsPage(){
             passage={currentPassage}
             translationId={activeTranslation.id}
             translationLabel={activeTranslation.label}
+            translationLanguage={activeTranslation.language}
             selection={currentSelection}
             onSelectionChange={(next) => {
               if (!currentPassageId) return
@@ -269,7 +255,7 @@ export default function ReadingsPage(){
 
       <button
         type="button"
-        className={`readings-copy-fab ${currentSelection.size ? 'is-visible' : ''}`.trim()}
+        className={`readings-copy-fab ${currentSelection.size ? 'is-visible' : ''} ${isRtlTranslation ? 'is-rtl' : ''}`.trim()}
         onClick={() => readerRef.current?.copy()}
         aria-label="Copy selected verses"
         aria-hidden={!currentSelection.size}
