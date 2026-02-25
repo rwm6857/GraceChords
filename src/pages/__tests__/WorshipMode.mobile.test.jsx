@@ -123,6 +123,29 @@ describe('WorshipMode — mobile toolbar and snackbar', () => {
     expect(screen.getByText(/Key:/).textContent).toEqual(initial)
   })
 
+  it('hides column selector on mobile settings and toggles timer from More sheet', async () => {
+    setViewport(390)
+    render(
+      <MemoryRouter initialEntries={[`/worship/abba`]}>
+        <Routes>
+          <Route path="/worship/:songIds" element={<WorshipMode />} />
+        </Routes>
+      </MemoryRouter>
+    )
+    expect(await screen.findByText('Abba')).toBeInTheDocument()
+    expect(screen.getByText('00:00')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /More controls/i }))
+    expect(await screen.findByRole('button', { name: /Toggle timer/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Toggle timer/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Done/i }))
+    expect(screen.queryByText('00:00')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Open settings/i }))
+    expect(await screen.findByRole('checkbox', { name: /Show timer/i })).toBeInTheDocument()
+    expect(screen.queryByText('Columns')).toBeNull()
+  })
+
   it('shows full toolbar and NEXT on desktop', async () => {
     setViewport(1024)
     render(

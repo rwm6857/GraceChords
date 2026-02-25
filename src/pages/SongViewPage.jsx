@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
-import { resolveChordCollisions } from '../utils/songs/chords'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -19,6 +18,7 @@ import { publicUrl } from '../utils/network/publicUrl'
 import { Button, Card, Chip, IconButton, InsetCard, PageHeader, Toolbar } from '../components/ui/layout-kit'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobileDock from '../components/ui/mobile/MobileDock'
+import { buildChordRowsLayout } from '../utils/songs/chordLineLayout'
 import {
   buildSongCatalog,
   getEntryById,
@@ -794,7 +794,7 @@ function InstrumentalLine({ spec, steps, split, preferFlat }) {
 function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
-  const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
+  const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
   useEffect(()=>{
@@ -810,44 +810,38 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
 
     // Grab computed styles from the visible lyrics node
     const lyr = hostRef.current.querySelector('.lyrics')
+    if (!ctx || !lyr) {
+      setState({ rows: [{ text: plain || '', offsets: [] }], padTop: 0 })
+      return
+    }
     const cs = window.getComputedStyle(lyr)
 
     // Lyrics font for width measurement
     const lyricFont = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    ctx.font = lyricFont
     const hostW = hostRef.current.getBoundingClientRect().width || 0
-    const spaceW = ctx.measureText(' ').width || 0
 
     // Measure pixel offsets for each chord and resolve collisions
     const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
     const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize // match lyric size
     const chordFont = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
-
-    const chordEntries = (showChords ? chords : []).map(c => ({
-      x: ctx.measureText(plain.slice(0, c.index)).width,
-      sym: transposeSymPrefer(c.sym, steps, preferFlat),
-      w: 0,
-    }))
-    ctx.font = chordFont
-    chordEntries.forEach(entry => { entry.w = ctx.measureText(entry.sym || '').width })
-    resolveChordCollisions(chordEntries, spaceW)
-    // Special-case triple overlaps: keep center fixed, nudge outer two
-    chordEntries.sort((a,b)=> a.x - b.x)
-    for (let i = 1; i < chordEntries.length - 1; i++) {
-      const L = chordEntries[i-1], M = chordEntries[i], R = chordEntries[i+1]
-      const gapLM = M.x - (L.x + L.w)
-      const gapMR = R.x - (M.x + M.w)
-      if (gapLM < spaceW && gapMR < spaceW) {
-        L.x = Math.min(L.x, M.x - spaceW - L.w)
-        R.x = Math.max(R.x, M.x + M.w + spaceW)
-      }
+    const measureLyric = (text = '') => {
+      ctx.font = lyricFont
+      return ctx.measureText(text).width
     }
-
-    const offsets = chordEntries.map(c => ({
-      left: hostW > 0 ? Math.min(Math.max(0, c.x), Math.max(0, hostW - c.w - 2)) : Math.max(0, c.x),
-      sym: c.sym
-    }))
+    const measureChord = (text = '') => {
+      ctx.font = chordFont
+      return ctx.measureText(text).width
+    }
+    const rows = buildChordRowsLayout({
+      plain,
+      chords: showChords ? chords : [],
+      width: hostW,
+      measureLyric,
+      measureChord,
+      transposeSym: (sym) => transposeSymPrefer(sym, steps, preferFlat),
+      spaceWidth: measureLyric(' ') || 0,
+    })
 
     // Estimate chord ascent to reserve vertical space
     ctx.font = chordFont
@@ -856,9 +850,8 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
 
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
-    const chordTop = 0                           // chord layer sits at host top
-    setState({ offsets, padTop, chordTop })
-  }, [plain, chords, steps, showChords, measureKey])
+    setState({ rows, padTop })
+  }, [plain, chords, steps, showChords, preferFlat, measureKey])
 
   // Recalculate on container resize (orientation/viewport changes)
   useEffect(() => {
@@ -877,20 +870,27 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
   }, [])
 
   return (
-    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: (showChords && state.offsets.length>0) ? state.padTop : 0}}>
-      {showChords && state.offsets.length>0 && (
-        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
-          {state.offsets.map((c, i)=>(
-            <span key={i} style={{
-              position:'absolute',
-              left: `${c.left}px`,
-              fontFamily: 'var(--gc-font-chords)',
-              fontWeight: 700
-            }}>{c.sym}</span>
-          ))}
+    <div ref={hostRef} style={{ marginBottom: 10 }}>
+      {(state.rows || []).map((row, rowIndex) => (
+        <div
+          key={`${rowIndex}-${row.text}`}
+          style={{ position:'relative', paddingTop: (showChords && row.offsets.length > 0) ? state.padTop : 0 }}
+        >
+          {showChords && row.offsets.length > 0 && (
+            <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
+              {row.offsets.map((c, i)=>(
+                <span key={i} style={{
+                  position:'absolute',
+                  left: `${c.left}px`,
+                  fontFamily: 'var(--gc-font-chords)',
+                  fontWeight: 700
+                }}>{c.sym}</span>
+              ))}
+            </div>
+          )}
+          <div className="lyrics" style={{ whiteSpace: 'pre' }}>{row.text || '\u00a0'}</div>
         </div>
-      )}
-      <div className="lyrics">{plain}</div>
+      ))}
     </div>
   )
 }

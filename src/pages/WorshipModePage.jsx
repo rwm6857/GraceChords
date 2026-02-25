@@ -6,8 +6,8 @@ import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKe
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/app/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
-import { resolveChordCollisions } from '../utils/songs/chords'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, GearIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
+import { buildChordRowsLayout } from '../utils/songs/chordLineLayout'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isVerseId, parseVerseId } from '../utils/songs/verseRef'
 import { fetchBibleChapter } from '../utils/bible/chapters'
@@ -154,7 +154,7 @@ export default function WorshipMode(){
     setChromeAwake(true)
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
     if (mobileControlsPinned || openSettings || mobileMoreOpen) return
-    chromeTimerRef.current = setTimeout(() => setChromeAwake(false), 2500)
+    chromeTimerRef.current = setTimeout(() => setChromeAwake(false), 5000)
   }
 
   useEffect(() => {
@@ -708,7 +708,7 @@ export default function WorshipMode(){
   const baseRootRaw = (!isVerse && cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
   const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey, isVerse])
-  const displayCols = isVerse ? 1 : cols
+  const displayCols = (isVerse || isMobile) ? 1 : cols
   const chromeDimmed = isMobile && !mobileControlsPinned && !chromeAwake && !openSettings && !mobileMoreOpen
 
   useEffect(() => {
@@ -772,22 +772,24 @@ export default function WorshipMode(){
             )
           })()}
         </div>
-        {/* Top-left home button */}
-        <button
-          className="iconbtn"
-          aria-label="Go home"
-          title="Home"
-          onClick={() => navigate('/')}
-          style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
-        >
-          <HomeIcon />
-        </button>
+        {/* Top-left home button (desktop only) */}
+        {!isMobile && (
+          <button
+            className="iconbtn"
+            aria-label="Go home"
+            title="Home"
+            onClick={() => navigate('/')}
+            style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
+          >
+            <HomeIcon />
+          </button>
+        )}
         <button
           className="iconbtn"
           aria-label="Back to setlist"
           title="Back to setlist"
           onClick={() => navigate(setlistUrl)}
-          style={{ position:'fixed', top:10, left:64, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
+          style={{ position:'fixed', top:10, left: isMobile ? 10 : 64, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
           <ArrowLeft />
         </button>
@@ -799,7 +801,7 @@ export default function WorshipMode(){
           onClick={() => setOpenSettings(true)}
           style={{ position:'fixed', top:10, right:10, zIndex:6, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
-          <SlidersIcon />
+          <GearIcon />
         </button>
         {/* Column toggle moved into settings */}
 
@@ -828,9 +830,9 @@ export default function WorshipMode(){
                   </div>
                 )}
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                  <div>Show stopwatch</div>
+                  <div>Show timer</div>
                   <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
-                    <input type="checkbox" checked={showStopwatch} onChange={e => setShowStopwatch(e.target.checked)} />
+                    <input type="checkbox" aria-label="Show timer" checked={showStopwatch} onChange={e => setShowStopwatch(e.target.checked)} />
                     <span>{showStopwatch ? 'On' : 'Off'}</span>
                   </label>
                 </div>
@@ -841,6 +843,7 @@ export default function WorshipMode(){
                     <option value="24">24-hour</option>
                   </select>
                 </div>
+                {!isMobile && (
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Columns</div>
                   {isVerse ? (
@@ -924,6 +927,7 @@ export default function WorshipMode(){
                     </div>
                   )}
                 </div>
+                )}
                 {!isVerse && (
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                     <div>Transpose increment</div>
@@ -1140,6 +1144,9 @@ export default function WorshipMode(){
           title="Worship controls"
         >
           <div className="gc-mobile-actions">
+            <button className="gc-btn" onClick={() => setShowStopwatch(v => !v)} aria-label="Toggle timer">
+              {`Timer: ${showStopwatch ? 'On' : 'Off'}`}
+            </button>
             {!isVerse ? (
               <button className="gc-btn" onClick={() => setShowChords(v => !v)} aria-label="Toggle chords">
                 <EyeIcon /> {showChords ? 'Hide chords' : 'Show chords'}
@@ -1162,8 +1169,12 @@ export default function WorshipMode(){
                 <ResetIcon /> Reset stopwatch
               </button>
             ) : null}
-            <button className="gc-btn" onClick={() => setMobileControlsPinned(v => !v)} aria-label="Pin controls">
-              {mobileControlsPinned ? 'Unpin controls' : 'Pin controls'}
+            <button
+              className="gc-btn"
+              onClick={() => setMobileControlsPinned(v => !v)}
+              aria-label="Toggle auto-dim"
+            >
+              {`Auto-Dim: ${mobileControlsPinned ? 'Off' : 'On'}`}
             </button>
           </div>
           <div style={{ marginTop: 10, display:'grid', gap:8 }}>
@@ -1224,7 +1235,7 @@ function InstrumentalRow({ spec, steps, split, preferFlat }){
 function ChordLine({ plain, chords, steps, showChords, preferFlat }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
-  const [state, setState] = useState({ offsets: [], padTop: 0, chordTop: 0 })
+  const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
   useEffect(() => {
@@ -1236,42 +1247,43 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
     }
     const ctx = canvasRef.current.getContext('2d')
     const lyr = hostRef.current.querySelector('.lyrics')
-    if (!ctx || !lyr) { setState({ offsets: [], padTop: 0, chordTop: 0 }); return }
+    if (!ctx || !lyr) {
+      setState({ rows: [{ text: plain || '', offsets: [] }], padTop: 0 })
+      return
+    }
     const cs = window.getComputedStyle(lyr)
-
-    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    const spaceW = ctx.measureText(' ').width || 6
-    const measured = (showChords ? chords : []).map(c => {
-      const left = ctx.measureText(plain.slice(0, c.index || 0)).width
-      const sym = transposeSymPrefer(c.sym, steps, preferFlat)
-      return { sym, x: left, w: 0 }
-    })
 
     const chordFamilyRaw = window.getComputedStyle(hostRef.current).getPropertyValue('--gc-font-chords')
     const chordFontFamily = chordFamilyRaw?.trim() || `'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`
     const chordFontSize = cs.fontSize
-    ctx.font = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
-    measured.forEach(m => { m.w = ctx.measureText(m.sym).width })
-    resolveChordCollisions(measured, spaceW)
-    // Special-case triple overlaps: keep center fixed, nudge outer two
-    measured.sort((a,b)=> a.x - b.x)
-    for (let i = 1; i < measured.length - 1; i++) {
-      const L = measured[i-1], M = measured[i], R = measured[i+1]
-      const gapLM = M.x - (L.x + L.w)
-      const gapMR = R.x - (M.x + M.w)
-      if (gapLM < spaceW && gapMR < spaceW) {
-        L.x = Math.min(L.x, M.x - spaceW - L.w)
-        R.x = Math.max(R.x, M.x + M.w + spaceW)
-      }
+    const lyricFont = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    const chordFont = `${cs.fontStyle} 700 ${chordFontSize} ${chordFontFamily}`
+    const hostW = hostRef.current.getBoundingClientRect().width || 0
+    const measureLyric = (text = '') => {
+      ctx.font = lyricFont
+      return ctx.measureText(text).width
     }
+    const measureChord = (text = '') => {
+      ctx.font = chordFont
+      return ctx.measureText(text).width
+    }
+    const rows = buildChordRowsLayout({
+      plain,
+      chords: showChords ? chords : [],
+      width: hostW,
+      measureLyric,
+      measureChord,
+      transposeSym: (sym) => transposeSymPrefer(sym, steps, preferFlat),
+      spaceWidth: measureLyric(' ') || 0,
+    })
+
+    ctx.font = chordFont
     const chordM = ctx.measureText('Mg')
     const chordAscent = chordM.actualBoundingBoxAscent || parseFloat(cs.fontSize) * 0.8
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap)
-    const chordTop = 0
-    const offsets = measured.map(m => ({ left: Math.max(0, m.x), sym: m.sym }))
-    setState({ offsets, padTop, chordTop })
-  }, [plain, chords, steps, showChords, measureKey])
+    setState({ rows, padTop })
+  }, [plain, chords, steps, showChords, preferFlat, measureKey])
 
   
 
@@ -1290,17 +1302,24 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
   }, [])
 
   return (
-    <div ref={hostRef} style={{position:'relative', marginBottom:10, paddingTop: (showChords && state.offsets.length>0) ? state.padTop : 0}}>
-      {showChords && state.offsets.length>0 && (
-        <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top: state.chordTop}}>
-          {state.offsets.map((c, i)=>(
-            <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: 'var(--gc-font-chords)', fontWeight: 700 }}>
-              {c.sym}
-            </span>
-          ))}
+    <div ref={hostRef} style={{ marginBottom: 10 }}>
+      {(state.rows || []).map((row, rowIndex) => (
+        <div
+          key={`${rowIndex}-${row.text}`}
+          style={{ position:'relative', paddingTop: (showChords && row.offsets.length > 0) ? state.padTop : 0 }}
+        >
+          {showChords && row.offsets.length > 0 && (
+            <div aria-hidden className="chord-layer" style={{position:'absolute', left:0, right:0, top:0}}>
+              {row.offsets.map((c, i)=>(
+                <span key={i} style={{ position:'absolute', left: `${c.left}px`, fontFamily: 'var(--gc-font-chords)', fontWeight: 700 }}>
+                  {c.sym}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="lyrics" style={{ whiteSpace:'pre', overflowWrap:'normal', fontSize:'inherit' }}>{row.text || '\u00a0'}</div>
         </div>
-      )}
-      <div className="lyrics" style={{whiteSpace:'pre-wrap', overflowWrap:'anywhere', fontSize:'inherit'}}>{plain}</div>
+      ))}
     </div>
   )
 }
