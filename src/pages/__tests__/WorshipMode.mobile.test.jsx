@@ -123,7 +123,7 @@ describe('WorshipMode — mobile toolbar and snackbar', () => {
     expect(screen.getByText(/Key:/).textContent).toEqual(initial)
   })
 
-  it('hides column selector on mobile settings and toggles timer from More sheet', async () => {
+  it('hides column selector on mobile settings and toggles clock/timer from More sheet', async () => {
     setViewport(390)
     render(
       <MemoryRouter initialEntries={[`/worship/abba`]}>
@@ -133,15 +133,20 @@ describe('WorshipMode — mobile toolbar and snackbar', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText('Abba')).toBeInTheDocument()
-    expect(screen.getByText('00:00')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Clock')).toBeNull()
+    expect(screen.queryByLabelText('Stopwatch')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: /More controls/i }))
+    expect(await screen.findByRole('button', { name: /Toggle clock/i })).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: /Toggle timer/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Toggle clock/i }))
     fireEvent.click(screen.getByRole('button', { name: /Toggle timer/i }))
     fireEvent.click(screen.getByRole('button', { name: /Done/i }))
-    expect(screen.queryByText('00:00')).toBeNull()
+    expect(screen.getByLabelText('Clock')).toBeInTheDocument()
+    expect(screen.getByLabelText('Stopwatch')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Open settings/i }))
+    expect(await screen.findByRole('checkbox', { name: /Show clock/i })).toBeInTheDocument()
     expect(await screen.findByRole('checkbox', { name: /Show timer/i })).toBeInTheDocument()
     expect(screen.queryByText('Columns')).toBeNull()
   })

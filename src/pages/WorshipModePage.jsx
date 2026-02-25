@@ -25,6 +25,10 @@ const PT_WINDOW = [18, 17, 16, 15, 14]
 const SESSION_KEY = 'worship:session'
 const SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
+function isMobileViewport(){
+  try { return window.innerWidth < 768 } catch { return false }
+}
+
 function safeDecodeURIComponent(value){
   try { return decodeURIComponent(value) } catch { return value }
 }
@@ -52,7 +56,24 @@ export default function WorshipMode(){
   const [autoSize, setAutoSize] = useState(() => fontPx == null)
   // Clock + Stopwatch settings (persist)
   const [clock24h, setClock24h] = useState(() => { try { return localStorage.getItem('worship:clock24h') === '1' } catch { return false } })
-  const [showStopwatch, setShowStopwatch] = useState(() => { try { return localStorage.getItem('worship:showStopwatch') !== '0' } catch { return true } })
+  const [showClock, setShowClock] = useState(() => {
+    try {
+      const saved = localStorage.getItem('worship:showClock')
+      if (saved != null) return saved !== '0'
+      return !isMobileViewport()
+    } catch {
+      return !isMobileViewport()
+    }
+  })
+  const [showStopwatch, setShowStopwatch] = useState(() => {
+    try {
+      const saved = localStorage.getItem('worship:showStopwatch')
+      if (saved != null) return saved !== '0'
+      return !isMobileViewport()
+    } catch {
+      return !isMobileViewport()
+    }
+  })
 
   const viewportRef = useRef(null)
   const contentRef = useRef(null)
@@ -146,6 +167,7 @@ export default function WorshipMode(){
 
   // Persist settings
   useEffect(() => { try { localStorage.setItem('worship:clock24h', clock24h ? '1' : '0') } catch {} }, [clock24h])
+  useEffect(() => { try { localStorage.setItem('worship:showClock', showClock ? '1' : '0') } catch {} }, [showClock])
   useEffect(() => { try { localStorage.setItem('worship:showStopwatch', showStopwatch ? '1' : '0') } catch {} }, [showStopwatch])
   useEffect(() => { try { localStorage.setItem('worship:mobileControlsPinned', mobileControlsPinned ? '1' : '0') } catch {} }, [mobileControlsPinned])
 
@@ -751,6 +773,7 @@ export default function WorshipMode(){
           <TitleStrip
             title={cur?.title || ''}
             clockText={formatClock(now)}
+            showClock={showClock}
             stopwatchText={showStopwatch ? formatStopwatch(elapsedSec) : ''}
             showStopwatch={showStopwatch}
             isRunning={isRunning}
@@ -829,6 +852,13 @@ export default function WorshipMode(){
                     </button>
                   </div>
                 )}
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                  <div>Show clock</div>
+                  <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
+                    <input type="checkbox" aria-label="Show clock" checked={showClock} onChange={e => setShowClock(e.target.checked)} />
+                    <span>{showClock ? 'On' : 'Off'}</span>
+                  </label>
+                </div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                   <div>Show timer</div>
                   <label style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
@@ -1144,6 +1174,9 @@ export default function WorshipMode(){
           title="Worship controls"
         >
           <div className="gc-mobile-actions">
+            <button className="gc-btn" onClick={() => setShowClock(v => !v)} aria-label="Toggle clock">
+              {`Clock: ${showClock ? 'On' : 'Off'}`}
+            </button>
             <button className="gc-btn" onClick={() => setShowStopwatch(v => !v)} aria-label="Toggle timer">
               {`Timer: ${showStopwatch ? 'On' : 'Off'}`}
             </button>
@@ -1346,7 +1379,7 @@ function VerseView({ sections, rtl = false }){
 }
 
 /* ---------- Title strip for Worship Mode ---------- */
-function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset, controlsInHeader = true }){
+function TitleStrip({ title, clockText, showClock, stopwatchText, showStopwatch, sizeCss, isRunning, onToggleRun, onReset, canReset, controlsInHeader = true }){
   const hostRef = useRef(null)
   const leftRef = useRef(null)
   const midWrapRef = useRef(null)
@@ -1418,7 +1451,7 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
     }
     setDisplay({ text: mid.textContent || originalTitle, size: fontPx })
     setReady(true)
-  }, [originalTitle, clockText, stopwatchText, showStopwatch, isRunning, canReset, controlsInHeader, measureKey])
+  }, [originalTitle, clockText, showClock, stopwatchText, showStopwatch, isRunning, canReset, controlsInHeader, measureKey])
 
   useEffect(() => {
     const host = hostRef.current
@@ -1445,9 +1478,11 @@ function TitleStrip({ title, clockText, stopwatchText, showStopwatch, sizeCss, i
   return (
     <div className="songtitlebar" ref={hostRef} aria-label="Song header" style={{ fontSize: sizeCss, ['--side-offset']: '80px' }}>
       {/* Left: Clock (align near Home button) */}
-      <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
-        {clockText}
-      </span>
+      {showClock && (
+        <span ref={leftRef} className="songtitlebar__side songtitlebar__side--left" aria-label="Clock" title="Clock">
+          {clockText}
+        </span>
+      )}
       {/* Middle: Smart-fitting title */}
       <div className="songtitlebar__mid" ref={midWrapRef}>
         <span ref={midRef} className="songtitlebar__title" style={display.size ? { fontSize: `${display.size}px` } : undefined} title={originalTitle}>
