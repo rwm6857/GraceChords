@@ -337,9 +337,9 @@
   cursor:pointer;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.94) translateY(6px);
+  transform: scale(0.9) translateY(10px);
   pointer-events: none;
-  transition: opacity 120ms var(--gc-ease), transform 120ms var(--gc-ease), visibility 0s linear 120ms;
+  transition: opacity 170ms var(--gc-ease), transform 170ms var(--gc-ease), visibility 0s linear 170ms;
   z-index: 1200;
 }
 
@@ -353,7 +353,7 @@
   visibility: visible;
   transform: scale(1) translateY(0);
   pointer-events: auto;
-  transition: opacity 120ms var(--gc-ease), transform 120ms var(--gc-ease), visibility 0s linear 0s;
+  transition: opacity 170ms var(--gc-ease), transform 170ms var(--gc-ease), visibility 0s linear 0s;
 }
 
 .readings-copy-fab:hover{
