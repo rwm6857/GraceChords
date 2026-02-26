@@ -78,16 +78,29 @@ export default function ReadingsPage(){
     () => isRtlBibleLanguage(activeTranslation.language),
     [activeTranslation.language]
   )
-  const selectionKey = `${dateKey}.${activeTranslation.id}`
   const translationGroups = useMemo(
     () => buildBibleTranslationGroups(translations),
     [translations]
   )
 
   useEffect(() => {
-    setPassageIndex(0)
-    setSelectionsByPassage(loadSelections(selectionKey))
-  }, [planForDate.mmdd, selectionKey])
+    const savedSelections = loadSelections(dateKey)
+    setSelectionsByPassage(savedSelections)
+
+    const savedPassageId = loadActivePassageId(dateKey)
+    if (!savedPassageId || !passages.length) {
+      setPassageIndex(0)
+      return
+    }
+    const nextIdx = passages.findIndex((passage) => passageId(passage) === savedPassageId)
+    setPassageIndex(nextIdx >= 0 ? nextIdx : 0)
+  }, [dateKey, passages, planForDate.mmdd])
+
+  useEffect(() => {
+    const activePassage = passages[passageIndex]
+    if (!activePassage) return
+    persistActivePassageId(dateKey, passageId(activePassage))
+  }, [dateKey, passageIndex, passages])
 
   function updateDate(next: Date){
     setDate(next)
@@ -262,7 +275,7 @@ export default function ReadingsPage(){
                 const updated = { ...prev }
                 if (next.size) updated[currentPassageId] = next
                 else delete updated[currentPassageId]
-                persistSelections(selectionKey, updated)
+                persistSelections(dateKey, updated)
                 return updated
               })
             }}
@@ -330,4 +343,18 @@ function persistSelections(dateKey: string, selections: Record<string, Set<numbe
 
 function storageKey(dateKey: string){
   return `gracechords.reading.selection.v1.${dateKey}`
+}
+
+function passageStorageKey(dateKey: string){
+  return `gracechords.reading.activePassage.v1.${dateKey}`
+}
+
+function loadActivePassageId(dateKey: string){
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(passageStorageKey(dateKey)) || ''
+}
+
+function persistActivePassageId(dateKey: string, id: string){
+  if (typeof window === 'undefined' || !id) return
+  window.localStorage.setItem(passageStorageKey(dateKey), id)
 }

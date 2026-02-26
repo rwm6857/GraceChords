@@ -249,6 +249,10 @@
 }
 
 @media (max-width: 720px){
+  .readings-page{
+    --readings-mobile-chipbar-h: 78px;
+  }
+
   .readings-dateblock{
     position: static;
     top: auto;
@@ -285,26 +289,34 @@
     z-index: 80;
     width: auto;
     margin: 0;
-    padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+    min-height: calc(var(--readings-mobile-chipbar-h) + env(safe-area-inset-bottom, 0px));
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
     background: var(--gc-surface-1);
     border-top: 1px solid var(--gc-separator);
     border-radius: 0;
     box-shadow: 0 -6px 16px color-mix(in srgb, var(--gc-shadow-color) 16%, transparent);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .readings-chips{
-    width: 100%;
-    padding-inline: 0;
+    width: max-content;
+    min-width: 100%;
+    padding-inline: 10px;
   }
 
   .readings-list{
     justify-content: flex-start;
-    padding-inline: 6px;
-    gap: 8px;
+    width: max-content;
+    min-width: 100%;
+    padding-inline: 0;
+    gap: 10px;
+    overflow-x: visible;
   }
 
   .readings-page{
-    padding-bottom: calc(52px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
+    padding-bottom: calc(var(--readings-mobile-chipbar-h) + var(--safe-b, env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -349,6 +361,6 @@
 @media (max-width: 720px){
   .readings-copy-fab{
     /* Keep FAB above the sticky passage-chip toolbar on mobile */
-    bottom: calc(60px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
+    bottom: calc(86px + var(--safe-b, env(safe-area-inset-bottom, 0px)));
   }
 }
