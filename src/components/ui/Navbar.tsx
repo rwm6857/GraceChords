@@ -125,8 +125,8 @@ export default function Navbar(){
           <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistPage')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Setlist</Link>
           <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songbook</Link>
           <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Daily Word</Link>
-          <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Resources</Link>
-          <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Docs</a>
+          <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
+          <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Wiki</a>
           <OfflineBadge />
           {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
           <button
@@ -157,8 +157,8 @@ export default function Navbar(){
               <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
               <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>Daily Word</Link>
-              <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Resources</Link>
-              <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Docs</a>
+              <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Blog</Link>
+              <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Wiki</a>
             </div>
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
