@@ -336,9 +336,10 @@
   box-shadow: var(--gc-shadow-2);
   cursor:pointer;
   opacity: 0;
-  transform: scale(0.92) translateY(6px);
+  visibility: hidden;
+  transform: scale(0.94) translateY(6px);
   pointer-events: none;
-  transition: opacity var(--gc-dur-quick) var(--gc-ease), transform var(--gc-dur-quick) var(--gc-ease);
+  transition: opacity 120ms var(--gc-ease), transform 120ms var(--gc-ease), visibility 0s linear 120ms;
   z-index: 1200;
 }
 
@@ -349,8 +350,10 @@
 
 .readings-copy-fab.is-visible{
   opacity: 1;
+  visibility: visible;
   transform: scale(1) translateY(0);
   pointer-events: auto;
+  transition: opacity 120ms var(--gc-ease), transform 120ms var(--gc-ease), visibility 0s linear 0s;
 }
 
 .readings-copy-fab:hover{
