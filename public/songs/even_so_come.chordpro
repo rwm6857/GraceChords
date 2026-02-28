@@ -2,40 +2,45 @@
 {key: A}
 {authors: Passion}
 {country: USA}
-{tags: Fast}
+{tags: Slow, Contemporary}
 {youtube: fBHcvJhc6Pk}
 
-{sov Verse 1}
+{start_of_verse: Verse 1}
 [Am]All of creation, all of the earth
 [Em]Make straight a highway, a path for the Lord
 [G]Jesus is coming [D]soon
 
-{eov}
-{sov Verse 2}
+{end_of_verse}
+
+{start_of_verse: Verse 2}
 [Am]Call back the sinner, wake up the saint
 [Em]Let every nation, shout of Your fame
 [G]Jesus is coming [D]soon
 
-{eov}
-{soc}
+{end_of_verse}
+
+{start_of_chorus: Chorus}
 [Em]Like a bride waiting for [C]her groom, we'll [G]be a church ready for [Bm]You
 [Em]Every heart lon[C]ging for our [G]King, we [Bm]sing:
 [C]Even so come, [G]Lord Jesus [D]come
 [C]Even so come, [G]Lord Jesus [D]come
 
-{eoc}
-{sov Verse 3}
+{end_of_chorus}
+
+{start_of_verse: Verse 3}
 [Am]There will be justice, all will be new
 [Em]Your name forever, faithful and true
 [G]Jesus is coming [D]soon
 
-{eov}
-{sob Bridge}
+{end_of_verse}
+
+{start_of_bridge: Bridge}
 [C]So we wait, [Em]we wait for [D]You
 [C]God we wait, [Em]You're coming [D]soon
 
-{eob}
-{soc Chorus 2}
+{end_of_bridge}
+
+{start_of_chorus: Chorus 2}
 [Em]Like a bride waiting for [C]her groom, we'll [G]be a church ready for [Bm]You
 [Em]Every heart lon[C]ging for our [G]King, we [Bm]sing
 [Em]Like a bride waiting for [C]her groom, we'll be a [G]church, we'll be ready for [Bm]You
@@ -43,9 +48,14 @@
 [C]Even so come, [G]Lord Jesus [D]come
 [C]Even so come, [G]Lord Jesus [D]come
 
-{eoc}
-{sob Outro}
+{end_of_chorus}
+
+{start_of_bridge: Outro}
 OUTRO: (quietly)
 [C]Even so come, [G]Lord Jesus [D]come
 [C]Even so come, [G]Lord Jesus [D]come
-{eob}
+{end_of_bridge}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holder, email us for takedown requests.
+# --- END DISCLAIMER ---
