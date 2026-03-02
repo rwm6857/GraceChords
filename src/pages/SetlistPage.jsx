@@ -1120,7 +1120,6 @@ async function exportPdf() {
                       rightSlot={
                         <div className="setlist-row-actions" style={isMobile ? { flexWrap:'wrap', justifyContent:'flex-end' } : undefined}>
                           <KeySelector
-                            variant='ui'
                             baseKey={s.originalKey || 'C'}
                             valueKey={sel.toKey || s.originalKey || 'C'}
                             onChange={(full) => changeKey(sel.uid, full)}
