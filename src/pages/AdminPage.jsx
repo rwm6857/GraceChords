@@ -13,12 +13,10 @@ import { fetchTextCached } from '../utils/network/fetchCache'
 import * as GH from '../utils/network/github'
 import { publicUrl } from '../utils/network/publicUrl'
 import AdminPrModal from '../components/admin/AdminPrModal'
-import Input from '../components/ui/Input'
-import Button from '../components/ui/Button'
+import { Button, Input, Toolbar } from '../components/ui/layout-kit'
 import { SearchIcon, PlusIcon, CloudUploadIcon, DownloadIcon } from '../components/Icons'
 import { showToast } from '../utils/app/toast'
 import '../styles/admin.css'
-import Toolbar from '../components/ui/Toolbar'
 
 const PASSWORD = import.meta.env.VITE_ADMIN_PW
 
@@ -381,13 +379,13 @@ function AdminPanel(){
         <div />
       </div>
 
-      <div className="card">
+      <div className="gc-card">
         <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
           <strong>GitHub:</strong>
           <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
-          <button className="btn" onClick={setToken}>Set token</button>
-          <button className="btn" onClick={clearToken}>Clear token</button>
-          <button className="btn" onClick={validateTokenNow}>Validate</button>
+          <button className="gc-btn" onClick={setToken}>Set token</button>
+          <button className="gc-btn" onClick={clearToken}>Clear token</button>
+          <button className="gc-btn" onClick={validateTokenNow}>Validate</button>
           <div className="spacer" />
           <label style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span>Edits Author <span aria-hidden style={{ color:'#ef4444' }}>*</span></span>
@@ -402,7 +400,7 @@ function AdminPanel(){
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 12 }}>
+      <div className="gc-card" style={{ marginTop: 12 }}>
         <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
           <strong>Load existing:</strong>
           <select value={loadId} onChange={e=> setLoadId(e.target.value)}>
@@ -411,7 +409,7 @@ function AdminPanel(){
               <option key={s.id} value={s.id}>{s.title}</option>
             ))}
           </select>
-          <button className="btn" onClick={loadExisting} disabled={!loadId}>Load</button>
+          <button className="gc-btn" onClick={loadExisting} disabled={!loadId}>Load</button>
           {editingFile && (
             <span className="Small" style={{ marginLeft: 8 }}>
               Editing: <code>{editingFile}</code>
@@ -420,7 +418,7 @@ function AdminPanel(){
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 12 }}>
+      <div className="gc-card" style={{ marginTop: 12 }}>
         <div className="Row" style={{ alignItems:'center', gap:8 }}>
           <strong>Staged songs:</strong> {staged.length}
         </div>
@@ -444,7 +442,7 @@ function AdminPanel(){
                       onChange={e => setPerFileCommit(s.filename, e.target.value)}
                       style={{ width:'100%' }}/>
                   </td>
-                  <td><button className="btn small" onClick={() => unstage(s.filename)}>Remove</button></td>
+                  <td><button className="gc-btn gc-btn--sm" onClick={() => unstage(s.filename)}>Remove</button></td>
                 </tr>
               ))}
             </tbody>
@@ -453,7 +451,7 @@ function AdminPanel(){
       </div>
 
       {/* Metadata form */}
-      <div className="card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+      <div className="gc-card" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
         <label>Title
           <input
             value={meta.title||''}
@@ -560,7 +558,7 @@ function AdminPanel(){
           style={{width:'100%', minHeight:'60vh', fontFamily:'"Roboto Mono", ui-monospace, Menlo, Consolas, monospace', fontSize: showPreview ? undefined : 'calc(1rem + 2pt)'}}
         />
         {showPreview && (
-          <div className='card' style={{minHeight:'60vh', overflow:'auto'}}>
+          <div className='gc-card' style={{minHeight:'60vh', overflow:'auto'}}>
             <strong>Preview</strong>
             <div className="Small" style={{ marginTop:6, fontFamily:'"Roboto Mono", ui-monospace, Menlo, Consolas, monospace' }}>
               {(() => {
@@ -614,7 +612,7 @@ function AdminPanel(){
 
       {/* Drafts section removed; staging is the single source of truth. */}
 
-      <div className="card" style={{marginTop:10}}>
+      <div className="gc-card" style={{marginTop:10}}>
         <strong>Publish Guide</strong>
         <div className="Small" style={{marginTop:6}}>
           <div><strong>Preferred (Pull Request)</strong></div>
