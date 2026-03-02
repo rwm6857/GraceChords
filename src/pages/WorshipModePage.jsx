@@ -798,7 +798,7 @@ export default function WorshipMode(){
         {/* Top-left home button (desktop only) */}
         {!isMobile && (
           <button
-            className="iconbtn"
+            className="gc-iconbtn"
             aria-label="Go home"
             title="Home"
             onClick={() => navigate('/')}
@@ -808,7 +808,7 @@ export default function WorshipMode(){
           </button>
         )}
         <button
-          className="iconbtn"
+          className="gc-iconbtn"
           aria-label="Back to setlist"
           title="Back to setlist"
           onClick={() => navigate(setlistUrl)}
@@ -818,7 +818,7 @@ export default function WorshipMode(){
         </button>
         {/* Top-right settings (opens menu) */}
         <button
-          className="iconbtn"
+          className="gc-iconbtn"
           aria-label="Open settings"
           title="Settings"
           onClick={() => setOpenSettings(true)}

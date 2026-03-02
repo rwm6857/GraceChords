@@ -76,7 +76,7 @@ export default function ResourcePost(){
       {err ? (
         <div className="alert error">{err}</div>
       ) : null}
-      <article className="card" style={{ padding: 12 }}>
+      <article className="gc-card" style={{ padding: 12 }}>
         <h1 style={{ margin: '4px 0', fontSize:'2.25rem', lineHeight:1.15 }}>{title}</h1>
         <div className="Small" style={{ opacity: 0.8 }}>
           by {meta.author || item?.author || '—'} • {fmtDate(meta.date || item?.date)}
@@ -93,7 +93,7 @@ export default function ResourcePost(){
           <h3>Related</h3>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12 }}>
             {related.map(it => (
-              <article key={it.slug} className="card" style={{ padding: 12 }}>
+              <article key={it.slug} className="gc-card" style={{ padding: 12 }}>
                 <h4 style={{ margin:'4px 0' }}><Link to={`/resources/${it.slug}`}>{it.title}</Link></h4>
                 <div className="Small" style={{ opacity: 0.8 }}>by {it.author} • {fmtDate(it.date)}</div>
                 {it.summary ? <p style={{ margin:'6px 0 0 0' }}>{it.summary}</p> : null}

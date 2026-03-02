@@ -71,7 +71,7 @@ export default function Resources(){
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12}}>
           <h1>Resources</h1>
         </div>
-        <div className="card" style={{display:'grid', gap:10}}>
+        <div className="gc-card" style={{display:'grid', gap:10}}>
           <input
             placeholder="Search resources..."
             value={q}

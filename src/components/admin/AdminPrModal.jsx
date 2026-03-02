@@ -110,7 +110,7 @@ export default function AdminPrModal({
         {!!error && <div className="alert error">{error}</div>}
 
         <div className="Row" style={{justifyContent:'flex-end', gap:8}}>
-          <button className="btn" onClick={onClose} disabled={busy}>Cancel</button>
+          <button className="gc-btn" onClick={onClose} disabled={busy}>Cancel</button>
           <button className="btn primary" onClick={submit} disabled={busy}>
             {busy ? 'Creating…' : 'Create PR'}
           </button>
