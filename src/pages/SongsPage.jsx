@@ -4,9 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import indexData from '../data/index.json'
-import { SongCard } from '../components/ui/Card'
-import Input from '../components/ui/Input'
-import { Chip } from '../components/ui/layout-kit'
+import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
@@ -352,7 +350,7 @@ export default function Songs(){
           ) : null}
         </div>
 
-        <div className="card" style={{display:'grid', gap:10}}>
+        <div className="gc-card" style={{display:'grid', gap:10}}>
           <Input
             id="search"
             ref={searchRef}
