@@ -4,9 +4,7 @@ import { parseFrontmatter, mdToHtml, slugifyKebab } from '../utils/content/markd
 import { fetchTextCached } from '../utils/network/fetchCache'
 import * as GH from '../utils/network/github'
 import { publicUrl } from '../utils/network/publicUrl'
-import Toolbar from '../components/ui/Toolbar'
-import Input from '../components/ui/Input'
-import Button from '../components/ui/Button'
+import { Button, Input, Toolbar } from '../components/ui/layout-kit'
 import AdminPrModal from '../components/admin/AdminPrModal'
 import { CloudUploadIcon, DownloadIcon, PlusIcon, SearchIcon } from '../components/Icons'
 import '../styles/admin.css'
@@ -190,7 +188,7 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
 
   const customActions = typeof actions === 'function' ? actions({ draft, newPost }) : actions
 
-  const cardClass = panelize ? 'gc-editor-panel' : 'card'
+  const cardClass = panelize ? 'gc-editor-panel' : 'gc-card'
 
   const content = (
     <>
@@ -202,9 +200,9 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
           <div className="Row" style={{ alignItems:'center', gap:8, flexWrap:'wrap' }}>
             <strong>GitHub:</strong>
             <span>Token: {ghUser ? `@${ghUser.login}` : (localStorage.getItem('ghToken') ? 'set' : 'not set')}</span>
-            <button className="btn" onClick={()=> { const t = prompt('Paste GitHub token (repo scope):',''); if(t!==null){ localStorage.setItem('ghToken', t.trim()) } }}>Set token</button>
-            <button className="btn" onClick={()=> { localStorage.removeItem('ghToken'); setGhUser(null) }}>Clear token</button>
-            <button className="btn" onClick={async ()=> { try { const u = await GH.validateToken(); setGhUser(u); alert(`Token OK: ${u.login}`) } catch(e){ setGhUser(null); alert(String(e?.message || e)) } }}>Validate</button>
+            <button className="gc-btn" onClick={()=> { const t = prompt('Paste GitHub token (repo scope):',''); if(t!==null){ localStorage.setItem('ghToken', t.trim()) } }}>Set token</button>
+            <button className="gc-btn" onClick={()=> { localStorage.removeItem('ghToken'); setGhUser(null) }}>Clear token</button>
+            <button className="gc-btn" onClick={async ()=> { try { const u = await GH.validateToken(); setGhUser(u); alert(`Token OK: ${u.login}`) } catch(e){ setGhUser(null); alert(String(e?.message || e)) } }}>Validate</button>
             <div className="spacer" />
             <label className="Small" style={{ display:'flex', alignItems:'center', gap:6 }}>
               <span>Edits Author <span aria-hidden style={{ color:'#ef4444' }}>*</span></span>
@@ -258,7 +256,7 @@ export function ResourceEditor({ actions, onDraftChange, showGhTools = true, hea
           </div>
           <div>
             <strong>Preview</strong>
-            <div className="card" style={{ minHeight:'50vh', overflow:'auto', padding: 10 }}>
+            <div className="gc-card" style={{ minHeight:'50vh', overflow:'auto', padding: 10 }}>
               <div className="Small" style={{ opacity: 0.9, marginBottom: 6 }}>
                 {meta.title ? <div><strong>{meta.title}</strong></div> : null}
                 <div>by {meta.author || '—'} • {meta.date || '—'}</div>
