@@ -956,6 +956,7 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   gap: 8px;
   background: transparent;
 }
+.home-sugg-item:hover,
 .home-sugg-item[aria-selected="true"]{
   background: var(--gc-selection-bg);
 }
