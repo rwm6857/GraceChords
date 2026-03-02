@@ -9,6 +9,7 @@ export default function Button({
   iconRight,
   loading = false,
   fullWidth = false,
+  iconOnly = false,
   as,
   href,
   className = '',
@@ -41,6 +42,7 @@ export default function Button({
     resolvedVariant ? `gc-btn--${resolvedVariant}` : '',
     size ? `gc-btn--${size}` : '',
     fullWidth ? 'gc-btn--full' : '',
+    iconOnly ? 'gc-btn--iconOnly' : '',
     loading ? 'is-loading' : '',
     className,
   ].filter(Boolean).join(' ')
@@ -50,7 +52,7 @@ export default function Button({
       {loading ? <span className="gc-btn__spinner" aria-hidden /> : null}
       <span className="gc-btn__content">
         {resolvedLeft ? <span className="gc-btn__icon gc-btn__icon--left" aria-hidden>{resolvedLeft}</span> : null}
-        <span className="gc-btn__label">{children}</span>
+        {!iconOnly && <span className="gc-btn__label">{children}</span>}
         {resolvedRight ? <span className="gc-btn__icon gc-btn__icon--right" aria-hidden>{resolvedRight}</span> : null}
       </span>
     </Component>
