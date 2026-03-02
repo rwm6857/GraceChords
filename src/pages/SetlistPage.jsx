@@ -29,14 +29,10 @@ import {
 import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
 import BibleTranslationPicker from '../components/BibleTranslationPicker'
 import Busy from '../components/Busy'
-import { SongCard } from '../components/ui/Card'
-import Button from '../components/ui/Button'
+import { Button, Chip, Input, SongCard, Toolbar } from '../components/ui/layout-kit'
 import KeySelector from '../components/KeySelector'
-import Input from '../components/ui/Input'
-import Toolbar from '../components/ui/Toolbar'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
-import { Chip } from '../components/ui/layout-kit'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import {
@@ -984,7 +980,7 @@ async function exportPdf() {
 
       {/* Toolbar: mobile condensed vs desktop/tablet full */}
       {isMobile ? (
-        <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
+        <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
           <div className="builder-mobile-actions" style={{ width:'100%', display:'flex', gap:8, alignItems:'center' }}>
             <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
             <Button as={Link} variant="primary" to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
@@ -992,7 +988,7 @@ async function exportPdf() {
           </div>
         </Toolbar>
       ) : (
-        <Toolbar className="card" style={{ marginTop: 8, position: 'static' }}>
+        <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
           <div style={{ width: '100%', marginBottom: 6 }}>
             <strong title="Current set name">{name || 'New Setlist'}</strong>
           </div>
