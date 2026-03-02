@@ -317,18 +317,7 @@ export default function HomeDashboard(){
         <link rel="canonical" href={`${SITE_URL}/`} />
       </Helmet>
 
-      <section
-        className="home-hero"
-        style={{
-          minHeight: 270,
-          maxHeight: 320,
-          width: '100vw',
-          maxWidth: '100vw',
-          borderRadius: 0,
-          margin: '0 calc(50% - 50vw)',
-          padding: '24px 20px'
-        }}
-      >
+      <section className="home-hero">
         {/* Inline picture keeps hero discoverable for LCP/PSI and lets webp be chosen without extra PNG fetch */}
         <picture className="home-hero__bg" aria-hidden="true">
           {/* Multiple WebP sizes to avoid "image larger than necessary" and improve mobile LCP */}
@@ -351,35 +340,16 @@ export default function HomeDashboard(){
         />
           <div
             className="home-hero__content"
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: 1040,
-              margin: '0 auto'
-            }}
           >
-            <div style={{ maxWidth: 720, padding: '0 6px' }}>
-              <h1 style={{ marginBottom: 4, fontSize: 'clamp(30px, 4.5vw, 44px)' }}>Welcome to GraceChords</h1>
-              <p className="home-hero__subtitle" style={{ fontSize: '1.2rem', fontStyle: 'italic' }}>
+            <div className="home-hero__text">
+              <h1 className="home-hero__title">Welcome to GraceChords</h1>
+              <p className="home-hero__subtitle">
                 Free, open-source worship tools for churches and worshippers.
               </p>
             </div>
-          <div className="home-hero__search-wrapper" style={{ maxWidth: 720, position: 'relative' }} ref={containerRef}>
+          <div className="home-hero__search-wrapper" ref={containerRef}>
             <div className="home-hero__input-wrap">
-              <label
-                htmlFor="home-search"
-                style={{
-                  position: 'absolute',
-                  width: 1,
-                  height: 1,
-                  padding: 0,
-                  margin: -1,
-                  overflow: 'hidden',
-                  clip: 'rect(0,0,0,0)',
-                  whiteSpace: 'nowrap',
-                  border: 0
-                }}
-              >
+              <label htmlFor="home-search" className="sr-only">
                 Search worship songs
               </label>
               <input
@@ -395,34 +365,12 @@ export default function HomeDashboard(){
                 aria-expanded={showSuggestions && suggestions.length > 0}
                 aria-controls="home-search-suggestions"
                 aria-activedescendant={activeIndex >= 0 ? `home-sugg-${activeIndex}` : undefined}
-                style={{
-                  width: '100%',
-                  padding: '14px 14px',
-                  borderRadius: 12,
-                  border: '1px solid rgba(148,163,184,0.5)',
-                  background: 'rgba(17,24,39,0.85)',
-                  color: '#f8fafc',
-                  fontSize: '1rem',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.25)'
-                }}
               />
               {showSuggestions && suggestions.length > 0 && (
                 <ul
                   id="home-search-suggestions"
                   role="listbox"
                   className="home-hero__suggestions"
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(17,24,39,0.95)',
-                    border: '1px solid rgba(148,163,184,0.5)',
-                    borderRadius: '0 0 10px 10px',
-                    boxShadow: '0 14px 32px rgba(0,0,0,0.32)',
-                    overflow: 'hidden',
-                    zIndex: 6
-                  }}
                 >
                   {suggestions.map((s, i) => (
                     <li
@@ -430,46 +378,31 @@ export default function HomeDashboard(){
                       id={`home-sugg-${i}`}
                       role="option"
                       aria-selected={i === activeIndex}
+                      className="home-sugg-item"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleNavigateToSong(s.id)}
                       onMouseEnter={() => setActiveIndex(i)}
-                      style={{
-                        padding: '10px 12px',
-                        cursor: 'pointer',
-                        background: i === activeIndex ? 'rgba(59,130,246,0.16)' : 'transparent',
-                        color: '#e2e8f0',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: 8
-                      }}
                     >
                       <span>{s.title}</span>
-                      <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{s.originalKey || ''}</span>
+                      <span className="home-sugg-item__key">{s.originalKey || ''}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            <div className="home-hero__helper" style={{ marginTop: 10, fontSize: '0.95rem' }}>
+            <div className="home-hero__helper">
               Search songs by title, tag, or author. Press Enter to browse or jump directly into a song.
             </div>
           </div>
         </div>
       </section>
 
-      <section style={{ marginTop: 24, marginBottom: 40 }}>
-        <div className="container" style={{ padding: '0 12px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
-            <h2 style={{ margin: 0 }}>Worship tools</h2>
+      <section className="home-section home-section--first">
+        <div className="container">
+          <div className="home-section__header">
+            <h2>Worship tools</h2>
           </div>
-          <div
-            style={{
-              display: 'grid',
-              gap: 16,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
-            }}
-          >
+          <div className="home-tools-grid">
             <QuickCard to="/songs" title="Song Library" desc="Browse our library for worship charts." />
             <QuickCard to="/setlist" title="Setlist Builder" desc="Create sets for service." />
             <QuickCard to="/songbook" title="Songbook Tool" desc="Build custom, printable songbooks." />
@@ -478,19 +411,12 @@ export default function HomeDashboard(){
         </div>
       </section>
 
-      <section className="home-quick-actions" style={{ marginTop: 8, marginBottom: 40 }}>
-        <div className="container" style={{ padding: '0 12px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom: 16 }}>
-            <h2 className="home-section-title" style={{ margin: 0 }}>Quick actions</h2>
+      <section className="home-quick-actions home-section">
+        <div className="container">
+          <div className="home-section__header">
+            <h2 className="home-section-title">Quick actions</h2>
           </div>
-          <div
-            className="home-quick-actions__grid"
-            style={{
-              display: 'grid',
-              gap: 16,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
-            }}
-          >
+          <div className="home-quick-actions__grid home-tools-grid">
             {songAction ? <QuickCard title={songAction.title} desc={songAction.desc} onClick={handleSongAction} /> : null}
             {setlistAction ? <QuickCard title={setlistAction.title} desc={setlistAction.desc} onClick={handleSetlistAction} /> : null}
             {songbookAction ? <QuickCard title={songbookAction.title} desc={songbookAction.desc} onClick={handleSongbookAction} /> : null}
@@ -499,8 +425,8 @@ export default function HomeDashboard(){
         </div>
       </section>
 
-      <section className="home-latest" style={{ marginTop: 8, marginBottom: 40 }}>
-        <div className="container" style={{ padding: '0 12px' }}>
+      <section className="home-latest home-section">
+        <div className="container">
           <div className="home-latest__grid">
             <div className="home-latest__col">
               <div className="home-latest__header">
@@ -511,7 +437,7 @@ export default function HomeDashboard(){
                   <SongMiniSkeleton count={6} />
                 ) : latestSongs.length ? latestSongs.map(song => (
                   <SongMiniCard key={song.id} song={song} />
-                )) : <p className="Small" style={{ opacity: 0.8 }}>No songs yet.</p>}
+                )) : <p className="Small home-empty-note">No songs yet.</p>}
               </div>
             </div>
             <div className="home-latest__col home-latest__col--posts">
@@ -523,7 +449,7 @@ export default function HomeDashboard(){
                   <PostMiniSkeleton count={3} />
                 ) : latestPosts.length ? latestPosts.map(post => (
                   <PostMiniCard key={post.slug} post={post} />
-                )) : <p className="Small" style={{ opacity: 0.8 }}>No posts yet.</p>}
+                )) : <p className="Small home-empty-note">No posts yet.</p>}
               </div>
             </div>
           </div>
@@ -549,7 +475,7 @@ function QuickCard({ to, title, desc, onClick }){
     </Link>
   )
   return (
-    <button type="button" {...props} style={{ textAlign:'left' }}>
+    <button type="button" {...props}>
       <div className="tool-card__head">
         <h3 className="tool-card__title">{title}</h3>
         <span aria-hidden="true" className="tool-card__chevron">→</span>
@@ -595,9 +521,9 @@ function SongMiniSkeleton({ count = 4 }){
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="home-mini-card tool-card" aria-hidden="true" style={{ opacity:0.6 }}>
-          <div className="skeleton-line" style={{ width:'70%', height:16 }} />
-          <div className="skeleton-line" style={{ width:'40%', height:14, marginTop:8 }} />
+        <div key={i} className="home-mini-card tool-card home-skeleton" aria-hidden="true">
+          <div className="skeleton-line skeleton-line--title" />
+          <div className="skeleton-line skeleton-line--meta" />
         </div>
       ))}
     </>
@@ -608,10 +534,10 @@ function PostMiniSkeleton({ count = 2 }){
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="home-post-card tool-card" aria-hidden="true" style={{ opacity:0.6 }}>
-          <div className="skeleton-line" style={{ width:'80%', height:16 }} />
-          <div className="skeleton-line" style={{ width:'90%', height:14, marginTop:8 }} />
-          <div className="skeleton-line" style={{ width:'60%', height:14, marginTop:6 }} />
+        <div key={i} className="home-post-card tool-card home-skeleton" aria-hidden="true">
+          <div className="skeleton-line skeleton-line--post-title" />
+          <div className="skeleton-line skeleton-line--post-body" />
+          <div className="skeleton-line skeleton-line--post-body-last" />
         </div>
       ))}
     </>

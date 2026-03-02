@@ -819,6 +819,13 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   overflow: visible;
   z-index: 0;
   background-position: center 40%;
+  min-height: 270px;
+  max-height: 320px;
+  width: 100vw;
+  max-width: 100vw;
+  border-radius: 0;
+  margin: 0 calc(50% - 50vw);
+  padding: 24px 20px;
 }
 .home-hero::after{
   content: '';
@@ -868,19 +875,35 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   position: relative;
   z-index: 2;
   color: #f8fafc;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
 }
 .home-hero__subtitle{
   margin-bottom: 12px;
+  font-size: 1.2rem;
+  font-style: italic;
 }
 .home-hero__search-wrapper{
   position: relative;
   z-index: 3;
+  max-width: 720px;
 }
 .home-hero__input-wrap{
   position: relative;
 }
+.home-hero__text{
+  max-width: 720px;
+  padding: 0 6px;
+}
+.home-hero__title{
+  margin-bottom: 4px;
+  font-size: clamp(30px, 4.5vw, 44px);
+}
 .home-hero__helper{
   color: rgba(255,255,255,0.9);
+  margin-top: 10px;
+  font-size: 0.95rem;
 }
 [data-theme="light"] .home-hero__content{
   color: rgba(0,0,0,0.85);
@@ -902,9 +925,44 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   border-radius: 0 0 10px 10px !important;
   left: 0 !important;
   right: 0 !important;
-}
-.home-hero__suggestions{
   z-index: 6;
+  background: color-mix(in srgb, var(--gc-surface-1) 95%, transparent);
+  border: 1px solid var(--gc-separator);
+  box-shadow: var(--gc-shadow-2);
+  overflow: hidden;
+  position: absolute;
+}
+
+/* Search input — uses ID to beat global input rule specificity */
+#home-search{
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--gc-separator);
+  background: color-mix(in srgb, var(--gc-surface-1) 85%, transparent);
+  color: var(--gc-text);
+  font-size: 1rem;
+  box-shadow: var(--gc-shadow-2);
+}
+
+/* Suggestion list items */
+.home-sugg-item{
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--gc-text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+}
+.home-sugg-item[aria-selected="true"]{
+  background: var(--gc-selection-bg);
+}
+.home-sugg-item__key{
+  font-size: 0.85rem;
+  color: var(--gc-text-secondary);
+  flex-shrink: 0;
 }
 
 /* Latest section */
@@ -1034,6 +1092,80 @@ a.gc-navlink.active:visited, .gc-navlink.active:visited{
   border-radius: 999px;
   width: 100%;
   height: 12px;
+}
+
+/* Home Dashboard section layout */
+.home-section{
+  margin-top: 8px;
+  margin-bottom: 40px;
+}
+.home-section--first{
+  margin-top: 24px;
+}
+/* Overrides .container default padding at all breakpoints (including mobile 640px)
+   intentionally — section margins control vertical rhythm, 12px horizontal kept */
+.home-section .container{
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+.home-section__header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.home-section__header h2,
+.home-section__header h3{
+  margin: 0;
+}
+
+/* Shared grid for Worship tools and Quick actions */
+.home-tools-grid{
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Fix browser default center-alignment on <button> tool cards */
+button.tool-card{
+  text-align: left;
+}
+
+/* Skeleton loading state */
+.home-skeleton{
+  opacity: 0.6;
+}
+/* skeleton-line dimension variants */
+.skeleton-line--title{
+  width: 70%;
+  height: 16px;
+}
+.skeleton-line--meta{
+  width: 40%;
+  height: 14px;
+  margin-top: 8px;
+}
+.skeleton-line--post-title{
+  width: 80%;
+  height: 16px;
+}
+.skeleton-line--post-body{
+  width: 90%;
+  height: 14px;
+  margin-top: 8px;
+}
+.skeleton-line--post-body-last{
+  width: 60%;
+  height: 14px;
+  margin-top: 6px;
+}
+
+/* Empty state note */
+.home-empty-note{
+  opacity: 0.8;
 }
 
 /* ===== Post / resource embeds ===== */
