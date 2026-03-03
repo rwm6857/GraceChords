@@ -263,16 +263,11 @@ export default function SongView(){
     return () => { cancelled = true; clearHeadCache(entry.id) }
   }, [entry])
 
-  // keyboard shortcuts: c toggle chords, [ down, ] up
+  // keyboard shortcuts: [ down, ] up
   useEffect(() => {
     function onKey(e){
       const tag = (e.target && e.target.tagName) || ''
       if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault()
-        setShowChords(v => !v)
-        return
-      }
       if (e.key === '[') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, -1, /b/.test(String(baseKey)))) }
       if (e.key === ']') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, +1, /b/.test(String(baseKey)))) }
     }
