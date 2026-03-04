@@ -5,17 +5,22 @@
 {tags: Praise}
 {youtube: HPBmFwBSGb0}
 
-{sov}
+{start_of_verse: Verse}
 [A]Alleluia Alleluia [D]for the Lord God Almighty [A]reigns
 [A]Alleluia Alleluia [D]for the Lord God Almighty [A]reigns
 [D]Alleluia
 
-{eov}
-{soc}
-[E][A]Holy, [E][A]holy are You [D]Lord [A]God al[F#[e]m]mighty
+{end_of_verse}
+
+{start_of_chorus: Chorus}
+[E][A]Holy, [E][A]holy are You [D]Lord [A]God al[F#m]migh[E]ty
 [E]Worthy is the Lamb, worthy is the [D]Lamb
-[D]For You are [A]holy, [E][A]holy are You [D]Lord [A]God al[F#[e]m]mighty
+[D]For You are [A]holy, [E][A]holy are You [D]Lord [A]God al[F#m]migh[E]ty
 [E]Worthy is the Lamb, worthy is the [D]Lamb
 [E][A]Amen
 
-{eoc}
+{end_of_chorus}
+
+# --- DISCLAIMER (GraceChords) ---
+# All lyrics and music are the property of their respective owners. GraceChords provides tools for personal worship and educational use only. Do not repost or redistribute copyrighted lyrics/charts. Rights holder, email us for takedown requests.
+# --- END DISCLAIMER ---
