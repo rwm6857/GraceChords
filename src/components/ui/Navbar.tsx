@@ -35,6 +35,10 @@ export default function Navbar(){
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [userMenuOpen])
 
+  React.useEffect(() => {
+    setUserMenuOpen(false)
+  }, [pathname, hash])
+
   async function handleSignOut() {
     setUserMenuOpen(false)
     await supabase.auth.signOut()
@@ -250,7 +254,7 @@ export default function Navbar(){
                     </Link>
                     <button
                       className="gc-btn gc-btn--ghost"
-                      onClick={() => { handleSignOut(); closeDrawer() }}
+                      onClick={async () => { await handleSignOut(); closeDrawer() }}
                       style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
                     >
                       Sign out
