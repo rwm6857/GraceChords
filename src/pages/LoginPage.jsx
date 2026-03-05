@@ -9,6 +9,17 @@ export default function LoginPage() {
   const location = useLocation()
   const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
 
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.dataset.theme === 'dark'
+  )
+  useEffect(() => {
+    const observer = new MutationObserver(() =>
+      setIsDark(document.documentElement.dataset.theme === 'dark')
+    )
+    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -37,9 +48,7 @@ export default function LoginPage() {
     <div className="gc-auth-page">
       <div className="gc-auth-card">
         <img
-          src={document.documentElement.dataset.theme === 'dark'
-            ? '/gc-brand-wide-dark.svg'
-            : '/gc-brand-wide-light.svg'}
+          src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
           alt="GraceChords"
           className="gc-auth-card__wordmark"
         />
@@ -95,7 +104,12 @@ export default function LoginPage() {
 
 function friendlyError(msg) {
   if (!msg) return 'Something went wrong. Please try again.'
-  if (msg.toLowerCase().includes('invalid login')) return 'Incorrect email or password.'
-  if (msg.toLowerCase().includes('email not confirmed')) return 'Please check your email to confirm your account before signing in.'
-  return msg
+  const lower = msg.toLowerCase()
+  if (lower.includes('invalid login') || lower.includes('invalid credentials'))
+    return 'Incorrect email or password.'
+  if (lower.includes('email not confirmed'))
+    return 'Please check your email to confirm your account before signing in.'
+  if (lower.includes('too many requests') || lower.includes('rate limit'))
+    return 'Too many attempts. Please wait a moment and try again.'
+  return 'Something went wrong. Please try again.'
 }
