@@ -8,13 +8,13 @@ export const SPRITE_IDS = [
 
 export default function SpritePicker({ value, onChange }) {
   return (
-    <div className="gc-sprite-picker" role="radiogroup" aria-label="Choose your icon">
+    <div className="gc-sprite-picker" role="group" aria-label="Choose your icon">
       {SPRITE_IDS.map(id => (
         <button
           key={id}
           type="button"
           className={`gc-sprite-picker__item${value === id ? ' selected' : ''}`}
-          onClick={() => onChange(id)}
+          onClick={() => value !== id && onChange(id)}
           aria-label={id.replace(/-/g, ' ')}
           aria-pressed={value === id}
         >
