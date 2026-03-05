@@ -28,6 +28,7 @@ export default function SignupPage() {
   const [sprite, setSprite] = useState(null)
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [signUpSuccess, setSignUpSuccess] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -54,10 +55,38 @@ export default function SignupPage() {
       showToast('Welcome to GraceChords!')
       navigate(redirectTo, { replace: true })
     } else {
-      showToast('Check your email to confirm your account.')
-      navigate('/login')
+      setSignUpSuccess(true)
     }
     setSubmitting(false)
+  }
+
+  if (signUpSuccess) {
+    return (
+      <div className="gc-auth-page">
+        <div className="gc-auth-card" style={{ maxWidth: 480 }}>
+          <img
+            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
+            alt="GraceChords"
+            className="gc-auth-card__wordmark"
+          />
+          <div className="gc-signup-confirm">
+            <div className="gc-signup-confirm__icon" aria-hidden="true">✉️</div>
+            <h1 className="gc-auth-card__title">Check your email</h1>
+            <p className="gc-signup-confirm__body">
+              We sent a verification link to{' '}
+              <strong className="gc-signup-confirm__email">{email}</strong>.
+              Click the link to activate your account, then come back to sign in.
+            </p>
+            <p className="gc-signup-confirm__note">
+              Didn't receive it? Check your spam folder or wait a moment and try again.
+            </p>
+          </div>
+          <p className="gc-auth-card__footer">
+            <Link to="/login">Back to sign in</Link>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
