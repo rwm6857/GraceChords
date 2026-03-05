@@ -69,6 +69,44 @@
   font-weight: 500;
 }
 
+/* ===== Signup email confirmation state ===== */
+.gc-signup-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0 var(--space-4);
+}
+
+.gc-signup-confirm__icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.gc-signup-confirm .gc-auth-card__title {
+  margin: 0;
+}
+
+.gc-signup-confirm__body {
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-body);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.gc-signup-confirm__email {
+  color: var(--gc-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.gc-signup-confirm__note {
+  color: var(--gc-text-tertiary);
+  font-size: var(--gc-font-sub);
+  margin: 0;
+}
+
 /* ===== Form fields (reusable) ===== */
 .gc-form-field {
   display: flex;
