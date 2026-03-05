@@ -1,0 +1,101 @@
+import React, { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
+
+export default function LoginPage() {
+  const { isLoggedIn, loading } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!loading && isLoggedIn) navigate(redirectTo, { replace: true })
+  }, [isLoggedIn, loading])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setError(friendlyError(error.message))
+      setSubmitting(false)
+    } else {
+      navigate(redirectTo, { replace: true })
+    }
+  }
+
+  if (loading) return null
+
+  return (
+    <div className="gc-auth-page">
+      <div className="gc-auth-card">
+        <img
+          src={document.documentElement.dataset.theme === 'dark'
+            ? '/gc-brand-wide-dark.svg'
+            : '/gc-brand-wide-light.svg'}
+          alt="GraceChords"
+          className="gc-auth-card__wordmark"
+        />
+        <h1 className="gc-auth-card__title">Welcome back</h1>
+        <p className="gc-auth-card__subtitle">Sign in to your account</p>
+
+        <form onSubmit={handleSubmit} className="gc-auth-form">
+          {error && <div className="gc-auth-error">{error}</div>}
+          <div className="gc-form-field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              disabled={submitting}
+            />
+          </div>
+          <div className="gc-form-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              disabled={submitting}
+            />
+          </div>
+          <button
+            type="submit"
+            className="gc-btn gc-btn--primary"
+            disabled={submitting}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+
+        <p className="gc-auth-card__footer">
+          Don't have an account?{' '}
+          <Link to={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}>
+            Sign up
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function friendlyError(msg) {
+  if (!msg) return 'Something went wrong. Please try again.'
+  if (msg.toLowerCase().includes('invalid login')) return 'Incorrect email or password.'
+  if (msg.toLowerCase().includes('email not confirmed')) return 'Please check your email to confirm your account before signing in.'
+  return msg
+}
