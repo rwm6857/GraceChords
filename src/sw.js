@@ -44,7 +44,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
-
+  // Don't intercept requests to external origins (e.g. R2, CDN) 
+  if (!request.url.startsWith(self.location.origin)) return;
   // Always try the network first for dynamic content that changes frequently
   // so edits to songs and the index show up without manual cache busting.
   if (request.url.includes('/songs/') || request.url.includes('/src/data/index.json')) {
