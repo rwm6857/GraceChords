@@ -149,52 +149,55 @@
 
 /* ===== Sprite picker ===== */
 .gc-sprite-picker {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .gc-sprite-picker__item {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--gc-separator);
-  background: var(--gc-surface-2);
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: transparent;
   cursor: pointer;
-  transition: border-color var(--gc-dur-quick) var(--gc-ease),
-              background-color var(--gc-dur-quick) var(--gc-ease);
-  padding: var(--space-2);
+  transition: box-shadow var(--gc-dur-quick) var(--gc-ease),
+              border-color var(--gc-dur-quick) var(--gc-ease);
+  padding: 0;
+  /* size matches SpriteAvatar md (36px) + border */
+  width: 40px;
+  height: 40px;
 }
 
 .gc-sprite-picker__item:hover {
-  background: var(--gc-surface-3);
+  box-shadow: 0 0 0 3px var(--gc-separator);
 }
 
 .gc-sprite-picker__item.selected {
-  border: 2px solid var(--gc-primary);
-  background: color-mix(in srgb, var(--gc-primary) 15%, var(--gc-surface-1));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gc-primary) 30%, transparent);
+  border-color: var(--gc-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gc-primary) 35%, transparent);
+}
+
+/* Avatar inside the picker fills the button circle */
+.gc-sprite-picker__item .gc-sprite-avatar {
+  width: 100%;
+  height: 100%;
 }
 
 /* ===== Sprite avatar ===== */
 .gc-sprite-avatar {
   border-radius: 50%;
-  background: color-mix(in srgb, var(--gc-primary) 15%, var(--gc-surface-2));
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  padding: 4px;
-  box-sizing: border-box;
+  display: block;
 }
 
 .gc-sprite-avatar img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  display: block;
 }
 
 /* ===== Star button ===== */

@@ -2,7 +2,7 @@ import React from 'react'
 import SpriteAvatar from './SpriteAvatar'
 
 export const SPRITE_IDS = [
-  'acoustic', 'bible', 'charlie', 'drums', 'elec',
+  'acoustic', 'bible', 'boba', 'charlie', 'drums', 'elec',
   'heart', 'keys', 'lamb', 'lion', 'mic',
   'notes', 'shepherd', 'star', 'thomas',
 ]
