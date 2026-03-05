@@ -4,6 +4,9 @@ import { Link, useLocation } from 'react-router-dom'
 import OfflineBadge from '../OfflineBadge'
 import { currentTheme, toggleTheme } from '../../utils/app/theme'
 import { Sun, Moon } from '../Icons'
+import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../lib/supabase'
+import SpriteAvatar from './SpriteAvatar'
 
 export default function Navbar(){
   const [, setBump] = React.useState(0)
@@ -17,6 +20,25 @@ export default function Navbar(){
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
+  const { isLoggedIn, loading: authLoading, session, profile } = useAuth()
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false)
+  const userMenuRef = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (!userMenuOpen) return
+    function handleOutsideClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [userMenuOpen])
+
+  async function handleSignOut() {
+    setUserMenuOpen(false)
+    await supabase.auth.signOut()
+  }
 
   useLayoutEffect(() => {
     function update(){
@@ -138,6 +160,47 @@ export default function Navbar(){
           >
             {isDark ? <Sun /> : <Moon />}
           </button>
+          {/* Auth slot — desktop */}
+          {!authLoading && (
+            isLoggedIn ? (
+              <div className="gc-user-menu" ref={userMenuRef}>
+                <button
+                  className="gc-user-avatar-btn"
+                  onClick={() => setUserMenuOpen(o => !o)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="User menu"
+                >
+                  <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
+                </button>
+                {userMenuOpen && (
+                  <div className="gc-user-dropdown" role="menu">
+                    <p className="gc-user-dropdown__name">
+                      {profile?.display_name || session?.user?.email}
+                    </p>
+                    <Link
+                      to="/profile"
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <hr className="gc-user-dropdown__divider" />
+                    <button
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="gc-nav-signin">Sign in</Link>
+            )
+          )}
         </div>
         </div>
       </nav>
@@ -172,6 +235,38 @@ export default function Navbar(){
               >
                 {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
               </button>
+              {/* Auth slot — mobile */}
+              {!authLoading && (
+                isLoggedIn ? (
+                  <div style={{ marginTop: 8 }}>
+                    <Link
+                      to="/profile"
+                      className="gc-btn gc-btn--secondary"
+                      onClick={closeDrawer}
+                      style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}
+                    >
+                      <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
+                      <span>{profile?.display_name || 'Profile'}</span>
+                    </Link>
+                    <button
+                      className="gc-btn gc-btn--ghost"
+                      onClick={() => { handleSignOut(); closeDrawer() }}
+                      style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="gc-nav-signin"
+                    onClick={closeDrawer}
+                    style={{ display: 'block', textAlign: 'center', marginTop: 8 }}
+                  >
+                    Sign in
+                  </Link>
+                )
+              )}
             </div>
           </nav>
         </div>,
