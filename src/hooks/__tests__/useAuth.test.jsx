@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import React from 'react'
 import { AuthProvider, useAuth } from '../useAuth'
@@ -7,23 +7,25 @@ import { AuthProvider, useAuth } from '../useAuth'
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn().mockReturnValue({
-        data: { subscription: { unsubscribe: vi.fn() } }
+      onAuthStateChange: vi.fn().mockImplementation((cb) => {
+        // Simulate INITIAL_SESSION with null (not logged in)
+        Promise.resolve().then(() => cb('INITIAL_SESSION', null))
+        return { data: { subscription: { unsubscribe: vi.fn() } } }
       }),
     },
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null }),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
     }),
   }
 }))
 
 describe('useAuth', () => {
-  it('starts in loading state', async () => {
+  it('starts in loading state', () => {
     const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>
     const { result } = renderHook(() => useAuth(), { wrapper })
+    // Before INITIAL_SESSION fires, session is undefined = loading
     expect(result.current.loading).toBe(true)
   })
 

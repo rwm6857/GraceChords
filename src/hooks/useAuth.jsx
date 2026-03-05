@@ -8,28 +8,28 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) fetchProfile(session.user.id)
-      else setSession(null)
-    })
+    let ignore = false
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (ignore) return
       setSession(session)
       if (session) fetchProfile(session.user.id)
       else setProfile(null)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      ignore = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchProfile(userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data)
+    if (!error) setProfile(data)
   }
 
   const value = {
