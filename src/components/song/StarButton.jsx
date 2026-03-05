@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { showToast } from '../../utils/app/toast'
 
 export default function StarButton({ songId }) {
   const { isLoggedIn, session, loading } = useAuth()
@@ -43,12 +44,20 @@ export default function StarButton({ songId }) {
         .delete()
         .eq('user_id', userId)
         .eq('song_id', songId)
-      if (error) setStarred(wasStarred)
+      if (error) {
+        console.error('Failed to unstar song:', error)
+        setStarred(wasStarred)
+        showToast('Could not remove star. Please try again.')
+      }
     } else {
       const { error } = await supabase
         .from('user_starred_songs')
         .insert({ user_id: userId, song_id: songId })
-      if (error) setStarred(wasStarred)
+      if (error) {
+        console.error('Failed to star song:', error)
+        setStarred(wasStarred)
+        showToast('Could not star song. Please try again.')
+      }
     }
   }
 
