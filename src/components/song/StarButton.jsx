@@ -4,28 +4,31 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function StarButton({ songId }) {
-  const { isLoggedIn, session } = useAuth()
+  const { isLoggedIn, session, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [starred, setStarred] = useState(false)
   const [checking, setChecking] = useState(true)
 
+  const userId = session?.user?.id
+
   useEffect(() => {
-    if (!isLoggedIn || !session || !songId) {
+    if (loading) return // wait for auth to resolve before doing anything
+    if (!isLoggedIn || !userId || !songId) {
       setChecking(false)
       return
     }
     supabase
       .from('user_starred_songs')
       .select('song_id')
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .eq('song_id', songId)
       .maybeSingle()
       .then(({ data }) => {
         setStarred(!!data)
         setChecking(false)
       })
-  }, [isLoggedIn, session, songId])
+  }, [loading, isLoggedIn, userId, songId])
 
   async function handleClick() {
     if (!isLoggedIn) {
@@ -38,14 +41,14 @@ export default function StarButton({ songId }) {
       const { error } = await supabase
         .from('user_starred_songs')
         .delete()
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .eq('song_id', songId)
-      if (error) setStarred(wasStarred) // revert on error
+      if (error) setStarred(wasStarred)
     } else {
       const { error } = await supabase
         .from('user_starred_songs')
-        .insert({ user_id: session.user.id, song_id: songId })
-      if (error) setStarred(wasStarred) // revert on error
+        .insert({ user_id: userId, song_id: songId })
+      if (error) setStarred(wasStarred)
     }
   }
 
