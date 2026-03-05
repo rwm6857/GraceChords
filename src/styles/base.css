@@ -292,10 +292,15 @@ select{
 /* ========== Tags & badges ========== */
 .badge{
   padding:4px 10px; border-radius:999px;
-  background:#eef2ff; color:#3730a3; border:1px solid #e6e6ff;
+  background: color-mix(in srgb, var(--gc-primary) 10%, var(--gc-surface-1));
+  color: var(--gc-primary);
+  border: 1px solid color-mix(in srgb, var(--gc-primary) 25%, var(--gc-separator));
   font-size:12px
 }
-.badge.active{ background:#dbeafe; border-color:#bfdbfe }
+.badge.active{
+  background: color-mix(in srgb, var(--gc-primary) 18%, var(--gc-surface-1));
+  border-color: color-mix(in srgb, var(--gc-primary) 40%, var(--gc-separator));
+}
 .tagbar{ display:flex; flex-wrap:wrap; gap: var(--space-2); }
 @media (max-width: 640px){
   .tagbar{ flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; padding-bottom: 6px; }

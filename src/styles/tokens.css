@@ -68,8 +68,9 @@
   --gc-focus-size: 2px;
   --gc-focus-offset: 2px;
 
-  /* ===== Colors (Light) - Apple system palette ===== */
-  --gc-primary: #007AFF;
+  /* ===== Colors (Light) - Warm worship palette ===== */
+  --gc-primary: #b8610a;
+  --gc-primary-hover: #9e5209;
   --gc-success: #34C759;
   --gc-warning: #FF9500;
   --gc-danger: #FF3B30;
@@ -81,28 +82,28 @@
   --gc-yellow: #FFCC00;
 
   /* Neutrals / surfaces */
-  --gc-bg: #F2F2F7;
-  --gc-surface-1: #FFFFFF;
-  --gc-surface-2: #F2F2F7;
-  --gc-surface-3: #E5E5EA;
+  --gc-bg: #faf7f2;
+  --gc-surface-1: #ffffff;
+  --gc-surface-2: #f5f1ea;
+  --gc-surface-3: #ede8de;
 
   /* Text */
-  --gc-text: #000000;
-  --gc-text-secondary: #8E8E93;
-  --gc-text-tertiary: #AEAEB2;
+  --gc-text: #1c1410;
+  --gc-text-secondary: #6b5c4e;
+  --gc-text-tertiary: #9c8878;
 
   /* Borders / separators */
-  --gc-separator: #D1D1D6;
+  --gc-separator: #ddd5c8;
 
   /* Derived / common */
   --gc-link: var(--gc-primary);
   --gc-focus: var(--gc-primary);
-  --gc-selection-bg: rgba(0, 122, 255, 0.18);
+  --gc-selection-bg: color-mix(in srgb, #b8610a 12%, #faf7f2);
 
-  /* Shadows (subtle; separators do most of the work) */
-  --gc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --gc-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.18);
-  --gc-shadow-3: 0 16px 44px rgba(0, 0, 0, 0.28);
+  /* Shadows */
+  --gc-shadow-1: 0 1px 4px rgba(60, 30, 10, 0.08);
+  --gc-shadow-2: 0 4px 16px rgba(60, 30, 10, 0.12);
+  --gc-shadow-3: 0 16px 44px rgba(60, 30, 10, 0.18);
 
   /* Overlays */
   --gc-overlay: rgba(0, 0, 0, 0.45);
@@ -111,7 +112,8 @@
 
 /* Dark theme (assumes app toggles [data-theme="dark"] on html or body) */
 [data-theme="dark"] {
-  --gc-primary: #0A84FF;
+  --gc-primary: #d4843a;
+  --gc-primary-hover: #e0923f;
   --gc-success: #30D158;
   --gc-warning: #FF9F0A;
   --gc-danger: #FF453A;
@@ -121,22 +123,22 @@
   --gc-teal: #64D2FF;
   --gc-yellow: #FFD60A;
 
-  --gc-bg: #000000;
-  --gc-surface-1: #1C1C1E;
-  --gc-surface-2: #2C2C2E;
-  --gc-surface-3: #3A3A3C;
+  --gc-bg: #100e0b;
+  --gc-surface-1: #1a1612;
+  --gc-surface-2: #231e18;
+  --gc-surface-3: #2e271f;
 
-  --gc-text: #FFFFFF;
-  --gc-text-secondary: #636366;
-  --gc-text-tertiary: #48484A;
+  --gc-text: #f0ebe3;
+  --gc-text-secondary: #a89484;
+  --gc-text-tertiary: #6e5e52;
 
-  --gc-separator: #48484A;
+  --gc-separator: #2e261e;
 
-  --gc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --gc-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.45);
-  --gc-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.6);
+  --gc-shadow-1: 0 1px 4px rgba(0, 0, 0, 0.35);
+  --gc-shadow-2: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --gc-shadow-3: 0 18px 54px rgba(0, 0, 0, 0.65);
 
-  --gc-selection-bg: rgba(10, 132, 255, 0.22);
+  --gc-selection-bg: color-mix(in srgb, #d4843a 16%, #1a1612);
 
   --gc-overlay: rgba(0, 0, 0, 0.6);
   --gc-shadow-drawer: -24px 0 48px rgba(0, 0, 0, 0.6);

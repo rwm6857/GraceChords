@@ -135,15 +135,15 @@
 }
 
 .gc-sprite-picker__item.selected {
-  border-color: #D97706;
-  background: color-mix(in srgb, #D97706 12%, var(--gc-surface-1));
-  box-shadow: 0 0 0 2px color-mix(in srgb, #D97706 30%, transparent);
+  border: 2px solid var(--gc-primary);
+  background: color-mix(in srgb, var(--gc-primary) 15%, var(--gc-surface-1));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gc-primary) 30%, transparent);
 }
 
 /* ===== Sprite avatar ===== */
 .gc-sprite-avatar {
   border-radius: 50%;
-  background: color-mix(in srgb, #D97706 15%, var(--gc-surface-2));
+  background: color-mix(in srgb, var(--gc-primary) 15%, var(--gc-surface-2));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -343,7 +343,7 @@
 
 .gc-user-avatar-btn:hover,
 .gc-user-avatar-btn[aria-expanded="true"] {
-  border-color: #D97706;
+  border-color: var(--gc-primary);
 }
 
 .gc-user-dropdown {
@@ -407,8 +407,8 @@
   padding: 5px 12px;
   font-size: var(--gc-btn-font-size-sm);
   font-weight: 600;
-  color: white;
-  background: #D97706;
+  color: #ffffff;
+  background: var(--gc-primary);
   border: none;
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -418,5 +418,5 @@
 }
 
 .gc-nav-signin:hover {
-  background: #B45309;
+  background: var(--gc-primary-hover);
 }
