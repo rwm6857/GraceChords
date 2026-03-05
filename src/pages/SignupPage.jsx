@@ -27,6 +27,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [sprite, setSprite] = useState(null)
   const [error, setError] = useState(null)
+  const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [signUpSuccess, setSignUpSuccess] = useState(false)
 
@@ -35,6 +36,7 @@ export default function SignupPage() {
     if (!sprite) { setError('Please choose an icon before creating your account.'); return }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
     setError(null)
+    setIsDuplicateEmail(false)
     setSubmitting(true)
 
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -44,6 +46,12 @@ export default function SignupPage() {
     })
 
     if (signUpError) { setError(signUpError.message); setSubmitting(false); return }
+
+    if (data?.user && data.user.identities && data.user.identities.length === 0) {
+      setIsDuplicateEmail(true)
+      setSubmitting(false)
+      return
+    }
 
     if (data.session) {
       const { error: profileError } = await supabase.from('users').update({
@@ -101,6 +109,12 @@ export default function SignupPage() {
         <p className="gc-auth-card__subtitle">Create your account</p>
 
         <form onSubmit={handleSubmit} className="gc-auth-form">
+          {isDuplicateEmail && (
+            <div className="gc-auth-error">
+              An account with this email already exists.{' '}
+              <Link to="/login">Sign in instead</Link>
+            </div>
+          )}
           {error && <div className="gc-auth-error">{error}</div>}
           <div className="gc-form-field">
             <label htmlFor="displayName">Display name</label>
