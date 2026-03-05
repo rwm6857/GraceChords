@@ -1,6 +1,6 @@
 import React from 'react'
 
-const SIZE_MAP = { sm: 24, md: 36, lg: 64 }
+const SIZE_MAP = { sm: 32, md: 44, lg: 80 }
 
 export const DEFAULT_SPRITE = 'notes'
 

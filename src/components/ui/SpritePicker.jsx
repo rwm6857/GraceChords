@@ -19,7 +19,7 @@ export default function SpritePicker({ value, onChange }) {
           aria-label={id.replace(/-/g, ' ')}
           aria-pressed={value === id}
         >
-          <SpriteAvatar sprite={id} size="md" />
+          <SpriteAvatar sprite={id} size="lg" />
         </button>
       ))}
     </div>
