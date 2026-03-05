@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (ignore) return
       setSession(session)
-      if (session) fetchProfile(session.user.id)
+      if (session) fetchProfile(session.user.id, () => ignore)
       else setProfile(null)
     })
 
@@ -23,13 +23,13 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  async function fetchProfile(userId) {
+  async function fetchProfile(userId, isStale = () => false) {
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
-    if (!error) setProfile(data)
+    if (!isStale() && !error) setProfile(data)
   }
 
   const value = {
