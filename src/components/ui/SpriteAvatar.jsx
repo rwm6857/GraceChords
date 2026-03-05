@@ -2,7 +2,7 @@ import React from 'react'
 
 const SIZE_MAP = { sm: 24, md: 36, lg: 64 }
 
-export const DEFAULT_SPRITE = 'music-note'
+export const DEFAULT_SPRITE = 'notes'
 
 export default function SpriteAvatar({ sprite, size = 'md', className = '' }) {
   const id = sprite || DEFAULT_SPRITE
@@ -14,7 +14,7 @@ export default function SpriteAvatar({ sprite, size = 'md', className = '' }) {
       aria-hidden="true"
     >
       <img
-        src={`/sprites/${id}.svg`}
+        src={`/sprites/${id}.webp`}
         alt=""
         width={px}
         height={px}

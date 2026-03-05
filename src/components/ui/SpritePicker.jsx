@@ -2,8 +2,9 @@ import React from 'react'
 import SpriteAvatar from './SpriteAvatar'
 
 export const SPRITE_IDS = [
-  'guitar', 'piano', 'candle', 'dove', 'harp',
-  'cross', 'music-note', 'bell', 'crown', 'flame',
+  'acoustic', 'bible', 'charlie', 'drums', 'elec',
+  'heart', 'keys', 'lamb', 'lion', 'mic',
+  'notes', 'shepherd', 'star', 'thomas',
 ]
 
 export default function SpritePicker({ value, onChange }) {
