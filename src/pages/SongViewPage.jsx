@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import KeySelector from '../components/KeySelector'
@@ -540,6 +541,7 @@ export default function SongView(){
                 ))}
               </span>
             ) : null}
+            <StarButton songId={id} />
           </div>
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
