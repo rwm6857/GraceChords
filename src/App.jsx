@@ -13,6 +13,10 @@ const About = React.lazy(() => import('./pages/AboutPage'))
 const Resources = React.lazy(() => import('./pages/ResourcesPage'))
 const ResourcePost = React.lazy(() => import('./pages/ResourcePostPage'))
 const AdminResources = React.lazy(() => import('./pages/AdminResourcesPage'))
+const LoginPage = React.lazy(() => import('./pages/LoginPage'))
+const SignupPage = React.lazy(() => import('./pages/SignupPage'))
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
+const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
 import NavBar from './components/ui/Navbar'
 import WorshipMode from './pages/WorshipModePage'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -40,7 +44,11 @@ export default function App(){
             <Route path="/songbook" element={<Songbook />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/resources/:slug" element={<ResourcePost />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
           <Route path="/admin" element={<Admin />} />
