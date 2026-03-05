@@ -25,6 +25,11 @@ export default function ProfilePage() {
   const [requestNote, setRequestNote] = useState('')
   const [submittingRequest, setSubmittingRequest] = useState(false)
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
   // Redirect if not logged in
   useEffect(() => {
     if (!loading && !isLoggedIn) {
@@ -112,6 +117,30 @@ export default function ProfilePage() {
   }
 
   async function signOut() {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
+  async function deleteAccount() {
+    setDeleteError('')
+    setDeleting(true)
+    // Verify password before deletion
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: session.user.email,
+      password: deletePassword,
+    })
+    if (authError) {
+      setDeleteError('Incorrect password. Please try again.')
+      setDeleting(false)
+      return
+    }
+    // Delete account via RPC (SECURITY DEFINER function removes from auth.users + cascades)
+    const { error: deleteError } = await supabase.rpc('delete_user')
+    if (deleteError) {
+      setDeleteError('Failed to delete account. Please try again.')
+      setDeleting(false)
+      return
+    }
     await supabase.auth.signOut()
     navigate('/')
   }
@@ -237,7 +266,67 @@ export default function ProfilePage() {
         >
           Sign out
         </button>
+
+        <div className="gc-danger-zone">
+          <div>
+            <p className="gc-danger-zone__label">Delete account</p>
+            <p className="gc-danger-zone__description">
+              Permanently remove your account and all associated data. This cannot be undone.
+            </p>
+          </div>
+          <button
+            className="gc-btn gc-btn--danger"
+            onClick={() => { setDeletePassword(''); setDeleteError(''); setShowDeleteModal(true) }}
+            style={{ width: 'fit-content', flexShrink: 0 }}
+          >
+            Delete account
+          </button>
+        </div>
       </section>
+
+      {/* Delete account modal */}
+      {showDeleteModal && (
+        <div className="gc-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <div className="gc-modal" onClick={e => e.stopPropagation()}>
+            <h2>Delete account</h2>
+            <p style={{ margin: 0, color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
+              This will permanently delete your account and all your data, including starred songs
+              and any contributor requests. <strong style={{ color: 'var(--gc-danger)' }}>This cannot be undone.</strong>
+            </p>
+            <div className="gc-form-field">
+              <label htmlFor="deletePassword">Confirm your password</label>
+              <input
+                id="deletePassword"
+                type="password"
+                value={deletePassword}
+                onChange={e => { setDeletePassword(e.target.value); setDeleteError('') }}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                disabled={deleting}
+              />
+            </div>
+            {deleteError && (
+              <p className="gc-auth-error" style={{ margin: 0 }}>{deleteError}</p>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="gc-btn gc-btn--danger"
+                onClick={deleteAccount}
+                disabled={deleting || !deletePassword}
+              >
+                {deleting ? 'Deleting…' : 'Delete my account'}
+              </button>
+              <button
+                className="gc-btn gc-btn--ghost"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contributor request modal */}
       {showRequestModal && (

@@ -362,6 +362,46 @@
   outline-offset: 2px;
 }
 
+/* ===== Danger zone ===== */
+.gc-danger-zone {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--gc-danger) 30%, var(--gc-separator));
+  background: color-mix(in srgb, var(--gc-danger) 6%, var(--gc-surface-1));
+}
+
+.gc-danger-zone__label {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+  font-size: var(--gc-font-body);
+  color: var(--gc-text);
+}
+
+.gc-danger-zone__description {
+  margin: 0;
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  line-height: 1.5;
+}
+
+.gc-btn--danger {
+  background: var(--gc-danger);
+  color: #fff;
+  border: none;
+}
+
+.gc-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--gc-danger) 85%, black);
+}
+
+.gc-btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ===== Nav user menu ===== */
 .gc-user-menu {
   position: relative;
