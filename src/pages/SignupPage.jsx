@@ -45,10 +45,11 @@ export default function SignupPage() {
     if (signUpError) { setError(signUpError.message); setSubmitting(false); return }
 
     if (data.session) {
-      await supabase.from('users').update({
+      const { error: profileError } = await supabase.from('users').update({
         display_name: displayName,
         preferences: { sprite },
       }).eq('id', data.session.user.id)
+      if (profileError) console.error('Profile update after signup failed:', profileError)
       await refreshProfile()
       showToast('Welcome to GraceChords!')
       navigate(redirectTo, { replace: true })

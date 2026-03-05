@@ -86,11 +86,12 @@ export default function ProfilePage() {
 
   async function unstarSong(songId) {
     setStarredSongIds(prev => prev.filter(id => id !== songId))
-    await supabase
+    const { error } = await supabase
       .from('user_starred_songs')
       .delete()
       .eq('user_id', session.user.id)
       .eq('song_id', songId)
+    if (error) setStarredSongIds(prev => [...prev, songId]) // revert on error
   }
 
   async function submitContributorRequest() {

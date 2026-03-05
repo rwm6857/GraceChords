@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && isLoggedIn) navigate(redirectTo, { replace: true })
-  }, [isLoggedIn, loading])
+  }, [isLoggedIn, loading, navigate, redirectTo])
 
   async function handleSubmit(e) {
     e.preventDefault()

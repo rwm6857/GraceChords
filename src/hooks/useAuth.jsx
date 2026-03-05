@@ -46,5 +46,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext)
+  const ctx = useContext(AuthContext)
+  if (!ctx) {
+    return { session: null, profile: null, loading: false, isLoggedIn: false, isEditor: false, isContributor: false, refreshProfile: () => {} }
+  }
+  return ctx
 }
