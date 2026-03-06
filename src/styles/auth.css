@@ -150,7 +150,7 @@
 /* ===== Sprite picker ===== */
 .gc-sprite-picker {
   display: grid;
-  grid-template-columns: repeat(5, 84px);
+  grid-template-columns: repeat(5, 72px);
   gap: var(--space-3);
 }
 
@@ -165,9 +165,9 @@
   transition: box-shadow var(--gc-dur-quick) var(--gc-ease),
               border-color var(--gc-dur-quick) var(--gc-ease);
   padding: 0;
-  /* size matches SpriteAvatar lg (80px) + 2px border each side */
-  width: 84px;
-  height: 84px;
+  /* 64px avatar + 2px border each side = 68px button */
+  width: 68px;
+  height: 68px;
 }
 
 .gc-sprite-picker__item:hover {
