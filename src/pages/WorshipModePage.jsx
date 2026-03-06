@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import indexData from '../data/index.json'
+import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKey } from '../utils/chordpro'
 import KeySelector from '../components/KeySelector'
@@ -37,7 +37,8 @@ export default function WorshipMode(){
   const { songIds = '' } = useParams()
   const navigate = useNavigate()
   const ids = useMemo(() => songIds.split(',').map(s => safeDecodeURIComponent(s.trim())).filter(Boolean), [songIds])
-  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const { songs: catalogSongs, loading: catalogLoading } = useSongs()
+  const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
   const allSongsById = catalog.byId
   const selectedLanguage = useMemo(
     () => resolveInitialSongLanguage(catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages),
@@ -405,9 +406,7 @@ export default function WorshipMode(){
         const s = allSongsById.get(String(id))
         if (!s) continue
         try {
-          const res = await fetch(publicUrl(`songs/${s.filename}`))
-          if (!res.ok) throw new Error(`Failed ${s.filename}`)
-          const txt = await res.text()
+          const txt = s.chordpro_content || ''
           const doc = parseChordProOrLegacy(txt)
           const title = doc?.meta?.title || s.title || s.id
           const baseKey = doc?.meta?.key || doc?.meta?.originalkey || s.originalKey || 'C'
@@ -684,9 +683,7 @@ export default function WorshipMode(){
     try {
       const entry = allSongsById.get(String(idToAdd))
       if (!entry) return
-      const res = await fetch(publicUrl(`songs/${entry.filename}`))
-      if (!res.ok) return
-      const txt = await res.text()
+      const txt = entry.chordpro_content || ''
       const doc = parseChordProOrLegacy(txt)
       const title = doc?.meta?.title || entry.title || entry.id
       const baseKey = doc?.meta?.key || doc?.meta?.originalkey || entry.originalKey || 'C'

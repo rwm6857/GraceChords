@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
-import indexData from '../data/index.json'
+import { useSongs } from '../hooks/useSongs'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
@@ -112,7 +112,8 @@ export default function Setlist(){
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const { songs, loading } = useSongs()
+  const catalog = useMemo(() => buildSongCatalog(songs), [songs])
   const allSongsById = catalog.byId
   const languageChipCodes = catalog.translationLanguages || []
   const [selectedLanguage, setSelectedLanguage] = useState(() =>
@@ -252,7 +253,7 @@ export default function Setlist(){
   // Load set from route code if present
   useEffect(() => {
     if (!routeCode) return
-    const { entries, error } = decodeSet(routeCode)
+    const { entries, error } = decodeSet(songs, routeCode)
     if (error) {
       alert(error)
       navigate('/setlist', { replace: true })

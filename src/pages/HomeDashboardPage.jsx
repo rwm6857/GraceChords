@@ -13,6 +13,7 @@ import heroLightWebp960 from '../assets/dashboard-hero-worship-angled-light-960.
 import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.webp'
 import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/app/theme'
+import { useSongs } from '../hooks/useSongs'
 import { filterByTag, pickRandom } from '../utils/songs/quickActions'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags } from '../utils/songs/tags'
@@ -40,6 +41,8 @@ export default function HomeDashboard(){
   const [latestSongs, setLatestSongs] = useState([])
   const [latestPosts, setLatestPosts] = useState([])
   const [listsReady, setListsReady] = useState(false)
+
+  const { songs: catalogSongs, loading: songsLoading } = useSongs()
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -229,20 +232,17 @@ export default function HomeDashboard(){
     blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
   }
 
-  // Defer heavier work (JSON parsing, sorting, observer) until idle to keep LCP quick
+  // Defer heavier work (sorting, observer) until idle to keep LCP quick
   // Defer heavy data prep and observers so first paint/LCP can happen quickly
   useEffect(() => {
+    if (songsLoading) return
     const idle = window.requestIdleCallback || ((cb) => setTimeout(() => cb(), 1))
     const cancel = window.cancelIdleCallback || clearTimeout
     let observer = null
     const idleId = idle(async () => {
       try {
-        const [{ default: indexJson }, { default: resourcesJson }] = await Promise.all([
-          import('../data/index.json'),
-          import('../data/resources.json'),
-        ])
-        const indexItems = indexJson?.items || []
-        const catalog = buildSongCatalog(indexItems)
+        const { default: resourcesJson } = await import('../data/resources.json')
+        const catalog = buildSongCatalog(catalogSongs)
         const prefLang = resolveInitialSongLanguage(
           catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages,
           songLanguage
@@ -301,7 +301,7 @@ export default function HomeDashboard(){
       cancel(idleId)
       if (observer) observer.disconnect()
     }
-  }, [songLanguage])
+  }, [songLanguage, catalogSongs, songsLoading])
 
   return (
     <div className="HomeDashboard">

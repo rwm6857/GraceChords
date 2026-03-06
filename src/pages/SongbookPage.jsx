@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Fuse from 'fuse.js'
-import indexData from '../data/index.json'
+import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
@@ -33,7 +33,8 @@ const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'
 function byTitle(a, b) { return compareSongsByTitle(a, b) }
 
 export default function Songbook() {
-  const catalog = useMemo(() => buildSongCatalog(indexData?.items || []), [])
+  const { songs } = useSongs()
+  const catalog = useMemo(() => buildSongCatalog(songs), [songs])
   const allSongsById = catalog.byId
   const languageChipCodes = catalog.translationLanguages || []
   const [selectedLanguage, setSelectedLanguage] = useState(() =>

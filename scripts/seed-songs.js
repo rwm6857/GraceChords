@@ -127,13 +127,14 @@ function extractContent(text) {
   return out.join('\n')
 }
 
-/** Slugify a string the same way buildIndex.mjs does. */
+/** Slugify a string: spaces become underscores, special chars are dropped. */
 function slugify(value) {
   return String(value || '')
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .replace(/(^_|_$)/g, '')
 }
 
 /** Parse comma/semicolon-separated tags into a normalized array. */
@@ -171,9 +172,8 @@ for (const filename of files) {
   const text = readFileSync(join(songsDir, filename), 'utf8')
   const meta = parseMeta(text)
 
-  // Derive the slug using the same logic as buildIndex.mjs
-  const fallbackId = slugify(meta.title || filename.replace(/\.chordpro$/i, ''))
-  const slug = slugify(meta.id || fallbackId) || fallbackId
+  // Slug = filename stem (special chars dropped, not converted to _)
+  const slug = filename.replace(/\.chordpro$/i, '').toLowerCase()
 
   const title = meta.title || slug
   const artist = (meta.authors || meta.author || meta.artist || '').trim() || null
