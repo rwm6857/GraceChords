@@ -21,3 +21,4 @@ scripts/ingest/_ingest_exports/
 
 # Local static build output
 docs/
+.env
