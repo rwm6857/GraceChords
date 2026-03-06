@@ -34,15 +34,24 @@ create table if not exists public.songs (
 );
 
 -- 1a. Columns that may already exist if the table was created earlier
---     (also covers the case where songs was created manually without slug)
-alter table public.songs
-  add column if not exists slug text;
-
-alter table public.songs
-  add column if not exists song_group_id uuid;
-
-alter table public.songs
-  add column if not exists star_count integer not null default 0;
+--     (also covers the case where songs was created manually without some columns)
+alter table public.songs add column if not exists slug             text;
+alter table public.songs add column if not exists artist           text;
+alter table public.songs add column if not exists default_key      text;
+alter table public.songs add column if not exists tags             text[] not null default '{}';
+alter table public.songs add column if not exists country          text;
+alter table public.songs add column if not exists youtube_id       text;
+alter table public.songs add column if not exists source_filename  text;
+alter table public.songs add column if not exists chordpro_content text;
+alter table public.songs add column if not exists star_count       integer not null default 0;
+alter table public.songs add column if not exists song_group_id    uuid;
+alter table public.songs add column if not exists pptx_url         text;
+alter table public.songs add column if not exists mp3_url          text;
+alter table public.songs add column if not exists tempo            integer;
+alter table public.songs add column if not exists time_signature   text;
+alter table public.songs add column if not exists is_deleted       boolean not null default false;
+alter table public.songs add column if not exists created_at       timestamptz not null default now();
+alter table public.songs add column if not exists updated_at       timestamptz not null default now();
 
 -- 1b. Indexes
 -- Ensure slug has a unique index (required for upsert onConflict: 'slug').
