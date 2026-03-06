@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
 import { compareSongsByTitle } from '../utils/songs/sort'
-import indexData from '../data/index.json'
+// src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
+import { useSongs } from '../hooks/useSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -24,7 +25,7 @@ const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | Grace
 const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at GraceChords.'
 
 export default function Songs(){
-  const itemsRaw = indexData?.items || []
+  const { songs: itemsRaw } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
   const languageChipCodes = catalog.translationLanguages || []
   const [selectedLanguage, setSelectedLanguage] = useState(() =>

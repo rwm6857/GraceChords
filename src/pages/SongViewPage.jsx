@@ -7,9 +7,9 @@ import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
-import indexData from '../data/index.json'
+// src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
+import { useSongs } from '../hooks/useSongs'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon, SlidersIcon } from '../components/Icons'
-import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -34,7 +34,6 @@ let imageLibPromise
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
-const SONG_CATALOG = buildSongCatalog(indexData?.items || [])
 
 function buildSongSeo(entry, parsed, id){
   const slugFromFile = entry?.filename ? entry.filename.replace(/\.chordpro$/, '') : ''
@@ -94,8 +93,10 @@ function buildSongSeo(entry, parsed, id){
 export default function SongView(){
   const { id } = useParams()
   const navigate = useNavigate()
-  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [id])
-  const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [id])
+  const { songs } = useSongs()
+  const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
+  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+  const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
   const [toKey, setToKey] = useState('C')
@@ -176,76 +177,58 @@ export default function SongView(){
     return imageLibPromise
   }
 
-  // load & parse chordpro
+  // parse chordpro content from DB (no static-file fetch needed)
   useEffect(()=>{
-    if(!entry) return
+    if(!entry?.chordpro_content) return
     setErr('')
     setParsed(null)
-    fetch(publicUrl(`songs/${entry.filename}`))
-      .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
-      .then(txt => {
-        try {
-          const doc = parseChordProOrLegacy(txt)
-          const blocks = (doc.sections || []).map((sec) => ({
-            section: sec.label,
-            lines: (sec.lines || []).map((ln) => {
-              if (ln.instrumental) {
-                return {
-                  type: 'instrumental',
-                  text: '',
-                  chords: [],
-                  comment: false,
-                  instrumental: ln.instrumental,
-                };
-              }
-              if (ln.comment) {
-                return {
-                  type: 'comment',
-                  text: ln.comment,
-                  chords: [],
-                  comment: true,
-                };
-              }
-              return {
-                type: 'lyric',
-                text: ln.lyrics || '',
-                chords: ln.chords || [],
-                comment: false,
-              };
-            }),
-          }))
-          const p = { meta: doc.meta, blocks }
-          setParsed(p)
-          const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
-          setToKey(baseKey)
-          const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
-          const needsCheck = blocks.length > 1 && lineCount > 40
-          setJpgDisabled(needsCheck)
-          if (needsCheck) loadImageLib()
-          try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
-        } catch(err){
-          console.error(err)
-          showToast(`Parse error in ${entry.filename}. Check ChordPro syntax.`)
-          setErr('Failed to parse song')
-        }
-      })
-      .catch(e => { console.error(e); showToast(`Failed to load ${entry.filename}`); setErr(e?.message || 'Failed to load song') })
-  }, [entry])
+    try {
+      const doc = parseChordProOrLegacy(entry.chordpro_content)
+      const blocks = (doc.sections || []).map((sec) => ({
+        section: sec.label,
+        lines: (sec.lines || []).map((ln) => {
+          if (ln.instrumental) {
+            return {
+              type: 'instrumental',
+              text: '',
+              chords: [],
+              comment: false,
+              instrumental: ln.instrumental,
+            };
+          }
+          if (ln.comment) {
+            return {
+              type: 'comment',
+              text: ln.comment,
+              chords: [],
+              comment: true,
+            };
+          }
+          return {
+            type: 'lyric',
+            text: ln.lyrics || '',
+            chords: ln.chords || [],
+            comment: false,
+          };
+        }),
+      }))
+      const p = { meta: doc.meta, blocks }
+      setParsed(p)
+      const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
+      setToKey(baseKey)
+      const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
+      const needsCheck = blocks.length > 1 && lineCount > 40
+      setJpgDisabled(needsCheck)
+      if (needsCheck) loadImageLib()
+      try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
+    } catch(err){
+      console.error(err)
+      showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
+      setErr('Failed to parse song')
+    }
+  }, [entry?.chordpro_content])
 
-  // prefetch neighbor songs (no await here)
-  useEffect(() => {
-    if (!entry) return
-    const items = SONG_CATALOG.items || []
-    const i = items.findIndex(x => x.id === entry.id)
-    const neighbors = [items[i-1], items[i+1]].filter(Boolean)
-    neighbors.forEach((n) => {
-      const url = publicUrl(`songs/${n.filename}`)
-      fetchTextCached(url).catch((err) => {
-        console.error(err)
-        showToast(`Failed to load ${n.filename}`)
-      })
-    })
-  }, [entry?.id])
+  // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
 
   // check for PPTX slides
   useEffect(() => {
@@ -536,7 +519,7 @@ export default function SongView(){
                 ))}
               </span>
             ) : null}
-            <StarButton songId={id} />
+            <StarButton songId={entry?.dbId} />
           </div>
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}

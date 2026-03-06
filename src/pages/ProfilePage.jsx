@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
 import { showToast } from '../utils/app/toast'
-import indexData from '../data/index.json'
+// src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {
   const { session, profile, loading, isLoggedIn, refreshProfile } = useAuth()
@@ -16,7 +16,8 @@ export default function ProfilePage() {
   const [sprite, setSprite] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const [starredSongIds, setStarredSongIds] = useState([])
+  // Each item: { song_id: UUID, songs: { slug, title, default_key, artist } }
+  const [starredItems, setStarredItems] = useState([])
   const [starsLoading, setStarsLoading] = useState(true)
 
   const [pendingRequest, setPendingRequest] = useState(false)
@@ -49,12 +50,15 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!session) return
 
+    // Join with songs to get slug, title, key, artist in one query.
     supabase
       .from('user_starred_songs')
-      .select('song_id')
+      .select('song_id, songs!inner(slug, title, default_key, artist)')
       .eq('user_id', session.user.id)
-      .then(({ data }) => {
-        setStarredSongIds((data || []).map(r => r.song_id))
+      .order('songs(title)')
+      .then(({ data, error }) => {
+        if (error) console.error('[ProfilePage] Failed to load starred songs:', error)
+        setStarredItems(data || [])
         setStarsLoading(false)
       })
 
@@ -90,13 +94,19 @@ export default function ProfilePage() {
   }
 
   async function unstarSong(songId) {
-    setStarredSongIds(prev => prev.filter(id => id !== songId))
+    // songId is the UUID from songs.id
+    const removed = starredItems.find(item => item.song_id === songId)
+    setStarredItems(prev => prev.filter(item => item.song_id !== songId))
     const { error } = await supabase
       .from('user_starred_songs')
       .delete()
       .eq('user_id', session.user.id)
       .eq('song_id', songId)
-    if (error) setStarredSongIds(prev => [...prev, songId]) // revert on error
+    if (error) {
+      console.error('[ProfilePage] Failed to unstar song:', error)
+      showToast('Could not remove star. Please try again.')
+      if (removed) setStarredItems(prev => [...prev, removed]) // revert on error
+    }
   }
 
   async function submitContributorRequest() {
@@ -156,7 +166,6 @@ export default function ProfilePage() {
   const currentSprite = sprite || 'music-note'
   const roleBadge = profile.global_role
   const showContributorRequestBtn = !roleBadge && contributorRequestsEnabled && !pendingRequest
-  const songCatalog = indexData?.items || []
 
   return (
     <div className="container">
@@ -208,25 +217,25 @@ export default function ProfilePage() {
         <h2>Starred Songs</h2>
         {starsLoading ? (
           <p style={{ color: 'var(--gc-text-secondary)' }}>Loading…</p>
-        ) : starredSongIds.length === 0 ? (
+        ) : starredItems.length === 0 ? (
           <p style={{ color: 'var(--gc-text-secondary)' }}>
             No starred songs yet. Star songs from the song page to find them here.
           </p>
         ) : (
           <div className="gc-starred-list">
-            {starredSongIds.map(songId => {
-              const song = songCatalog.find(s => s.id === songId)
+            {starredItems.map(item => {
+              const { song_id, songs: song } = item
               return (
-                <div key={songId} className="gc-starred-row">
-                  <Link to={`/songs/${songId}`} className="gc-starred-row__info">
-                    <span className="gc-starred-row__title">{song?.title || songId}</span>
-                    {song?.key && <span className="gc-starred-row__key">{song.key}</span>}
+                <div key={song_id} className="gc-starred-row">
+                  <Link to={`/songs/${song?.slug || song_id}`} className="gc-starred-row__info">
+                    <span className="gc-starred-row__title">{song?.title || song_id}</span>
+                    {song?.default_key && <span className="gc-starred-row__key">{song.default_key}</span>}
                     {song?.artist && <span className="gc-starred-row__artist">{song.artist}</span>}
                   </Link>
                   <button
                     className="gc-btn gc-btn--ghost gc-btn--sm"
-                    onClick={() => unstarSong(songId)}
-                    aria-label={`Unstar ${song?.title || songId}`}
+                    onClick={() => unstarSong(song_id)}
+                    aria-label={`Unstar ${song?.title || song_id}`}
                   >
                     Unstar
                   </button>

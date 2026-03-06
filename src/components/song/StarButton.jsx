@@ -15,6 +15,7 @@ export default function StarButton({ songId }) {
 
   useEffect(() => {
     if (loading) return // wait for auth to resolve before doing anything
+    // songId is the UUID from the songs table (set after useSongs() resolves)
     if (!isLoggedIn || !userId || !songId) {
       setChecking(false)
       return
