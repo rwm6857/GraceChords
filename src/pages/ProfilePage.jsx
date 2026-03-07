@@ -10,7 +10,7 @@ import { showToast } from '../utils/app/toast'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {
-  const { session, profile, loading, isLoggedIn, refreshProfile } = useAuth()
+  const { session, profile, loading, isLoggedIn, refreshProfile, role, isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const [displayName, setDisplayName] = useState('')
@@ -165,7 +165,7 @@ export default function ProfilePage() {
   }
 
   const currentSprite = sprite || 'music-note'
-  const roleBadge = profile.global_role || profile.role
+  const roleBadge = role !== 'user' ? role : null
   const showContributorRequestBtn = !roleBadge && contributorRequestsEnabled && !pendingRequest
 
   return (
@@ -251,8 +251,15 @@ export default function ProfilePage() {
       <section className="gc-profile-section">
         <h2>Account</h2>
         {roleBadge && (
-          <div className="gc-role-badge">
-            {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div className="gc-role-badge">
+              {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
+            </div>
+            {isAdmin && (
+              <Link to="/admin" className="gc-btn gc-btn--ghost gc-btn--sm">
+                Admin Portal →
+              </Link>
+            )}
           </div>
         )}
         <CollaboratorRequest />
