@@ -14,7 +14,10 @@ const LoginPage = React.lazy(() => import('./pages/LoginPage'))
 const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
 const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
+const AdminPage = React.lazy(() => import('./pages/AdminPage'))
+const EditorPage = React.lazy(() => import('./pages/EditorPage'))
 import NavBar from './components/ui/Navbar'
+import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoutePage'
@@ -41,6 +44,8 @@ export default function App(){
             <Route path="/resources" element={<Resources />} />
             <Route path="/resources/:slug" element={<ResourcePost />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
+            <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

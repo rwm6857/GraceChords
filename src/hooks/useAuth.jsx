@@ -3,6 +3,15 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
+const ROLE_ORDER = ['user', 'collaborator', 'editor', 'admin', 'owner']
+
+function checkHasMinRole(userRole, minRole) {
+  const userIdx = ROLE_ORDER.indexOf(userRole || 'user')
+  const minIdx = ROLE_ORDER.indexOf(minRole || 'user')
+  if (minIdx < 0) return false
+  return userIdx >= minIdx
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined) // undefined = loading
   const [profile, setProfile] = useState(null)
@@ -24,22 +33,36 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function fetchProfile(userId, isStale = () => false) {
-    const { data, error } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
-    if (!isStale() && !error) setProfile(data)
+
+    if (isStale()) return
+    if (!userError && userData) {
+      setProfile(userData)
+    }
   }
+
+  const role = profile?.role || 'user'
 
   const value = {
     session,
     profile,
     loading: session === undefined,
     isLoggedIn: !!session,
-    isEditor: ['admin', 'editor'].includes(profile?.global_role),
-    isContributor: profile?.global_role != null,
+    // Legacy fields kept for backward compat
+    isEditor: ['admin', 'editor', 'owner'].includes(role),
+    isContributor: profile?.global_role != null || checkHasMinRole(role, 'collaborator'),
     refreshProfile: () => session && fetchProfile(session.user.id),
+    // New role system
+    role,
+    isOwner: role === 'owner',
+    isAdmin: checkHasMinRole(role, 'admin'),
+    isEditorRole: checkHasMinRole(role, 'editor'),
+    isCollaborator: checkHasMinRole(role, 'collaborator'),
+    hasMinRole: (minRole) => checkHasMinRole(role, minRole),
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -48,7 +71,21 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) {
-    return { session: null, profile: null, loading: false, isLoggedIn: false, isEditor: false, isContributor: false, refreshProfile: () => {} }
+    return {
+      session: null,
+      profile: null,
+      loading: false,
+      isLoggedIn: false,
+      isEditor: false,
+      isContributor: false,
+      refreshProfile: () => {},
+      role: 'user',
+      isOwner: false,
+      isAdmin: false,
+      isEditorRole: false,
+      isCollaborator: false,
+      hasMinRole: () => false,
+    }
   }
   return ctx
 }

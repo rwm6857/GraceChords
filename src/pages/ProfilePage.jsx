@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
+import CollaboratorRequest from '../components/CollaboratorRequest'
 import { showToast } from '../utils/app/toast'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
@@ -164,7 +165,7 @@ export default function ProfilePage() {
   }
 
   const currentSprite = sprite || 'music-note'
-  const roleBadge = profile.global_role
+  const roleBadge = profile.global_role || profile.role
   const showContributorRequestBtn = !roleBadge && contributorRequestsEnabled && !pendingRequest
 
   return (
@@ -254,6 +255,7 @@ export default function ProfilePage() {
             {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
           </div>
         )}
+        <CollaboratorRequest />
         {showContributorRequestBtn && (
           <button
             className="gc-btn gc-btn--secondary"

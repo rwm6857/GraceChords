@@ -20,7 +20,7 @@ export default function Navbar(){
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
-  const { isLoggedIn, loading: authLoading, session, profile } = useAuth()
+  const { isLoggedIn, loading: authLoading, session, profile, hasMinRole, role } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = React.useState(false)
   const userMenuRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -153,6 +153,12 @@ export default function Navbar(){
           <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Daily Word</Link>
           <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
           <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Wiki</a>
+          {isLoggedIn && hasMinRole('admin') && (
+            <Link to="/admin" className={`gc-navlink ${isActive('/admin') ? 'active':''}`} style={isActive('/admin') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Admin Portal</Link>
+          )}
+          {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
+            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Editor Portal</Link>
+          )}
           <OfflineBadge />
           {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
           <button
@@ -226,6 +232,12 @@ export default function Navbar(){
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>Daily Word</Link>
               <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Blog</Link>
               <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Wiki</a>
+              {isLoggedIn && hasMinRole('admin') && (
+                <Link to="/admin" onClick={closeDrawer} className={`gc-navlink ${isActive('/admin') ? 'active':''}`}>Admin Portal</Link>
+              )}
+              {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
+                <Link to="/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/editor') ? 'active':''}`}>Editor Portal</Link>
+              )}
             </div>
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
