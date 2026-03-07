@@ -16,11 +16,15 @@
   - [[ChordPro-Guide]]
   - [[Importing-Lyrics]]
   - [[PDF-and-Printing]]
-  - [[Admin-Tool]]
-  - [[Admin-Resources]]
-  - [[Admin-Tips]]
   - [[Offline-Support]]
   - [[Troubleshooting]]
+
+- **Roles & Admin**
+  - [[Roles-and-Access]]
+  - [[Admin-Tool]]
+  - [[Admin-Portal]]
+  - [[Admin-Resources]]
+  - [[Admin-Tips]]
 
 - **Developer Guide**
   - [[Getting-Started]]

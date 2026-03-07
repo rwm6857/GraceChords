@@ -3,7 +3,7 @@ Build and export a worship set that remembers your choices.
 ## At a glance
 - Add songs and drag to reorder
 - Set per-song target keys
-- Saved to `localStorage` (named saves)
+- **Cloud saves** (Supabase) for signed-in users; `localStorage` fallback for guests
 - Language chips select preferred translation variant for add/search lists
 - Export PDF or PPTX
 - Share a link to the current set
@@ -16,16 +16,27 @@ Build and export a worship set that remembers your choices.
 5. Use **Share Set** to copy a link that restores the exact set and target keys.
 6. Print the set for a simple checklist (print-only outline is included).
 
-Translation behavior
+## Saved Sets
+
+When signed in, sets are saved to Supabase (`saved_sets` table) and sync across devices. Operations use `src/utils/setlists/supabaseSets.js`:
+- `fetchSavedSets()` — loads all sets for the current user, ordered by last updated
+- `upsertSavedSet({ id, name, items })` — creates or updates a set
+- `deleteSavedSet(id)` — removes a set
+
+When not signed in, sets fall back to `localStorage`.
+
+Set limits: accounts must be collaborator-eligible (7+ days old) to save more than the default guest limit. See [[Roles-and-Access]].
+
+## Translation behavior
 - Setlist add/search uses the same translation grouping model as Song Library.
 - Search matches alternate titles/tags/authors from all variants in each translation group.
 - Results prioritize songs available in the selected language.
 - Selected song language is persisted to `localStorage` (`pref:songLanguage`) and shared with Songs/SongView/Songbook.
 
-Toolbar
-- Title line shows the current set name (defaults to “New Setlist”).
+## Toolbar
+- Title line shows the current set name (defaults to "New Setlist").
 - Left cluster: Save, Load (modal), New, Delete.
 - Right cluster: Export PDF, Export PPTX, Share Set, Worship Mode.
 - Worship Mode works with or without a selection (blank launch allowed).
 
-[[SongView]] [[Slides-(PPTX)]] [[PDF-and-Printing]]
+[[SongView]] [[Slides-(PPTX)]] [[PDF-and-Printing]] [[Roles-and-Access]]

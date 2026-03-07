@@ -1,18 +1,39 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/`: React app (components, pages, utils, styles, tests). Key areas: `src/components/readings` (Daily Word), `src/utils/pdf_mvp`, `src/utils/pdf`, `src/utils/chordpro`, `src/data/index.json`.
-- `public/`: user content and static assets — songs in `public/songs/`, UI fonts in `public/fonts/`, optional slides in `public/pptx/`, generated ESV JSON in `public/esv/`.
-- `scripts/`: maintenance tasks (index build, filename normalization, wiki sync).
+- `src/`: React app (components, pages, utils, styles, tests).
+  - `src/pages/AdminPage.jsx` — Admin Portal (user/role management); requires `admin` role via `RoleGuard`
+  - `src/pages/EditorPage.jsx` — Editor Portal landing page; requires `editor` role
+  - `src/components/auth/RoleGuard.jsx` — redirects users lacking the required minimum role
+  - `src/components/CollaboratorRequest.jsx` — collaborator access request UI for `user`-role accounts
+  - `src/hooks/useAuth.jsx` — auth context: `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`, `isCollaborator`
+  - `src/lib/supabase.js` — Supabase client
+  - `src/utils/setlists/supabaseSets.js` — Supabase-backed saved set CRUD
+  - `src/utils/pdf_mvp/` — PDF engine with tests and font registrar
+  - `src/utils/pdf/` — facade and multi-song/songbook exports
+  - `src/utils/chordpro/` — parser, serializer, normalization, helpers
+  - `src/data/index.json` — generated song index (legacy static fallback); do not hand-edit
+  - `src/styles/tokens.css` — `--gc-*` design tokens (light/dark, spacing, type scale)
+  - `src/styles/admin-portal.css` — Admin/Editor portal styles
+  - `src/components/ui/layout-kit/` — reusable UI primitives (Card, Toolbar, Chip, etc.)
+- `public/`: static assets — `resources/` for blog posts, `wiki/` as wiki source, `bible/` for translation manifest + chapter JSON, `fonts/` for UI fonts. **Songs are in Supabase, not `public/songs/`.**
+- `supabase/migrations/`: SQL migrations — apply in order for `users`, `songs`, `user_starred_songs`, `saved_sets`, `collaborator_requests` tables.
+- `scripts/`: maintenance tasks (index build, filename normalization, wiki sync, ingest CLI).
 - `docs/`: Vite build output for GitHub Pages. Do not edit by hand.
-- `ESV.xml` lives at repo root (not committed) and is required for `build:esv`.
+
+## Supabase & Auth
+- Supabase is used for auth, song storage, starred songs, saved sets, and collaborator requests.
+- Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+- Role system: `user → collaborator → editor → admin → owner` (stored in `public.users.role`).
+- Use `hasMinRole(minRole)` from `useAuth` for role checks; never hardcode role strings in conditionals unless adding a new role.
+- RLS policies on all tables — test with a non-owner account before shipping.
 
 ## Build, Test, and Development Commands
 - `npm ci`: install exact dependencies.
 - `npm run dev`: start Vite dev server (http://localhost:5173).
 - `npm run build`: produce static site into `docs/`.
 - `npm run preview`: preview the production build locally.
-- `npm run build-index`: generate `src/data/index.json` from `public/songs/`.
+- `npm run build-index`: generate `src/data/index.json` (legacy; songs now live in Supabase).
 - `npm run build:esv`: generate `public/esv/<Book>/<Chapter>.json` from `ESV.xml` at repo root.
 - `npm run normalize`: normalize song/PPTX filenames into canonical forms.
 - `npm test` / `npm run test:watch`: run Vitest (happy-dom + Testing Library).
@@ -39,11 +60,13 @@
 
 ## Commit & Pull Request Guidelines
 - Commit style: conventional preferred — `type(scope): summary`.
-  - Examples: `feat(songbook): two‑column reading view`, `fix(pdf): prevent orphan lines`, `chore(index): rebuild`.
-- PRs: include a clear description, linked issues, and screenshots/GIFs for UI changes. Note any data/index impacts.
-- Before opening: run `npm test`, `npm run build`, and (if you added songs) `npm run build-index`.
-- Do not commit secrets or `.env`; do not hand‑edit `docs/`.
+  - Examples: `feat(admin): collaborator request queue`, `fix(pdf): prevent orphan lines`, `chore(index): rebuild`.
+- PRs: include a clear description, linked issues, and screenshots/GIFs for UI changes. Note any data/index or Supabase migration impacts.
+- Before opening: run `npm test`, `npm run build`, and (if schema changed) note which migrations to apply.
+- Do not commit secrets or `.env`; do not hand-edit `docs/`.
 
 ## Security & Configuration Tips
-- Local `.env`: set `VITE_ADMIN_PW=your-password`. For deploys, set the same repo secret; optional `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust caches.
+- Local `.env`: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_ADMIN_PW`. For deploys, add the same as repository secrets.
+- `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust service worker caches.
 - Fonts for PDF export must exist in `src/assets/fonts/` (see README for list).
+- New Supabase tables must have RLS enabled and appropriate policies before merging.
