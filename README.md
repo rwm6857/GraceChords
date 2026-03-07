@@ -1,29 +1,28 @@
 # GraceChords
 
-GraceChords is a React + Vite single-page application for managing and playing a ChordPro songbook. It supports fast search, chord transposition, setlist building, and PDF exports for practice or performance.
+GraceChords is a React + Vite single-page application for managing and playing a ChordPro songbook. It supports fast search, chord transposition, setlist building, and PDF exports for practice or performance. Songs are stored in Supabase and served via authenticated API calls.
 
 ## Features
-- 🔍 Instant search with tag filters
-- 🌐 Translation-aware song catalog (`song_id` + language chips)
-- 🎸 Song view with key transposition, chord toggling, and single-song PDF download
-- 📋 Setlist builder for reordering and transposing multiple songs with multi-song PDF export (sticky pane headers, independent scrolling, named saves, shareable links)
-- 📦 Bundle download for predefined groups of songs
-- 🛠️ Admin interface for authoring songs and rebuilding the index
-- 📚 Resources (blog-style posts) with search, tags, and an admin editor
-- 📖 Daily Word reading view (M’Cheyne plan) with local Bible text, verse selection, and copy
-- 🌓 Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
- - 🧭 SongView 1/2‑column reading view (site‑side)
-- 🎤 Worship/Perform Mode — full‑screen, touch‑friendly view with auto‑fit text, swipe/arrow navigation, and quick transpose
+- Fast search with tag filters and translation-aware song catalog
+- Song view with key transposition, chord toggling, and single-song PDF download
+- Setlist builder for reordering and transposing multiple songs with multi-song PDF export (sticky pane headers, independent scrolling, named cloud saves, shareable links)
+- Songbook builder for predefined groups of songs
+- Role-based access control (user, collaborator, editor, admin, owner)
+- Admin Portal for user/role management and collaborator request review
+- Resources (blog-style posts) with search, tags, and an admin editor
+- Daily Word reading view (M'Cheyne plan) with local Bible text, verse selection, and copy
+- Light/dark theme toggle and keyboard shortcuts (`c`, `[`, `]`)
+- SongView 1/2-column reading view
+- Worship/Perform Mode — full-screen, touch-friendly view with auto-fit text, swipe/arrow navigation, and quick transpose
 
 ## Project Structure
 ```
 src/            # components, hooks, utilities, tests
-public/         # ChordPro files and font assets
-public/bible/   # translation manifest + generated Bible chapter JSON
-scripts/        # maintenance scripts (e.g., index generation)
+supabase/       # SQL migrations (songs, users, starred songs, saved sets, collaborator requests)
+public/         # font assets, bible data, wiki source, resources
+scripts/        # maintenance scripts (index generation, wiki sync, ingest CLI)
 docs/           # local Vite build output (gitignored)
 ```
-Bible XML source files should be placed under `BIBLE_XML/` (not committed) for import into `public/bible/<lang>/<id>/`.
 
 ## UI Styling
 GraceChords uses a UIKit-inspired, token-driven UI kit.
@@ -33,6 +32,7 @@ GraceChords uses a UIKit-inspired, token-driven UI kit.
 - Prefer `gc-*` classes and layout kit components for new UI. Avoid hardcoded colors.
 
 ## Installation
+
 Use Node.js 20 LTS and install dependencies with `npm ci`:
 ```bash
 npm ci
@@ -40,6 +40,28 @@ npm run dev
 ```
 
 Visit `http://localhost:5173` (default Vite port) to explore the app.
+
+### Environment Variables
+
+Create a `.env` at the repo root:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_ADMIN_PW=your-password              # legacy gate for ingest CLI
+VITE_ENABLE_DISCLAIMER=1                  # set to 0 to disable footer/PDF disclaimers
+VITE_CONTACT_EMAIL=you@example.com        # optional contact line in disclaimers
+```
+
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are required for all song loading and authentication. Find these in your Supabase project's **Settings → API** page.
+
+### Supabase Setup
+
+Apply all migrations under `supabase/migrations/` in order to create the required tables and RLS policies. Key tables:
+- `public.users` — user profiles with `role` column (`user`, `collaborator`, `editor`, `admin`, `owner`)
+- `public.songs` — full song catalog with ChordPro content, metadata, and star counts
+- `public.user_starred_songs` — per-user song stars
+- `public.saved_sets` — Supabase-backed setlist saves for logged-in users
+- `public.collaborator_requests` — queue for users requesting collaborator access
 
 ## Testing
 Run the test suite with:
@@ -50,17 +72,17 @@ npm test
 For more detail, see the [Getting Started](../../wiki/Getting-Started) and [Contributing](../../wiki/Contributing) pages.
 
 ## Building & Deployment
-See the wiki page for details on CI/CD and wiki sync: ../../wiki/Build-and-Deploy
+
 Generate the static site locally into `docs/` (gitignored):
 ```bash
 npm run build
 ```
 GitHub Pages deploys automatically from the GitHub Actions workflow `.github/workflows/pages-deploy.yml` on pushes to `main` (no `docs/` commit required).
+
 Daily Word requires local Bible chapter JSON. Place XML files in `BIBLE_XML/` and run:
 ```bash
 npm run build:bibles
 ```
-Run this only when Bible XML files are added/updated.
 
 To ingest a single XML translation into the shared Bible structure:
 ```bash
@@ -68,162 +90,105 @@ npm run build:bible -- --xml ./BIBLE_XML/EnglishNLTBible.xml
 ```
 
 This writes chapter files to `public/bible/<lang>/<id>/` and updates `public/bible/translations.json`.
+
 Keep the root `404.html` (SPA fallback) in the repo when deploying.
 
 Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
 
 ## SEO & Sitemaps
-- Per-page metadata is provided via `react-helmet-async` (`HelmetProvider` in `src/main.jsx`, with `Helmet` in route pages such as `src/pages/HomeDashboardPage.jsx` and `src/pages/SongViewPage.jsx`).
-- Song pages tagged `ICP` get an InterCP-specific meta extension (description/keywords/JSON-LD) plus a visible badge on the page.
-- Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` (plus shell pages for top routes) so Google can crawl lyrics/content before JS runs.
-- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml` with top-level routes plus `/songs/:id` and `/resources/:slug`).
+- Per-page metadata is provided via `react-helmet-async`.
+- Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` so Google can crawl content before JS runs.
+- Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml`).
 - `public/sitemap.xml` and `public/robots.txt` are served from the site root on GitHub Pages; keep both committed.
 
+## Roles & Access
+
+GraceChords uses five roles: **user → collaborator → editor → admin → owner**.
+
+| Role | Key Permissions |
+|------|----------------|
+| user | Star songs, personal features |
+| collaborator | Suggest song edits/additions (requires 7-day-old account + admin approval) |
+| editor | Add/edit songs & posts directly, approve suggestions; access to `/editor` |
+| admin | Delete content, promote users, manage collaborator requests; access to `/admin` |
+| owner | Unrestricted — promote to admin, delete accounts |
+
+Routes `/admin` and `/editor` are protected by `RoleGuard`. Users without the required role are redirected to `/` with a toast.
+
+### Admin Portal (`/admin`)
+The Admin Portal lets admins and owners:
+- View all users with roles and account ages
+- Promote or demote user roles
+- Approve or deny collaborator access requests
+- (Owner only) Delete user accounts
+
+### Editor Portal (`/editor`)
+Landing page for editors linking to song and resource management tools.
+
+### Requesting Collaborator Access
+Regular users with 7+ day-old accounts can request collaborator access from the Profile page (`/profile`). Requests appear in the Admin Portal for review.
+
 ## Worship/Perform Mode
-Full‑screen, minimal UI optimized for live performance.
+Full-screen, minimal UI optimized for live performance.
 
-Access
-- From a song: use the “Open in Worship Mode” button on the Song page.
-- From a set: use “Open in Worship Mode” in Setlist to load the current set.
-- Direct URL: `/worship/<id1,id2,...>` (comma‑separated song IDs). Example: `/worship/abba,above-all`.
+Access:
+- From a song: use the "Open in Worship Mode" button.
+- From a set: use "Open in Worship Mode" in Setlist to load the current set.
+- Direct URL: `/worship/<id1,id2,...>` (comma-separated song IDs).
 
-Layout & Fit
-- Renders an entire song on a single page (no pagination), single column.
-- Auto‑fit font using the same candidate window as the PDF engine: tries sizes `16 → 12` px and chooses the largest that fully fits the viewport; you can override manually.
-- Chords render above lyrics with exact positioning; comments display in italic.
+Layout & Fit:
+- Renders an entire song on a single page, single column.
+- Auto-fit font tries sizes `16 → 12` px and chooses the largest that fits; manual override available.
 
-Controls (floating toolbar)
-- NEXT →: advance to next song in the list.
-- Key Up (♯): raise key by 1 semitone; Reset Key: revert to original.
-- Theme: toggles light/dark (persists via existing theme utilities).
-- Font Size A−/A+: manual override (persists); use page reload to re‑enable auto‑fit.
-- Chords On/Off toggle.
+Controls (floating toolbar): NEXT, Key Up/Reset, Theme, Font Size A−/A+, Chords On/Off.
 
-Navigation
-- Mobile/tablet: swipe left = NEXT, swipe right = PREV.
-- Desktop: Arrow Right/Left keys.
+Navigation: swipe left/right on mobile; Arrow Right/Left on desktop.
 
-Persistence
-- Theme: `gracechords.theme` (via `src/utils/app/theme.js`).
-- Worship settings: `worship:transpose`, `worship:showChords`, `worship:fontSize`.
-
-Notes
-- Worship Mode hides the site navbar for clarity (route is outside the shared `Layout`).
-- Uses the same chord rendering approach as SongView for alignment.
-- Keep song IDs and filenames up to date by running `npm run build-index` after adding songs.
-
-## Admin & Index Generation
-Set the admin password via an environment variable and open `/admin` to author songs in ChordPro. Use Stage to queue changes; you can either publish a PR or download a ZIP of staged files.
-
-```bash
-VITE_ADMIN_PW=your-password # in .env
-npm run build-index
-```
-
-Add `VITE_ADMIN_PW` to a local `.env` file for development and configure the same variable as a GitHub repository secret so builds receive it.
-
-Admin highlights:
-- Load an existing song from the index, edit in place, and Stage to queue changes.
-- “Edits Author” is required when publishing — your name is appended to the PR body.
-- Publish Staged opens a PR with staged files; Download Staged saves a ZIP for manual copy.
-- Quick chord buttons insert `[C]`, `[Am]`, etc., at the caret; buttons adapt to the song’s key (I, ii, iii, IV, V, vi).
-
-Manual publish (no PR):
-1) Stage → Download Staged → unzip → copy to `public/songs/` → `npm run build-index` → `npm run build`.
+Persistence: `worship:transpose`, `worship:showChords`, `worship:fontSize` in `localStorage`.
 
 ## Song Translations
-GraceChords supports separate `.chordpro` files per language variant.
+GraceChords supports per-language variants linked by `song_id`.
 
 - Link variants with `{song_id: <shared-id>}`.
-- Mark file language with `{lang: <code>}` (`en`, `tr`, `ar`, `es`).
-- If `{lang: ...}` is omitted, language defaults to English (`en`).
-- Translation titles can differ from English titles. Matching is by `song_id`, not by title text.
+- Mark language with `{lang: <code>}` (`en`, `tr`, `ar`, `es`). Defaults to English if omitted.
+- Translation titles can differ from English titles; matching is by `song_id`.
 
-Example:
-```chordpro
-{title: Send Us Lord}
-{song_id: send-us-lord}
-{lang: en}
-```
+Metadata inheritance: for each `song_id` group, English is master. Translations inherit `key`, `tags`, `authors`, `country`, `youtube`, `mp3`, and `pptx` unless they set a non-empty override.
 
-```chordpro
-{title: Rab Bizi Gonder}
-{song_id: send-us-lord}
-{lang: tr}
-```
-
-Default and persistence behavior:
-- Song language defaults from UI/browser locale when possible.
-- User override is saved in `localStorage` under `pref:songLanguage`.
-- The same preference is reused across Song Library, SongView, Setlist, Songbook, Home suggestions, and Worship Mode resolution.
-
-Metadata inheritance behavior:
-- For each `song_id` group, English is treated as master/source of truth when present.
-- Translations inherit `key`, `tags`, `authors`, `country`, `youtube`, `mp3`, and `pptx` unless the translation sets a non-empty value for that field.
-- Blank values in translation files still inherit from English.
-
-Song Library behavior:
-- Language chips appear only for languages that have at least one real translation group.
-- Results are sorted in two blocks:
-  - songs with selected-language translation (A-Z)
-  - songs without selected-language translation (A-Z), under "No Translation in Selected Language"
-- Search matches alternate titles/tags/authors across all variants in a group.
+Song Library: language chips appear for languages with at least one real translation. Results sort songs with selected-language translations first (A-Z), then the rest under "No Translation in Selected Language".
 
 ## Resources (Guides/Articles)
-GraceChords includes a lightweight resources/blog system for worship teams.
+Content lives in `public/resources/*.md` with YAML-style frontmatter:
 
-- Content lives in `public/resources/*.md` with YAML-style frontmatter:
+```md
+---
+title: "Leading Worship with Confidence"
+author: "Ryan Moore"
+date: "2025-09-10"
+tags: ["leadership", "vocals"]
+summary: "Practical tips for worship leaders."
+---
 
-  ```md
-  ---
-  title: "Leading Worship with Confidence"
-  author: "Ryan Moore"
-  date: "2025-09-10"
-  tags: ["leadership", "vocals"]
-  summary: "Practical tips for worship leaders."
-  ---
-
-  # Heading
-  Markdown content…
-  ```
-
-- Index page: `/resources` — grid of cards, search (title/summary, falls back to content), tag filters.
-- Post page: `/resources/:slug` — renders Markdown with support for images, links, blockquotes, lists, headings, code, and raw HTML embeds (e.g., YouTube iframes).
-- Admin editor: `/admin/resources` — create/edit posts with live preview and PR publishing (uses the same GitHub token flow as songs). Requires the “Edits Author” field.
-
-Build & CI
-- Rebuild resources index after adding/editing `.md` files:
-  ```bash
-  npm run build-resources-index
-  ```
-- CI automation: see “CI & Automation” section (below) for the single unified workflow that rebuilds indexes, sitemap, docs, and Telegram posts when needed.
-
-## PDF Fonts
-Place the following font files in `src/assets/fonts/` so the PDF exporter can bundle them (they are imported with `?url` and registered at runtime):
-- `NotoSans-Regular.ttf`
-- `NotoSans-Bold.ttf`
-- `NotoSans-Italic.ttf`
-- `NotoSans-BoldItalic.ttf`
-- `NotoSansMono-Regular.ttf`
-- `NotoSansMono-Bold.ttf`
-
-These fonts cover multilingual glyphs used in translated charts, including Turkish characters.
-
-## Normalization
-Keep filenames consistent and avoid duplicates before building the index:
-
-```bash
-npm run normalize
-npm run build-index
+# Heading
+Markdown content…
 ```
 
-The normalizer converts hyphens/spaces to underscores (e.g., `all-in-all.chordpro` → `all_in_all.chordpro`) and, when both forms exist, keeps the underscore file and deletes the hyphen one. It also copies/renames PPTX from `TO_RENAME/` to `public/pptx/` with normalized names.
+- Index page: `/resources` — grid of cards, search, tag filters.
+- Post page: `/resources/:slug` — renders Markdown with images, links, and HTML embeds.
+- Admin editor: `/admin/resources` — requires editor role.
 
-## Disclaimer Controls
-Set `VITE_ENABLE_DISCLAIMER=0` to disable the site footer, ChordPro comment block appending, and PDF footers. Optionally set `VITE_CONTACT_EMAIL=you@example.com` to append a contact line in site/ChordPro disclaimers.
+Rebuild the resources index after adding/editing `.md` files:
+```bash
+npm run build-resources-index
+```
+
+## PDF Fonts
+Place the following font files in `src/assets/fonts/`:
+- `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`, `NotoSans-Italic.ttf`, `NotoSans-BoldItalic.ttf`
+- `NotoSansMono-Regular.ttf`, `NotoSansMono-Bold.ttf`
 
 ## Importing Lyrics (DOCX/PDF/Images → ChordPro)
-Recommended: use the standalone ingest CLI under `scripts/ingest/` (supports DOCX/PDF/images + OCR, staging, normalization, and compare reports).
+Use the standalone ingest CLI under `scripts/ingest/`:
 
 ```bash
 cd scripts/ingest
@@ -236,97 +201,57 @@ npx gc-ingest
 # or ingest a single file
 npx gc-ingest ingest /path/to/song.pdf
 
-# ingest a multi-song PDF songbook (bilingual-aware splitter)
+# ingest a multi-song PDF songbook
 npx gc-ingest ingest-songbook /path/to/songbook.pdf
 ```
 
-Legacy: Convert documents into a ChordPro skeleton with section blocks. Default output uses short ChordPro directives.
-
-```bash
-# DOCX → ChordPro (directives default)
-npm run ingest -- path/to/song.docx
-
-# PDF → ChordPro (default output: public/songs)
-npm run ingest -- path/to/song.pdf
-
-# Plain headers instead of directives
-npm run ingest -- path/to/song.pdf --plain
-```
-
-Notes
-- The ingest CLI writes staged output under `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
-- `ingest-songbook` is designed for large multi-page PDFs: it keeps page order, ignores cover/TOC-style pages, and splits numbered Turkish/English song pairs into separate staged songs when detected.
-- Songbook ingest also maps Turkish section markers (`[KITA]`, `[NAKARAT]`, `[KÖPRÜ]`) to standard ChordPro section directives and normalizes titles to Title Case while keeping the song number.
-- Optional deps: `mammoth` for DOCX, `pdf-parse` for PDF.
-- Default wraps sections using `{sov|soc|sob}` / `{eov|eoc|eob}`; `--plain` emits readable headers (e.g., `Verse 1`, `Pre‑Chorus`).
-- Output directory must exist. By default it is `public/songs`. Use `--out <dir>` to override.
-- If the target filename already exists, the tool interactively asks to Overwrite, Rename, Skip, or Abort.
-- After import: `npm run normalize && npm run build-index`.
-- The tool strips a leading title duplicate and recognizes lines like `(Key of G)` to populate `{key: G}` while removing the line from lyrics. Pure chord-only lines are ignored.
-- Output filenames use underscores by default (e.g., `above_all.chordpro`).
+Notes:
+- Staged output goes to `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
+- `ingest-songbook` handles large multi-page PDFs, ignores cover/TOC pages, and splits bilingual song pairs.
+- Maps Turkish section markers (`[KITA]`, `[NAKARAT]`, `[KÖPRÜ]`) to ChordPro directives.
 
 ## CI & Automation
-- Single workflow: `.github/workflows/automation.yml` runs on pushes to `main` (and manual dispatch) and decides what to do based on changed files.
-  - Telegram (opt-in): send only when the commit message contains `#post`/`#announce` (`[post]`/`[announce]` also work). Skips if Telegram secrets are missing.
-  - Wiki: if `public/wiki/**` changes, runs `scripts/syncWiki.mjs` (needs `WIKI_PUSH_TOKEN`).
-  - Indexes: if `public/songs/**` or `scripts/buildIndex.mjs` change, runs `npm run build-index`. If `public/resources/**` or `scripts/buildResourcesIndex.mjs` change, runs `npm run build-resources-index`.
-  - Sitemap: runs `npm run generate:sitemap` when song/resource data or sitemap script changes.
-  - Build: runs `npm run build` with `VITE_COMMIT_SHA=${{ github.sha }}` when code or generated data/sitemap changed.
-  - Commit: stages `src/data/*.json` and `public/sitemap.xml`/`public/robots.txt` into a single commit (`chore: automation for <sha>`).
-  - Pages deploy: `.github/workflows/pages-deploy.yml` builds and deploys the site artifact to GitHub Pages without committing `docs/`.
-  - Concurrency: one automation run per branch (`automation-${ref}`), canceling in-progress duplicates.
-- Bot-origin pushes are ignored to avoid loops.
+Single workflow: `.github/workflows/automation.yml` runs on pushes to `main` and decides what to do based on changed files.
+- **Telegram** (opt-in): sends when the commit message contains `#post`/`#announce`.
+- **Wiki**: if `public/wiki/**` changes, runs `scripts/syncWiki.mjs` (needs `WIKI_PUSH_TOKEN`).
+- **Indexes**: rebuilds `src/data/index.json` and resources index when source files change.
+- **Sitemap**: regenerates `public/sitemap.xml` when song/resource data changes.
+- **Build**: runs `npm run build` with `VITE_COMMIT_SHA=${{ github.sha }}`.
+- **Pages deploy**: `.github/workflows/pages-deploy.yml` builds and deploys to GitHub Pages.
 
 **PDF Export (MVP Engine)**
-- **Engine:** single-song, setlist, and songbook exporters live at `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
-- **Decision ladder:** 1-col single page at sizes `16 → 12` pt; else 2-col at `16 → 12` pt; else 1-col multipage at 15 pt (header only on page 1).
-- **Typography:** Title 26 pt bold; Key 16 pt italic gray (`rgb(90,90,90)`); lyrics/chords 12–16 pt with ~1.2× line-height; section headers same size as lyrics (bold).
-- **Chords:** appear above the exact lyric character; no overlaps (≥ one space width); trailing chords flush to end.
-- **Sections:** never split across columns/pages; compact, consistent spacing.
-- **Songbook TOC:** entries show “#. Title” (no page numbers). Defaults to one column; switches to two before spilling to a second page; continued pages use two columns. Default cover shows “GraceChords Songbook” + date.
-- **Tests:** run `npm run test:mvp` to guard column/size/page decisions, chord alignment, header spacing.
-- See `src/utils/pdf_mvp/README.md` and the wiki page for details.
+- Engine: `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
+- Decision ladder: 1-col single page at sizes `16 → 12` pt; else 2-col at `16 → 12` pt; else 1-col multipage at 15 pt.
+- Typography: Title 26 pt bold; lyrics/chords 12–16 pt with ~1.2× line-height.
+- Tests: `npm run test:mvp`.
+- See `src/utils/pdf_mvp/README.md` for details.
 
 ## PPTX Slides
-Place PowerPoint lyric decks in `public/pptx/` named after the song's file name without the `.chordpro` extension.
-For example, a song stored as `public/songs/glorious-king.chordpro` can have slides at `public/pptx/glorious-king.pptx`.
-Files committed under `public/` are served directly by GitHub Pages, so adding a PPTX is as simple as dropping it in this directory and committing.
+Place PowerPoint lyric decks in `public/pptx/` named after the song's file slug (e.g., `glorious-king.pptx`).
 
 ## Offline Support
-GraceChords registers a service worker to make core assets available offline. During the install event it pre-caches the app shell (`index.html`), the song index, and bundled fonts. At runtime the worker caches additional scripts, styles, fonts, documents, assets under `/assets/` or `/src/data/`, and individual song files as they are fetched.
-
-The cache name includes a commit hash from the `VITE_COMMIT_SHA` environment variable so that each deployment invalidates older caches. Set it when building to force clients to fetch the latest files, for example:
+GraceChords registers a service worker to make core assets available offline. The cache name includes a commit hash from `VITE_COMMIT_SHA` so each deployment invalidates older caches.
 
 ```bash
 VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
 ```
 
-During development you can disable the worker by commenting out its registration in `index.html` or by unregistering via the browser console:
-
-```js
-navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-```
-
-Song files (`/songs/**`) and the index (`/src/data/index.json`) are fetched with a network‑first strategy so edits appear promptly after deploy. To pick up changes without a full rebuild, call `navigator.serviceWorker.getRegistration().then(r => r.update())` or clear cached data.
+Song files are fetched with a network-first strategy so edits appear promptly after deploy.
 
 ## Usage Notes
-- **Home**: search and tag filters, select-all/clear, per-song key, bundle builder at `/bundle`.
-- **Song page**: vertical layout, sticky toolbar (transpose & download), chord toggle (on by default), 1/2‑column reading view, collapsible media.
-- **Editor shortcut**: floating pencil button (bottom-right) opens the editor. On song/resource pages it preloads that item; on the song/resources list it starts a new entry of that type; elsewhere it opens a new song draft.
-- **Setlist**: `/setlist` lets you build/reorder sets, choose keys, save/load by name (modal), share a link, and export PDF/PPTX. Headers are sticky within each pane; panes scroll independently.
-- **Songbook**: builder mirrors Setlist layout and width; sticky header with inline search and “Add all”. Export always includes a TOC; optional cover image.
-- **PDFs**: vector text with Noto Sans; sections stay together; layout auto‑switches to two columns when needed.
+- **Home**: search and tag filters, per-song key, bundle builder at `/bundle`.
+- **Song page**: sticky toolbar (transpose & download), chord toggle, 1/2-column reading view, collapsible media.
+- **Setlist**: build/reorder sets, choose keys, cloud save/load by name (modal), share a link, export PDF/PPTX.
+- **Songbook**: mirrors Setlist layout; export includes a TOC and optional cover image.
+- **PDFs**: vector text with Noto Sans; sections stay together; auto-switches to two columns when needed.
 
 ## Sorting & Index
 - The index builder ignores files prefixed with `test_*.chordpro`.
-- Sorting places numeric titles first; otherwise titles are compared case‑insensitively, ignoring leading punctuation (e.g., `'Tis` sorted under `T`).
-
-## Next Steps
-Explore utilities in `src/utils` for chord transposition and PDF generation, check `scripts/buildIndex.mjs` for index creation, and extend Vitest tests to safeguard future refactors.
+- Sorting places numeric titles first; otherwise titles are compared case-insensitively, ignoring leading punctuation (e.g., `'Tis` sorted under `T`).
 
 ## GitHub Wiki
 
-Author or edit Markdown pages under `public/wiki/` (e.g., `Home.md`, `_Sidebar.md`, etc.).
+Author or edit Markdown pages under `public/wiki/` (e.g., `Home.md`, `_Sidebar.md`).
 Set the repo secret `WIKI_PUSH_TOKEN` (a classic PAT with `repo` scope) to allow pushes to `GraceChords.wiki`.
 Trigger sync by pushing changes under `public/wiki/**` (workflow runs) or run locally:
 
@@ -334,8 +259,10 @@ Trigger sync by pushing changes under `public/wiki/**` (workflow runs) or run lo
 WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
 ```
 
-If pages don’t appear, run the diagnostic:
-
+If pages don't appear, run the diagnostic:
 ```bash
 node scripts/verifyWikiSetup.mjs
 ```
+
+## Next Steps
+Explore utilities in `src/utils` for chord transposition and PDF generation, check `supabase/migrations/` for the database schema, and extend Vitest tests to safeguard future refactors.
