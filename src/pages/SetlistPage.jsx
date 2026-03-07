@@ -9,6 +9,9 @@ import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
+import { fetchSavedSets, upsertSavedSet, deleteSavedSet } from '../utils/setlists/supabaseSets'
+import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
 import { headOk } from '../utils/network/headCache'
@@ -108,11 +111,20 @@ function buildVerseCompletion(input, suggestion){
   return { composed, prefix: raw, remainder: composed.slice(raw.length) }
 }
 
+const SET_LIMITS = {
+  owner: Infinity,
+  admin: 30,
+  editor: 30,
+  collaborator: 25,
+  user: 10,
+}
+
 export default function Setlist(){
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   const { songs, loading } = useSongs()
+  const { session: authSession, role: userRole, hasMinRole: authHasMinRole, isLoggedIn } = useAuth()
   const catalog = useMemo(() => buildSongCatalog(songs), [songs])
   const allSongsById = catalog.byId
   const languageChipCodes = catalog.translationLanguages || []
@@ -151,6 +163,7 @@ export default function Setlist(){
   const [savedSets, setSavedSets] = useState(() => listSets())
   const [selectedId, setSelectedId] = useState('')
   const [loadOpen, setLoadOpen] = useState(false)
+  const [setsLoading, setSetsLoading] = useState(false)
   const [loadChoice, setLoadChoice] = useState('')
   const [verseOpen, setVerseOpen] = useState(false)
   const [verseInput, setVerseInput] = useState('')
@@ -297,6 +310,23 @@ export default function Setlist(){
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list.map(s => `${s.id}:${s.toKey}`).join('|'), routeSongIds, location.search, routeCode])
+
+  // Load sets from Supabase when logged in
+  useEffect(() => {
+    if (!isLoggedIn) return
+    let cancelled = false
+    setSetsLoading(true)
+    fetchSavedSets().then(({ data, error }) => {
+      if (cancelled) return
+      setSetsLoading(false)
+      if (error) {
+        console.error('[Setlist] fetchSavedSets:', error)
+        return
+      }
+      if (data) setSavedSets(data)
+    })
+    return () => { cancelled = true }
+  }, [isLoggedIn])
 
   // (optional) migrate legacy single-set storage if present and nothing saved yet
   useEffect(() => {
@@ -526,34 +556,112 @@ export default function Setlist(){
     }))
   }
 
+  // Derive set limit from role
+  const userSetLimit = SET_LIMITS[userRole] ?? SET_LIMITS.user
+
   // named set helpers
-  function refreshSaved(idToSelect){
-    setSavedSets(listSets())
+  async function refreshSaved(idToSelect){
+    if (isLoggedIn) {
+      const { data, error } = await fetchSavedSets()
+      if (!error && data) setSavedSets(data)
+    } else {
+      setSavedSets(listSets())
+    }
     setSelectedId(idToSelect || '')
   }
   function onNew(){
     setCurrentId(null); setName('New Setlist'); setList([]); setSelectedId('')
   }
-  function onSave(){
+  async function onSave(){
     const proposed = (name?.trim() || 'New Setlist')
     const input = window.prompt('Save set as:', proposed)
     if (input === null) return
     const finalName = (String(input).trim() || 'New Setlist')
-    // If no current id, but a set exists with this name, overwrite it by reusing its id
-    let targetId = currentId
-    if (!targetId) {
-      const existing = (listSets() || []).find(s => (s.name || '') === finalName)
-      if (existing) targetId = existing.id
-    }
     const payload = list.map(({ id, toKey }) => ({ id, toKey }))
-    const saved = saveSet({ id: targetId, name: finalName, items: payload })
-    setName(saved.name); setCurrentId(saved.id); refreshSaved(saved.id)
+
+    if (isLoggedIn) {
+      // Client-side limit check before INSERT
+      const isNew = !currentId
+      if (isNew && savedSets.length >= userSetLimit) {
+        // Role-specific messaging
+        if (userRole === 'user') {
+          // Check eligibility for collaborator access
+          let eligible = false
+          try {
+            const { data } = await supabase.rpc('is_collaborator_eligible')
+            eligible = !!data
+          } catch {}
+          if (eligible) {
+            showToast(`You've reached the ${userSetLimit} set limit. Request collaborator access to save up to 25 sets.`)
+          } else {
+            showToast(`You've reached the ${userSetLimit} set limit.`)
+          }
+        } else {
+          showToast("You've reached your set limit.")
+        }
+        return
+      }
+
+      let targetId = currentId
+      if (!targetId) {
+        const existing = savedSets.find(s => (s.name || '') === finalName)
+        if (existing) targetId = existing.id
+      }
+
+      const { data: saved, error } = await upsertSavedSet({ id: targetId, name: finalName, items: payload })
+      if (error) {
+        if (error.message?.includes('SET_LIMIT_REACHED')) {
+          // DB-level limit error — surface role-appropriate message
+          if (userRole === 'user') {
+            let eligible = false
+            try {
+              const { supabase: sb } = await import('../lib/supabase')
+              const { data: eligData } = await sb.rpc('is_collaborator_eligible')
+              eligible = !!eligData
+            } catch {}
+            if (eligible) {
+              showToast(`You've reached the ${userSetLimit} set limit. Request collaborator access to save up to 25 sets.`)
+            } else {
+              showToast(`You've reached the ${userSetLimit} set limit.`)
+            }
+          } else {
+            showToast("You've reached your set limit.")
+          }
+        } else {
+          showToast('Failed to save set.')
+          console.error('[Setlist] upsertSavedSet:', error)
+        }
+        return
+      }
+      if (saved) {
+        setName(saved.name); setCurrentId(saved.id); await refreshSaved(saved.id)
+      }
+    } else {
+      // localStorage path
+      let targetId = currentId
+      if (!targetId) {
+        const existing = (listSets() || []).find(s => (s.name || '') === finalName)
+        if (existing) targetId = existing.id
+      }
+      const saved = saveSet({ id: targetId, name: finalName, items: payload })
+      setName(saved.name); setCurrentId(saved.id); await refreshSaved(saved.id)
+    }
   }
   function onLoadConfirm(){
     const id = loadChoice || selectedId || ''
     if (!id) { setLoadOpen(false); return }
-    const s = getSet(id)
-    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])) ; setSelectedId(s.id) }
+    if (isLoggedIn) {
+      const s = savedSets.find(set => set.id === id)
+      if (s) {
+        setCurrentId(s.id)
+        setName(s.name || 'New Setlist')
+        setList(hydrateSelections(s.items || []))
+        setSelectedId(s.id)
+      }
+    } else {
+      const s = getSet(id)
+      if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])) ; setSelectedId(s.id) }
+    }
     setLoadOpen(false)
   }
   function onOpenLoad(){
@@ -562,10 +670,16 @@ export default function Setlist(){
     setLoadOpen(true)
   }
   // Duplicate removed per request
-  function onDelete(){
+  async function onDelete(){
     if (!currentId) return
     if (window.confirm(`Delete set "${name}"? This cannot be undone.`)){
-      deleteSet(currentId); onNew(); refreshSaved('')
+      if (isLoggedIn) {
+        const { error } = await deleteSavedSet(currentId)
+        if (error) { showToast('Failed to delete set.'); return }
+      } else {
+        deleteSet(currentId)
+      }
+      onNew(); await refreshSaved('')
     }
   }
 

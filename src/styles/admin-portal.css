@@ -1,0 +1,328 @@
+/* ===== Admin / Editor Portal ===== */
+
+.gc-portal-page {
+  padding: var(--space-5) var(--space-4);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.gc-portal-page h1 {
+  font-size: var(--gc-font-title);
+  font-weight: var(--gc-weight-title);
+  margin: 0 0 var(--space-1);
+  color: var(--gc-text);
+}
+
+.gc-portal-page__subtitle {
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+  margin: 0 0 var(--space-5);
+}
+
+/* ===== Portal section card ===== */
+.gc-portal-section {
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.gc-portal-section h2 {
+  font-size: var(--gc-font-h2);
+  font-weight: var(--gc-weight-h2);
+  margin: 0 0 var(--space-4);
+  color: var(--gc-text);
+}
+
+/* ===== User management table ===== */
+.gc-user-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gc-user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gc-font-sub);
+}
+
+.gc-user-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  color: var(--gc-text-secondary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--gc-separator);
+  white-space: nowrap;
+}
+
+.gc-user-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--gc-separator);
+  vertical-align: middle;
+}
+
+.gc-user-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gc-user-table tr:hover td {
+  background: var(--gc-surface-2);
+}
+
+/* ===== Role badges ===== */
+.gc-role-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--gc-font-cap);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gc-role-pill--owner {
+  background: color-mix(in srgb, #b8610a 15%, var(--gc-surface-1));
+  color: #b8610a;
+  border: 1px solid color-mix(in srgb, #b8610a 30%, var(--gc-separator));
+}
+[data-theme="dark"] .gc-role-pill--owner {
+  background: color-mix(in srgb, #d4843a 15%, var(--gc-surface-1));
+  color: #d4843a;
+  border-color: color-mix(in srgb, #d4843a 35%, var(--gc-separator));
+}
+
+.gc-role-pill--admin {
+  background: color-mix(in srgb, #c0392b 12%, var(--gc-surface-1));
+  color: #c0392b;
+  border: 1px solid color-mix(in srgb, #c0392b 28%, var(--gc-separator));
+}
+[data-theme="dark"] .gc-role-pill--admin {
+  background: color-mix(in srgb, #e05c4b 14%, var(--gc-surface-1));
+  color: #e05c4b;
+  border-color: color-mix(in srgb, #e05c4b 32%, var(--gc-separator));
+}
+
+.gc-role-pill--editor {
+  background: color-mix(in srgb, #2a8a7a 12%, var(--gc-surface-1));
+  color: #2a8a7a;
+  border: 1px solid color-mix(in srgb, #2a8a7a 28%, var(--gc-separator));
+}
+[data-theme="dark"] .gc-role-pill--editor {
+  background: color-mix(in srgb, #3dbdab 14%, var(--gc-surface-1));
+  color: #3dbdab;
+  border-color: color-mix(in srgb, #3dbdab 32%, var(--gc-separator));
+}
+
+.gc-role-pill--collaborator {
+  background: color-mix(in srgb, #3a6abf 12%, var(--gc-surface-1));
+  color: #3a6abf;
+  border: 1px solid color-mix(in srgb, #3a6abf 28%, var(--gc-separator));
+}
+[data-theme="dark"] .gc-role-pill--collaborator {
+  background: color-mix(in srgb, #5580d9 14%, var(--gc-surface-1));
+  color: #6a96e8;
+  border-color: color-mix(in srgb, #6a96e8 32%, var(--gc-separator));
+}
+
+.gc-role-pill--user {
+  background: color-mix(in srgb, var(--gc-text-secondary) 10%, var(--gc-surface-1));
+  color: var(--gc-text-secondary);
+  border: 1px solid color-mix(in srgb, var(--gc-text-secondary) 25%, var(--gc-separator));
+}
+
+/* ===== Role change row actions ===== */
+.gc-user-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gc-role-select {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gc-separator);
+  background: var(--gc-surface-2);
+  color: var(--gc-text);
+  font-size: var(--gc-font-sub);
+  font-family: var(--gc-font-family);
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.gc-role-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== Role matrix table ===== */
+.gc-matrix-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gc-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gc-font-sub);
+}
+
+.gc-matrix-table th {
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gc-separator);
+  white-space: nowrap;
+}
+
+.gc-matrix-table th:first-child {
+  text-align: left;
+}
+
+.gc-matrix-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gc-separator);
+  text-align: center;
+  color: var(--gc-text-secondary);
+}
+
+.gc-matrix-table td:first-child {
+  text-align: left;
+  color: var(--gc-text);
+  font-size: var(--gc-font-sub);
+  white-space: nowrap;
+}
+
+.gc-matrix-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gc-matrix-table tr:hover td {
+  background: var(--gc-surface-2);
+}
+
+.gc-matrix-yes {
+  color: var(--gc-success);
+  font-weight: 700;
+}
+
+.gc-matrix-no {
+  color: var(--gc-text-tertiary);
+}
+
+/* ===== Pending requests ===== */
+.gc-pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gc-pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gc-surface-2);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.gc-pending-item__info {
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.gc-pending-item__name {
+  font-weight: 600;
+  color: var(--gc-text);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-pending-item__meta {
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-cap);
+  margin-top: 2px;
+}
+
+.gc-pending-item__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ===== Delete confirm dialog ===== */
+.gc-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--gc-overlay);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.gc-confirm-dialog {
+  background: var(--gc-surface-1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--gc-shadow-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.gc-confirm-dialog h3 {
+  margin: 0;
+  font-size: var(--gc-font-h2);
+  font-weight: var(--gc-weight-h2);
+}
+
+.gc-confirm-dialog p {
+  margin: 0;
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-confirm-dialog__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* ===== Empty state ===== */
+.gc-portal-empty {
+  padding: var(--space-5) 0;
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+  text-align: center;
+}
+
+/* ===== Account age ===== */
+.gc-account-age {
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-cap);
+  white-space: nowrap;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .gc-portal-page {
+    padding: var(--space-4) var(--space-3);
+  }
+  .gc-portal-section {
+    padding: var(--space-4) var(--space-3);
+  }
+  .gc-user-table th,
+  .gc-user-table td {
+    padding: var(--space-2);
+  }
+  .gc-user-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
