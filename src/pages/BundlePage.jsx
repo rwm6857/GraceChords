@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import indexData from '../data/index.json'
+import { useSongs } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
@@ -10,6 +10,7 @@ import { publicUrl } from '../utils/network/publicUrl'
 
 export default function Bundle(){
   const navigate = useNavigate()
+  const { songs } = useSongs()
   const [selection, setSelection] = useState({})
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
@@ -21,8 +22,8 @@ export default function Bundle(){
 
   useEffect(()=>{
     const ids = Object.keys(selection)
-    setEntries((indexData?.items||[]).filter(it=> ids.includes(it.id)))
-  },[selection])
+    setEntries(songs.filter(it=> ids.includes(it.id)))
+  },[selection, songs])
 
   let pdfLibPromise
   const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))

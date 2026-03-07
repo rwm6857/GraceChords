@@ -3,8 +3,6 @@ import { Routes, Route, Link, Outlet } from 'react-router-dom'
 import HomeDashboard from './pages/HomeDashboardPage'
 import Songs from './pages/SongsPage'
 import SongView from './pages/SongViewPage'
-import Admin from './pages/AdminPage'
-const Editor = React.lazy(() => import('./pages/EditorPage'))
 const Setlist = React.lazy(() => import('./pages/SetlistPage'))
 const ReadingsPage = React.lazy(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
@@ -12,7 +10,6 @@ const Songbook = React.lazy(() => import('./pages/SongbookPage'))
 const About = React.lazy(() => import('./pages/AboutPage'))
 const Resources = React.lazy(() => import('./pages/ResourcesPage'))
 const ResourcePost = React.lazy(() => import('./pages/ResourcePostPage'))
-const AdminResources = React.lazy(() => import('./pages/AdminResourcesPage'))
 const LoginPage = React.lazy(() => import('./pages/LoginPage'))
 const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
@@ -23,7 +20,6 @@ import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoutePage'
 import Toast from './components/Toast'
 import SiteDisclaimer from './components/SiteDisclaimer'
-import EditorFab from './components/EditorFab'
 
 export default function App(){
   return (
@@ -51,9 +47,6 @@ export default function App(){
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/resources" element={<AdminResources />} />
-          <Route path="/editor" element={<Editor />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>
@@ -70,7 +63,6 @@ function Layout(){
       <main id="main" className="Route">
         <Outlet />
       </main>
-      <EditorFab />
     </div>
   )
 }
