@@ -33,30 +33,15 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function fetchProfile(userId, isStale = () => false) {
-    // Fetch main profile data from users table (existing behavior)
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
 
-    // Also fetch role from profiles table (new role system)
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('role, account_created_at')
-      .eq('id', userId)
-      .maybeSingle()
-
     if (isStale()) return
     if (!userError && userData) {
-      setProfile({
-        ...userData,
-        role: profileData?.role || 'user',
-        account_created_at: profileData?.account_created_at || null,
-      })
-    } else if (profileData) {
-      // Fallback: profiles table only
-      setProfile(profileData)
+      setProfile(userData)
     }
   }
 

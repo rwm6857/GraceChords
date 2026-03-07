@@ -36,7 +36,7 @@ export default function CollaboratorRequest() {
     if (!data) {
       // Fetch account_created_at to compute eligible date
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('users')
         .select('account_created_at')
         .eq('id', session.user.id)
         .maybeSingle()

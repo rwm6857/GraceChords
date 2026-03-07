@@ -63,10 +63,9 @@ export default function AdminPage() {
 
   async function loadUsers() {
     setUsersLoading(true)
-    // Fetch from users table (display name, email) + profiles table (role, account_created_at)
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id, role, account_created_at, display_name, email')
+      .from('users')
+      .select('id, role, account_created_at, display_name')
       .order('account_created_at', { ascending: false })
     if (error) {
       showToast('Failed to load users.')
@@ -81,7 +80,7 @@ export default function AdminPage() {
     setPendingLoading(true)
     const { data, error } = await supabase
       .from('collaborator_requests')
-      .select('id, user_id, requested_at, profiles(display_name, email)')
+      .select('id, user_id, requested_at, users(display_name)')
       .eq('status', 'pending')
       .order('requested_at', { ascending: true })
     if (error) {
@@ -266,9 +265,9 @@ export default function AdminPage() {
         ) : (
           <div className="gc-pending-list">
             {pendingRequests.map(req => {
-              const prof = req.profiles
+              const prof = req.users
               const name = prof?.display_name || '—'
-              const email = prof?.email || '—'
+              const email = '—'
               return (
                 <div key={req.id} className="gc-pending-item">
                   <div className="gc-pending-item__info">

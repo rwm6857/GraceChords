@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS public.collaborator_requests (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid        REFERENCES public.profiles(id) ON DELETE CASCADE,
+  user_id      uuid        REFERENCES public.users(id) ON DELETE CASCADE,
   status       text        NOT NULL DEFAULT 'pending'
                            CHECK (status IN ('pending', 'approved', 'denied')),
   requested_at timestamptz NOT NULL DEFAULT now(),
