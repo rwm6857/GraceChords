@@ -107,6 +107,23 @@
   margin: 0;
 }
 
+/* ===== OAuth divider ===== */
+.gc-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--gc-text-tertiary);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-auth-divider::before,
+.gc-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gc-separator);
+}
+
 /* ===== Form fields (reusable) ===== */
 .gc-form-field {
   display: flex;
