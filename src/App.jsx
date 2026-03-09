@@ -14,6 +14,7 @@ const LoginPage = React.lazy(() => import('./pages/LoginPage'))
 const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
 const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'))
 const AdminPage = React.lazy(() => import('./pages/AdminPage'))
 const EditorPage = React.lazy(() => import('./pages/EditorPage'))
 import NavBar from './components/ui/Navbar'
@@ -50,6 +51,7 @@ export default function App(){
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
