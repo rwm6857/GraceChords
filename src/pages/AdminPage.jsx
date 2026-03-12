@@ -189,7 +189,6 @@ export default function AdminPage() {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Email</th>
                   <th>Role</th>
                   <th>Account Age</th>
                   <th>Actions</th>
@@ -206,9 +205,6 @@ export default function AdminPage() {
                   return (
                     <tr key={user.id}>
                       <td>{user.display_name || <span style={{ color: 'var(--gc-text-tertiary)' }}>—</span>}</td>
-                      <td style={{ fontSize: 'var(--gc-font-cap)', color: 'var(--gc-text-secondary)' }}>
-                        {user.email || '—'}
-                      </td>
                       <td><RolePill role={user.role || 'user'} /></td>
                       <td>
                         <span className="gc-account-age">
