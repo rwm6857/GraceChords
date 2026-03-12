@@ -461,7 +461,7 @@
 
 @media (max-width: 900px) {
   .gc-editor-page__columns {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 
@@ -900,14 +900,14 @@
   z-index: 90;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 10px 18px;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: var(--gc-primary);
   color: #fff;
-  border-radius: var(--radius-pill);
+  border-radius: 50%;
   box-shadow: var(--gc-shadow-2);
-  font-size: var(--gc-font-sub);
-  font-weight: 700;
   text-decoration: none;
   border: none;
   cursor: pointer;
@@ -935,7 +935,8 @@
   .gc-editor-fab {
     bottom: 16px;
     right: 16px;
-    padding: 10px 14px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -1064,25 +1065,46 @@
   min-height: 0;
 }
 
-/* ---- Page columns: 1fr : 1.5fr, equal height ---- */
+/* ---- Page columns: fixed metadata + flex editor, constrained to page width ---- */
 .gc-editor-page__columns {
-  grid-template-columns: 1fr 1.5fr;
+  display: flex;
   align-items: stretch;
+  gap: var(--space-5);
 }
 
 .gc-editor-page__panel {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-/* Editor panel: ChordPro editor stretches to fill */
+/* Metadata panel: fixed width, scrollable */
+.gc-editor-page__panel--meta {
+  width: 340px;
+  flex-shrink: 0;
+  height: 70vh;
+  overflow-y: auto;
+}
+
+/* Editor panel: fills remaining space */
 .gc-editor-page__panel--editor {
-  min-height: 0;
+  flex: 1;
+  min-width: 0;
+  height: 70vh;
 }
 
 .gc-editor-page__panel--editor .gc-chordpro-editor {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.gc-editor-page__panel--editor .gc-chordpro-textarea {
+  flex: 1;
+  min-height: 0;
+  resize: none;
 }
 
 /* Extra bottom padding for fixed action bar */
@@ -1531,7 +1553,17 @@ kbd {
 /* Mobile: stack editor below metadata, full-width action bar */
 @media (max-width: 900px) {
   .gc-editor-page__columns {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .gc-editor-page__panel--meta {
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .gc-editor-page__panel--editor {
+    height: 60vh;
   }
 
   .gc-editor-action-bar {
