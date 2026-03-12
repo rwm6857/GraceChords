@@ -78,6 +78,7 @@ export default function PortalEditorPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const searchTimeout = useRef(null)
+  const importFileRef = useRef(null)
   const [showDropdown, setShowDropdown] = useState(false)
 
   // ---- Load song ----
@@ -170,6 +171,125 @@ export default function PortalEditorPage() {
     }
   }
   const hasErrors = Object.keys(validationErrors).length > 0
+
+  // ---- ChordPro file import ----
+  function handleImportFile(e) {
+    const file = e.target.files[0]
+    // Reset input so the same file can be re-imported
+    e.target.value = ''
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target.result
+      if (typeof text !== 'string') {
+        showToast('Could not read file')
+        return
+      }
+
+      const METADATA_KEYS = new Set([
+        'title',
+        'artist', 'composer', 'author', 'authors',
+        'key',
+        'tempo',
+        'time', 'time_sig', 'time_signature',
+        'youtube', 'youtube_id',
+        'tag', 'tags',
+        'country',
+        'lang', 'language',
+      ])
+      const IGNORE_SILENTLY = new Set([
+        'album', 'year', 'ccli', 'capo', 'subtitle', 'copyright',
+        'sorttitle', 'duration', 'lyricist',
+      ])
+      const DIRECTIVE_RE = /^\{([^:}]+?)(?::\s*(.*?))?\s*\}$/
+
+      function normalizeYT(raw) {
+        if (!raw) return ''
+        const s = raw.trim()
+        if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s
+        const m = s.match(/[?&]v=([a-zA-Z0-9_-]{11})/) ||
+                  s.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) ||
+                  s.match(/shorts\/([a-zA-Z0-9_-]{11})/)
+        return m ? m[1] : s
+      }
+
+      const meta = {}
+      const bodyLines = []
+
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim()
+
+        // Strip comment lines
+        if (trimmed.startsWith('#')) continue
+
+        const match = trimmed.match(DIRECTIVE_RE)
+        if (match) {
+          const key = match[1].toLowerCase().trim()
+          const val = (match[2] || '').trim()
+
+          if (key === 'title') {
+            meta.title = val
+          } else if (['artist', 'composer', 'author', 'authors'].includes(key)) {
+            meta.artist = val
+          } else if (key === 'key') {
+            meta.default_key = val
+          } else if (key === 'tempo') {
+            const t = parseInt(val, 10)
+            if (!isNaN(t)) meta.tempo = t
+          } else if (['time', 'time_sig', 'time_signature'].includes(key)) {
+            meta.time_signature = val
+          } else if (['youtube', 'youtube_id'].includes(key)) {
+            meta.youtube_id = normalizeYT(val)
+          } else if (['tag', 'tags'].includes(key)) {
+            meta.tags = val.split(',').map(t => t.trim()).filter(Boolean)
+          } else if (key === 'country') {
+            meta.country = val
+          } else if (['lang', 'language'].includes(key)) {
+            meta.language = val
+          } else if (key.startsWith('start_of_') || key.startsWith('end_of_')) {
+            // Section directives go to body as-is
+            bodyLines.push(line)
+          } else if (IGNORE_SILENTLY.has(key) || METADATA_KEYS.has(key)) {
+            // handled above or silently ignored
+          } else {
+            // Unknown directive: silently ignore
+          }
+        } else {
+          bodyLines.push(line)
+        }
+      }
+
+      // Trim leading/trailing blank lines from body
+      let body = bodyLines.join('\n').replace(/^\n+/, '').replace(/\n+$/, '')
+
+      if (!meta.title && !body) {
+        showToast('File appears to be empty')
+        return
+      }
+
+      const imported = {
+        ...BLANK_FORM,
+        ...meta,
+        tags: meta.tags || [],
+        chordpro_content: body,
+      }
+
+      setFormValues(imported)
+      setSavedFormValues(BLANK_FORM)
+      setSong(null)
+      setIsDirty(true)
+      setSubmitted(false)
+
+      if (!meta.title) {
+        showToast('No title found — please add one before saving')
+      } else {
+        showToast(`Imported: ${meta.title}`)
+      }
+    }
+    reader.onerror = () => showToast('Could not read file')
+    reader.readAsText(file)
+  }
 
   function handleFormChange(newValues) {
     setFormValues(newValues)
@@ -458,6 +578,21 @@ export default function PortalEditorPage() {
             New Song
           </button>
         )}
+
+        <button
+          type="button"
+          className="gc-btn gc-btn--secondary gc-btn--sm"
+          onClick={() => importFileRef.current?.click()}
+        >
+          Import ChordPro
+        </button>
+        <input
+          ref={importFileRef}
+          type="file"
+          accept=".chordpro,.pro,.chord,.cho,.cpr"
+          style={{ display: 'none' }}
+          onChange={handleImportFile}
+        />
       </div>
 
       {/* Song info bar */}
