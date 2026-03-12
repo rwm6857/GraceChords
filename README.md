@@ -50,9 +50,14 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_ADMIN_PW=your-password              # legacy gate for ingest CLI
 VITE_ENABLE_DISCLAIMER=1                  # set to 0 to disable footer/PDF disclaimers
 VITE_CONTACT_EMAIL=you@example.com        # optional contact line in disclaimers
+VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev  # deployed PPTX upload worker
 ```
 
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are required for all song loading and authentication. Find these in your Supabase project's **Settings → API** page.
+
+`VITE_PPTX_WORKER_URL` is the deployed URL of the `gracechords-pptx-upload` Cloudflare Worker. It enables the PPTX upload/delete widget in the song editor. See [`workers/pptx-upload/README.md`](workers/pptx-upload/README.md) for setup instructions. If omitted, the widget shows a configuration warning and upload is disabled.
+
+A complete `.env.example` file is provided at the repo root.
 
 ### Supabase Setup
 
