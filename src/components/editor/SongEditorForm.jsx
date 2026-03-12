@@ -1,67 +1,120 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { CHROMATIC_KEYS } from '../../utils/chordpro/diatonicChords'
-import { supabase } from '../../lib/supabase'
+import { useRole } from '../../hooks/useRole'
+import { publicUrl } from '../../utils/network/publicUrl'
 
-const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '12/8', '2/4', '5/4']
+const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8']
 
-function deriveSlug(title) {
-  return (title || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
+const LANGUAGE_OPTIONS = ['', 'English', 'Turkish', 'Spanish', 'Arabic', 'Korean', 'Other']
+
+// Normalize YouTube input to a bare video ID
+function normalizeYoutubeInput(raw) {
+  if (!raw) return { id: '', valid: true }
+  const s = raw.trim()
+  if (!s) return { id: '', valid: true }
+
+  // Already 11-char ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return { id: s, valid: true }
+
+  // youtube.com/watch?v=ID
+  const watchMatch = s.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+  if (watchMatch) return { id: watchMatch[1], valid: true }
+
+  // youtu.be/ID
+  const shortMatch = s.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+  if (shortMatch) return { id: shortMatch[1], valid: true }
+
+  // youtube.com/shorts/ID
+  const shortsMatch = s.match(/shorts\/([a-zA-Z0-9_-]{11})/)
+  if (shortsMatch) return { id: shortsMatch[1], valid: true }
+
+  return { id: s, valid: false }
 }
 
-export default function SongEditorForm({ values, onChange, disabled, currentSongId }) {
-  const [slugConflict, setSlugConflict] = useState(false)
+function extractFilename(url) {
+  if (!url) return ''
+  const parts = url.split('/')
+  return decodeURIComponent(parts[parts.length - 1] || url)
+}
+
+function PptxWidget({ value, onChange, disabled, canDelete }) {
+  const [showUploadStub, setShowUploadStub] = useState(false)
+
+  if (!value) {
+    return (
+      <div className="gc-pptx-widget">
+        {!showUploadStub ? (
+          <button
+            type="button"
+            className="gc-btn gc-btn--secondary gc-btn--sm"
+            onClick={() => setShowUploadStub(true)}
+            disabled={disabled}
+          >
+            Upload PPTX
+          </button>
+        ) : (
+          <div className="gc-pptx-widget__stub">
+            <span className="gc-pptx-widget__stub-msg">
+              Upload coming soon — files are managed via R2
+            </span>
+            <p className="gc-pptx-widget__stub-note">
+              To add a PPTX file, upload it directly to the <code>gracechords-bible</code> R2 bucket under <code>/pptx/</code>.
+            </p>
+            <button
+              type="button"
+              className="gc-btn gc-btn--secondary gc-btn--sm"
+              onClick={() => setShowUploadStub(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const filename = extractFilename(value)
+  const downloadUrl = value.startsWith('http') ? value : publicUrl(value)
+
+  return (
+    <div className="gc-pptx-widget gc-pptx-widget--has-file">
+      <span className="gc-pptx-widget__filename">📎 {filename}</span>
+      <div className="gc-pptx-widget__actions">
+        <a
+          href={downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="gc-btn gc-btn--secondary gc-btn--sm"
+        >
+          Download
+        </a>
+        {canDelete && (
+          <button
+            type="button"
+            className="gc-btn gc-btn--destructive gc-btn--sm"
+            onClick={() => onChange('')}
+            disabled={disabled}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function SongEditorForm({ values, onChange, disabled, validationErrors = {} }) {
+  const { can } = useRole()
   const [tagInput, setTagInput] = useState('')
-  const slugCheckTimeout = useRef(null)
-  const slugAutoSet = useRef(true) // auto-derive slug from title until user edits it manually
-
-  // When title changes and slug is in auto mode, derive the slug
-  useEffect(() => {
-    if (!slugAutoSet.current) return
-    const derived = deriveSlug(values.title || '')
-    if (derived !== values.slug) {
-      onChange({ ...values, slug: derived })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.title])
-
-  // Debounced slug conflict check
-  useEffect(() => {
-    const slug = values.slug
-    if (!slug) {
-      setSlugConflict(false)
-      return
-    }
-
-    clearTimeout(slugCheckTimeout.current)
-    slugCheckTimeout.current = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('id')
-        .eq('slug', slug)
-        .maybeSingle()
-
-      if (!error && data && data.id !== currentSongId) {
-        setSlugConflict(true)
-      } else {
-        setSlugConflict(false)
-      }
-    }, 400)
-
-    return () => clearTimeout(slugCheckTimeout.current)
-  }, [values.slug, currentSongId])
+  const [youtubeWarning, setYoutubeWarning] = useState('')
+  const tapTimestamps = useRef([])
+  const tapResetTimeout = useRef(null)
 
   function handleChange(field, val) {
     onChange({ ...values, [field]: val })
   }
 
-  function handleSlugChange(val) {
-    slugAutoSet.current = false
-    handleChange('slug', val)
-  }
-
+  // ---- Tags ----
   function handleTagInputKeyDown(e) {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
@@ -90,21 +143,71 @@ export default function SongEditorForm({ values, onChange, disabled, currentSong
 
   const tags = Array.isArray(values.tags) ? values.tags : []
 
+  // ---- YouTube normalize on blur ----
+  function handleYoutubeBlur() {
+    const raw = values.youtube_id || ''
+    if (!raw.trim()) {
+      setYoutubeWarning('')
+      return
+    }
+    const { id, valid } = normalizeYoutubeInput(raw)
+    handleChange('youtube_id', id)
+    setYoutubeWarning(valid ? '' : 'Could not extract a valid YouTube video ID from this input.')
+  }
+
+  // ---- Tap tempo ----
+  function handleTap() {
+    const now = Date.now()
+
+    // Reset if gap > 3 seconds
+    if (tapTimestamps.current.length > 0) {
+      const last = tapTimestamps.current[tapTimestamps.current.length - 1]
+      if (now - last > 3000) tapTimestamps.current = []
+    }
+
+    tapTimestamps.current.push(now)
+
+    clearTimeout(tapResetTimeout.current)
+    tapResetTimeout.current = setTimeout(() => {
+      tapTimestamps.current = []
+    }, 3000)
+
+    if (tapTimestamps.current.length >= 2) {
+      const taps = tapTimestamps.current.slice(-5)
+      const intervals = []
+      for (let i = 1; i < taps.length; i++) {
+        intervals.push(taps[i] - taps[i - 1])
+      }
+      const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length
+      const bpm = Math.round(60000 / avg)
+      if (bpm >= 20 && bpm <= 400) handleChange('tempo', bpm)
+    }
+  }
+
+  const inputCls = (field) =>
+    `gc-song-editor-form__input${validationErrors[field] ? ' gc-song-editor-form__input--error' : ''}`
+
   return (
     <div className="gc-song-editor-form">
-      {/* Title & Artist */}
+
+      {/* Row 1: Title / Artist */}
       <div className="gc-song-editor-form__row">
         <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-title">Title</label>
+          <label className="gc-song-editor-form__label" htmlFor="sef-title">
+            Title <span className="gc-song-editor-form__required">*</span>
+          </label>
           <input
             id="sef-title"
-            className="gc-song-editor-form__input"
+            className={inputCls('title')}
             type="text"
             value={values.title || ''}
             onChange={e => handleChange('title', e.target.value)}
             disabled={disabled}
             placeholder="Song title"
           />
+          {validationErrors.title && (
+            <p className="gc-song-editor-form__field-error">{validationErrors.title}</p>
+          )}
         </div>
         <div className="gc-song-editor-form__field">
           <label className="gc-song-editor-form__label" htmlFor="sef-artist">Artist</label>
@@ -120,13 +223,15 @@ export default function SongEditorForm({ values, onChange, disabled, currentSong
         </div>
       </div>
 
-      {/* Key & Tempo */}
+      {/* Row 2: Key / Country */}
       <div className="gc-song-editor-form__row">
         <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-key">Key</label>
+          <label className="gc-song-editor-form__label" htmlFor="sef-key">
+            Key <span className="gc-song-editor-form__required">*</span>
+          </label>
           <select
             id="sef-key"
-            className="gc-song-editor-form__select"
+            className={`gc-song-editor-form__select${validationErrors.default_key ? ' gc-song-editor-form__input--error' : ''}`}
             value={values.default_key || ''}
             onChange={e => handleChange('default_key', e.target.value)}
             disabled={disabled}
@@ -136,24 +241,25 @@ export default function SongEditorForm({ values, onChange, disabled, currentSong
               <option key={k} value={k}>{k}</option>
             ))}
           </select>
+          {validationErrors.default_key && (
+            <p className="gc-song-editor-form__field-error">{validationErrors.default_key}</p>
+          )}
         </div>
         <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-tempo">Tempo (BPM)</label>
+          <label className="gc-song-editor-form__label" htmlFor="sef-country">Country</label>
           <input
-            id="sef-tempo"
+            id="sef-country"
             className="gc-song-editor-form__input"
-            type="number"
-            min={40}
-            max={300}
-            value={values.tempo || ''}
-            onChange={e => handleChange('tempo', e.target.value ? parseInt(e.target.value, 10) : null)}
+            type="text"
+            value={values.country || ''}
+            onChange={e => handleChange('country', e.target.value)}
             disabled={disabled}
-            placeholder="e.g. 120"
+            placeholder="e.g. USA"
           />
         </div>
       </div>
 
-      {/* Time Signature & Country */}
+      {/* Row 3: Time Signature / Tempo + TAP */}
       <div className="gc-song-editor-form__row">
         <div className="gc-song-editor-form__field">
           <label className="gc-song-editor-form__label" htmlFor="sef-time">Time Signature</label>
@@ -171,25 +277,40 @@ export default function SongEditorForm({ values, onChange, disabled, currentSong
           </select>
         </div>
         <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-country">Country</label>
-          <input
-            id="sef-country"
-            className="gc-song-editor-form__input"
-            type="text"
-            value={values.country || ''}
-            onChange={e => handleChange('country', e.target.value)}
-            disabled={disabled}
-            placeholder="e.g. USA"
-          />
+          <label className="gc-song-editor-form__label" htmlFor="sef-tempo">Tempo (BPM)</label>
+          <div className="gc-song-editor-form__tempo-row">
+            <input
+              id="sef-tempo"
+              className="gc-song-editor-form__input"
+              type="number"
+              min={20}
+              max={400}
+              value={values.tempo || ''}
+              onChange={e => handleChange('tempo', e.target.value ? parseInt(e.target.value, 10) : null)}
+              disabled={disabled}
+              placeholder="e.g. 120"
+            />
+            <button
+              type="button"
+              className="gc-song-editor-form__tap-btn"
+              onPointerDown={handleTap}
+              disabled={disabled}
+              title="Tap to calculate BPM"
+            >
+              TAP
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tags */}
-      <div className="gc-song-editor-form__field">
-        <label className="gc-song-editor-form__label" htmlFor="sef-tags">Tags</label>
+      {/* Tags — full width, horizontally scrollable chips */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-tags">
+          Tags <span className="gc-song-editor-form__required">*</span>
+        </label>
         <input
           id="sef-tags"
-          className="gc-song-editor-form__input"
+          className={inputCls('tags')}
           type="text"
           value={tagInput}
           onChange={e => setTagInput(e.target.value)}
@@ -198,87 +319,76 @@ export default function SongEditorForm({ values, onChange, disabled, currentSong
           disabled={disabled}
           placeholder="Type a tag and press Enter or comma"
         />
-        {tags.length > 0 && (
-          <div className="gc-song-editor-form__tags">
-            {tags.map(tag => (
-              <span key={tag} className="gc-song-editor-form__tag">
-                {tag}
-                {!disabled && (
-                  <button
-                    type="button"
-                    className="gc-song-editor-form__tag-remove"
-                    onClick={() => removeTag(tag)}
-                    aria-label={`Remove tag ${tag}`}
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
+        {validationErrors.tags && (
+          <p className="gc-song-editor-form__field-error">{validationErrors.tags}</p>
         )}
-      </div>
-
-      {/* YouTube ID & MP3 URL */}
-      <div className="gc-song-editor-form__row">
-        <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-youtube">YouTube ID</label>
-          <input
-            id="sef-youtube"
-            className="gc-song-editor-form__input"
-            type="text"
-            value={values.youtube_id || ''}
-            onChange={e => handleChange('youtube_id', e.target.value)}
-            disabled={disabled}
-            placeholder="e.g. dQw4w9WgXcQ"
-          />
-        </div>
-        <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-mp3">MP3 URL</label>
-          <input
-            id="sef-mp3"
-            className="gc-song-editor-form__input"
-            type="text"
-            value={values.mp3_url || ''}
-            onChange={e => handleChange('mp3_url', e.target.value)}
-            disabled={disabled}
-            placeholder="https://..."
-          />
+        <div className="gc-song-editor-form__tags-scroll">
+          {tags.map(tag => (
+            <span key={tag} className="gc-song-editor-form__tag">
+              {tag}
+              {!disabled && (
+                <button
+                  type="button"
+                  className="gc-song-editor-form__tag-remove"
+                  onClick={() => removeTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+          {tags.length === 0 && (
+            <span className="gc-song-editor-form__tags-placeholder">No tags yet</span>
+          )}
         </div>
       </div>
 
-      {/* PPTX URL */}
-      <div className="gc-song-editor-form__field">
-        <label className="gc-song-editor-form__label" htmlFor="sef-pptx">PPTX URL</label>
+      {/* YouTube ID — full width, normalize on blur */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-youtube">YouTube ID or URL</label>
         <input
-          id="sef-pptx"
+          id="sef-youtube"
           className="gc-song-editor-form__input"
           type="text"
-          value={values.pptx_url || ''}
-          onChange={e => handleChange('pptx_url', e.target.value)}
+          value={values.youtube_id || ''}
+          onChange={e => { handleChange('youtube_id', e.target.value); setYoutubeWarning('') }}
+          onBlur={handleYoutubeBlur}
           disabled={disabled}
-          placeholder="https://..."
+          placeholder="e.g. dQw4w9WgXcQ or https://youtube.com/watch?v=..."
+        />
+        {youtubeWarning && (
+          <p className="gc-song-editor-form__warning">{youtubeWarning}</p>
+        )}
+      </div>
+
+      {/* Language — full width */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-language">Language</label>
+        <select
+          id="sef-language"
+          className="gc-song-editor-form__select"
+          value={values.language || ''}
+          onChange={e => handleChange('language', e.target.value)}
+          disabled={disabled}
+        >
+          {LANGUAGE_OPTIONS.map(l => (
+            <option key={l} value={l}>{l || '— Select language —'}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* PPTX — full width, file widget */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label">Lyric PPT File</label>
+        <PptxWidget
+          value={values.pptx_url || ''}
+          onChange={v => handleChange('pptx_url', v)}
+          disabled={disabled}
+          canDelete={can('deletePptx')}
         />
       </div>
 
-      {/* Slug */}
-      <div className="gc-song-editor-form__field">
-        <label className="gc-song-editor-form__label" htmlFor="sef-slug">Slug</label>
-        <input
-          id="sef-slug"
-          className={`gc-song-editor-form__input${slugConflict ? ' gc-song-editor-form__input--warning' : ''}`}
-          type="text"
-          value={values.slug || ''}
-          onChange={e => handleSlugChange(e.target.value)}
-          disabled={disabled}
-          placeholder="auto-derived from title"
-        />
-        {slugConflict && (
-          <p className="gc-song-editor-form__warning">
-            ⚠ This slug is already used by another song.
-          </p>
-        )}
-      </div>
     </div>
   )
 }

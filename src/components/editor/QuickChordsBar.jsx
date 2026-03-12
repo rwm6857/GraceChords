@@ -28,28 +28,15 @@ export default function QuickChordsBar({ currentKey, onInsert }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [chords, handleInsert])
 
-  if (!currentKey) {
-    return (
-      <div className="gc-quick-chords">
-        <p className="gc-quick-chords__empty">Set a key to enable quick chords</p>
-      </div>
-    )
-  }
-
-  if (!chords) {
-    return (
-      <div className="gc-quick-chords">
-        <p className="gc-quick-chords__empty">Unknown key: {currentKey}</p>
-      </div>
-    )
-  }
-
   return (
     <div className="gc-quick-chords">
-      {/* Primary row */}
+      {/* Primary row — always visible */}
       <div className="gc-quick-chords__row">
         <span className="gc-quick-chords__label">Chords</span>
-        {chords.map((c, i) => (
+        {!currentKey && (
+          <span className="gc-quick-chords__empty">Set a key to enable quick chords</span>
+        )}
+        {chords && chords.map((c, i) => (
           <button
             key={c.symbol}
             className="gc-quick-chords__btn"
@@ -61,33 +48,40 @@ export default function QuickChordsBar({ currentKey, onInsert }) {
             <span className="gc-quick-chords__degree">{c.degree}</span>
           </button>
         ))}
-        <button
-          className="gc-quick-chords__toggle"
-          onClick={() => setShowVariants(v => !v)}
-          type="button"
-        >
-          {showVariants ? 'Hide variants' : 'Show variants'}
-        </button>
+        {chords && (
+          <button
+            className="gc-quick-chords__toggle"
+            onClick={() => setShowVariants(v => !v)}
+            type="button"
+            aria-pressed={showVariants}
+          >
+            {showVariants ? 'Hide variants' : 'Show variants'}
+          </button>
+        )}
       </div>
 
-      {/* Collapsible variant row */}
-      {showVariants && (
-        <div className="gc-quick-chords__row">
+      {/* Variants row — always rendered; toggled via CSS visibility only to avoid layout shift */}
+      <div
+        className="gc-quick-chords__variants-wrap"
+        aria-hidden={!showVariants}
+      >
+        <div className={`gc-quick-chords__variants${showVariants ? ' gc-quick-chords__variants--visible' : ''}`}>
           <span className="gc-quick-chords__label">Variants</span>
-          {chords.map(c =>
+          {chords && chords.map(c =>
             VARIANTS.map(v => (
               <button
                 key={`${c.symbol}${v}`}
                 className="gc-quick-chords__btn gc-quick-chords__btn--variant"
                 onClick={() => handleInsert(`${c.symbol}${v}`)}
                 type="button"
+                tabIndex={showVariants ? 0 : -1}
               >
                 {c.display}{v}
               </button>
             ))
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

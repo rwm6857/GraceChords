@@ -9,6 +9,7 @@ const ACTIONS = {
   directDelete:    'admin',
   review:          'editor',
   viewAuditLog:    'admin',
+  deletePptx:      'admin',
 }
 
 /**
@@ -16,7 +17,7 @@ const ACTIONS = {
  *
  * isAtLeast(minRole) — true if current role >= minRole in the hierarchy
  * can(action) — where action is one of:
- *   'suggest' | 'directSave' | 'suggestDeletion' | 'directDelete' | 'review' | 'viewAuditLog'
+ *   'suggest' | 'directSave' | 'suggestDeletion' | 'directDelete' | 'review' | 'viewAuditLog' | 'deletePptx'
  */
 export function useRole() {
   const { role, hasMinRole } = useAuth()

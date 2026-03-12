@@ -980,3 +980,566 @@
   gap: var(--space-2);
   justify-content: flex-end;
 }
+
+/* ===== REVISION PASS ADDITIONS ===== */
+
+/* ---- Variants fixed-height row (zero layout shift) ---- */
+.gc-quick-chords__variants-wrap {
+  /* Fixed height always reserved — prevents layout shift on toggle */
+  height: 38px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.gc-quick-chords__variants {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--space-1);
+  align-items: center;
+  height: 100%;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity var(--gc-dur-quick) var(--gc-ease);
+  scrollbar-width: none;
+}
+
+.gc-quick-chords__variants::-webkit-scrollbar {
+  display: none;
+}
+
+.gc-quick-chords__variants--visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ---- Editor toolbar (sections + guide button) ---- */
+.gc-chordpro-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* QuickSectionsBar inside toolbar takes remaining space */
+.gc-chordpro-editor__toolbar .gc-quick-sections {
+  flex: 1;
+  min-width: 0;
+}
+
+.gc-chordpro-editor__guide-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--gc-separator);
+  background: var(--gc-surface-1);
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 6px;
+  transition: background var(--gc-dur-quick) var(--gc-ease),
+              border-color var(--gc-dur-quick) var(--gc-ease),
+              color var(--gc-dur-quick) var(--gc-ease);
+}
+
+.gc-chordpro-editor__guide-btn:hover {
+  background: color-mix(in srgb, var(--gc-primary) 10%, var(--gc-surface-1));
+  border-color: var(--gc-primary);
+  color: var(--gc-primary);
+}
+
+.gc-chordpro-editor__guide-btn:focus-visible {
+  outline: var(--gc-focus-size) solid var(--gc-focus);
+  outline-offset: var(--gc-focus-offset);
+}
+
+/* ---- Textarea fills height in editor panel ---- */
+.gc-chordpro-textarea {
+  flex: 1;
+  resize: none;
+  min-height: 0;
+}
+
+/* ---- Page columns: 1fr : 1.5fr, equal height ---- */
+.gc-editor-page__columns {
+  grid-template-columns: 1fr 1.5fr;
+  align-items: stretch;
+}
+
+.gc-editor-page__panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Editor panel: ChordPro editor stretches to fill */
+.gc-editor-page__panel--editor {
+  min-height: 0;
+}
+
+.gc-editor-page__panel--editor .gc-chordpro-editor {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Extra bottom padding for fixed action bar */
+.gc-editor-page {
+  padding-bottom: 72px;
+}
+
+/* ---- Fixed action bar ---- */
+.gc-editor-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: var(--gc-surface-1);
+  border-top: 1px solid var(--gc-separator);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+}
+
+.gc-editor-action-bar__spacer {
+  flex: 1;
+}
+
+/* Save button "soft-disabled" — looks disabled but is still clickable to trigger validation */
+.gc-btn--soft-disabled {
+  opacity: 0.5;
+  filter: saturate(0.5);
+}
+
+/* ---- Metadata form additions ---- */
+
+/* Tempo row with TAP button */
+.gc-song-editor-form__tempo-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.gc-song-editor-form__tempo-row .gc-song-editor-form__input {
+  flex: 1;
+}
+
+.gc-song-editor-form__tap-btn {
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gc-separator);
+  background: var(--gc-surface-2);
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-cap);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--gc-dur-quick) var(--gc-ease),
+              border-color var(--gc-dur-quick) var(--gc-ease);
+  min-height: var(--gc-control-h);
+  user-select: none;
+}
+
+.gc-song-editor-form__tap-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--gc-primary) 10%, var(--gc-surface-1));
+  border-color: var(--gc-primary);
+  color: var(--gc-primary);
+}
+
+.gc-song-editor-form__tap-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--gc-primary) 18%, var(--gc-surface-1));
+  transform: scale(0.97);
+}
+
+/* Tags — fixed-height horizontally scrollable row */
+.gc-song-editor-form__tags-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--space-1);
+  height: 32px;
+  align-items: center;
+  margin-top: var(--space-2);
+  padding: 2px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gc-separator) transparent;
+}
+
+.gc-song-editor-form__tags-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.gc-song-editor-form__tags-scroll::-webkit-scrollbar-thumb {
+  background: var(--gc-separator);
+  border-radius: var(--radius-pill);
+}
+
+.gc-song-editor-form__tags-placeholder {
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-tertiary);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Full-width field spans both columns */
+.gc-song-editor-form__field--full {
+  grid-column: 1 / -1;
+}
+
+/* Required asterisk */
+.gc-song-editor-form__required {
+  color: var(--gc-danger);
+  margin-left: 2px;
+}
+
+/* Validation error state */
+.gc-song-editor-form__input--error {
+  border-color: var(--gc-danger) !important;
+}
+
+.gc-song-editor-form__field-error {
+  font-size: var(--gc-font-cap);
+  color: var(--gc-danger);
+  margin-top: 2px;
+}
+
+/* Keep grid rows consistent */
+.gc-song-editor-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 480px) {
+  .gc-song-editor-form {
+    grid-template-columns: 1fr;
+  }
+  .gc-song-editor-form__field--full {
+    grid-column: 1;
+  }
+}
+
+/* ---- PPTX widget ---- */
+.gc-pptx-widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gc-pptx-widget__stub {
+  padding: var(--space-3);
+  border: 1px dashed var(--gc-separator);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gc-pptx-widget__stub-msg {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  font-style: italic;
+}
+
+.gc-pptx-widget__stub-note {
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-tertiary);
+  margin: 0;
+}
+
+.gc-pptx-widget--has-file {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.gc-pptx-widget__filename {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text);
+  flex: 1;
+  min-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gc-pptx-widget__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ---- Live Preview Modal ---- */
+.gc-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gc-preview-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--gc-overlay);
+}
+
+.gc-preview-modal__panel {
+  position: relative;
+  background: var(--gc-surface-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--gc-shadow-3);
+  width: min(860px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.gc-preview-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gc-separator);
+  flex-shrink: 0;
+  gap: var(--space-3);
+}
+
+.gc-preview-modal__title {
+  font-size: var(--gc-font-h2);
+  font-weight: var(--gc-weight-h2);
+  margin: 0;
+  color: var(--gc-text);
+}
+
+.gc-preview-modal__key {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.gc-preview-modal__close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--gc-text-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gc-preview-modal__close:hover {
+  background: var(--gc-surface-2);
+  color: var(--gc-text);
+}
+
+.gc-preview-modal__body {
+  overflow-y: auto;
+  padding: var(--space-5);
+  flex: 1;
+}
+
+.gc-preview-modal__section-header {
+  font-size: var(--gc-font-sub);
+  font-weight: 700;
+  color: var(--gc-primary);
+  margin: var(--space-4) 0 var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gc-preview-modal__line {
+  margin: 0 0 var(--space-1);
+  line-height: 1.4;
+}
+
+.gc-preview-modal__chord-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gc-preview-modal__chord-col {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gc-preview-modal__chord {
+  font-family: var(--gc-font-chords);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gc-primary);
+  white-space: pre;
+}
+
+.gc-preview-modal__lyric {
+  font-family: var(--gc-font-lyrics);
+  font-size: 14px;
+  white-space: pre;
+  color: var(--gc-text);
+}
+
+/* ---- ChordPro Guide Drawer ---- */
+.gc-guide-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  background: var(--gc-surface-1);
+  border-left: 1px solid var(--gc-separator);
+  box-shadow: var(--gc-shadow-drawer);
+  z-index: 190;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--gc-dur) var(--gc-ease);
+}
+
+.gc-guide-drawer--open {
+  transform: translateX(0);
+}
+
+.gc-guide-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--gc-overlay);
+  z-index: 189;
+}
+
+.gc-guide-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gc-separator);
+  flex-shrink: 0;
+}
+
+.gc-guide-drawer__title {
+  font-size: var(--gc-font-h2);
+  font-weight: var(--gc-weight-h2);
+  margin: 0;
+}
+
+.gc-guide-drawer__close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--gc-text-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+
+.gc-guide-drawer__close:hover {
+  background: var(--gc-surface-2);
+  color: var(--gc-text);
+}
+
+.gc-guide-drawer__body {
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+  flex: 1;
+}
+
+.gc-guide-drawer__section {
+  margin-bottom: var(--space-5);
+}
+
+.gc-guide-drawer__section--warning {
+  background: color-mix(in srgb, var(--gc-warning) 6%, var(--gc-surface-2));
+  border: 1px solid color-mix(in srgb, var(--gc-warning) 25%, var(--gc-separator));
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.gc-guide-drawer__section-title {
+  font-size: var(--gc-font-sub);
+  font-weight: 700;
+  color: var(--gc-text);
+  margin: 0 0 var(--space-2);
+}
+
+.gc-guide-drawer__text {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  margin: 0 0 var(--space-2);
+  line-height: var(--gc-lh-body);
+}
+
+.gc-guide-drawer__code {
+  background: var(--gc-surface-2);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--gc-font-chords);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--gc-text);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.gc-guide-drawer__list {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gc-guide-drawer__list li {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  line-height: var(--gc-lh-body);
+}
+
+.gc-guide-drawer__list code,
+.gc-guide-drawer__text code {
+  font-family: var(--gc-font-chords);
+  font-size: 12px;
+  background: var(--gc-surface-3);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--gc-primary);
+}
+
+kbd {
+  font-family: var(--gc-font-chords);
+  font-size: 12px;
+  background: var(--gc-surface-3);
+  border: 1px solid var(--gc-separator);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Mobile: stack editor below metadata, full-width action bar */
+@media (max-width: 900px) {
+  .gc-editor-page__columns {
+    grid-template-columns: 1fr;
+  }
+
+  .gc-editor-action-bar {
+    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .gc-editor-page {
+    padding-bottom: 80px;
+  }
+}
