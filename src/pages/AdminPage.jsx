@@ -31,19 +31,12 @@ function formatAccountAge(createdAt) {
 
 // Role matrix data
 const MATRIX_ROWS = [
-  { label: 'View public site',               user: true,  collab: true,  editor: true,  admin: true,  owner: true  },
-  { label: 'Star songs / personal features', user: true,  collab: true,  editor: true,  admin: true,  owner: true  },
-  { label: 'Suggest song edits/additions',   user: false, collab: true,  editor: true,  admin: true,  owner: true  },
-  { label: 'Add/edit songs & posts directly',user: false, collab: false, editor: true,  admin: true,  owner: true  },
-  { label: 'Approve/reject suggestions',     user: false, collab: false, editor: true,  admin: true,  owner: true  },
-  { label: 'Request deletion',               user: false, collab: false, editor: true,  admin: true,  owner: true  },
-  { label: 'Delete songs & posts',           user: false, collab: false, editor: false, admin: true,  owner: true  },
-  { label: 'Promote users to Collaborator',  user: false, collab: false, editor: false, admin: true,  owner: true  },
-  { label: 'Promote Collaborators to Editor',user: false, collab: false, editor: false, admin: true,  owner: true  },
-  { label: 'Promote users to Admin',         user: false, collab: false, editor: false, admin: false, owner: true  },
-  { label: 'Delete user accounts',           user: false, collab: false, editor: false, admin: false, owner: true  },
-  { label: 'Access Admin Portal',            user: false, collab: false, editor: false, admin: true,  owner: true  },
-  { label: 'Access Editor Portal',           user: false, collab: false, editor: true,  admin: true,  owner: true  },
+  { label: 'Basic access & personal features', user: true,  collab: true,  editor: true,  admin: true,             owner: true          },
+  { label: 'Suggest song edits/additions',     user: false, collab: true,  editor: true,  admin: true,             owner: true          },
+  { label: 'Manage song content',              user: false, collab: false, editor: true,  admin: true,             owner: true          },
+  { label: 'Delete content',                   user: false, collab: false, editor: false, admin: true,             owner: true          },
+  { label: 'Promote users',                    user: false, collab: false, editor: false, admin: 'Up to Editor',   owner: 'Up to Admin' },
+  { label: 'Manage user accounts',             user: false, collab: false, editor: false, admin: false,            owner: true          },
 ]
 
 export default function AdminPage() {
@@ -301,24 +294,29 @@ export default function AdminPage() {
             <thead>
               <tr>
                 <th>Capability</th>
-                <th><RolePill role="owner" /></th>
-                <th><RolePill role="admin" /></th>
-                <th><RolePill role="editor" /></th>
-                <th><RolePill role="collaborator" /></th>
                 <th><RolePill role="user" /></th>
+                <th><RolePill role="collaborator" /></th>
+                <th><RolePill role="editor" /></th>
+                <th><RolePill role="admin" /></th>
+                <th><RolePill role="owner" /></th>
               </tr>
             </thead>
             <tbody>
-              {MATRIX_ROWS.map(row => (
-                <tr key={row.label}>
-                  <td>{row.label}</td>
-                  <td><span className={row.owner ? 'gc-matrix-yes' : 'gc-matrix-no'}>{row.owner ? '✓' : '—'}</span></td>
-                  <td><span className={row.admin ? 'gc-matrix-yes' : 'gc-matrix-no'}>{row.admin ? '✓' : '—'}</span></td>
-                  <td><span className={row.editor ? 'gc-matrix-yes' : 'gc-matrix-no'}>{row.editor ? '✓' : '—'}</span></td>
-                  <td><span className={row.collab ? 'gc-matrix-yes' : 'gc-matrix-no'}>{row.collab ? '✓' : '—'}</span></td>
-                  <td><span className={row.user ? 'gc-matrix-yes' : 'gc-matrix-no'}>{row.user ? '✓' : '—'}</span></td>
-                </tr>
-              ))}
+              {MATRIX_ROWS.map(row => {
+                const cell = (val) => typeof val === 'string'
+                  ? <span className="gc-matrix-yes">{val}</span>
+                  : <span className={val ? 'gc-matrix-yes' : 'gc-matrix-no'}>{val ? '✓' : '—'}</span>
+                return (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    <td>{cell(row.user)}</td>
+                    <td>{cell(row.collab)}</td>
+                    <td>{cell(row.editor)}</td>
+                    <td>{cell(row.admin)}</td>
+                    <td>{cell(row.owner)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
