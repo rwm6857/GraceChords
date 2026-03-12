@@ -1,7 +1,13 @@
 import React, { useRef, useState } from 'react'
 import { CHROMATIC_KEYS } from '../../utils/chordpro/diatonicChords'
 import { useRole } from '../../hooks/useRole'
+import { useAuth } from '../../hooks/useAuth'
 import { publicUrl } from '../../utils/network/publicUrl'
+import { showToast } from '../../utils/app/toast'
+
+// Deployed Cloudflare Worker URL for PPTX uploads/deletions.
+// Set VITE_PPTX_WORKER_URL in your .env to the deployed worker URL.
+const PPTX_WORKER_URL = import.meta.env.VITE_PPTX_WORKER_URL || ''
 
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8']
 
@@ -37,68 +43,198 @@ function extractFilename(url) {
   return decodeURIComponent(parts[parts.length - 1] || url)
 }
 
-function PptxWidget({ value, onChange, disabled, canDelete }) {
-  const [showUploadStub, setShowUploadStub] = useState(false)
+function PptxWidget({ value, onChange, disabled, slug, title }) {
+  const { can, isAtLeast } = useRole()
+  const { session } = useAuth()
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [fileError, setFileError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [actionError, setActionError] = useState('')
+  const [replacing, setReplacing] = useState(false)
 
-  if (!value) {
+  const canUpload = can('suggest') // collaborator+
+  const canReplace = isAtLeast('editor')
+  const canDelete = can('deletePptx') // admin+
+
+  // Configuration warning when worker URL is missing
+  if (!PPTX_WORKER_URL) {
     return (
       <div className="gc-pptx-widget">
-        {!showUploadStub ? (
-          <button
-            type="button"
-            className="gc-btn gc-btn--secondary gc-btn--sm"
-            onClick={() => setShowUploadStub(true)}
-            disabled={disabled}
-          >
-            Upload PPTX
-          </button>
-        ) : (
-          <div className="gc-pptx-widget__stub">
-            <span className="gc-pptx-widget__stub-msg">
-              Upload coming soon — files are managed via R2
-            </span>
-            <p className="gc-pptx-widget__stub-note">
-              To add a PPTX file, upload it directly to the <code>gracechords-bible</code> R2 bucket under <code>/pptx/</code>.
-            </p>
+        <p className="gc-pptx-widget__config-warning">
+          PPTX upload is not configured. Set <code>VITE_PPTX_WORKER_URL</code> in your environment.
+        </p>
+      </div>
+    )
+  }
+
+  // --- File exists state ---
+  if (value && !replacing) {
+    const filename = extractFilename(value)
+    const downloadUrl = value.startsWith('http') ? value : publicUrl(value)
+
+    async function handleDelete() {
+      if (!window.confirm(`Delete PPTX for "${title || 'this song'}"? This cannot be undone.`)) return
+      setActionError('')
+      setDeleting(true)
+      try {
+        const resp = await fetch(`${PPTX_WORKER_URL}/delete`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ slug }),
+        })
+        const data = await resp.json()
+        if (!resp.ok) {
+          setActionError(data.error || 'Delete failed')
+          return
+        }
+        onChange('')
+        showToast('PPTX deleted.')
+      } catch (err) {
+        setActionError('Network error — delete failed')
+      } finally {
+        setDeleting(false)
+      }
+    }
+
+    return (
+      <div className="gc-pptx-widget gc-pptx-widget--has-file">
+        <span className="gc-pptx-widget__filename">{filename}</span>
+        <div className="gc-pptx-widget__actions">
+          {canUpload && (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gc-btn gc-btn--secondary gc-btn--sm"
+            >
+              Download
+            </a>
+          )}
+          {canReplace && (
             <button
               type="button"
               className="gc-btn gc-btn--secondary gc-btn--sm"
-              onClick={() => setShowUploadStub(false)}
+              onClick={() => { setReplacing(true); setActionError(''); setSelectedFile(null); setFileError('') }}
+              disabled={disabled || deleting}
             >
-              Cancel
+              Replace
             </button>
-          </div>
+          )}
+          {canDelete && (
+            <button
+              type="button"
+              className="gc-btn gc-btn--destructive gc-btn--sm"
+              onClick={handleDelete}
+              disabled={disabled || deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          )}
+        </div>
+        {actionError && (
+          <p className="gc-pptx-widget__error">{actionError}</p>
         )}
       </div>
     )
   }
 
-  const filename = extractFilename(value)
-  const downloadUrl = value.startsWith('http') ? value : publicUrl(value)
+  // --- No file (or replacing) state ---
+  if (!canUpload) {
+    return null
+  }
+
+  function handleFileChange(e) {
+    const f = e.target.files?.[0]
+    setFileError('')
+    setSelectedFile(null)
+    if (!f) return
+    if (!f.name.toLowerCase().endsWith('.pptx')) {
+      setFileError('Only .pptx files are allowed.')
+      return
+    }
+    if (f.size > 20 * 1024 * 1024) {
+      setFileError('File must be under 20MB.')
+      return
+    }
+    setSelectedFile(f)
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) return
+    if (!slug) return
+    setActionError('')
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('slug', slug)
+      const resp = await fetch(`${PPTX_WORKER_URL}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
+        body: formData,
+      })
+      const data = await resp.json()
+      if (!resp.ok) {
+        setActionError(data.error || 'Upload failed')
+        return
+      }
+      onChange(data.url)
+      setSelectedFile(null)
+      setReplacing(false)
+      showToast('PPTX uploaded.')
+    } catch (err) {
+      setActionError('Network error — upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
-    <div className="gc-pptx-widget gc-pptx-widget--has-file">
-      <span className="gc-pptx-widget__filename">📎 {filename}</span>
-      <div className="gc-pptx-widget__actions">
-        <a
-          href={downloadUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="gc-btn gc-btn--secondary gc-btn--sm"
-        >
-          Download
-        </a>
-        {canDelete && (
+    <div className="gc-pptx-widget">
+      {!slug ? (
+        <p className="gc-pptx-widget__no-slug">
+          Save the song first before uploading a PPTX.
+        </p>
+      ) : (
+        <div className="gc-pptx-widget__upload-row">
+          <input
+            type="file"
+            accept=".pptx"
+            onChange={handleFileChange}
+            disabled={disabled || uploading}
+          />
           <button
             type="button"
-            className="gc-btn gc-btn--destructive gc-btn--sm"
-            onClick={() => onChange('')}
-            disabled={disabled}
+            className="gc-btn gc-btn--secondary gc-btn--sm"
+            onClick={handleUpload}
+            disabled={disabled || uploading || !selectedFile || !slug}
           >
-            Remove
+            {uploading ? 'Uploading...' : 'Upload PPTX'}
           </button>
-        )}
-      </div>
+          {replacing && (
+            <button
+              type="button"
+              className="gc-btn gc-btn--secondary gc-btn--sm"
+              onClick={() => { setReplacing(false); setSelectedFile(null); setFileError(''); setActionError('') }}
+              disabled={uploading}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
+      {fileError && (
+        <p className="gc-pptx-widget__error">{fileError}</p>
+      )}
+      {actionError && (
+        <p className="gc-pptx-widget__error">{actionError}</p>
+      )}
     </div>
   )
 }
@@ -385,7 +521,8 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
           value={values.pptx_url || ''}
           onChange={v => handleChange('pptx_url', v)}
           disabled={disabled}
-          canDelete={can('deletePptx')}
+          slug={values.slug || ''}
+          title={values.title || ''}
         />
       </div>
 
