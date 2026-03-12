@@ -19,6 +19,10 @@ const AdminPage = React.lazy(() => import('./pages/AdminPage'))
 const EditorPage = React.lazy(() => import('./pages/EditorPage'))
 const PortalEditorPage = React.lazy(() => import('./pages/portal/EditorPage'))
 const AuditLogPage = React.lazy(() => import('./components/editor/AuditLogPanel'))
+const PostsPage = React.lazy(() => import('./pages/PostsPage'))
+const PostDetailPage = React.lazy(() => import('./pages/PostDetailPage'))
+const ManagePostsPage = React.lazy(() => import('./pages/portal/ManagePostsPage'))
+const EditPostPage = React.lazy(() => import('./pages/portal/EditPostPage'))
 import NavBar from './components/ui/Navbar'
 import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
@@ -53,6 +57,11 @@ export default function App(){
             <Route path="/portal/editor" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/editor/:slug" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/audit" element={<RoleGuard minRole="admin"><AuditLogPage /></RoleGuard>} />
+            <Route path="/portal/posts" element={<RoleGuard minRole="editor"><ManagePostsPage /></RoleGuard>} />
+            <Route path="/portal/posts/new" element={<RoleGuard minRole="editor"><EditPostPage /></RoleGuard>} />
+            <Route path="/portal/posts/:id/edit" element={<RoleGuard minRole="editor"><EditPostPage /></RoleGuard>} />
+            <Route path="/posts" element={<PostsPage />} />
+            <Route path="/posts/:slug" element={<PostDetailPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
