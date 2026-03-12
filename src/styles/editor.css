@@ -287,11 +287,23 @@
   color: var(--gc-text);
   font-size: var(--gc-font-sub);
   font-family: var(--gc-font-family);
+  line-height: 1.4;
   min-height: var(--gc-control-h);
   box-sizing: border-box;
   width: 100%;
   outline: none;
   transition: border-color var(--gc-dur-quick) var(--gc-ease);
+}
+
+/* Strip native select chrome so it renders identically to inputs */
+.gc-song-editor-form__select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
 }
 
 .gc-song-editor-form__input:focus,
