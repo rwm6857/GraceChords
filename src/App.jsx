@@ -17,6 +17,8 @@ const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'))
 const AdminPage = React.lazy(() => import('./pages/AdminPage'))
 const EditorPage = React.lazy(() => import('./pages/EditorPage'))
+const PortalEditorPage = React.lazy(() => import('./pages/portal/EditorPage'))
+const AuditLogPage = React.lazy(() => import('./components/editor/AuditLogPanel'))
 import NavBar from './components/ui/Navbar'
 import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
@@ -24,6 +26,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoutePage'
 import Toast from './components/Toast'
 import SiteDisclaimer from './components/SiteDisclaimer'
+import EditorFab from './components/EditorFab'
 
 export default function App(){
   return (
@@ -47,6 +50,9 @@ export default function App(){
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
             <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
+            <Route path="/portal/editor" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
+            <Route path="/portal/editor/:slug" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
+            <Route path="/portal/audit" element={<RoleGuard minRole="admin"><AuditLogPage /></RoleGuard>} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -59,6 +65,7 @@ export default function App(){
       </React.Suspense>
       <SiteDisclaimer />
       <Toast />
+      <EditorFab />
     </ErrorBoundary>
   )
 }
