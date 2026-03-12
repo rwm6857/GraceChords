@@ -503,7 +503,7 @@ export default function PortalEditorPage() {
 
             {/* Right: ChordPro editor */}
             <div className="gc-editor-page__panel gc-editor-page__panel--editor">
-              <div className="gc-editor-page__panel-title">ChordPro Content</div>
+              <div className="gc-editor-page__panel-title">ChordPro Editor</div>
               <ChordProEditor
                 ref={editorRef}
                 value={formValues.chordpro_content}

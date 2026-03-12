@@ -309,12 +309,8 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
     }, 3000)
 
     if (tapTimestamps.current.length >= 2) {
-      const taps = tapTimestamps.current.slice(-5)
-      const intervals = []
-      for (let i = 1; i < taps.length; i++) {
-        intervals.push(taps[i] - taps[i - 1])
-      }
-      const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length
+      const taps = tapTimestamps.current.slice(-8)
+      const avg = (taps[taps.length - 1] - taps[0]) / (taps.length - 1)
       const bpm = Math.round(60000 / avg)
       if (bpm >= 20 && bpm <= 400) handleChange('tempo', bpm)
     }
@@ -326,40 +322,40 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
   return (
     <div className="gc-song-editor-form">
 
-      {/* Row 1: Title / Artist */}
-      <div className="gc-song-editor-form__row">
-        <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-title">
-            Title <span className="gc-song-editor-form__required">*</span>
-          </label>
-          <input
-            id="sef-title"
-            className={inputCls('title')}
-            type="text"
-            value={values.title || ''}
-            onChange={e => handleChange('title', e.target.value)}
-            disabled={disabled}
-            placeholder="Song title"
-          />
-          {validationErrors.title && (
-            <p className="gc-song-editor-form__field-error">{validationErrors.title}</p>
-          )}
-        </div>
-        <div className="gc-song-editor-form__field">
-          <label className="gc-song-editor-form__label" htmlFor="sef-artist">Artist</label>
-          <input
-            id="sef-artist"
-            className="gc-song-editor-form__input"
-            type="text"
-            value={values.artist || ''}
-            onChange={e => handleChange('artist', e.target.value)}
-            disabled={disabled}
-            placeholder="Artist / composer"
-          />
-        </div>
+      {/* Title — full width */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-title">
+          Title <span className="gc-song-editor-form__required">*</span>
+        </label>
+        <input
+          id="sef-title"
+          className={inputCls('title')}
+          type="text"
+          value={values.title || ''}
+          onChange={e => handleChange('title', e.target.value)}
+          disabled={disabled}
+          placeholder="Song title"
+        />
+        {validationErrors.title && (
+          <p className="gc-song-editor-form__field-error">{validationErrors.title}</p>
+        )}
       </div>
 
-      {/* Row 2: Key / Country */}
+      {/* Artist — full width */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-artist">Artist</label>
+        <input
+          id="sef-artist"
+          className="gc-song-editor-form__input"
+          type="text"
+          value={values.artist || ''}
+          onChange={e => handleChange('artist', e.target.value)}
+          disabled={disabled}
+          placeholder="Artist / composer"
+        />
+      </div>
+
+      {/* Row: Key / Country */}
       <div className="gc-song-editor-form__row">
         <div className="gc-song-editor-form__field">
           <label className="gc-song-editor-form__label" htmlFor="sef-key">
@@ -395,7 +391,7 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
         </div>
       </div>
 
-      {/* Row 3: Time Signature / Tempo + TAP */}
+      {/* Row: Time Signature / Tempo + TAP */}
       <div className="gc-song-editor-form__row">
         <div className="gc-song-editor-form__field">
           <label className="gc-song-editor-form__label" htmlFor="sef-time">Time Signature</label>
@@ -437,6 +433,22 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Language — full width */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-language">Language</label>
+        <select
+          id="sef-language"
+          className="gc-song-editor-form__select"
+          value={values.language || ''}
+          onChange={e => handleChange('language', e.target.value)}
+          disabled={disabled}
+        >
+          {LANGUAGE_OPTIONS.map(l => (
+            <option key={l} value={l}>{l || '— Select language —'}</option>
+          ))}
+        </select>
       </div>
 
       {/* Tags — full width, horizontally scrollable chips */}
@@ -496,22 +508,6 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
         {youtubeWarning && (
           <p className="gc-song-editor-form__warning">{youtubeWarning}</p>
         )}
-      </div>
-
-      {/* Language — full width */}
-      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
-        <label className="gc-song-editor-form__label" htmlFor="sef-language">Language</label>
-        <select
-          id="sef-language"
-          className="gc-song-editor-form__select"
-          value={values.language || ''}
-          onChange={e => handleChange('language', e.target.value)}
-          disabled={disabled}
-        >
-          {LANGUAGE_OPTIONS.map(l => (
-            <option key={l} value={l}>{l || '— Select language —'}</option>
-          ))}
-        </select>
       </div>
 
       {/* PPTX — full width, file widget */}
