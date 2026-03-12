@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
+import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -406,6 +407,20 @@ export default function SongView(){
     }
   }
 
+  function handleDownloadChordPro() {
+    const raw = entry?.chordpro_content || ''
+    const content = appendDisclaimerIfMissing(raw)
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${slug}.pro`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   function handleLanguageSelect(language){
     if (!translationGroup) return
     const next = resolveGroupEntry(translationGroup, language)
@@ -484,6 +499,14 @@ export default function SongView(){
             <span className="text-when-narrow">PPTX</span>
           </Button>
         )}
+        <Button
+          leftIcon={<DownloadIcon />}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadChordPro() }}
+          title="Download ChordPro"
+        >
+          <span className="text-when-wide">Download ChordPro</span>
+          <span className="text-when-narrow">ChordPro</span>
+        </Button>
         <Button
           as={Link}
           to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
@@ -665,6 +688,13 @@ export default function SongView(){
               PPTX
             </Button>
           ) : null}
+          <Button
+            leftIcon={<DownloadIcon />}
+            onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setMobileActionsOpen(false) }}
+            title="Download ChordPro"
+          >
+            ChordPro
+          </Button>
         </div>
       </MobileActionSheet>
     </div>
