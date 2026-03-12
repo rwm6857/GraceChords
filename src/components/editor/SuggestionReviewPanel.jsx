@@ -346,7 +346,7 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
       {loading && <p className="gc-suggestion-review__empty">Loading suggestions…</p>}
 
       {!loading && !error && suggestions.length === 0 && (
-        <p className="gc-suggestion-review__empty">No pending suggestions for this song.</p>
+        <p className="gc-suggestion-review__empty">No suggestions to review</p>
       )}
 
       {suggestions.map(s => (

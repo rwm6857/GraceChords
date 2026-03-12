@@ -3,7 +3,7 @@ import QuickChordsBar from './QuickChordsBar'
 import QuickSectionsBar from './QuickSectionsBar'
 
 const ChordProEditor = forwardRef(function ChordProEditor(
-  { value, onChange, currentKey, readOnly = false },
+  { value, onChange, currentKey, readOnly = false, onGuideOpen },
   ref
 ) {
   const textareaRef = useRef(null)
@@ -22,11 +22,9 @@ const ChordProEditor = forwardRef(function ChordProEditor(
     const end = el.selectionEnd
     const before = value.slice(0, start)
     const after = value.slice(end)
-    const newValue = before + text + after
 
-    onChange(newValue)
+    onChange(before + text + after)
 
-    // Restore cursor after React re-render
     requestAnimationFrame(() => {
       if (!textareaRef.current) return
       const newPos = start + text.length
@@ -55,12 +53,10 @@ const ChordProEditor = forwardRef(function ChordProEditor(
       cursorOffset = start + insertion.length
     } else {
       insertion = `${startDir}\n\n${endDir}\n`
-      // Place cursor between the directives
       cursorOffset = start + startDir.length + 1
     }
 
-    const newValue = before + insertion + after
-    onChange(newValue)
+    onChange(before + insertion + after)
 
     requestAnimationFrame(() => {
       if (!textareaRef.current) return
@@ -79,7 +75,20 @@ const ChordProEditor = forwardRef(function ChordProEditor(
         currentKey={currentKey}
         onInsert={insertAtCursor}
       />
-      <QuickSectionsBar onWrap={wrapSelection} />
+      <div className="gc-chordpro-editor__toolbar">
+        <QuickSectionsBar onWrap={wrapSelection} />
+        {onGuideOpen && (
+          <button
+            type="button"
+            className="gc-chordpro-editor__guide-btn"
+            onClick={onGuideOpen}
+            title="ChordPro syntax guide"
+            aria-label="Open ChordPro guide"
+          >
+            ?
+          </button>
+        )}
+      </div>
       <textarea
         ref={textareaRef}
         className="gc-chordpro-textarea"
