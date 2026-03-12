@@ -38,7 +38,9 @@
 /* ===== User management table ===== */
 .gc-user-table-wrap {
   overflow-x: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  max-height: 260px;
 }
 
 .gc-user-table {
@@ -48,6 +50,10 @@
 }
 
 .gc-user-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--gc-surface-1);
   text-align: left;
   padding: var(--space-2) var(--space-3);
   color: var(--gc-text-secondary);
@@ -215,6 +221,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 .gc-pending-item {
