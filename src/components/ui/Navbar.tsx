@@ -153,13 +153,9 @@ export default function Navbar(){
           <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Daily Word</Link>
           <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
           <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Wiki</a>
-          {isLoggedIn && hasMinRole('admin') && (
-            <Link to="/admin" className={`gc-navlink ${isActive('/admin') ? 'active':''}`} style={isActive('/admin') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Admin Portal</Link>
-          )}
           {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
             <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Editor Portal</Link>
           )}
-          <OfflineBadge />
           {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
           <button
             className="gc-btn gc-btn--ghost"
@@ -196,6 +192,16 @@ export default function Navbar(){
                     >
                       Profile
                     </Link>
+                    {(role === 'admin' || role === 'owner') && (
+                      <Link
+                        to="/admin"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Admin Portal
+                      </Link>
+                    )}
                     <hr className="gc-user-dropdown__divider" />
                     <button
                       className="gc-user-dropdown__item"
