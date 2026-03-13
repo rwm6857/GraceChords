@@ -37,6 +37,8 @@ jobs:
       - name: Build site
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run build
 
       - name: Configure Pages
