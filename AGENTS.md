@@ -65,8 +65,10 @@
 - Before opening: run `npm test`, `npm run build`, and (if schema changed) note which migrations to apply.
 - Do not commit secrets or `.env`; do not hand-edit `docs/`.
 
-## Security & Configuration Tips
-- Local `.env`: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_ADMIN_PW`. For deploys, add the same as repository secrets.
+## Environment Variables & Configuration
+- **Production values are configured in Cloudflare Pages** (Settings → Variables and Secrets). Do not add, change, or remove production secrets — they are already set. The full list is documented in `.env.example`.
+- Local dev: copy `.env.example` to `.env` and fill in your own values. Never commit `.env`.
+- **Rule for agents/contributors:** any time a new environment variable is introduced anywhere in the codebase, `.env.example` must be updated in the same PR/commit with a placeholder value and a one-line description of what it does and where to find it.
 - `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust service worker caches.
 - Fonts for PDF export must exist in `src/assets/fonts/` (see README for list).
 - New Supabase tables must have RLS enabled and appropriate policies before merging.
