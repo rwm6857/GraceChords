@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -59,6 +60,8 @@ export default function ResetPasswordPage() {
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false)
+  const pwBlurTimer = useRef(null)
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -105,7 +108,7 @@ export default function ResetPasswordPage() {
             <h1 className="gc-auth-card__title">Link expired</h1>
             <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
               This link has expired or is invalid.{' '}
-              <Link to="/login">Request a new one</Link>
+              <Link to="/forgot-password">Request a new one</Link>
             </p>
           </>
         ) : success ? (
@@ -122,7 +125,7 @@ export default function ResetPasswordPage() {
 
             <form onSubmit={handleSubmit} className="gc-auth-form">
               {error && <div className="gc-auth-error">{error}</div>}
-              <div className="gc-form-field">
+              <div className="gc-form-field gc-pw-field-wrapper">
                 <label htmlFor="new-password">New password</label>
                 <input
                   id="new-password"
@@ -132,7 +135,15 @@ export default function ResetPasswordPage() {
                   required
                   autoComplete="new-password"
                   disabled={submitting}
+                  onFocus={() => {
+                    clearTimeout(pwBlurTimer.current)
+                    setNewPasswordFocused(true)
+                  }}
+                  onBlur={() => {
+                    pwBlurTimer.current = setTimeout(() => setNewPasswordFocused(false), 150)
+                  }}
                 />
+                {newPasswordFocused && <PasswordStrengthPopover password={newPassword} />}
               </div>
               <div className="gc-form-field">
                 <label htmlFor="confirm-password">Confirm new password</label>

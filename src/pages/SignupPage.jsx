@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import { showToast } from '../utils/app/toast'
+import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
 
 function GoogleIcon() {
   return (
@@ -36,6 +37,8 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const pwBlurTimer = useRef(null)
   const [sprite, setSprite] = useState(null)
   const [error, setError] = useState(null)
   const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
@@ -158,7 +161,7 @@ export default function SignupPage() {
               disabled={submitting}
             />
           </div>
-          <div className="gc-form-field">
+          <div className="gc-form-field gc-pw-field-wrapper">
             <label htmlFor="password">Password</label>
             <input
               id="password"
@@ -170,7 +173,15 @@ export default function SignupPage() {
               minLength={8}
               disabled={submitting}
               placeholder="At least 8 characters"
+              onFocus={() => {
+                clearTimeout(pwBlurTimer.current)
+                setPasswordFocused(true)
+              }}
+              onBlur={() => {
+                pwBlurTimer.current = setTimeout(() => setPasswordFocused(false), 150)
+              }}
             />
+            {passwordFocused && <PasswordStrengthPopover password={password} />}
           </div>
           <div className="gc-form-field">
             <label>Choose your icon</label>

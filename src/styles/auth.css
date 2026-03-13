@@ -164,6 +164,77 @@
   cursor: not-allowed;
 }
 
+/* ===== Password strength popover ===== */
+.gc-pw-field-wrapper {
+  position: relative;
+}
+
+.gc-pw-strength-popover {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 12px);
+  width: 220px;
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--gc-shadow-2);
+  z-index: 50;
+  pointer-events: none;
+  animation: gc-popover-in var(--gc-dur-quick) var(--gc-ease);
+}
+
+@keyframes gc-popover-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.gc-pw-strength-popover__title {
+  font-size: var(--gc-font-cap);
+  font-weight: 600;
+  color: var(--gc-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-2);
+}
+
+.gc-pw-strength-popover__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gc-pw-strength-req {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--gc-text-tertiary);
+  transition: color var(--gc-dur-quick) var(--gc-ease);
+}
+
+.gc-pw-strength-req--met {
+  color: var(--gc-primary);
+}
+
+/* Mobile: render below the input instead of to the right */
+@media (max-width: 700px) {
+  .gc-pw-strength-popover {
+    position: static;
+    width: 100%;
+    margin-top: var(--space-2);
+    animation: gc-popover-in-down var(--gc-dur-quick) var(--gc-ease);
+  }
+
+  @keyframes gc-popover-in-down {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
 /* ===== Sprite picker ===== */
 .gc-sprite-picker {
   display: grid;
