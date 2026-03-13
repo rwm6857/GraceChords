@@ -25,26 +25,6 @@ export default function LoginPage() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const [forgotOpen, setForgotOpen] = useState(false)
-  const [forgotEmail, setForgotEmail] = useState('')
-  const [forgotSubmitting, setForgotSubmitting] = useState(false)
-  const [forgotSuccess, setForgotSuccess] = useState(false)
-  const [forgotError, setForgotError] = useState(null)
-
-  async function handleForgotPassword(e) {
-    e.preventDefault()
-    setForgotError(null)
-    setForgotSubmitting(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: window.location.origin + '/reset-password',
-    })
-    if (error) {
-      setForgotError(error.message)
-    } else {
-      setForgotSuccess(true)
-    }
-    setForgotSubmitting(false)
-  }
 
   useEffect(() => {
     if (!loading && isLoggedIn) navigate(redirectTo, { replace: true })
@@ -111,69 +91,19 @@ export default function LoginPage() {
               />
             </div>
             <div style={{ textAlign: 'right' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setForgotOpen(o => !o)
-                  setForgotSuccess(false)
-                  setForgotError(null)
-                  if (!forgotEmail) setForgotEmail(email)
-                }}
+              <Link
+                to="/forgot-password"
                 style={{
-                  background: 'none',
-                  border: 'none',
                   color: 'var(--gc-primary)',
-                  font: 'inherit',
                   fontSize: 'var(--gc-font-sub)',
-                  cursor: 'pointer',
-                  padding: 0,
                   fontWeight: 500,
+                  textDecoration: 'none',
                 }}
               >
-                Forgot password?
-              </button>
+                Forgot your password?
+              </Link>
             </div>
           </div>
-
-          {forgotOpen && (
-            <div style={{
-              borderTop: '1px solid var(--gc-separator)',
-              paddingTop: 'var(--space-4)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-3)',
-            }}>
-              {forgotSuccess ? (
-                <p style={{ margin: 0, fontSize: 'var(--gc-font-sub)', color: 'var(--gc-text-secondary)' }}>
-                  Check your email for a password reset link.
-                </p>
-              ) : (
-                <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  {forgotError && <div className="gc-auth-error">{forgotError}</div>}
-                  <div className="gc-form-field">
-                    <label htmlFor="forgot-email">Email address</label>
-                    <input
-                      id="forgot-email"
-                      type="email"
-                      value={forgotEmail}
-                      onChange={e => setForgotEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      disabled={forgotSubmitting}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="gc-btn gc-btn--primary"
-                    disabled={forgotSubmitting}
-                    style={{ width: '100%', justifyContent: 'center' }}
-                  >
-                    {forgotSubmitting ? 'Sending…' : 'Send reset link'}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
 
           <button
             type="submit"

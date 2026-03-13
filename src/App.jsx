@@ -15,6 +15,7 @@ const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
 const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'))
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'))
 const AdminPage = React.lazy(() => import('./pages/AdminPage'))
 const EditorPage = React.lazy(() => import('./pages/EditorPage'))
 const PortalEditorPage = React.lazy(() => import('./pages/portal/EditorPage'))
@@ -66,6 +67,7 @@ export default function App(){
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
