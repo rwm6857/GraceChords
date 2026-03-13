@@ -1,9 +1,39 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import { showToast } from '../utils/app/toast'
+
+const PW_REQUIREMENTS = [
+  { key: 'minLength', label: 'At least 8 characters' },
+  { key: 'hasLower',  label: 'One lowercase letter' },
+  { key: 'hasUpper',  label: 'One uppercase letter' },
+  { key: 'hasNumber', label: 'One number' },
+  { key: 'hasSpecial', label: 'One special character' },
+]
+
+function checkPassword(pw) {
+  return {
+    minLength: pw.length >= 8,
+    hasLower:  /[a-z]/.test(pw),
+    hasUpper:  /[A-Z]/.test(pw),
+    hasNumber: /[0-9]/.test(pw),
+    hasSpecial: /[^A-Za-z0-9]/.test(pw),
+  }
+}
+
+function CircleIcon({ filled }) {
+  return filled ? (
+    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+      <circle cx="5" cy="5" r="5" fill="currentColor" />
+    </svg>
+  ) : (
+    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+      <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    </svg>
+  )
+}
 
 function GoogleIcon() {
   return (
@@ -36,6 +66,8 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const pwBlurTimer = useRef(null)
   const [sprite, setSprite] = useState(null)
   const [error, setError] = useState(null)
   const [isDuplicateEmail, setIsDuplicateEmail] = useState(false)
@@ -158,7 +190,7 @@ export default function SignupPage() {
               disabled={submitting}
             />
           </div>
-          <div className="gc-form-field">
+          <div className="gc-form-field gc-pw-field-wrapper">
             <label htmlFor="password">Password</label>
             <input
               id="password"
@@ -170,7 +202,30 @@ export default function SignupPage() {
               minLength={8}
               disabled={submitting}
               placeholder="At least 8 characters"
+              onFocus={() => {
+                clearTimeout(pwBlurTimer.current)
+                setPasswordFocused(true)
+              }}
+              onBlur={() => {
+                pwBlurTimer.current = setTimeout(() => setPasswordFocused(false), 150)
+              }}
             />
+            {passwordFocused && (() => {
+              const checks = checkPassword(password)
+              return (
+                <div className="gc-pw-strength-popover" role="status" aria-label="Password requirements">
+                  <p className="gc-pw-strength-popover__title">Password requirements</p>
+                  <ul className="gc-pw-strength-popover__list">
+                    {PW_REQUIREMENTS.map(({ key, label }) => (
+                      <li key={key} className={`gc-pw-strength-req${checks[key] ? ' gc-pw-strength-req--met' : ''}`}>
+                        <CircleIcon filled={checks[key]} />
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })()}
           </div>
           <div className="gc-form-field">
             <label>Choose your icon</label>
