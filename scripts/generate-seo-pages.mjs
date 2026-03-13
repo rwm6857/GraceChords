@@ -1,18 +1,57 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { createClient } from '@supabase/supabase-js'
 
 const SITE_URL = 'https://gracechords.com'
 const root = process.cwd()
 const docsDir = path.join(root, 'docs')
 const templatePath = path.join(docsDir, 'index.html')
-const indexData = await readJson(path.join(root, 'src', 'data', 'index.json'))
+
+async function loadDotEnv() {
+  try {
+    const txt = await fs.readFile(path.join(root, '.env'), 'utf8')
+    for (const line of txt.split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eqIdx = trimmed.indexOf('=')
+      if (eqIdx < 0) continue
+      const key = trimmed.slice(0, eqIdx).trim()
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '')
+      if (key && !(key in process.env)) process.env[key] = val
+    }
+  } catch { /* no .env file – rely on pre-set env vars */ }
+}
+
+await loadDotEnv()
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+const { data: songs, error: songsError } = await supabase
+  .from('songs')
+  .select('title, artist, slug, updated_at')
+  .eq('is_deleted', false)
+  .order('title')
+
+if (songsError) {
+  console.error('Supabase query failed:', songsError.message)
+  process.exit(1)
+}
+
 const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
 
 const template = await fs.readFile(templatePath, 'utf8')
 
 const genericDescription = 'GraceChords provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in GraceChords for the full experience.'
 
-await buildSongPages(indexData?.items || [])
+await buildSongPages(songs || [])
 await buildResourcePages(resourcesData?.items || [])
 await buildShellPages([
   { path: '/about', label: 'About' },
@@ -38,16 +77,13 @@ async function readJson(filePath){
 async function buildSongPages(items){
   let count = 0
   for (const item of items) {
-    const id = item?.id || (item?.filename ? item.filename.replace(/\.chordpro$/, '') : '')
-    if (!id || !item?.filename) continue
-    const sourcePath = path.join(root, 'public', 'songs', item.filename)
-    let raw = ''
-    try { raw = await fs.readFile(sourcePath, 'utf8') } catch {}
-    const title = (item?.title || extractChordProTitle(raw) || id).trim()
-    const lyrics = cleanChordProText(raw)
+    const slug = item?.slug
+    if (!slug) continue
+    const title = (item?.title || slug).trim()
+    const lyrics = ''
     const description = buildDescription(lyrics, buildSongFallback(title))
-    const encoded = encodeURIComponent(id)
-    const canonical = `${SITE_URL}/songs/${encoded}`
+    const encoded = encodeURIComponent(slug)
+    const canonical = `${SITE_URL}/songs/${encoded}/`
     const ld = buildSongLd(title, canonical, item)
     const body = buildLyricsBody(title, lyrics)
     const html = buildSeoHtml({ title: `${title} – Lyrics & Chords | GraceChords`, description, canonical, ld, body })
@@ -207,17 +243,16 @@ function buildResourceFallback(title){
 }
 
 function buildSongLd(title, url, item){
-  const authors = Array.isArray(item?.authors) ? item.authors.filter(Boolean) : []
+  const artist = item?.artist
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'MusicComposition',
     name: title || 'Song',
     url
   }
-  if (authors.length) {
-    const names = authors.join(', ')
-    ld.lyricist = names
-    ld.composer = names
+  if (artist) {
+    ld.lyricist = artist
+    ld.composer = artist
   }
   return ld
 }

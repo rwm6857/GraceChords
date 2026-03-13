@@ -228,12 +228,17 @@ jobs:
 
       - name: Generate sitemap
         if: ${{ steps.changes.outputs.sitemap_needed == 'true' }}
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run generate:sitemap
 
       - name: Build site into /docs
         if: ${{ steps.changes.outputs.build_needed == 'true' }}
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run build
 
       - name: Commit and push generated assets
