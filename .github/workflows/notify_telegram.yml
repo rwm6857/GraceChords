@@ -1,0 +1,143 @@
+name: Notify Telegram
+
+on:
+  push:
+    branches: [ migration ]
+    # TODO: add main when you cut over
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    # Skip commits made by the bot itself
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for announce flag
+        id: check
+        shell: bash
+        run: |
+          commit_msg="${{ github.event.head_commit.message }}"
+          if [ -z "$commit_msg" ]; then
+            commit_msg="$(git log -1 --pretty=%B || true)"
+          fi
+
+          if printf '%s' "$commit_msg" | grep -Ei '#post|#announce|\[post\]|\[announce\]' >/dev/null; then
+            echo "should_post=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_post=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "commit_msg<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$commit_msg" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Get changed files
+        id: diff
+        if: ${{ steps.check.outputs.should_post == 'true' }}
+        shell: bash
+        run: |
+          BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE"^{commit}; then
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              BASE="HEAD^"
+            else
+              BASE="$(git rev-list --max-parents=0 HEAD)"
+            fi
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE" "${{ github.sha }}" || true)
+
+          echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Generate and send Telegram message
+        if: ${{ steps.check.outputs.should_post == 'true' }}
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "Telegram secrets missing; skipping."
+            exit 0
+          fi
+
+          commit_msg="${{ steps.check.outputs.commit_msg }}"
+          changed_files="${{ steps.diff.outputs.changed_files }}"
+          summary=""
+
+          # Try Claude API
+          if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+            payload=$(jq -n \
+              --arg msg "$commit_msg" \
+              --arg diff "$changed_files" \
+              '{
+                model: "claude-haiku-4-5-20251001",
+                max_tokens: 300,
+                system: "You are the GraceChords Bot, a friendly and upbeat writer for a worship chord/lead sheet tool used by small churches. Write a short Telegram update for end users in a casual tone. Keep it to 2-4 short sentences or a small bullet list. Use real newlines (no literal \\n). Avoid hashtags and links. Use 1-2 fitting emojis. If there are multiple updates or added content, use a clear bulleted list. Be clear and concise.",
+                messages: [
+                  {
+                    role: "user",
+                    content: ("Commit message:\n" + $msg + "\n\nChanged files:\n" + $diff + "\n\nWrite a friendly update for our Telegram channel.")
+                  }
+                ]
+              }')
+
+            response=$(curl -s https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+
+            summary=$(echo "$response" | jq -r '.content[0].text // empty')
+          fi
+
+          # Template fallback if Claude failed or key missing
+          if [ -z "$summary" ] || [ "$summary" = "null" ]; then
+            summary="Update pushed: ${commit_msg:-latest changes}."
+            if [ -n "$changed_files" ]; then
+              summary="$summary
+Files changed:
+$(echo "$changed_files" | sed 's/^/- /')"
+            fi
+          fi
+
+          # Escape HTML special chars
+          summary=$(printf '%s' "$summary" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')
+
+          title='<b>🎸 GraceChords Update</b>'
+          footer='<i><a href="https://www.gracechords.com/">Check it out!</a></i>'
+          text=$(printf "%s\n\n%s\n\n%s" "$title" "$summary" "$footer")
+
+          tg_payload=$(jq -n \
+            --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg text "$text" \
+            '{chat_id: $chat_id, text: $text, parse_mode: "HTML", disable_web_page_preview: true}')
+
+          # Simulate typing
+          delay=$((3 + RANDOM % 3))
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction" \
+               -d chat_id="$TELEGRAM_CHAT_ID" \
+               -d action="typing" >/dev/null || true
+          sleep "$delay"
+
+          echo "Sending to Telegram..."
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+               -H "Content-Type: application/json" \
+               -d "$tg_payload"
