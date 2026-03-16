@@ -21,7 +21,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     if (!slug) return
     fetchPostBySlug(slug).then(({ data, error }) => {
-      if (error || !data) {
+      if (error || !data || data.status !== 'published') {
         setNotFound(true)
       } else {
         setPost(data)
