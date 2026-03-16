@@ -192,6 +192,16 @@ export default function Navbar(){
                     >
                       Profile
                     </Link>
+                    {hasMinRole('collaborator') && (
+                      <Link
+                        to="/portal/editor"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Song Editor
+                      </Link>
+                    )}
                     {(role === 'admin' || role === 'owner') && (
                       <Link
                         to="/admin"
@@ -238,11 +248,11 @@ export default function Navbar(){
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>Daily Word</Link>
               <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Blog</Link>
               <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Wiki</a>
+              {isLoggedIn && hasMinRole('collaborator') && (
+                <Link to="/portal/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/portal/editor') ? 'active':''}`}>Song Editor</Link>
+              )}
               {isLoggedIn && hasMinRole('admin') && (
                 <Link to="/admin" onClick={closeDrawer} className={`gc-navlink ${isActive('/admin') ? 'active':''}`}>Admin Portal</Link>
-              )}
-              {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
-                <Link to="/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/editor') ? 'active':''}`}>Editor Portal</Link>
               )}
             </div>
             <div className="gc-drawer__footer">
