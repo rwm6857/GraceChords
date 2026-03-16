@@ -1,11 +1,14 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import { getDiatonicChords } from '../../utils/chordpro/diatonicChords'
 
 const VARIANTS = ['7', 'maj7', 'sus2', 'sus4']
 
 export default function QuickChordsBar({ currentKey, onInsert }) {
   const [showVariants, setShowVariants] = useState(false)
-  const chords = getDiatonicChords(currentKey)
+  // Memoize so chords only recomputes when currentKey actually changes,
+  // not on every parent re-render. Prevents keydown listener from being
+  // re-registered on every keystroke.
+  const chords = useMemo(() => getDiatonicChords(currentKey), [currentKey])
 
   const handleInsert = useCallback((chord) => {
     if (onInsert) onInsert(`[${chord}]`)
