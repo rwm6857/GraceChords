@@ -14,6 +14,7 @@ import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.
 import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/app/theme'
 import { useSongs } from '../hooks/useSongs'
+import { fetchPosts } from '../hooks/usePosts'
 import { filterByTag, pickRandom } from '../utils/songs/quickActions'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags } from '../utils/songs/tags'
@@ -241,7 +242,6 @@ export default function HomeDashboard(){
     let observer = null
     const idleId = idle(async () => {
       try {
-        const { default: resourcesJson } = await import('../data/resources.json')
         const catalog = buildSongCatalog(catalogSongs)
         const prefLang = resolveInitialSongLanguage(
           catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages,
@@ -283,11 +283,8 @@ export default function HomeDashboard(){
           .sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
           .slice(0, 6)
         setLatestSongs(songsSorted)
-        const postsSorted = (resourcesJson?.items || [])
-          .map(p => ({ ...p, dateMs: parseDateMs(p.date) }))
-          .sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
-          .slice(0, 3)
-        setLatestPosts(postsSorted)
+        const { data: postsData } = await fetchPosts({ status: 'published' })
+        setLatestPosts((postsData || []).slice(0, 3))
         setListsReady(true)
       } catch {
         setListsReady(true)
@@ -508,9 +505,9 @@ function SongMiniCard({ song }){
 }
 
 function PostMiniCard({ post }){
-  const summary = post.summary || ''
+  const summary = post.excerpt || ''
   return (
-    <Link to={`/resources/${post.slug}`} className="home-post-card tool-card">
+    <Link to={`/posts/${post.slug}`} className="home-post-card tool-card">
       <div className="home-post-card__title">{post.title}</div>
       <p className="home-post-card__summary line-clamp-3">{summary}</p>
     </Link>
