@@ -291,10 +291,17 @@ export default function PortalEditorPage() {
     reader.readAsText(file)
   }
 
-  function handleFormChange(newValues) {
+  const handleFormChange = useCallback((newValues) => {
     setFormValues(newValues)
     setIsDirty(true)
-  }
+  }, [])
+
+  // Stable callback for ChordProEditor — prevents QuickChordsBar's keydown
+  // listener from re-registering on every keystroke (was causing memory leak).
+  const handleChordProChange = useCallback((v) => {
+    setFormValues(prev => ({ ...prev, chordpro_content: v }))
+    setIsDirty(true)
+  }, [])
 
   function navigateWithGuard(path) {
     if (isDirty) {
@@ -642,7 +649,7 @@ export default function PortalEditorPage() {
               <ChordProEditor
                 ref={editorRef}
                 value={formValues.chordpro_content}
-                onChange={v => handleFormChange({ ...formValues, chordpro_content: v })}
+                onChange={handleChordProChange}
                 currentKey={formValues.default_key}
                 readOnly={saving}
                 onGuideOpen={() => setShowGuide(true)}
