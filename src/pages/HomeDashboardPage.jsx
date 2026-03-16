@@ -403,7 +403,7 @@ export default function HomeDashboard(){
             <QuickCard to="/songs" title="Song Library" desc="Browse our library for worship charts." />
             <QuickCard to="/setlist" title="Setlist Builder" desc="Create sets for service." />
             <QuickCard to="/songbook" title="Songbook Tool" desc="Build custom, printable songbooks." />
-            <QuickCard to="/resources" title="Resources" desc="Guides and tips for worshippers." />
+            <QuickCard to="/posts" title="Blog" desc="Guides and tips for worshippers." />
           </div>
         </div>
       </section>

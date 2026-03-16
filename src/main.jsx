@@ -31,10 +31,10 @@ function bootstrapRouteFromQuery(){
   const view = params.get('view') || params.get('page')
   let target = ''
   if (song) target = `/songs/${encodeURIComponent(song)}`
-  else if (resource) target = `/resources/${encodeURIComponent(resource)}`
+  else if (resource) target = `/posts/${encodeURIComponent(resource)}`
   else if (view) {
     const v = view.toLowerCase()
-    const allowed = new Set(['about','songs','setlist','songbook','resources','bundle'])
+    const allowed = new Set(['about','songs','setlist','songbook','posts','bundle'])
     if (allowed.has(v)) target = `/${v}`
   }
   if (target) {
