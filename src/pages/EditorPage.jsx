@@ -25,7 +25,7 @@ export default function EditorPage() {
           <Link to="/songs" className="gc-btn gc-btn--primary">
             Browse Songs
           </Link>
-          <Link to="/resources" className="gc-btn gc-btn--secondary">
+          <Link to="/posts" className="gc-btn gc-btn--secondary">
             Blog Posts
           </Link>
         </div>
