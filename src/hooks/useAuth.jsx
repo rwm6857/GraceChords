@@ -15,6 +15,7 @@ function checkHasMinRole(userRole, minRole) {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined) // undefined = loading
   const [profile, setProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -22,8 +23,13 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (ignore) return
       setSession(session)
-      if (session) fetchProfile(session.user.id, () => ignore)
-      else setProfile(null)
+      if (session) {
+        setProfileLoading(true)
+        fetchProfile(session.user.id, () => ignore)
+      } else {
+        setProfile(null)
+        setProfileLoading(false)
+      }
     })
 
     return () => {
@@ -43,6 +49,7 @@ export function AuthProvider({ children }) {
     if (!userError && userData) {
       setProfile(userData)
     }
+    setProfileLoading(false)
   }
 
   const role = profile?.role || 'user'
@@ -50,7 +57,7 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     profile,
-    loading: session === undefined,
+    loading: session === undefined || profileLoading,
     isLoggedIn: !!session,
     // Legacy fields kept for backward compat
     isEditor: ['admin', 'editor', 'owner'].includes(role),

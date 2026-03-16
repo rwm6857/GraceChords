@@ -202,6 +202,16 @@ export default function Navbar(){
                         Song Editor
                       </Link>
                     )}
+                    {hasMinRole('editor') && (
+                      <Link
+                        to="/portal/posts"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Post Editor
+                      </Link>
+                    )}
                     {(role === 'admin' || role === 'owner') && (
                       <Link
                         to="/admin"
