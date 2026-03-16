@@ -12,7 +12,6 @@ import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
 import { fetchSavedSets, upsertSavedSet, deleteSavedSet } from '../utils/setlists/supabaseSets'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
-import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
 import { headOk } from '../utils/network/headCache'
 import { encodeSet, decodeSet } from '../utils/setlists/setcode'
@@ -778,9 +777,7 @@ async function exportPdf() {
       if (!s) continue;
 
       try {
-        const url = publicUrl(`songs/${s.filename}`)
-        const txt = await fetchTextCached(url);
-        const doc = parseChordProOrLegacy(txt);
+        const doc = parseChordProOrLegacy(s.chordpro_content || '');
 
         const baseKey =
           doc.meta?.key ||
@@ -815,9 +812,8 @@ async function exportPdf() {
           }),
         }));
 
-        const slug = s.filename.replace(/\.chordpro$/i, "");
         const song = normalizeSongInput({
-          title: doc.meta?.title || s.title || slug,
+          title: doc.meta?.title || s.title,
           key: sel.toKey || baseKey,
           capo: doc.meta?.capo,
           lyricsBlocks: blocks,
@@ -825,7 +821,7 @@ async function exportPdf() {
         songs.push(song);
       } catch (err) {
         console.error(err);
-        showToast(`Failed to process ${s.filename}`);
+        showToast(`Failed to process ${s.title}`);
       }
     }
 
