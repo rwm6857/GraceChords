@@ -96,7 +96,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $function$
-  SELECT CASE get_user_role()
+  SELECT CASE public.get_user_role()
     WHEN 'owner'        THEN true
     WHEN 'admin'        THEN min_role IN ('admin','editor','collaborator','user')
     WHEN 'editor'       THEN min_role IN ('editor','collaborator','user')
@@ -127,7 +127,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $function$
-  SELECT get_user_role() IN ('admin', 'editor');
+  SELECT public.get_user_role() IN ('admin', 'editor');
 $function$;
 
 
@@ -143,7 +143,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $function$
-  SELECT get_user_role() = 'admin';
+  SELECT public.get_user_role() = 'admin';
 $function$;
 
 
@@ -219,7 +219,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $function$
 DECLARE
-  caller_role         text := get_user_role();
+  caller_role         text := public.get_user_role();
   target_current_role text;
 BEGIN
   IF new_role NOT IN ('owner','admin','editor','collaborator','user') THEN
@@ -314,7 +314,7 @@ AS $function$
 declare
   req contributor_requests%rowtype;
 begin
-  if not is_global_admin() then
+  if not public.is_global_admin() then
     return 'unauthorized';
   end if;
 
@@ -361,7 +361,7 @@ AS $function$
 declare
   prop song_proposals%rowtype;
 begin
-  if not is_global_editor() then
+  if not public.is_global_editor() then
     return 'unauthorized';
   end if;
 
