@@ -19,6 +19,15 @@ export async function fetchPosts({ status } = {}) {
   return query
 }
 
+export async function fetchPublishedPostsWithAuthors() {
+  return supabase
+    .from('posts')
+    .select('id, title, slug, excerpt, tags, published_at, author_id, users(display_name)')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+}
+
 export async function fetchPostBySlug(slug) {
   return supabase
     .from('posts')
