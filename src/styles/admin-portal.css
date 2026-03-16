@@ -318,7 +318,7 @@
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .gc-portal-page {
     padding: var(--space-4) var(--space-3);
   }
@@ -332,5 +332,98 @@
   .gc-user-actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* ── User table: collapsible rows on mobile ── */
+  .gc-user-table__col--desktop {
+    display: none;
+  }
+  .gc-user-table__col--mobile {
+    display: table-cell !important;
+    width: 28px;
+    text-align: right;
+    padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  }
+  .gc-user-table__row {
+    cursor: pointer;
+  }
+  .gc-user-table__row:active td {
+    background: var(--gc-surface-2);
+  }
+  .gc-user-table__expand-row {
+    display: none;
+  }
+  .gc-user-table__expand-row--open {
+    display: table-row;
+  }
+  .gc-user-table__expand-panel {
+    padding: var(--space-3) var(--space-3) var(--space-4);
+    background: var(--gc-surface-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    border-top: 1px solid var(--gc-separator);
+  }
+  .gc-user-table__expand-panel .gc-account-age {
+    font-size: var(--gc-font-sub);
+    color: var(--gc-text-secondary);
+  }
+  /* Chevron icon */
+  .gc-chevron {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--gc-text-secondary);
+    border-bottom: 2px solid var(--gc-text-secondary);
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+    vertical-align: middle;
+  }
+  .gc-chevron--open {
+    transform: rotate(45deg);
+    margin-bottom: 3px;
+  }
+
+  /* ── Pending items: no overflow ── */
+  .gc-pending-item {
+    padding: var(--space-3);
+  }
+
+  /* ── Matrix: scroll hint ── */
+  .gc-matrix-wrap {
+    position: relative;
+  }
+  .gc-matrix-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--gc-surface-1));
+    pointer-events: none;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+  .gc-matrix-scroll-hint {
+    display: block;
+    text-align: right;
+    font-size: var(--gc-font-cap);
+    color: var(--gc-text-tertiary);
+    margin-top: var(--space-2);
+    margin-bottom: 0;
+    user-select: none;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Desktop: hide mobile-only columns and expand rows */
+  .gc-user-table__col--mobile {
+    display: none;
+  }
+  .gc-user-table__expand-row {
+    display: none !important;
+  }
+  .gc-matrix-scroll-hint {
+    display: none;
   }
 }

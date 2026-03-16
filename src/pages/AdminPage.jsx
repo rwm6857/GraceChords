@@ -48,6 +48,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [changingRole, setChangingRole] = useState({}) // { userId: true }
+  const [expandedUserId, setExpandedUserId] = useState(null)
 
   useEffect(() => {
     loadUsers()
@@ -183,8 +184,9 @@ export default function AdminPage() {
                 <tr>
                   <th>Name</th>
                   <th>Role</th>
-                  <th>Account Age</th>
-                  <th>Actions</th>
+                  <th className="gc-user-table__col--desktop">Account Age</th>
+                  <th className="gc-user-table__col--desktop">Actions</th>
+                  <th className="gc-user-table__col--mobile" aria-hidden="true"></th>
                 </tr>
               </thead>
               <tbody>
@@ -194,48 +196,71 @@ export default function AdminPage() {
                   const canChangeRole = !isSelf && (!isTargetOwner || isOwner)
                   const availableRoles = getAvailableRoles(user.role)
                   const isChanging = !!changingRole[user.id]
+                  const isExpanded = expandedUserId === user.id
+
+                  const actionButtons = (
+                    <div className="gc-user-actions">
+                      <select
+                        className="gc-role-select"
+                        value={user.role || 'user'}
+                        disabled={!canChangeRole || isChanging}
+                        onChange={e => handleRoleChange(user.id, e.target.value)}
+                        aria-label={`Change role for ${user.display_name || user.email}`}
+                      >
+                        {availableRoles.map(r => (
+                          <option key={r} value={r}>
+                            {r.charAt(0).toUpperCase() + r.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                      {isOwner && !isSelf && (
+                        <button
+                          className="gc-btn gc-btn--danger gc-btn--sm"
+                          onClick={e => { e.stopPropagation(); setDeleteTarget(user) }}
+                          style={{ fontSize: 'var(--gc-font-cap)', padding: '4px 10px' }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {isSelf && (
+                        <span style={{ color: 'var(--gc-text-tertiary)', fontSize: 'var(--gc-font-cap)' }}>
+                          (you)
+                        </span>
+                      )}
+                    </div>
+                  )
 
                   return (
-                    <tr key={user.id}>
-                      <td>{user.display_name || <span style={{ color: 'var(--gc-text-tertiary)' }}>—</span>}</td>
-                      <td><RolePill role={user.role || 'user'} /></td>
-                      <td>
-                        <span className="gc-account-age">
-                          {formatAccountAge(user.account_created_at)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="gc-user-actions">
-                          <select
-                            className="gc-role-select"
-                            value={user.role || 'user'}
-                            disabled={!canChangeRole || isChanging}
-                            onChange={e => handleRoleChange(user.id, e.target.value)}
-                            aria-label={`Change role for ${user.display_name || user.email}`}
-                          >
-                            {availableRoles.map(r => (
-                              <option key={r} value={r}>
-                                {r.charAt(0).toUpperCase() + r.slice(1)}
-                              </option>
-                            ))}
-                          </select>
-                          {isOwner && !isSelf && (
-                            <button
-                              className="gc-btn gc-btn--danger gc-btn--sm"
-                              onClick={() => setDeleteTarget(user)}
-                              style={{ fontSize: 'var(--gc-font-cap)', padding: '4px 10px' }}
-                            >
-                              Delete
-                            </button>
-                          )}
-                          {isSelf && (
-                            <span style={{ color: 'var(--gc-text-tertiary)', fontSize: 'var(--gc-font-cap)' }}>
-                              (you)
+                    <React.Fragment key={user.id}>
+                      <tr
+                        className="gc-user-table__row"
+                        onClick={() => setExpandedUserId(isExpanded ? null : user.id)}
+                      >
+                        <td>{user.display_name || <span style={{ color: 'var(--gc-text-tertiary)' }}>—</span>}</td>
+                        <td><RolePill role={user.role || 'user'} /></td>
+                        <td className="gc-user-table__col--desktop">
+                          <span className="gc-account-age">
+                            {formatAccountAge(user.account_created_at)}
+                          </span>
+                        </td>
+                        <td className="gc-user-table__col--desktop" onClick={e => e.stopPropagation()}>
+                          {actionButtons}
+                        </td>
+                        <td className="gc-user-table__col--mobile" aria-hidden="true">
+                          <span className={`gc-chevron${isExpanded ? ' gc-chevron--open' : ''}`} />
+                        </td>
+                      </tr>
+                      <tr className={`gc-user-table__expand-row${isExpanded ? ' gc-user-table__expand-row--open' : ''}`}>
+                        <td colSpan={5}>
+                          <div className="gc-user-table__expand-panel">
+                            <span className="gc-account-age">
+                              {formatAccountAge(user.account_created_at)}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                            {actionButtons}
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   )
                 })}
               </tbody>
@@ -320,6 +345,7 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+        <p className="gc-matrix-scroll-hint">Scroll →</p>
       </section>
 
       {/* ── Delete confirm dialog ──────────────────────────────────── */}
