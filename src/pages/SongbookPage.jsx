@@ -5,9 +5,7 @@ import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
-import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
-import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import {
   buildSongCatalog,
@@ -217,9 +215,7 @@ export default function Songbook() {
       const songs = []
       for (const it of selectedEntries) {
         try {
-          const url = publicUrl(`songs/${it.filename}`)
-          const txt = await fetchTextCached(url)
-          const doc = parseChordProOrLegacy(txt)
+          const doc = parseChordProOrLegacy(it.chordpro_content || '')
           const blocks = (doc.sections || []).map((sec) => ({
             section: sec.label,
             lines: (sec.lines || []).map((ln) => {
@@ -244,17 +240,16 @@ export default function Songbook() {
               }
             }),
           }))
-          const slug = it.filename.replace(/\.chordpro$/, '')
           const song = normalizeSongInput({
-            title: doc.meta.title || it.title || slug,
-            key: doc.meta.key || doc.meta.originalkey || it.originalKey || 'C',
+            title: doc.meta?.title || it.title,
+            key: doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C',
             capo: doc.meta?.capo,
             lyricsBlocks: blocks,
           })
           songs.push(song)
         } catch(err) {
           console.error(err)
-          showToast(`Failed to process ${it.filename}`)
+          showToast(`Failed to process ${it.title}`)
         }
       }
       if (songs.length) {
