@@ -40,6 +40,19 @@ export default function EditPostPage() {
   const [loading, setLoading] = useState(!isNew)
   const [notFound, setNotFound] = useState(false)
   const initialContentRef = useRef('')
+  const autosaveTimerRef = useRef(null)
+
+  const draftKey = `gracechords_post_draft_${isNew ? 'new' : id}`
+
+  // Restore saved draft for new posts on mount
+  useEffect(() => {
+    if (!isNew) return
+    try {
+      const saved = localStorage.getItem(draftKey)
+      if (saved) setForm(JSON.parse(saved))
+    } catch { /* ignore parse errors */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Load post for editing
   useEffect(() => {
@@ -50,7 +63,7 @@ export default function EditPostPage() {
         setNotFound(true)
       } else {
         initialContentRef.current = data.content || ''
-        setForm({
+        const fromServer = {
           title: data.title || '',
           slug: data.slug || '',
           excerpt: data.excerpt || '',
@@ -58,12 +71,31 @@ export default function EditPostPage() {
           tags: (data.tags || []).join(', '),
           status: data.status || 'draft',
           content: data.content || '',
-        })
+        }
+        try {
+          const saved = localStorage.getItem(draftKey)
+          setForm(saved ? JSON.parse(saved) : fromServer)
+        } catch {
+          setForm(fromServer)
+        }
         setSlugManual(true) // editing existing → slug is fixed
       }
       setLoading(false)
     })
   }, [id, isNew])
+
+  // Autosave form to localStorage (debounced 1 s)
+  // Skip while still loading so we don't overwrite a good draft with the blank initial state.
+  useEffect(() => {
+    if (loading) return
+    clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(form))
+      } catch { /* ignore storage errors */ }
+    }, 1000)
+    return () => clearTimeout(autosaveTimerRef.current)
+  }, [form, draftKey, loading])
 
   function set(field, value) {
     setForm(prev => {
@@ -107,6 +139,7 @@ export default function EditPostPage() {
           author_id: session?.user?.id,
         })
         if (error) throw error
+        localStorage.removeItem(draftKey)
         showToast('Post created.')
         navigate(`/portal/posts/${data.id}/edit`, { replace: true })
       } else {
@@ -120,6 +153,7 @@ export default function EditPostPage() {
           status: form.status,
         })
         if (error) throw error
+        localStorage.removeItem(draftKey)
         showToast('Post saved.')
       }
     } catch (err) {
