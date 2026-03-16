@@ -218,10 +218,46 @@
   color: var(--gc-primary);
   text-decoration: none;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .gc-post-detail__back a:hover {
   text-decoration: underline;
+}
+
+/* Wide screen: pull back link into the left margin, inline with tags */
+@media (min-width: 860px) {
+  .gc-post-detail {
+    max-width: 920px;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+
+  .gc-post-detail__back {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+    /* Nudge down to align with tag pill text */
+    padding-top: 3px;
+  }
+
+  .gc-post-detail__header {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .gc-post-detail__hero {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .gc-post-detail__content {
+    grid-column: 2;
+    grid-row: 3;
+  }
 }
 
 .gc-post-detail__hero {
@@ -267,10 +303,29 @@
   margin: 0;
 }
 
+.gc-post-detail__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-tertiary);
+}
+
+.gc-post-detail__author {
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-tertiary);
+}
+
+.gc-post-detail__meta-sep {
+  color: var(--gc-text-tertiary);
+  padding: 0 var(--space-1);
+}
+
 .gc-post-detail__date {
   font-size: var(--gc-font-cap);
   color: var(--gc-text-tertiary);
-  display: block;
 }
 
 /* ===================================================
@@ -732,5 +787,9 @@
 
   .gc-post-detail__title {
     font-size: clamp(24px, 6vw, 32px);
+  }
+
+  .gc-post-detail__back {
+    margin-bottom: var(--space-4);
   }
 }

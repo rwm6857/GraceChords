@@ -12,6 +12,13 @@ function formatDate(iso) {
   })
 }
 
+function isUpdated(publishedAt, updatedAt) {
+  if (!publishedAt || !updatedAt) return false
+  const diff = new Date(updatedAt) - new Date(publishedAt)
+  // Only show "Updated" if updated more than 5 minutes after publish
+  return diff > 5 * 60 * 1000
+}
+
 export default function PostDetailPage() {
   const { slug } = useParams()
   const [post, setPost] = useState(null)
@@ -47,6 +54,13 @@ export default function PostDetailPage() {
     )
   }
 
+  const authorName = post.users?.display_name || null
+  const showUpdated = isUpdated(post.published_at, post.updated_at)
+  const dateLabel = showUpdated
+    ? `Updated ${formatDate(post.updated_at)}`
+    : formatDate(post.published_at)
+  const dateIso = showUpdated ? post.updated_at : post.published_at
+
   return (
     <div className="gc-post-detail container">
       <Helmet>
@@ -58,16 +72,6 @@ export default function PostDetailPage() {
       <div className="gc-post-detail__back">
         <Link to="/posts">← All Posts</Link>
       </div>
-
-      {post.featured_image_url && (
-        <div className="gc-post-detail__hero">
-          <img
-            src={post.featured_image_url}
-            alt=""
-            className="gc-post-detail__hero-img"
-          />
-        </div>
-      )}
 
       <header className="gc-post-detail__header">
         {(post.tags || []).length > 0 && (
@@ -81,12 +85,28 @@ export default function PostDetailPage() {
         {post.excerpt && (
           <p className="gc-post-detail__excerpt">{post.excerpt}</p>
         )}
-        {post.published_at && (
-          <time dateTime={post.published_at} className="gc-post-detail__date">
-            {formatDate(post.published_at)}
-          </time>
+        {(authorName || post.published_at) && (
+          <p className="gc-post-detail__meta">
+            {authorName && <span className="gc-post-detail__author">{authorName}</span>}
+            {authorName && dateIso && <span className="gc-post-detail__meta-sep"> • </span>}
+            {dateIso && (
+              <time dateTime={dateIso} className="gc-post-detail__date">
+                {dateLabel}
+              </time>
+            )}
+          </p>
         )}
       </header>
+
+      {post.featured_image_url && (
+        <div className="gc-post-detail__hero">
+          <img
+            src={post.featured_image_url}
+            alt=""
+            className="gc-post-detail__hero-img"
+          />
+        </div>
+      )}
 
       <div
         className="gc-post-detail__content gc-prose"

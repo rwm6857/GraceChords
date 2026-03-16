@@ -31,7 +31,7 @@ export async function fetchPublishedPostsWithAuthors() {
 export async function fetchPostBySlug(slug) {
   return supabase
     .from('posts')
-    .select('*')
+    .select('*, users(display_name)')
     .eq('slug', slug)
     .single()
 }
