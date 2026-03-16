@@ -13,22 +13,27 @@ function checkHasMinRole(userRole, minRole) {
 }
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(undefined) // undefined = loading
-  const [profile, setProfile] = useState(null)
-  const [profileLoading, setProfileLoading] = useState(false)
+  // Single state object so session + profileLoading are always updated atomically,
+  // preventing a transient render where session is set but profileLoading is still false.
+  const [authState, setAuthState] = useState({
+    session: undefined, // undefined = not yet initialised
+    profile: null,
+    profileLoading: false,
+  })
+
+  const { session, profile } = authState
 
   useEffect(() => {
     let ignore = false
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (ignore) return
-      setSession(session)
-      if (session) {
-        setProfileLoading(true)
-        fetchProfile(session.user.id, () => ignore)
+      if (newSession) {
+        // Atomically mark session known + profile in-flight
+        setAuthState({ session: newSession, profile: null, profileLoading: true })
+        fetchProfile(newSession.user.id, () => ignore)
       } else {
-        setProfile(null)
-        setProfileLoading(false)
+        setAuthState({ session: null, profile: null, profileLoading: false })
       }
     })
 
@@ -46,10 +51,12 @@ export function AuthProvider({ children }) {
       .single()
 
     if (isStale()) return
-    if (!userError && userData) {
-      setProfile(userData)
-    }
-    setProfileLoading(false)
+    // Atomically set profile + clear profileLoading in one update
+    setAuthState(prev => ({
+      ...prev,
+      profile: (!userError && userData) ? userData : null,
+      profileLoading: false,
+    }))
   }
 
   const role = profile?.role || 'user'
@@ -57,7 +64,7 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     profile,
-    loading: session === undefined || profileLoading,
+    loading: authState.session === undefined || authState.profileLoading,
     isLoggedIn: !!session,
     // Legacy fields kept for backward compat
     isEditor: ['admin', 'editor', 'owner'].includes(role),
