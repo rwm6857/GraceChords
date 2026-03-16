@@ -14,10 +14,6 @@ vi.mock('../data/index.json', () => ({
   }
 }))
 
-vi.mock('../data/resources.json', () => ({
-  default: { items: [] }
-}))
-
 describe('Home search accessibility', () => {
   beforeEach(() => {
     window.requestIdleCallback = (cb) => { cb(); return 0 }

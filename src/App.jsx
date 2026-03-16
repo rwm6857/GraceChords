@@ -8,8 +8,6 @@ const ReadingsPage = React.lazy(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
 const Songbook = React.lazy(() => import('./pages/SongbookPage'))
 const About = React.lazy(() => import('./pages/AboutPage'))
-const Resources = React.lazy(() => import('./pages/ResourcesPage'))
-const ResourcePost = React.lazy(() => import('./pages/ResourcePostPage'))
 const LoginPage = React.lazy(() => import('./pages/LoginPage'))
 const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
@@ -50,8 +48,6 @@ export default function App(){
             <Route path="/reading" element={<ReadingsPage />} />
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/resources/:slug" element={<ResourcePost />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
             <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
