@@ -238,8 +238,9 @@
 /* ===== Sprite picker ===== */
 .gc-sprite-picker {
   display: grid;
-  grid-template-columns: repeat(5, 72px);
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
   gap: var(--space-3);
+  justify-items: center;
 }
 
 .gc-sprite-picker__item {
@@ -588,4 +589,57 @@
 
 .gc-nav-signin:hover {
   background: var(--gc-primary-hover);
+}
+
+/* ===== Mobile responsive ===== */
+@media (max-width: 767px) {
+  /* Auth card: reduce padding so form content has more room */
+  .gc-auth-card {
+    padding: var(--space-5);
+  }
+
+  /* Wordmark: constrain width so it never overflows */
+  .gc-auth-card__wordmark {
+    max-width: 100%;
+    height: auto;
+    max-height: 36px;
+  }
+
+  /* Danger zone: stack button below text on narrow screens */
+  .gc-danger-zone {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Danger zone button: full width on mobile */
+  .gc-danger-zone .gc-btn--danger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Starred songs: ensure no horizontal overflow */
+  .gc-starred-list {
+    overflow: hidden;
+  }
+
+  .gc-starred-row {
+    min-width: 0;
+  }
+
+  .gc-starred-row__info {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .gc-starred-row__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  /* Profile section: remove max-width cap on mobile (container handles it) */
+  .gc-profile-section {
+    max-width: 100%;
+  }
 }
