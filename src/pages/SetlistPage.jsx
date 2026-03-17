@@ -1222,13 +1222,14 @@ async function exportPdf() {
         </div>
 
         <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab === 'add'}>
-          <section className="setlist-section setlist-current" data-role="current" style={isStacked && mobileTab === 'saved' ? { display:'none' } : undefined}>
+          <section className="setlist-section setlist-current" data-role="current" style={isStacked && mobileTab === 'saved' ? { display:'none' } : !isStacked ? { flex:'1 1 0', minHeight:0 } : undefined}>
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                 <strong>Current setlist ({list.length})</strong>
                 <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>Add Verse</Button>
               </div>
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
+                <div style={{ display:'grid', gap:8 }}>
                 {list.map((sel, idx)=>{
                   const isVerse = isVerseId(sel.id)
                   if (isVerse) {
@@ -1280,6 +1281,7 @@ async function exportPdf() {
                     />
                   )
                 })}
+                </div>
               </div>
             </div>
           {/* Actions moved to toolbar above */}
@@ -1319,11 +1321,11 @@ async function exportPdf() {
                 isStacked && mobileTab === 'current'
                   ? { display:'none' }
                   : !isStacked
-                    ? { flex:'0 0 auto', borderTop:'1px solid var(--gc-separator)', paddingTop:8 }
+                    ? { flex:'1 1 0', minHeight:0, borderTop:'1px solid var(--gc-separator)', paddingTop:8 }
                     : undefined
               }
             >
-              <div className="card setlist-pane" style={{ flex:'0 0 auto' }}>
+              <div className="card setlist-pane">
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                   <strong>Saved Sets</strong>
                   {!setsLoading && (
@@ -1347,34 +1349,28 @@ async function exportPdf() {
                           : null
                         const isConfirming = deleteConfirmId === s.id
                         const isLoaded = currentId === s.id
+                        const subtitle = [serviceDate, `${songCount} ${songCount === 1 ? 'song' : 'songs'}`].filter(Boolean).join(' · ')
                         return (
-                          <div
+                          <SongCard
                             key={s.id}
-                            className="gc-card"
-                            style={{ padding:'10px 12px', display:'flex', alignItems:'center', gap:8, background: isLoaded ? 'var(--gc-surface-2)' : undefined }}
-                          >
-                            <div style={{ flex:'1 1 auto', minWidth:0 }}>
-                              <div style={{ fontWeight:600, fontSize:'0.9375rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                                {s.name}{isLoaded ? <span className="meta" style={{ marginLeft:6, fontWeight:400 }}>(loaded)</span> : null}
-                              </div>
-                              <div className="meta" style={{ marginTop:2, display:'flex', gap:8, flexWrap:'wrap' }}>
-                                {serviceDate ? <span>{serviceDate}</span> : null}
-                                <span>{songCount} {songCount === 1 ? 'song' : 'songs'}</span>
-                              </div>
-                            </div>
-                            {isConfirming ? (
-                              <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                                <span className="meta">Delete this set?</span>
-                                <Button size="sm" variant="destructive" onClick={() => handleDeleteFromCard(s.id)}>Yes</Button>
-                                <Button size="sm" onClick={() => setDeleteConfirmId(null)}>No</Button>
-                              </div>
-                            ) : (
-                              <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                                <Button size="sm" variant="secondary" onClick={() => handleLoadFromCard(s.id)}>Load</Button>
-                                <Button size="sm" variant="secondary" onClick={() => setDeleteConfirmId(s.id)} iconLeft={<TrashIcon />} iconOnly title="Delete this setlist" />
-                              </div>
-                            )}
-                          </div>
+                            title={<>{s.name}{isLoaded ? <span className="meta" style={{ marginLeft:6, fontWeight:400 }}>(loaded)</span> : null}</>}
+                            subtitle={subtitle}
+                            style={isLoaded ? { background:'var(--gc-surface-2)' } : undefined}
+                            rightSlot={
+                              isConfirming ? (
+                                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                                  <span className="meta" style={{ whiteSpace:'nowrap' }}>Delete?</span>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteFromCard(s.id)}>Yes</Button>
+                                  <Button size="sm" onClick={() => setDeleteConfirmId(null)}>No</Button>
+                                </div>
+                              ) : (
+                                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                                  <Button size="sm" variant="secondary" onClick={() => handleLoadFromCard(s.id)}>Load</Button>
+                                  <Button size="sm" variant="secondary" onClick={() => setDeleteConfirmId(s.id)} iconLeft={<TrashIcon />} iconOnly title="Delete this setlist" />
+                                </div>
+                              )
+                            }
+                          />
                         )
                       })}
                     </div>
