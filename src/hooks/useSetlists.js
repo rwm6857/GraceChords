@@ -1,5 +1,5 @@
-// Setlist save/load operations using the setlists + setlist_songs tables.
-// These are personal setlists only (team_id IS NULL).
+// Supabase-backed setlists operations (new setlists + setlist_songs schema).
+// All functions return { data, error } matching Supabase conventions.
 import { supabase } from '../lib/supabase'
 
 export const SETLIST_LIMITS = {
@@ -15,8 +15,8 @@ export function getSetlistLimit(role) {
 }
 
 /**
- * Fetch the current user's personal setlists, ordered by updated_at DESC.
- * Returns { data: [], error }
+ * Fetch all personal (team_id IS NULL) setlists for the current user,
+ * sorted by updated_at DESC.  Includes a song count via relationship.
  */
 export async function fetchPersonalSetlists() {
   return supabase
@@ -27,19 +27,18 @@ export async function fetchPersonalSetlists() {
 }
 
 /**
- * Save a new personal setlist.
- * songs: [{ dbId: uuid, toKey: string }]
- * Returns { data: setlist, error }
+ * Save a brand-new setlist and its songs.
+ * songs: array of { id: uuid, toKey: string }
  */
 export async function saveSetlist(name, serviceDate, songs) {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) return { data: null, error: authError || new Error('Not authenticated') }
+  if (authError || !user) return { data: null, error: authError || { message: 'Not authenticated' } }
 
-  const { data: setlist, error: insertError } = await supabase
+  const { data: setlist, error: setlistError } = await supabase
     .from('setlists')
     .insert({
       owner_id: user.id,
-      name: name?.trim() || 'Untitled Set',
+      name: (name || '').trim() || 'Untitled Set',
       service_date: serviceDate || null,
       team_id: null,
       edit_mode: 'suggest',
@@ -47,79 +46,66 @@ export async function saveSetlist(name, serviceDate, songs) {
     .select('id, name, service_date, created_at, updated_at')
     .single()
 
-  if (insertError) return { data: null, error: insertError }
+  if (setlistError) return { data: null, error: setlistError }
 
-  const songRows = (songs || [])
-    .filter(s => s.dbId)
-    .map((s, i) => ({
+  if (songs && songs.length > 0) {
+    const rows = songs.map((song, i) => ({
       setlist_id: setlist.id,
-      song_id: s.dbId,
+      song_id: song.id,
       position: i,
-      key_override: s.toKey || null,
+      key_override: song.toKey || null,
       notes: null,
     }))
-
-  if (songRows.length) {
     const { error: songsError } = await supabase
       .from('setlist_songs')
-      .insert(songRows)
-    if (songsError) return { data: null, error: songsError }
+      .insert(rows)
+    if (songsError) return { data: setlist, error: songsError }
   }
 
   return { data: setlist, error: null }
 }
 
 /**
- * Overwrite an existing personal setlist (update name/date, replace all songs).
- * Returns { data: setlist, error }
+ * Overwrite an existing setlist: update metadata, wipe songs, re-insert.
+ * songs: array of { id: uuid, toKey: string }
  */
 export async function updateSetlist(setlistId, name, serviceDate, songs) {
   const { error: updateError } = await supabase
     .from('setlists')
     .update({
-      name: name?.trim() || 'Untitled Set',
+      name: (name || '').trim() || 'Untitled Set',
       service_date: serviceDate || null,
-      updated_at: new Date().toISOString(),
     })
     .eq('id', setlistId)
 
-  if (updateError) return { data: null, error: updateError }
+  if (updateError) return { error: updateError }
 
   const { error: deleteError } = await supabase
     .from('setlist_songs')
     .delete()
     .eq('setlist_id', setlistId)
 
-  if (deleteError) return { data: null, error: deleteError }
+  if (deleteError) return { error: deleteError }
 
-  const songRows = (songs || [])
-    .filter(s => s.dbId)
-    .map((s, i) => ({
+  if (songs && songs.length > 0) {
+    const rows = songs.map((song, i) => ({
       setlist_id: setlistId,
-      song_id: s.dbId,
+      song_id: song.id,
       position: i,
-      key_override: s.toKey || null,
+      key_override: song.toKey || null,
       notes: null,
     }))
-
-  if (songRows.length) {
     const { error: songsError } = await supabase
       .from('setlist_songs')
-      .insert(songRows)
-    if (songsError) return { data: null, error: songsError }
+      .insert(rows)
+    if (songsError) return { error: songsError }
   }
 
-  const { data: updated } = await supabase
-    .from('setlists')
-    .select('id, name, service_date, created_at, updated_at')
-    .eq('id', setlistId)
-    .single()
-
-  return { data: updated, error: null }
+  return { error: null }
 }
 
 /**
- * Delete a personal setlist (cascade removes setlist_songs).
+ * Delete a setlist by id.  Cascade handles setlist_songs.
  */
 export async function deleteSetlist(setlistId) {
   return supabase
@@ -129,24 +115,13 @@ export async function deleteSetlist(setlistId) {
 }
 
 /**
- * Load a setlist's songs, ordered by position.
- * Returns { data: [{ id: slug, toKey: string }], error }
+ * Fetch the ordered songs for a setlist, ready to hydrate the working list.
+ * Returns rows: [{ song_id, key_override, position }]
  */
 export async function loadSetlist(setlistId) {
-  const { data, error } = await supabase
+  return supabase
     .from('setlist_songs')
-    .select('position, key_override, songs(slug, default_key)')
+    .select('song_id, key_override, position')
     .eq('setlist_id', setlistId)
     .order('position', { ascending: true })
-
-  if (error) return { data: null, error }
-
-  const entries = (data || [])
-    .map(row => ({
-      id: row.songs?.slug,
-      toKey: row.key_override || row.songs?.default_key || 'C',
-    }))
-    .filter(e => e.id)
-
-  return { data: entries, error: null }
 }
