@@ -21,7 +21,7 @@ src/            # components, hooks, utilities, tests
 supabase/       # SQL migrations (songs, users, starred songs, saved sets, collaborator requests)
 public/         # font assets, bible data, wiki source, resources
 scripts/        # maintenance scripts (index generation, wiki sync, ingest CLI)
-docs/           # local Vite build output (gitignored)
+docs/           # local Vite build output (gitignored) 
 ```
 
 ## UI Styling
