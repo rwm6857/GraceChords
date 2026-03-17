@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const BASE_URL = 'https://gracechords.com'
 const root = process.cwd()
-const outPath = path.join(root, 'public', 'sitemap.xml')
+const outPath = path.join(root, 'dist', 'sitemap.xml')
 
 async function loadDotEnv() {
   try {
