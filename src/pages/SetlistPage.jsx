@@ -601,6 +601,8 @@ export default function Setlist(){
     const finalName = saveModalName.trim() || 'New Setlist'
     const finalDate = saveModalDate || null
     const songs = list.map(({ id, toKey }) => ({ id, toKey }))
+    console.log('[DEBUG] list[0]', list[0])
+    console.log('[DEBUG] getSongById(list[0]?.id)', getSongById(list[0]?.id))
 
     // Client-side limit check for new setlists
     const isNew = !currentId
