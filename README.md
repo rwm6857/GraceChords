@@ -18,10 +18,12 @@ GraceChords is a React + Vite single-page application for managing and playing a
 ## Project Structure
 ```
 src/            # components, hooks, utilities, tests
-supabase/       # SQL migrations (songs, users, starred songs, saved sets, collaborator requests)
-public/         # font assets, bible data, wiki source, resources
-scripts/        # maintenance scripts (index generation, wiki sync, ingest CLI)
-docs/           # local Vite build output (gitignored) 
+supabase/       # SQL migrations (songs, posts, users, starred songs, saved sets, collaborator requests)
+public/         # font assets, bible data, wiki source, static assets
+scripts/        # maintenance scripts (wiki sync, SEO generation, sitemap, Bible ingestion)
+functions/      # Cloudflare Pages Functions (Bible CDN proxy)
+workers/        # Cloudflare Workers (PPTX upload/delete, sitemap rebuild)
+dist/           # Vite build output (gitignored, deployed to Cloudflare Pages)
 ```
 
 ## UI Styling
@@ -43,27 +45,45 @@ Visit `http://localhost:5173` (default Vite port) to explore the app.
 
 ### Environment Variables
 
-Create a `.env` at the repo root:
+Create a `.env` at the repo root (see `.env.example` for a full template):
+
 ```env
+# Required — Supabase project credentials (Settings → API)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_ADMIN_PW=your-password              # legacy gate for ingest CLI
+
+# Required for build scripts (generate-seo-pages.mjs, generate-sitemap.mjs)
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# PPTX Upload Worker (workers/pptx-upload/)
+VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev
+
+# Bible CDN — public R2 URL proxied by the CF Pages Function
+VITE_BIBLE_CDN_URL=https://pub-xxxx.r2.dev
+
+# Cloudinary — image hosting for song/post covers
+VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
+VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
+
+# Optional
 VITE_ENABLE_DISCLAIMER=1                  # set to 0 to disable footer/PDF disclaimers
-VITE_CONTACT_EMAIL=you@example.com        # optional contact line in disclaimers
-VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev  # deployed PPTX upload worker
+VITE_CONTACT_EMAIL=you@example.com
 ```
 
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are required for all song loading and authentication. Find these in your Supabase project's **Settings → API** page.
 
-`VITE_PPTX_WORKER_URL` is the deployed URL of the `gracechords-pptx-upload` Cloudflare Worker. It enables the PPTX upload/delete widget in the song editor. See [`workers/pptx-upload/README.md`](workers/pptx-upload/README.md) for setup instructions. If omitted, the widget shows a configuration warning and upload is disabled.
+`SUPABASE_SERVICE_ROLE_KEY` is used only by the Node build scripts (`generate-seo-pages.mjs`, `generate-sitemap.mjs`) to query songs and posts for static HTML generation; it is never bundled into the frontend.
 
-A complete `.env.example` file is provided at the repo root.
+`VITE_PPTX_WORKER_URL` points to the deployed `gracechords-pptx-upload` Cloudflare Worker. See [`workers/pptx-upload/README.md`](workers/pptx-upload/README.md) for setup. If omitted, the upload widget shows a configuration warning.
+
+`VITE_BIBLE_CDN_URL` is the base public URL for Bible chapter JSON files served from Cloudflare R2. In local dev it is proxied by Vite to avoid CORS; in production it is proxied server-side by the `functions/bible/[[path]].js` Pages Function.
 
 ### Supabase Setup
 
 Apply all migrations under `supabase/migrations/` in order to create the required tables and RLS policies. Key tables:
 - `public.users` — user profiles with `role` column (`user`, `collaborator`, `editor`, `admin`, `owner`)
 - `public.songs` — full song catalog with ChordPro content, metadata, and star counts
+- `public.posts` — blog-style posts with title, slug, rich content, tags, status, and author
 - `public.user_starred_songs` — per-user song stars
 - `public.saved_sets` — Supabase-backed setlist saves for logged-in users
 - `public.collaborator_requests` — queue for users requesting collaborator access
@@ -78,33 +98,29 @@ For more detail, see the [Getting Started](../../wiki/Getting-Started) and [Cont
 
 ## Building & Deployment
 
-Generate the static site locally into `docs/` (gitignored):
+Generate the static site locally into `dist/` (gitignored):
 ```bash
 npm run build
 ```
-GitHub Pages deploys automatically from the GitHub Actions workflow `.github/workflows/pages-deploy.yml` on pushes to `main` (no `docs/` commit required).
 
-Daily Word requires local Bible chapter JSON. Place XML files in `BIBLE_XML/` and run:
-```bash
-npm run build:bibles
-```
+The build runs Vite, then generates static SEO HTML pages and a sitemap using the Supabase service role key.
 
-To ingest a single XML translation into the shared Bible structure:
+**Production deployment** is handled by **Cloudflare Pages**, which connects to this repository and builds from `dist/` on every push to `main`. No manual deploy step or committed build output is required.
+
+Daily Word requires Bible chapter JSON. Place XML files in `BIBLE_XML/` and run:
 ```bash
 npm run build:bible -- --xml ./BIBLE_XML/EnglishNLTBible.xml
 ```
 
-This writes chapter files to `public/bible/<lang>/<id>/` and updates `public/bible/translations.json`.
+This writes chapter files to `public/bible/<lang>/<id>/` and updates `public/bible/translations.json`. In production, Bible JSON is served from Cloudflare R2 via the `functions/bible/[[path]].js` Pages Function (see [Cloudflare Infrastructure](../../wiki/Cloudflare-Infrastructure)).
 
-Keep the root `404.html` (SPA fallback) in the repo when deploying.
-
-Routing uses `BrowserRouter` plus prebuilt shell pages and a 404 redirect so deep links work on static hosting.
+Routing uses `BrowserRouter` plus a `404.html` SPA fallback so deep links work on static hosting.
 
 ## SEO & Sitemaps
 - Per-page metadata is provided via `react-helmet-async`.
-- Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` so Google can crawl content before JS runs.
+- Post-build step generates static HTML pages for `/songs/:id` and `/resources/:slug` (queries Supabase via `SUPABASE_SERVICE_ROLE_KEY`) so Google can crawl content before JS runs.
 - Regenerate the sitemap with `npm run generate:sitemap` (writes `public/sitemap.xml`).
-- `public/sitemap.xml` and `public/robots.txt` are served from the site root on GitHub Pages; keep both committed.
+- `public/sitemap.xml` and `public/robots.txt` are committed and served from the site root.
 
 ## Roles & Access
 
@@ -163,66 +179,29 @@ Metadata inheritance: for each `song_id` group, English is master. Translations 
 Song Library: language chips appear for languages with at least one real translation. Results sort songs with selected-language translations first (A-Z), then the rest under "No Translation in Selected Language".
 
 ## Resources (Guides/Articles)
-Content lives in `public/resources/*.md` with YAML-style frontmatter:
-
-```md
----
-title: "Leading Worship with Confidence"
-author: "Ryan Moore"
-date: "2025-09-10"
-tags: ["leadership", "vocals"]
-summary: "Practical tips for worship leaders."
----
-
-# Heading
-Markdown content…
-```
+Posts are stored in the Supabase `posts` table. Each row has a title, slug, rich HTML content, excerpt, featured image URL, tags, author, and a `status` (`draft` | `published`).
 
 - Index page: `/resources` — grid of cards, search, tag filters.
-- Post page: `/resources/:slug` — renders Markdown with images, links, and HTML embeds.
-- Admin editor: `/admin/resources` — requires editor role.
-
-Rebuild the resources index after adding/editing `.md` files:
-```bash
-npm run build-resources-index
-```
+- Post page: `/resources/:slug` — renders post content with images, embeds, and related posts by tag.
+- Editor: `/portal/posts` — requires editor role; uses a Tiptap rich-text editor.
 
 ## PDF Fonts
 Place the following font files in `src/assets/fonts/`:
 - `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`, `NotoSans-Italic.ttf`, `NotoSans-BoldItalic.ttf`
 - `NotoSansMono-Regular.ttf`, `NotoSansMono-Bold.ttf`
 
-## Importing Lyrics (DOCX/PDF/Images → ChordPro)
-Use the standalone ingest CLI under `scripts/ingest/`:
-
-```bash
-cd scripts/ingest
-npm i
-npm run build
-
-# drop sources into scripts/ingest/_ingest_inbox and run:
-npx gc-ingest
-
-# or ingest a single file
-npx gc-ingest ingest /path/to/song.pdf
-
-# ingest a multi-song PDF songbook
-npx gc-ingest ingest-songbook /path/to/songbook.pdf
-```
-
-Notes:
-- Staged output goes to `scripts/ingest/_ingest_staging/<slug>/` with draft/normalized outputs and HTML previews.
-- `ingest-songbook` handles large multi-page PDFs, ignores cover/TOC pages, and splits bilingual song pairs.
-- Maps Turkish section markers (`[KITA]`, `[NAKARAT]`, `[KÖPRÜ]`) to ChordPro directives.
-
 ## CI & Automation
-Single workflow: `.github/workflows/automation.yml` runs on pushes to `main` and decides what to do based on changed files.
-- **Telegram** (opt-in): sends when the commit message contains `#post`/`#announce`.
-- **Wiki**: if `public/wiki/**` changes, runs `scripts/syncWiki.mjs` (needs `WIKI_PUSH_TOKEN`).
-- **Indexes**: rebuilds `src/data/index.json` and resources index when source files change.
-- **Sitemap**: regenerates `public/sitemap.xml` when song/resource data changes.
-- **Build**: runs `npm run build` with `VITE_COMMIT_SHA=${{ github.sha }}`.
-- **Pages deploy**: `.github/workflows/pages-deploy.yml` builds and deploys to GitHub Pages.
+Active workflows in `.github/workflows/`:
+- **`notify_telegram.yml`**: on every `main` push, sends a Telegram message when the commit message contains `#post` or `#announce`; uses Claude to write the message if `ANTHROPIC_API_KEY` is set.
+- **`force-update.yml`** (manual dispatch): syncs wiki, rebuilds sitemap, and runs `npm run build` — commits generated assets back to `main`.
+- **`codeqL.yml`**: CodeQL security scanning.
+
+Cloudflare Pages builds and deploys automatically on every `main` push — no separate deploy workflow is needed.
+
+Wiki sync is available via the `force-update.yml` workflow (requires `WIKI_PUSH_TOKEN` secret) or locally:
+```bash
+WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
+```
 
 **PDF Export (MVP Engine)**
 - Engine: `src/utils/pdf_mvp/` (facade: `src/utils/pdf/`).
@@ -232,7 +211,7 @@ Single workflow: `.github/workflows/automation.yml` runs on pushes to `main` and
 - See `src/utils/pdf_mvp/README.md` for details.
 
 ## PPTX Slides
-Place PowerPoint lyric decks in `public/pptx/` named after the song's file slug (e.g., `glorious-king.pptx`).
+PowerPoint lyric decks are stored in Cloudflare R2 (`gracechords-bible` bucket, `pptx/` prefix). Uploads and deletes go through the `gracechords-pptx-upload` Cloudflare Worker which validates JWT auth and role before writing to R2. See [`workers/pptx-upload/README.md`](workers/pptx-upload/README.md) and the wiki's [[Slides-(PPTX)]] page for the upload workflow.
 
 ## Offline Support
 GraceChords registers a service worker to make core assets available offline. The cache name includes a commit hash from `VITE_COMMIT_SHA` so each deployment invalidates older caches.
@@ -250,9 +229,8 @@ Song files are fetched with a network-first strategy so edits appear promptly af
 - **Songbook**: mirrors Setlist layout; export includes a TOC and optional cover image.
 - **PDFs**: vector text with Noto Sans; sections stay together; auto-switches to two columns when needed.
 
-## Sorting & Index
-- The index builder ignores files prefixed with `test_*.chordpro`.
-- Sorting places numeric titles first; otherwise titles are compared case-insensitively, ignoring leading punctuation (e.g., `'Tis` sorted under `T`).
+## Sorting
+Song results are sorted with numeric titles first; otherwise case-insensitively, ignoring leading punctuation (e.g., `'Tis` sorts under `T`). Translation-aware sorting shows songs with a variant in the selected language first.
 
 ## GitHub Wiki
 
@@ -268,6 +246,18 @@ If pages don't appear, run the diagnostic:
 ```bash
 node scripts/verifyWikiSetup.mjs
 ```
+
+## Cloudflare Infrastructure
+
+| Service | Purpose |
+|---------|---------|
+| **Cloudflare Pages** | Hosts the SPA; builds from `dist/` on every push to `main` |
+| **Pages Function** (`functions/bible/[[path]].js`) | Server-side proxy for Bible JSON from R2 (avoids CORS) |
+| **R2 bucket** (`gracechords-bible`) | Stores PPTX slide decks (`pptx/` prefix) and Bible chapter JSON (`bible/` prefix) |
+| **Worker** (`gracechords-pptx-upload`) | Authenticated upload/delete of PPTX files to R2 |
+| **Worker** (`gracechords-sitemap-rebuild`) | Weekly cron (Sunday midnight UTC) to rebuild the sitemap |
+
+See [Cloudflare Infrastructure](../../wiki/Cloudflare-Infrastructure) wiki page for full details.
 
 ## Next Steps
 Explore utilities in `src/utils` for chord transposition and PDF generation, check `supabase/migrations/` for the database schema, and extend Vitest tests to safeguard future refactors.
