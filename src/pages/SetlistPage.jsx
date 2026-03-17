@@ -1136,9 +1136,7 @@ async function exportPdf() {
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-              <Button size="sm" variant="secondary" onClick={onOpenLoad} title={isStacked ? 'View saved sets' : 'Saved sets are always visible in the panel below'} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn || !savedSets.length}> <span className="text-when-wide">Load</span></Button>
               <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-              <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
               <Button size="sm" variant="secondary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">Share Set</span></Button>
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
@@ -1216,7 +1214,7 @@ async function exportPdf() {
         </div>
 
         <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab === 'add'}>
-          <section className="setlist-section setlist-current" data-role="current" hidden={isStacked && mobileTab === 'saved'}>
+          <section className="setlist-section setlist-current" data-role="current" style={isStacked && mobileTab === 'saved' ? { display:'none' } : undefined}>
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                 <strong>Current setlist ({list.length})</strong>
@@ -1309,8 +1307,13 @@ async function exportPdf() {
             <section
               className="setlist-section setlist-saved"
               data-role="saved"
-              hidden={isStacked && mobileTab === 'current'}
-              style={!isStacked ? { flex:'0 0 auto', borderTop:'1px solid var(--gc-separator)', paddingTop:8 } : undefined}
+              style={
+                isStacked && mobileTab === 'current'
+                  ? { display:'none' }
+                  : !isStacked
+                    ? { flex:'0 0 auto', borderTop:'1px solid var(--gc-separator)', paddingTop:8 }
+                    : undefined
+              }
             >
               <div className="card setlist-pane" style={{ flex:'0 0 auto' }}>
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
@@ -1375,7 +1378,7 @@ async function exportPdf() {
             <section
               className="setlist-section setlist-saved"
               data-role="saved"
-              hidden={isStacked && mobileTab === 'current'}
+              style={isStacked && mobileTab === 'current' ? { display:'none' } : undefined}
             >
               <div className="card setlist-pane" style={{ flex:'0 0 auto', padding:'16px', textAlign:'center' }}>
                 <div className="meta">Sign in to save and load personal setlists.</div>
@@ -1393,7 +1396,6 @@ async function exportPdf() {
           <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>Save</Button>
           <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>Saved Sets</Button>
           <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>New</Button>
-          <Button onClick={() => { onDelete(); setMobileActionsOpen(false) }} iconLeft={<TrashIcon />} disabled={!currentId}>Delete</Button>
           <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
           <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || 'Export PPT'}</Button>
           <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || 'PPT ZIP'}</Button>
