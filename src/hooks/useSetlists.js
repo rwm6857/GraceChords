@@ -2,18 +2,6 @@
 // All functions return { data, error } matching Supabase conventions.
 import { supabase } from '../lib/supabase'
 
-export const SETLIST_LIMITS = {
-  owner: 30,
-  admin: 20,
-  editor: 10,
-  collaborator: 5,
-  user: 3,
-}
-
-export function getSetlistLimit(role) {
-  return SETLIST_LIMITS[role] ?? SETLIST_LIMITS.user
-}
-
 /**
  * Fetch all personal (team_id IS NULL) setlists for the current user,
  * sorted by updated_at DESC.  Includes a song count via relationship.
