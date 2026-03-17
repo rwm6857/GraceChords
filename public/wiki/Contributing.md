@@ -12,14 +12,14 @@ Guidelines for contributing code or docs to GraceChords.
 # full suite
 npm test
 
-# PDF export non‑regression tests (formatting, spacing, columns)
+# PDF export non-regression tests (formatting, spacing, columns)
 npm run test:mvp
 ```
 Changes to PDF formatting should keep `npm run test:mvp` passing to preserve the approved layout.
 
 ### Commits & PRs
 - Use conventional commits when possible: `type(scope): summary` (e.g., `fix(pdf): prevent orphan lines`).
-- Before opening a PR: `npm test`, `npm run build`, and run `npm run build-index` if songs changed.
-- For song/slide additions, run `npm run normalize` first to align filenames.
+- Before opening a PR: run `npm test` and `npm run build`.
+- Song or post changes are made directly in Supabase (no file-based index to rebuild).
 
-[[Getting-Started]] [[Project-Structure]] [[UI-Design-System]] [[File-Naming-and-Normalization]]
+[[Getting-Started]] [[Project-Structure]] [[UI-Design-System]]

@@ -1,39 +1,27 @@
-Generate the searchable song index from ChordPro files.
+How song and post data flows from Supabase to the app and SEO assets.
 
-## At a glance
-- `scripts/buildIndex.mjs` reads metadata
-- Output saved to `src/data/index.json`
-- Run with `npm run build-index`
-- Before building, normalize names with `npm run normalize`
-- Warns on missing fields
-- Ignores files prefixed with `test_*.chordpro`
-- Supports translation metadata via `{song_id: ...}` + `{lang: ...}` (`en` default when `lang` is omitted)
-- Applies metadata inheritance from English source variant unless translation provides non-empty override
-- Sorting: numeric titles first; otherwise by title with leading punctuation ignored (e.g., `'Tis` sorted under `T`)
+## Runtime data (app)
+Songs and posts are served directly from Supabase at runtime — there is no local JSON index required for the app to run.
 
-```bash
-npm run normalize && npm run build-index
-```
-Warnings highlight songs missing titles, keys, or tags so they can be fixed.
+- **Songs** — `useSongs.jsx` queries `public.songs` from Supabase and caches the result for the session.
+- **Posts** — `usePosts.jsx` queries `public.posts` from Supabase.
+- **Search** — `SongsPage` passes the Supabase results to Fuse.js for in-memory fuzzy search.
 
-Translation/index rules
-- Canonical language field is `{lang: ...}`. Legacy aliases are accepted during migration (`language`, `locale`, `eng/tur/spa`, etc.).
-- Canonical grouping field is `{song_id: ...}`. Legacy aliases are accepted (`songid`, `translation_group`, `translation_of`).
-- Each indexed song gets:
-  - `songId` for translation grouping
-  - `language` for chip/filter behavior
-- Output root includes `languages` plus `items`.
-- Language chips in the app only show languages that appear in at least one true translation group (2+ variants sharing the same `songId`).
+## Build-time SEO data
+`npm run build` runs two scripts that need Supabase data to generate static HTML:
 
-Metadata inheritance rules
-- English variant is master when present.
-- Inherited when translation does not provide a non-empty override:
-  - `originalKey`, `tags`, `authors`, `country`, `youtube`, `mp3`, `pptx`
-- Empty or blank translation values inherit from English.
+- `scripts/generate-seo-pages.mjs` — queries songs and posts via the service role key to create static HTML shells for `/songs/:slug` and `/resources/:slug` (so crawlers can index content before JS runs)
+- `scripts/generate-sitemap.mjs` — queries songs and posts to write `public/sitemap.xml`
 
-Sorting rules
+Both scripts require `SUPABASE_SERVICE_ROLE_KEY` set in the environment.
+
+## Translation grouping
+Songs can be grouped into translation families by sharing the same `song_group_id` in the `songs` table (equivalent to `{song_id: ...}` in ChordPro). Language chips in the app only appear when at least one real translation group exists (two or more songs sharing a `song_group_id`).
+
+## Sorting rules
 - Titles beginning with digits are listed first.
-- For others, leading punctuation is ignored during sorting so `'Tis So Sweet…` is grouped with `T`.
-- Sorting is case‑insensitive.
+- For other titles, leading punctuation is ignored (`'Tis So Sweet…` sorts under `T`).
+- Sorting is case-insensitive.
+- When a language is selected, songs with a variant in that language appear first (A→Z), then songs without (A→Z).
 
-[[Project-Structure]]
+[[Project-Structure]] [[Build-and-Deploy]]
