@@ -600,7 +600,10 @@ export default function Setlist(){
   async function handleSaveConfirm(){
     const finalName = saveModalName.trim() || 'New Setlist'
     const finalDate = saveModalDate || null
-    const songs = list.map(({ id, toKey }) => ({ id, toKey }))
+    const songs = list.map(({ id, toKey }) => {
+        const song = getSongById(id)
+        return { id: song?.dbId ?? id, toKey }
+    })    
     console.log('[DEBUG] list[0]', list[0])
     console.log('[DEBUG] getSongById(list[0]?.id)', getSongById(list[0]?.id))
 
