@@ -603,9 +603,7 @@ export default function Setlist(){
     const songs = list.map(({ id, toKey }) => {
         const song = getSongById(id)
         return { id: song?.dbId ?? id, toKey }
-    })    
-    console.log('[DEBUG] list[0]', list[0])
-    console.log('[DEBUG] getSongById(list[0]?.id)', getSongById(list[0]?.id))
+    })
 
     // Client-side limit check for new setlists
     const isNew = !currentId
