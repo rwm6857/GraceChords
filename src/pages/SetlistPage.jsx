@@ -9,7 +9,13 @@ import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
-import { fetchSavedSets, upsertSavedSet, deleteSavedSet } from '../utils/setlists/supabaseSets'
+import {
+  fetchPersonalSetlists,
+  saveSetlist as dbSaveSetlist,
+  updateSetlist as dbUpdateSetlist,
+  deleteSetlist as dbDeleteSetlist,
+  loadSetlist as dbLoadSetlist,
+} from '../hooks/useSetlists'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../utils/app/toast'
@@ -110,12 +116,13 @@ function buildVerseCompletion(input, suggestion){
   return { composed, prefix: raw, remainder: composed.slice(raw.length) }
 }
 
+// Must match the DB trigger limits in the setlists schema migration.
 const SET_LIMITS = {
-  owner: Infinity,
-  admin: 30,
-  editor: 30,
-  collaborator: 25,
-  user: 10,
+  user: 3,
+  collaborator: 5,
+  editor: 10,
+  admin: 20,
+  owner: 30,
 }
 
 export default function Setlist(){
@@ -164,6 +171,15 @@ export default function Setlist(){
   const [loadOpen, setLoadOpen] = useState(false)
   const [setsLoading, setSetsLoading] = useState(false)
   const [loadChoice, setLoadChoice] = useState('')
+  // Save modal state
+  const [saveModalOpen, setSaveModalOpen] = useState(false)
+  const [saveModalName, setSaveModalName] = useState('')
+  const [saveModalDate, setSaveModalDate] = useState('')
+  const [saveBusy, setSaveBusy] = useState(false)
+  // Loaded setlist's service date (for pre-filling save modal on overwrite)
+  const [loadedServiceDate, setLoadedServiceDate] = useState(null)
+  // Inline delete confirmation: stores the setlist id pending confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
   const [verseOpen, setVerseOpen] = useState(false)
   const [verseInput, setVerseInput] = useState('')
   const [verseError, setVerseError] = useState('')
@@ -310,16 +326,16 @@ export default function Setlist(){
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list.map(s => `${s.id}:${s.toKey}`).join('|'), routeSongIds, location.search, routeCode])
 
-  // Load sets from Supabase when logged in
+  // Load personal setlists from Supabase when logged in
   useEffect(() => {
     if (!isLoggedIn) return
     let cancelled = false
     setSetsLoading(true)
-    fetchSavedSets().then(({ data, error }) => {
+    fetchPersonalSetlists().then(({ data, error }) => {
       if (cancelled) return
       setSetsLoading(false)
       if (error) {
-        console.error('[Setlist] fetchSavedSets:', error)
+        console.error('[Setlist] fetchPersonalSetlists:', error)
         return
       }
       if (data) setSavedSets(data)
@@ -561,7 +577,7 @@ export default function Setlist(){
   // named set helpers
   async function refreshSaved(idToSelect){
     if (isLoggedIn) {
-      const { data, error } = await fetchSavedSets()
+      const { data, error } = await fetchPersonalSetlists()
       if (!error && data) setSavedSets(data)
     } else {
       setSavedSets(listSets())
@@ -569,117 +585,117 @@ export default function Setlist(){
     setSelectedId(idToSelect || '')
   }
   function onNew(){
-    setCurrentId(null); setName('New Setlist'); setList([]); setSelectedId('')
+    setCurrentId(null); setLoadedServiceDate(null); setName('New Setlist'); setList([]); setSelectedId('')
   }
-  async function onSave(){
-    const proposed = (name?.trim() || 'New Setlist')
-    const input = window.prompt('Save set as:', proposed)
-    if (input === null) return
-    const finalName = (String(input).trim() || 'New Setlist')
-    const payload = list.map(({ id, toKey }) => ({ id, toKey }))
 
-    if (isLoggedIn) {
-      // Client-side limit check before INSERT
-      const isNew = !currentId
-      if (isNew && savedSets.length >= userSetLimit) {
-        // Role-specific messaging
-        if (userRole === 'user') {
-          // Check eligibility for collaborator access
-          let eligible = false
-          try {
-            const { data } = await supabase.rpc('is_collaborator_eligible')
-            eligible = !!data
-          } catch {}
-          if (eligible) {
-            showToast(`You've reached the ${userSetLimit} set limit. Request collaborator access to save up to 25 sets.`)
-          } else {
-            showToast(`You've reached the ${userSetLimit} set limit.`)
-          }
-        } else {
-          showToast("You've reached your set limit.")
-        }
-        return
-      }
+  // Opens the save modal pre-filled for create or overwrite.
+  function onSave(){
+    if (!isLoggedIn) { showToast('Sign in to save setlists.'); return }
+    setSaveModalName(name?.trim() || 'New Setlist')
+    setSaveModalDate(currentId && loadedServiceDate ? loadedServiceDate : '')
+    setSaveModalOpen(true)
+  }
 
-      let targetId = currentId
-      if (!targetId) {
-        const existing = savedSets.find(s => (s.name || '') === finalName)
-        if (existing) targetId = existing.id
-      }
+  // Executes the actual DB save when the modal's Save button is pressed.
+  async function handleSaveConfirm(){
+    const finalName = saveModalName.trim() || 'New Setlist'
+    const finalDate = saveModalDate || null
+    const songs = list.map(({ id, toKey }) => ({ id, toKey }))
 
-      const { data: saved, error } = await upsertSavedSet({ id: targetId, name: finalName, items: payload })
-      if (error) {
-        if (error.message?.includes('SET_LIMIT_REACHED')) {
-          // DB-level limit error — surface role-appropriate message
-          if (userRole === 'user') {
-            let eligible = false
-            try {
-              const { supabase: sb } = await import('../lib/supabase')
-              const { data: eligData } = await sb.rpc('is_collaborator_eligible')
-              eligible = !!eligData
-            } catch {}
-            if (eligible) {
-              showToast(`You've reached the ${userSetLimit} set limit. Request collaborator access to save up to 25 sets.`)
-            } else {
-              showToast(`You've reached the ${userSetLimit} set limit.`)
-            }
-          } else {
-            showToast("You've reached your set limit.")
-          }
-        } else {
-          showToast('Failed to save set.')
-          console.error('[Setlist] upsertSavedSet:', error)
-        }
-        return
+    // Client-side limit check for new setlists
+    const isNew = !currentId
+    if (isNew && savedSets.length >= userSetLimit) {
+      let eligible = false
+      try { const { data } = await supabase.rpc('is_collaborator_eligible'); eligible = !!data } catch {}
+      if (userRole === 'user' && eligible) {
+        showToast(`Limit of ${userSetLimit} reached. Request collaborator access to save more.`)
+      } else {
+        showToast(`You've reached your ${userSetLimit} set limit.`)
       }
-      if (saved) {
-        setName(saved.name); setCurrentId(saved.id); await refreshSaved(saved.id)
-      }
-    } else {
-      // localStorage path
-      let targetId = currentId
-      if (!targetId) {
-        const existing = (listSets() || []).find(s => (s.name || '') === finalName)
-        if (existing) targetId = existing.id
-      }
-      const saved = saveSet({ id: targetId, name: finalName, items: payload })
-      setName(saved.name); setCurrentId(saved.id); await refreshSaved(saved.id)
+      setSaveModalOpen(false)
+      return
     }
-  }
-  function onLoadConfirm(){
-    const id = loadChoice || selectedId || ''
-    if (!id) { setLoadOpen(false); return }
-    if (isLoggedIn) {
-      const s = savedSets.find(set => set.id === id)
-      if (s) {
-        setCurrentId(s.id)
-        setName(s.name || 'New Setlist')
-        setList(hydrateSelections(s.items || []))
-        setSelectedId(s.id)
-      }
+
+    setSaveBusy(true)
+    let error
+    let savedId = currentId
+
+    if (currentId) {
+      ;({ error } = await dbUpdateSetlist(currentId, finalName, finalDate, songs))
     } else {
-      const s = getSet(id)
-      if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])) ; setSelectedId(s.id) }
+      const { data: saved, error: saveError } = await dbSaveSetlist(finalName, finalDate, songs)
+      error = saveError
+      if (saved) savedId = saved.id
     }
-    setLoadOpen(false)
+
+    setSaveBusy(false)
+
+    if (error) {
+      if (error.message?.includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
+        showToast(`You've reached your ${userSetLimit} set limit.`)
+      } else {
+        showToast('Failed to save setlist.')
+        console.error('[Setlist] save:', error)
+      }
+      return
+    }
+
+    setName(finalName)
+    if (savedId) setCurrentId(savedId)
+    if (finalDate !== undefined) setLoadedServiceDate(finalDate)
+    setSaveModalOpen(false)
+    await refreshSaved(savedId || '')
+    showToast(currentId ? 'Setlist updated.' : 'Setlist saved.')
   }
+
+  // Load a setlist from a Saved Sets card.
+  async function handleLoadFromCard(setlistId){
+    const { data, error } = await dbLoadSetlist(setlistId)
+    if (error) { showToast('Failed to load setlist.'); return }
+    const card = savedSets.find(s => s.id === setlistId)
+    setList(hydrateSelections((data || []).map(row => ({ id: row.song_id, toKey: row.key_override || '' }))))
+    setCurrentId(setlistId)
+    setName(card?.name || 'Setlist')
+    setLoadedServiceDate(card?.service_date || null)
+    setSelectedId(setlistId)
+    setMobileTab('current')
+  }
+
+  // Delete a setlist from a Saved Sets card (called after inline confirmation).
+  async function handleDeleteFromCard(setlistId){
+    const { error } = await dbDeleteSetlist(setlistId)
+    setDeleteConfirmId(null)
+    if (error) { showToast('Failed to delete setlist.'); return }
+    if (currentId === setlistId) { setCurrentId(null); setLoadedServiceDate(null) }
+    await refreshSaved('')
+    showToast('Setlist deleted.')
+  }
+
+  // Toolbar Load button: navigate to Saved Sets tab on mobile; no-op on desktop.
   function onOpenLoad(){
-    const first = (savedSets[0]?.id) || ''
-    setLoadChoice(selectedId || first)
-    setLoadOpen(true)
+    if (isStacked) setMobileTab('saved')
   }
-  // Duplicate removed per request
+
   async function onDelete(){
     if (!currentId) return
     if (window.confirm(`Delete set "${name}"? This cannot be undone.`)){
       if (isLoggedIn) {
-        const { error } = await deleteSavedSet(currentId)
-        if (error) { showToast('Failed to delete set.'); return }
+        const { error } = await dbDeleteSetlist(currentId)
+        if (error) { showToast('Failed to delete setlist.'); return }
       } else {
         deleteSet(currentId)
       }
       onNew(); await refreshSaved('')
     }
+  }
+
+  // Legacy localStorage load (non-logged-in path, kept for compatibility).
+  function onLoadConfirm(){
+    const id = loadChoice || selectedId || ''
+    if (!id) { setLoadOpen(false); return }
+    const s = getSet(id)
+    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])); setSelectedId(s.id) }
+    setLoadOpen(false)
   }
 
   // export & print
@@ -985,27 +1001,40 @@ async function exportPdf() {
 
   return (
     <PageContainer className="is-setlist">
-      {/* Load Set modal */}
-      {loadOpen ? (
-        <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
-          <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
-            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Load Set</h3>
-            {savedSets.length ? (
-              <label style={{ display:'block', margin:'8px 0' }}>Select a saved set
-                <select value={loadChoice} onChange={e=> setLoadChoice(e.target.value)} style={{ width:'100%' }}>
-                  {savedSets.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} · {new Date(s.updatedAt).toLocaleString()}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <div className="meta">No saved sets yet.</div>
-            )}
-            <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
-              <Button onClick={()=> setLoadOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={onLoadConfirm} disabled={!savedSets.length}>Load</Button>
+      {/* Save Setlist modal */}
+      {saveModalOpen ? (
+        <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+          <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:20, width:'min(480px, 92vw)', display:'flex', flexDirection:'column', gap:12 }}>
+            <h3 id="save-modal-title" style={{ margin:0 }}>{currentId ? 'Update Setlist' : 'Save Setlist'}</h3>
+            <div className="gc-field">
+              <label className="gc-label" htmlFor="save-modal-name">Name <span aria-hidden style={{ color:'var(--gc-danger)' }}>*</span></label>
+              <input
+                id="save-modal-name"
+                className="gc-input"
+                style={{ width:'100%' }}
+                maxLength={80}
+                value={saveModalName}
+                onChange={e => setSaveModalName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !saveBusy) handleSaveConfirm() }}
+                autoFocus
+              />
+            </div>
+            <div className="gc-field">
+              <label className="gc-label" htmlFor="save-modal-date">Service date <span className="meta">(optional)</span></label>
+              <input
+                id="save-modal-date"
+                className="gc-input"
+                style={{ width:'100%' }}
+                type="date"
+                value={saveModalDate}
+                onChange={e => setSaveModalDate(e.target.value)}
+              />
+            </div>
+            <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop:4 }}>
+              <Button onClick={() => setSaveModalOpen(false)} disabled={saveBusy}>Cancel</Button>
+              <Button variant="primary" onClick={handleSaveConfirm} disabled={saveBusy || !saveModalName.trim()} loading={saveBusy}>
+                {currentId ? 'Update' : 'Save'}
+              </Button>
             </div>
           </div>
         </div>
@@ -1100,13 +1129,14 @@ async function exportPdf() {
         </Toolbar>
       ) : (
         <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
-          <div style={{ width: '100%', marginBottom: 6 }}>
+          <div style={{ width: '100%', marginBottom: 6, display:'flex', alignItems:'center', gap:8 }}>
             <strong title="Current set name">{name || 'New Setlist'}</strong>
+            {currentId && isLoggedIn ? <span className="meta">(saved)</span> : null}
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-              <Button size="sm" variant="secondary" onClick={onOpenLoad} title="Load saved set" iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}> <span className="text-when-wide">Load</span></Button>
+              <Button size="sm" variant="secondary" onClick={onOpenLoad} title={isStacked ? 'View saved sets' : 'Saved sets are always visible in the panel below'} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn || !savedSets.length}> <span className="text-when-wide">Load</span></Button>
               <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
               <Button size="sm" variant="secondary" onClick={onDelete} disabled={!currentId} title="Delete set" iconLeft={<TrashIcon />}> <span className="text-when-wide">Delete</span></Button>
               <Button size="sm" variant="secondary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">Share Set</span></Button>
@@ -1126,6 +1156,7 @@ async function exportPdf() {
           onChange={setMobileTab}
           addLabel="Add songs"
           currentLabel={`Current (${list.length})`}
+          savedLabel={`Saved${isLoggedIn && savedSets.length ? ` (${savedSets.length})` : ''}`}
         />
       ) : null}
 
@@ -1184,8 +1215,8 @@ async function exportPdf() {
           </section>
         </div>
 
-        <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab !== 'current'}>
-          <section className="setlist-section setlist-current" data-role="current">
+        <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab === 'add'}>
+          <section className="setlist-section setlist-current" data-role="current" hidden={isStacked && mobileTab === 'saved'}>
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                 <strong>Current setlist ({list.length})</strong>
@@ -1272,6 +1303,85 @@ async function exportPdf() {
             </ol>
           </div>
           </section>
+
+          {/* ── Saved Sets section ─────────────────────────────────── */}
+          {isLoggedIn ? (
+            <section
+              className="setlist-section setlist-saved"
+              data-role="saved"
+              hidden={isStacked && mobileTab === 'current'}
+              style={!isStacked ? { flex:'0 0 auto', borderTop:'1px solid var(--gc-separator)', paddingTop:8 } : undefined}
+            >
+              <div className="card setlist-pane" style={{ flex:'0 0 auto' }}>
+                <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
+                  <strong>Saved Sets</strong>
+                  {!setsLoading && (
+                    <span className="meta" title="Your usage toward the plan limit">
+                      {savedSets.length} of {userSetLimit} used
+                    </span>
+                  )}
+                </div>
+
+                <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--savedSets'].join(' ')} style={{ marginTop:6 }}>
+                  {setsLoading ? (
+                    <div className="meta" style={{ padding:'12px 0' }}>Loading…</div>
+                  ) : savedSets.length === 0 ? (
+                    <div className="meta" style={{ padding:'12px 0' }}>No saved setlists yet. Build a set and press Save.</div>
+                  ) : (
+                    <div style={{ display:'grid', gap:8 }}>
+                      {savedSets.map(s => {
+                        const songCount = s.setlist_songs?.[0]?.count ?? 0
+                        const serviceDate = s.service_date
+                          ? (() => { try { return new Date(s.service_date + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) } catch { return s.service_date } })()
+                          : null
+                        const isConfirming = deleteConfirmId === s.id
+                        const isLoaded = currentId === s.id
+                        return (
+                          <div
+                            key={s.id}
+                            className="gc-card"
+                            style={{ padding:'10px 12px', display:'flex', alignItems:'center', gap:8, background: isLoaded ? 'var(--gc-surface-2)' : undefined }}
+                          >
+                            <div style={{ flex:'1 1 auto', minWidth:0 }}>
+                              <div style={{ fontWeight:600, fontSize:'0.9375rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                {s.name}{isLoaded ? <span className="meta" style={{ marginLeft:6, fontWeight:400 }}>(loaded)</span> : null}
+                              </div>
+                              <div className="meta" style={{ marginTop:2, display:'flex', gap:8, flexWrap:'wrap' }}>
+                                {serviceDate ? <span>{serviceDate}</span> : null}
+                                <span>{songCount} {songCount === 1 ? 'song' : 'songs'}</span>
+                              </div>
+                            </div>
+                            {isConfirming ? (
+                              <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                                <span className="meta">Delete this set?</span>
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteFromCard(s.id)}>Yes</Button>
+                                <Button size="sm" onClick={() => setDeleteConfirmId(null)}>No</Button>
+                              </div>
+                            ) : (
+                              <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                                <Button size="sm" variant="secondary" onClick={() => handleLoadFromCard(s.id)}>Load</Button>
+                                <Button size="sm" variant="secondary" onClick={() => setDeleteConfirmId(s.id)} iconLeft={<TrashIcon />} iconOnly title="Delete this setlist" />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section
+              className="setlist-section setlist-saved"
+              data-role="saved"
+              hidden={isStacked && mobileTab === 'current'}
+            >
+              <div className="card setlist-pane" style={{ flex:'0 0 auto', padding:'16px', textAlign:'center' }}>
+                <div className="meta">Sign in to save and load personal setlists.</div>
+              </div>
+            </section>
+          )}
         </div>
       </div>
       <MobileActionSheet
@@ -1280,8 +1390,8 @@ async function exportPdf() {
         title="Setlist actions"
       >
         <div className="gc-mobile-actions">
-          <Button onClick={() => { onSave(); setMobileActionsOpen(false) }} iconLeft={<SaveIcon />}>Save</Button>
-          <Button onClick={() => { onOpenLoad(); setMobileActionsOpen(false) }} iconLeft={<CloudDownloadIcon />} disabled={!savedSets.length}>Load</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>Save</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>Saved Sets</Button>
           <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>New</Button>
           <Button onClick={() => { onDelete(); setMobileActionsOpen(false) }} iconLeft={<TrashIcon />} disabled={!currentId}>Delete</Button>
           <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
