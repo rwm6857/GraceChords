@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const SITE_URL = 'https://gracechords.com'
 const root = process.cwd()
-const docsDir = path.join(root, 'docs')
+const docsDir = path.join(root, 'dist')
 const templatePath = path.join(docsDir, 'index.html')
 
 async function loadDotEnv() {
@@ -153,7 +153,7 @@ async function build404Page(){
   html = absolutizeAssetPaths(html)
   const outPath = path.join(docsDir, '404.html')
   await writeFile(outPath, html)
-  console.log('Generated docs/404.html for deep-link redirects.')
+  console.log('Generated dist/404.html for deep-link redirects.')
 }
 
 function buildSeoHtml({ title, description, canonical, ld, body }){

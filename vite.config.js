@@ -24,7 +24,7 @@ export default defineConfig({
       ]
     }),
     // Enable bundle analysis with ANALYZE=1 to find unused JS and split chunks safely
-    process.env.ANALYZE ? visualizer({ filename: 'docs/stats.html', template: 'treemap' }) : null
+    process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],
   // In local dev, proxy /bible/* to the R2 CDN so the Pages Function path is simulated.
   // Set VITE_BIBLE_CDN_URL in .env.local to enable this (e.g. https://pub-abc123.r2.dev).
@@ -39,7 +39,7 @@ export default defineConfig({
       }
     : {},
   build: {
-    outDir: 'docs',
+    outDir: 'dist',
     // Keep previous hashed assets so stale cached HTML can still load CSS/JS.
     // This is important when a CDN caches HTML longer than expected.
     emptyOutDir: false,
