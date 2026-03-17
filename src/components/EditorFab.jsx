@@ -1,31 +1,34 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { PencilIcon } from './Icons'
+import { useRole } from '../hooks/useRole'
 
-export default function EditorFab(){
+export default function EditorFab() {
+  const { isAtLeast } = useRole()
   const location = useLocation()
-  const path = location.pathname || ''
 
-  const hide = useMemo(() => {
-    const prefixes = ['/editor', '/admin', '/admin/resources', '/worship', '/reading']
-    return prefixes.some(p => path.startsWith(p))
-  }, [path])
+  // Only render for Collaborator+
+  if (!isAtLeast('collaborator')) return null
 
-  const to = useMemo(() => {
-    const songMatch = /^\/song\/([^/]+)/.exec(path)
-    const resMatch = /^\/resources\/([^/]+)/.exec(path)
-    if (songMatch) return `/editor?song=${encodeURIComponent(songMatch[1])}`
-    if (resMatch) return `/editor?resource=${encodeURIComponent(resMatch[1])}&tab=posts`
-    if (path === '/songs') return '/editor?newSong=1'
-    if (path === '/resources') return '/editor?tab=posts&newResource=1'
-    return '/editor?newSong=1'
-  }, [path])
+  const pathname = location.pathname
 
-  if (hide) return null
+  // Hide on portal/editor pages
+  if (pathname.startsWith('/portal/editor')) return null
+
+  // Detect song pages: /song/:slug or /songs/:slug
+  const songMatch = pathname.match(/^\/songs?\/([^/]+)$/)
+  if (!songMatch) return null
+
+  const slug = songMatch[1]
 
   return (
-    <Link className="gc-editor-fab" to={to} aria-label="Open editor">
-      <PencilIcon size={20} />
+    <Link
+      to={`/portal/editor/${slug}`}
+      className="gc-editor-fab"
+      aria-label="Edit this song"
+    >
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M13.5 2.5l4 4L6 18H2v-4L13.5 2.5z"/>
+      </svg>
     </Link>
   )
 }

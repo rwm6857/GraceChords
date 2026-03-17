@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build-index && npm run build-resources-index && vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
+    "build": "npm run build-resources-index && vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
     "preview": "vite preview",
     "stats": "node scripts/repoStats.mjs",
     "build-index": "node scripts/buildIndex.mjs",
@@ -26,13 +26,23 @@
   },
   "dependencies": {
     "@mdxeditor/editor": "^3.52.1",
+    "@supabase/supabase-js": "^2.98.0",
+    "@tiptap/extension-image": "^3.20.1",
+    "@tiptap/extension-link": "^3.20.1",
+    "@tiptap/extension-placeholder": "^3.20.1",
+    "@tiptap/extension-youtube": "^3.20.1",
+    "@tiptap/pm": "^3.20.1",
+    "@tiptap/react": "^3.20.1",
+    "@tiptap/starter-kit": "^3.20.1",
     "fuse.js": "^7.0.0",
     "jspdf": "^3.0.2",
     "jszip": "^3.10.1",
+    "pako": "^2.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-helmet-async": "^2.0.5",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "vite": "^7.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.4",
@@ -42,11 +52,10 @@
     "happy-dom": "^20.0.11",
     "mammoth": "^1.10.0",
     "pdf-parse": "^1.1.1",
+    "rollup-plugin-visualizer": "^5.12.0",
     "sharp": "^0.34.5",
     "ttf2woff2": "^8.0.0",
-    "vite": "^7.1.4",
     "vite-plugin-static-copy": "^3.1.1",
-    "vitest": "^3.2.4",
-    "rollup-plugin-visualizer": "^5.12.0"
+    "vitest": "^3.2.4"
   }
 }

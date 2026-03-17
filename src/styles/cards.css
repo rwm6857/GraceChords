@@ -111,4 +111,26 @@
   box-shadow: var(--gc-shadow-1);
 }
 
+/* Article/post page layout — override flex row with column for vertical stacking */
+article.gc-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Post body (markdown content) — ensure full width and responsive images */
+.PostBody {
+  width: 100%;
+}
+
+.PostBody img,
+.PostBody iframe {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
 /* No prefers-color-scheme override – theme is driven by [data-theme] */

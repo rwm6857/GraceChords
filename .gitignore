@@ -15,9 +15,11 @@ scripts/ingest/_ingest_exports/
 # Local env and tooling
 .env
 .env.*
+!.env.example
 .vscode/
 .idea/
 *.log
 
 # Local static build output
 docs/
+.env

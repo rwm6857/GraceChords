@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
+import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
-import indexData from '../data/index.json'
+// src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
+import { useSongs } from '../hooks/useSongs'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon, SlidersIcon } from '../components/Icons'
-import { fetchTextCached } from '../utils/network/fetchCache'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -33,7 +35,6 @@ let imageLibPromise
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
-const SONG_CATALOG = buildSongCatalog(indexData?.items || [])
 
 function buildSongSeo(entry, parsed, id){
   const slugFromFile = entry?.filename ? entry.filename.replace(/\.chordpro$/, '') : ''
@@ -93,8 +94,10 @@ function buildSongSeo(entry, parsed, id){
 export default function SongView(){
   const { id } = useParams()
   const navigate = useNavigate()
-  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [id])
-  const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [id])
+  const { songs } = useSongs()
+  const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
+  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+  const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
   const [toKey, setToKey] = useState('C')
@@ -175,76 +178,58 @@ export default function SongView(){
     return imageLibPromise
   }
 
-  // load & parse chordpro
+  // parse chordpro content from DB (no static-file fetch needed)
   useEffect(()=>{
-    if(!entry) return
+    if(!entry?.chordpro_content) return
     setErr('')
     setParsed(null)
-    fetch(publicUrl(`songs/${entry.filename}`))
-      .then(r => { if(!r.ok) throw new Error(`Song file not found: ${entry.filename}`); return r.text() })
-      .then(txt => {
-        try {
-          const doc = parseChordProOrLegacy(txt)
-          const blocks = (doc.sections || []).map((sec) => ({
-            section: sec.label,
-            lines: (sec.lines || []).map((ln) => {
-              if (ln.instrumental) {
-                return {
-                  type: 'instrumental',
-                  text: '',
-                  chords: [],
-                  comment: false,
-                  instrumental: ln.instrumental,
-                };
-              }
-              if (ln.comment) {
-                return {
-                  type: 'comment',
-                  text: ln.comment,
-                  chords: [],
-                  comment: true,
-                };
-              }
-              return {
-                type: 'lyric',
-                text: ln.lyrics || '',
-                chords: ln.chords || [],
-                comment: false,
-              };
-            }),
-          }))
-          const p = { meta: doc.meta, blocks }
-          setParsed(p)
-          const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
-          setToKey(baseKey)
-          const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
-          const needsCheck = blocks.length > 1 && lineCount > 40
-          setJpgDisabled(needsCheck)
-          if (needsCheck) loadImageLib()
-          try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
-        } catch(err){
-          console.error(err)
-          showToast(`Parse error in ${entry.filename}. Check ChordPro syntax.`)
-          setErr('Failed to parse song')
-        }
-      })
-      .catch(e => { console.error(e); showToast(`Failed to load ${entry.filename}`); setErr(e?.message || 'Failed to load song') })
-  }, [entry])
+    try {
+      const doc = parseChordProOrLegacy(entry.chordpro_content)
+      const blocks = (doc.sections || []).map((sec) => ({
+        section: sec.label,
+        lines: (sec.lines || []).map((ln) => {
+          if (ln.instrumental) {
+            return {
+              type: 'instrumental',
+              text: '',
+              chords: [],
+              comment: false,
+              instrumental: ln.instrumental,
+            };
+          }
+          if (ln.comment) {
+            return {
+              type: 'comment',
+              text: ln.comment,
+              chords: [],
+              comment: true,
+            };
+          }
+          return {
+            type: 'lyric',
+            text: ln.lyrics || '',
+            chords: ln.chords || [],
+            comment: false,
+          };
+        }),
+      }))
+      const p = { meta: doc.meta, blocks }
+      setParsed(p)
+      const baseKey = p?.meta?.key || p?.meta?.originalkey || entry.originalKey || 'C'
+      setToKey(baseKey)
+      const lineCount = blocks.reduce((s,b)=> s + (b.lines?.length || 0), 0)
+      const needsCheck = blocks.length > 1 && lineCount > 40
+      setJpgDisabled(needsCheck)
+      if (needsCheck) loadImageLib()
+      try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
+    } catch(err){
+      console.error(err)
+      showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
+      setErr('Failed to parse song')
+    }
+  }, [entry?.chordpro_content])
 
-  // prefetch neighbor songs (no await here)
-  useEffect(() => {
-    if (!entry) return
-    const items = SONG_CATALOG.items || []
-    const i = items.findIndex(x => x.id === entry.id)
-    const neighbors = [items[i-1], items[i+1]].filter(Boolean)
-    neighbors.forEach((n) => {
-      const url = publicUrl(`songs/${n.filename}`)
-      fetchTextCached(url).catch((err) => {
-        console.error(err)
-        showToast(`Failed to load ${n.filename}`)
-      })
-    })
-  }, [entry?.id])
+  // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
 
   // check for PPTX slides
   useEffect(() => {
@@ -263,16 +248,11 @@ export default function SongView(){
     return () => { cancelled = true; clearHeadCache(entry.id) }
   }, [entry])
 
-  // keyboard shortcuts: c toggle chords, [ down, ] up
+  // keyboard shortcuts: [ down, ] up
   useEffect(() => {
     function onKey(e){
       const tag = (e.target && e.target.tagName) || ''
       if (/INPUT|TEXTAREA|SELECT/.test(tag)) return
-      if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault()
-        setShowChords(v => !v)
-        return
-      }
       if (e.key === '[') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, -1, /b/.test(String(baseKey)))) }
       if (e.key === ']') { e.preventDefault(); setToKey(k => transposeSymPrefer(k, +1, /b/.test(String(baseKey)))) }
     }
@@ -427,6 +407,20 @@ export default function SongView(){
     }
   }
 
+  function handleDownloadChordPro() {
+    const raw = entry?.chordpro_content || ''
+    const content = appendDisclaimerIfMissing(raw)
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${slug}.pro`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   function handleLanguageSelect(language){
     if (!translationGroup) return
     const next = resolveGroupEntry(translationGroup, language)
@@ -506,6 +500,14 @@ export default function SongView(){
           </Button>
         )}
         <Button
+          leftIcon={<DownloadIcon />}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadChordPro() }}
+          title="Download ChordPro"
+        >
+          <span className="text-when-wide">Download ChordPro</span>
+          <span className="text-when-narrow">ChordPro</span>
+        </Button>
+        <Button
           as={Link}
           to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
           leftIcon={<MediaIcon />}
@@ -540,6 +542,7 @@ export default function SongView(){
                 ))}
               </span>
             ) : null}
+            <StarButton songId={entry?.dbId} />
           </div>
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
@@ -685,6 +688,13 @@ export default function SongView(){
               PPTX
             </Button>
           ) : null}
+          <Button
+            leftIcon={<DownloadIcon />}
+            onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setMobileActionsOpen(false) }}
+            title="Download ChordPro"
+          >
+            ChordPro
+          </Button>
         </div>
       </MobileActionSheet>
     </div>

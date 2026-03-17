@@ -4,6 +4,9 @@ import { Link, useLocation } from 'react-router-dom'
 import OfflineBadge from '../OfflineBadge'
 import { currentTheme, toggleTheme } from '../../utils/app/theme'
 import { Sun, Moon } from '../Icons'
+import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../lib/supabase'
+import SpriteAvatar from './SpriteAvatar'
 
 export default function Navbar(){
   const [, setBump] = React.useState(0)
@@ -17,6 +20,29 @@ export default function Navbar(){
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
+  const { isLoggedIn, loading: authLoading, session, profile, hasMinRole, role } = useAuth()
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false)
+  const userMenuRef = React.useRef<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    if (!userMenuOpen) return
+    function handleOutsideClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [userMenuOpen])
+
+  React.useEffect(() => {
+    setUserMenuOpen(false)
+  }, [pathname, hash])
+
+  async function handleSignOut() {
+    setUserMenuOpen(false)
+    await supabase.auth.signOut()
+  }
 
   useLayoutEffect(() => {
     function update(){
@@ -125,9 +151,11 @@ export default function Navbar(){
           <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistPage')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Setlist</Link>
           <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songbook</Link>
           <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Daily Word</Link>
-          <Link to="/resources" className={`gc-navlink ${isActive('/resources') ? 'active':''}`} style={isActive('/resources') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
+          <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`} style={isActive('/posts') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
           <a href="https://github.com/rwm6857/GraceChords/wiki" className="gc-navlink" target="_blank" rel="noopener noreferrer">Wiki</a>
-          <OfflineBadge />
+          {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
+            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Editor Portal</Link>
+          )}
           {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
           <button
             className="gc-btn gc-btn--ghost"
@@ -138,6 +166,77 @@ export default function Navbar(){
           >
             {isDark ? <Sun /> : <Moon />}
           </button>
+          {/* Auth slot — desktop */}
+          {!authLoading && (
+            isLoggedIn ? (
+              <div className="gc-user-menu" ref={userMenuRef}>
+                <button
+                  className="gc-user-avatar-btn"
+                  onClick={() => setUserMenuOpen(o => !o)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="User menu"
+                >
+                  <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
+                </button>
+                {userMenuOpen && (
+                  <div className="gc-user-dropdown" role="menu">
+                    <p className="gc-user-dropdown__name">
+                      {profile?.display_name || session?.user?.email}
+                    </p>
+                    <Link
+                      to="/profile"
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    {hasMinRole('collaborator') && (
+                      <Link
+                        to="/portal/editor"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Song Editor
+                      </Link>
+                    )}
+                    {hasMinRole('editor') && (
+                      <Link
+                        to="/portal/posts"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Post Editor
+                      </Link>
+                    )}
+                    {(role === 'admin' || role === 'owner') && (
+                      <Link
+                        to="/admin"
+                        className="gc-user-dropdown__item"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Admin Portal
+                      </Link>
+                    )}
+                    <hr className="gc-user-dropdown__divider" />
+                    <button
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="gc-nav-signin">Sign in</Link>
+            )
+          )}
         </div>
         </div>
       </nav>
@@ -157,8 +256,14 @@ export default function Navbar(){
               <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
               <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>Daily Word</Link>
-              <Link to="/resources" onClick={closeDrawer} className={`gc-navlink ${isActive('/resources') ? 'active':''}`}>Blog</Link>
+              <Link to="/posts" onClick={closeDrawer} className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>Blog</Link>
               <a href="https://github.com/rwm6857/GraceChords/wiki" target="_blank" rel="noopener noreferrer" className="gc-navlink" onClick={closeDrawer}>Wiki</a>
+              {isLoggedIn && hasMinRole('collaborator') && (
+                <Link to="/portal/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/portal/editor') ? 'active':''}`}>Song Editor</Link>
+              )}
+              {isLoggedIn && hasMinRole('admin') && (
+                <Link to="/admin" onClick={closeDrawer} className={`gc-navlink ${isActive('/admin') ? 'active':''}`}>Admin Portal</Link>
+              )}
             </div>
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
@@ -172,6 +277,38 @@ export default function Navbar(){
               >
                 {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
               </button>
+              {/* Auth slot — mobile */}
+              {!authLoading && (
+                isLoggedIn ? (
+                  <div style={{ marginTop: 8 }}>
+                    <Link
+                      to="/profile"
+                      className="gc-btn gc-btn--secondary"
+                      onClick={closeDrawer}
+                      style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}
+                    >
+                      <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
+                      <span>{profile?.display_name || 'Profile'}</span>
+                    </Link>
+                    <button
+                      className="gc-btn gc-btn--ghost"
+                      onClick={async () => { await handleSignOut(); closeDrawer() }}
+                      style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="gc-nav-signin"
+                    onClick={closeDrawer}
+                    style={{ display: 'block', textAlign: 'center', marginTop: 8 }}
+                  >
+                    Sign in
+                  </Link>
+                )
+              )}
             </div>
           </nav>
         </div>,

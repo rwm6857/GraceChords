@@ -1,4 +1,3 @@
-import indexData from '../../data/index.json'
 import { KEYS } from '../chordpro'
 import {
   DEFAULT_BIBLE_TRANSLATION,
@@ -61,9 +60,8 @@ function buildMaps(items){
   return { idToCode, codeToId }
 }
 
-export function encodeSet(list){
-  const items = (indexData?.items || [])
-  const { idToCode } = buildMaps(items)
+export function encodeSet(songs, list){
+  const { idToCode } = buildMaps(songs || [])
   let out = ''
   for(const sel of (list || [])){
     if (isVerseId(sel.id)) {
@@ -79,9 +77,8 @@ export function encodeSet(list){
   return out
 }
 
-export function decodeSet(code){
-  const items = (indexData?.items || [])
-  const { codeToId } = buildMaps(items)
+export function decodeSet(songs, code){
+  const { codeToId } = buildMaps(songs || [])
   const s = String(code || '').trim()
   if(!s) return { error: 'Invalid code length', entries: [] }
   const entries = []

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
+import { AuthProvider } from './hooks/useAuth'
 import { initTheme } from './utils/app/theme'
 
 function bootstrapRouteFromQuery(){
@@ -30,10 +31,10 @@ function bootstrapRouteFromQuery(){
   const view = params.get('view') || params.get('page')
   let target = ''
   if (song) target = `/songs/${encodeURIComponent(song)}`
-  else if (resource) target = `/resources/${encodeURIComponent(resource)}`
+  else if (resource) target = `/posts/${encodeURIComponent(resource)}`
   else if (view) {
     const v = view.toLowerCase()
-    const allowed = new Set(['about','songs','setlist','songbook','resources','bundle'])
+    const allowed = new Set(['about','songs','setlist','songbook','posts','bundle'])
     if (allowed.has(v)) target = `/${v}`
   }
   if (target) {
@@ -118,7 +119,9 @@ createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </HelmetProvider>
   </React.StrictMode>

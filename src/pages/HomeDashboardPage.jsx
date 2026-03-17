@@ -13,6 +13,8 @@ import heroLightWebp960 from '../assets/dashboard-hero-worship-angled-light-960.
 import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.webp'
 import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/app/theme'
+import { useSongs } from '../hooks/useSongs'
+import { fetchPosts } from '../hooks/usePosts'
 import { filterByTag, pickRandom } from '../utils/songs/quickActions'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags } from '../utils/songs/tags'
@@ -40,6 +42,8 @@ export default function HomeDashboard(){
   const [latestSongs, setLatestSongs] = useState([])
   const [latestPosts, setLatestPosts] = useState([])
   const [listsReady, setListsReady] = useState(false)
+
+  const { songs: catalogSongs, loading: songsLoading } = useSongs()
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -229,20 +233,16 @@ export default function HomeDashboard(){
     blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
   }
 
-  // Defer heavier work (JSON parsing, sorting, observer) until idle to keep LCP quick
+  // Defer heavier work (sorting, observer) until idle to keep LCP quick
   // Defer heavy data prep and observers so first paint/LCP can happen quickly
   useEffect(() => {
+    if (songsLoading) return
     const idle = window.requestIdleCallback || ((cb) => setTimeout(() => cb(), 1))
     const cancel = window.cancelIdleCallback || clearTimeout
     let observer = null
     const idleId = idle(async () => {
       try {
-        const [{ default: indexJson }, { default: resourcesJson }] = await Promise.all([
-          import('../data/index.json'),
-          import('../data/resources.json'),
-        ])
-        const indexItems = indexJson?.items || []
-        const catalog = buildSongCatalog(indexItems)
+        const catalog = buildSongCatalog(catalogSongs)
         const prefLang = resolveInitialSongLanguage(
           catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages,
           songLanguage
@@ -283,11 +283,8 @@ export default function HomeDashboard(){
           .sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
           .slice(0, 6)
         setLatestSongs(songsSorted)
-        const postsSorted = (resourcesJson?.items || [])
-          .map(p => ({ ...p, dateMs: parseDateMs(p.date) }))
-          .sort((a, b) => (b.dateMs || 0) - (a.dateMs || 0))
-          .slice(0, 3)
-        setLatestPosts(postsSorted)
+        const { data: postsData } = await fetchPosts({ status: 'published' })
+        setLatestPosts((postsData || []).slice(0, 3))
         setListsReady(true)
       } catch {
         setListsReady(true)
@@ -301,7 +298,7 @@ export default function HomeDashboard(){
       cancel(idleId)
       if (observer) observer.disconnect()
     }
-  }, [songLanguage])
+  }, [songLanguage, catalogSongs, songsLoading])
 
   return (
     <div className="HomeDashboard">
@@ -406,7 +403,7 @@ export default function HomeDashboard(){
             <QuickCard to="/songs" title="Song Library" desc="Browse our library for worship charts." />
             <QuickCard to="/setlist" title="Setlist Builder" desc="Create sets for service." />
             <QuickCard to="/songbook" title="Songbook Tool" desc="Build custom, printable songbooks." />
-            <QuickCard to="/resources" title="Resources" desc="Guides and tips for worshippers." />
+            <QuickCard to="/posts" title="Blog" desc="Guides and tips for worshippers." />
           </div>
         </div>
       </section>
@@ -508,9 +505,9 @@ function SongMiniCard({ song }){
 }
 
 function PostMiniCard({ post }){
-  const summary = post.summary || ''
+  const summary = post.excerpt || ''
   return (
-    <Link to={`/resources/${post.slug}`} className="home-post-card tool-card">
+    <Link to={`/posts/${post.slug}`} className="home-post-card tool-card">
       <div className="home-post-card__title">{post.title}</div>
       <p className="home-post-card__summary line-clamp-3">{summary}</p>
     </Link>

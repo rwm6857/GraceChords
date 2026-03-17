@@ -1,0 +1,22 @@
+# Required secrets — run these before deploying:
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_JWT_SECRET
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# wrangler secret put ALLOWED_ORIGINS
+
+name = "gracechords-pptx-upload"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "gracechords-bible"
+
+[vars]
+# Non-secret vars can go here if needed
+
+# Secrets (set via `wrangler secret put`, never committed):
+# SUPABASE_URL
+# SUPABASE_JWT_SECRET
+# SUPABASE_SERVICE_ROLE_KEY
+# ALLOWED_ORIGINS (comma-separated)

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import indexData from '../data/index.json'
+import { useSongs } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/app/toast'
-import { publicUrl } from '../utils/network/publicUrl'
 
 export default function Bundle(){
   const navigate = useNavigate()
+  const { songs } = useSongs()
   const [selection, setSelection] = useState({})
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
@@ -21,8 +21,8 @@ export default function Bundle(){
 
   useEffect(()=>{
     const ids = Object.keys(selection)
-    setEntries((indexData?.items||[]).filter(it=> ids.includes(it.id)))
-  },[selection])
+    setEntries(songs.filter(it=> ids.includes(it.id)))
+  },[selection, songs])
 
   let pdfLibPromise
   const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
@@ -34,10 +34,7 @@ export default function Bundle(){
       const promises = entries.map(it =>
         (async () => {
           const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
-          const res = await fetch(publicUrl(`songs/${it.filename}`))
-          if(!res.ok) throw new Error(`Missing file ${it.filename}`)
-          const text = await res.text()
-          const doc = parseChordProOrLegacy(text)
+          const doc = parseChordProOrLegacy(it.chordpro_content || '')
           const baseKey = doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C'
           const steps = stepsBetween(baseKey, toKey)
           const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
@@ -66,7 +63,7 @@ export default function Bundle(){
         })()
           .catch(err => {
             console.error(err)
-            showToast(`Failed to process ${it.filename}`)
+            showToast(`Failed to process ${it.title}`)
             throw err
           })
           .finally(() => setProgress(p => p + 1))

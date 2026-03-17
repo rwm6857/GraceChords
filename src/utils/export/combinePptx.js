@@ -1,3 +1,33 @@
+/*
+ * DIAGNOSIS (fix-pptx-export-y1y0r)
+ *
+ * Root causes of ~50% corrupt/mis-formatted PPTX exports:
+ *
+ * 1. SLIDE MASTER MISMATCH — `clonePart` contained four early-return short-circuits
+ *    (for PPT_SLIDE_LAYOUT_CT, PPT_SLIDE_MASTER_CT, PPT_NOTES_MASTER_CT, PPT_THEME_CT)
+ *    that returned the *base* file's equivalent asset instead of copying the source
+ *    file's asset.  Every song after the first had its slides rendered with song-1's
+ *    visual theme → black text, wrong sizes, wrong colours.
+ *
+ * 2. LAYOUT REDIRECT — `processSlideRelationships` also forced every incoming slide's
+ *    slideLayout relationship to point at `context.defaultLayoutTarget` (base file's
+ *    first layout), compounding the master mismatch.
+ *
+ * 3. MIME TYPE — `generateAsync({ type: 'blob' })` produced a Blob with no MIME type;
+ *    some readers flagged this as damaged.
+ *
+ * 4. SEQUENTIAL / NO-SKIP FETCH — A single 404 aborted the entire export; all files
+ *    should be fetched in parallel with per-file error suppression.
+ *
+ * FIX SUMMARY:
+ *   • Removed the four short-circuit blocks in clonePart so source layouts/masters/
+ *     themes are actually copied and renumbered into the output ZIP.
+ *   • Replaced the forced-redirect layout handling in processSlideRelationships with
+ *     a proper clonePart call, matching how other relationship types are handled.
+ *   • Changed generateAsync to uint8array + explicit Blob with the correct MIME type.
+ *   • Fetch all files in parallel (Promise.all) with per-file failure suppression.
+ *   • Appended `_worship` to the download filename per spec.
+ */
 const PPT_SLIDE_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
 const PPT_NOTES_CT = 'application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml'
 const PPT_SLIDE_MASTER_CT = 'application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml'
@@ -536,23 +566,6 @@ async function clonePart(
   const entry = getZipEntry(srcZip, originalPath)
   if (!entry) return null
 
-  if (typeInfo.contentType === PPT_SLIDE_LAYOUT_CT && context.defaultLayoutPath) {
-    context.partMap.set(mapKey, context.defaultLayoutPath)
-    return context.defaultLayoutPath
-  }
-  if (typeInfo.contentType === PPT_SLIDE_MASTER_CT && context.defaultMasterPath) {
-    context.partMap.set(mapKey, context.defaultMasterPath)
-    return context.defaultMasterPath
-  }
-  if (typeInfo.contentType === PPT_NOTES_MASTER_CT && context.defaultNotesMasterPath) {
-    context.partMap.set(mapKey, context.defaultNotesMasterPath)
-    return context.defaultNotesMasterPath
-  }
-  if (typeInfo.contentType === PPT_THEME_CT && context.defaultThemePath) {
-    context.partMap.set(mapKey, context.defaultThemePath)
-    return context.defaultThemePath
-  }
-
   const info = parseNumberedPath(originalPath)
   let newPath
 
@@ -644,11 +657,6 @@ async function processSlideRelationships(
   const relDoc = parseXml(relXml)
   const relNodes = Array.from(relDoc.getElementsByTagName('Relationship'))
   const relationshipsEl = relDoc.documentElement
-  let layoutAssigned = false
-  let maxLocalRelId = relNodes.reduce((max, node) => {
-    const idAttr = node.getAttribute('Id') || ''
-    return Math.max(max, getNumericSuffix(idAttr))
-  }, 0)
 
   for (const node of relNodes) {
     const type = node.getAttribute('Type') || ''
@@ -658,17 +666,9 @@ async function processSlideRelationships(
     if (!absolute) continue
 
     if (type.endsWith('/slideLayout')) {
-      if (context.defaultLayoutTarget) {
-        if (!layoutAssigned) {
-          layoutAssigned = true
-          node.setAttribute('Target', context.defaultLayoutTarget)
-        } else {
-          relationshipsEl.removeChild(node)
-        }
-      } else if (!layoutAssigned) {
-        layoutAssigned = true
-      } else {
-        relationshipsEl.removeChild(node)
+      const layoutPath = await clonePart(context, srcZip, sourceContentTypesDoc, sourceKey, absolute)
+      if (layoutPath) {
+        node.setAttribute('Target', getRelativePath(newSlidePath, layoutPath))
       }
       continue
     }
@@ -693,15 +693,6 @@ async function processSlideRelationships(
       if (!dependencyPath) continue
       node.setAttribute('Target', getRelativePath(newSlidePath, dependencyPath))
     }
-  }
-
-  if (!layoutAssigned && context.defaultLayoutTarget) {
-    const relNode = relDoc.createElement('Relationship')
-    const newId = `rId${maxLocalRelId + 1 || 1}`
-    relNode.setAttribute('Id', newId)
-    relNode.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout')
-    relNode.setAttribute('Target', context.defaultLayoutTarget)
-    relationshipsEl.appendChild(relNode)
   }
 
   const newRelPath = getRelationshipsPath(newSlidePath)
@@ -769,20 +760,33 @@ export async function combinePptxFiles(songFileUrls = [], setlistName = 'Setlist
     throw new Error('No PPTX files to merge')
   }
   const JSZip = (await import('jszip')).default
-  const [first, ...rest] = songFileUrls
-  const baseBuffer = await fetchArrayBuffer(first)
-  const baseZip = await JSZip.loadAsync(baseBuffer)
+
+  // Fetch all files in parallel; skip any that fail (404, network error, etc.)
+  const results = await Promise.all(
+    songFileUrls.map((url) =>
+      fetch(url)
+        .then((res) => (res.ok ? res.arrayBuffer() : null))
+        .catch(() => null)
+    )
+  )
+  const buffers = results.filter(Boolean)
+  if (!buffers.length) throw new Error('No PPTX files could be loaded')
+
+  const [firstBuffer, ...restBuffers] = buffers
+  const baseZip = await JSZip.loadAsync(firstBuffer)
   const context = await prepareContext(baseZip)
 
-  for (let i = 0; i < rest.length; i++) {
-    const buffer = await fetchArrayBuffer(rest[i])
-    const srcZip = await JSZip.loadAsync(buffer)
+  for (let i = 0; i < restBuffers.length; i++) {
+    const srcZip = await JSZip.loadAsync(restBuffers[i])
     await appendSlides(context, srcZip, `src${i + 1}`)
   }
 
   persistXml(context)
-  const blob = await baseZip.generateAsync({ type: 'blob' })
+  const uint8 = await baseZip.generateAsync({ type: 'uint8array' })
+  const blob = new Blob([uint8], {
+    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  })
   const safeName = sanitizeFilename(setlistName || 'Setlist')
 
-  saveBlob(blob, `${safeName}.pptx`)
+  saveBlob(blob, `${safeName}_worship.pptx`)
 }
