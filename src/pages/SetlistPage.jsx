@@ -658,7 +658,10 @@ export default function Setlist(){
     const { data, error } = await dbLoadSetlist(setlistId)
     if (error) { showToast('Failed to load setlist.'); return }
     const card = savedSets.find(s => s.id === setlistId)
-    setList(hydrateSelections((data || []).map(row => ({ id: row.song_id, toKey: row.key_override || '' }))))
+    setList(hydrateSelections((data || []).map(row => {
+        const song = songs.find(s => s.dbId === row.song_id)
+        return { id: song?.id ?? row.song_id, toKey: row.key_override || '' }
+    })))    
     setCurrentId(setlistId)
     setName(card?.name || 'Setlist')
     setLoadedServiceDate(card?.service_date || null)
