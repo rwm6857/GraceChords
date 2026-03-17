@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
@@ -61,6 +61,11 @@ export function AuthProvider({ children }) {
 
   const role = profile?.role || 'user'
 
+  const hasMinRole = useCallback(
+    (minRole) => checkHasMinRole(role, minRole),
+    [role]
+  )
+
   const value = {
     session,
     profile,
@@ -76,7 +81,7 @@ export function AuthProvider({ children }) {
     isAdmin: checkHasMinRole(role, 'admin'),
     isEditorRole: checkHasMinRole(role, 'editor'),
     isCollaborator: checkHasMinRole(role, 'collaborator'),
-    hasMinRole: (minRole) => checkHasMinRole(role, minRole),
+    hasMinRole,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
