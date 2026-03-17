@@ -2,8 +2,7 @@ name: Notify Telegram
 
 on:
   push:
-    branches: [ migration ]
-    # TODO: add main when you cut over
+    branches: [ migration, main ]
 
 permissions:
   contents: read
