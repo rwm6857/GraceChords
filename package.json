@@ -5,24 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build-resources-index && vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
+    "build": "vite build && node scripts/generate-seo-pages.mjs && node scripts/generate-sitemap.mjs",
     "preview": "vite preview",
-    "stats": "node scripts/repoStats.mjs",
-    "build-index": "node scripts/buildIndex.mjs",
-    "build:index": "node scripts/buildIndex.mjs",
-    "build-resources-index": "node scripts/buildResourcesIndex.mjs",
     "build:bible": "node scripts/bible-xml-to-json.mjs",
-    "build:bibles": "node scripts/build-bibles.mjs",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
     "test:mvp": "vitest run src/__tests__/pdf_mvp.*.test.js --pool=forks",
-    "normalize": "node scripts/normalizeFilenames.mjs",
     "convert:short": "node scripts/convertChordProAll.mjs",
-    "ingest": "node scripts/ingestToChordpro.mjs",
-    "repair:meta": "node scripts/repairMeta.mjs",
-    "generate:sitemap": "node scripts/generate-sitemap.mjs",
-    "generate:mcheyne": "node scripts/generate-mcheyne-plan.mjs"
+    "generate:sitemap": "node scripts/generate-sitemap.mjs"
   },
   "dependencies": {
     "@mdxeditor/editor": "^3.52.1",
