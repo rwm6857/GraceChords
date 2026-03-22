@@ -421,6 +421,26 @@ export default function SongView(){
     URL.revokeObjectURL(url)
   }
 
+  async function handleDownloadPptx() {
+    if (!pptxUrl) return
+    try {
+      const res = await fetch(pptxUrl)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = `${slug}.pptx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(objectUrl)
+    } catch (err) {
+      console.error('PPTX download failed', err)
+      showToast('Failed to download PPTX')
+    }
+  }
+
   function handleLanguageSelect(language){
     if (!translationGroup) return
     const next = resolveGroupEntry(translationGroup, language)
@@ -489,8 +509,7 @@ export default function SongView(){
         </Button>
         {hasPptx && (
           <Button
-            href={pptxUrl}
-            download
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadPptx() }}
             leftIcon={<DownloadIcon />}
             aria-label="Download PPTX"
             title="Download PPTX"
@@ -679,8 +698,7 @@ export default function SongView(){
           </Button>
           {hasPptx ? (
             <Button
-              href={pptxUrl}
-              download
+              onClick={(e) => { e.preventDefault(); handleDownloadPptx(); setMobileActionsOpen(false) }}
               leftIcon={<DownloadIcon />}
               aria-label="Download PPTX"
               title="Download PPTX"
