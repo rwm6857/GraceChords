@@ -242,20 +242,27 @@ export default function Setlist(){
     return allSongsById.get(String(songId)) || null
   }
 
-  // check available PPTX files for current set
+  // check available PPTX files for current set (parallel HEAD requests)
   useEffect(() => {
     let cancelled = false
     async function check(){
+      const entries = list
+        .map(sel => {
+          const s = getSongById(sel.id)
+          if (!s) return null
+          const slug = s.filename.replace(/\.chordpro$/i, '')
+          return { slug, url: publicUrl(`pptx/${slug}.pptx`) }
+        })
+        .filter(Boolean)
+      const results = await Promise.all(
+        entries.map(({ slug, url }) => headOk(url, slug).then(ok => ({ slug, ok })))
+      )
+      if (cancelled) return
       const found = {}
-      for(const sel of list){
-        const s = getSongById(sel.id)
-        if(!s) continue
-        const slug = s.filename.replace(/\.chordpro$/i, '')
-        const url = publicUrl(`pptx/${slug}.pptx`)
-        const ok = await headOk(url, slug)
-        if(ok) found[slug] = true
+      for (const { slug, ok } of results) {
+        if (ok) found[slug] = true
       }
-      if(!cancelled) setPptxMap(found)
+      setPptxMap(found)
     }
     check()
     return () => { cancelled = true }
