@@ -5,10 +5,9 @@
  * so the browser never makes a cross-origin request to R2 directly (no CORS needed).
  * This also enables programmatic fetch() calls from the app (combine/bundle exports).
  *
- * Required environment variable (set in Cloudflare Pages → Settings → Environment Variables):
- *   PPTX_CDN_URL  — the public base URL of the R2 bucket, e.g. https://pub-abc123.r2.dev
- *                   (also accepts VITE_PPTX_CDN_URL, or falls back to BIBLE_CDN_URL /
- *                   VITE_BIBLE_CDN_URL since PPTX files share the same bucket)
+ * No additional environment variables needed — PPTX files share the same R2 bucket as
+ * Bible files, so this function reuses the existing BIBLE_CDN_URL (or VITE_BIBLE_CDN_URL)
+ * variable already set in Cloudflare Pages → Settings → Environment Variables.
  */
 export async function onRequest(context) {
   const { request, env, params } = context
@@ -26,17 +25,11 @@ export async function onRequest(context) {
     return new Response(null, { status: 405, headers: corsHeaders() })
   }
 
-  const cdnBase = (
-    env.PPTX_CDN_URL ||
-    env.VITE_PPTX_CDN_URL ||
-    env.BIBLE_CDN_URL ||
-    env.VITE_BIBLE_CDN_URL ||
-    ''
-  ).replace(/\/+$/, '')
+  const cdnBase = (env.BIBLE_CDN_URL || env.VITE_BIBLE_CDN_URL || '').replace(/\/+$/, '')
 
   if (!cdnBase) {
     return new Response(
-      JSON.stringify({ error: 'PPTX CDN not configured. Set PPTX_CDN_URL in Cloudflare Pages environment variables.' }),
+      JSON.stringify({ error: 'PPTX CDN not configured. Set BIBLE_CDN_URL in Cloudflare Pages environment variables.' }),
       { status: 503, headers: { 'Content-Type': 'application/json', ...corsHeaders() } }
     )
   }
