@@ -12,14 +12,32 @@ function checkHasMinRole(userRole, minRole) {
   return userIdx >= minIdx
 }
 
+const PROFILE_CACHE_KEY = 'gc_profile_cache'
+
+function getCachedProfile() {
+  try {
+    const cached = localStorage.getItem(PROFILE_CACHE_KEY)
+    return cached ? JSON.parse(cached) : null
+  } catch { return null }
+}
+
+function writeCachedProfile(profile) {
+  try {
+    if (profile) localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile))
+    else localStorage.removeItem(PROFILE_CACHE_KEY)
+  } catch {}
+}
+
 export function AuthProvider({ children }) {
   // Single state object so session + profileLoading are always updated atomically,
   // preventing a transient render where session is set but profileLoading is still false.
-  const [authState, setAuthState] = useState({
+  // Profile is seeded from localStorage so the navbar avatar renders on first paint,
+  // eliminating the flash/shift when returning to the tab.
+  const [authState, setAuthState] = useState(() => ({
     session: undefined, // undefined = not yet initialised
-    profile: null,
+    profile: getCachedProfile(),
     profileLoading: false,
-  })
+  }))
 
   const { session, profile } = authState
 
@@ -29,10 +47,19 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (ignore) return
       if (newSession) {
-        // Atomically mark session known + profile in-flight
-        setAuthState({ session: newSession, profile: null, profileLoading: true })
+        // Keep the existing (cached) profile while re-fetching so the navbar
+        // avatar doesn't vanish on tab refocus / token refresh.
+        // Only mark profileLoading when there is no profile to show yet.
+        setAuthState(prev => ({
+          session: newSession,
+          profile: prev.profile,
+          profileLoading: prev.profile === null,
+        }))
         fetchProfile(newSession.user.id, () => ignore)
       } else {
+        // Signed out — clear the cache so a subsequent visitor doesn't see
+        // stale avatar data.
+        writeCachedProfile(null)
         setAuthState({ session: null, profile: null, profileLoading: false })
       }
     })
@@ -51,10 +78,14 @@ export function AuthProvider({ children }) {
       .single()
 
     if (isStale()) return
+    const newProfile = (!userError && userData) ? userData : null
+    // Persist the freshly-fetched profile so the next page load / tab refocus
+    // can render it immediately without waiting for this round-trip.
+    writeCachedProfile(newProfile)
     // Atomically set profile + clear profileLoading in one update
     setAuthState(prev => ({
       ...prev,
-      profile: (!userError && userData) ? userData : null,
+      profile: newProfile,
       profileLoading: false,
     }))
   }
