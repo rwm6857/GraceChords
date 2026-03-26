@@ -17,7 +17,7 @@ import {
 } from '../utils/songs/songCatalog'
 import Busy from '../components/Busy'
 import { Button, Card, Chip, Field, IconButton, Input, PageHeader, SongCard } from '../components/ui/layout-kit'
-import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon, SlidersIcon } from '../components/Icons'
+import { PlusIcon, MinusIcon, DownloadIcon, ClearIcon, SlidersIcon, CloudUploadIcon, TrashIcon } from '../components/Icons'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import '../styles/songbook.css'
@@ -149,6 +149,10 @@ export default function Songbook() {
 
   // Export
   const [cover, setCover] = useState(null)
+  const [coverName, setCoverName] = useState(null)
+  const [coverDragOver, setCoverDragOver] = useState(false)
+  const coverDialogRef = useRef(null)
+  const coverFileRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [isMobile, setIsMobile] = useState(() => { try { return window.innerWidth <= 640 } catch { return false } })
   const [isStacked, setIsStacked] = useState(() => { try { return window.innerWidth <= 900 } catch { return false } })
@@ -262,31 +266,28 @@ export default function Songbook() {
 
   function prefetchPdf(){ loadPdfLib() }
 
+  function handleCoverFileObj(f) {
+    if (!f) return
+    if (f.size > 2 * 1024 * 1024) { showToast('Image must be under 2 MB'); return }
+    if (!f.type.startsWith('image/')) { showToast('File must be an image'); return }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCover(String(reader.result || ''))
+      setCoverName(f.name)
+      coverDialogRef.current?.close()
+    }
+    reader.readAsDataURL(f)
+  }
+
   function onCoverFile(e) {
     const f = e.target.files?.[0]
-    if (!f) {
-      setCover(null)
-      return
-    }
-    if (f.size > 2 * 1024 * 1024) {
-      showToast('Image must be under 2 MB')
-      e.target.value = ''
-      setCover(null)
-      return
-    }
-    if (!f.type.startsWith('image/')) {
-      showToast('File must be an image')
-      e.target.value = ''
-      setCover(null)
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => setCover(String(reader.result || ''))
-    reader.readAsDataURL(f)
+    handleCoverFileObj(f)
+    e.target.value = ''
   }
 
   function clearCover(){
     setCover(null)
+    setCoverName(null)
   }
 
   // Render
@@ -408,22 +409,44 @@ export default function Songbook() {
                   </div>
                 </div>
               ) : null}
-              <div className="gc-songbook-options">
-                <Field label="Upload Cover Image" className="gc-songbook-cover" style={{ minWidth: 0 }}>
-                  <input
-                    className="CoverInput"
-                    type="file"
-                    accept="image/*"
-                    onChange={onCoverFile}
-                  />
-                </Field>
-                <div className="gc-songbook-options__meta">
-                  <span className="meta">{cover ? 'Cover image ready' : 'No cover image selected'}</span>
-                  {cover ? (
-                    <Button size="sm" onClick={clearCover} leftIcon={<ClearIcon />}>Clear Cover</Button>
-                  ) : null}
-                </div>
+              <div className="gc-cover-btn-row">
+                {cover ? (
+                  <div className="gc-cover-chip">
+                    <span className="gc-cover-chip__name" title={coverName}>{coverName}</span>
+                    <button type="button" className="gc-cover-chip__remove" aria-label="Remove cover image" onClick={clearCover}>
+                      <TrashIcon style={{ width: 14, height: 14 }} />
+                    </button>
+                  </div>
+                ) : (
+                  <Button variant="secondary" size="sm" leftIcon={<CloudUploadIcon />} onClick={() => coverDialogRef.current?.showModal()}>
+                    Upload cover image
+                  </Button>
+                )}
               </div>
+              <dialog
+                ref={coverDialogRef}
+                className="gc-cover-dialog"
+                onClick={(e) => { if (e.target === coverDialogRef.current) coverDialogRef.current.close() }}
+              >
+                <div className="gc-cover-dialog__inner">
+                  <div className="gc-cover-dialog__header">
+                    <strong>Upload cover image</strong>
+                    <button type="button" className="gc-cover-dialog__close" aria-label="Close" onClick={() => coverDialogRef.current?.close()}>×</button>
+                  </div>
+                  <div
+                    className={`gc-cover-dropzone${coverDragOver ? ' gc-cover-dropzone--over' : ''}`}
+                    onClick={() => coverFileRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setCoverDragOver(true) }}
+                    onDragLeave={() => setCoverDragOver(false)}
+                    onDrop={(e) => { e.preventDefault(); setCoverDragOver(false); handleCoverFileObj(e.dataTransfer.files?.[0]) }}
+                  >
+                    <CloudUploadIcon style={{ width: 36, height: 36, opacity: 0.45 }} />
+                    <p>Drop an image here<br />or <span className="gc-cover-dropzone__link">click to browse</span></p>
+                    <p className="gc-cover-dropzone__hint">JPG, PNG, WEBP — max 2 MB</p>
+                  </div>
+                  <input ref={coverFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onCoverFile} />
+                </div>
+              </dialog>
 
               <div
                 className={['BuilderScroll', 'setlist-scroll', 'pane--addSongs'].join(' ')}
