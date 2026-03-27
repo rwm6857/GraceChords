@@ -11,3 +11,12 @@
 }
 .gc-page > *{ margin-bottom:12px; }
 .gc-page > *:last-child{ margin-bottom:0; }
+
+/* Builder pages use the full available width — no 1200px cap */
+@media (min-width: 901px) {
+  .gc-page.is-setlist,
+  .gc-page.is-songbook {
+    max-width: none;
+    padding: 0 2rem;
+  }
+}
