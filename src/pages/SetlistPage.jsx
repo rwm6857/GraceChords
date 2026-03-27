@@ -37,7 +37,7 @@ import {
 import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
 import BibleTranslationPicker from '../components/BibleTranslationPicker'
 import Busy from '../components/Busy'
-import { Button, Chip, Input, SongCard, Toolbar } from '../components/ui/layout-kit'
+import { Button, Chip, Input, PageHeader, SongCard, Toolbar } from '../components/ui/layout-kit'
 import KeySelector from '../components/KeySelector'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
@@ -1125,11 +1125,7 @@ async function exportPdf() {
         </div>
       ) : null}
       <Busy busy={busy} />
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 12, marginBottom: 4}}>
-        <div />
-        <h1 style={{margin:0}}>Setlist Builder</h1>
-        <div />
-      </div>
+      <PageHeader title="Setlist Builder" />
 
       {/* Toolbar: mobile condensed vs desktop/tablet full */}
       {isMobile ? (
@@ -1251,7 +1247,7 @@ async function exportPdf() {
                         title={title}
                         subtitle={translationLabel}
                         rightSlot={
-                          <div className="setlist-row-actions" style={isMobile ? { flexWrap:'wrap', justifyContent:'flex-end' } : undefined}>
+                          <div className="setlist-row-actions">
                             <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
                             <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
                             <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
@@ -1270,9 +1266,8 @@ async function exportPdf() {
                       onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                       onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
                       title={s.title}
-                      subtitle={`Original: ${s.originalKey || '—'}`}
                       rightSlot={
-                        <div className="setlist-row-actions" style={isMobile ? { flexWrap:'wrap', justifyContent:'flex-end' } : undefined}>
+                        <div className="setlist-row-actions">
                           <KeySelector
                             baseKey={s.originalKey || 'C'}
                             valueKey={sel.toKey || s.originalKey || 'C'}
