@@ -534,6 +534,16 @@ export default function SongView(){
         >
           <span className="text-when-wide">Open in Worship Mode</span>
         </Button>
+        {entry?.gracetracks_url && (
+          <a
+            href={entry.gracetracks_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="gc-btn gc-btn--ghost"
+          >
+            🎚 Practice on GraceTracks
+          </a>
+        )}
       </div>
     </Toolbar>
   ) : null
@@ -713,6 +723,16 @@ export default function SongView(){
           >
             ChordPro
           </Button>
+          {entry?.gracetracks_url && (
+            <a
+              href={entry.gracetracks_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gc-btn gc-btn--ghost"
+            >
+              🎚 Practice on GraceTracks
+            </a>
+          )}
         </div>
       </MobileActionSheet>
     </div>

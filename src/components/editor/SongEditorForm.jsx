@@ -509,7 +509,37 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
         )}
       </div>
 
-      {/* Row 7: PPTX (full) */}
+      {/* Row 7: GraceTracks Stem Slug (full) */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-stem-slug">GraceTracks Stem Slug</label>
+        <input
+          id="sef-stem-slug"
+          className="gc-song-editor-form__input"
+          type="text"
+          value={values.stem_slug || ''}
+          onChange={e => handleChange('stem_slug', e.target.value)}
+          disabled={disabled}
+          placeholder="R2 folder name — leave blank to use song slug"
+        />
+        <p className="gc-song-editor-form__helper">R2 folder name — leave blank to use song slug</p>
+      </div>
+
+      {/* Row 8: GraceTracks URL (full) */}
+      <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
+        <label className="gc-song-editor-form__label" htmlFor="sef-gracetracks-url">GraceTracks URL</label>
+        <input
+          id="sef-gracetracks-url"
+          className="gc-song-editor-form__input"
+          type="text"
+          value={values.gracetracks_url || ''}
+          onChange={e => handleChange('gracetracks_url', e.target.value)}
+          disabled={disabled}
+          placeholder="Full URL e.g. tracks.gracechords.com/song/slug"
+        />
+        <p className="gc-song-editor-form__helper">Full URL e.g. tracks.gracechords.com/song/slug</p>
+      </div>
+
+      {/* Row 9: PPTX (full) */}
       <div className="gc-song-editor-form__field gc-song-editor-form__field--full">
         <label className="gc-song-editor-form__label">Lyric PPT File</label>
         <PptxWidget
