@@ -6,7 +6,7 @@
  * This also enables programmatic fetch() calls from the app (combine/bundle exports).
  *
  * No additional environment variables needed — PPTX files share the same R2 bucket as
- * Bible files, so this function reuses the existing BIBLE_CDN_URL (or VITE_BIBLE_CDN_URL)
+ * Bible files, so this function reuses the existing VITE_R2_PUBLIC_URL (or BIBLE_CDN_URL)
  * variable already set in Cloudflare Pages → Settings → Environment Variables.
  */
 export async function onRequest(context) {
@@ -25,7 +25,7 @@ export async function onRequest(context) {
     return new Response(null, { status: 405, headers: corsHeaders() })
   }
 
-  const cdnBase = (env.BIBLE_CDN_URL || env.VITE_BIBLE_CDN_URL || '').replace(/\/+$/, '')
+  const cdnBase = (env.VITE_R2_PUBLIC_URL || env.BIBLE_CDN_URL || '').replace(/\/+$/, '')
 
   if (!cdnBase) {
     return new Response(

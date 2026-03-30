@@ -26,13 +26,13 @@ export default defineConfig({
     // Enable bundle analysis with ANALYZE=1 to find unused JS and split chunks safely
     process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],
-  // In local dev, proxy /bible/* to the R2 CDN so the Pages Function path is simulated.
-  // Set VITE_BIBLE_CDN_URL in .env.local to enable this (e.g. https://pub-abc123.r2.dev).
-  server: process.env.VITE_BIBLE_CDN_URL
+  // In local dev, proxy /bible/* and /pptx/* to the R2 CDN so the Pages Function path is simulated.
+  // Set VITE_R2_PUBLIC_URL in .env.local to enable this (e.g. https://assets.gracechords.com).
+  server: process.env.VITE_R2_PUBLIC_URL
     ? {
         proxy: {
           '/bible': {
-            target: process.env.VITE_BIBLE_CDN_URL,
+            target: process.env.VITE_R2_PUBLIC_URL,
             changeOrigin: true,
           },
         },

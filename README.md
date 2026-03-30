@@ -58,8 +58,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # PPTX Upload Worker (workers/pptx-upload/)
 VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev
 
-# Bible CDN — public R2 URL proxied by the CF Pages Function
-VITE_BIBLE_CDN_URL=https://pub-xxxx.r2.dev
+# R2 Public URL — base URL for Bible JSON and PPTX assets
+VITE_R2_PUBLIC_URL=https://assets.gracechords.com
 
 # Cloudinary — image hosting for song/post covers
 VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
@@ -76,7 +76,7 @@ VITE_CONTACT_EMAIL=you@example.com
 
 `VITE_PPTX_WORKER_URL` points to the deployed `gracechords-pptx-upload` Cloudflare Worker. See [`workers/pptx-upload/README.md`](workers/pptx-upload/README.md) for setup. If omitted, the upload widget shows a configuration warning.
 
-`VITE_BIBLE_CDN_URL` is the base public URL for Bible chapter JSON files served from Cloudflare R2. In local dev it is proxied by Vite to avoid CORS; in production it is proxied server-side by the `functions/bible/[[path]].js` Pages Function.
+`VITE_R2_PUBLIC_URL` is the base public URL for all Cloudflare R2 assets (`/bible/` prefix for scripture JSON, `/pptx/` prefix for slide decks). In local dev it is proxied by Vite to avoid CORS; in production it is proxied server-side by the `functions/bible/[[path]].js` and `functions/pptx/[[path]].js` Pages Functions.
 
 ### Supabase Setup
 

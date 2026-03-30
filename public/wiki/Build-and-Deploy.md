@@ -53,7 +53,7 @@ npm run preview  # http://localhost:4173
 | `VITE_SUPABASE_URL` | CF Pages env, local `.env` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | CF Pages env, local `.env` | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | CF Pages env (build only), local `.env` | SEO build scripts |
-| `VITE_BIBLE_CDN_URL` | CF Pages env, local `.env` | R2 public URL for Bible JSON |
+| `VITE_R2_PUBLIC_URL` | CF Pages env, local `.env` | R2 base URL for Bible JSON and PPTX assets |
 | `VITE_PPTX_WORKER_URL` | CF Pages env, local `.env` | PPTX upload Worker URL |
 | `VITE_CLOUDINARY_CLOUD_NAME` | CF Pages env, local `.env` | Cloudinary cloud name |
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | CF Pages env, local `.env` | Cloudinary upload preset |
