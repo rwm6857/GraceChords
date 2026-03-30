@@ -434,6 +434,21 @@ export default function PortalEditorPage() {
     setSaving(false)
   }
 
+  // ---- PPTX auto-save (called immediately after upload/delete) ----
+  async function handlePptxSaved(url) {
+    if (!song?.id) return
+    const { error } = await supabase
+      .from('songs')
+      .update({ pptx_url: url || null })
+      .eq('id', song.id)
+    if (error) {
+      showToast(`Error saving PPTX URL: ${error.message}`)
+      return
+    }
+    setSong(prev => prev ? { ...prev, pptx_url: url } : prev)
+    setSavedFormValues(prev => ({ ...prev, pptx_url: url }))
+  }
+
   // ---- Discard ----
   function handleDiscard() {
     if (!isDirty) return
@@ -640,6 +655,8 @@ export default function PortalEditorPage() {
                 onChange={handleFormChange}
                 disabled={saving}
                 validationErrors={validationErrors}
+                slug={song?.slug || ''}
+                onPptxSaved={handlePptxSaved}
               />
             </div>
 

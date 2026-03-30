@@ -43,7 +43,7 @@ function extractFilename(url) {
   return decodeURIComponent(parts[parts.length - 1] || url)
 }
 
-function PptxWidget({ value, onChange, disabled, slug, title }) {
+function PptxWidget({ value, onChange, onPptxSaved, disabled, slug, title }) {
   const { can, isAtLeast } = useRole()
   const { session } = useAuth()
   const [selectedFile, setSelectedFile] = useState(null)
@@ -92,6 +92,7 @@ function PptxWidget({ value, onChange, disabled, slug, title }) {
           return
         }
         onChange('')
+        if (typeof onPptxSaved === 'function') await onPptxSaved('')
         showToast('PPTX deleted.')
       } catch (err) {
         setActionError('Network error — delete failed')
@@ -185,6 +186,7 @@ function PptxWidget({ value, onChange, disabled, slug, title }) {
         return
       }
       onChange(data.url)
+      if (typeof onPptxSaved === 'function') await onPptxSaved(data.url)
       setSelectedFile(null)
       setReplacing(false)
       showToast('PPTX uploaded.')
@@ -239,7 +241,7 @@ function PptxWidget({ value, onChange, disabled, slug, title }) {
   )
 }
 
-export default function SongEditorForm({ values, onChange, disabled, validationErrors = {} }) {
+export default function SongEditorForm({ values, onChange, disabled, validationErrors = {}, slug = '', onPptxSaved }) {
   const { can } = useRole()
   const [tagInput, setTagInput] = useState('')
   const [youtubeWarning, setYoutubeWarning] = useState('')
@@ -513,8 +515,9 @@ export default function SongEditorForm({ values, onChange, disabled, validationE
         <PptxWidget
           value={values.pptx_url || ''}
           onChange={v => handleChange('pptx_url', v)}
+          onPptxSaved={onPptxSaved}
           disabled={disabled}
-          slug={values.slug || ''}
+          slug={slug}
           title={values.title || ''}
         />
       </div>
