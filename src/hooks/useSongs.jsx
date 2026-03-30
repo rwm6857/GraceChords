@@ -24,7 +24,8 @@ async function fetchSongs() {
     .from('songs')
     .select(
       'id, slug, title, artist, default_key, tags, country, youtube_id, ' +
-      'source_filename, chordpro_content, star_count, song_group_id, is_deleted'
+      'source_filename, chordpro_content, star_count, song_group_id, is_deleted, ' +
+      'has_stems, stem_slug, gracetracks_url'
     )
     .eq('is_deleted', false)
     .order('title')
@@ -92,6 +93,11 @@ function normaliseSong(song) {
     song_group_id: song.song_group_id || null,
 
     incomplete: false,
+
+    // GraceTracks stem fields
+    has_stems:       song.has_stems       ?? false,
+    stem_slug:       song.stem_slug       ?? null,
+    gracetracks_url: song.gracetracks_url ?? null,
   }
 }
 
