@@ -5,8 +5,8 @@
  * so the browser never makes a cross-origin request to R2 directly (no CORS needed).
  *
  * Required environment variable (set in Cloudflare Pages → Settings → Environment Variables):
- *   BIBLE_CDN_URL  — the base URL of the R2 bucket, e.g. https://pub-abc123.r2.dev
- *                    (also accepts VITE_BIBLE_CDN_URL for backwards compatibility)
+ *   VITE_R2_PUBLIC_URL — the base URL of the R2 bucket, e.g. https://assets.gracechords.com
+ *                        (also accepts BIBLE_CDN_URL for backwards compatibility)
  */
 export async function onRequest(context) {
   const { request, env, params } = context
@@ -19,7 +19,7 @@ export async function onRequest(context) {
     })
   }
 
-  const cdnBase = (env.BIBLE_CDN_URL || env.VITE_BIBLE_CDN_URL || '').replace(/\/+$/, '')
+  const cdnBase = (env.VITE_R2_PUBLIC_URL || env.BIBLE_CDN_URL || '').replace(/\/+$/, '')
   if (!cdnBase) {
     return new Response(
       JSON.stringify({ error: 'Bible CDN not configured. Set BIBLE_CDN_URL in Cloudflare Pages environment variables.' }),

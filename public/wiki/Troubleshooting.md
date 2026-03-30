@@ -26,7 +26,7 @@ Solve common issues when running or using GraceChords.
 ## Bible / Daily Word
 
 **Chapter fails to load**
-- Ensure `VITE_BIBLE_CDN_URL` is set to the correct R2 public URL.
+- Ensure `VITE_R2_PUBLIC_URL` is set to the correct R2 public URL (e.g. `https://assets.gracechords.com`).
 - In development, Vite proxies `/bible/*` to this URL. In production, the CF Pages Function (`functions/bible/[[path]].js`) proxies it server-side.
 - Confirm the R2 bucket is public or the Pages Function has read access.
 

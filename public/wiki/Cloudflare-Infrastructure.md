@@ -29,7 +29,7 @@ Environment variables (including secrets like `SUPABASE_SERVICE_ROLE_KEY`) are c
 BIBLE_CDN_URL=https://pub-xxxx.r2.dev
 ```
 
-In **local dev**, Vite proxies `/bible/*` to `VITE_BIBLE_CDN_URL` (set in `.env.local`).
+In **local dev**, Vite proxies `/bible/*` to `VITE_R2_PUBLIC_URL` (set in `.env.local`).
 
 ---
 
@@ -44,7 +44,7 @@ R2 is used as object storage for large binary assets.
 | `pptx/` | PowerPoint slide decks (`{slug}.pptx`) |
 | `bible/` | Bible chapter JSON files (`{lang}/{id}/{chapter}.json`) |
 
-R2 has no egress fees. Files are served publicly via the R2 public URL (set as `BIBLE_CDN_URL`) or downloaded via a Worker endpoint.
+R2 has no egress fees. Files are served publicly via the R2 public URL (set as `VITE_R2_PUBLIC_URL`) or downloaded via a Worker endpoint.
 
 ---
 
@@ -105,8 +105,7 @@ wrangler deploy
 
 | Variable | Used by | Where to set |
 |----------|---------|-------------|
-| `VITE_BIBLE_CDN_URL` | Dev proxy + Pages Function | `.env.local` / CF Pages env |
-| `BIBLE_CDN_URL` | Pages Function (server-side) | CF Pages env |
+| `VITE_R2_PUBLIC_URL` | Dev proxy + Pages Function | `.env.local` / CF Pages env |
 | `VITE_PPTX_WORKER_URL` | SPA frontend | `.env` / CF Pages env |
 | Worker secrets | `gracechords-pptx-upload` | `wrangler secret put` |
 

@@ -27,8 +27,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # PPTX upload/delete Worker
 VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev
 
-# Bible CDN — R2 public URL for Bible chapter JSON
-VITE_BIBLE_CDN_URL=https://pub-xxxx.r2.dev
+# R2 Public URL — base URL for Bible JSON and PPTX assets
+VITE_R2_PUBLIC_URL=https://assets.gracechords.com
 
 # Cloudinary — image hosting for song/post covers
 VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
@@ -43,7 +43,7 @@ VITE_CONTACT_EMAIL=you@example.com
 
 `SUPABASE_SERVICE_ROLE_KEY` is only needed when running `npm run build` (SEO page + sitemap generation). It is never bundled into the frontend.
 
-`VITE_BIBLE_CDN_URL` enables the Daily Word feature locally. In dev, Vite proxies `/bible/*` to this URL. In production the Cloudflare Pages Function handles the proxy.
+`VITE_R2_PUBLIC_URL` enables the Daily Word and PPTX features locally. In dev, Vite proxies `/bible/*` to this URL. In production the Cloudflare Pages Function handles the proxy.
 
 ## Supabase setup
 
