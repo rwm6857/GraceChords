@@ -16,7 +16,7 @@ import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
 import Busy from '../components/Busy'
 import { publicUrl } from '../utils/network/publicUrl'
-import { Button, Card, Chip, IconButton, InsetCard, PageHeader, Panel, Toolbar } from '../components/ui/layout-kit'
+import { Button, Card, Chip, IconButton, PageHeader, Toolbar } from '../components/ui/layout-kit'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobileDock from '../components/ui/mobile/MobileDock'
 import { buildChordRowsLayout } from '../utils/songs/chordLineLayout'
@@ -102,7 +102,6 @@ export default function SongView(){
   const [parsed, setParsed] = useState(null)
   const [toKey, setToKey] = useState('C')
   const [showChords, setShowChords] = useState(true)
-  const [showMedia, setShowMedia] = useState(false)
   const [twoColsView, setTwoColsView] = useState(() => {
     try {
       const saved = localStorage.getItem('songView:twoCols')
@@ -124,13 +123,13 @@ export default function SongView(){
     try { return window.innerWidth < 600 } catch { return false }
   })
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const mobileDockRef = useRef(null)
   const [mobileDockHeight, setMobileDockHeight] = useState(96)
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
   const isIcpSong = !!songSeo.isIcpSong
   const mediaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube || entry?.youtube || ''
-  const mediaMp3 = parsed?.meta?.mp3 || parsed?.meta?.meta?.mp3 || entry?.mp3 || ''
 
   useEffect(() => {
     if (!entry?.language) return
@@ -221,7 +220,6 @@ export default function SongView(){
       const needsCheck = blocks.length > 1 && lineCount > 40
       setJpgDisabled(needsCheck)
       if (needsCheck) loadImageLib()
-      try { setShowMedia(localStorage.getItem(`mediaOpen:${entry.id}`) === '1') } catch {}
     } catch(err){
       console.error(err)
       showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
@@ -484,55 +482,80 @@ export default function SongView(){
         </IconButton>
       </div>
       <div className="gc-toolbar__actions">
+        <div className="gc-download-menu">
+          <Button
+            variant="primary"
+            leftIcon={<DownloadIcon />}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDownloadMenuOpen(v => !v) }}
+            onMouseEnter={prefetchPdf}
+            onFocus={prefetchPdf}
+            loading={busy}
+            title="Download"
+            aria-haspopup="true"
+            aria-expanded={downloadMenuOpen}
+          >
+            Download
+          </Button>
+          {downloadMenuOpen && (
+            <>
+              <button
+                type="button"
+                className="gc-download-menu__backdrop"
+                aria-hidden="true"
+                tabIndex={-1}
+                onClick={() => setDownloadMenuOpen(false)}
+              />
+              <div className="gc-download-menu__panel" role="menu" aria-label="Download options">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  onClick={(e) => { e.preventDefault(); handleDownloadPdf(); setDownloadMenuOpen(false) }}
+                  onMouseEnter={prefetchPdf}
+                >
+                  <DownloadIcon /> PDF
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  disabled={jpgDisabled}
+                  title={jpgDisabled ? 'JPG only supports single-page songs' : undefined}
+                  onClick={(e) => { e.preventDefault(); handleDownloadJpg(); setDownloadMenuOpen(false) }}
+                  onMouseEnter={prefetchJpg}
+                >
+                  <DownloadIcon /> JPG
+                </button>
+                {hasPptx && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="gc-download-menu__item"
+                    onClick={(e) => { e.preventDefault(); handleDownloadPptx(); setDownloadMenuOpen(false) }}
+                  >
+                    <DownloadIcon /> PPTX
+                  </button>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setDownloadMenuOpen(false) }}
+                >
+                  <DownloadIcon /> ChordPro
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         <Button
           variant="primary"
-          leftIcon={<DownloadIcon />}
-          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
-          onMouseEnter={prefetchPdf}
-          onFocus={prefetchPdf}
-          loading={busy}
-          title="Download PDF"
-        >
-          <span className="text-when-wide">Download PDF</span>
-          <span className="text-when-narrow">PDF</span>
-        </Button>
-        <Button
-          leftIcon={<DownloadIcon />}
-          disabled={jpgDisabled}
-          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
-          onMouseEnter={prefetchJpg}
-          onFocus={prefetchJpg}
-          title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
-        >
-          <span className="text-when-wide">Download JPG</span>
-          <span className="text-when-narrow">JPG</span>
-        </Button>
-        {hasPptx && (
-          <Button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadPptx() }}
-            leftIcon={<DownloadIcon />}
-            aria-label="Download PPTX"
-            title="Download PPTX"
-          >
-            <span className="text-when-wide">Download PPTX</span>
-            <span className="text-when-narrow">PPTX</span>
-          </Button>
-        )}
-        <Button
-          leftIcon={<DownloadIcon />}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadChordPro() }}
-          title="Download ChordPro"
-        >
-          <span className="text-when-wide">Download ChordPro</span>
-          <span className="text-when-narrow">ChordPro</span>
-        </Button>
-        <Button
           as={Link}
           to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
           leftIcon={<MediaIcon />}
-          title="Open in Worship Mode"
+          title="Worship Mode"
         >
-          <span className="text-when-wide">Open in Worship Mode</span>
+          Worship Mode
         </Button>
         {entry?.gracetracks_url && (
           <a
@@ -632,47 +655,24 @@ export default function SongView(){
         ))}
       </Card>
 
-      {(mediaYoutube || mediaMp3) && (
-        <Card className="gc-media-panel" style={{ marginTop: 12 }}>
-          <Panel
-            title={<span style={{ display:'inline-flex', alignItems:'center', gap:8 }}><MediaIcon /> Media</span>}
-            open={showMedia}
-            onToggle={()=>{ const n=!showMedia; setShowMedia(n); try{ localStorage.setItem(`mediaOpen:${entry.id}`, n?'1':'0') }catch{} }}
-          >
-            <div className="media__stack">
-              {mediaYoutube && (
-                <InsetCard className="media__card">
-                  <div className="media__label">Reference Video</div>
-                  {(() => {
-                   const ytId = extractYouTubeId(mediaYoutube)
-                   return ytId ? (
-                      <div style={{ marginTop: 12 }}>
-                        <LiteYouTube id={ytId} />
-                      </div>
-                    ) : (
-                      <Button
-                        href={String(mediaYoutube)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ marginTop: 12 }}
-                      >
-                        Open on YouTube
-                      </Button>
-                     )
-                  })()}
-                </InsetCard>
-              )}
-
-              {mediaMp3 && (
-                <InsetCard className="media__card">
-                  <div className="media__label">Audio</div>
-                  <audio className="media__audio" controls src={mediaMp3} />
-                </InsetCard>
-              )}
+      {(() => {
+        const ytId = mediaYoutube ? extractYouTubeId(mediaYoutube) : null
+        if (!ytId) return null
+        return (
+          <div className="gc-ref-video">
+            <div className="media__label">Reference Video</div>
+            <div className="media__frame">
+              <iframe
+                title="Reference Video"
+                src={`https://www.youtube.com/embed/${ytId}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
             </div>
-          </Panel>
-        </Card>
-      )}
+          </div>
+        )
+      })()}
       {/* Mobile action bar */}
       {isNarrow && (
         <MobileDock ref={mobileDockRef} role="group" aria-label="Song actions">
@@ -780,32 +780,6 @@ function extractYouTubeId(input = '') {
   return null
 }
 
-function LiteYouTube({ id }) {
-  const [ready, setReady] = React.useState(false)
-  const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
-  return (
-    <div className="media__frame">
-      {ready ? (
-        <iframe
-          title="YouTube video"
-          src={`https://www.youtube.com/embed/${id}?autoplay=1`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{position:'absolute', inset:0, width:'100%', height:'100%', border:0}}
-        />
-      ) : (
-        <button
-          onClick={() => setReady(true)}
-          aria-label="Play video"
-          style={{position:'absolute', inset:0, width:'100%', height:'100%', padding:0, border:0, background:'none', cursor:'pointer'}}
-        >
-          <img src={thumb} alt="" style={{width:'100%', height:'100%', objectFit:'cover'}} loading="lazy" />
-          <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48}}>▶</div>
-        </button>
-      )}
-    </div>
-  )
-}
 
 function isSectionLabel(text = '') {
   const s = String(text).trim()
