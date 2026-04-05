@@ -198,6 +198,43 @@ select{
 .gc-song-tags{ display:flex; flex-wrap:wrap; gap: var(--space-2); margin-top: var(--space-2); }
 .gc-song-tags + .gc-song-toolbar{ margin-top: var(--space-2); }
 
+/* Download dropdown menu */
+.gc-download-menu{ position: relative; display: inline-flex; }
+.gc-download-menu__backdrop{ position: fixed; inset: 0; z-index: 98; background: transparent; border: 0; cursor: default; padding: 0; }
+.gc-download-menu__panel{
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 99;
+  min-width: 170px;
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  box-shadow: var(--gc-shadow-2, 0 4px 16px rgba(0,0,0,.18));
+  padding: var(--space-1) 0;
+  display: flex;
+  flex-direction: column;
+}
+.gc-download-menu__item{
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 10px var(--space-3);
+  background: transparent;
+  border: 0;
+  color: var(--gc-text);
+  font-family: var(--gc-font-family);
+  font-size: var(--gc-btn-font-size);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-download-menu__item svg{ width: var(--gc-btn-icon-size); height: var(--gc-btn-icon-size); flex-shrink: 0; }
+.gc-download-menu__item:hover{ background: var(--gc-surface-2); }
+.gc-download-menu__item:disabled{ opacity: 0.5; cursor: not-allowed; }
+
 /* Song title strip: Stopwatch — Title — Clock (single line) */
 .songtitlebar{
   position: relative; display:block; text-align:center;

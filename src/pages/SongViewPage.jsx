@@ -124,6 +124,7 @@ export default function SongView(){
     try { return window.innerWidth < 600 } catch { return false }
   })
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
   const mobileDockRef = useRef(null)
   const [mobileDockHeight, setMobileDockHeight] = useState(96)
   const songSeo = buildSongSeo(entry, parsed, id)
@@ -484,55 +485,80 @@ export default function SongView(){
         </IconButton>
       </div>
       <div className="gc-toolbar__actions">
+        <div className="gc-download-menu">
+          <Button
+            variant="primary"
+            leftIcon={<DownloadIcon />}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDownloadMenuOpen(v => !v) }}
+            onMouseEnter={prefetchPdf}
+            onFocus={prefetchPdf}
+            loading={busy}
+            title="Download"
+            aria-haspopup="true"
+            aria-expanded={downloadMenuOpen}
+          >
+            Download
+          </Button>
+          {downloadMenuOpen && (
+            <>
+              <button
+                type="button"
+                className="gc-download-menu__backdrop"
+                aria-hidden="true"
+                tabIndex={-1}
+                onClick={() => setDownloadMenuOpen(false)}
+              />
+              <div className="gc-download-menu__panel" role="menu" aria-label="Download options">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  onClick={(e) => { e.preventDefault(); handleDownloadPdf(); setDownloadMenuOpen(false) }}
+                  onMouseEnter={prefetchPdf}
+                >
+                  <DownloadIcon /> PDF
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  disabled={jpgDisabled}
+                  title={jpgDisabled ? 'JPG only supports single-page songs' : undefined}
+                  onClick={(e) => { e.preventDefault(); handleDownloadJpg(); setDownloadMenuOpen(false) }}
+                  onMouseEnter={prefetchJpg}
+                >
+                  <DownloadIcon /> JPG
+                </button>
+                {hasPptx && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="gc-download-menu__item"
+                    onClick={(e) => { e.preventDefault(); handleDownloadPptx(); setDownloadMenuOpen(false) }}
+                  >
+                    <DownloadIcon /> PPTX
+                  </button>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="gc-download-menu__item"
+                  onClick={(e) => { e.preventDefault(); handleDownloadChordPro(); setDownloadMenuOpen(false) }}
+                >
+                  <DownloadIcon /> ChordPro
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         <Button
           variant="primary"
-          leftIcon={<DownloadIcon />}
-          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadPdf() }}
-          onMouseEnter={prefetchPdf}
-          onFocus={prefetchPdf}
-          loading={busy}
-          title="Download PDF"
-        >
-          <span className="text-when-wide">Download PDF</span>
-          <span className="text-when-narrow">PDF</span>
-        </Button>
-        <Button
-          leftIcon={<DownloadIcon />}
-          disabled={jpgDisabled}
-          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); handleDownloadJpg() }}
-          onMouseEnter={prefetchJpg}
-          onFocus={prefetchJpg}
-          title={jpgDisabled ? 'JPG only supports single-page songs' : 'Download JPG'}
-        >
-          <span className="text-when-wide">Download JPG</span>
-          <span className="text-when-narrow">JPG</span>
-        </Button>
-        {hasPptx && (
-          <Button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadPptx() }}
-            leftIcon={<DownloadIcon />}
-            aria-label="Download PPTX"
-            title="Download PPTX"
-          >
-            <span className="text-when-wide">Download PPTX</span>
-            <span className="text-when-narrow">PPTX</span>
-          </Button>
-        )}
-        <Button
-          leftIcon={<DownloadIcon />}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDownloadChordPro() }}
-          title="Download ChordPro"
-        >
-          <span className="text-when-wide">Download ChordPro</span>
-          <span className="text-when-narrow">ChordPro</span>
-        </Button>
-        <Button
           as={Link}
           to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
           leftIcon={<MediaIcon />}
-          title="Open in Worship Mode"
+          title="Worship Mode"
         >
-          <span className="text-when-wide">Open in Worship Mode</span>
+          Worship Mode
         </Button>
         {entry?.gracetracks_url && (
           <a
