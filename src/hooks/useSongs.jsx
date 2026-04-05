@@ -92,11 +92,6 @@ function normaliseSong(song) {
     // Translation grouping (not yet wired)
     song_group_id: song.song_group_id || null,
 
-    // GraceTracks integration
-    gracetracks_url: song.gracetracks_url || null,
-    has_stems: song.has_stems || false,
-    stem_slug: song.stem_slug || null,
-
     incomplete: false,
 
     // GraceTracks stem fields
