@@ -10,7 +10,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
-import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon, SlidersIcon } from '../components/Icons'
+import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -684,19 +684,23 @@ export default function SongView(){
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
-          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={(e)=>{ e.preventDefault(); handleDownloadPdf() }} title="Download PDF">PDF</Button>
-          <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Open in Worship Mode">Worship</Button>
-          <IconButton label="More actions" title="More actions" onClick={() => setMobileActionsOpen(true)}><SlidersIcon /></IconButton>
+          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download">Download</Button>
+          <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode">Worship</Button>
         </MobileDock>
       )}
       <MobileActionSheet
         open={mobileActionsOpen}
         onClose={() => setMobileActionsOpen(false)}
-        title="Song actions"
+        title="Download"
       >
         <div className="gc-mobile-actions">
-          <Button onClick={() => { toggleColumns(); setMobileActionsOpen(false) }} leftIcon={twoColsView ? <OneColIcon /> : <TwoColIcon />}>
-            {twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+          <Button
+            variant="primary"
+            leftIcon={<DownloadIcon />}
+            onClick={(e)=>{ e.preventDefault(); handleDownloadPdf(); setMobileActionsOpen(false) }}
+            title="Download PDF"
+          >
+            PDF
           </Button>
           <Button
             leftIcon={<DownloadIcon />}
@@ -723,16 +727,6 @@ export default function SongView(){
           >
             ChordPro
           </Button>
-          {entry?.gracetracks_url && (
-            <a
-              href={entry.gracetracks_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gc-btn gc-btn--ghost"
-            >
-              🎚 Practice on GraceTracks
-            </a>
-          )}
         </div>
       </MobileActionSheet>
     </div>
