@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import MobileEditorPage from './MobileEditorPage'
+import MobilePortalPage from './MobilePortalPage'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -53,7 +56,7 @@ function ConfirmDialog({ title, body, confirmLabel, confirmVariant = 'destructiv
   )
 }
 
-export default function PortalEditorPage() {
+function DesktopEditorPage() {
   const { slug: slugParam } = useParams()
   const navigate = useNavigate()
   const { session } = useAuth()
@@ -742,4 +745,18 @@ export default function PortalEditorPage() {
       </div>
     </div>
   )
+}
+
+// Screen-aware wrapper: renders mobile UI on devices ≤820px, desktop UI otherwise.
+export default function PortalEditorPage() {
+  const isMobile = useIsMobile()
+  const { slug } = useParams()
+
+  if (isMobile) {
+    // '_new_' synthetic slug → blank editor; any real slug or no slug → respective mobile view
+    if (!slug) return <MobilePortalPage />
+    return <MobileEditorPage />
+  }
+
+  return <DesktopEditorPage />
 }
