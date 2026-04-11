@@ -1223,7 +1223,7 @@ async function exportPdf() {
         </div>
 
         <div className="BuilderRight builder-pane" style={{ minHeight:0, display:'flex', flexDirection:'column' }} hidden={isStacked && mobileTab === 'add'}>
-          <section className="setlist-section setlist-current" data-role="current" style={isStacked && mobileTab === 'saved' ? { display:'none' } : !isStacked ? { flex:'1 1 0', minHeight:0 } : undefined}>
+          <section className="setlist-section setlist-current" data-role="current" hidden={isStacked && mobileTab === 'saved'} style={!isStacked ? { flex:'1 1 0', minHeight:0 } : undefined}>
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                 <strong>Current setlist ({list.length})</strong>
@@ -1317,13 +1317,8 @@ async function exportPdf() {
             <section
               className="setlist-section setlist-saved"
               data-role="saved"
-              style={
-                isStacked && mobileTab === 'current'
-                  ? { display:'none' }
-                  : !isStacked
-                    ? { flex:'1 1 0', minHeight:0, borderTop:'1px solid var(--gc-separator)', paddingTop:8 }
-                    : undefined
-              }
+              hidden={isStacked && mobileTab === 'current'}
+              style={!isStacked ? { flex:'1 1 0', minHeight:0, borderTop:'1px solid var(--gc-separator)', paddingTop:8 } : undefined}
             >
               <div className="card setlist-pane">
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
@@ -1382,7 +1377,7 @@ async function exportPdf() {
             <section
               className="setlist-section setlist-saved"
               data-role="saved"
-              style={isStacked && mobileTab === 'current' ? { display:'none' } : undefined}
+              hidden={isStacked && mobileTab === 'current'}
             >
               <div className="card setlist-pane" style={{ flex:'0 0 auto', padding:'16px', textAlign:'center' }}>
                 <div className="meta">Sign in to save and load personal setlists.</div>

@@ -822,6 +822,10 @@ html, body, #root { height: 100%; }
   .builder-pane[hidden]{
     display:none !important;
   }
+  /* Sections inside BuilderRight toggle via hidden attr; must beat display:block !important above */
+  .setlist-section[hidden]{
+    display:none !important;
+  }
   .builder-mobile-actions{
     display:block;
   }
