@@ -10,6 +10,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
+import { useRole } from '../hooks/useRole'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
@@ -95,6 +96,7 @@ export default function SongView(){
   const { id } = useParams()
   const navigate = useNavigate()
   const { songs } = useSongs()
+  const { isAtLeast } = useRole()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
   const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
@@ -686,6 +688,17 @@ export default function SongView(){
           <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
           <Button variant="primary" leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download">Download</Button>
           <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode">Worship</Button>
+          {isAtLeast('collaborator') && (
+            <Button
+              variant="secondary"
+              as={Link}
+              to={`/portal/editor/${entry.id}`}
+              title="Edit this song"
+              aria-label="Edit this song"
+            >
+              Edit
+            </Button>
+          )}
         </MobileDock>
       )}
       <MobileActionSheet
