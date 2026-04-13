@@ -83,7 +83,7 @@ input, select, textarea,
   -webkit-text-fill-color: var(--primary-text) !important;
 }
 
-.container{ padding: var(--space-4); max-width:1200px; margin:0 auto }
+.container{ padding: var(--space-4); width:100%; max-width:1200px; margin:0 auto }
 @media (max-width: 640px){ .container{ padding: var(--space-3); } }
 
 .card{
