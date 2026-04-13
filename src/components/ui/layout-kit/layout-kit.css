@@ -10,7 +10,7 @@
   gap: var(--space-4);
   flex-wrap: wrap;
 }
-.gc-page-header__text{ min-width: 0; }
+.gc-page-header__text{ min-width: 0; flex: 1 1 auto; }
 .gc-page-header__title{
   margin:0;
   font-size: var(--gc-font-title);
