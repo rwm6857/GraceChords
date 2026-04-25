@@ -72,3 +72,181 @@
 - `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust service worker caches.
 - Fonts for PDF export must exist in `src/assets/fonts/` (see README for list).
 - New Supabase tables must have RLS enabled and appropriate policies before merging.
+
+---
+
+## Design System & Properties
+
+### Token System
+- All colours, spacing, radii, type scale, and motion values live in `src/styles/tokens.css`
+  as `--gc-*` CSS custom properties. This file is the **single source of truth**.
+- Never introduce hardcoded hex values, `px` sizes, or timing literals anywhere in
+  component or page CSS. Always reference a token.
+- Light/dark theming is handled by scoping token overrides under `[data-theme="dark"]` in
+  `tokens.css`. The `applyTheme()` / `toggleTheme()` helpers in `src/utils/app/theme.js`
+  set the `data-theme` attribute on `<html>` and persist the choice to `localStorage`.
+
+### Layout Kit
+- Reusable UI primitives live in `src/components/ui/layout-kit/`:
+  `Button`, `Card`, `InsetCard`, `Chip`, `Field`, `IconButton`, `PageHeader`, `Panel`,
+  `SegmentedControl`, `Toolbar`, `Input`, `SongCard`.
+- Prefer these components for all new UI. Do not introduce new one-off styled wrappers
+  unless the layout kit genuinely cannot express what is needed.
+- Class names follow the `gc-*` prefix convention (`gc-card`, `gc-btn`, `gc-chip`, …).
+- Legacy back-compat classes (`.btn`, `.card`, `.iconbtn`, `.container`) remain stable and
+  map to kit styles via aliases in `src/styles.css`. Do not remove them.
+
+### Mobile & Responsive
+- Mobile-specific primitives: `MobileActionSheet`, `MobileDock`, `MobilePaneTabs`,
+  `MobileSheet` in `src/components/ui/mobile/`.
+- Use `useIsMobile()` (from `src/hooks/useIsMobile.js`) to branch layout logic; do not
+  rely on CSS-only breakpoints for component-level behavioural differences.
+- Action sheets (`MobileActionSheet`) replace dropdown menus and inline button rows on
+  mobile. Consolidate download/export options there rather than adding individual buttons.
+
+### Typography & PDF
+- UI fonts: Inter Variable (loaded from `public/fonts/`).
+- PDF fonts: NotoSans Regular/Bold/Italic/BoldItalic + NotoSansMono Regular/Bold
+  (stored in `src/assets/fonts/`). These must exist locally for PDF generation.
+- PDF type scale: Title 26 pt bold; section headers 16 pt; lyrics/chords 12–16 pt;
+  line-height ~1.2×. See `src/utils/pdf_mvp/README.md` for full constants.
+
+### Icons
+- All SVG icons are centralised in `src/components/Icons.jsx`. Add new icons there;
+  never inline `<svg>` directly in page or component files.
+
+---
+
+## Current Systems & Tools
+
+### Supabase
+- **Client:** `src/lib/supabase.js` — import this singleton everywhere; never create a
+  second client.
+- **Auth context:** `src/hooks/useAuth.jsx` — exposes `session`, `user`, `profile`,
+  `role`, `hasMinRole(minRole)`, `isAdmin`, `isOwner`, `isEditorRole`, `isCollaborator`.
+- **Role hierarchy:** `user → collaborator → editor → admin → owner`. Always use
+  `hasMinRole()` for gate checks.
+- **RLS:** all tables have row-level security. Test with a `user`-role account before
+  shipping any query change.
+- **Migrations:** `supabase/migrations/` — apply in order. Document migration impact in
+  the PR description.
+- **Service role:** `SUPABASE_SERVICE_ROLE_KEY` is used only by Node build scripts
+  (`generate-seo-pages.mjs`, `generate-sitemap.mjs`). Never bundle it into the frontend.
+
+### Cloudflare Pages
+- SPA is hosted on Cloudflare Pages. Auto-deploy fires on every push to `main` via
+  `.github/workflows/pages-deploy.yml`.
+- All `VITE_*` production env vars are set in Pages → Settings → Variables — do not
+  change them without coordinating a deploy.
+- `functions/` contains Pages Functions (run server-side, no separate Worker deployment
+  required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to avoid CORS.
+- `404.html` + `BrowserRouter` together handle SPA deep-link routing.
+
+### Cloudflare R2
+- Bucket: `gracechords-bible`. Public base URL: `VITE_R2_PUBLIC_URL`.
+- Paths: `pptx/<slug>.pptx` for slide decks; `bible/<lang>/<id>/` for chapter JSON.
+- In local dev, Vite proxies `/bible` and `/pptx` to `VITE_R2_PUBLIC_URL`.
+- Direct R2 access (upload/delete) goes through the `gracechords-pptx-upload` Worker —
+  never call R2 directly from the browser.
+
+### Cloudflare Workers
+- **`gracechords-pptx-upload`** (`workers/pptx-upload/`) — handles authenticated PPTX
+  upload/delete. Verifies Supabase JWT, checks role, writes/deletes from R2.
+  Secrets: `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `ALLOWED_ORIGINS`. Set via `wrangler secret put`.
+- **`gracechords-sitemap-rebuild`** (`workers/sitemap-rebuild/`) — cron
+  `0 0 * * 0` (Sunday 00:00 UTC) rebuilds `public/sitemap.xml`.
+- Worker configs: `workers/*/wrangler.toml`. Deploy individually with `wrangler deploy`.
+
+### Cloudinary
+- Unsigned browser uploads via `VITE_CLOUDINARY_CLOUD_NAME` + `VITE_CLOUDINARY_UPLOAD_PRESET`.
+- No server-side Cloudinary SDK. All uploads are direct from the browser.
+- Returned URLs are stored in `songs.featured_image_url` and `posts.featured_image_url`.
+- To add Cloudinary upload to a new feature, follow the pattern in the existing song/post
+  editor components.
+
+### Resend
+- Used for transactional/notification emails.
+- `RESEND_API_KEY` is **server-side only** — never expose it to the Vite bundle.
+- Integration point: Cloudflare Worker or Supabase Edge Function. Check `workers/` for
+  active send points.
+- When adding a new email trigger, create or extend a Worker/Edge Function; do not add
+  Resend calls to frontend code.
+
+### PDF Engine
+- Facade: `src/utils/pdf/index.js` — call `downloadSingleSongPdf()`,
+  `downloadSongbookPdf()`, etc. from UI code.
+- Engine: `src/utils/pdf_mvp/` — jsPDF-based MVP. Decision ladder: 1-col single page
+  (sizes 16→12 pt) → 2-col single page (16→12 pt) → 1-col multipage (15 pt).
+- Tests: `npm run test:mvp`. Never modify the engine without running these tests.
+
+### Service Worker
+- `src/sw.js` — registered in `src/main.jsx`.
+- Strategy: network-first for `/songs` and `/index.html`; stale-while-revalidate for
+  other static assets.
+- Cache name includes `VITE_COMMIT_SHA` so every deploy invalidates old caches.
+- Always pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` when building for production.
+
+### GraceTracks Integration
+- Songs optionally link to practice stem tracks via `has_stems` (boolean),
+  `stem_slug` (text), and `gracetracks_url` (text) columns in `public.songs`.
+- UI should check `has_stems` before showing any GraceTracks affordance.
+
+---
+
+## Claude Code — Agent Instructions
+
+These are the conventions and patterns used by Claude Code (AI-assisted development) in
+this repository. Follow them for all AI-generated changes.
+
+### General Principles
+- **Minimal diffs.** Fix what was asked; do not refactor surrounding code, add unrelated
+  features, or introduce abstractions beyond what the task requires.
+- **No speculative features.** Do not design for hypothetical future requirements.
+  Three similar lines is better than a premature abstraction.
+- **No unnecessary comments.** Only add a comment when the WHY is non-obvious: a hidden
+  constraint, a subtle invariant, or a framework workaround. Never restate what the code
+  already says.
+- **Security first.** Never introduce command injection, XSS, SQL injection, or other
+  OWASP Top 10 vulnerabilities. If insecure code is spotted, fix it immediately.
+- **No half-finished implementations.** If a feature cannot be completed safely in the
+  current change, leave the existing code intact and raise the gap explicitly.
+
+### File & Scope Rules
+- Prefer editing existing files over creating new ones.
+- Never hand-edit `dist/`, `docs/`, or `src/data/index.json` (generated files).
+- Never commit `.env` or any file containing secrets.
+- When adding a new route, register it in `src/App.jsx` and add a corresponding page file
+  under `src/pages/`. Protect it with `RoleGuard` if it requires a minimum role.
+- When adding a new Supabase table, provide the migration SQL in `supabase/migrations/`
+  with RLS policies, and update `.env.example` if new env vars are needed.
+
+### UI Changes
+- Use `--gc-*` tokens. Never hardcode colours, sizes, or timing.
+- Use layout-kit primitives (`Card`, `Button`, `Chip`, etc.). Do not introduce new
+  one-off styled wrappers without a strong reason.
+- On mobile, consolidate actions into `MobileActionSheet`. Do not add individual buttons
+  where an action sheet is already in use.
+- After making UI changes: start the dev server, exercise the golden path, and check for
+  regressions in adjacent features before marking the task complete.
+
+### Branching & Commits
+- Development branches follow the pattern `claude/<short-description>-<id>`.
+- Commit style: Conventional Commits — `type(scope): summary`.
+  Examples: `feat(setlist): team sharing`, `fix(pdf): orphan lines`, `chore: rebuild index`.
+- Push to the feature branch; open a PR against `main`. Never push directly to `main`.
+- Include screenshots or GIFs in the PR description for any UI change.
+- Run `npm test` and `npm run build` before pushing. Both must pass.
+
+### Testing
+- Write Vitest unit tests for new utilities under `__tests__/` next to the code.
+- Use accessible queries (`getByRole`, `getByLabelText`) over `data-testid`.
+- Keep tests deterministic — no real network calls, no timers.
+- PDF layout changes must be verified with `npm run test:mvp`.
+
+### Environment Variables
+- Any new `VITE_*` var must be added to `.env.example` with a placeholder and description
+  in the same commit it is introduced.
+- Server-side vars (`RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, Worker secrets) must
+  never appear in Vite-bundled code. Enforce this by checking for `import.meta.env` usage
+  in non-`src/` files.
