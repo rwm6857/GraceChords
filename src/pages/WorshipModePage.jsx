@@ -6,7 +6,7 @@ import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKe
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/app/theme'
-import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, HomeIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, GearIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
+import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, GearIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
 import { buildChordRowsLayout } from '../utils/songs/chordLineLayout'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isVerseId, parseVerseId } from '../utils/songs/verseRef'
@@ -792,24 +792,13 @@ export default function WorshipMode(){
             )
           })()}
         </div>
-        {/* Top-left home button (desktop only) */}
-        {!isMobile && (
-          <button
-            className="gc-iconbtn"
-            aria-label="Go home"
-            title="Home"
-            onClick={() => navigate('/')}
-            style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
-          >
-            <HomeIcon />
-          </button>
-        )}
+        {/* Back button */}
         <button
           className="gc-iconbtn"
           aria-label="Back to setlist"
           title="Back to setlist"
           onClick={() => navigate(setlistUrl)}
-          style={{ position:'fixed', top:10, left: isMobile ? 10 : 64, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
+          style={{ position:'fixed', top:10, left:10, zIndex:5, padding:'10px 12px', opacity: chromeDimmed ? 'var(--gc-mobile-dim-opacity)' : 1, transition:'opacity var(--gc-dur-quick) var(--gc-ease)' }}
         >
           <ArrowLeft />
         </button>
