@@ -1,6 +1,6 @@
 import { getPdfFooterDisclaimer, isDisclaimerEnabled } from '../../config/disclaimer'
 
-export function drawPdfFooter(doc: any, layout: { left: number; bottom: number; pageWidth: number; pageHeight: number }){
+export function drawPdfFooter(doc, layout){
   if (!isDisclaimerEnabled()) return
   const text = getPdfFooterDisclaimer()
   const fontSize = 8
@@ -13,10 +13,10 @@ export function drawPdfFooter(doc: any, layout: { left: number; bottom: number; 
 }
 
 export function applyFooterToAllPages(
-  doc: any,
-  margins: { left: number; bottom: number },
-  page: { w: number; h: number },
-  opts: { startPage?: number } = {}
+  doc,
+  margins,
+  page,
+  opts = {}
 ){
   if (!isDisclaimerEnabled()) return
   const n = (typeof doc.getNumberOfPages === 'function') ? doc.getNumberOfPages() : 1
