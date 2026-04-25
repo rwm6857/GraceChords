@@ -568,7 +568,7 @@ html, body, #root { height: 100%; }
 .BuilderPage {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: 2fr 1fr;
   grid-template-rows: 1fr; /* ensure row fills remaining height */
   gap: 12px;
   flex: 1 1 auto;
