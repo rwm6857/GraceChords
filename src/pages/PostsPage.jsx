@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { fetchPublishedPostsWithAuthors } from '../hooks/usePosts'
+import Button from '../components/ui/layout-kit/Button'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -10,6 +11,11 @@ function formatDate(iso) {
     month: 'long',
     day: 'numeric',
   })
+}
+
+function formatTime(date) {
+  if (!date) return ''
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
 
 function PostCard({ post }) {
@@ -47,15 +53,31 @@ function PostCard({ post }) {
 export default function PostsPage() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
   const [search, setSearch] = useState('')
   const [activeTag, setActiveTag] = useState('All')
 
-  useEffect(() => {
-    fetchPublishedPostsWithAuthors().then(({ data, error }) => {
-      if (!error) setPosts(data || [])
-      setLoading(false)
-    })
+  const loadPosts = useCallback(async () => {
+    const { data, error } = await fetchPublishedPostsWithAuthors()
+    if (error) console.error('[PostsPage] Failed to load posts:', error)
+    else setPosts(data || [])
+    setLastUpdated(new Date())
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    loadPosts().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [loadPosts])
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await loadPosts()
+    setRefreshing(false)
+  }, [loadPosts])
 
   const allTags = useMemo(() => {
     const set = new Set()
@@ -86,6 +108,24 @@ export default function PostsPage() {
       <header className="gc-posts-page__header">
         <h1 className="gc-posts-page__title">Posts</h1>
         <p className="gc-posts-page__lead">News, announcements and worship resources</p>
+        {!loading && (
+          <div className="gc-posts-page__refresh" style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginTop: 'var(--gc-space-2)' }}>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={refreshing}
+              onClick={handleRefresh}
+              aria-label="Refresh posts"
+            >
+              Refresh
+            </Button>
+            {lastUpdated && (
+              <span style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-text-sm)' }}>
+                Updated {formatTime(lastUpdated)}
+              </span>
+            )}
+          </div>
+        )}
       </header>
 
       {!loading && (
