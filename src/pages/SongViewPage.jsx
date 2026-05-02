@@ -163,7 +163,7 @@ export default function SongView(){
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [isNarrow, hasPptx, jpgDisabled, toKey, showChords])
+  }, [isNarrow])
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
