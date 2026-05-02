@@ -235,7 +235,7 @@ export default function Setlist(){
       })
     }
     setItems(out)
-  }, [catalog.groups, selectedLanguage])
+  }, [catalog, selectedLanguage])
 
   function getSongById(songId){
     if (!songId) return null

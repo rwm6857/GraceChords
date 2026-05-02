@@ -20,6 +20,11 @@ export default function StarButton({ songId }) {
       setChecking(false)
       return
     }
+    // Rapid navigation between songs can stack in-flight queries; ignore any
+    // response whose deps have already changed to avoid setState-after-unmount
+    // and stale starred-flag flicker.
+    let cancelled = false
+    setChecking(true)
     supabase
       .from('user_starred_songs')
       .select('song_id')
@@ -27,9 +32,11 @@ export default function StarButton({ songId }) {
       .eq('song_id', songId)
       .maybeSingle()
       .then(({ data }) => {
+        if (cancelled) return
         setStarred(!!data)
         setChecking(false)
       })
+    return () => { cancelled = true }
   }, [loading, isLoggedIn, userId, songId])
 
   async function handleClick() {
