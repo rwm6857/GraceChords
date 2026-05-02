@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useEffect, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import OfflineBadge from '../OfflineBadge'
@@ -82,11 +82,11 @@ export default function Navbar(){
     lockBodyScroll(true)
     setTimeout(() => firstLinkRef.current?.focus(), 0)
   }
-  function closeDrawer(){
+  const closeDrawer = useCallback(() => {
     setOpen(false)
     lockBodyScroll(false)
     setTimeout(() => btnRef.current?.focus(), 0)
-  }
+  }, [])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent){
@@ -109,7 +109,7 @@ export default function Navbar(){
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open])
+  }, [open, closeDrawer])
 
   return (
     <>

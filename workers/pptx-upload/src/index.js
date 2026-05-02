@@ -162,7 +162,53 @@ async function verifyAndGetRole(request, env) {
     return { error: 500, msg: 'Failed to fetch user role' }
   }
 
-  return { role: userRow.global_role || 'user' }
+  return { role: userRow.global_role || 'user', userId }
+}
+
+// ---- Rate limiting ----
+// Per-user limit on uploads, enforced via KV. Uses two adjacent fixed windows
+// (current + previous, each 5 min) so the effective rate stays close to the
+// configured limit even at window boundaries.
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000
+const RATE_LIMIT_MAX = 10
+
+async function checkRateLimit(env, userId) {
+  if (!env.RATE_LIMIT_KV) return { ok: true }
+  const now = Date.now()
+  const bucket = Math.floor(now / RATE_LIMIT_WINDOW_MS)
+  const curKey = `rl:upload:${userId}:${bucket}`
+  const prevKey = `rl:upload:${userId}:${bucket - 1}`
+
+  const [curRaw, prevRaw] = await Promise.all([
+    env.RATE_LIMIT_KV.get(curKey),
+    env.RATE_LIMIT_KV.get(prevKey),
+  ])
+  const cur = Number(curRaw) || 0
+  const prev = Number(prevRaw) || 0
+  if (cur + prev >= RATE_LIMIT_MAX) {
+    const resetMs = ((bucket + 1) * RATE_LIMIT_WINDOW_MS) - now
+    return { ok: false, retryAfter: Math.max(1, Math.ceil(resetMs / 1000)) }
+  }
+
+  // Best-effort increment. KV has no atomic increment; a brief race on the
+  // boundary may permit one or two extra uploads — acceptable for this limit.
+  await env.RATE_LIMIT_KV.put(curKey, String(cur + 1), {
+    expirationTtl: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) * 2,
+  })
+  return { ok: true }
+}
+
+function rateLimited(retryAfter) {
+  return new Response(
+    JSON.stringify({ error: 'Too many uploads. Please slow down.' }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+      },
+    },
+  )
 }
 
 // ---- Handlers ----
@@ -174,6 +220,11 @@ async function handleUpload(request, env) {
   }
   if (!isAtLeast(authResult.role, 'collaborator')) {
     return jsonError('Insufficient role: collaborator or higher required', 403)
+  }
+
+  const limit = await checkRateLimit(env, authResult.userId)
+  if (!limit.ok) {
+    return rateLimited(limit.retryAfter)
   }
 
   // Parse multipart form data

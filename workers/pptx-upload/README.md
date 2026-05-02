@@ -27,12 +27,21 @@ Handles PPTX file uploads and deletions for GraceChords songs. Files are stored 
    - `SUPABASE_SERVICE_ROLE_KEY`: found in Supabase dashboard → Settings → API → service_role key
    - `ALLOWED_ORIGINS`: comma-separated list of allowed frontend origins (e.g. `https://gracechords.com,https://migration.gracechords-app.pages.dev`)
 
-3. Deploy:
+3. Provision the rate-limit KV namespace (one-time):
+   ```bash
+   wrangler kv:namespace create RATE_LIMIT_KV
+   ```
+
+   Paste the returned `id` into `wrangler.toml` (replace
+   `REPLACE_WITH_NAMESPACE_ID` under `[[kv_namespaces]]`). The binding name
+   must remain `RATE_LIMIT_KV` — the worker reads `env.RATE_LIMIT_KV`.
+
+4. Deploy:
    ```bash
    npm run deploy
    ```
 
-4. Copy the deployed worker URL and set it in the SPA's environment:
+5. Copy the deployed worker URL and set it in the SPA's environment:
    ```env
    VITE_PPTX_WORKER_URL=https://gracechords-pptx-upload.your-subdomain.workers.dev
    ```
@@ -52,3 +61,4 @@ Runs the Worker locally via Wrangler. R2 bindings use a local simulation. You wi
 - Slug is validated against `/^[a-z0-9_]+$/` before use as an R2 key
 - File type and size are validated before upload (`.pptx` only, 20MB max)
 - CORS is enforced against the `ALLOWED_ORIGINS` secret — requests from unlisted origins receive no `Access-Control-Allow-Origin` header
+- Per-user upload rate limit: 10 uploads / 5 min sliding window, enforced via the `RATE_LIMIT_KV` binding. Exceeding the limit returns `429` with a `Retry-After` header. If the binding is unset (e.g. local dev without KV) the limit is bypassed.

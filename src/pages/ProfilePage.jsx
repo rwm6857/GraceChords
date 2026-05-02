@@ -37,7 +37,7 @@ export default function ProfilePage() {
     if (!loading && !isLoggedIn) {
       navigate('/login?redirect=/profile', { replace: true })
     }
-  }, [isLoggedIn, loading])
+  }, [isLoggedIn, loading, navigate])
 
   // Sync form state from profile
   useEffect(() => {

@@ -12,6 +12,13 @@ compatibility_date = "2024-01-01"
 binding = "R2_BUCKET"
 bucket_name = "gracechords-bible"
 
+# Per-user upload rate limiting (10 uploads / 5 min).
+# Provision with: wrangler kv:namespace create RATE_LIMIT_KV
+# Paste the returned id into the placeholder below before first deploy.
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_NAMESPACE_ID"
+
 [vars]
 # Non-secret vars can go here if needed
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
@@ -40,7 +40,7 @@ export default function Songs(){
   }, [selectedLanguage])
 
   const tagMap = useMemo(() => buildTagMap(catalog.items), [catalog.items])
-  const ICP_KEY = normalizeTagKey('ICP')
+  const ICP_KEY = useMemo(() => normalizeTagKey('ICP'), [])
 
   const items = useMemo(() => {
     const out = []
@@ -120,16 +120,17 @@ export default function Songs(){
     ]
   }), [items])
 
-  function tagPass(s){
+  const selectedTagsKey = selectedTags.join('|')
+  const tagPass = useCallback((s) => {
     if (!selectedTags.length) return true
     const tags = s.tagKeys || []
     return selectedTags.some((t) => tags.includes(t))
-  }
-  function icpPass(s){
+  }, [selectedTags])
+  const icpPass = useCallback((s) => {
     if (!icpOnly) return true
     const tags = s.tagKeys || []
     return tags.includes(ICP_KEY)
-  }
+  }, [icpOnly, ICP_KEY])
 
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
@@ -156,8 +157,9 @@ export default function Songs(){
       }
     })()
     return () => { cancelled = true }
+  // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTags.join('|'), icpOnly])
+  }, [lyricsOn, qLower, items, selectedTagsKey, icpOnly, tagPass, icpPass])
 
   const resultParts = useMemo(() => {
     const scoreMap = new Map()
@@ -211,7 +213,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, fuse, qLower, lyricsOn, lyricsCache, selectedTags.join('|'), icpOnly])
+  }, [items, fuse, qLower, lyricsOn, lyricsCache, tagPass, icpPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
