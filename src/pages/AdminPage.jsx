@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { showToast } from '../utils/app/toast'
+import Button from '../components/ui/layout-kit/Button'
+import { ROLES_BY_RANK_DESC } from '../lib/roles'
 
-const ALL_ROLES = ['owner', 'admin', 'editor', 'collaborator', 'user']
+function formatTime(date) {
+  if (!date) return ''
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
+const ALL_ROLES = ROLES_BY_RANK_DESC
 
 function RolePill({ role }) {
   return (
@@ -49,13 +56,10 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false)
   const [changingRole, setChangingRole] = useState({}) // { userId: true }
   const [expandedUserId, setExpandedUserId] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
-  useEffect(() => {
-    loadUsers()
-    loadPendingRequests()
-  }, [])
-
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     setUsersLoading(true)
     const { data, error } = await supabase
       .from('users')
@@ -68,9 +72,9 @@ export default function AdminPage() {
       setUsers(data || [])
     }
     setUsersLoading(false)
-  }
+  }, [])
 
-  async function loadPendingRequests() {
+  const loadPendingRequests = useCallback(async () => {
     setPendingLoading(true)
     const { data, error } = await supabase
       .from('collaborator_requests')
@@ -86,7 +90,19 @@ export default function AdminPage() {
       setPendingRequests(data || [])
     }
     setPendingLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    Promise.all([loadUsers(), loadPendingRequests()])
+      .then(() => setLastUpdated(new Date()))
+  }, [loadUsers, loadPendingRequests])
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await Promise.all([loadUsers(), loadPendingRequests()])
+    setLastUpdated(new Date())
+    setRefreshing(false)
+  }, [loadUsers, loadPendingRequests])
 
   function getAvailableRoles(targetRole) {
     if (isOwner) return ALL_ROLES
@@ -169,6 +185,22 @@ export default function AdminPage() {
       <p className="gc-portal-page__subtitle">
         Manage users, roles, and pending access requests.
       </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginBottom: 'var(--gc-space-4)' }}>
+        <Button
+          size="sm"
+          variant="secondary"
+          loading={refreshing}
+          onClick={handleRefresh}
+          aria-label="Refresh users and pending requests"
+        >
+          Refresh
+        </Button>
+        {lastUpdated && (
+          <span style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-text-sm)' }}>
+            Updated {formatTime(lastUpdated)}
+          </span>
+        )}
+      </div>
 
       {/* ── 4a. User Management Table ─────────────────────────────── */}
       <section className="gc-portal-section">

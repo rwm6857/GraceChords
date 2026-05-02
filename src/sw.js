@@ -46,9 +46,10 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   // Don't intercept requests to external origins (e.g. R2, CDN) 
   if (!request.url.startsWith(self.location.origin)) return;
-  // Always try the network first for dynamic content that changes frequently
-  // so edits to songs and the index show up without manual cache busting.
-  if (request.url.includes('/songs/') || request.url.includes('/src/data/index.json')) {
+  // Always try the network first for the legacy static song index, so any
+  // local fallback usage shows fresh content without manual cache busting.
+  // (Songs themselves now live in Supabase and aren't fetched from /songs/.)
+  if (request.url.includes('/src/data/index.json')) {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then((response) => {
@@ -109,9 +110,7 @@ function shouldCache(request, response) {
       request.destination === 'font' ||
       request.destination === 'image' ||
       request.url.includes('/assets/') ||
-      request.url.includes('/src/data/') ||
-      // Cache individual song files
-      request.url.includes('/songs/'))
+      request.url.includes('/src/data/'))
   );
 }
 

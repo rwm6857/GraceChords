@@ -25,7 +25,12 @@
 - Supabase is used for auth, song storage, starred songs, saved sets, and collaborator requests.
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 - Role system: `user → collaborator → editor → admin → owner` (stored in `public.users.role`).
-- Use `hasMinRole(minRole)` from `useAuth` for role checks; never hardcode role strings in conditionals unless adding a new role.
+- **Single source of truth**: `src/lib/roles.js` exports `ROLE_ORDER`,
+  `ROLES_BY_RANK_DESC`, and `hasMinRole()`. Frontend code imports from there.
+  The `workers/pptx-upload/` worker keeps its own copy because it's bundled
+  separately — keep the two in sync if the hierarchy changes.
+- Use `hasMinRole(minRole)` from `useAuth` (or `useRole().isAtLeast`) for role
+  checks; never hardcode role strings in conditionals unless adding a new role.
 - RLS policies on all tables — test with a non-owner account before shipping.
 
 ## Build, Test, and Development Commands
@@ -38,12 +43,25 @@
 - `npm run normalize`: normalize song/PPTX filenames into canonical forms.
 - `npm test` / `npm run test:watch`: run Vitest (happy-dom + Testing Library).
 - `npm run test:mvp`: run PDF MVP engine safeguards.
+- `npm run lint`: ESLint flat config (`eslint.config.js`), focused on
+  `react-hooks/rules-of-hooks` (error) and `react-hooks/exhaustive-deps` (warn).
+
+### Known baselines (don't try to fix in unrelated PRs)
+- **Tests**: 2 failed | 102 passed (104) — Test Files: 11 failed | 34 passed.
+  The 11 file-load failures all stem from `src/lib/supabase.js` calling
+  `createClient()` at import time without a `VITE_SUPABASE_URL` test env. The
+  2 actual test failures are in `setcode.verseTranslation`. Both are pre-
+  existing — leave alone unless your PR is specifically about them.
+- **Lint**: 27 warnings, 0 errors, all `react-hooks/exhaustive-deps`. Chip
+  away as you touch each file; don't try to fix in bulk.
 
 ## Coding Style & Naming Conventions
 - Indentation: 2 spaces; single quotes; prefer no semicolons (match existing files).
 - React components: `PascalCase.jsx` (e.g., `SongView.jsx`). Utilities: `camelCase.js/ts`.
 - Tests: place under `__tests__/` next to code; name `*.test.(js|jsx|ts)` or `*.spec.*`.
 - Paths and assets: keep song files lowercase with underscores (see `normalize` script).
+- ESLint flat config lives at `eslint.config.js`; `js.configs.recommended` is
+  intentionally not enabled. Add new rules sparingly so the hook signal stays loud.
 
 ## UI Styling (UIKit Tokens + Layout Kit)
 - Tokens live in `src/styles/tokens.css`. Always use the `--gc-*` tokens for colors, spacing, radii, and type scale.
@@ -190,8 +208,9 @@
 
 ### Service Worker
 - `src/sw.js` — registered in `src/main.jsx`.
-- Strategy: network-first for `/songs` and `/index.html`; stale-while-revalidate for
-  other static assets.
+- Strategy: network-first for navigations + the legacy `/src/data/index.json`
+  fallback; stale-while-revalidate for other static assets. Songs themselves
+  live in Supabase (not `public/songs/`) so the SW never touches them.
 - Cache name includes `VITE_COMMIT_SHA` so every deploy invalidates old caches.
 - Always pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` when building for production.
 
@@ -242,9 +261,28 @@ this repository. Follow them for all AI-generated changes.
 - Development branches follow the pattern `claude/<short-description>-<id>`.
 - Commit style: Conventional Commits — `type(scope): summary`.
   Examples: `feat(setlist): team sharing`, `fix(pdf): orphan lines`, `chore: rebuild index`.
-- Push to the feature branch; open a PR against `main`. Never push directly to `main`.
+- Push to the feature branch; **do not open the PR** — the user creates it.
+  Never push directly to `main`.
 - Include screenshots or GIFs in the PR description for any UI change.
-- Run `npm test` and `npm run build` before pushing. Both must pass.
+- Run `npm test` and `npm run build` before pushing. Both must pass at the
+  documented baselines (see "Known baselines" above).
+
+### Repo gotchas (operational, important)
+- **`node_modules/` is git-tracked** (~13K files; the entry in `.gitignore`
+  is ineffective because the files were committed historically). After **any**
+  `npm install` / `npm ci` / `npm run lint --fix`, the working tree fills with
+  thousands of phantom diffs. **Before committing, revert that churn:**
+  `git checkout HEAD -- node_modules/`. Recent merged PRs all have zero
+  `node_modules/` lines — match that convention.
+- **esbuild platform-binary mismatch**: after a `git checkout HEAD -- node_modules/`,
+  tests/build can fail with
+  `Host version "0.27.2" does not match binary version "0.27.7"`. The tracked
+  `node_modules/esbuild` and the untracked `node_modules/@esbuild/linux-x64`
+  drift apart. Recover with:
+  `rm -rf node_modules/@esbuild/linux-x64 && npm install --no-save`.
+- **CI workflow `.github/workflows/pr-checks.yml`** runs lint/test/build on
+  every PR with `continue-on-error: true` — it's signal, not a gate. Don't
+  expect CI to block on warnings.
 
 ### Testing
 - Write Vitest unit tests for new utilities under `__tests__/` next to the code.
