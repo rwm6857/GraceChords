@@ -7,16 +7,20 @@
  *   star_count    — integer, maintained by DB trigger
  *   chordpro_content — full renderable body (metadata directives stripped)
  *
- * The result is module-level cached so subsequent hook calls in the same
- * session do not re-fetch from the network.
+ * Uses a stale-while-revalidate strategy: cached data is served immediately,
+ * but after STALE_MS a background refetch runs and all mounted hook instances
+ * are updated without requiring a hard refresh.
  */
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-// Module-level cache so the list is only fetched once per page load.
+const STALE_MS = 5 * 60 * 1000  // revalidate after 5 minutes
+
 let _cache = null
 let _promise = null
+let _cacheTime = 0
+const _listeners = new Set()
 
 async function fetchSongs() {
   if (_promise) return _promise
@@ -33,10 +37,12 @@ async function fetchSongs() {
       if (error) {
         console.error('[useSongs] Failed to load songs from Supabase:', error)
         _promise = null // allow retry
-        return []
+        return _cache || []
       }
       const normalised = (data || []).map(normaliseSong)
       _cache = normalised
+      _cacheTime = Date.now()
+      _listeners.forEach(fn => fn(normalised))
       return normalised
     })
   return _promise
@@ -111,14 +117,24 @@ export function useSongs() {
   const [loading, setLoading] = useState(!_cache)
 
   useEffect(() => {
-    if (_cache) {
-      // Already loaded — nothing to do.
-      return
-    }
-    fetchSongs().then(data => {
-      setSongs(data)
+    _listeners.add(setSongs)
+
+    if (!_cache) {
+      // First load — fetch and clear loading when done.
+      // _listeners will push the data into this component's state.
+      fetchSongs().then(() => setLoading(false))
+    } else {
       setLoading(false)
-    })
+      // Stale-while-revalidate: if cached data is older than STALE_MS,
+      // clear the cached promise so fetchSongs issues a fresh request.
+      // _listeners will push the updated songs to all mounted hook instances.
+      if (Date.now() - _cacheTime > STALE_MS) {
+        _promise = null
+        fetchSongs()
+      }
+    }
+
+    return () => _listeners.delete(setSongs)
   }, [])
 
   return { songs, loading }
