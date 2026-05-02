@@ -38,6 +38,9 @@
   transition: background var(--gc-dur-quick) var(--gc-ease),
               border-color var(--gc-dur-quick) var(--gc-ease);
   white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .gc-quick-chords__btn:hover {
@@ -51,36 +54,12 @@
   outline-offset: var(--gc-focus-offset);
 }
 
-.gc-quick-chords__btn--variant {
-  font-size: var(--gc-font-cap);
-  padding: 3px 7px;
-  color: var(--gc-text-secondary);
-  background: var(--gc-surface-2);
-}
-
 .gc-quick-chords__degree {
   font-size: 9px;
   color: var(--gc-text-tertiary);
   display: block;
   text-align: center;
   margin-top: 1px;
-}
-
-.gc-quick-chords__toggle {
-  margin-left: auto;
-  font-size: var(--gc-font-cap);
-  color: var(--gc-text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.gc-quick-chords__toggle:hover {
-  color: var(--gc-primary);
 }
 
 .gc-quick-chords__empty {
@@ -996,34 +975,60 @@
 
 /* ===== REVISION PASS ADDITIONS ===== */
 
-/* ---- Variants fixed-height row (zero layout shift) ---- */
-.gc-quick-chords__variants-wrap {
-  /* Fixed height always reserved — prevents layout shift on toggle */
-  height: 38px;
-  overflow: hidden;
-  box-sizing: border-box;
+/* ---- Radial variant popup (hold-and-release) ---- */
+.gc-quick-chords__radial {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
 }
 
-.gc-quick-chords__variants {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: var(--space-1);
+.gc-quick-chords__radial-center,
+.gc-quick-chords__radial-item {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--gc-font-chords);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
   align-items: center;
-  height: 100%;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity var(--gc-dur-quick) var(--gc-ease);
-  scrollbar-width: none;
+  justify-content: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.gc-quick-chords__variants::-webkit-scrollbar {
-  display: none;
+.gc-quick-chords__radial-center {
+  min-width: 36px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: var(--gc-font-sub);
+  background: var(--gc-surface-1);
+  color: var(--gc-text);
+  border: 1px solid var(--gc-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--gc-primary) 18%, transparent);
 }
 
-.gc-quick-chords__variants--visible {
-  visibility: visible;
-  opacity: 1;
+.gc-quick-chords__radial-item {
+  min-width: 44px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: var(--gc-font-sub);
+  background: var(--gc-surface-2);
+  color: var(--gc-text-secondary);
+  border: 1px solid var(--gc-separator);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform var(--gc-dur-quick) var(--gc-ease),
+              background var(--gc-dur-quick) var(--gc-ease),
+              color var(--gc-dur-quick) var(--gc-ease),
+              border-color var(--gc-dur-quick) var(--gc-ease);
+}
+
+.gc-quick-chords__radial-item--active {
+  background: var(--gc-primary);
+  color: var(--gc-on-primary, #fff);
+  border-color: var(--gc-primary);
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 /* ---- Editor toolbar (sections + guide button) ---- */
