@@ -11,6 +11,9 @@
  *   ALLOWED_ORIGINS           — comma-separated list of allowed frontend origins
  */
 
+// Role hierarchy: lowest privilege → highest. Mirror of `ROLE_ORDER` in
+// `src/lib/roles.js`; this worker is bundled separately so the constant
+// can't be imported. Keep the two in sync if the hierarchy changes.
 const ROLE_HIERARCHY = ['user', 'collaborator', 'editor', 'admin', 'owner']
 
 function isAtLeast(userRole, minRole) {
