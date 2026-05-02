@@ -132,6 +132,7 @@ export default function SongView(){
   const songLdJson = JSON.stringify(songSeo.ld || {})
   const isIcpSong = !!songSeo.isIcpSong
   const mediaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube || entry?.youtube || ''
+  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry?.originalKey || 'C'
 
   useEffect(() => {
     if (!entry?.language) return
@@ -261,7 +262,6 @@ export default function SongView(){
   }, [baseKey])
 
 
-
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
     if (!parsed) return
@@ -323,7 +323,6 @@ export default function SongView(){
 
   const slug = entry.filename.replace(/\.chordpro$/, '')
   const title = parsed?.meta?.title || entry.title || slug
-  const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry.originalKey || 'C'
   const steps = stepsBetween(baseKey, toKey)
   const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
