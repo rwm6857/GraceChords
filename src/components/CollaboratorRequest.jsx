@@ -20,42 +20,47 @@ export default function CollaboratorRequest() {
 
   useEffect(() => {
     if (!session || role !== 'user') return
-    checkEligibility()
-    checkPendingRequest()
-  }, [session, role])
+    let cancelled = false
 
-  async function checkEligibility() {
-    // Check is_collaborator_eligible() RPC
-    const { data, error } = await supabase.rpc('is_collaborator_eligible')
-    if (error) {
-      console.error('[CollaboratorRequest] eligibility check:', error)
-      return
-    }
-    setEligible(!!data)
+    async function checkEligibility() {
+      const { data, error } = await supabase.rpc('is_collaborator_eligible')
+      if (cancelled) return
+      if (error) {
+        console.error('[CollaboratorRequest] eligibility check:', error)
+        return
+      }
+      setEligible(!!data)
 
-    if (!data) {
-      // Fetch account_created_at to compute eligible date
-      const { data: profile } = await supabase
-        .from('users')
-        .select('account_created_at')
-        .eq('id', session.user.id)
-        .maybeSingle()
-      if (profile?.account_created_at) {
-        const created = new Date(profile.account_created_at)
-        const eligDate = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000)
-        setEligibleDate(eligDate)
+      if (!data) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('account_created_at')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        if (cancelled) return
+        if (profile?.account_created_at) {
+          const created = new Date(profile.account_created_at)
+          const eligDate = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000)
+          setEligibleDate(eligDate)
+        }
       }
     }
-  }
 
-  async function checkPendingRequest() {
-    const { data } = await supabase
-      .from('collaborator_requests')
-      .select('id, status')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-    if (data?.status === 'pending') setPending(true)
-  }
+    async function checkPendingRequest() {
+      const { data } = await supabase
+        .from('collaborator_requests')
+        .select('id, status')
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+      if (cancelled) return
+      if (data?.status === 'pending') setPending(true)
+    }
+
+    checkEligibility()
+    checkPendingRequest()
+
+    return () => { cancelled = true }
+  }, [session, role])
 
   async function submitRequest() {
     setSubmitting(true)
