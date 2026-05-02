@@ -227,7 +227,7 @@ export default function SongView(){
       showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
       setErr('Failed to parse song')
     }
-  }, [entry?.chordpro_content])
+  }, [entry?.chordpro_content, entry?.title, entry?.originalKey])
 
   // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
 
@@ -258,9 +258,9 @@ export default function SongView(){
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [baseKey])
 
-  
+
 
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
@@ -274,6 +274,9 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
+    // checkJpgSupport closes over buildSong/loadImageLib which are recreated each render;
+    // refire is gated by parsed/toKey/imageLibPromiseState only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsed, toKey, imageLibPromiseState])
 
   const helmet = (
