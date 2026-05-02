@@ -315,7 +315,7 @@ export default function SuggestionReviewPanel({ songId, currentSong, onApproved,
       setSuggestions(data || [])
     }
     setLoading(false)
-  }, [songId])
+  }, [songId, isAtLeast])
 
   useEffect(() => {
     fetchSuggestions()
