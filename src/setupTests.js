@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
 // Provide a lightweight fetch mock for tests that hit /src/data/index.json or /public/songs/*.chordpro
 beforeAll(() => {
