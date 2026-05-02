@@ -49,6 +49,13 @@ export default defineConfig({
     emptyOutDir: false,
     chunkSizeWarningLimit: 1200
   },
+  optimizeDeps: {
+    // pako v2 dropped its "main" field (only "module" + "exports" remain).
+    // Explicitly including it here ensures vite's esbuild optimizer selects
+    // the CJS entry (exports.require → index.js) rather than falling back to
+    // the ESM "module" field when jszip calls require('pako').
+    include: ['pako'],
+  },
   test: {
     environment: 'happy-dom',
     setupFiles: './src/setupTests.js',
