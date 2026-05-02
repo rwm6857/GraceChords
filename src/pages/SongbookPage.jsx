@@ -4,7 +4,6 @@ import Fuse from 'fuse.js'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/songs/sort'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/app/toast'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import {
@@ -26,7 +25,7 @@ import { filterByTag, pickManyRandom } from '../utils/songs/quickActions'
 
 // Lazy pdf exporters
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf_mvp'))
 
 function byTitle(a, b) { return compareSongsByTitle(a, b) }
 
@@ -244,12 +243,12 @@ export default function Songbook() {
               }
             }),
           }))
-          const song = normalizeSongInput({
+          const song = {
             title: doc.meta?.title || it.title,
             key: doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C',
             capo: doc.meta?.capo,
             lyricsBlocks: blocks,
-          })
+          }
           songs.push(song)
         } catch(err) {
           console.error(err)

@@ -1,6 +1,10 @@
-// src/utils/pdf/pdfLayout.js
-// Drop-in: telemetry + robust candidate enumeration/packing
-// NOTE: Removed import of measureSectionHeight to avoid circular import with ./index.js
+// src/utils/media/jpgPlanner.js
+//
+// Canvas2D-driven layout planner used exclusively by the JPG/image exporter
+// (src/utils/media/image.js). All PDF generation lives in
+// src/utils/pdf_mvp/; do not use this planner for PDF output. It survives the
+// legacy PDF stack consolidation because the JPG canvas renderer needs a
+// planner that measures with `CanvasRenderingContext2D.measureText`.
 
 import { parseChordPro } from '../chordpro';
 import { resolveChordCollisions } from '../songs/chords.js';

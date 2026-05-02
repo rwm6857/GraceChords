@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { chooseBestLayout, normalizeSongInput } from '../../pdf/pdfLayout'
+import { chooseBestLayout, normalizeSongInput } from '../jpgPlanner'
 import { planSongForJpg } from '../image'
 
 function makeMockCanvasFactory() {

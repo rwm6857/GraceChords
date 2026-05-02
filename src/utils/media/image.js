@@ -1,9 +1,9 @@
 // src/utils/media/image.js
-import { chooseBestLayout, normalizeSongInput } from '../pdf/pdfLayout.js'
-import { ensureCanvasFonts } from '../pdf/fonts.js'
+import { chooseBestLayout, normalizeSongInput } from './jpgPlanner.js'
+import { ensureCanvasFonts } from './canvasFonts.js'
 import { formatInstrumental } from '../songs/instrumental.js'
 import { resolveChordCollisions } from '../songs/chords.js'
-export { ensureCanvasFonts } from '../pdf/fonts.js'
+export { ensureCanvasFonts } from './canvasFonts.js'
 
 const PAGE_DEFAULT = { w: 612, h: 792 }
 const MARGINS_DEFAULT = { top: 36, right: 36, bottom: 36, left: 36 }

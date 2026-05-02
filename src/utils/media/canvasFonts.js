@@ -1,4 +1,8 @@
-// src/utils/pdf/fonts.js
+// src/utils/media/canvasFonts.js
+//
+// Font registration helpers for the JPG/image exporter. PDF font registration
+// lives in src/utils/pdf_mvp/fonts.js. `ensureCanvasFonts` is the only export
+// consumed outside this file (Canvas2D rendering path).
 import { publicUrl } from '../network/publicUrl.js'
 
 // Small in-memory cache of fetched font data
