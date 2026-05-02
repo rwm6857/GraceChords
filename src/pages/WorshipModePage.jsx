@@ -42,7 +42,7 @@ export default function WorshipMode(){
   const allSongsById = catalog.byId
   const selectedLanguage = useMemo(
     () => resolveInitialSongLanguage(catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages),
-    [catalog]
+    [catalog.translationLanguages, catalog.allLanguages]
   )
 
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections, type }]
