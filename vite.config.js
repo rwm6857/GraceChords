@@ -35,6 +35,10 @@ export default defineConfig({
             target: process.env.VITE_R2_PUBLIC_URL,
             changeOrigin: true,
           },
+          '/pptx': {
+            target: process.env.VITE_R2_PUBLIC_URL,
+            changeOrigin: true,
+          },
         },
       }
     : {},
