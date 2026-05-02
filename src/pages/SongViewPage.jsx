@@ -7,7 +7,7 @@ import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
+import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
 import { useRole } from '../hooks/useRole'
@@ -167,7 +167,7 @@ export default function SongView(){
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
-      pdfLibPromise = import('../utils/pdf')
+      pdfLibPromise = import('../utils/pdf_mvp')
     }
     return pdfLibPromise
   }

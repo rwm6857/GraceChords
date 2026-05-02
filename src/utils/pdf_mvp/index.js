@@ -11,7 +11,7 @@
 // - Fonts: Noto Sans family preferred; fall back to jsPDF built-ins.
 
 import jsPDF from 'jspdf'
-import { applyFooterToAllPages } from '../pdf/footer'
+import { applyFooterToAllPages } from './footer'
 import { registerPdfFonts } from './fonts.js'
 import { formatInstrumental } from '../songs/instrumental.js'
 

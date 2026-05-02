@@ -9,8 +9,8 @@
   - `src/hooks/useAuth.jsx` — auth context: `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`, `isCollaborator`
   - `src/lib/supabase.js` — Supabase client
   - `src/utils/setlists/supabaseSets.js` — Supabase-backed saved set CRUD
-  - `src/utils/pdf_mvp/` — PDF engine with tests and font registrar
-  - `src/utils/pdf/` — facade and multi-song/songbook exports
+  - `src/utils/pdf_mvp/` — PDF engine (single-song, setlist, songbook) with tests and font registrar
+  - `src/utils/media/jpgPlanner.js` + `src/utils/media/canvasFonts.js` — JPG-only Canvas2D planner and font registration (used by `src/utils/media/image.js`)
   - `src/utils/chordpro/` — parser, serializer, normalization, helpers
   - `src/data/index.json` — generated song index (legacy static fallback); do not hand-edit
   - `src/styles/tokens.css` — `--gc-*` design tokens (light/dark, spacing, type scale)
@@ -192,13 +192,19 @@
   Resend calls to frontend code.
 
 ### PDF Engine
-- **`src/utils/pdf_mvp/` is the authoritative engine.** jsPDF-based MVP.
-  Decision ladder: 1-col single page (sizes 16→12 pt) → 2-col single page
-  (16→12 pt) → 1-col multipage (15 pt). Tests: `npm run test:mvp` — never
-  modify the engine without running these.
-- **`src/utils/pdf/` is legacy and being removed.** Don't add new call sites.
-  If you need a PDF helper, import from `src/utils/pdf_mvp/`. The legacy
-  facade migration + deletion is tracked as its own audit pass.
+- Engine: `src/utils/pdf_mvp/` — jsPDF-based MVP, the **only** PDF stack. Call
+  `downloadSingleSongPdf()`, `downloadMultiSongPdf()`, `downloadSongbookPdf()`
+  from UI code. Decision ladder: 1-col single page (sizes 16→12 pt) → 2-col
+  single page (16→12 pt) → 1-col multipage (15 pt).
+- Tests: `npm run test:mvp`. Never modify the engine without running these tests.
+
+### JPG/Image Exporter
+- Renderer: `src/utils/media/image.js` (Canvas2D).
+- Planner: `src/utils/media/jpgPlanner.js` — Canvas2D-driven layout planner
+  used **only** by the JPG exporter. It is not a PDF engine; it survived the
+  legacy PDF stack removal because the canvas renderer needs Canvas2D
+  measurements rather than jsPDF measurements.
+- Fonts: `src/utils/media/canvasFonts.js`.
 
 ### Service Worker
 - `src/sw.js` — registered in `src/main.jsx`.

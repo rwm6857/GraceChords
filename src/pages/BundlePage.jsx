@@ -4,7 +4,6 @@ import { useSongs } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { showToast } from '../utils/app/toast'
 
 export default function Bundle(){
@@ -25,7 +24,7 @@ export default function Bundle(){
   },[selection, songs])
 
   let pdfLibPromise
-  const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+  const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf_mvp'))
 
   async function handleDownload(){
     setLoading(true)
@@ -54,12 +53,12 @@ export default function Bundle(){
               }
             })
           }))
-          return normalizeSongInput({
+          return {
             title: doc.meta?.title || it.title,
             key: toKey,
             capo: doc.meta?.capo,
             lyricsBlocks: blocks,
-          })
+          }
         })()
           .catch(err => {
             console.error(err)

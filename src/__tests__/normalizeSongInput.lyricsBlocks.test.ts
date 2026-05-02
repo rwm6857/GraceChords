@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
+import { normalizeSongInput } from '../utils/media/jpgPlanner'
 
 describe('normalizeSongInput lyricsBlocks', () => {
   it('converts lyricsBlocks into sections with lines and blocks', () => {

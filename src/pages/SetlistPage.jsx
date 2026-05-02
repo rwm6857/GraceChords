@@ -7,7 +7,6 @@ import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashI
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
 import {
   fetchPersonalSetlists,
@@ -54,7 +53,7 @@ import {
 
 // Lazy pdf exporter
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf_mvp'))
 
 function makeUid(){
   try {
@@ -841,12 +840,12 @@ async function exportPdf() {
           }),
         }));
 
-        const song = normalizeSongInput({
+        const song = {
           title: doc.meta?.title || s.title,
           key: sel.toKey || baseKey,
           capo: doc.meta?.capo,
           lyricsBlocks: blocks,
-        });
+        };
         songs.push(song);
       } catch (err) {
         console.error(err);
