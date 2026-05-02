@@ -1,0 +1,54 @@
+name: PR Checks
+
+# Run lint + tests + Vite build on every PR. All steps are non-blocking
+# (`continue-on-error: true`) so the job always ends green — they're for
+# visibility, not gating. Flip individual steps to required after their
+# warning baselines have been driven down.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint (warn-only)
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Tests (warn-only)
+        continue-on-error: true
+        # Several component test files fail to load because src/lib/supabase.js
+        # creates the client at module-import time and throws if VITE_SUPABASE_URL
+        # is missing. Tracked as a follow-up; for now the workflow surfaces the
+        # same baseline as a local `npm run test:run`.
+        run: npm run test:run
+
+      - name: Build (warn-only, vite only)
+        continue-on-error: true
+        # Skip the SEO/sitemap scripts that need a real Supabase service-role
+        # key — only the bundle compile matters for a PR check.
+        env:
+          VITE_COMMIT_SHA: ${{ github.sha }}
+        run: npx vite build
