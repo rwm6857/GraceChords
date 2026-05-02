@@ -1,7 +1,35 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import DOMPurify from 'dompurify'
 import { fetchPostBySlug } from '../hooks/usePosts'
+
+// TipTap-authored posts may include YouTube/Vimeo embeds. Strip any iframe whose
+// src is not from a known-safe host so a compromised editor can't inject scripts
+// via a hostile iframe.
+const ALLOWED_IFRAME_HOSTS = new Set([
+  'www.youtube.com',
+  'www.youtube-nocookie.com',
+  'youtube.com',
+  'player.vimeo.com',
+])
+
+if (typeof window !== 'undefined') {
+  DOMPurify.addHook('uponSanitizeElement', (node, data) => {
+    if (data.tagName !== 'iframe') return
+    const src = node.getAttribute('src') || ''
+    let host = ''
+    try { host = new URL(src, window.location.href).host } catch {}
+    if (!ALLOWED_IFRAME_HOSTS.has(host)) {
+      node.parentNode?.removeChild(node)
+    }
+  })
+}
+
+const SANITIZE_CONFIG = {
+  ADD_TAGS: ['iframe'],
+  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'target', 'rel'],
+}
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -36,6 +64,11 @@ export default function PostDetailPage() {
       setLoading(false)
     })
   }, [slug])
+
+  const sanitizedContent = useMemo(
+    () => DOMPurify.sanitize(post?.content || '', SANITIZE_CONFIG),
+    [post?.content]
+  )
 
   if (loading) {
     return (
@@ -110,7 +143,7 @@ export default function PostDetailPage() {
 
       <div
         className="gc-post-detail__content gc-prose"
-        dangerouslySetInnerHTML={{ __html: post.content || '' }}
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
     </div>
   )
