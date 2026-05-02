@@ -1,16 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { hasMinRole as checkHasMinRole } from '../lib/roles'
 
 const AuthContext = createContext(null)
-
-const ROLE_ORDER = ['user', 'collaborator', 'editor', 'admin', 'owner']
-
-function checkHasMinRole(userRole, minRole) {
-  const userIdx = ROLE_ORDER.indexOf(userRole || 'user')
-  const minIdx = ROLE_ORDER.indexOf(minRole || 'user')
-  if (minIdx < 0) return false
-  return userIdx >= minIdx
-}
 
 const PROFILE_CACHE_KEY = 'gc_profile_cache'
 

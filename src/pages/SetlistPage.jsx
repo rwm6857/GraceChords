@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import Fuse from 'fuse.js'
 import { useSongs } from '../hooks/useSongs'
@@ -7,7 +7,6 @@ import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashI
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
 import {
   fetchPersonalSetlists,
@@ -54,7 +53,7 @@ import {
 
 // Lazy pdf exporter
 let pdfLibPromise
-const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf'))
+const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../utils/pdf_mvp'))
 
 function makeUid(){
   try {
@@ -235,7 +234,7 @@ export default function Setlist(){
       })
     }
     setItems(out)
-  }, [catalog.groups, selectedLanguage])
+  }, [catalog, selectedLanguage])
 
   function getSongById(songId){
     if (!songId) return null
@@ -248,7 +247,7 @@ export default function Setlist(){
     async function check(){
       const entries = list
         .map(sel => {
-          const s = getSongById(sel.id)
+          const s = sel.id ? allSongsById.get(String(sel.id)) || null : null
           if (!s) return null
           const slug = s.filename.replace(/\.chordpro$/i, '')
           return { slug, url: publicUrl(`pptx/${slug}.pptx`) }
@@ -300,7 +299,7 @@ export default function Setlist(){
     const ids = decoded.map(e => encodeURIComponent(e.id)).join(',')
     const keys = decoded.map(e => encodeURIComponent(e.toKey || '')).join(',')
     navigate(`/setlist/${ids}?toKeys=${keys}`, { replace: true })
-  }, [routeCode])
+  }, [routeCode, songs, navigate])
 
   // Load set from param-style route (/setlist/:songIds?toKeys=...)
   useEffect(() => {
@@ -411,7 +410,7 @@ export default function Setlist(){
     keys: ['title', 'tags', 'searchTitles', 'searchTags', 'searchAuthors'],
     threshold: 0.4
   }), [items])
-  function icpPass(s){ return !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP') }
+  const icpPass = useCallback((s) => !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP'), [icpOnly])
   const results = useMemo(() => {
     const base = q ? fuse.search(q).map((r) => r.item) : items.slice()
     const filtered = base.filter(icpPass)
@@ -422,7 +421,7 @@ export default function Setlist(){
       return String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' })
     })
     return filtered
-  }, [q, fuse, items, icpOnly])
+  }, [q, fuse, items, icpPass])
 
   // list mutators
   function addSong(s){
@@ -841,12 +840,12 @@ async function exportPdf() {
           }),
         }));
 
-        const song = normalizeSongInput({
+        const song = {
           title: doc.meta?.title || s.title,
           key: sel.toKey || baseKey,
           capo: doc.meta?.capo,
           lyricsBlocks: blocks,
-        });
+        };
         songs.push(song);
       } catch (err) {
         console.error(err);

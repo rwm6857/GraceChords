@@ -7,7 +7,7 @@ import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { normalizeSongInput } from '../utils/pdf/pdfLayout'
+import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
 import { useRole } from '../hooks/useRole'
@@ -164,11 +164,11 @@ export default function SongView(){
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [isNarrow, hasPptx, jpgDisabled, toKey, showChords])
+  }, [isNarrow])
 
   const loadPdfLib = () => {
     if (!pdfLibPromise) {
-      pdfLibPromise = import('../utils/pdf')
+      pdfLibPromise = import('../utils/pdf_mvp')
     }
     return pdfLibPromise
   }
@@ -228,7 +228,7 @@ export default function SongView(){
       showToast(`Parse error in "${entry.title}". Check ChordPro syntax.`)
       setErr('Failed to parse song')
     }
-  }, [entry?.chordpro_content])
+  }, [entry?.chordpro_content, entry?.title, entry?.originalKey])
 
   // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
 
@@ -261,7 +261,6 @@ export default function SongView(){
     return () => window.removeEventListener('keydown', onKey)
   }, [baseKey])
 
-  
 
   // JPG single-page guard – only runs once layout/image libs are loaded
   useEffect(() => {
@@ -275,6 +274,9 @@ export default function SongView(){
     }
     check()
     return () => { cancelled = true }
+    // checkJpgSupport closes over buildSong/loadImageLib which are recreated each render;
+    // refire is gated by parsed/toKey/imageLibPromiseState only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsed, toKey, imageLibPromiseState])
 
   const helmet = (

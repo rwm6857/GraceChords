@@ -12,6 +12,7 @@
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
     "test:mvp": "vitest run src/__tests__/pdf_mvp.*.test.js --pool=forks",
+    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
     "convert:short": "node scripts/convertChordProAll.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs"
   },
@@ -25,6 +26,7 @@
     "@tiptap/pm": "^3.20.1",
     "@tiptap/react": "^3.20.1",
     "@tiptap/starter-kit": "^3.20.1",
+    "dompurify": "^3.4.2",
     "fuse.js": "^7.0.0",
     "jspdf": "^3.0.2",
     "jszip": "^3.10.1",
@@ -36,16 +38,21 @@
     "vite": "^7.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.0.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
     "happy-dom": "^20.0.11",
     "mammoth": "^1.10.0",
     "pdf-parse": "^1.1.1",
     "rollup-plugin-visualizer": "^5.12.0",
     "sharp": "^0.34.5",
     "ttf2woff2": "^8.0.0",
+    "typescript-eslint": "^8.59.1",
     "vite-plugin-static-copy": "^3.1.1",
     "vitest": "^3.2.4"
   }

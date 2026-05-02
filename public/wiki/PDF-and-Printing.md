@@ -20,7 +20,7 @@ If a section still splits, shorten lines or reduce font size.
 
 ## MVP PDF Engine (Single Song)
 
-- Engine location: `src/utils/pdf_mvp/` (wired via `src/utils/pdf/index.js`).
+- Engine location: `src/utils/pdf_mvp/` (export entry: `src/utils/pdf_mvp/index.js`).
 - Decision ladder:
   - 1 column, single page at sizes 16 → 12 pt
   - else 2 columns, single page at sizes 16 → 12 pt

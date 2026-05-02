@@ -35,6 +35,10 @@ export default defineConfig({
             target: process.env.VITE_R2_PUBLIC_URL,
             changeOrigin: true,
           },
+          '/pptx': {
+            target: process.env.VITE_R2_PUBLIC_URL,
+            changeOrigin: true,
+          },
         },
       }
     : {},
@@ -48,6 +52,10 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     setupFiles: './src/setupTests.js',
-    globals: true
+    globals: true,
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key'
+    }
   }
 })

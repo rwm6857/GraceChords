@@ -2,7 +2,7 @@
 
 - **Scope:** Single-song PDF export with clean, legible lead sheets. Setlist/songbook can adopt this later.
 - **Location:** `src/utils/pdf_mvp/`
-- **Entry:** `downloadSingleSongPdf(song)` (wired via `src/utils/pdf/index.js`).
+- **Entry:** `downloadSingleSongPdf(song)` exported from `src/utils/pdf_mvp/index.js`.
 
 **Design Goals**
 - **Readability-first:** Keep lyrics/chords large; fit on one page whenever possible.

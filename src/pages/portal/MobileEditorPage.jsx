@@ -113,7 +113,7 @@ export default function MobileEditorPage() {
 
     load()
     return () => { cancelled = true }
-  }, [slugParam])
+  }, [slugParam, isNewSong])
 
   const handleFormChange = useCallback((newValues) => {
     setFormValues(newValues)

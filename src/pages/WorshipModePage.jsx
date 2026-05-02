@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -42,7 +42,7 @@ export default function WorshipMode(){
   const allSongsById = catalog.byId
   const selectedLanguage = useMemo(
     () => resolveInitialSongLanguage(catalog.translationLanguages?.length ? catalog.translationLanguages : catalog.allLanguages),
-    [catalog]
+    [catalog.translationLanguages, catalog.allLanguages]
   )
 
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections, type }]
@@ -172,13 +172,13 @@ export default function WorshipMode(){
   useEffect(() => { try { localStorage.setItem('worship:showStopwatch', showStopwatch ? '1' : '0') } catch {} }, [showStopwatch])
   useEffect(() => { try { localStorage.setItem('worship:mobileControlsPinned', mobileControlsPinned ? '1' : '0') } catch {} }, [mobileControlsPinned])
 
-  function wakeChrome(){
+  const wakeChrome = useCallback(() => {
     if (!isMobile) return
     setChromeAwake(true)
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
     if (mobileControlsPinned || openSettings || mobileMoreOpen) return
     chromeTimerRef.current = setTimeout(() => setChromeAwake(false), 5000)
-  }
+  }, [isMobile, mobileControlsPinned, openSettings, mobileMoreOpen])
 
   useEffect(() => {
     if (!isMobile || mobileControlsPinned || openSettings || mobileMoreOpen) {
@@ -190,7 +190,7 @@ export default function WorshipMode(){
     return () => {
       if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
     }
-  }, [isMobile, mobileControlsPinned, openSettings, mobileMoreOpen])
+  }, [isMobile, mobileControlsPinned, openSettings, mobileMoreOpen, wakeChrome])
 
   // Clock: tick on minute boundary
   useEffect(() => {
@@ -303,6 +303,8 @@ export default function WorshipMode(){
     }
   }, [location.search])
 
+  const idsKey = ids.join('|')
+  const toKeysKey = query.toKeys.join('|')
   const setlistUrl = useMemo(() => {
     if (!ids.length) return '/setlist'
     const encodedIds = ids.map((id) => encodeURIComponent(id)).join(',')
@@ -311,7 +313,8 @@ export default function WorshipMode(){
       : ids.map(() => '')
     const encodedKeys = keys.map(k => encodeURIComponent(k || '')).join(',')
     return `/setlist/${encodedIds}?toKeys=${encodedKeys}`
-  }, [ids.join('|'), query.toKeys.join('|')])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, toKeysKey])
 
   // Load songs by ids
   useEffect(() => {
@@ -495,7 +498,8 @@ export default function WorshipMode(){
     }
     load()
     return () => { cancelled = true }
-  }, [songIds, query.toKey, query.toKeys.join('|'), allSongsById])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songIds, query.toKey, toKeysKey, allSongsById])
 
   // Clear pending swipe-hint timer on unmount
   useEffect(() => {
@@ -544,7 +548,7 @@ export default function WorshipMode(){
       content.style.columnCount = prevCols
       content.style.columnGap = prevGap
     }
-  }, [songs, idx, autoSize, showChords, isWide])
+  }, [songs, idx, autoSize, showChords, isWide, isMobile])
 
   // When manually changing font size, allow auto switch in both directions.
   useEffect(() => {
@@ -594,7 +598,9 @@ export default function WorshipMode(){
     }
   }, [fontPx, autoSize, cols, idx, songs])
 
-  // Keep transpose in sync when song changes
+  // Keep transpose in sync when song changes.
+  // baseOffsets/songOffsets are intentionally read by index without re-firing
+  // when their arrays update — we only want this to react to song-position changes.
   useEffect(() => {
     const entry = songs[idx]
     if (entry?.type === 'verse') {
@@ -602,6 +608,7 @@ export default function WorshipMode(){
       return
     }
     setTranspose((songOffsets[idx] ?? baseOffsets[idx] ?? 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, songs])
   // Persist session for accidental refresh recovery
   useEffect(() => {
@@ -618,7 +625,9 @@ export default function WorshipMode(){
       ts: Date.now(),
     }
     try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)) } catch {}
-  }, [ids.join(','), idx, songOffsets, baseOffsets, cols, fontPx, autoSize, showChords, halfStep])
+    // ids is captured via idsKey; ESLint can't statically resolve the join().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, idx, songOffsets, baseOffsets, cols, fontPx, autoSize, showChords, halfStep])
 
   // Keyboard navigation
   useEffect(() => {
@@ -630,6 +639,8 @@ export default function WorshipMode(){
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+    // next/prev/wakeChrome are stable enough at this scope; refire is gated by idx/songs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, songs])
 
   // Touch navigation
@@ -723,10 +734,10 @@ export default function WorshipMode(){
 
   const cur = songs[idx]
   const isVerse = cur?.type === 'verse'
-  const toKey = useMemo(() => (cur && !isVerse ? transposeSymPrefer(cur.baseKey, transpose, false) : ''), [cur?.baseKey, transpose, isVerse])
+  const toKey = useMemo(() => (cur && !isVerse ? transposeSymPrefer(cur.baseKey, transpose, false) : ''), [cur, transpose, isVerse])
   const baseRootRaw = (!isVerse && cur?.baseKey ? String(cur.baseKey).match(/^([A-G][#b]?)/)?.[1] : '')
   const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
-  const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur?.baseKey, toKey, isVerse])
+  const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur, toKey, isVerse])
   const displayCols = (isVerse || isMobile) ? 1 : cols
   const chromeDimmed = isMobile && !mobileControlsPinned && !chromeAwake && !openSettings && !mobileMoreOpen
 

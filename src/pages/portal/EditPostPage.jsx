@@ -82,7 +82,7 @@ export default function EditPostPage() {
       }
       setLoading(false)
     })
-  }, [id, isNew])
+  }, [id, isNew, draftKey])
 
   // Autosave form to localStorage (debounced 1 s)
   // Skip while still loading so we don't overwrite a good draft with the blank initial state.

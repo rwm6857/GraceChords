@@ -37,7 +37,7 @@ export default function ProfilePage() {
     if (!loading && !isLoggedIn) {
       navigate('/login?redirect=/profile', { replace: true })
     }
-  }, [isLoggedIn, loading])
+  }, [isLoggedIn, loading, navigate])
 
   // Sync form state from profile
   useEffect(() => {
@@ -50,6 +50,7 @@ export default function ProfilePage() {
   // Fetch stars + contributor request status
   useEffect(() => {
     if (!session) return
+    let cancelled = false
 
     // Join with songs to get slug, title, key, artist in one query.
     supabase
@@ -58,6 +59,7 @@ export default function ProfilePage() {
       .eq('user_id', session.user.id)
       .order('songs(title)')
       .then(({ data, error }) => {
+        if (cancelled) return
         if (error) console.error('[ProfilePage] Failed to load starred songs:', error)
         setStarredItems(data || [])
         setStarsLoading(false)
@@ -71,10 +73,18 @@ export default function ProfilePage() {
         .eq('user_id', session.user.id)
         .eq('status', 'pending')
         .maybeSingle(),
-    ]).then(([settingsRes, requestRes]) => {
-      setContributorRequestsEnabled(settingsRes.data?.contributor_requests_enabled ?? false)
-      setPendingRequest(!!requestRes.data)
-    })
+    ])
+      .then(([settingsRes, requestRes]) => {
+        if (cancelled) return
+        setContributorRequestsEnabled(settingsRes.data?.contributor_requests_enabled ?? false)
+        setPendingRequest(!!requestRes.data)
+      })
+      .catch(err => {
+        if (cancelled) return
+        console.error('[ProfilePage] Failed to load contributor request status:', err)
+      })
+
+    return () => { cancelled = true }
   }, [session])
 
   async function saveProfile() {
