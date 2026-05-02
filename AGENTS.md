@@ -262,17 +262,11 @@ this repository. Follow them for all AI-generated changes.
   documented baselines (see "Known baselines" above).
 
 ### Repo gotchas (operational, important)
-- **`node_modules/` is git-tracked** (~13K files; the entry in `.gitignore`
-  is ineffective because the files were committed historically). After **any**
-  `npm install` / `npm ci` / `npm run lint --fix`, the working tree fills with
-  thousands of phantom diffs. **Before committing, revert that churn:**
-  `git checkout HEAD -- node_modules/`. Recent merged PRs all have zero
-  `node_modules/` lines — match that convention.
-- **esbuild platform-binary mismatch**: after a `git checkout HEAD -- node_modules/`,
-  tests/build can fail with
-  `Host version "0.27.2" does not match binary version "0.27.7"`. The tracked
-  `node_modules/esbuild` and the untracked `node_modules/@esbuild/linux-x64`
-  drift apart. Recover with:
+- **esbuild platform-binary drift**: a fresh `npm install` may leave
+  `node_modules/esbuild` and `node_modules/@esbuild/linux-x64` at mismatched
+  versions, surfacing as
+  `Host version "0.27.2" does not match binary version "0.27.7"` on
+  `npm run test:run` or `vite build`. Recover with:
   `rm -rf node_modules/@esbuild/linux-x64 && npm install --no-save`.
 - **CI workflow `.github/workflows/pr-checks.yml`** runs lint/test/build on
   every PR with `continue-on-error: true` — it's signal, not a gate. Don't
