@@ -304,11 +304,11 @@ export default function Songs(){
 
   useEffect(() => {
     if (navigationTypeRef.current === 'POP') {
-      const saved = sessionStorage.getItem('songs:scrollY')
+      const saved = sessionStorage.getItem('songs:scrollTop')
       if (saved) pendingScrollRef.current = Number(saved)
     }
     return () => {
-      sessionStorage.setItem('songs:scrollY', String(window.scrollY))
+      sessionStorage.setItem('songs:scrollTop', String(resultsRef.current?.scrollTop ?? 0))
     }
   }, [])
 
@@ -316,7 +316,9 @@ export default function Songs(){
     if (pendingScrollRef.current !== null && items.length > 0) {
       const y = pendingScrollRef.current
       pendingScrollRef.current = null
-      requestAnimationFrame(() => window.scrollTo(0, y))
+      requestAnimationFrame(() => {
+        if (resultsRef.current) resultsRef.current.scrollTop = y
+      })
     }
   }, [items])
 
