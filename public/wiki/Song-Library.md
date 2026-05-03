@@ -10,8 +10,7 @@ Visit the in-app [Song Library](/songs) to browse, search, and filter all availa
 
 ## Filters
 - Selecting multiple tags uses **ANY** matching—songs appear if they include **any** of the tags you pick.
-- The **ICP only** toggle sticks between visits; its state is saved in your browser's `localStorage` so it persists across reloads on the same device.
-- Song language preference is also saved in `localStorage` (`pref:songLanguage`) and reused in SongView, Setlist, Songbook, Worship Mode, and Home suggestions.
+- Song language preference is saved in `localStorage` (`pref:songLanguage`) and reused in SongView, Setlist, Songbook, Worship Mode, and Home suggestions.
 
 ## Translation behavior
 - Language chips appear only when at least one translation exists in that language.

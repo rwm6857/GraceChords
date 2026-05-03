@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
@@ -140,12 +140,6 @@ export default function Setlist(){
   const [name, setName] = useState('New Setlist')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
-  const [icpOnly, setIcpOnly] = useState(() => {
-    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
-  })
-  useEffect(() => {
-    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
-  }, [icpOnly])
   const [list, setList] = useState([])
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')
@@ -390,11 +384,6 @@ export default function Setlist(){
   }, [isStacked, mobileActionsOpen])
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search || '')
-    if (params.get('icp') === '1') setIcpOnly(true)
-  }, [location.search])
-
-  useEffect(() => {
     if (quickAppliedRef.current) return
     const quick = location.state?.quickAction
     if (!quick) return
@@ -406,18 +395,16 @@ export default function Setlist(){
   }, [location.state, items.map(s => s.id).join('|')])
 
   // search
-  const icpPass = useCallback((s) => !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP'), [icpOnly])
   const results = useMemo(() => {
     const base = q ? searchSongs(items, q).map((r) => r.item) : items.slice()
-    const filtered = base.filter(icpPass)
-    filtered.sort((a, b) => {
+    base.sort((a, b) => {
       if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
         return a.hasSelectedLanguage ? -1 : 1
       }
       return String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' })
     })
-    return filtered
-  }, [q, items, icpPass])
+    return base
+  }, [q, items])
 
   // list mutators
   function addSong(s){
@@ -1170,12 +1157,6 @@ async function exportPdf() {
                 <div className="builder-search-row">
                   <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                   <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
-                </div>
-                <div className="builder-options-row">
-                  <label className="row" style={{gap:6, alignItems:'center'}}>
-                    <input type="checkbox" checked={icpOnly} onChange={e=> setIcpOnly(e.target.checked)} />
-                    <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
-                  </label>
                 </div>
               </div>
               {languageChipCodes.length > 0 ? (
