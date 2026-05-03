@@ -125,7 +125,7 @@ export default function Songbook() {
       return
     }
     if (key === 'sendMeSongbook'){
-      const tags = ['NATION', 'NATIONS', 'MISSION', 'MISSIONS', 'ICP']
+      const tags = ['NATION', 'NATIONS', 'MISSION', 'MISSIONS', 'COMMUNITY']
       const matches = all.filter((song) => tags.some((t) => filterByTag([song], t).length))
       if (matches.length){
         matches.sort(byTitle)
