@@ -8,7 +8,7 @@ import { useSongs } from '../hooks/useSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
-import { buildTagMap, canonicalizeTags, tagLabelFromKey } from '../utils/songs/tags'
+import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, tagLabelFromKey } from '../utils/songs/tags'
 import {
   buildGroupSearchText,
   buildSongCatalog,
@@ -87,7 +87,7 @@ export default function Songs(){
     const options = []
     for (const s of items) {
       for (const key of s.tagKeys || []) {
-        if (!key || seen.has(key)) continue
+        if (!key || seen.has(key) || isHiddenTag(key)) continue
         seen.add(key)
         options.push({ key, label: tagMap.get(key) || tagLabelFromKey(key) })
       }
@@ -415,7 +415,10 @@ export default function Songs(){
               aria-selected={i === activeIndex}
               className={i === activeIndex ? 'active' : ''}
               title={s.title}
-              subtitle={`${s.originalKey || '—'}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+              subtitle={(() => {
+                const visible = filterDisplayTags(s.tags)
+                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
+              })()}
             />
           ))}
 
@@ -438,7 +441,10 @@ export default function Songs(){
                 aria-selected={idx === activeIndex}
                 className={idx === activeIndex ? 'active' : ''}
                 title={s.title}
-                subtitle={`${s.originalKey || '—'}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+                subtitle={(() => {
+                const visible = filterDisplayTags(s.tags)
+                return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
+              })()}
               />
             )
           })}

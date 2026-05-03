@@ -1,4 +1,5 @@
 const ACRONYM_TAG_KEYS = new Set(['icp'])
+const HIDDEN_TAG_KEYS = new Set(['icp'])
 
 export function normalizeTagKey(tag) {
   const key = String(tag || '')
@@ -6,6 +7,14 @@ export function normalizeTagKey(tag) {
     .toLowerCase()
     .replace(/\s+/g, ' ')
   return key
+}
+
+export function isHiddenTag(tag) {
+  return HIDDEN_TAG_KEYS.has(normalizeTagKey(tag))
+}
+
+export function filterDisplayTags(tags = []) {
+  return (Array.isArray(tags) ? tags : []).filter((t) => !isHiddenTag(t))
 }
 
 function sentenceCaseFromKey(key) {

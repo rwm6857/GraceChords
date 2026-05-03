@@ -8,7 +8,6 @@ Open a song to transpose chords, hide them, or export the chart.
 - Download PDF or JPG
 - Watch an embedded reference video
 - PPTX button appears when `public/pptx/<slug>.pptx` exists
-- ICP badge appears on songs tagged `ICP` (InterCP International); SEO metadata is extended automatically.
 
 1. Select a song from [[Home-Search-and-Filters]].
 2. If translation chips are shown, click `EN/TR/AR/SP` to switch variants in-place.

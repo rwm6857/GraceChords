@@ -29,6 +29,7 @@ import {
   resolveGroupEntry,
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
+import { filterDisplayTags } from '../utils/songs/tags'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -130,7 +131,6 @@ export default function SongView(){
   const [mobileDockHeight, setMobileDockHeight] = useState(96)
   const songSeo = buildSongSeo(entry, parsed, id)
   const songLdJson = JSON.stringify(songSeo.ld || {})
-  const isIcpSong = !!songSeo.isIcpSong
   const mediaYoutube = parsed?.meta?.youtube || parsed?.meta?.meta?.youtube || entry?.youtube || ''
   const baseKey = parsed?.meta?.key || parsed?.meta?.originalkey || entry?.originalKey || 'C'
 
@@ -603,16 +603,17 @@ export default function SongView(){
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
       >
-        {(isIcpSong || entry?.tags?.length) && (
-          <div className="gc-song-tags">
-            {isIcpSong ? (
-              <Chip variant="tag" selected className="gc-chip--indigo">InterCP All Nations Worship</Chip>
-            ) : null}
-            {(entry?.tags || []).map(t => (
-              <Chip key={t} variant="tag">{t}</Chip>
-            ))}
-          </div>
-        )}
+        {(() => {
+          const visibleTags = filterDisplayTags(entry?.tags)
+          if (!visibleTags.length) return null
+          return (
+            <div className="gc-song-tags">
+              {visibleTags.map(t => (
+                <Chip key={t} variant="tag">{t}</Chip>
+              ))}
+            </div>
+          )
+        })()}
         {desktopToolbar}
       </PageHeader>
 
