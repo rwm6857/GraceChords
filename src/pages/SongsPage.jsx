@@ -78,6 +78,7 @@ export default function Songs(){
   const navigationType = useNavigationType()
   const navigationTypeRef = useRef(navigationType)
   const pendingScrollRef = useRef(null)
+  const scrollTopRef = useRef(0)
 
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
@@ -302,23 +303,33 @@ export default function Songs(){
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  // Keep scrollTopRef current so the cleanup below never reads a nulled-out DOM ref.
+  useEffect(() => {
+    const el = resultsRef.current
+    if (!el) return
+    const onScroll = () => { scrollTopRef.current = el.scrollTop }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
   useEffect(() => {
     if (navigationTypeRef.current === 'POP') {
       const saved = sessionStorage.getItem('songs:scrollTop')
       if (saved) pendingScrollRef.current = Number(saved)
     }
     return () => {
-      sessionStorage.setItem('songs:scrollTop', String(resultsRef.current?.scrollTop ?? 0))
+      sessionStorage.setItem('songs:scrollTop', String(scrollTopRef.current))
     }
   }, [])
 
+  // Double-RAF so grid layout is complete before we set scrollTop.
   useEffect(() => {
     if (pendingScrollRef.current !== null && items.length > 0) {
       const y = pendingScrollRef.current
       pendingScrollRef.current = null
-      requestAnimationFrame(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         if (resultsRef.current) resultsRef.current.scrollTop = y
-      })
+      }))
     }
   }, [items])
 
