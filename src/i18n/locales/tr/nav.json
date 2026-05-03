@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "home": "Ana Sayfa",
+  "songs": "İlahiler",
+  "setlist": "Set Listesi",
+  "songbook": "İlahi Kitabı",
+  "dailyWord": "Günün Sözü",
+  "blog": "Blog",
+  "editorPortal": "Editör Portalı",
+  "profile": "Profil",
+  "songEditor": "İlahi Editörü",
+  "postEditor": "Yazı Editörü",
+  "adminPortal": "Yönetici Portalı",
+  "signIn": "Giriş yap",
+  "signOut": "Çıkış yap",
+  "openMainMenu": "Ana menüyü aç",
+  "userMenu": "Kullanıcı menüsü",
+  "mobileMenu": "Mobil menü",
+  "graceChordsHome": "GraceChords ana sayfası"
+}

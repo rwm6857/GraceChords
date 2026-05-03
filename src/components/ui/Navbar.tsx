@@ -1,15 +1,18 @@
 import React, { useCallback, useLayoutEffect, useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import OfflineBadge from '../OfflineBadge'
 import { currentTheme, toggleTheme } from '../../utils/app/theme'
 import { Sun, Moon } from '../Icons'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import SpriteAvatar from './SpriteAvatar'
+import LanguageSelector from './LanguageSelector'
 
 export default function Navbar(){
   const [, setBump] = React.useState(0)
+  const { t } = useTranslation(['nav', 'common'])
   const isDark = (currentTheme() === 'dark')
   const { pathname, hash } = useLocation()
   const path = (hash && hash.replace('#','')) || pathname
@@ -115,7 +118,7 @@ export default function Navbar(){
     <>
       <nav className="gc-navbar" ref={navRef as any}>
         <div className="gc-navbar__inner">
-        <Link to="/" className="gc-brand" aria-label="GraceChords home">
+        <Link to="/" className="gc-brand" aria-label={t('graceChordsHome')}>
           {/* Wide logo for tablet/desktop */}
           <img
             src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
@@ -137,7 +140,7 @@ export default function Navbar(){
         <button
           ref={btnRef as any}
           className="gc-hamburger"
-          aria-label="Open main menu"
+          aria-label={t('openMainMenu')}
           aria-controls="gc-mobile-nav"
           aria-expanded={open}
           onClick={(e)=> { e.preventDefault(); open ? closeDrawer() : openDrawer() }}
@@ -146,22 +149,22 @@ export default function Navbar(){
           <span aria-hidden="true" style={{display:'inline-block', width:18, height:2, background:'currentColor', boxShadow:'0 6px 0 currentColor, 0 -6px 0 currentColor'}} />
         </button>
         <div className="gc-navlinks">
-          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Home</Link>
-          <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`} style={isActive('/songs') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songs</Link>
-          <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistPage')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Setlist</Link>
-          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Songbook</Link>
-          <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Daily Word</Link>
-          <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`} style={isActive('/posts') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Blog</Link>
+          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('home')}</Link>
+          <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`} style={isActive('/songs') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songs')}</Link>
+          <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistPage')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('setlist')}</Link>
+          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songbook')}</Link>
+          <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('dailyWord')}</Link>
+          <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`} style={isActive('/posts') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('blog')}</Link>
           {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
-            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>Editor Portal</Link>
+            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('editorPortal')}</Link>
           )}
           {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
           <button
             className="gc-btn gc-btn--ghost"
-            aria-label="Toggle dark mode"
+            aria-label={t('common:toggleDarkMode')}
             aria-pressed={isDark}
             onClick={onToggleClick}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDark ? t('common:switchToLight') : t('common:switchToDark')}
           >
             {isDark ? <Sun /> : <Moon />}
           </button>
@@ -174,7 +177,7 @@ export default function Navbar(){
                   onClick={() => setUserMenuOpen(o => !o)}
                   aria-expanded={userMenuOpen}
                   aria-haspopup="menu"
-                  aria-label="User menu"
+                  aria-label={t('userMenu')}
                 >
                   <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
                 </button>
@@ -189,7 +192,7 @@ export default function Navbar(){
                       role="menuitem"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      Profile
+                      {t('profile')}
                     </Link>
                     {hasMinRole('collaborator') && (
                       <Link
@@ -198,7 +201,7 @@ export default function Navbar(){
                         role="menuitem"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Song Editor
+                        {t('songEditor')}
                       </Link>
                     )}
                     {hasMinRole('editor') && (
@@ -208,7 +211,7 @@ export default function Navbar(){
                         role="menuitem"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Post Editor
+                        {t('postEditor')}
                       </Link>
                     )}
                     {(role === 'admin' || role === 'owner') && (
@@ -218,22 +221,25 @@ export default function Navbar(){
                         role="menuitem"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Admin Portal
+                        {t('adminPortal')}
                       </Link>
                     )}
+                    <div style={{ padding: '4px 12px' }}>
+                      <LanguageSelector style={{ width: '100%' }} />
+                    </div>
                     <hr className="gc-user-dropdown__divider" />
                     <button
                       className="gc-user-dropdown__item"
                       role="menuitem"
                       onClick={handleSignOut}
                     >
-                      Sign out
+                      {t('signOut')}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <Link to="/login" className="gc-nav-signin">Sign in</Link>
+              <Link to="/login" className="gc-nav-signin">{t('signIn')}</Link>
             )
           )}
         </div>
@@ -248,33 +254,36 @@ export default function Navbar(){
           aria-hidden={!open}
         >
           <button type="button" className="gc-drawer__overlay" onClick={()=> closeDrawer()} aria-hidden="true" tabIndex={-1} />
-          <nav className="gc-drawer__panel" role="navigation" aria-label="Mobile menu">
+          <nav className="gc-drawer__panel" role="navigation" aria-label={t('mobileMenu')}>
             <div className="gc-drawer__links">
-              <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>Home</Link>
-              <Link to="/songs" onClick={closeDrawer} className={`gc-navlink ${isActive('/songs') ? 'active':''}`}>Songs</Link>
-              <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>Setlist</Link>
-              <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>Songbook</Link>
-              <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>Daily Word</Link>
-              <Link to="/posts" onClick={closeDrawer} className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>Blog</Link>
+              <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>{t('home')}</Link>
+              <Link to="/songs" onClick={closeDrawer} className={`gc-navlink ${isActive('/songs') ? 'active':''}`}>{t('songs')}</Link>
+              <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>{t('setlist')}</Link>
+              <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>{t('songbook')}</Link>
+              <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>{t('dailyWord')}</Link>
+              <Link to="/posts" onClick={closeDrawer} className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>{t('blog')}</Link>
 
               {isLoggedIn && hasMinRole('collaborator') && (
-                <Link to="/portal/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/portal/editor') ? 'active':''}`}>Song Editor</Link>
+                <Link to="/portal/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/portal/editor') ? 'active':''}`}>{t('songEditor')}</Link>
               )}
               {isLoggedIn && hasMinRole('admin') && (
-                <Link to="/admin" onClick={closeDrawer} className={`gc-navlink ${isActive('/admin') ? 'active':''}`}>Admin Portal</Link>
+                <Link to="/admin" onClick={closeDrawer} className={`gc-navlink ${isActive('/admin') ? 'active':''}`}>{t('adminPortal')}</Link>
               )}
             </div>
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
+              <div style={{ marginTop: 8 }}>
+                <LanguageSelector style={{ width: '100%' }} />
+              </div>
               <button
                 className="gc-btn gc-btn--secondary"
-                aria-label="Toggle dark mode"
+                aria-label={t('common:toggleDarkMode')}
                 aria-pressed={isDark}
                 onClick={onToggleClick}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={isDark ? t('common:switchToLight') : t('common:switchToDark')}
                 style={{ width:'100%', justifyContent:'center', marginTop:8 }}
               >
-                {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? 'Light mode' : 'Dark mode'}</span>
+                {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? t('common:lightMode') : t('common:darkMode')}</span>
               </button>
               {/* Auth slot — mobile */}
               {!authLoading && (
@@ -287,14 +296,14 @@ export default function Navbar(){
                       style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}
                     >
                       <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
-                      <span>{profile?.display_name || 'Profile'}</span>
+                      <span>{profile?.display_name || t('profile')}</span>
                     </Link>
                     <button
                       className="gc-btn gc-btn--ghost"
                       onClick={async () => { await handleSignOut(); closeDrawer() }}
                       style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
                     >
-                      Sign out
+                      {t('signOut')}
                     </button>
                   </div>
                 ) : (
@@ -304,7 +313,7 @@ export default function Navbar(){
                     onClick={closeDrawer}
                     style={{ display: 'block', textAlign: 'center', marginTop: 8 }}
                   >
-                    Sign in
+                    {t('signIn')}
                   </Link>
                 )
               )}

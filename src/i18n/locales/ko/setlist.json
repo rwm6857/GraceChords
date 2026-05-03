@@ -1,0 +1,8 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "name": "이름",
+  "serviceDate": "예배 날짜",
+  "bibleVerse": "성경 구절",
+  "saveSetlist": "셋리스트 저장",
+  "updateSetlist": "셋리스트 업데이트"
+}

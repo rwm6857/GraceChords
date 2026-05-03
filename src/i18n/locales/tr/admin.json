@@ -1,0 +1,7 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "deleteUser": "Kullanıcıyı sil",
+  "deleteAccount": "Hesabı sil",
+  "loadingUsers": "Kullanıcılar yükleniyor…",
+  "loadingRequests": "İstekler yükleniyor…"
+}

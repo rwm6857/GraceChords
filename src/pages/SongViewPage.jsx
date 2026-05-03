@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
@@ -93,6 +94,7 @@ function buildSongSeo(entry, parsed, id){
 }
 
 export default function SongView(){
+  const { t } = useTranslation('song')
   const { id } = useParams()
   const navigate = useNavigate()
   const { songs } = useSongs()
@@ -307,7 +309,7 @@ export default function SongView(){
     return (
       <div className="container">
         {helmet}
-        <p style={{color:'#b91c1c'}}>Error: {err}</p>
+        <p style={{color:'#b91c1c'}}>{t('errorPrefix', { message: err })}</p>
         <p>Check that <code>public/songs/{entry.filename}</code> exists and is copied to <code>docs/songs/</code> after build.</p>
       </div>
     )
@@ -316,7 +318,7 @@ export default function SongView(){
     return (
       <div className="container">
         {helmet}
-        <p>Loading…</p>
+        <p>{t('loading')}</p>
       </div>
     )
   }
@@ -469,16 +471,16 @@ export default function SongView(){
         />
         <IconButton
           variant={twoColsView ? 'primary' : 'secondary'}
-          aria-label={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
-          title={twoColsView ? 'Use 1 column' : 'Use 2 columns'}
+          aria-label={twoColsView ? t('useOneColumn') : t('useTwoColumns')}
+          title={twoColsView ? t('useOneColumn') : t('useTwoColumns')}
           onClick={toggleColumns}
         >
           {twoColsView ? <OneColIcon /> : <TwoColIcon />}
         </IconButton>
         <IconButton
           variant={showChords ? 'primary' : 'secondary'}
-          aria-label="Toggle chords"
-          title="Toggle chords"
+          aria-label={t('toggleChords')}
+          title={t('toggleChords')}
           aria-pressed={showChords}
           onClick={() => setShowChords(v => !v)}
         >
@@ -557,9 +559,9 @@ export default function SongView(){
           as={Link}
           to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`}
           leftIcon={<MediaIcon />}
-          title="Worship Mode"
+          title={t('worshipMode')}
         >
-          Worship Mode
+          {t('worshipMode')}
         </Button>
         {entry?.gracetracks_url && (
           <a
@@ -687,7 +689,7 @@ export default function SongView(){
             title="Key"
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
-          <IconButton label="Toggle chords" onClick={()=> setShowChords(v=>!v)} title="Toggle chords"><EyeIcon /></IconButton>
+          <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
           <Button variant="primary" leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download">Download</Button>
           <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode">Worship</Button>
           {isAtLeast('collaborator') && (

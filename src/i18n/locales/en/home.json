@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "welcomeTitle": "Welcome to GraceChords",
+  "welcomeSubtitle": "Free, open-source worship tools for churches and worshippers.",
+  "searchLabel": "Search worship songs",
+  "searchPlaceholder": "Search songs by title, tag, or author…",
+  "searchHelper": "Search songs by title, tag, or author. Press Enter to browse or jump directly into a song.",
+  "worshipTools": "Worship tools",
+  "quickActions": "Quick actions",
+  "tools": {
+    "songLibrary": { "title": "Song Library", "desc": "Browse our library for worship charts." },
+    "setlistBuilder": { "title": "Setlist Builder", "desc": "Create sets for service." },
+    "songbookTool": { "title": "Songbook Tool", "desc": "Build custom, printable songbooks." },
+    "blog": { "title": "Blog", "desc": "Guides and tips for worshippers." }
+  },
+  "actions": {
+    "songOfDay": { "title": "Song of the Day", "desc": "Join others in daily worship." },
+    "quietTime": { "title": "Quiet Time", "desc": "Start the day with word and worship." },
+    "highEnergy": { "title": "High Energy Hit", "desc": "Lift up a shout of praise!" },
+    "celebrationSet": { "title": "Celebration Set", "desc": "End with praise that shakes the earth!" },
+    "threeSongFlow": { "title": "Build a 3-Song Flow", "desc": "Let the Spirit lead." },
+    "randomThemeSet": { "title": "Random Theme Set", "desc": "Cross? Missions? Commitment? Let's see..." },
+    "randomTenSong": { "title": "Random 10-Song Collection", "desc": "Surprise me!" },
+    "sendMeSongbook": { "title": "\"Send Me\" Songbook", "desc": "Make a missions theme'd song book." },
+    "graceChordsSongbook": { "title": "GraceChords Songbook", "desc": "Our entire library in one printable book." },
+    "contribute": { "title": "Contribute", "desc": "Download source code, suggest a feature, or report a bug." }
+  },
+  "latestSongs": "Latest Songs",
+  "latestPosts": "Latest Posts",
+  "noSongsYet": "No songs yet.",
+  "noPostsYet": "No posts yet.",
+  "byAuthor": "by"
+}

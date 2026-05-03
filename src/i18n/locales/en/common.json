@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "appName": "GraceChords",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "back": "Back",
+  "loading": "Loading…",
+  "search": "Search",
+  "language": "Language",
+  "lightMode": "Light mode",
+  "darkMode": "Dark mode",
+  "toggleDarkMode": "Toggle dark mode",
+  "switchToLight": "Switch to light mode",
+  "switchToDark": "Switch to dark mode",
+  "or": "or",
+  "continueWithGoogle": "Continue with Google"
+}

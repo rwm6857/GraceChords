@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "home": "Home",
+  "songs": "Songs",
+  "setlist": "Setlist",
+  "songbook": "Songbook",
+  "dailyWord": "Daily Word",
+  "blog": "Blog",
+  "editorPortal": "Editor Portal",
+  "profile": "Profile",
+  "songEditor": "Song Editor",
+  "postEditor": "Post Editor",
+  "adminPortal": "Admin Portal",
+  "signIn": "Sign in",
+  "signOut": "Sign out",
+  "openMainMenu": "Open main menu",
+  "userMenu": "User menu",
+  "mobileMenu": "Mobile menu",
+  "graceChordsHome": "GraceChords home"
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import heroDarkPng from '../assets/dashboard-hero-worship-angled.png'
 import heroLightPng from '../assets/dashboard-hero-worship-angled-light.png'
 import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
@@ -31,6 +32,7 @@ const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 const MAX_SUGGESTIONS = 5
 
 export default function HomeDashboard(){
+  const { t } = useTranslation('home')
   const navigate = useNavigate()
   const [songLanguage] = useState(() => resolveInitialSongLanguage())
   const [items, setItems] = useState([])
@@ -81,8 +83,8 @@ export default function HomeDashboard(){
   const songViewQuickActions = useMemo(() => ([
     {
       id: 'songOfDay',
-      title: 'Song of the Day',
-      desc: 'Join others in daily worship.',
+      title: t('actions.songOfDay.title'),
+      desc: t('actions.songOfDay.desc'),
       pickSong: (songs) => {
         if (!songs.length) return null
         const seed = Number(new Date().toISOString().slice(0,10).replace(/-/g,'')) || 0
@@ -91,8 +93,8 @@ export default function HomeDashboard(){
     },
     {
       id: 'quietTime',
-      title: 'Quiet Time',
-      desc: 'Start the day with word and worship.',
+      title: t('actions.quietTime.title'),
+      desc: t('actions.quietTime.desc'),
       pickSong: (songs) => {
         const slow = filterByTag(songs, 'SLOW')
         const shortSlow = slow.filter((s) => sectionCount(s) <= 3)
@@ -102,27 +104,27 @@ export default function HomeDashboard(){
     },
     {
       id: 'highEnergy',
-      title: 'High Energy Hit',
-      desc: 'Lift up a shout of praise!',
+      title: t('actions.highEnergy.title'),
+      desc: t('actions.highEnergy.desc'),
       pickSong: (songs) => {
         const fast = filterByTag(songs, 'FAST')
         const pool = fast.length ? fast : songs
         return pickRandom(pool)
       }
     }
-  ]), [])
+  ]), [t])
 
   const setlistQuickActions = useMemo(() => ([
-    { id: 'celebrationSet', title: 'Celebration Set', desc: 'End with praise that shakes the earth!' },
-    { id: 'threeSongFlow', title: 'Build a 3-Song Flow', desc: 'Let the Spirit lead.' },
-    { id: 'randomThemeSet', title: 'Random Theme Set', desc: "Cross? Missions? Commitment? Let's see..." }
-  ]), [])
+    { id: 'celebrationSet', title: t('actions.celebrationSet.title'), desc: t('actions.celebrationSet.desc') },
+    { id: 'threeSongFlow', title: t('actions.threeSongFlow.title'), desc: t('actions.threeSongFlow.desc') },
+    { id: 'randomThemeSet', title: t('actions.randomThemeSet.title'), desc: t('actions.randomThemeSet.desc') }
+  ]), [t])
 
   const songbookQuickActions = useMemo(() => ([
-    { id: 'random10SongCollection', title: 'Random 10-Song Collection', desc: 'Surprise me!' },
-    { id: 'sendMeSongbook', title: '"Send Me" Songbook', desc: 'Make a missions theme\'d song book.' },
-    { id: 'graceChordsSongbook', title: 'GraceChords Songbook', desc: 'Our entire library in one printable book.' }
-  ]), [])
+    { id: 'random10SongCollection', title: t('actions.randomTenSong.title'), desc: t('actions.randomTenSong.desc') },
+    { id: 'sendMeSongbook', title: t('actions.sendMeSongbook.title'), desc: t('actions.sendMeSongbook.desc') },
+    { id: 'graceChordsSongbook', title: t('actions.graceChordsSongbook.title'), desc: t('actions.graceChordsSongbook.desc') }
+  ]), [t])
 
   const [songAction] = useState(() => pickRandom(songViewQuickActions))
   const [setlistAction] = useState(() => pickRandom(setlistQuickActions))
@@ -328,15 +330,15 @@ export default function HomeDashboard(){
             className="home-hero__content"
           >
             <div className="home-hero__text">
-              <h1 className="home-hero__title">Welcome to GraceChords</h1>
+              <h1 className="home-hero__title">{t('welcomeTitle')}</h1>
               <p className="home-hero__subtitle">
-                Free, open-source worship tools for churches and worshippers.
+                {t('welcomeSubtitle')}
               </p>
             </div>
           <div className="home-hero__search-wrapper" ref={containerRef}>
             <div className="home-hero__input-wrap">
               <label htmlFor="home-search" className="sr-only">
-                Search worship songs
+                {t('searchLabel')}
               </label>
               <input
                 id="home-search"
@@ -346,7 +348,7 @@ export default function HomeDashboard(){
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={onBlur}
                 onKeyDown={handleKeyDown}
-                placeholder="Search songs by title, tag, or author…"
+                placeholder={t('searchPlaceholder')}
                 aria-autocomplete="list"
                 aria-expanded={showSuggestions && suggestions.length > 0}
                 aria-controls="home-search-suggestions"
@@ -377,7 +379,7 @@ export default function HomeDashboard(){
               )}
             </div>
             <div className="home-hero__helper">
-              Search songs by title, tag, or author. Press Enter to browse or jump directly into a song.
+              {t('searchHelper')}
             </div>
           </div>
         </div>
@@ -386,13 +388,13 @@ export default function HomeDashboard(){
       <section className="home-section home-section--first">
         <div className="container">
           <div className="home-section__header">
-            <h2>Worship tools</h2>
+            <h2>{t('worshipTools')}</h2>
           </div>
           <div className="home-tools-grid">
-            <QuickCard to="/songs" title="Song Library" desc="Browse our library for worship charts." />
-            <QuickCard to="/setlist" title="Setlist Builder" desc="Create sets for service." />
-            <QuickCard to="/songbook" title="Songbook Tool" desc="Build custom, printable songbooks." />
-            <QuickCard to="/posts" title="Blog" desc="Guides and tips for worshippers." />
+            <QuickCard to="/songs" title={t('tools.songLibrary.title')} desc={t('tools.songLibrary.desc')} />
+            <QuickCard to="/setlist" title={t('tools.setlistBuilder.title')} desc={t('tools.setlistBuilder.desc')} />
+            <QuickCard to="/songbook" title={t('tools.songbookTool.title')} desc={t('tools.songbookTool.desc')} />
+            <QuickCard to="/posts" title={t('tools.blog.title')} desc={t('tools.blog.desc')} />
           </div>
         </div>
       </section>
@@ -400,13 +402,13 @@ export default function HomeDashboard(){
       <section className="home-quick-actions home-section">
         <div className="container">
           <div className="home-section__header">
-            <h2 className="home-section-title">Quick actions</h2>
+            <h2 className="home-section-title">{t('quickActions')}</h2>
           </div>
           <div className="home-quick-actions__grid home-tools-grid">
             {songAction ? <QuickCard title={songAction.title} desc={songAction.desc} onClick={handleSongAction} /> : null}
             {setlistAction ? <QuickCard title={setlistAction.title} desc={setlistAction.desc} onClick={handleSetlistAction} /> : null}
             {songbookAction ? <QuickCard title={songbookAction.title} desc={songbookAction.desc} onClick={handleSongbookAction} /> : null}
-            <QuickCard title="Contribute" desc="Download source code, suggest a feature, or report a bug." onClick={handleContribute} />
+            <QuickCard title={t('actions.contribute.title')} desc={t('actions.contribute.desc')} onClick={handleContribute} />
           </div>
         </div>
       </section>
@@ -416,26 +418,26 @@ export default function HomeDashboard(){
           <div className="home-latest__grid">
             <div className="home-latest__col">
               <div className="home-latest__header">
-                <h3>Latest Songs</h3>
+                <h3>{t('latestSongs')}</h3>
               </div>
               <div className="home-latest__list">
                 {!listsReady ? (
                   <SongMiniSkeleton count={6} />
                 ) : latestSongs.length ? latestSongs.map(song => (
                   <SongMiniCard key={song.id} song={song} />
-                )) : <p className="Small home-empty-note">No songs yet.</p>}
+                )) : <p className="Small home-empty-note">{t('noSongsYet')}</p>}
               </div>
             </div>
             <div className="home-latest__col home-latest__col--posts">
               <div className="home-latest__header">
-                <h3>Latest Posts</h3>
+                <h3>{t('latestPosts')}</h3>
               </div>
               <div className="home-latest__posts">
                 {!listsReady ? (
                   <PostMiniSkeleton count={3} />
                 ) : latestPosts.length ? latestPosts.map(post => (
                   <PostMiniCard key={post.slug} post={post} />
-                )) : <p className="Small home-empty-note">No posts yet.</p>}
+                )) : <p className="Small home-empty-note">{t('noPostsYet')}</p>}
               </div>
             </div>
           </div>

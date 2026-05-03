@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "appName": "GraceChords",
+  "save": "Kaydet",
+  "cancel": "İptal",
+  "delete": "Sil",
+  "edit": "Düzenle",
+  "close": "Kapat",
+  "back": "Geri",
+  "loading": "Yükleniyor…",
+  "search": "Ara",
+  "language": "Dil",
+  "lightMode": "Açık tema",
+  "darkMode": "Koyu tema",
+  "toggleDarkMode": "Koyu temayı değiştir",
+  "switchToLight": "Açık temaya geç",
+  "switchToDark": "Koyu temaya geç",
+  "or": "veya",
+  "continueWithGoogle": "Google ile devam et"
+}
