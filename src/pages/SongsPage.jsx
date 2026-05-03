@@ -8,7 +8,7 @@ import { useSongs } from '../hooks/useSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
-import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, tagLabelFromKey } from '../utils/songs/tags'
+import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
 import {
   buildGroupSearchText,
   buildSongCatalog,
@@ -40,6 +40,7 @@ export default function Songs(){
   }, [selectedLanguage])
 
   const tagMap = useMemo(() => buildTagMap(catalog.items), [catalog.items])
+  const COMMUNITY_KEY = useMemo(() => normalizeTagKey('Community'), [])
 
   const items = useMemo(() => {
     const out = []
@@ -99,6 +100,12 @@ export default function Songs(){
 
   const [selectedTags, setSelectedTags] = useState([])
   const [lyricsOn, setLyricsOn] = useState(false)
+  const [communityOnly, setCommunityOnly] = useState(() => {
+    try { return localStorage.getItem('pref:communityOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:communityOnly', communityOnly ? '1' : '0') } catch {}
+  }, [communityOnly])
 
   const [lyricsCache, setLyricsCache] = useState({})
   const fetchingRef = useRef(new Set())
@@ -110,11 +117,17 @@ export default function Songs(){
     const tags = s.tagKeys || []
     return selectedTags.some((t) => tags.includes(t))
   }, [selectedTags])
+  const communityPass = useCallback((s) => {
+    if (!communityOnly) return true
+    const tags = s.tagKeys || []
+    return tags.includes(COMMUNITY_KEY)
+  }, [communityOnly, COMMUNITY_KEY])
 
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
     const shouldFetch = items
       .filter(tagPass)
+      .filter(communityPass)
       .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
       .slice(0, 200)
     if (!shouldFetch.length) return
@@ -137,7 +150,7 @@ export default function Songs(){
     return () => { cancelled = true }
   // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTagsKey, tagPass])
+  }, [lyricsOn, qLower, items, selectedTagsKey, communityOnly, tagPass, communityPass])
 
   const resultParts = useMemo(() => {
     const scoreMap = new Map()
@@ -153,11 +166,12 @@ export default function Songs(){
       list = items.slice()
     }
 
-    list = list.filter(tagPass)
+    list = list.filter(tagPass).filter(communityPass)
 
     if (lyricsOn && qLower.length) {
       const extra = items
         .filter(tagPass)
+        .filter(communityPass)
         .filter((s) => {
           const txt = lyricsCache[s.id]
           return typeof txt === 'string' ? txt.includes(qLower) : false
@@ -190,7 +204,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, qLower, lyricsOn, lyricsCache, tagPass])
+  }, [items, qLower, lyricsOn, lyricsCache, tagPass, communityPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
@@ -378,6 +392,14 @@ export default function Songs(){
                 onChange={(e)=> setLyricsOn(e.target.checked)}
               />
               <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
+            </label>
+            <label className="row" style={{gap:8, alignItems:'center'}}>
+              <input
+                type="checkbox"
+                checked={communityOnly}
+                onChange={(e)=> setCommunityOnly(e.target.checked)}
+              />
+              <span className="meta" title="Limit results to songs tagged Community">Community Setlist</span>
             </label>
           </div>
 

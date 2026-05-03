@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
@@ -141,6 +141,12 @@ export default function Setlist(){
   const [name, setName] = useState('New Setlist')
   const [q, setQ] = useState('')
   const [items, setItems] = useState([])
+  const [communityOnly, setCommunityOnly] = useState(() => {
+    try { return localStorage.getItem('pref:communityOnly') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('pref:communityOnly', communityOnly ? '1' : '0') } catch {}
+  }, [communityOnly])
   const [list, setList] = useState([])
   const [pptxMap, setPptxMap] = useState({})
   const [pptxProgress, setPptxProgress] = useState('')
@@ -396,16 +402,22 @@ export default function Setlist(){
   }, [location.state, items.map(s => s.id).join('|')])
 
   // search
+  const communityPass = useCallback((s) => {
+    if (!communityOnly) return true
+    const tags = Array.isArray(s.tags) ? s.tags : (s.tags ? [s.tags] : [])
+    return tags.some((t) => String(t || '').toLowerCase() === 'community')
+  }, [communityOnly])
   const results = useMemo(() => {
     const base = q ? searchSongs(items, q).map((r) => r.item) : items.slice()
-    base.sort((a, b) => {
+    const filtered = base.filter(communityPass)
+    filtered.sort((a, b) => {
       if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
         return a.hasSelectedLanguage ? -1 : 1
       }
       return String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' })
     })
-    return base
-  }, [q, items])
+    return filtered
+  }, [q, items, communityPass])
 
   // list mutators
   function addSong(s){
@@ -1158,6 +1170,12 @@ async function exportPdf() {
                 <div className="builder-search-row">
                   <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
                   <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
+                </div>
+                <div className="builder-options-row">
+                  <label className="row" style={{gap:6, alignItems:'center'}}>
+                    <input type="checkbox" checked={communityOnly} onChange={e=> setCommunityOnly(e.target.checked)} />
+                    <span className="meta" title="Limit results to songs tagged Community">Community Setlist</span>
+                  </label>
                 </div>
               </div>
               {languageChipCodes.length > 0 ? (
