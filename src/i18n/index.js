@@ -1,0 +1,112 @@
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
+import {
+  DEFAULT_LOCALE,
+  I18N_NAMESPACES,
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+} from './config'
+
+import enCommon from './locales/en/common.json'
+import enNav from './locales/en/nav.json'
+import enHome from './locales/en/home.json'
+import enAuth from './locales/en/auth.json'
+import enSong from './locales/en/song.json'
+import enSetlist from './locales/en/setlist.json'
+import enProfile from './locales/en/profile.json'
+import enAdmin from './locales/en/admin.json'
+import enEditor from './locales/en/editor.json'
+import enErrors from './locales/en/errors.json'
+
+import koCommon from './locales/ko/common.json'
+import koNav from './locales/ko/nav.json'
+import koHome from './locales/ko/home.json'
+import koAuth from './locales/ko/auth.json'
+import koSong from './locales/ko/song.json'
+import koSetlist from './locales/ko/setlist.json'
+import koProfile from './locales/ko/profile.json'
+import koAdmin from './locales/ko/admin.json'
+import koEditor from './locales/ko/editor.json'
+import koErrors from './locales/ko/errors.json'
+
+import trCommon from './locales/tr/common.json'
+import trNav from './locales/tr/nav.json'
+import trHome from './locales/tr/home.json'
+import trAuth from './locales/tr/auth.json'
+import trSong from './locales/tr/song.json'
+import trSetlist from './locales/tr/setlist.json'
+import trProfile from './locales/tr/profile.json'
+import trAdmin from './locales/tr/admin.json'
+import trEditor from './locales/tr/editor.json'
+import trErrors from './locales/tr/errors.json'
+
+const resources = {
+  en: {
+    common: enCommon,
+    nav: enNav,
+    home: enHome,
+    auth: enAuth,
+    song: enSong,
+    setlist: enSetlist,
+    profile: enProfile,
+    admin: enAdmin,
+    editor: enEditor,
+    errors: enErrors,
+  },
+  ko: {
+    common: koCommon,
+    nav: koNav,
+    home: koHome,
+    auth: koAuth,
+    song: koSong,
+    setlist: koSetlist,
+    profile: koProfile,
+    admin: koAdmin,
+    editor: koEditor,
+    errors: koErrors,
+  },
+  tr: {
+    common: trCommon,
+    nav: trNav,
+    home: trHome,
+    auth: trAuth,
+    song: trSong,
+    setlist: trSetlist,
+    profile: trProfile,
+    admin: trAdmin,
+    editor: trEditor,
+    errors: trErrors,
+  },
+}
+
+if (!i18n.isInitialized) {
+  i18n
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init({
+      resources,
+      fallbackLng: DEFAULT_LOCALE,
+      supportedLngs: SUPPORTED_LOCALES.map(l => l.code),
+      ns: I18N_NAMESPACES,
+      defaultNS: 'common',
+      detection: {
+        order: ['localStorage', 'navigator'],
+        lookupLocalStorage: LOCALE_STORAGE_KEY,
+        caches: ['localStorage'],
+      },
+      interpolation: { escapeValue: false },
+      returnEmptyString: false,
+      react: { useSuspense: false },
+    })
+
+  if (typeof document !== 'undefined') {
+    const apply = (lng) => {
+      try { document.documentElement.lang = lng || DEFAULT_LOCALE } catch {}
+    }
+    apply(i18n.language)
+    i18n.on('languageChanged', apply)
+  }
+}
+
+export default i18n

@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "appName": "GraceChords",
+  "save": "저장",
+  "cancel": "취소",
+  "delete": "삭제",
+  "edit": "편집",
+  "close": "닫기",
+  "back": "뒤로",
+  "loading": "불러오는 중…",
+  "search": "검색",
+  "language": "언어",
+  "lightMode": "라이트 모드",
+  "darkMode": "다크 모드",
+  "toggleDarkMode": "다크 모드 전환",
+  "switchToLight": "라이트 모드로 전환",
+  "switchToDark": "다크 모드로 전환",
+  "or": "또는",
+  "continueWithGoogle": "Google 계정으로 계속하기"
+}

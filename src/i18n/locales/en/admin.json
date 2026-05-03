@@ -1,0 +1,7 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "deleteUser": "Delete user",
+  "deleteAccount": "Delete account",
+  "loadingUsers": "Loading users…",
+  "loadingRequests": "Loading requests…"
+}

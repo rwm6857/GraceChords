@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
 export default function LoginPage() {
+  const { t } = useTranslation(['auth', 'common'])
   const { isLoggedIn, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -43,7 +45,7 @@ export default function LoginPage() {
     setSubmitting(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError(friendlyError(error.message))
+      setError(friendlyError(error.message, t))
       setSubmitting(false)
     } else {
       navigate(redirectTo, { replace: true })
@@ -60,13 +62,13 @@ export default function LoginPage() {
           alt="GraceChords"
           className="gc-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">Welcome back</h1>
-        <p className="gc-auth-card__subtitle">Sign in to your account</p>
+        <h1 className="gc-auth-card__title">{t('welcomeBack')}</h1>
+        <p className="gc-auth-card__subtitle">{t('signInToAccount')}</p>
 
         <form onSubmit={handleSubmit} className="gc-auth-form">
           {error && <div className="gc-auth-error">{error}</div>}
           <div className="gc-form-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('email')}</label>
             <input
               id="email"
               type="email"
@@ -79,7 +81,7 @@ export default function LoginPage() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <div className="gc-form-field">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">{t('password')}</label>
               <input
                 id="password"
                 type="password"
@@ -100,7 +102,7 @@ export default function LoginPage() {
                   textDecoration: 'none',
                 }}
               >
-                Forgot your password?
+                {t('forgotPassword')}
               </Link>
             </div>
           </div>
@@ -111,11 +113,11 @@ export default function LoginPage() {
             disabled={submitting}
             style={{ width: '100%', justifyContent: 'center' }}
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('signingIn') : t('signIn')}
           </button>
         </form>
 
-        <div className="gc-auth-divider">or</div>
+        <div className="gc-auth-divider">{t('common:or')}</div>
         <button
           type="button"
           className="gc-btn gc-btn--secondary"
@@ -123,13 +125,13 @@ export default function LoginPage() {
           style={{ width: '100%', justifyContent: 'center', gap: '10px' }}
         >
           <GoogleIcon />
-          Continue with Google
+          {t('common:continueWithGoogle')}
         </button>
 
         <p className="gc-auth-card__footer">
-          Don't have an account?{' '}
+          {t('noAccountYet')}{' '}
           <Link to={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}>
-            Sign up
+            {t('signUp')}
           </Link>
         </p>
       </div>
@@ -148,14 +150,14 @@ function GoogleIcon() {
   )
 }
 
-function friendlyError(msg) {
-  if (!msg) return 'Something went wrong. Please try again.'
+function friendlyError(msg, t) {
+  if (!msg) return t('errors.generic')
   const lower = msg.toLowerCase()
   if (lower.includes('invalid login') || lower.includes('invalid credentials'))
-    return 'Incorrect email or password.'
+    return t('errors.invalidCredentials')
   if (lower.includes('email not confirmed'))
-    return 'Please check your email to confirm your account before signing in.'
+    return t('errors.emailNotConfirmed')
   if (lower.includes('too many requests') || lower.includes('rate limit'))
-    return 'Too many attempts. Please wait a moment and try again.'
-  return 'Something went wrong. Please try again.'
+    return t('errors.tooManyRequests')
+  return t('errors.generic')
 }

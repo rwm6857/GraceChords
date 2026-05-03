@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "home": "홈",
+  "songs": "찬양곡",
+  "setlist": "셋리스트",
+  "songbook": "송북",
+  "dailyWord": "오늘의 말씀",
+  "blog": "블로그",
+  "editorPortal": "편집자 포털",
+  "profile": "프로필",
+  "songEditor": "찬양곡 편집기",
+  "postEditor": "게시글 편집기",
+  "adminPortal": "관리자 포털",
+  "signIn": "로그인",
+  "signOut": "로그아웃",
+  "openMainMenu": "메인 메뉴 열기",
+  "userMenu": "사용자 메뉴",
+  "mobileMenu": "모바일 메뉴",
+  "graceChordsHome": "GraceChords 홈"
+}

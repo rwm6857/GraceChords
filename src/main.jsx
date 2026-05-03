@@ -4,7 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
+import { LocaleProvider } from './hooks/useLocale'
 import { initTheme } from './utils/app/theme'
+import './i18n'
 
 function bootstrapRouteFromQuery(){
   if (typeof window === 'undefined') return
@@ -120,7 +122,9 @@ createRoot(document.getElementById('root')).render(
     <HelmetProvider>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <LocaleProvider>
+            <App />
+          </LocaleProvider>
         </AuthProvider>
       </BrowserRouter>
     </HelmetProvider>

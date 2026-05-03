@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "welcomeTitle": "GraceChords'a hoş geldiniz",
+  "welcomeSubtitle": "Kiliseler ve ibadet edenler için ücretsiz, açık kaynaklı tapınma araçları.",
+  "searchLabel": "İlahileri ara",
+  "searchPlaceholder": "Başlık, etiket veya yazara göre ara…",
+  "searchHelper": "Başlık, etiket veya yazara göre arayın. Listeye gitmek veya doğrudan bir ilahiye atlamak için Enter'a basın.",
+  "worshipTools": "Tapınma araçları",
+  "quickActions": "Hızlı işlemler",
+  "tools": {
+    "songLibrary": { "title": "İlahi Kütüphanesi", "desc": "İbadet notalarını kütüphanemizde inceleyin." },
+    "setlistBuilder": { "title": "Set Listesi Oluşturucu", "desc": "İbadet için setler oluşturun." },
+    "songbookTool": { "title": "İlahi Kitabı Aracı", "desc": "Özelleştirilmiş, yazdırılabilir ilahi kitapları oluşturun." },
+    "blog": { "title": "Blog", "desc": "İbadet edenler için rehberler ve ipuçları." }
+  },
+  "actions": {
+    "songOfDay": { "title": "Günün İlahisi", "desc": "Günlük ibadette başkalarına katılın." },
+    "quietTime": { "title": "Sessiz Zaman", "desc": "Güne sözle ve tapınmayla başlayın." },
+    "highEnergy": { "title": "Coşkulu İlahi", "desc": "Bir övgü çığlığı yükseltin!" },
+    "celebrationSet": { "title": "Kutlama Seti", "desc": "Yeri sarsan övgüyle bitirin!" },
+    "threeSongFlow": { "title": "3 İlahilik Akış", "desc": "Bırakın Ruh yönlendirsin." },
+    "randomThemeSet": { "title": "Rastgele Tema Seti", "desc": "Haç mı? Misyon mu? Adanmışlık mı? Bakalım..." },
+    "randomTenSong": { "title": "Rastgele 10 İlahilik Koleksiyon", "desc": "Beni şaşırt!" },
+    "sendMeSongbook": { "title": "\"Beni Gönder\" İlahi Kitabı", "desc": "Misyon temalı bir ilahi kitabı oluşturun." },
+    "graceChordsSongbook": { "title": "GraceChords İlahi Kitabı", "desc": "Tüm kütüphanemiz tek bir yazdırılabilir kitapta." },
+    "contribute": { "title": "Katkıda Bulun", "desc": "Kaynak kodu indirin, özellik önerin veya hata bildirin." }
+  },
+  "latestSongs": "En Son İlahiler",
+  "latestPosts": "En Son Yazılar",
+  "noSongsYet": "Henüz ilahi yok.",
+  "noPostsYet": "Henüz yazı yok.",
+  "byAuthor": "yazar:"
+}

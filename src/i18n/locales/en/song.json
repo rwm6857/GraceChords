@@ -1,0 +1,10 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "loading": "Loading…",
+  "errorPrefix": "Error: {{message}}",
+  "useOneColumn": "Use 1 column",
+  "useTwoColumns": "Use 2 columns",
+  "toggleChords": "Toggle chords",
+  "download": "Download",
+  "worshipMode": "Worship Mode"
+}

@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
+import LanguageSelector from '../components/ui/LanguageSelector'
 import CollaboratorRequest from '../components/CollaboratorRequest'
 import { showToast } from '../utils/app/toast'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {
+  const { t } = useTranslation('profile')
   const { session, profile, loading, isLoggedIn, refreshProfile, role, isAdmin } = useAuth()
   const navigate = useNavigate()
 
@@ -96,7 +99,7 @@ export default function ProfilePage() {
         preferences: { ...(profile?.preferences || {}), sprite },
       })
       .eq('id', session.user.id)
-    if (error) showToast('Failed to save profile.')
+    if (error) showToast(t('saveFailed'))
     else {
       await refreshProfile()
       showToast('Profile saved.')
@@ -221,6 +224,18 @@ export default function ProfilePage() {
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>
+      </section>
+
+      {/* Preferences section */}
+      <section className="gc-profile-section">
+        <h2>{t('preferences')}</h2>
+        <div className="gc-form-field">
+          <label htmlFor="ui-language">{t('uiLanguage')}</label>
+          <LanguageSelector id="ui-language" style={{ maxWidth: 240 }} />
+          <p style={{ fontSize: 13, color: 'var(--gc-text-secondary)', marginTop: 4 }}>
+            {t('uiLanguageHelper')}
+          </p>
+        </div>
       </section>
 
       {/* Starred songs section */}

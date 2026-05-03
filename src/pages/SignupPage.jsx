@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
@@ -18,6 +19,7 @@ function GoogleIcon() {
 }
 
 export default function SignupPage() {
+  const { t } = useTranslation(['auth', 'common'])
   const { refreshProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,8 +56,8 @@ export default function SignupPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!sprite) { setError('Please choose an icon before creating your account.'); return }
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    if (!sprite) { setError(t('errors.chooseIcon')); return }
+    if (password.length < 8) { setError(t('errors.passwordTooShort')); return }
     setError(null)
     setIsDuplicateEmail(false)
     setSubmitting(true)
@@ -81,7 +83,7 @@ export default function SignupPage() {
       }).eq('id', data.session.user.id)
       if (profileError) console.error('Profile update after signup failed:', profileError)
       await refreshProfile()
-      showToast('Welcome to GraceChords!')
+      showToast(t('welcomeToast'))
       navigate(redirectTo, { replace: true })
     } else {
       setSignUpSuccess(true)
@@ -100,18 +102,20 @@ export default function SignupPage() {
           />
           <div className="gc-signup-confirm">
             <div className="gc-signup-confirm__icon" aria-hidden="true">✉️</div>
-            <h1 className="gc-auth-card__title">Check your email</h1>
+            <h1 className="gc-auth-card__title">{t('checkYourEmail')}</h1>
             <p className="gc-signup-confirm__body">
-              We sent a verification link to{' '}
-              <strong className="gc-signup-confirm__email">{email}</strong>.
-              Click the link to activate your account, then come back to sign in.
+              <Trans
+                i18nKey="auth:verificationSent"
+                values={{ email }}
+                components={{ strong: <strong className="gc-signup-confirm__email" /> }}
+              />
             </p>
             <p className="gc-signup-confirm__note">
-              Didn't receive it? Check your spam folder or wait a moment and try again.
+              {t('verificationResend')}
             </p>
           </div>
           <p className="gc-auth-card__footer">
-            <Link to="/login">Back to sign in</Link>
+            <Link to="/login">{t('backToSignIn')}</Link>
           </p>
         </div>
       </div>
@@ -126,19 +130,19 @@ export default function SignupPage() {
           alt="GraceChords"
           className="gc-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">Join GraceChords</h1>
-        <p className="gc-auth-card__subtitle">Create your account</p>
+        <h1 className="gc-auth-card__title">{t('joinGraceChords')}</h1>
+        <p className="gc-auth-card__subtitle">{t('createYourAccount')}</p>
 
         <form onSubmit={handleSubmit} className="gc-auth-form">
           {isDuplicateEmail && (
             <div className="gc-auth-error">
-              An account with this email already exists.{' '}
-              <Link to="/login">Sign in instead</Link>
+              {t('duplicateEmail')}{' '}
+              <Link to="/login">{t('signInInstead')}</Link>
             </div>
           )}
           {error && <div className="gc-auth-error">{error}</div>}
           <div className="gc-form-field">
-            <label htmlFor="displayName">Display name</label>
+            <label htmlFor="displayName">{t('displayName')}</label>
             <input
               id="displayName"
               type="text"
@@ -146,11 +150,11 @@ export default function SignupPage() {
               onChange={e => setDisplayName(e.target.value)}
               required
               disabled={submitting}
-              placeholder="Your name"
+              placeholder={t('displayNamePlaceholder')}
             />
           </div>
           <div className="gc-form-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('email')}</label>
             <input
               id="email"
               type="email"
@@ -162,7 +166,7 @@ export default function SignupPage() {
             />
           </div>
           <div className="gc-form-field gc-pw-field-wrapper">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('password')}</label>
             <input
               id="password"
               type="password"
@@ -172,7 +176,7 @@ export default function SignupPage() {
               autoComplete="new-password"
               minLength={8}
               disabled={submitting}
-              placeholder="At least 8 characters"
+              placeholder={t('passwordPlaceholder')}
               onFocus={() => {
                 clearTimeout(pwBlurTimer.current)
                 setPasswordFocused(true)
@@ -184,9 +188,9 @@ export default function SignupPage() {
             {passwordFocused && <PasswordStrengthPopover password={password} />}
           </div>
           <div className="gc-form-field">
-            <label>Choose your icon</label>
+            <label>{t('chooseYourIcon')}</label>
             <p style={{ fontSize: 13, color: 'var(--gc-text-secondary)', margin: '2px 0 8px' }}>
-              You can change this later
+              {t('chooseIconHelper')}
             </p>
             <SpritePicker value={sprite} onChange={setSprite} />
           </div>
@@ -196,11 +200,11 @@ export default function SignupPage() {
             disabled={submitting || !sprite}
             style={{ width: '100%', justifyContent: 'center' }}
           >
-            {submitting ? 'Creating account…' : 'Create account'}
+            {submitting ? t('creatingAccount') : t('createAccount')}
           </button>
         </form>
 
-        <div className="gc-auth-divider">or</div>
+        <div className="gc-auth-divider">{t('common:or')}</div>
         <button
           type="button"
           className="gc-btn gc-btn--secondary"
@@ -208,11 +212,11 @@ export default function SignupPage() {
           style={{ width: '100%', justifyContent: 'center', gap: '10px' }}
         >
           <GoogleIcon />
-          Continue with Google
+          {t('common:continueWithGoogle')}
         </button>
 
         <p className="gc-auth-card__footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          {t('alreadyHaveAccount')} <Link to="/login">{t('signIn')}</Link>
         </p>
       </div>
     </div>

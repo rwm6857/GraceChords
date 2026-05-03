@@ -1,0 +1,7 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "deleteUser": "사용자 삭제",
+  "deleteAccount": "계정 삭제",
+  "loadingUsers": "사용자 불러오는 중…",
+  "loadingRequests": "요청 불러오는 중…"
+}

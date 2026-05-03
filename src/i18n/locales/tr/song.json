@@ -1,0 +1,10 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "loading": "Yükleniyor…",
+  "errorPrefix": "Hata: {{message}}",
+  "useOneColumn": "Tek sütun kullan",
+  "useTwoColumns": "Çift sütun kullan",
+  "toggleChords": "Akorları değiştir",
+  "download": "İndir",
+  "worshipMode": "Tapınma Modu"
+}

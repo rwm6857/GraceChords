@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "welcomeTitle": "GraceChords에 오신 것을 환영합니다",
+  "welcomeSubtitle": "교회와 예배자를 위한 무료 오픈소스 예배 도구.",
+  "searchLabel": "찬양곡 검색",
+  "searchPlaceholder": "제목, 태그, 작가로 검색…",
+  "searchHelper": "제목, 태그, 작가로 검색하세요. Enter를 눌러 목록을 보거나 곡으로 바로 이동합니다.",
+  "worshipTools": "예배 도구",
+  "quickActions": "빠른 작업",
+  "tools": {
+    "songLibrary": { "title": "찬양곡 라이브러리", "desc": "예배용 악보를 둘러보세요." },
+    "setlistBuilder": { "title": "셋리스트 빌더", "desc": "예배를 위한 셋을 만드세요." },
+    "songbookTool": { "title": "송북 도구", "desc": "맞춤형 인쇄용 송북을 만드세요." },
+    "blog": { "title": "블로그", "desc": "예배자를 위한 가이드와 팁." }
+  },
+  "actions": {
+    "songOfDay": { "title": "오늘의 찬양", "desc": "매일의 예배에 함께해 보세요." },
+    "quietTime": { "title": "큐티", "desc": "말씀과 찬양으로 하루를 시작하세요." },
+    "highEnergy": { "title": "강력한 찬양", "desc": "찬양의 함성을 올려요!" },
+    "celebrationSet": { "title": "축하 셋", "desc": "땅을 흔드는 찬양으로 마무리!" },
+    "threeSongFlow": { "title": "3곡 흐름 만들기", "desc": "성령의 인도하심을 따라." },
+    "randomThemeSet": { "title": "랜덤 주제 셋", "desc": "십자가? 선교? 헌신? 함께 보아요..." },
+    "randomTenSong": { "title": "랜덤 10곡 모음", "desc": "놀라게 해주세요!" },
+    "sendMeSongbook": { "title": "\"나를 보내소서\" 송북", "desc": "선교 주제의 송북을 만드세요." },
+    "graceChordsSongbook": { "title": "GraceChords 송북", "desc": "전체 라이브러리를 한 권의 인쇄본으로." },
+    "contribute": { "title": "참여하기", "desc": "소스 코드 다운로드, 기능 제안, 버그 신고." }
+  },
+  "latestSongs": "최신 찬양곡",
+  "latestPosts": "최신 게시글",
+  "noSongsYet": "아직 찬양곡이 없습니다.",
+  "noPostsYet": "아직 게시글이 없습니다.",
+  "byAuthor": "작가:"
+}
