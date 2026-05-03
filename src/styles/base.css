@@ -414,6 +414,7 @@ select{
   display:grid;
   gap:0.875rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  align-content: start;
   margin-top: var(--space-4);
   min-height: 60vh;
 }

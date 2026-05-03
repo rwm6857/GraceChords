@@ -24,6 +24,7 @@ import {
   resolveGroupEntry,
   resolveInitialSongLanguage,
 } from '../utils/songs/songCatalog'
+import { searchSongs } from '../utils/songs/search'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -48,21 +49,9 @@ export default function HomeDashboard(){
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
     if (!trimmed) return []
-    const q = trimmed.toLowerCase()
-    const scored = []
-    for (const s of items) {
-      const title = (s.title || '').toLowerCase()
-      const altTitles = (s.searchTitles || []).map((t) => String(t).toLowerCase())
-      const tags = (s.tags || []).map(t => String(t).toLowerCase())
-      const authors = (s.authors || []).map(a => String(a).toLowerCase())
-      const haystack = [title, ...altTitles, ...tags, ...authors].join(' ')
-      if (title.includes(q) || haystack.includes(q)) {
-        const starts = title.startsWith(q) ? 1 : 0
-        scored.push({ s, starts })
-      }
-    }
-    scored.sort((a, b) => b.starts - a.starts || a.s.title.localeCompare(b.s.title))
-    return scored.slice(0, MAX_SUGGESTIONS).map(x => x.s)
+    return searchSongs(items, trimmed)
+      .slice(0, MAX_SUGGESTIONS)
+      .map(r => r.item)
   }, [items, trimmed])
 
   useEffect(() => {
