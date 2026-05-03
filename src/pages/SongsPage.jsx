@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import Fuse from 'fuse.js'
 import { compareSongsByTitle } from '../utils/songs/sort'
@@ -74,6 +74,10 @@ export default function Songs(){
     }
     return out
   }, [catalog.groups, selectedLanguage, tagMap])
+
+  const navigationType = useNavigationType()
+  const navigationTypeRef = useRef(navigationType)
+  const pendingScrollRef = useRef(null)
 
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
@@ -311,6 +315,24 @@ export default function Songs(){
     } catch {}
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
+
+  useEffect(() => {
+    if (navigationTypeRef.current === 'POP') {
+      const saved = sessionStorage.getItem('songs:scrollY')
+      if (saved) pendingScrollRef.current = Number(saved)
+    }
+    return () => {
+      sessionStorage.setItem('songs:scrollY', String(window.scrollY))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pendingScrollRef.current !== null && items.length > 0) {
+      const y = pendingScrollRef.current
+      pendingScrollRef.current = null
+      requestAnimationFrame(() => window.scrollTo(0, y))
+    }
+  }, [items])
 
   function toggleTag(key){
     setSelectedTags((prev) => prev.includes(key) ? prev.filter((x) => x!==key) : [...prev, key])
