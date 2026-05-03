@@ -8,7 +8,7 @@ import { useSongs } from '../hooks/useSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
-import { buildTagMap, canonicalizeTags, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
+import { buildTagMap, canonicalizeTags, tagLabelFromKey } from '../utils/songs/tags'
 import {
   buildGroupSearchText,
   buildSongCatalog,
@@ -40,7 +40,6 @@ export default function Songs(){
   }, [selectedLanguage])
 
   const tagMap = useMemo(() => buildTagMap(catalog.items), [catalog.items])
-  const ICP_KEY = useMemo(() => normalizeTagKey('ICP'), [])
 
   const items = useMemo(() => {
     const out = []
@@ -100,12 +99,6 @@ export default function Songs(){
 
   const [selectedTags, setSelectedTags] = useState([])
   const [lyricsOn, setLyricsOn] = useState(false)
-  const [icpOnly, setIcpOnly] = useState(() => {
-    try { return localStorage.getItem('pref:icpOnly') === '1' } catch { return false }
-  })
-  useEffect(() => {
-    try { localStorage.setItem('pref:icpOnly', icpOnly ? '1' : '0') } catch {}
-  }, [icpOnly])
 
   const [lyricsCache, setLyricsCache] = useState({})
   const fetchingRef = useRef(new Set())
@@ -117,17 +110,11 @@ export default function Songs(){
     const tags = s.tagKeys || []
     return selectedTags.some((t) => tags.includes(t))
   }, [selectedTags])
-  const icpPass = useCallback((s) => {
-    if (!icpOnly) return true
-    const tags = s.tagKeys || []
-    return tags.includes(ICP_KEY)
-  }, [icpOnly, ICP_KEY])
 
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
     const shouldFetch = items
       .filter(tagPass)
-      .filter(icpPass)
       .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
       .slice(0, 200)
     if (!shouldFetch.length) return
@@ -150,7 +137,7 @@ export default function Songs(){
     return () => { cancelled = true }
   // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lyricsOn, qLower, items, selectedTagsKey, icpOnly, tagPass, icpPass])
+  }, [lyricsOn, qLower, items, selectedTagsKey, tagPass])
 
   const resultParts = useMemo(() => {
     const scoreMap = new Map()
@@ -166,12 +153,11 @@ export default function Songs(){
       list = items.slice()
     }
 
-    list = list.filter(tagPass).filter(icpPass)
+    list = list.filter(tagPass)
 
     if (lyricsOn && qLower.length) {
       const extra = items
         .filter(tagPass)
-        .filter(icpPass)
         .filter((s) => {
           const txt = lyricsCache[s.id]
           return typeof txt === 'string' ? txt.includes(qLower) : false
@@ -204,7 +190,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, qLower, lyricsOn, lyricsCache, tagPass, icpPass])
+  }, [items, qLower, lyricsOn, lyricsCache, tagPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
@@ -392,14 +378,6 @@ export default function Songs(){
                 onChange={(e)=> setLyricsOn(e.target.checked)}
               />
               <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
-            </label>
-            <label className="row" style={{gap:8, alignItems:'center'}}>
-              <input
-                type="checkbox"
-                checked={icpOnly}
-                onChange={(e)=> setIcpOnly(e.target.checked)}
-              />
-              <span className="meta" title="Limit results to songs tagged ICP">ICP only</span>
             </label>
           </div>
 
