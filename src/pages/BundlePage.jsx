@@ -4,6 +4,7 @@ import { useSongs } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
+import { filterDisplayTags } from '../utils/songs/tags'
 import { showToast } from '../utils/app/toast'
 
 export default function Bundle(){
@@ -97,7 +98,12 @@ export default function Bundle(){
             <div key={it.id} className="row">
               <div style={{flex:1}}>
                 <div style={{fontWeight:600}}>{it.title}</div>
-                <div className="meta">Original: {it.originalKey || '—'}{it.tags?.length ? ` • ${it.tags.join(', ')}` : ''}</div>
+                {(() => {
+                  const visible = filterDisplayTags(it.tags)
+                  return (
+                    <div className="meta">Original: {it.originalKey || '—'}{visible.length ? ` • ${visible.join(', ')}` : ''}</div>
+                  )
+                })()}
               </div>
               <label>Key:{' '}
                 <select value={toKey} onChange={(e)=> setSelection(prev=> ({...prev, [it.id]: { toKey: e.target.value }}))}>

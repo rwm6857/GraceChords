@@ -40,6 +40,7 @@ import { Button, Chip, Input, PageHeader, SongCard, Toolbar } from '../component
 import KeySelector from '../components/KeySelector'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom, pickRandom } from '../utils/songs/quickActions'
+import { filterDisplayTags } from '../utils/songs/tags'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import {
@@ -1186,7 +1187,10 @@ async function exportPdf() {
                       <SongCard
                         key={s.id}
                         title={s.title}
-                        subtitle={`${s.originalKey || ''}${s.tags?.length ? ` • ${s.tags.join(', ')}` : ''}`}
+                        subtitle={(() => {
+                          const visible = filterDisplayTags(s.tags)
+                          return `${s.originalKey || ''}${visible.length ? ` • ${visible.join(', ')}` : ''}`
+                        })()}
                         rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
                         onClick={() => addSong(s)}
                       />
