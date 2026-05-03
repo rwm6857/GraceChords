@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "home": "Inicio",
+  "songs": "Canciones",
+  "setlist": "Repertorio",
+  "songbook": "Cancionero",
+  "dailyWord": "Palabra del día",
+  "blog": "Blog",
+  "editorPortal": "Portal del editor",
+  "profile": "Perfil",
+  "songEditor": "Editor de canciones",
+  "postEditor": "Editor de publicaciones",
+  "adminPortal": "Portal de administración",
+  "signIn": "Iniciar sesión",
+  "signOut": "Cerrar sesión",
+  "openMainMenu": "Abrir menú principal",
+  "userMenu": "Menú de usuario",
+  "mobileMenu": "Menú móvil",
+  "graceChordsHome": "Inicio de GraceChords"
+}

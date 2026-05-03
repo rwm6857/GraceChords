@@ -22,6 +22,14 @@ describe('i18n smoke', () => {
     expect(screen.getByLabelText('sample')).toHaveTextContent('홈')
   })
 
+  test('switches to Spanish', async () => {
+    render(<NavSample />)
+    await act(async () => {
+      await i18n.changeLanguage('es')
+    })
+    expect(screen.getByLabelText('sample')).toHaveTextContent('Inicio')
+  })
+
   test('switches to Turkish', async () => {
     render(<NavSample />)
     await act(async () => {

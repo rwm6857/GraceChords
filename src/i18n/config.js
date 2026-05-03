@@ -4,6 +4,7 @@
 //  3. Run `npm run i18n:check` to confirm key parity.
 export const SUPPORTED_LOCALES = [
   { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
   { code: 'ko', label: '한국어' },
   { code: 'tr', label: 'Türkçe' },
 ]

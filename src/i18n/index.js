@@ -19,6 +19,17 @@ import enAdmin from './locales/en/admin.json'
 import enEditor from './locales/en/editor.json'
 import enErrors from './locales/en/errors.json'
 
+import esCommon from './locales/es/common.json'
+import esNav from './locales/es/nav.json'
+import esHome from './locales/es/home.json'
+import esAuth from './locales/es/auth.json'
+import esSong from './locales/es/song.json'
+import esSetlist from './locales/es/setlist.json'
+import esProfile from './locales/es/profile.json'
+import esAdmin from './locales/es/admin.json'
+import esEditor from './locales/es/editor.json'
+import esErrors from './locales/es/errors.json'
+
 import koCommon from './locales/ko/common.json'
 import koNav from './locales/ko/nav.json'
 import koHome from './locales/ko/home.json'
@@ -53,6 +64,18 @@ const resources = {
     admin: enAdmin,
     editor: enEditor,
     errors: enErrors,
+  },
+  es: {
+    common: esCommon,
+    nav: esNav,
+    home: esHome,
+    auth: esAuth,
+    song: esSong,
+    setlist: esSetlist,
+    profile: esProfile,
+    admin: esAdmin,
+    editor: esEditor,
+    errors: esErrors,
   },
   ko: {
     common: koCommon,
