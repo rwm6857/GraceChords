@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import Fuse from 'fuse.js'
 import { useSongs } from '../hooks/useSongs'
+import { searchSongs } from '../utils/songs/search'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { showToast } from '../utils/app/toast'
@@ -74,12 +74,8 @@ export default function Songbook() {
   // Search (match Setlist semantics).
   const [q, setQ] = useState('')
 
-  const fuse = useMemo(() => new Fuse(items, {
-    keys: ['title', 'tags', 'authors', 'searchTitles', 'searchTags', 'searchAuthors'],
-    threshold: 0.4
-  }), [items])
   const results = useMemo(() => {
-    const base = q ? fuse.search(q).map((r) => r.item) : items.slice()
+    const base = q ? searchSongs(items, q).map((r) => r.item) : items.slice()
     base.sort((a, b) => {
       if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
         return a.hasSelectedLanguage ? -1 : 1
@@ -87,7 +83,7 @@ export default function Songbook() {
       return byTitle(a, b)
     })
     return base
-  }, [items, fuse, q])
+  }, [items, q])
 
   // Selection
   const [selectedIds, setSelectedIds] = useState(() => new Set())

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import Fuse from 'fuse.js'
 import { useSongs } from '../hooks/useSongs'
+import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
@@ -406,13 +406,9 @@ export default function Setlist(){
   }, [location.state, items.map(s => s.id).join('|')])
 
   // search
-  const fuse = useMemo(() => new Fuse(items, {
-    keys: ['title', 'tags', 'searchTitles', 'searchTags', 'searchAuthors'],
-    threshold: 0.4
-  }), [items])
   const icpPass = useCallback((s) => !icpOnly || (Array.isArray(s.tags) ? s.tags.includes('ICP') : s.tags === 'ICP'), [icpOnly])
   const results = useMemo(() => {
-    const base = q ? fuse.search(q).map((r) => r.item) : items.slice()
+    const base = q ? searchSongs(items, q).map((r) => r.item) : items.slice()
     const filtered = base.filter(icpPass)
     filtered.sort((a, b) => {
       if (a.hasSelectedLanguage !== b.hasSelectedLanguage) {
@@ -421,7 +417,7 @@ export default function Setlist(){
       return String(a.title || '').localeCompare(String(b.title || ''), undefined, { sensitivity: 'base' })
     })
     return filtered
-  }, [q, fuse, items, icpPass])
+  }, [q, items, icpPass])
 
   // list mutators
   function addSong(s){
@@ -1201,7 +1197,7 @@ async function exportPdf() {
                 </div>
               ) : null}
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--addSongs'].join(' ')}>
-                {!fuse ? (
+                {items.length === 0 ? (
                   <div>Loading search…</div>
                 ) : (
                   <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', marginTop:6 }}>

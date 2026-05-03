@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import Fuse from 'fuse.js'
 import { compareSongsByTitle } from '../utils/songs/sort'
+import { searchSongs } from '../utils/songs/search'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
@@ -109,20 +109,6 @@ export default function Songs(){
   const [lyricsCache, setLyricsCache] = useState({})
   const fetchingRef = useRef(new Set())
 
-  const fuse = useMemo(() => new Fuse(items, {
-    includeScore: true,
-    threshold: 0.35,
-    ignoreLocation: true,
-    keys: [
-      { name: 'title',        weight: 0.65 },
-      { name: 'searchTitles', weight: 0.6 },
-      { name: 'tags',         weight: 0.25 },
-      { name: 'searchTags',   weight: 0.2 },
-      { name: 'authors',      weight: 0.15 },
-      { name: 'searchAuthors',weight: 0.1 },
-      { name: 'searchText',   weight: 0.05 },
-    ]
-  }), [items])
 
   const selectedTagsKey = selectedTags.join('|')
   const tagPass = useCallback((s) => {
@@ -170,9 +156,9 @@ export default function Songs(){
     let list
 
     if (qLower.length) {
-      const rs = fuse.search(qLower)
+      const rs = searchSongs(items, qLower)
       list = rs.map((r) => {
-        scoreMap.set(r.item.id, r.score ?? 0)
+        scoreMap.set(r.item.id, r.score)
         return r.item
       })
     } else {
@@ -217,7 +203,7 @@ export default function Songs(){
       else fallback.push(item)
     }
     return { translated, fallback }
-  }, [items, fuse, qLower, lyricsOn, lyricsCache, tagPass, icpPass])
+  }, [items, qLower, lyricsOn, lyricsCache, tagPass, icpPass])
 
   const results = useMemo(
     () => [...resultParts.translated, ...resultParts.fallback],
