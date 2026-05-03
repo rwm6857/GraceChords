@@ -1,0 +1,20 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "appName": "GraceChords",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "close": "Cerrar",
+  "back": "Atrás",
+  "loading": "Cargando…",
+  "search": "Buscar",
+  "language": "Idioma",
+  "lightMode": "Modo claro",
+  "darkMode": "Modo oscuro",
+  "toggleDarkMode": "Cambiar modo oscuro",
+  "switchToLight": "Cambiar a modo claro",
+  "switchToDark": "Cambiar a modo oscuro",
+  "or": "o",
+  "continueWithGoogle": "Continuar con Google"
+}

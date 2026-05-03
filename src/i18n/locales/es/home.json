@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "welcomeTitle": "Bienvenido a GraceChords",
+  "welcomeSubtitle": "Herramientas de adoración gratuitas y de código abierto para iglesias y adoradores.",
+  "searchLabel": "Buscar canciones de adoración",
+  "searchPlaceholder": "Busca canciones por título, etiqueta o autor…",
+  "searchHelper": "Busca canciones por título, etiqueta o autor. Pulsa Enter para explorar o ir directamente a una canción.",
+  "worshipTools": "Herramientas de adoración",
+  "quickActions": "Acciones rápidas",
+  "tools": {
+    "songLibrary": { "title": "Biblioteca de canciones", "desc": "Explora nuestra biblioteca de partituras de adoración." },
+    "setlistBuilder": { "title": "Creador de repertorios", "desc": "Crea repertorios para el servicio." },
+    "songbookTool": { "title": "Herramienta de cancionero", "desc": "Crea cancioneros personalizados e imprimibles." },
+    "blog": { "title": "Blog", "desc": "Guías y consejos para adoradores." }
+  },
+  "actions": {
+    "songOfDay": { "title": "Canción del día", "desc": "Únete a otros en la adoración diaria." },
+    "quietTime": { "title": "Tiempo a solas", "desc": "Comienza el día con la palabra y la adoración." },
+    "highEnergy": { "title": "Éxito de alta energía", "desc": "¡Levanta un grito de alabanza!" },
+    "celebrationSet": { "title": "Set de celebración", "desc": "¡Termina con alabanza que sacuda la tierra!" },
+    "threeSongFlow": { "title": "Crea un flujo de 3 canciones", "desc": "Deja que el Espíritu guíe." },
+    "randomThemeSet": { "title": "Set de tema aleatorio", "desc": "¿Cruz? ¿Misiones? ¿Compromiso? A ver..." },
+    "randomTenSong": { "title": "Colección aleatoria de 10 canciones", "desc": "¡Sorpréndeme!" },
+    "sendMeSongbook": { "title": "Cancionero \"Envíame\"", "desc": "Crea un cancionero con temática misionera." },
+    "graceChordsSongbook": { "title": "Cancionero GraceChords", "desc": "Toda nuestra biblioteca en un libro imprimible." },
+    "contribute": { "title": "Contribuir", "desc": "Descarga el código fuente, sugiere una función o reporta un error." }
+  },
+  "latestSongs": "Últimas canciones",
+  "latestPosts": "Últimas publicaciones",
+  "noSongsYet": "Aún no hay canciones.",
+  "noPostsYet": "Aún no hay publicaciones.",
+  "byAuthor": "por"
+}

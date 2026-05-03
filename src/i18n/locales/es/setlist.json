@@ -1,0 +1,8 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "name": "Nombre",
+  "serviceDate": "Fecha del servicio",
+  "bibleVerse": "Versículo bíblico",
+  "saveSetlist": "Guardar repertorio",
+  "updateSetlist": "Actualizar repertorio"
+}
