@@ -1,5 +1,6 @@
 import { publicUrl } from '../network/publicUrl'
-import { normalizeLanguageCode as normalizeSongLanguageCode, resolveInitialSongLanguage } from '../songs/songCatalog'
+import { normalizeLanguageCode as normalizeSongLanguageCode, detectUiLanguage } from '../songs/songCatalog'
+import { LOCALE_STORAGE_KEY } from '../../i18n/config'
 
 export type BibleTranslation = {
   id: string
@@ -123,11 +124,17 @@ async function fetchTranslations(){
   }
 }
 
+function readUiLocale(): string {
+  try {
+    if (typeof window === 'undefined') return ''
+    return window.localStorage.getItem(LOCALE_STORAGE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
 function normalizeDefaultTranslationId(raw: unknown, translations: BibleTranslation[]){
-  const uiLanguage = resolveInitialSongLanguage(
-    translations.map((item) => normalizeSongLanguageCode(item.language, 'en')),
-    'en'
-  )
+  const uiLanguage = normalizeSongLanguageCode(readUiLocale() || detectUiLanguage(), 'en')
 
   if (uiLanguage === 'en' && translations.some((item) => item.id === DEFAULT_BIBLE_TRANSLATION_ID)) {
     return DEFAULT_BIBLE_TRANSLATION_ID
