@@ -1,4 +1,5 @@
 import { transposeSymPrefer } from '../chordpro'
+import { formatChord } from '../chordpro/solfege'
 
 function normalizeSpec(spec){
   const chords = Array.isArray(spec?.chords) ? spec.chords.map(ch => String(ch || '').trim()).filter(Boolean) : []
@@ -6,11 +7,15 @@ function normalizeSpec(spec){
   return { chords, repeat }
 }
 
-export function transposeInstrumental(spec, steps = 0, preferFlat = false){
+export function transposeInstrumental(spec, steps = 0, preferFlat = false, opts = {}){
+  const style = opts.style || 'letters'
   const { chords, repeat } = normalizeSpec(spec)
-  const mapped = steps
+  const transposed = steps
     ? chords.map(sym => transposeSymPrefer(sym, steps, preferFlat))
     : chords.slice()
+  const mapped = style === 'solfege'
+    ? transposed.map(sym => formatChord(sym, { style }))
+    : transposed
   return { chords: mapped, repeat }
 }
 

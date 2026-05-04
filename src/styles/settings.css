@@ -1,0 +1,204 @@
+/* Settings cluster: theme switch, locale picker, chord-style switch.
+   Used in the desktop gear-tray and the mobile drawer. */
+
+.gc-settings-cluster {
+  display: flex;
+  gap: var(--space-2);
+}
+.gc-settings-cluster--row { flex-direction: row; align-items: center; }
+.gc-settings-cluster--column {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.gc-settings-cluster__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 32px;
+}
+.gc-settings-cluster__label {
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  font-weight: 500;
+}
+.gc-settings-cluster__control { display: flex; align-items: center; }
+
+/* ---------- Pill switch (theme + chord style) ---------- */
+
+.gc-pill-switch {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.gc-pill-switch:focus { outline: none; }
+.gc-pill-switch:focus-visible .gc-pill-switch__track {
+  box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
+}
+
+.gc-pill-switch__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 56px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-3);
+  border: 1px solid var(--gc-separator);
+  transition: background var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-pill-switch--text .gc-pill-switch__track { width: 64px; }
+
+.gc-pill-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  height: calc(100% - 4px);
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-1);
+  box-shadow: var(--gc-shadow-1);
+  transition: transform var(--gc-dur) var(--gc-ease), background var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-pill-switch.is-right .gc-pill-switch__thumb {
+  transform: translateX(calc(100% + 0px));
+}
+
+.gc-pill-switch__option {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  color: var(--gc-text-tertiary);
+  transition: color var(--gc-dur-quick) var(--gc-ease);
+  pointer-events: none;
+}
+.gc-pill-switch.is-left .gc-pill-switch__option--left,
+.gc-pill-switch.is-right .gc-pill-switch__option--right {
+  color: var(--gc-text);
+}
+
+.gc-pill-switch__text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: var(--gc-font-family);
+}
+
+/* ---------- Locale picker ---------- */
+
+.gc-locale-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.gc-locale-picker__select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--gc-surface-3);
+  color: var(--gc-text);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-pill);
+  font: 500 13px/1 var(--gc-font-family);
+  height: 28px;
+  padding: 0 26px 0 12px;
+  cursor: pointer;
+  transition: background var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-locale-picker__select:hover { background: var(--gc-surface-2); }
+.gc-locale-picker__select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
+  border-color: var(--gc-primary);
+}
+.gc-locale-picker__chev {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--gc-text-secondary);
+  pointer-events: none;
+}
+
+/* ---------- Desktop gear tray ---------- */
+
+.gc-settings-tray-host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.gc-settings-tray-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--gc-text-secondary);
+  cursor: pointer;
+  transition: background var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease), color var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-settings-tray-btn:hover,
+.gc-settings-tray-btn[aria-expanded="true"] {
+  color: var(--gc-text);
+  border-color: var(--gc-separator);
+  background: var(--gc-surface-2);
+}
+
+.gc-settings-tray {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  box-shadow: var(--gc-shadow-2);
+  min-width: 240px;
+  z-index: 100;
+  padding: var(--space-3);
+  animation: gc-dropdown-in var(--gc-dur-quick) var(--gc-ease);
+}
+.gc-settings-tray__title {
+  font-size: var(--gc-font-cap);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gc-text-tertiary);
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-1);
+}
+
+/* ---------- Drawer overrides ---------- */
+
+.gc-drawer .gc-settings-cluster { width: 100%; }
+.gc-drawer .gc-settings-cluster--column { gap: var(--space-3); }
+.gc-drawer .gc-locale-picker,
+.gc-drawer .gc-locale-picker__select { width: 100%; }
+.gc-drawer .gc-locale-picker__select { height: 36px; }
+
+/* Sign Out gets a quieter, secondary treatment */
+.gc-drawer .gc-signout-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+  font-family: var(--gc-font-family);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gc-drawer .gc-signout-link:hover { color: var(--gc-danger); }

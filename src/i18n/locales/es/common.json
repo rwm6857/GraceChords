@@ -15,6 +15,9 @@
   "toggleDarkMode": "Cambiar modo oscuro",
   "switchToLight": "Cambiar a modo claro",
   "switchToDark": "Cambiar a modo oscuro",
+  "settings": "Ajustes",
+  "chordStyle": "Estilo de acordes",
+  "toggleChordStyle": "Alternar estilo de acordes",
   "or": "o",
   "continueWithGoogle": "Continuar con Google"
 }

@@ -5,6 +5,8 @@ import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
+import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
+import { useChordStyle } from '../hooks/useSettings'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { listSets, getSet, saveSet, deleteSet } from '../utils/setlists/sets'
@@ -130,6 +132,7 @@ export default function Setlist(){
   const location = useLocation()
   const navigate = useNavigate()
   const { songs, loading } = useSongs()
+  const chordStyle = useChordStyle()
   const { session: authSession, role: userRole, hasMinRole: authHasMinRole, isLoggedIn } = useAuth()
   const catalog = useMemo(() => buildSongCatalog(songs), [songs])
   const allSongsById = catalog.byId
@@ -817,7 +820,7 @@ async function exportPdf() {
           section: sec.label,
           lines: (sec.lines || []).map((ln) => {
             if (ln.instrumental) {
-              return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat) };
+              return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat, { style: chordStyle }) };
             }
             if (ln.comment) {
               return {
@@ -829,7 +832,7 @@ async function exportPdf() {
             return {
               plain: ln.lyrics || '',
               chordPositions: (ln.chords || []).map((c) => ({
-                sym: transposeSymPrefer(c.sym, steps, preferFlat),
+                sym: formatChord(transposeSymPrefer(c.sym, steps, preferFlat), { style: chordStyle }),
                 index: c.index,
               })),
             };
@@ -838,7 +841,7 @@ async function exportPdf() {
 
         const song = {
           title: doc.meta?.title || s.title,
-          key: sel.toKey || baseKey,
+          key: formatKeyDisplay(sel.toKey || baseKey, chordStyle),
           capo: doc.meta?.capo,
           lyricsBlocks: blocks,
         };

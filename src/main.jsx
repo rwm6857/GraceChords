@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
 import { LocaleProvider } from './hooks/useLocale'
+import { SettingsProvider } from './hooks/useSettings'
 import { initTheme } from './utils/app/theme'
 import './i18n'
 
@@ -123,7 +124,9 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <AuthProvider>
           <LocaleProvider>
-            <App />
+            <SettingsProvider>
+              <App />
+            </SettingsProvider>
           </LocaleProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
+import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
+import { useChordStyle } from '../hooks/useSettings'
 import { appendDisclaimerIfMissing } from '../utils/chordpro/disclaimer'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
@@ -100,6 +102,7 @@ export default function SongView(){
   const navigate = useNavigate()
   const { songs } = useSongs()
   const { isAtLeast } = useRole()
+  const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
   const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
@@ -331,14 +334,14 @@ export default function SongView(){
 
   const buildSong = () => normalizeSongInput({
     title,
-    key: toKey,
+    key: formatKeyDisplay(toKey, chordStyle),
     capo: parsed?.meta?.capo,
     lyricsBlocks: (parsed.blocks || []).map(b => ({
       section: b.section,
       lines: (b.lines || []).map(ln => {
         if (ln.instrumental) {
           return {
-            instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat),
+            instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat, { style: chordStyle }),
           }
         }
         if (ln.comment) {
@@ -350,7 +353,7 @@ export default function SongView(){
         }
         return {
           plain: ln.text,
-          chordPositions: (ln.chords || []).map(c => ({ sym: transposeSymPrefer(c.sym, steps, preferFlat), index: c.index })),
+          chordPositions: (ln.chords || []).map(c => ({ sym: formatChord(transposeSymPrefer(c.sym, steps, preferFlat), { style: chordStyle }), index: c.index })),
         }
       })
     }))
@@ -655,6 +658,7 @@ export default function SongView(){
                                                 steps={steps}
                                                 showChords={showChords}
                                                 preferFlat={preferFlat}
+                                                chordStyle={chordStyle}
                                         />
                                 )
                         })}
@@ -824,7 +828,7 @@ function InstrumentalLine({ spec, steps, split, preferFlat }) {
 }
 
 
-function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
+function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle = 'letters' }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
@@ -872,7 +876,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
       width: hostW,
       measureLyric,
       measureChord,
-      transposeSym: (sym) => transposeSymPrefer(sym, steps, preferFlat),
+      transposeSym: (sym) => formatChord(transposeSymPrefer(sym, steps, preferFlat), { style: chordStyle }),
       spaceWidth: measureLyric(' ') || 0,
     })
 
@@ -884,7 +888,7 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat }){
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap) // reserve space above lyrics
     setState({ rows, padTop })
-  }, [plain, chords, steps, showChords, preferFlat, measureKey])
+  }, [plain, chords, steps, showChords, preferFlat, chordStyle, measureKey])
 
   // Recalculate on container resize (orientation/viewport changes)
   useEffect(() => {

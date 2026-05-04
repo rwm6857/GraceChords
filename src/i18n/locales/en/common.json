@@ -15,6 +15,9 @@
   "toggleDarkMode": "Toggle dark mode",
   "switchToLight": "Switch to light mode",
   "switchToDark": "Switch to dark mode",
+  "settings": "Settings",
+  "chordStyle": "Chord style",
+  "toggleChordStyle": "Toggle chord style",
   "or": "or",
   "continueWithGoogle": "Continue with Google"
 }

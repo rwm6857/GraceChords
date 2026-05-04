@@ -3,17 +3,15 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import OfflineBadge from '../OfflineBadge'
-import { currentTheme, toggleTheme } from '../../utils/app/theme'
-import { Sun, Moon } from '../Icons'
+import { GearIcon } from '../Icons'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import SpriteAvatar from './SpriteAvatar'
-import LanguageSelector from './LanguageSelector'
+import SettingsCluster from './SettingsCluster'
+import { useSettings } from '../../hooks/useSettings'
 
 export default function Navbar(){
-  const [, setBump] = React.useState(0)
   const { t } = useTranslation(['nav', 'common'])
-  const isDark = (currentTheme() === 'dark')
   const { pathname, hash } = useLocation()
   const path = (hash && hash.replace('#','')) || pathname
   const isActive = (p: string) => path === p
@@ -24,8 +22,12 @@ export default function Navbar(){
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
   const { isLoggedIn, loading: authLoading, session, profile, hasMinRole, role } = useAuth()
+  const { theme } = useSettings()
+  const isDark = theme === 'dark'
   const [userMenuOpen, setUserMenuOpen] = React.useState(false)
   const userMenuRef = React.useRef<HTMLDivElement | null>(null)
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
+  const settingsRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
     if (!userMenuOpen) return
@@ -40,7 +42,26 @@ export default function Navbar(){
 
   React.useEffect(() => {
     setUserMenuOpen(false)
+    setSettingsOpen(false)
   }, [pathname, hash])
+
+  React.useEffect(() => {
+    if (!settingsOpen) return
+    function handleOutsideClick(e: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false)
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSettingsOpen(false)
+    }
+    document.addEventListener('click', handleOutsideClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [settingsOpen])
 
   async function handleSignOut() {
     setUserMenuOpen(false)
@@ -58,12 +79,6 @@ export default function Navbar(){
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
-
-  function onToggleClick(e: React.MouseEvent){
-    e.preventDefault()
-    toggleTheme()
-    setBump(x => x + 1)
-  }
 
   useEffect(() => {
     const host = document.createElement('div')
@@ -158,16 +173,27 @@ export default function Navbar(){
           {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
             <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('editorPortal')}</Link>
           )}
-          {/* Theme toggle stays in topbar on desktop; hidden with .gc-navlinks at ≤820px */}
-          <button
-            className="gc-btn gc-btn--ghost"
-            aria-label={t('common:toggleDarkMode')}
-            aria-pressed={isDark}
-            onClick={onToggleClick}
-            title={isDark ? t('common:switchToLight') : t('common:switchToDark')}
-          >
-            {isDark ? <Sun /> : <Moon />}
-          </button>
+          {/* Settings tray — gear icon opens a small panel with theme/locale/chord style */}
+          <div className="gc-settings-tray-host" ref={settingsRef}>
+            <button
+              type="button"
+              className="gc-settings-tray-btn"
+              aria-label={t('common:settings', { defaultValue: 'Settings' })}
+              aria-expanded={settingsOpen}
+              aria-haspopup="menu"
+              onClick={() => setSettingsOpen(o => !o)}
+            >
+              <GearIcon />
+            </button>
+            {settingsOpen && (
+              <div className="gc-settings-tray" role="menu">
+                <p className="gc-settings-tray__title">
+                  {t('common:settings', { defaultValue: 'Settings' })}
+                </p>
+                <SettingsCluster orientation="column" showLabels />
+              </div>
+            )}
+          </div>
           {/* Auth slot — desktop */}
           {!authLoading && (
             isLoggedIn ? (
@@ -224,9 +250,6 @@ export default function Navbar(){
                         {t('adminPortal')}
                       </Link>
                     )}
-                    <div style={{ padding: '4px 12px' }}>
-                      <LanguageSelector style={{ width: '100%' }} />
-                    </div>
                     <hr className="gc-user-dropdown__divider" />
                     <button
                       className="gc-user-dropdown__item"
@@ -272,23 +295,13 @@ export default function Navbar(){
             </div>
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
-              <div style={{ marginTop: 8 }}>
-                <LanguageSelector style={{ width: '100%' }} />
+              <div style={{ marginTop: 12 }}>
+                <SettingsCluster orientation="column" showLabels />
               </div>
-              <button
-                className="gc-btn gc-btn--secondary"
-                aria-label={t('common:toggleDarkMode')}
-                aria-pressed={isDark}
-                onClick={onToggleClick}
-                title={isDark ? t('common:switchToLight') : t('common:switchToDark')}
-                style={{ width:'100%', justifyContent:'center', marginTop:8 }}
-              >
-                {isDark ? <Sun /> : <Moon />} <span style={{ marginLeft:8 }}>{isDark ? t('common:lightMode') : t('common:darkMode')}</span>
-              </button>
               {/* Auth slot — mobile */}
               {!authLoading && (
                 isLoggedIn ? (
-                  <div style={{ marginTop: 8 }}>
+                  <div style={{ marginTop: 12 }}>
                     <Link
                       to="/profile"
                       className="gc-btn gc-btn--secondary"
@@ -299,9 +312,9 @@ export default function Navbar(){
                       <span>{profile?.display_name || t('profile')}</span>
                     </Link>
                     <button
-                      className="gc-btn gc-btn--ghost"
+                      type="button"
+                      className="gc-signout-link"
                       onClick={async () => { await handleSignOut(); closeDrawer() }}
-                      style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
                     >
                       {t('signOut')}
                     </button>
@@ -311,7 +324,7 @@ export default function Navbar(){
                     to="/login"
                     className="gc-nav-signin"
                     onClick={closeDrawer}
-                    style={{ display: 'block', textAlign: 'center', marginTop: 8 }}
+                    style={{ display: 'block', textAlign: 'center', marginTop: 12 }}
                   >
                     {t('signIn')}
                   </Link>

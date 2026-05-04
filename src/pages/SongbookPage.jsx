@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
+import { useChordStyle } from '../hooks/useSettings'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { showToast } from '../utils/app/toast'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -31,6 +33,7 @@ function byTitle(a, b) { return compareSongsByTitle(a, b) }
 
 export default function Songbook() {
   const { songs } = useSongs()
+  const chordStyle = useChordStyle()
   const catalog = useMemo(() => buildSongCatalog(songs), [songs])
   const allSongsById = catalog.byId
   const languageChipCodes = catalog.translationLanguages || []
@@ -219,9 +222,10 @@ export default function Songbook() {
             section: sec.label,
             lines: (sec.lines || []).map((ln) => {
               if (ln.instrumental) {
+                const rawChords = Array.isArray(ln.instrumental?.chords) ? ln.instrumental.chords : []
                 return {
                   instrumental: {
-                    chords: Array.isArray(ln.instrumental?.chords) ? ln.instrumental.chords.slice() : [],
+                    chords: rawChords.map(s => formatChord(s, { style: chordStyle })),
                     repeat: typeof ln.instrumental?.repeat === 'number' ? ln.instrumental.repeat : undefined,
                   },
                 }
@@ -235,13 +239,14 @@ export default function Songbook() {
               }
               return {
                 plain: ln.lyrics || '',
-                chordPositions: (ln.chords || []).map((c) => ({ sym: c.sym, index: c.index })),
+                chordPositions: (ln.chords || []).map((c) => ({ sym: formatChord(c.sym, { style: chordStyle }), index: c.index })),
               }
             }),
           }))
+          const rawKey = doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C'
           const song = {
             title: doc.meta?.title || it.title,
-            key: doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C',
+            key: formatKeyDisplay(rawKey, chordStyle),
             capo: doc.meta?.capo,
             lyricsBlocks: blocks,
           }
