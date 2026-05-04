@@ -1,10 +1,10 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
   "home": "Ana Sayfa",
   "songs": "İlahiler",
   "setlist": "Set Listesi",
   "songbook": "İlahi Kitabı",
-  "dailyWord": "Günün Sözü",
+  "dailyWord": "Kutsal Kitap",
   "blog": "Blog",
   "editorPortal": "Editör Portalı",
   "profile": "Profil",

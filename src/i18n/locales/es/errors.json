@@ -1,5 +1,5 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "generic": "Algo salió mal. Por favor, inténtalo de nuevo.",
-  "network": "Error de red. Por favor, comprueba tu conexión."
+  "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
+  "generic": "Algo salió mal. Inténtalo de nuevo.",
+  "network": "Error de red. Comprueba tu conexión."
 }
