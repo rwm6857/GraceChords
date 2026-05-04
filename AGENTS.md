@@ -221,6 +221,65 @@
 
 ---
 
+## Internationalization (i18n)
+
+UI translations live as JSON files under `src/i18n/locales/{lang}/` across ten
+namespaces: `admin`, `auth`, `common`, `editor`, `errors`, `home`, `nav`,
+`profile`, `setlist`, `song`. The English files at `src/i18n/locales/en/`
+are the **source of truth**; every other locale must mirror their key shape.
+Runtime wiring lives in `src/i18n/index.js` and `src/hooks/useLocale.jsx`;
+the supported list is in `src/i18n/config.js`.
+
+Translation tooling lives at `gracechords-i18n/`:
+- `SKILL.md` — translation and revision skill used to author/refresh copy.
+- `scripts/validate.py` — key parity, placeholder, and HTML tag validator.
+- `glossaries/{lang}.md` — per-locale terminology, register, and convention
+  decisions. Reference these for any word-choice question; do **not**
+  duplicate their contents here.
+
+### Workflow when English UI strings change
+
+When you add, modify, or remove a key under `src/i18n/locales/en/`:
+
+1. Apply the same key change to every other locale folder under
+   `src/i18n/locales/`.
+2. For each non-English file modified, set `_meta.needsReview` to `true` and
+   clear `_meta.reviewer` and `_meta.reviewedAt` to empty strings.
+3. For translation guidance, follow `gracechords-i18n/SKILL.md`.
+4. For terminology and word-choice decisions, consult
+   `gracechords-i18n/glossaries/{lang}.md` for the target locale. If the
+   change introduces new terminology not already in the glossary, append it
+   to the appropriate section there so future updates stay consistent.
+5. Run the validator before committing — once per non-English locale:
+   ```bash
+   python gracechords-i18n/scripts/validate.py \
+     src/i18n/locales/en src/i18n/locales/{lang}
+   ```
+   Exit code `0` is clean. The in-repo parity smoke check
+   (`npm run i18n:check`) is a faster sanity pass and should also be green.
+
+### Hard rules
+
+- **Never modify a file where `_meta.needsReview` is `false`** without
+  explicit user instruction. That value is a human reviewer's signoff;
+  touching it invalidates trust.
+- **Never change JSON keys, HTML tags, or `{{variables}}`** — these must be
+  byte-identical across all locales.
+- **Never translate the brand name "GraceChords."**
+- **Never populate `_meta.reviewer` or `_meta.reviewedAt`.** Those fields are
+  filled by human reviewers after QA, not by agents.
+- **Always run the validator** before committing locale changes.
+
+### Schema notes
+
+- Each file begins with an inline `_meta` block:
+  `{ "reviewer": string, "reviewedAt": string, "needsReview": boolean }`. The
+  inline single-line format is deliberate; preserve it when editing.
+- Files use 2-space indentation with a trailing newline. Match the source
+  key order to keep diffs reviewable.
+
+---
+
 ## Claude Code — Agent Instructions
 
 These are the conventions and patterns used by Claude Code (AI-assisted development) in
