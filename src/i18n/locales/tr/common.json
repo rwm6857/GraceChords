@@ -15,6 +15,9 @@
   "toggleDarkMode": "Koyu temayı değiştir",
   "switchToLight": "Açık temaya geç",
   "switchToDark": "Koyu temaya geç",
+  "settings": "Ayarlar",
+  "chordStyle": "Akor gösterimi",
+  "toggleChordStyle": "Akor gösterimini değiştir",
   "or": "veya",
   "continueWithGoogle": "Google ile devam et"
 }

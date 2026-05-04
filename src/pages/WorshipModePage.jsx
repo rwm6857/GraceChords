@@ -3,6 +3,8 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKey } from '../utils/chordpro'
+import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
+import { useChordStyle } from '../hooks/useSettings'
 import KeySelector from '../components/KeySelector'
 import { transposeInstrumental, formatInstrumental } from '../utils/songs/instrumental'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/app/theme'
@@ -36,6 +38,7 @@ function safeDecodeURIComponent(value){
 export default function WorshipMode(){
   const { songIds = '' } = useParams()
   const navigate = useNavigate()
+  const chordStyle = useChordStyle()
   const ids = useMemo(() => songIds.split(',').map(s => safeDecodeURIComponent(s.trim())).filter(Boolean), [songIds])
   const { songs: catalogSongs, loading: catalogLoading } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
@@ -795,10 +798,12 @@ export default function WorshipMode(){
             const base = cur?.baseKey || ''
             const baseRootRaw = (String(base).match(/^([A-G][#b]?)/) || [,''])[1]
             const preferFlat = !!(baseRootRaw && /b$/.test(baseRootRaw))
-            const display = formatKey(toKey, preferFlat ? 'flat' : 'sharp')
+            const displayLetter = formatKey(toKey, preferFlat ? 'flat' : 'sharp')
+            const display = formatKeyDisplay(displayLetter, chordStyle)
+            const original = cur?.baseKey ? formatKeyDisplay(cur.baseKey, chordStyle) : ''
             return (
               <div style={{opacity:.75, fontSize:16, marginTop:2}}>
-                Key: {display}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${cur.baseKey}` : ''}
+                Key: {display}{(cur?.baseKey && toKey !== cur.baseKey) ? ` • Original: ${original}` : ''}
               </div>
             )
           })()}
@@ -1023,6 +1028,7 @@ export default function WorshipMode(){
                             steps={steps}
                             preferFlat={preferFlat}
                             split={displayCols === 2}
+                            chordStyle={chordStyle}
                           />
                         ) : null
                       ) : ln.comment ? (
@@ -1035,6 +1041,7 @@ export default function WorshipMode(){
                           steps={steps}
                           preferFlat={preferFlat}
                           showChords={showChords}
+                          chordStyle={chordStyle}
                         />
                       )
                     ))}
@@ -1238,8 +1245,8 @@ export default function WorshipMode(){
   )
 }
 
-function InstrumentalRow({ spec, steps, split, preferFlat }){
-  const inst = transposeInstrumental(spec, steps, preferFlat)
+function InstrumentalRow({ spec, steps, split, preferFlat, chordStyle = 'letters' }){
+  const inst = transposeInstrumental(spec, steps, preferFlat, { style: chordStyle })
   const rows = formatInstrumental(inst, { split })
   if (!rows.length) return null
   return (
@@ -1262,7 +1269,7 @@ function InstrumentalRow({ spec, steps, split, preferFlat }){
   )
 }
 
-function ChordLine({ plain, chords, steps, showChords, preferFlat }){
+function ChordLine({ plain, chords, steps, showChords, preferFlat, chordStyle = 'letters' }){
   const hostRef = useRef(null)
   const canvasRef = useRef(null)
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
@@ -1303,7 +1310,7 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
       width: hostW,
       measureLyric,
       measureChord,
-      transposeSym: (sym) => transposeSymPrefer(sym, steps, preferFlat),
+      transposeSym: (sym) => formatChord(transposeSymPrefer(sym, steps, preferFlat), { style: chordStyle }),
       spaceWidth: measureLyric(' ') || 0,
     })
 
@@ -1313,7 +1320,7 @@ function ChordLine({ plain, chords, steps, showChords, preferFlat }){
     const gap = 4
     const padTop = Math.ceil(chordAscent + gap)
     setState({ rows, padTop })
-  }, [plain, chords, steps, showChords, preferFlat, measureKey])
+  }, [plain, chords, steps, showChords, preferFlat, chordStyle, measureKey])
 
   
 

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSongs } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
+import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
+import { useChordStyle } from '../hooks/useSettings'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { filterDisplayTags } from '../utils/songs/tags'
@@ -10,6 +12,7 @@ import { showToast } from '../utils/app/toast'
 export default function Bundle(){
   const navigate = useNavigate()
   const { songs } = useSongs()
+  const chordStyle = useChordStyle()
   const [selection, setSelection] = useState({})
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
@@ -43,20 +46,20 @@ export default function Bundle(){
             section: sec.label,
             lines: (sec.lines || []).map(ln => {
               if (ln.instrumental) {
-                return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat) }
+                return { instrumental: transposeInstrumental(ln.instrumental, steps, preferFlat, { style: chordStyle }) }
               }
               if (ln.comment) {
                 return { plain: ln.comment, chordPositions: [], comment: ln.comment }
               }
               return {
                 plain: ln.lyrics || '',
-                chordPositions: (ln.chords || []).map(c => ({ sym: transposeSymPrefer(c.sym, steps, preferFlat), index: c.index }))
+                chordPositions: (ln.chords || []).map(c => ({ sym: formatChord(transposeSymPrefer(c.sym, steps, preferFlat), { style: chordStyle }), index: c.index }))
               }
             })
           }))
           return {
             title: doc.meta?.title || it.title,
-            key: toKey,
+            key: formatKeyDisplay(toKey, chordStyle),
             capo: doc.meta?.capo,
             lyricsBlocks: blocks,
           }

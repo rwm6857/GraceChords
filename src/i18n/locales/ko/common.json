@@ -15,6 +15,9 @@
   "toggleDarkMode": "다크 모드 전환",
   "switchToLight": "라이트 모드로 전환",
   "switchToDark": "다크 모드로 전환",
+  "settings": "설정",
+  "chordStyle": "코드 표기",
+  "toggleChordStyle": "코드 표기 전환",
   "or": "또는",
   "continueWithGoogle": "Google 계정으로 계속하기"
 }
