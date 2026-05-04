@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import PageHeader from '../components/ui/layout-kit/PageHeader'
 import IconButton from '../components/ui/layout-kit/IconButton'
 import PassageReader, { type PassageReaderHandle } from '../features/readings/PassageReader'
@@ -25,6 +26,7 @@ const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function ReadingsPage(){
+  const { t } = useTranslation('pages')
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>(() => ({}))
@@ -185,14 +187,14 @@ export default function ReadingsPage(){
         <link rel="canonical" href={`${SITE_URL}/reading`} />
       </Helmet>
       <PageHeader
-        title="Daily Bible Reading"
-        subtitle="Following Robert M. M'Cheyne's plan will take you through the entire Bible in a year, including the New Testament & Psalms twice."
+        title={t('readings.title')}
+        subtitle={t('readings.subtitle')}
       />
 
       <section className="readings-dateblock">
         <div className="readings-date">
           <IconButton
-            label="Previous day"
+            label={t('readings.previousDay')}
             className="readings-datebtn"
             onClick={() => goToRelativeDay(-1)}
             onMouseDown={(e) => e.preventDefault()}
@@ -204,7 +206,7 @@ export default function ReadingsPage(){
               value={activeTranslation.id}
               groups={translationGroups}
               onChange={setSelectedTranslationId}
-              ariaLabel="Choose Bible translation"
+              ariaLabel={t('readings.translationAria')}
             />
           </div>
           <div ref={datePickerRef} className="readings-date__picker">
@@ -215,20 +217,20 @@ export default function ReadingsPage(){
               value={inputDate}
               onChange={handleDateChange}
               onBlur={closeDatePicker}
-              aria-label={`Pick date ${displayDate}`}
+              aria-label={t('readings.pickDate', { date: displayDate })}
             />
             <button
               type="button"
               className="readings-date__button"
               onClick={openDatePicker}
               onMouseDown={(e) => e.preventDefault()}
-              aria-label={`Pick date ${displayDate}`}
+              aria-label={t('readings.pickDate', { date: displayDate })}
             >
               {displayDate}
             </button>
           </div>
           <IconButton
-            label="Next day"
+            label={t('readings.nextDay')}
             className="readings-datebtn"
             onClick={() => goToRelativeDay(1)}
             onMouseDown={(e) => e.preventDefault()}
@@ -238,7 +240,7 @@ export default function ReadingsPage(){
         </div>
         <div className="readings-chips-nav">
           <div className="readings-chips">
-            <ul className="readings-list" aria-label="Passages">
+            <ul className="readings-list" aria-label={t('readings.passagesAria')}>
               {passages.map((passage, idx) => {
                 const isActive = idx === passageIndex
                 return (
@@ -283,14 +285,14 @@ export default function ReadingsPage(){
           />
         </>
       ) : (
-        <div className="gc-card readings-status readings-status--error">No passages found for this day.</div>
+        <div className="gc-card readings-status readings-status--error">{t('readings.noPassages')}</div>
       )}
 
       <button
         type="button"
         className={`readings-copy-fab ${currentSelection.size ? 'is-visible' : ''} ${isRtlTranslation ? 'is-rtl' : ''}`.trim()}
         onClick={() => readerRef.current?.copy()}
-        aria-label="Copy selected verses"
+        aria-label={t('readings.copyVerses')}
         aria-hidden={!currentSelection.size}
         tabIndex={currentSelection.size ? 0 : -1}
       >

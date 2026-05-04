@@ -1,18 +1,18 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
-import { getSiteDisclaimer, isDisclaimerEnabled, DISCLAIMER_EMAIL } from '../config/disclaimer'
-import { getCopyrightNotice } from '../config/copyright'
+import { useTranslation } from 'react-i18next'
+import { isDisclaimerEnabled, DISCLAIMER_EMAIL } from '../config/disclaimer'
 
 export default function SiteDisclaimer(){
+  const { t } = useTranslation('common')
   const { pathname, hash } = useLocation()
   const inWorship = (pathname && pathname.startsWith('/worship')) || (hash && hash.includes('/worship'))
   const inReading = (pathname && pathname.startsWith('/reading')) || (hash && hash.includes('/reading'))
   if (inWorship) return null
   if (!isDisclaimerEnabled()) return null
-  const text = getSiteDisclaimer()
-  const linkText = 'email us'
-  const textParts = text.split(linkText)
-  const copyright = getCopyrightNotice()
+  const year = new Date().getFullYear()
+  const base = 2023
+  const range = year === base ? `${year}` : `${base}–${year}`
   return (
     <footer style={{ marginTop: inReading ? '1.5rem' : '3rem' }}>
       <div
@@ -27,18 +27,12 @@ export default function SiteDisclaimer(){
         }}
       >
         <div>
-          {textParts.length === 2 ? (
-            <>
-              {textParts[0]}
-              <a href={`mailto:${DISCLAIMER_EMAIL}`}>{linkText}</a>
-              {textParts[1]}
-            </>
-          ) : (
-            text
-          )}
+          {t('footer.disclaimerBefore')}
+          <a href={`mailto:${DISCLAIMER_EMAIL}`}>{t('footer.disclaimerLink')}</a>
+          {t('footer.disclaimerAfter')}
         </div>
         <div style={{ height: '1em' }} aria-hidden="true" />
-        <div>{copyright}</div>
+        <div>{t('footer.copyright', { range })}</div>
       </div>
     </footer>
   )

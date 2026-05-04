@@ -18,6 +18,7 @@ import enProfile from './locales/en/profile.json'
 import enAdmin from './locales/en/admin.json'
 import enEditor from './locales/en/editor.json'
 import enErrors from './locales/en/errors.json'
+import enPages from './locales/en/pages.json'
 
 import esCommon from './locales/es/common.json'
 import esNav from './locales/es/nav.json'
@@ -29,6 +30,7 @@ import esProfile from './locales/es/profile.json'
 import esAdmin from './locales/es/admin.json'
 import esEditor from './locales/es/editor.json'
 import esErrors from './locales/es/errors.json'
+import esPages from './locales/es/pages.json'
 
 import koCommon from './locales/ko/common.json'
 import koNav from './locales/ko/nav.json'
@@ -40,6 +42,7 @@ import koProfile from './locales/ko/profile.json'
 import koAdmin from './locales/ko/admin.json'
 import koEditor from './locales/ko/editor.json'
 import koErrors from './locales/ko/errors.json'
+import koPages from './locales/ko/pages.json'
 
 import trCommon from './locales/tr/common.json'
 import trNav from './locales/tr/nav.json'
@@ -51,6 +54,7 @@ import trProfile from './locales/tr/profile.json'
 import trAdmin from './locales/tr/admin.json'
 import trEditor from './locales/tr/editor.json'
 import trErrors from './locales/tr/errors.json'
+import trPages from './locales/tr/pages.json'
 
 const resources = {
   en: {
@@ -64,6 +68,7 @@ const resources = {
     admin: enAdmin,
     editor: enEditor,
     errors: enErrors,
+    pages: enPages,
   },
   es: {
     common: esCommon,
@@ -76,6 +81,7 @@ const resources = {
     admin: esAdmin,
     editor: esEditor,
     errors: esErrors,
+    pages: esPages,
   },
   ko: {
     common: koCommon,
@@ -88,6 +94,7 @@ const resources = {
     admin: koAdmin,
     editor: koEditor,
     errors: koErrors,
+    pages: koPages,
   },
   tr: {
     common: trCommon,
@@ -100,6 +107,7 @@ const resources = {
     admin: trAdmin,
     editor: trEditor,
     errors: trErrors,
+    pages: trPages,
   },
 }
 

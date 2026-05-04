@@ -24,6 +24,7 @@ export const I18N_NAMESPACES = [
   'admin',
   'editor',
   'errors',
+  'pages',
 ]
 
 export function isSupportedLocale(code) {

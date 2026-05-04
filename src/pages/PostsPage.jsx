@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { fetchPublishedPostsWithAuthors } from '../hooks/usePosts'
 import Button from '../components/ui/layout-kit/Button'
 
@@ -19,13 +20,14 @@ function formatTime(date) {
 }
 
 function PostCard({ post }) {
+  const { t } = useTranslation('pages')
   const authorName = post.users?.display_name
 
   return (
     <Link to={`/posts/${post.slug}`} className="gc-post-card">
       <div className="gc-post-card__body">
         {(post.tags || []).length > 0 && (
-          <div className="gc-post-card__tags" aria-label="Tags">
+          <div className="gc-post-card__tags" aria-label={t('posts.tagsAria')}>
             {post.tags.map(t => (
               <span key={t} className="gc-posts-tag">{t}</span>
             ))}
@@ -51,6 +53,7 @@ function PostCard({ post }) {
 }
 
 export default function PostsPage() {
+  const { t } = useTranslation('pages')
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -106,8 +109,8 @@ export default function PostsPage() {
       </Helmet>
 
       <header className="gc-posts-page__header">
-        <h1 className="gc-posts-page__title">Posts</h1>
-        <p className="gc-posts-page__lead">News, announcements and worship resources</p>
+        <h1 className="gc-posts-page__title">{t('posts.title')}</h1>
+        <p className="gc-posts-page__lead">{t('posts.subtitle')}</p>
         {!loading && (
           <div className="gc-posts-page__refresh" style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginTop: 'var(--gc-space-2)' }}>
             <Button
@@ -115,13 +118,13 @@ export default function PostsPage() {
               variant="secondary"
               loading={refreshing}
               onClick={handleRefresh}
-              aria-label="Refresh posts"
+              aria-label={t('posts.refreshAria')}
             >
-              Refresh
+              {t('posts.refresh')}
             </Button>
             {lastUpdated && (
               <span style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-text-sm)' }}>
-                Updated {formatTime(lastUpdated)}
+                {t('posts.updated', { time: formatTime(lastUpdated) })}
               </span>
             )}
           </div>
@@ -133,19 +136,19 @@ export default function PostsPage() {
           <input
             type="search"
             className="gc-input gc-posts-search__input"
-            placeholder="Search posts…"
+            placeholder={t('posts.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            aria-label="Search posts"
+            aria-label={t('posts.searchAria')}
           />
           {allTags.length > 0 && (
-            <div className="gc-posts-filter" role="group" aria-label="Filter by tag">
+            <div className="gc-posts-filter" role="group" aria-label={t('posts.filterAria')}>
               <button
                 type="button"
                 className={`gc-posts-filter__chip${activeTag === 'All' ? ' is-active' : ''}`}
                 onClick={() => setActiveTag('All')}
               >
-                All
+                {t('posts.all')}
               </button>
               {allTags.map(tag => (
                 <button
@@ -163,9 +166,9 @@ export default function PostsPage() {
       )}
 
       {loading ? (
-        <p className="gc-posts-empty">Loading…</p>
+        <p className="gc-posts-empty">{t('posts.loading')}</p>
       ) : filtered.length === 0 ? (
-        <p className="gc-posts-empty">No posts found.</p>
+        <p className="gc-posts-empty">{t('posts.empty')}</p>
       ) : (
         <div className="gc-posts-grid">
           {filtered.map(post => (
