@@ -19,5 +19,11 @@
   "chordStyle": "Chord style",
   "toggleChordStyle": "Toggle chord style",
   "or": "or",
-  "continueWithGoogle": "Continue with Google"
+  "continueWithGoogle": "Continue with Google",
+  "footer": {
+    "disclaimerBefore": "All lyrics are property of their respective owners. GraceChords provides tools for personal and educational use only. Rights holders, ",
+    "disclaimerLink": "email us",
+    "disclaimerAfter": " for takedown requests.",
+    "copyright": "© {{range}} Ryan Moore. All rights reserved."
+  }
 }

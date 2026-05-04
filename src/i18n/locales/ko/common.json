@@ -1,5 +1,5 @@
 {
-  "_meta": { "reviewer": "Ryan", "reviewedAt": "5/3/26", "needsReview": false },
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "appName": "GraceChords",
   "save": "저장",
   "cancel": "취소",
@@ -19,5 +19,11 @@
   "chordStyle": "코드 표기",
   "toggleChordStyle": "코드 표기 전환",
   "or": "또는",
-  "continueWithGoogle": "Google 계정으로 계속하기"
+  "continueWithGoogle": "Google 계정으로 계속하기",
+  "footer": {
+    "disclaimerBefore": "모든 가사는 각 저작권자의 소유입니다. GraceChords는 개인 및 교육 목적으로만 도구를 제공합니다. 저작권자께서는 게시물 삭제 요청을 위해 ",
+    "disclaimerLink": "이메일을 보내주세요",
+    "disclaimerAfter": ".",
+    "copyright": "© {{range}} Ryan Moore. 모든 권리 보유."
+  }
 }

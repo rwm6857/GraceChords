@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { useTranslation } from 'react-i18next'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { searchSongs } from '../utils/songs/search'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
@@ -25,6 +26,7 @@ const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | Grace
 const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at GraceChords.'
 
 export default function Songs(){
+  const { t } = useTranslation('pages')
   const { songs: itemsRaw } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
   const languageChipCodes = catalog.translationLanguages || []
@@ -356,16 +358,16 @@ export default function Songs(){
       </Helmet>
       <div className="HomeHeader">
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap'}}>
-          <h1 title="Browse Songs" style={{ marginBottom: 0 }}>Songs</h1>
+          <h1 title={t('songs.titleTooltip')} style={{ marginBottom: 0 }}>{t('songs.title')}</h1>
           {languageChipCodes.length > 0 ? (
-            <div className="tagbar" aria-label="Song language">
+            <div className="tagbar" aria-label={t('songs.languageAria')}>
               {languageChipCodes.map((code) => (
                 <Chip
                   key={code}
                   variant="filter"
                   selected={selectedLanguage === code}
                   onClick={() => setSelectedLanguage(code)}
-                  title={`Show ${getLanguageChipLabel(code)} songs`}
+                  title={t('songs.languageTooltip', { language: getLanguageChipLabel(code) })}
                 >
                   {getLanguageChipLabel(code)}
                 </Chip>
@@ -381,8 +383,8 @@ export default function Songs(){
             value={q}
             onChange={(e)=> setQ(e.target.value)}
             onKeyDown={onSearchKeyDown}
-            placeholder="Search title/tags/authors…"
-            aria-label="Search songs"
+            placeholder={t('songs.searchPlaceholder')}
+            aria-label={t('songs.searchAria')}
           />
           <div className="row" style={{gap:8, alignItems:'center'}}>
             <label className="row" style={{gap:8, alignItems:'center'}}>
@@ -391,7 +393,7 @@ export default function Songs(){
                 checked={lyricsOn}
                 onChange={(e)=> setLyricsOn(e.target.checked)}
               />
-              <span className="meta" title="Search within song texts (fetched on demand)">Lyrics contain</span>
+              <span className="meta" title={t('songs.lyricsContainTooltip')}>{t('songs.lyricsContain')}</span>
             </label>
             <label className="row" style={{gap:8, alignItems:'center'}}>
               <input
@@ -399,20 +401,20 @@ export default function Songs(){
                 checked={communityOnly}
                 onChange={(e)=> setCommunityOnly(e.target.checked)}
               />
-              <span className="meta" title="Limit results to songs tagged Community">Community Setlist</span>
+              <span className="meta" title={t('songs.communitySetlistTooltip')}>{t('songs.communitySetlist')}</span>
             </label>
           </div>
 
           <div className="row">
             <div className="tagbar">
-              <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>All</Chip>
-              {allTags.map((t) => (
+              <Chip variant="filter" selected={selectedTags.length===0} onClick={clearTags}>{t('songs.all')}</Chip>
+              {allTags.map((tag) => (
                 <Chip
-                  key={t.key}
+                  key={tag.key}
                   variant="filter"
-                  selected={selectedTags.includes(t.key)}
-                  onClick={() => toggleTag(t.key)}
-                >{t.label}</Chip>
+                  selected={selectedTags.includes(tag.key)}
+                  onClick={() => toggleTag(tag.key)}
+                >{tag.label}</Chip>
               ))}
             </div>
           </div>
@@ -425,7 +427,7 @@ export default function Songs(){
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
-        <div className="HomeGrid" role="listbox" aria-label="Song results">
+        <div className="HomeGrid" role="listbox" aria-label={t('songs.resultsAria')}>
           {resultParts.translated.map((s, i) => (
             <SongCard
               as={Link}
@@ -446,7 +448,7 @@ export default function Songs(){
 
           {resultParts.translated.length > 0 && resultParts.fallback.length > 0 ? (
             <div className="gc-translation-divider" role="separator">
-              <span>No Translation in Selected Language</span>
+              <span>{t('songs.noTranslation')}</span>
             </div>
           ) : null}
 

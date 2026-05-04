@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
@@ -128,6 +129,7 @@ const SET_LIMITS = {
 }
 
 export default function Setlist(){
+  const { t } = useTranslation('pages')
   const { code: routeCode, songIds: routeSongIds } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
@@ -431,7 +433,7 @@ export default function Setlist(){
   async function addVerseFromInput(input){
     const parsed = parseVerseReference(input, { translation: verseTranslation })
     if (parsed.error) {
-      setVerseError('Please check verse reference.')
+      setVerseError(t('setlist.checkVerse'))
       return false
     }
     const validation = await validateVerseReference(parsed)
@@ -590,20 +592,20 @@ export default function Setlist(){
     setSelectedId(idToSelect || '')
   }
   function onNew(){
-    setCurrentId(null); setLoadedServiceDate(null); setName('New Setlist'); setList([]); setSelectedId('')
+    setCurrentId(null); setLoadedServiceDate(null); setName(t('setlist.newSetlist')); setList([]); setSelectedId('')
   }
 
   // Opens the save modal pre-filled for create or overwrite.
   function onSave(){
-    if (!isLoggedIn) { showToast('Sign in to save setlists.'); return }
-    setSaveModalName(name?.trim() || 'New Setlist')
+    if (!isLoggedIn) { showToast(t('setlist.signInToSaveToast')); return }
+    setSaveModalName(name?.trim() || t('setlist.newSetlist'))
     setSaveModalDate(currentId && loadedServiceDate ? loadedServiceDate : '')
     setSaveModalOpen(true)
   }
 
   // Executes the actual DB save when the modal's Save button is pressed.
   async function handleSaveConfirm(){
-    const finalName = saveModalName.trim() || 'New Setlist'
+    const finalName = saveModalName.trim() || t('setlist.newSetlist')
     const finalDate = saveModalDate || null
     const songs = list.map(({ id, toKey }) => {
         const song = getSongById(id)
@@ -616,9 +618,9 @@ export default function Setlist(){
       let eligible = false
       try { const { data } = await supabase.rpc('is_collaborator_eligible'); eligible = !!data } catch {}
       if (userRole === 'user' && eligible) {
-        showToast(`Limit of ${userSetLimit} reached. Request collaborator access to save more.`)
+        showToast(t('setlist.limitReachedCollab', { limit: userSetLimit }))
       } else {
-        showToast(`You've reached your ${userSetLimit} set limit.`)
+        showToast(t('setlist.limitReached', { limit: userSetLimit }))
       }
       setSaveModalOpen(false)
       return
@@ -640,9 +642,9 @@ export default function Setlist(){
 
     if (error) {
       if (error.message?.includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
-        showToast(`You've reached your ${userSetLimit} set limit.`)
+        showToast(t('setlist.limitReached', { limit: userSetLimit }))
       } else {
-        showToast('Failed to save setlist.')
+        showToast(t('setlist.failedSave'))
         console.error('[Setlist] save:', error)
       }
       return
@@ -653,20 +655,20 @@ export default function Setlist(){
     if (finalDate !== undefined) setLoadedServiceDate(finalDate)
     setSaveModalOpen(false)
     await refreshSaved(savedId || '')
-    showToast(currentId ? 'Setlist updated.' : 'Setlist saved.')
+    showToast(currentId ? t('setlist.setlistUpdated') : t('setlist.setlistSaved'))
   }
 
   // Load a setlist from a Saved Sets card.
   async function handleLoadFromCard(setlistId){
     const { data, error } = await dbLoadSetlist(setlistId)
-    if (error) { showToast('Failed to load setlist.'); return }
+    if (error) { showToast(t('setlist.failedLoad')); return }
     const card = savedSets.find(s => s.id === setlistId)
     setList(hydrateSelections((data || []).map(row => {
         const song = songs.find(s => s.dbId === row.song_id)
         return { id: song?.id ?? row.song_id, toKey: row.key_override || '' }
-    })))    
+    })))
     setCurrentId(setlistId)
-    setName(card?.name || 'Setlist')
+    setName(card?.name || t('setlist.newSetlist'))
     setLoadedServiceDate(card?.service_date || null)
     setSelectedId(setlistId)
     setMobileTab('current')
@@ -676,10 +678,10 @@ export default function Setlist(){
   async function handleDeleteFromCard(setlistId){
     const { error } = await dbDeleteSetlist(setlistId)
     setDeleteConfirmId(null)
-    if (error) { showToast('Failed to delete setlist.'); return }
+    if (error) { showToast(t('setlist.failedDelete')); return }
     if (currentId === setlistId) { setCurrentId(null); setLoadedServiceDate(null) }
     await refreshSaved('')
-    showToast('Setlist deleted.')
+    showToast(t('setlist.setlistDeleted'))
   }
 
   // Toolbar Load button: navigate to Saved Sets tab on mobile; no-op on desktop.
@@ -689,10 +691,10 @@ export default function Setlist(){
 
   async function onDelete(){
     if (!currentId) return
-    if (window.confirm(`Delete set "${name}"? This cannot be undone.`)){
+    if (window.confirm(t('setlist.deleteConfirm', { name }))){
       if (isLoggedIn) {
         const { error } = await dbDeleteSetlist(currentId)
-        if (error) { showToast('Failed to delete setlist.'); return }
+        if (error) { showToast(t('setlist.failedDelete')); return }
       } else {
         deleteSet(currentId)
       }
@@ -705,7 +707,7 @@ export default function Setlist(){
     const id = loadChoice || selectedId || ''
     if (!id) { setLoadOpen(false); return }
     const s = getSet(id)
-    if (s){ setCurrentId(s.id); setName(s.name || 'New Setlist'); setList(hydrateSelections(s.items || [])); setSelectedId(s.id) }
+    if (s){ setCurrentId(s.id); setName(s.name || t('setlist.newSetlist')); setList(hydrateSelections(s.items || [])); setSelectedId(s.id) }
     setLoadOpen(false)
   }
 
@@ -741,7 +743,7 @@ async function exportPdf() {
       if (isVerseId(sel.id)) {
         const parsed = parseVerseId(sel.id)
         if (!parsed) {
-          showToast('Please check verse reference.')
+          showToast(t('setlist.checkVerse'))
           continue
         }
         try {
@@ -784,7 +786,7 @@ async function exportPdf() {
           }
 
           if (!lines.length) {
-            showToast(`No verses found for ${parsed.refDisplay}`)
+            showToast(t('setlist.noVersesFound', { ref: parsed.refDisplay }))
             continue
           }
 
@@ -796,7 +798,7 @@ async function exportPdf() {
           })
         } catch (err) {
           console.error(err)
-          showToast(`Failed to load ${parsed.refDisplay}`)
+          showToast(t('setlist.failedLoadVerse', { ref: parsed.refDisplay }))
         }
         continue
       }
@@ -848,7 +850,7 @@ async function exportPdf() {
         songs.push(song);
       } catch (err) {
         console.error(err);
-        showToast(`Failed to process ${s.title}`);
+        showToast(t('setlist.failedProcess', { title: s.title }));
       }
     }
 
@@ -878,8 +880,8 @@ async function exportPdf() {
       })()
       const url = `${baseOrigin}setlist/${ids}?toKeys=${keys}`
       await navigator.clipboard.writeText(url)
-      try { showToast?.('Link copied!') } catch {}
-    } catch (e) { alert('Failed to copy link') }
+      try { showToast?.(t('setlist.linkCopied')) } catch {}
+    } catch (e) { alert(t('setlist.failedCopy')) }
   }
 
   useEffect(() => {
@@ -890,7 +892,7 @@ async function exportPdf() {
   }, [verseInput, verseOpen])
 
   async function validateVerseReference(parsed){
-    if (!parsed?.book || !parsed?.segments?.length) return { ok: false, message: 'Please check verse reference.' }
+    if (!parsed?.book || !parsed?.segments?.length) return { ok: false, message: t('setlist.checkVerse') }
 
     async function loadChapter(translationId, book, chapter){
       const key = `${translationId}::${book}::${chapter}`
@@ -909,7 +911,7 @@ async function exportPdf() {
     let foundAny = false
     for (const segment of parsed.segments) {
       const chapterData = await loadChapter(parsed.translation, String(parsed.bookNumber), segment.chapter)
-      if (!chapterData?.verses) return { ok: false, message: 'No verse found.' }
+      if (!chapterData?.verses) return { ok: false, message: t('setlist.noVerseFound') }
       const verseMap = chapterData.verses || {}
       const verseKeys = Object.keys(verseMap)
       if (!segment.ranges) {
@@ -920,12 +922,12 @@ async function exportPdf() {
         const start = range.start
         const end = range.end ?? start
         if (!verseMap[String(start)] || !verseMap[String(end)]) {
-          return { ok: false, message: 'Please check verse reference.' }
+          return { ok: false, message: t('setlist.checkVerse') }
         }
         foundAny = true
       }
     }
-    if (!foundAny) return { ok: false, message: 'No verse found.' }
+    if (!foundAny) return { ok: false, message: t('setlist.noVerseFound') }
     return { ok: true }
   }
 
@@ -937,15 +939,15 @@ async function exportPdf() {
 
   async function bundlePptx(){
     if (combinePptxProgress) return
-    setPptxProgress(`Bundling 0/${list.length}…`)
+    setPptxProgress(t('setlist.bundling', { current: 0, total: list.length }))
     const JSZip = (await import('jszip')).default
     const zip = new JSZip()
     let added = 0
     for(let i=0; i<list.length; i++){
       const sel = list[i]
       const s = getSongById(sel.id)
-      if(!s){ setPptxProgress(`Bundling ${i+1}/${list.length}…`); continue }
-      setPptxProgress(`Bundling ${i+1}/${list.length}…`)
+      if(!s){ setPptxProgress(t('setlist.bundling', { current: i+1, total: list.length })); continue }
+      setPptxProgress(t('setlist.bundling', { current: i+1, total: list.length }))
       const slug = s.filename.replace(/\.chordpro$/i, '')
       if(!pptxMap[slug]) continue
       try{
@@ -965,14 +967,14 @@ async function exportPdf() {
       a.click()
       URL.revokeObjectURL(a.href)
     } else {
-      try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
+      try { (showToast && showToast(t('setlist.noPptxFound'))) || alert(t('setlist.noPptxFound')) } catch {}
     }
     setPptxProgress('')
   }
 
   async function combineSetlistPptx(){
     if (pptxProgress || combinePptxProgress) return
-    setCombinePptxProgress('Combining…')
+    setCombinePptxProgress(t('setlist.combining'))
     try {
       const songs = []
       const missing = []
@@ -987,14 +989,14 @@ async function exportPdf() {
         songs.push(s)
       }
       if (!songs.length) {
-        try { (showToast && showToast('No PPTX files found for selected songs')) || alert('No PPTX files found for selected songs') } catch {}
+        try { (showToast && showToast(t('setlist.noPptxFound'))) || alert(t('setlist.noPptxFound')) } catch {}
         return
       }
       if (missing.length) {
         const msg =
           missing.length === 1
-            ? `${missing[0]} PPT file unavailable`
-            : `${missing.length} songs missing PPT files`
+            ? t('setlist.pptUnavailable', { title: missing[0] })
+            : t('setlist.songsMissingPpt', { count: missing.length })
         try { showToast?.(msg) } catch {}
       }
       await downloadSetlistAsPptx(
@@ -1003,7 +1005,7 @@ async function exportPdf() {
       )
     } catch (err) {
       console.error(err)
-      try { (showToast && showToast('Failed to combine PPTX files')) || alert('Failed to combine PPTX files') } catch {}
+      try { (showToast && showToast(t('setlist.failedCombine'))) || alert(t('setlist.failedCombine')) } catch {}
     } finally {
       setCombinePptxProgress('')
     }
@@ -1016,9 +1018,9 @@ async function exportPdf() {
       {saveModalOpen ? (
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
           <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:20, width:'min(480px, 92vw)', display:'flex', flexDirection:'column', gap:12 }}>
-            <h3 id="save-modal-title" style={{ margin:0 }}>{currentId ? 'Update Setlist' : 'Save Setlist'}</h3>
+            <h3 id="save-modal-title" style={{ margin:0 }}>{currentId ? t('setlist.updateModalTitle') : t('setlist.saveModalTitle')}</h3>
             <div className="gc-field">
-              <label className="gc-label" htmlFor="save-modal-name">Name <span aria-hidden style={{ color:'var(--gc-danger)' }}>*</span></label>
+              <label className="gc-label" htmlFor="save-modal-name">{t('setlist.fieldName')} <span aria-hidden style={{ color:'var(--gc-danger)' }}>*</span></label>
               <input
                 id="save-modal-name"
                 className="gc-input"
@@ -1031,7 +1033,7 @@ async function exportPdf() {
               />
             </div>
             <div className="gc-field">
-              <label className="gc-label" htmlFor="save-modal-date">Service date <span className="meta">(optional)</span></label>
+              <label className="gc-label" htmlFor="save-modal-date">{t('setlist.fieldServiceDate')} <span className="meta">{t('setlist.fieldOptional')}</span></label>
               <input
                 id="save-modal-date"
                 className="gc-input"
@@ -1042,9 +1044,9 @@ async function exportPdf() {
               />
             </div>
             <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop:4 }}>
-              <Button onClick={() => setSaveModalOpen(false)} disabled={saveBusy}>Cancel</Button>
+              <Button onClick={() => setSaveModalOpen(false)} disabled={saveBusy}>{t('setlist.cancel')}</Button>
               <Button variant="primary" onClick={handleSaveConfirm} disabled={saveBusy || !saveModalName.trim()} loading={saveBusy}>
-                {currentId ? 'Update' : 'Save'}
+                {currentId ? t('setlist.update') : t('setlist.save')}
               </Button>
             </div>
           </div>
@@ -1054,11 +1056,11 @@ async function exportPdf() {
       {verseOpen ? (
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
           <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:16, width:'min(560px, 92vw)' }}>
-            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Add Verse</h3>
+            <h3 style={{ marginTop: 0, marginBottom: 8 }}>{t('setlist.addVerseTitle')}</h3>
             <div className="gc-field" style={{ margin:'8px 0' }}>
               <div style={{ display:'grid', gridTemplateColumns:'1fr minmax(220px, 34%)', gap:8, alignItems:'center' }}>
-                <label className="gc-label" htmlFor="verse-input">Bible verse</label>
-                <label className="gc-label" htmlFor="verse-translation">Translation</label>
+                <label className="gc-label" htmlFor="verse-input">{t('setlist.bibleVerse')}</label>
+                <label className="gc-label" htmlFor="verse-translation">{t('setlist.translation')}</label>
                 <div style={{ position:'relative' }}>
                   {(() => {
                     const completion = buildVerseCompletion(verseInput, verseSuggest)
@@ -1088,7 +1090,7 @@ async function exportPdf() {
                     id="verse-input"
                     value={verseInput}
                     onChange={(e) => { setVerseInput(e.target.value); if (verseError) setVerseError('') }}
-                    placeholder="John 3:16"
+                    placeholder={t('setlist.versePlaceholder')}
                     onKeyDown={(e) => {
                       if (e.key === 'Tab' && buildVerseCompletion(verseInput, verseSuggest)) {
                         e.preventDefault()
@@ -1109,48 +1111,48 @@ async function exportPdf() {
                   value={verseTranslation}
                   groups={translationGroups}
                   onChange={setVerseTranslation}
-                  ariaLabel="Choose Bible translation"
+                  ariaLabel={t('setlist.translationAria')}
                   fullWidth
                 />
               </div>
             </div>
             {verseError ? <div className="meta" style={{ color:'var(--gc-danger)', marginTop: 6 }}>{verseError}</div> : null}
             <div className="row" style={{ justifyContent:'flex-end', gap:8, marginTop: 12 }}>
-              <Button onClick={() => { setVerseOpen(false); setVerseError('') }}>Cancel</Button>
-              <Button variant="primary" onClick={() => addVerseFromInput(verseInput)}>Add Verse</Button>
+              <Button onClick={() => { setVerseOpen(false); setVerseError('') }}>{t('setlist.cancel')}</Button>
+              <Button variant="primary" onClick={() => addVerseFromInput(verseInput)}>{t('setlist.addVerse')}</Button>
             </div>
           </div>
         </div>
       ) : null}
       <Busy busy={busy} />
-      <PageHeader title="Setlist Builder" />
+      <PageHeader title={t('setlist.title')} />
 
       {/* Toolbar: mobile condensed vs desktop/tablet full */}
       {isMobile ? (
         <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
           <div className="builder-mobile-actions" style={{ width:'100%', display:'flex', gap:8, alignItems:'center' }}>
-            <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>PDF</Button>
-            <Button as={Link} variant="primary" to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}>Worship</Button>
-            <Button iconOnly title="More actions" aria-label="More actions" onClick={() => setMobileActionsOpen(true)} iconLeft={<SlidersIcon />} />
+            <Button variant="primary" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title={t('setlist.exportPdfTooltip')} iconLeft={<DownloadIcon />}>{t('setlist.exportPdfShort')}</Button>
+            <Button as={Link} variant="primary" to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={t('setlist.worshipModeTooltip')} iconLeft={<MediaIcon />}>{t('setlist.worshipModeShort')}</Button>
+            <Button iconOnly title={t('setlist.moreActions')} aria-label={t('setlist.moreActions')} onClick={() => setMobileActionsOpen(true)} iconLeft={<SlidersIcon />} />
           </div>
         </Toolbar>
       ) : (
         <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
           <div style={{ width: '100%', marginBottom: 6, display:'flex', alignItems:'center', gap:8 }}>
-            <strong title="Current set name">{name || 'New Setlist'}</strong>
-            {currentId && isLoggedIn ? <span className="meta">(saved)</span> : null}
+            <strong title={t('setlist.currentSetTitle')}>{name || t('setlist.newSetlist')}</strong>
+            {currentId && isLoggedIn ? <span className="meta">{t('setlist.saved')}</span> : null}
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-              <Button size="sm" variant="secondary" onClick={onSave} title="Save set" iconLeft={<SaveIcon />}> <span className="text-when-wide">Save</span></Button>
-              <Button size="sm" variant="secondary" onClick={onNew} title="New set" iconLeft={<PlusIcon />}> <span className="text-when-wide">New</span></Button>
-              <Button size="sm" variant="secondary" onClick={copySetLink} title="Copy shareable link" iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">Share Set</span></Button>
+              <Button size="sm" variant="secondary" onClick={onSave} title={t('setlist.saveTooltip')} iconLeft={<SaveIcon />}> <span className="text-when-wide">{t('setlist.save')}</span></Button>
+              <Button size="sm" variant="secondary" onClick={onNew} title={t('setlist.newTooltip')} iconLeft={<PlusIcon />}> <span className="text-when-wide">{t('setlist.new')}</span></Button>
+              <Button size="sm" variant="secondary" onClick={copySetLink} title={t('setlist.shareTooltip')} iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">{t('setlist.shareSet')}</span></Button>
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-              <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title="Export set as a single PDF" iconLeft={<DownloadIcon />}>{busy ? 'Exporting…' : <><span className="text-when-wide">Export PDF</span><span className="text-when-narrow">PDF</span></>}</Button>
-              <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to combine PPTX files' : 'Combine PPTX files into a single presentation'} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">Export PPT</span><span className="text-when-narrow">Export PPT</span></>}</Button>
-              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? 'Add songs to export PPTX bundle' : 'Export PPTX bundle (ZIP) for selected songs'} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">PPT ZIP</span><span className="text-when-narrow">PPT ZIP</span></>}</Button>
-              <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={'Open Worship Mode'} iconLeft={<MediaIcon />}> <span className="text-when-wide">Worship Mode</span><span className="text-when-narrow">Worship</span></Button>
+              <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title={t('setlist.exportPdfTooltip')} iconLeft={<DownloadIcon />}>{busy ? t('setlist.exporting') : <><span className="text-when-wide">{t('setlist.exportPdf')}</span><span className="text-when-narrow">{t('setlist.exportPdfShort')}</span></>}</Button>
+              <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.exportPptDisabled') : t('setlist.exportPptTooltip')} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">{t('setlist.exportPpt')}</span><span className="text-when-narrow">{t('setlist.exportPpt')}</span></>}</Button>
+              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.pptZipDisabled') : t('setlist.pptZipTooltip')} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">{t('setlist.pptZip')}</span><span className="text-when-narrow">{t('setlist.pptZip')}</span></>}</Button>
+              <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={t('setlist.worshipModeTooltip')} iconLeft={<MediaIcon />}> <span className="text-when-wide">{t('setlist.worshipMode')}</span><span className="text-when-narrow">{t('setlist.worshipModeShort')}</span></Button>
             </div>
           </div>
         </Toolbar>
@@ -1159,9 +1161,9 @@ async function exportPdf() {
         <MobilePaneTabs
           value={mobileTab}
           onChange={setMobileTab}
-          addLabel="Add songs"
-          currentLabel={`Current (${list.length})`}
-          savedLabel={`Saved${isLoggedIn && savedSets.length ? ` (${savedSets.length})` : ''}`}
+          addLabel={t('setlist.addSongsTab')}
+          currentLabel={t('setlist.currentTab', { count: list.length })}
+          savedLabel={isLoggedIn && savedSets.length ? t('setlist.savedTabCount', { count: savedSets.length }) : t('setlist.savedTab')}
         />
       ) : null}
 
@@ -1171,19 +1173,19 @@ async function exportPdf() {
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'grid', gap:8 }}>
                 <div className="builder-search-row">
-                  <strong style={{ whiteSpace:'nowrap' }}>Add songs</strong>
-                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder="Search..." style={{flex:1, minWidth:0}} />
+                  <strong style={{ whiteSpace:'nowrap' }}>{t('setlist.addSongs')}</strong>
+                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder={t('setlist.search')} style={{flex:1, minWidth:0}} />
                 </div>
                 <div className="builder-options-row">
                   <label className="row" style={{gap:6, alignItems:'center'}}>
                     <input type="checkbox" checked={communityOnly} onChange={e=> setCommunityOnly(e.target.checked)} />
-                    <span className="meta" title="Limit results to songs tagged Community">Community Setlist</span>
+                    <span className="meta" title={t('setlist.communitySetlistTooltip')}>{t('setlist.communitySetlist')}</span>
                   </label>
                 </div>
               </div>
               {languageChipCodes.length > 0 ? (
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ paddingTop: 0, display:'flex', alignItems:'center', gap:8 }}>
-                  <span className="meta">Language</span>
+                  <span className="meta">{t('setlist.language')}</span>
                   <div className="tagbar">
                     {languageChipCodes.map((code) => (
                       <Chip
@@ -1191,7 +1193,7 @@ async function exportPdf() {
                         variant="filter"
                         selected={selectedLanguage === code}
                         onClick={() => setSelectedLanguage(code)}
-                        title={`Use ${getLanguageChipLabel(code)} where available`}
+                        title={t('setlist.languageTooltip', { language: getLanguageChipLabel(code) })}
                       >
                         {getLanguageChipLabel(code)}
                       </Chip>
@@ -1201,7 +1203,7 @@ async function exportPdf() {
               ) : null}
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--addSongs'].join(' ')}>
                 {items.length === 0 ? (
-                  <div>Loading search…</div>
+                  <div>{t('setlist.loadingSearch')}</div>
                 ) : (
                   <div style={{ display:'grid', gap:'.5rem', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', marginTop:6 }}>
                     {results.map(s=> (
@@ -1212,7 +1214,7 @@ async function exportPdf() {
                           const visible = filterDisplayTags(s.tags)
                           return `${s.originalKey || ''}${visible.length ? ` • ${visible.join(', ')}` : ''}`
                         })()}
-                        rightSlot={<Button aria-label="Add" title="Add to set" variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
+                        rightSlot={<Button aria-label={t('setlist.addAria')} title={t('setlist.addToSet')} variant="primary" iconLeft={<PlusIcon />} iconOnly onClick={(e)=> { e.stopPropagation(); addSong(s) }} />}
                         onClick={() => addSong(s)}
                       />
                     ))}
@@ -1227,8 +1229,8 @@ async function exportPdf() {
           <section className="setlist-section setlist-current" data-role="current" hidden={isStacked && mobileTab === 'saved'} style={!isStacked ? { flex:'1 1 0', minHeight:0 } : undefined}>
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-                <strong>Current setlist ({list.length})</strong>
-                <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>Add Verse</Button>
+                <strong>{t('setlist.currentSetlistCount', { count: list.length })}</strong>
+                <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>{t('setlist.addVerse')}</Button>
               </div>
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
                 <div style={{ display:'grid', gap:8 }}>
@@ -1249,9 +1251,9 @@ async function exportPdf() {
                         subtitle={translationLabel}
                         rightSlot={
                           <div className="setlist-row-actions">
-                            <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
-                            <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
-                            <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
+                            <Button onClick={()=> move(sel.uid,'up')} title={t('setlist.moveUp')} iconLeft={<ArrowUp />} />
+                            <Button onClick={()=> move(sel.uid,'down')} title={t('setlist.moveDown')} iconLeft={<ArrowDown />} />
+                            <Button onClick={()=> removeSong(sel.uid)} title={t('setlist.remove')} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                           </div>
                         }
                       />
@@ -1323,19 +1325,19 @@ async function exportPdf() {
             >
               <div className="card setlist-pane">
                 <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-                  <strong>Saved Sets</strong>
+                  <strong>{t('setlist.savedSets')}</strong>
                   {!setsLoading && (
-                    <span className="meta" title="Your usage toward the plan limit">
-                      {savedSets.length} of {userSetLimit} used
+                    <span className="meta" title={t('setlist.savedSetsLimitTooltip')}>
+                      {t('setlist.usageCount', { count: savedSets.length, limit: userSetLimit })}
                     </span>
                   )}
                 </div>
 
                 <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--savedSets'].join(' ')} style={{ marginTop:6 }}>
                   {setsLoading ? (
-                    <div className="meta" style={{ padding:'12px 0' }}>Loading…</div>
+                    <div className="meta" style={{ padding:'12px 0' }}>{t('setlist.loading')}</div>
                   ) : savedSets.length === 0 ? (
-                    <div className="meta" style={{ padding:'12px 0' }}>No saved setlists yet. Build a set and press Save.</div>
+                    <div className="meta" style={{ padding:'12px 0' }}>{t('setlist.noSavedSets')}</div>
                   ) : (
                     <div style={{ display:'grid', gap:8 }}>
                       {savedSets.map(s => {
@@ -1345,24 +1347,25 @@ async function exportPdf() {
                           : null
                         const isConfirming = deleteConfirmId === s.id
                         const isLoaded = currentId === s.id
-                        const subtitle = [serviceDate, `${songCount} ${songCount === 1 ? 'song' : 'songs'}`].filter(Boolean).join(' · ')
+                        const songLabel = songCount === 1 ? t('setlist.songSingular') : t('setlist.songPlural')
+                        const subtitle = [serviceDate, `${songCount} ${songLabel}`].filter(Boolean).join(' · ')
                         return (
                           <SongCard
                             key={s.id}
-                            title={<>{s.name}{isLoaded ? <span className="meta" style={{ marginLeft:6, fontWeight:400 }}>(loaded)</span> : null}</>}
+                            title={<>{s.name}{isLoaded ? <span className="meta" style={{ marginLeft:6, fontWeight:400 }}>{t('setlist.loaded')}</span> : null}</>}
                             subtitle={subtitle}
                             style={isLoaded ? { background:'var(--gc-surface-2)' } : undefined}
                             rightSlot={
                               isConfirming ? (
                                 <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                                  <span className="meta" style={{ whiteSpace:'nowrap' }}>Delete?</span>
-                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteFromCard(s.id)}>Yes</Button>
-                                  <Button size="sm" onClick={() => setDeleteConfirmId(null)}>No</Button>
+                                  <span className="meta" style={{ whiteSpace:'nowrap' }}>{t('setlist.deletePrompt')}</span>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteFromCard(s.id)}>{t('setlist.yes')}</Button>
+                                  <Button size="sm" onClick={() => setDeleteConfirmId(null)}>{t('setlist.no')}</Button>
                                 </div>
                               ) : (
                                 <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                                  <Button size="sm" variant="secondary" onClick={() => handleLoadFromCard(s.id)}>Load</Button>
-                                  <Button size="sm" variant="secondary" onClick={() => setDeleteConfirmId(s.id)} iconLeft={<TrashIcon />} iconOnly title="Delete this setlist" />
+                                  <Button size="sm" variant="secondary" onClick={() => handleLoadFromCard(s.id)}>{t('setlist.load')}</Button>
+                                  <Button size="sm" variant="secondary" onClick={() => setDeleteConfirmId(s.id)} iconLeft={<TrashIcon />} iconOnly title={t('setlist.deleteTooltip')} />
                                 </div>
                               )
                             }
@@ -1381,7 +1384,7 @@ async function exportPdf() {
               hidden={isStacked && mobileTab === 'current'}
             >
               <div className="card setlist-pane" style={{ flex:'0 0 auto', padding:'16px', textAlign:'center' }}>
-                <div className="meta">Sign in to save and load personal setlists.</div>
+                <div className="meta">{t('setlist.signInToSave')}</div>
               </div>
             </section>
           )}
@@ -1390,15 +1393,15 @@ async function exportPdf() {
       <MobileActionSheet
         open={mobileActionsOpen}
         onClose={() => setMobileActionsOpen(false)}
-        title="Setlist actions"
+        title={t('setlist.actionsTitle')}
       >
         <div className="gc-mobile-actions">
-          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>Save</Button>
-          <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>Saved Sets</Button>
-          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>New</Button>
-          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>Share</Button>
-          <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || 'Export PPT'}</Button>
-          <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || 'PPT ZIP'}</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>{t('setlist.save')}</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>{t('setlist.savedSetsAction')}</Button>
+          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>{t('setlist.new')}</Button>
+          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
+          <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || t('setlist.exportPpt')}</Button>
+          <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || t('setlist.pptZip')}</Button>
         </div>
       </MobileActionSheet>
     </PageContainer>
