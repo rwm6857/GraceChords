@@ -2,6 +2,8 @@ import React from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import '../styles/admin-portal.css'
+import '../styles/editor.css'
 
 export default function EditorPage() {
   const { profile, role } = useAuth()

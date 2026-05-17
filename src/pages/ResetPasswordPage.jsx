@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
+import '../styles/auth.css'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()

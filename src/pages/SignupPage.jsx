@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import { showToast } from '../utils/app/toast'
 import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
+import '../styles/auth.css'
 
 function GoogleIcon() {
   return (

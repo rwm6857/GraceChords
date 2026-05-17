@@ -13,6 +13,8 @@ import ChordProEditor from '../../components/editor/ChordProEditor'
 import LivePreviewModal from '../../components/editor/LivePreviewModal'
 import ChordProGuideDrawer from '../../components/editor/ChordProGuideDrawer'
 import SuggestionReviewPanel from '../../components/editor/SuggestionReviewPanel'
+import '../../styles/admin-portal.css'
+import '../../styles/editor.css'
 
 const BLANK_FORM = {
   title: '',

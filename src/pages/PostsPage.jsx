@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { fetchPublishedPostsWithAuthors } from '../hooks/usePosts'
 import Button from '../components/ui/layout-kit/Button'
+import '../styles/posts.css'
 
 function formatDate(iso) {
   if (!iso) return ''

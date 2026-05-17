@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import '../styles/auth.css'
 
 export default function LoginPage() {
   const { t } = useTranslation(['auth', 'common'])

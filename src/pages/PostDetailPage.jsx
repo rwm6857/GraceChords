@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import DOMPurify from 'dompurify'
 import { fetchPostBySlug } from '../hooks/usePosts'
+import '../styles/posts.css'
 
 // TipTap-authored posts may include YouTube/Vimeo embeds. Strip any iframe whose
 // src is not from a known-safe host so a compromised editor can't inject scripts

@@ -224,6 +224,17 @@ export default function HomeDashboard(){
     blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
   }
 
+  // Fetch published posts in parallel with the songs query so the network
+  // requests don't serialize into the LCP critical chain.
+  useEffect(() => {
+    let cancelled = false
+    fetchPosts({ status: 'published' }).then(({ data }) => {
+      if (cancelled) return
+      setLatestPosts((data || []).slice(0, 3))
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   // Defer heavier work (sorting, observer) until idle to keep LCP quick
   // Defer heavy data prep and observers so first paint/LCP can happen quickly
   useEffect(() => {
@@ -231,7 +242,7 @@ export default function HomeDashboard(){
     const idle = window.requestIdleCallback || ((cb) => setTimeout(() => cb(), 1))
     const cancel = window.cancelIdleCallback || clearTimeout
     let observer = null
-    const idleId = idle(async () => {
+    const idleId = idle(() => {
       try {
         const catalog = buildSongCatalog(catalogSongs)
         const prefLang = resolveInitialSongLanguage(
@@ -274,8 +285,6 @@ export default function HomeDashboard(){
           .sort((a, b) => (b.addedMs || 0) - (a.addedMs || 0))
           .slice(0, 6)
         setLatestSongs(songsSorted)
-        const { data: postsData } = await fetchPosts({ status: 'published' })
-        setLatestPosts((postsData || []).slice(0, 3))
         setListsReady(true)
       } catch {
         setListsReady(true)

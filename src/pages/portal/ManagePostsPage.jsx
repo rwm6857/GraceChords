@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async'
 import { fetchPosts, deletePost } from '../../hooks/usePosts'
 import { useAuth } from '../../hooks/useAuth'
 import { showToast } from '../../utils/app/toast'
+import '../../styles/admin-portal.css'
+import '../../styles/posts.css'
 
 function StatusBadge({ status }) {
   return (
