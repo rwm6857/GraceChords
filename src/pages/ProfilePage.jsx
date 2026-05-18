@@ -9,6 +9,7 @@ import SpriteAvatar from '../components/ui/SpriteAvatar'
 import LanguageSelector from '../components/ui/LanguageSelector'
 import CollaboratorRequest from '../components/CollaboratorRequest'
 import { showToast } from '../utils/app/toast'
+import '../styles/settings.css'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {

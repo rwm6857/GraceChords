@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { showToast } from '../utils/app/toast'
 import Button from '../components/ui/layout-kit/Button'
 import { ROLES_BY_RANK_DESC } from '../lib/roles'
+import '../styles/admin-portal.css'
 
 function formatTime(date) {
   if (!date) return ''

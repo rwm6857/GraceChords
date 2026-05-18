@@ -5,6 +5,8 @@ import { createPost, fetchPostById, updatePost } from '../../hooks/usePosts'
 import { useAuth } from '../../hooks/useAuth'
 import { showToast } from '../../utils/app/toast'
 import PostEditor from '../../components/editor/PostEditor'
+import '../../styles/admin-portal.css'
+import '../../styles/posts.css'
 
 /* -----------------------------------------------------------------------
  * Derive a slug from a title:

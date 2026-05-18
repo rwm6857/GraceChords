@@ -5,6 +5,41 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
 
+// Inject a <link rel="preload"> for the hashed home-hero WebP variants so the
+// browser can fetch the LCP image before parsing the JS bundle. The hero file
+// names are content-hashed at build time, so the tag must be generated from the
+// emitted bundle rather than written by hand in index.html.
+const injectLcpPreload = {
+  name: 'inject-lcp-preload',
+  apply: 'build',
+  enforce: 'post',
+  transformIndexHtml(html, ctx) {
+    const wanted = ['768', '960', '1200']
+    const map = {}
+    for (const fileName of Object.keys(ctx.bundle || {})) {
+      const m = fileName.match(/assets\/dashboard-hero-worship-angled-(\d+)-[A-Za-z0-9_-]+\.webp$/)
+      if (m && wanted.includes(m[1])) map[m[1]] = '/' + fileName
+    }
+    const parts = wanted.filter(w => map[w]).map(w => `${map[w]} ${w}w`)
+    if (parts.length === 0) return html
+    return {
+      html,
+      tags: [{
+        tag: 'link',
+        attrs: {
+          rel: 'preload',
+          as: 'image',
+          type: 'image/webp',
+          imagesrcset: parts.join(', '),
+          imagesizes: '100vw',
+          fetchpriority: 'high',
+        },
+        injectTo: 'head-prepend',
+      }],
+    }
+  },
+}
+
 export default defineConfig({
   // Keep assets rooted at the site origin for absolute public paths.
   base: '/',
@@ -23,6 +58,7 @@ export default defineConfig({
         { src: '404.html', dest: '' }
       ]
     }),
+    injectLcpPreload,
     // Enable bundle analysis with ANALYZE=1 to find unused JS and split chunks safely
     process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],
@@ -47,7 +83,17 @@ export default defineConfig({
     // Keep previous hashed assets so stale cached HTML can still load CSS/JS.
     // This is important when a CDN caches HTML longer than expected.
     emptyOutDir: false,
-    chunkSizeWarningLimit: 1200
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase':     ['@supabase/supabase-js'],
+          'i18n':         ['i18next', 'react-i18next'],
+          'helmet':       ['react-helmet-async'],
+        },
+      },
+    },
   },
   optimizeDeps: {
     // pako v2 dropped its "main" field (only "module" + "exports" remain).
