@@ -203,13 +203,17 @@ function crc32(bytes) {
 
 // Returns Uint8Array (PNG bytes) or null if rasterisation isn't available.
 export async function renderSongJpg(env, song, key, { scale = 2 } = {}) {
+  console.log('renderSongJpg: entry')
   const lib = await getPdfium(env)
+  console.log('renderSongJpg: getPdfium ->', lib ? 'ok' : 'null')
   if (!lib) return null
 
   const pdfBuf = await renderSongPdf(env, song, key)
+  console.log('renderSongJpg: pdfBuf bytes=', pdfBuf?.byteLength ?? pdfBuf?.length)
   let document
   try {
     document = await lib.loadDocument(pdfBuf)
+    console.log('renderSongJpg: loadDocument ok')
   } catch (err) {
     console.warn('pdfium loadDocument failed:', err?.message || err)
     return null
@@ -218,19 +222,23 @@ export async function renderSongJpg(env, song, key, { scale = 2 } = {}) {
   try {
     const pageCount = document.getPageCount?.() || 1
     const page = document.getPage(0)
+    console.log('renderSongJpg: getPage(0) ok, pageCount=', pageCount)
     const out = await page.render({
       scale,
       // Custom renderer receives raw RGBA pixels — encode them ourselves so
       // we don't pull in a JPG/PNG WASM encoder.
       render: async ({ data, width, height }) => {
+        console.log('renderSongJpg: render callback w=', width, 'h=', height, 'data bytes=', data?.length)
         return await encodePng(width, height, data)
       },
     })
+    console.log('renderSongJpg: page.render returned shape=', out && typeof out === 'object' ? Object.keys(out).join(',') : typeof out)
     // Some pdfium versions return { data: Uint8Array } from the renderer
     const png = out?.image instanceof Uint8Array ? out.image
               : out?.data  instanceof Uint8Array ? out.data
               : out instanceof Uint8Array ? out
               : null
+    console.log('renderSongJpg: png bytes=', png?.length, 'null?', png === null)
     return png
   } catch (err) {
     console.warn('pdfium render failed:', err?.message || err)
