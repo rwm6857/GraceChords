@@ -25,17 +25,39 @@ if (typeof globalThis.window === 'undefined') {
 }
 
 // Build a song shape the pdf_mvp engine accepts. The pure engine reads
-// `lyricsBlocks` or `sections` plus `title` and `key`/`originalKey`. We pass
-// the parsed sections through; the parser lives at chordpro/parser.ts and is
-// also reused by the site.
+// `lyricsBlocks` or `sections` plus `title` and `key`/`originalKey`.
+// Transposition is the caller's responsibility (the engine renders chord
+// symbols verbatim) — the site does it in SongViewPage; we do it here.
 async function toRenderableSong(song, key) {
-  const { parseChordProOrLegacy } = await import('../../../src/utils/chordpro/parser.ts')
+  const [{ parseChordProOrLegacy }, { stepsBetween, transposeSymPrefer }] = await Promise.all([
+    import('../../../src/utils/chordpro/parser.ts'),
+    import('../../../src/utils/chordpro/index.js'),
+  ])
   const parsed = parseChordProOrLegacy(song.chordpro_content || '')
+  const originalKey = song.default_key || parsed.meta?.key || ''
+  const targetKey = key || originalKey
+  const steps = (originalKey && targetKey) ? stepsBetween(originalKey, targetKey) : 0
+  const preferFlat = /b/.test(String(targetKey))
+
+  const sections = steps === 0 ? parsed.sections : parsed.sections.map(sec => ({
+    ...sec,
+    instrumental: sec.instrumental
+      ? { ...sec.instrumental, chords: sec.instrumental.chords.map(s => transposeSymPrefer(s, steps, preferFlat)) }
+      : undefined,
+    lines: sec.lines.map(ln => ({
+      ...ln,
+      chords: ln.chords.map(c => ({ ...c, sym: transposeSymPrefer(c.sym, steps, preferFlat) })),
+      instrumental: ln.instrumental
+        ? { ...ln.instrumental, chords: ln.instrumental.chords.map(s => transposeSymPrefer(s, steps, preferFlat)) }
+        : undefined,
+    })),
+  }))
+
   return {
     title: song.title,
-    key: key || song.default_key || parsed.meta?.key || '',
-    originalKey: song.default_key || '',
-    sections: parsed.sections,
+    key: targetKey,
+    originalKey,
+    sections,
   }
 }
 
