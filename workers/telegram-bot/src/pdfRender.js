@@ -29,8 +29,8 @@ if (typeof globalThis.window === 'undefined') {
 // the parsed sections through; the parser lives at chordpro/parser.ts and is
 // also reused by the site.
 async function toRenderableSong(song, key) {
-  const { parseChordPro } = await import('../../../src/utils/chordpro/parser.ts')
-  const parsed = parseChordPro(song.chordpro_content || '', { key: key || song.default_key || '' })
+  const { parseChordProOrLegacy } = await import('../../../src/utils/chordpro/parser.ts')
+  const parsed = parseChordProOrLegacy(song.chordpro_content || '')
   return {
     title: song.title,
     key: key || song.default_key || parsed.meta?.key || '',
