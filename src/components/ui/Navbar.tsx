@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import SpriteAvatar from './SpriteAvatar'
 import SettingsCluster from './SettingsCluster'
 import { useSettings } from '../../hooks/useSettings'
+import '../../styles/auth.css'
 
 export default function Navbar(){
   const { t } = useTranslation(['nav', 'common'])
