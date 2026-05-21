@@ -11,6 +11,12 @@
 
 import { renderSingleSongPdfBuffer, renderMultiSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { makeFontRegistrar } from './fontsWorker.js'
+// Bundle the pdfium WASM at deploy time. Workers block
+// WebAssembly.instantiate(buffer); only pre-compiled WebAssembly.Module
+// instances are allowed, which is what wrangler's bundler produces from a
+// .wasm import. The subpath is exposed by @hyzyla/pdfium's package.json
+// exports map.
+import pdfiumWasmModule from '@hyzyla/pdfium/pdfium.wasm'
 
 let _fontRegistrar = null
 function fontRegistrar(env) {
@@ -77,42 +83,26 @@ export async function renderSetlistPdf(env, songs, keys = []) {
 // ---- JPG (best-effort) -----------------------------------------------------
 
 let _pdfiumLib = null
-let _wasmBytesPromise = null
 
-const WASM_R2_KEYS = ['pdfium/pdfium.wasm', 'pdfium.wasm']
-
-async function loadPdfiumWasm(env) {
-  if (!_wasmBytesPromise) {
-    _wasmBytesPromise = (async () => {
-      if (!env?.R2_BUCKET) throw new Error('R2_BUCKET binding missing')
-      for (const key of WASM_R2_KEYS) {
-        const obj = await env.R2_BUCKET.get(key)
-        if (obj) {
-          console.log('pdfium WASM: found at R2 key', key)
-          return await obj.arrayBuffer()
-        }
-      }
-      throw new Error(`pdfium WASM not in R2 — checked keys: ${WASM_R2_KEYS.join(', ')}`)
-    })().catch(err => {
-      _wasmBytesPromise = null
-      throw err
-    })
-  }
-  return _wasmBytesPromise
-}
-
-async function getPdfium(env) {
+async function getPdfium() {
   if (_pdfiumLib) return _pdfiumLib
   try {
-    // The base @hyzyla/pdfium entry lets us bring our own WASM. We fetch it
-    // from R2 (same bucket as the Noto TTFs) to avoid the CDN entry's
-    // subresource-integrity fetch, which Cloudflare Workers don't support.
-    const wasmBinary = await loadPdfiumWasm(env)
-    console.log('pdfium: wasm loaded, bytes=', wasmBinary?.byteLength)
+    // instantiateWasm is Emscripten's hook for caller-controlled
+    // instantiation. We use it to feed the bundled WebAssembly.Module
+    // directly to pdfium — Workers allow WebAssembly.instantiate(module,
+    // imports) when passed a precompiled Module, but reject the same call
+    // when passed a buffer.
     const { PDFiumLibrary } = await import('@hyzyla/pdfium')
-    console.log('pdfium: module imported, calling init')
-    _pdfiumLib = await PDFiumLibrary.init({ wasmBinary })
-    console.log('pdfium: init complete')
+    _pdfiumLib = await PDFiumLibrary.init({
+      instantiateWasm: (imports, success) => {
+        WebAssembly.instantiate(pdfiumWasmModule, imports).then(instance => {
+          success(instance, pdfiumWasmModule)
+        }).catch(err => {
+          console.warn('pdfium WebAssembly.instantiate failed:', err?.message || err)
+        })
+        return {}
+      },
+    })
     return _pdfiumLib
   } catch (err) {
     console.warn('pdfium init failed; JPG rendering disabled:', err?.message || err, err?.stack || '')
@@ -210,42 +200,33 @@ function crc32(bytes) {
 
 // Returns Uint8Array (PNG bytes) or null if rasterisation isn't available.
 export async function renderSongJpg(env, song, key, { scale = 2 } = {}) {
-  console.log('renderSongJpg: entry')
-  const lib = await getPdfium(env)
-  console.log('renderSongJpg: getPdfium ->', lib ? 'ok' : 'null')
+  const lib = await getPdfium()
   if (!lib) return null
 
   const pdfBuf = await renderSongPdf(env, song, key)
-  console.log('renderSongJpg: pdfBuf bytes=', pdfBuf?.byteLength ?? pdfBuf?.length)
   let document
   try {
     document = await lib.loadDocument(pdfBuf)
-    console.log('renderSongJpg: loadDocument ok')
   } catch (err) {
     console.warn('pdfium loadDocument failed:', err?.message || err)
     return null
   }
 
   try {
-    const pageCount = document.getPageCount?.() || 1
     const page = document.getPage(0)
-    console.log('renderSongJpg: getPage(0) ok, pageCount=', pageCount)
     const out = await page.render({
       scale,
       // Custom renderer receives raw RGBA pixels — encode them ourselves so
       // we don't pull in a JPG/PNG WASM encoder.
       render: async ({ data, width, height }) => {
-        console.log('renderSongJpg: render callback w=', width, 'h=', height, 'data bytes=', data?.length)
         return await encodePng(width, height, data)
       },
     })
-    console.log('renderSongJpg: page.render returned shape=', out && typeof out === 'object' ? Object.keys(out).join(',') : typeof out)
     // Some pdfium versions return { data: Uint8Array } from the renderer
     const png = out?.image instanceof Uint8Array ? out.image
               : out?.data  instanceof Uint8Array ? out.data
               : out instanceof Uint8Array ? out
               : null
-    console.log('renderSongJpg: png bytes=', png?.length, 'null?', png === null)
     return png
   } catch (err) {
     console.warn('pdfium render failed:', err?.message || err)
