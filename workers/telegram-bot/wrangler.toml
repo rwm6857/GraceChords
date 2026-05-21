@@ -24,7 +24,7 @@ crons = ["0 22 * * 1,5"]
 # Paste the returned id below before first deploy.
 [[kv_namespaces]]
 binding = "BOT_KV"
-id = "REPLACE_WITH_NAMESPACE_ID"
+id = "7c716aa9f03e4cf7bc89a3ed477270a7"
 
 # R2 holds the Noto TTFs the PDF renderer uses (under fonts/ prefix). The
 # bucket already exists for pptx-upload; we just bind it here. Upload the
