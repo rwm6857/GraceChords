@@ -36,5 +36,13 @@ bucket_name = "gracechords-bible"
 [vars]
 # Empty — every runtime value comes from `wrangler secret put`.
 
+# pure.js lives at ../../src/utils/pdf_mvp/pure.js and imports `jspdf`. Node's
+# module resolution walks up from that file and never sees the worker's local
+# node_modules, so Cloudflare Workers Builds fails with "Could not resolve
+# 'jspdf'". This alias tells esbuild to use the copy installed under the
+# worker's package.json.
+[alias]
+"jspdf" = "./node_modules/jspdf"
+
 [observability]
 enabled = true
