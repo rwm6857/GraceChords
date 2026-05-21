@@ -1,4 +1,4 @@
-import { json, jsonError, requireBearer, supabaseQuery } from '../_shared.js'
+import { json, jsonError, requireBearer, supabaseQuery } from './_shared.js'
 
 // Bot posts a setlist as { items: [{ song_id, key }] } and gets back the
 // full per-song payloads (in order) so it can render either per-song JPGs
