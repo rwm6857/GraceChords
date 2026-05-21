@@ -36,27 +36,42 @@ function parseItem(raw) {
   let s = String(raw || '').trim()
   if (!s) return null
 
-  // Strip trailing/leading bracketed annotations like "(capo 3)" - keep only
-  // the title + key for matching. We don't currently use capo metadata.
+  // Defensive cap. Per-item input post-split shouldn't exceed a couple
+  // hundred chars; keeps the suffix parsing below trivially bounded.
+  if (s.length > 500) s = s.slice(0, 500)
+
+  // Normalise whitespace runs to a single space up front so the suffix
+  // parsing below can use plain string ops with no nested-quantifier regex
+  // (avoids polynomial backtracking on adversarial whitespace).
   s = s.replace(/\s+/g, ' ')
 
-  // " in <key>" suffix (case-insensitive). Anchor at the end of the string.
   let key = null
-  const inMatch = s.match(/^(.*?)\s+in\s+([A-Ga-g][b#♭♯]?m?(?:in(?:or)?)?|[A-Ga-g][-\s]?(?:flat|sharp)?m?)\s*$/i)
-  if (inMatch) {
-    const candidate = normalizeKey(inMatch[2])
+
+  // " in <key>" suffix. lastIndexOf is O(n); no regex backtracking.
+  const lower = s.toLowerCase()
+  const inIdx = lower.lastIndexOf(' in ')
+  if (inIdx > 0 && inIdx + 4 < s.length) {
+    const candidate = normalizeKey(s.slice(inIdx + 4))
     if (candidate) {
-      s = inMatch[1].trim()
+      s = s.slice(0, inIdx).trim()
       key = candidate
     }
-  } else {
-    // Bare trailing key, e.g. "Build My Life G". Only accept if the trailing
-    // token is unambiguously a key (1-3 chars with accidentals/m).
-    const tailMatch = s.match(/^(.*?)[\s,]+([A-G][b#♭♯]?m?)\s*$/)
-    if (tailMatch) {
-      const candidate = normalizeKey(tailMatch[2])
-      if (candidate && tailMatch[1].trim().length >= 2) {
-        s = tailMatch[1].trim()
+  }
+
+  if (!key) {
+    // Bare trailing key, e.g. "Build My Life G". Take the last whitespace-
+    // or comma-delimited token; accept only if it normalises to a key and
+    // the prefix is non-trivial.
+    let sep = -1
+    for (let i = s.length - 1; i >= 0; i--) {
+      const ch = s.charCodeAt(i)
+      if (ch === 32 /* space */ || ch === 44 /* comma */) { sep = i; break }
+    }
+    if (sep > 1 && sep < s.length - 1) {
+      const tail = s.slice(sep + 1)
+      const candidate = normalizeKey(tail)
+      if (candidate && s.slice(0, sep).trim().length >= 2) {
+        s = s.slice(0, sep).trim()
         key = candidate
       }
     }
