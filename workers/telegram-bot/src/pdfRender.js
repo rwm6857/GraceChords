@@ -10,6 +10,13 @@
 // gets `null` back and should send the PDF via sendDocument instead.
 
 import { renderSingleSongPdfBuffer, renderMultiSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
+import { makeFontRegistrar } from './fontsWorker.js'
+
+let _fontRegistrar = null
+function fontRegistrar(env) {
+  if (!_fontRegistrar) _fontRegistrar = makeFontRegistrar(env)
+  return _fontRegistrar
+}
 
 // jsPDF references `window` in a couple of optional code paths. Provide a
 // minimal shim before any pdf_mvp call. Safe in browsers (already exists).
@@ -32,17 +39,17 @@ async function toRenderableSong(song, key) {
   }
 }
 
-export async function renderSongPdf(song, key) {
+export async function renderSongPdf(env, song, key) {
   const renderable = await toRenderableSong(song, key)
-  return renderSingleSongPdfBuffer(renderable)
+  return renderSingleSongPdfBuffer(renderable, { registerFonts: fontRegistrar(env) })
 }
 
-export async function renderSetlistPdf(songs, keys = []) {
+export async function renderSetlistPdf(env, songs, keys = []) {
   const renderables = []
   for (let i = 0; i < songs.length; i++) {
     renderables.push(await toRenderableSong(songs[i], keys[i]))
   }
-  return renderMultiSongPdfBuffer(renderables)
+  return renderMultiSongPdfBuffer(renderables, { registerFonts: fontRegistrar(env) })
 }
 
 // ---- JPG (best-effort) -----------------------------------------------------
@@ -156,11 +163,11 @@ function crc32(bytes) {
 }
 
 // Returns Uint8Array (PNG bytes) or null if rasterisation isn't available.
-export async function renderSongJpg(song, key, { scale = 2 } = {}) {
+export async function renderSongJpg(env, song, key, { scale = 2 } = {}) {
   const lib = await getPdfium()
   if (!lib) return null
 
-  const pdfBuf = await renderSongPdf(song, key)
+  const pdfBuf = await renderSongPdf(env, song, key)
   let document
   try {
     document = await lib.loadDocument(pdfBuf)

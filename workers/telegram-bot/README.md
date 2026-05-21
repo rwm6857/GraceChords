@@ -21,7 +21,20 @@ npm install
 # 2. Create the KV namespace and paste the returned id into wrangler.toml
 npx wrangler kv:namespace create BOT_KV
 
-# 3. Set the secrets
+# 3. Upload the six Noto TTFs to R2 (one-time; only needed when fonts change)
+for f in ../../src/assets/fonts/NotoSans-Regular.ttf \
+         ../../src/assets/fonts/NotoSans-Bold.ttf \
+         ../../src/assets/fonts/NotoSans-Italic.ttf \
+         ../../src/assets/fonts/NotoSans-BoldItalic.ttf \
+         ../../src/assets/fonts/NotoSansMono-Regular.ttf \
+         ../../src/assets/fonts/NotoSansMono-Bold.ttf; do
+  npx wrangler r2 object put \
+    "gracechords-bible/fonts/$(basename "$f")" \
+    --file="$f" \
+    --content-type="font/ttf"
+done
+
+# 4. Set the secrets
 npx wrangler secret put TELEGRAM_BOT_TOKEN        # from BotFather
 npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   # any random string
 npx wrangler secret put DEV_CHANNEL_ID            # negative integer
@@ -31,10 +44,10 @@ npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put BOT_WEBHOOK_TOKEN         # shared with GitHub Action
 
-# 4. Deploy
+# 5. Deploy
 npx wrangler deploy
 
-# 5. Point Telegram at the worker
+# 6. Point Telegram at the worker
 curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
   --data-urlencode "url=https://gracechords-telegram-bot.<your-account>.workers.dev/webhook" \
   --data-urlencode "secret_token=${TELEGRAM_WEBHOOK_SECRET}"
@@ -43,10 +56,18 @@ curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
 ## Bundle size
 
 Free-tier Workers are limited to 3 MiB compressed. To keep us inside the
-budget, this Worker imports `src/utils/pdf_mvp/pure.js` from the monorepo
-(jsPDF stays as a runtime dep) but **does not bundle the Noto font TTFs**
-(~3.3 MB combined). PDFs render with jsPDF's built-in Helvetica/Courier —
-legible but not the exact site font.
+budget the heavy dependencies are kept OUT of the script:
+
+- **Noto TTFs** (~3.3 MB) live in the `gracechords-bible` R2 bucket
+  under `fonts/`. The first PDF render per worker isolate fetches all
+  six in parallel and caches the base64-encoded payload in module
+  scope. R2 reads from the same worker cost nothing and finish in tens
+  of milliseconds.
+- **pdfium WASM** (~2 MB compressed) is fetched from jsdelivr on first
+  JPG render per isolate by the `@hyzyla/pdfium/browser/cdn` entry.
+
+If the R2 read or pdfium init fails the bot transparently falls back —
+PDFs use Helvetica/Courier, JPG path drops to PDF via `sendDocument`.
 
 Run a dry-run after dependency changes:
 

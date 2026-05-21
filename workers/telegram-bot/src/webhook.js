@@ -82,7 +82,7 @@ function setlistPdfCallbackData(token) {
 async function sendSongJpgOrPdf({ env, chatId, song, key, label }) {
   // Best-effort JPG. If the rasteriser isn't available (cold WASM, etc.)
   // fall back to sending the PDF directly.
-  const jpg = await renderSongJpg(song, key).catch(() => null)
+  const jpg = await renderSongJpg(env, song, key).catch(() => null)
   const caption = label || `${song.title}${key ? ` — ${key}` : ''}`
   if (jpg) {
     await sendPhoto(env.TELEGRAM_BOT_TOKEN, {
@@ -98,7 +98,7 @@ async function sendSongJpgOrPdf({ env, chatId, song, key, label }) {
     })
     return
   }
-  const pdf = await renderSongPdf(song, key)
+  const pdf = await renderSongPdf(env, song, key)
   await sendDocument(env.TELEGRAM_BOT_TOKEN, {
     chatId,
     document: pdf,
@@ -112,9 +112,9 @@ async function sendSetlistResponse({ env, chatId, songs, keys }) {
   // the whole set so the user always gets something usable.
   const media = []
   for (let i = 0; i < songs.length; i++) {
-    const jpg = await renderSongJpg(songs[i], keys[i]).catch(() => null)
+    const jpg = await renderSongJpg(env, songs[i], keys[i]).catch(() => null)
     if (!jpg) {
-      const pdf = await renderSetlistPdf(songs, keys)
+      const pdf = await renderSetlistPdf(env, songs, keys)
       await sendDocument(env.TELEGRAM_BOT_TOKEN, {
         chatId,
         document: pdf,
@@ -246,7 +246,7 @@ async function handleCallbackQuery(env, ctx, cbq) {
   if (data.startsWith('pdf:')) {
     const [, songId, key] = data.split(':')
     const song = await fetchSong(env, songId)
-    const pdf = await renderSongPdf(song, key)
+    const pdf = await renderSongPdf(env, song, key)
     await sendDocument(env.TELEGRAM_BOT_TOKEN, {
       chatId,
       document: pdf,
@@ -275,7 +275,7 @@ async function handleCallbackQuery(env, ctx, cbq) {
     }
     const songs = await fetchSetlistSongs(env, stored.items)
     const keys = stored.items.map(i => i.key || '')
-    const pdf = await renderSetlistPdf(songs, keys)
+    const pdf = await renderSetlistPdf(env, songs, keys)
     await sendDocument(env.TELEGRAM_BOT_TOKEN, {
       chatId,
       document: pdf,

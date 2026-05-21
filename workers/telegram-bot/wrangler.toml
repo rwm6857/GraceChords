@@ -26,6 +26,13 @@ crons = ["0 22 * * 1,5"]
 binding = "BOT_KV"
 id = "REPLACE_WITH_NAMESPACE_ID"
 
+# R2 holds the Noto TTFs the PDF renderer uses (under fonts/ prefix). The
+# bucket already exists for pptx-upload; we just bind it here. Upload the
+# six TTFs from src/assets/fonts/ before deploying; see README.md.
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "gracechords-bible"
+
 [vars]
 # Empty — every runtime value comes from `wrangler secret put`.
 
