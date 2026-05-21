@@ -1,0 +1,41 @@
+name: Notify dev channel on flagged merge
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'post')
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST to bot worker
+        env:
+          BOT_WORKER_URL: ${{ secrets.BOT_WORKER_URL }}
+          BOT_WEBHOOK_TOKEN: ${{ secrets.BOT_WEBHOOK_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -z "${BOT_WORKER_URL:-}" ] || [ -z "${BOT_WEBHOOK_TOKEN:-}" ]; then
+            echo "BOT_WORKER_URL or BOT_WEBHOOK_TOKEN not set; skipping."
+            exit 0
+          fi
+
+          # Use jq to safely encode env vars into JSON (handles quotes/newlines).
+          payload=$(jq -n \
+            --arg title "$PR_TITLE" \
+            --arg summary "$PR_BODY" \
+            --arg url "$PR_URL" \
+            '{title:$title, summary:$summary, url:$url}')
+
+          curl -sS -X POST "${BOT_WORKER_URL%/}/internal/feature" \
+            -H "Authorization: Bearer $BOT_WEBHOOK_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$payload"

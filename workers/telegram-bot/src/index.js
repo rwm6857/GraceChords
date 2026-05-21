@@ -1,0 +1,75 @@
+// gracechords-telegram-bot — entry point.
+// Routes:
+//   POST /webhook            — Telegram updates (DM flow)
+//   POST /internal/feature   — GitHub Action calls this on merged "post" PRs
+//   GET  /healthz            — liveness
+// Scheduled: digest cron, Mon + Fri 17:00 ET (see wrangler.toml).
+
+import { verifyTelegramWebhookSecret, verifyInternalBearer } from './auth.js'
+import { handleTelegramUpdate } from './webhook.js'
+import { runDigest } from './digest.js'
+import { postFeature } from './feature.js'
+
+function notFound() {
+  return new Response('Not found', { status: 404 })
+}
+
+function unauthorized() {
+  return new Response('Unauthorized', { status: 401 })
+}
+
+function ok(body = 'OK') {
+  return new Response(body, { status: 200 })
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url)
+
+    if (url.pathname === '/healthz') {
+      return ok('ok')
+    }
+
+    if (url.pathname === '/webhook') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+      if (!verifyTelegramWebhookSecret(request, env)) return unauthorized()
+      let update
+      try {
+        update = await request.json()
+      } catch {
+        return new Response('Invalid JSON', { status: 400 })
+      }
+      // Acknowledge fast. All real work happens in the background so Telegram
+      // doesn't retry on slow renders.
+      ctx.waitUntil(handleTelegramUpdate(env, ctx, update))
+      return ok()
+    }
+
+    if (url.pathname === '/internal/feature') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+      if (!verifyInternalBearer(request, env)) return unauthorized()
+      let body
+      try {
+        body = await request.json()
+      } catch {
+        return new Response('Invalid JSON', { status: 400 })
+      }
+      try {
+        await postFeature(env, body)
+        return ok()
+      } catch (err) {
+        return new Response(`Feature post failed: ${err.message || err}`, { status: 500 })
+      }
+    }
+
+    return notFound()
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      runDigest(env).catch(err => {
+        console.warn('digest failed', err)
+      }),
+    )
+  },
+}
