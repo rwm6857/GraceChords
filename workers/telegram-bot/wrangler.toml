@@ -1,0 +1,40 @@
+# Required secrets — set with `wrangler secret put` before deploying:
+#   TELEGRAM_BOT_TOKEN        — bot API token from BotFather
+#   TELEGRAM_WEBHOOK_SECRET   — random token validated on each Telegram webhook
+#   DEV_CHANNEL_ID            — channel ID (negative integer)
+#   GRACECHORDS_API_BASE      — https://www.gracechords.com/api/bot
+#   GRACECHORDS_API_TOKEN     — matches the site's BOT_API_TOKEN env
+#   SUPABASE_URL              — e.g. https://xyz.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY — read-only role recommended for digest queries
+#   BOT_WEBHOOK_TOKEN         — shared with the GitHub Action
+
+name = "gracechords-telegram-bot"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Mon + Fri 17:00 ET. UTC offset shifts by 1h across DST — we accept the drift
+# rather than skip half the year (see plan).
+[triggers]
+crons = ["0 22 * * 1,5"]
+
+# Single KV namespace for: per-user rate limits, last_digest_at, and short-lived
+# disambiguation tokens. Provision with:
+#   wrangler kv:namespace create BOT_KV
+# Paste the returned id below before first deploy.
+[[kv_namespaces]]
+binding = "BOT_KV"
+id = "REPLACE_WITH_NAMESPACE_ID"
+
+# R2 holds the Noto TTFs the PDF renderer uses (under fonts/ prefix). The
+# bucket already exists for pptx-upload; we just bind it here. Upload the
+# six TTFs from src/assets/fonts/ before deploying; see README.md.
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "gracechords-bible"
+
+[vars]
+# Empty — every runtime value comes from `wrangler secret put`.
+
+[observability]
+enabled = true

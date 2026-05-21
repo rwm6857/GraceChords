@@ -1,0 +1,19 @@
+{
+  "name": "gracechords-telegram-bot",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run --outdir dist"
+  },
+  "dependencies": {
+    "@hyzyla/pdfium": "^2.1.6",
+    "jspdf": "^3.0.2"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}
