@@ -78,16 +78,33 @@ export async function renderSetlistPdf(env, songs, keys = []) {
 
 let _pdfiumLib = null
 let _pdfiumFailed = false
+let _wasmBytesPromise = null
 
-async function getPdfium() {
+async function loadPdfiumWasm(env) {
+  if (!_wasmBytesPromise) {
+    _wasmBytesPromise = (async () => {
+      if (!env?.R2_BUCKET) throw new Error('R2_BUCKET binding missing')
+      const obj = await env.R2_BUCKET.get('pdfium/pdfium.wasm')
+      if (!obj) throw new Error("R2 object 'pdfium/pdfium.wasm' not found — upload pdfium.wasm before JPG rendering will work (see README)")
+      return await obj.arrayBuffer()
+    })().catch(err => {
+      _wasmBytesPromise = null
+      throw err
+    })
+  }
+  return _wasmBytesPromise
+}
+
+async function getPdfium(env) {
   if (_pdfiumLib) return _pdfiumLib
   if (_pdfiumFailed) return null
   try {
-    // The /browser/cdn entry fetches the pdfium WASM from jsdelivr at runtime,
-    // so we don't have to bundle it (saves ~2 MB compressed). First call per
-    // worker isolate pays a one-time fetch + instantiate cost.
-    const { PDFiumLibrary } = await import('@hyzyla/pdfium/browser/cdn')
-    _pdfiumLib = await PDFiumLibrary.init()
+    // The base @hyzyla/pdfium entry lets us bring our own WASM. We fetch it
+    // from R2 (same bucket as the Noto TTFs) to avoid the CDN entry's
+    // subresource-integrity fetch, which Cloudflare Workers don't support.
+    const wasmBinary = await loadPdfiumWasm(env)
+    const { PDFiumLibrary } = await import('@hyzyla/pdfium')
+    _pdfiumLib = await PDFiumLibrary.init({ wasmBinary })
     return _pdfiumLib
   } catch (err) {
     _pdfiumFailed = true
@@ -186,7 +203,7 @@ function crc32(bytes) {
 
 // Returns Uint8Array (PNG bytes) or null if rasterisation isn't available.
 export async function renderSongJpg(env, song, key, { scale = 2 } = {}) {
-  const lib = await getPdfium()
+  const lib = await getPdfium(env)
   if (!lib) return null
 
   const pdfBuf = await renderSongPdf(env, song, key)
