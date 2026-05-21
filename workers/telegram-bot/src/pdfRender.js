@@ -77,16 +77,22 @@ export async function renderSetlistPdf(env, songs, keys = []) {
 // ---- JPG (best-effort) -----------------------------------------------------
 
 let _pdfiumLib = null
-let _pdfiumFailed = false
 let _wasmBytesPromise = null
+
+const WASM_R2_KEYS = ['pdfium/pdfium.wasm', 'pdfium.wasm']
 
 async function loadPdfiumWasm(env) {
   if (!_wasmBytesPromise) {
     _wasmBytesPromise = (async () => {
       if (!env?.R2_BUCKET) throw new Error('R2_BUCKET binding missing')
-      const obj = await env.R2_BUCKET.get('pdfium/pdfium.wasm')
-      if (!obj) throw new Error("R2 object 'pdfium/pdfium.wasm' not found — upload pdfium.wasm before JPG rendering will work (see README)")
-      return await obj.arrayBuffer()
+      for (const key of WASM_R2_KEYS) {
+        const obj = await env.R2_BUCKET.get(key)
+        if (obj) {
+          console.log('pdfium WASM: found at R2 key', key)
+          return await obj.arrayBuffer()
+        }
+      }
+      throw new Error(`pdfium WASM not in R2 — checked keys: ${WASM_R2_KEYS.join(', ')}`)
     })().catch(err => {
       _wasmBytesPromise = null
       throw err
@@ -97,18 +103,19 @@ async function loadPdfiumWasm(env) {
 
 async function getPdfium(env) {
   if (_pdfiumLib) return _pdfiumLib
-  if (_pdfiumFailed) return null
   try {
     // The base @hyzyla/pdfium entry lets us bring our own WASM. We fetch it
     // from R2 (same bucket as the Noto TTFs) to avoid the CDN entry's
     // subresource-integrity fetch, which Cloudflare Workers don't support.
     const wasmBinary = await loadPdfiumWasm(env)
+    console.log('pdfium: wasm loaded, bytes=', wasmBinary?.byteLength)
     const { PDFiumLibrary } = await import('@hyzyla/pdfium')
+    console.log('pdfium: module imported, calling init')
     _pdfiumLib = await PDFiumLibrary.init({ wasmBinary })
+    console.log('pdfium: init complete')
     return _pdfiumLib
   } catch (err) {
-    _pdfiumFailed = true
-    console.warn('pdfium init failed; JPG rendering disabled:', err?.message || err)
+    console.warn('pdfium init failed; JPG rendering disabled:', err?.message || err, err?.stack || '')
     return null
   }
 }
