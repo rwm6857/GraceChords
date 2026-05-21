@@ -55,35 +55,47 @@ curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
 
 ## Bundle size
 
-Free-tier Workers are limited to 3 MiB compressed. To keep us inside the
-budget the heavy dependencies are kept OUT of the script:
+Free-tier Workers are limited to 3 MiB compressed. We currently fit
+inside that budget with the following layout:
 
 - **Noto TTFs** (~3.3 MB) live in the `gracechords-bible` R2 bucket
   under `fonts/`. The first PDF render per worker isolate fetches all
   six in parallel and caches the base64-encoded payload in module
   scope. R2 reads from the same worker cost nothing and finish in tens
   of milliseconds.
-- **pdfium WASM** (~2 MB compressed) is fetched from jsdelivr on first
-  JPG render per isolate by the `@hyzyla/pdfium/browser/cdn` entry.
+- **pdfium WASM** (~2 MB compressed) is bundled into the worker
+  script at deploy time via `import pdfiumWasmModule from
+  '@hyzyla/pdfium/pdfium.wasm'`. Wrangler precompiles it into a
+  `WebAssembly.Module` and we hand that to pdfium through Emscripten's
+  `instantiateWasm` hook.
 
-If the R2 read or pdfium init fails the bot transparently falls back —
-PDFs use Helvetica/Courier, JPG path drops to PDF via `sendDocument`.
+> **Important:** Cloudflare Workers refuse
+> `WebAssembly.instantiate(buffer)` ("Wasm code generation disallowed by
+> embedder"). Any WASM must be bundled at deploy time so the runtime
+> only ever sees a precompiled `WebAssembly.Module`. Do not switch back
+> to a runtime fetch from CDN or R2 — that path is permanently blocked.
 
-Run a dry-run after dependency changes:
+If pdfium init fails at runtime the bot transparently falls back: JPG
+path drops to PDF via `sendDocument`. The same fallback handles the
+"Get as PDF" inline button under each photo.
+
+Run a dry-run after dependency changes to check the bundle size against
+the 3 MiB ceiling:
 
 ```bash
-npx wrangler deploy --dry-run --outdir dist
+npm run dry-run
 ls -lh dist
 ```
 
-If the script blows past 3 MiB compressed, options in order of preference
-are:
+If a future change blows past 3 MiB compressed, options in order of
+preference are:
 
-1. Drop the JPG path (set `BOT_DISABLE_JPG=1` and short-circuit in
-   `pdfRender.js`). Bot falls back to PDF-only via `sendDocument`.
+1. Drop the JPG path (short-circuit `getPdfium()` in `pdfRender.js` to
+   return null unconditionally). Bot falls back to PDF-only via
+   `sendDocument`. Cuts ~2 MB.
 2. Move `@hyzyla/pdfium` and the PNG encoder out into a sibling Worker
    accessible via Service Binding.
-3. Upgrade to the $5 Workers paid plan.
+3. Upgrade to the $5 Workers paid plan (10 MiB ceiling).
 
 ## Local dev
 
