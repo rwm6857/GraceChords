@@ -19,48 +19,30 @@ function json(body, init = {}) {
 }
 function jsonError(msg, status) { return json({ error: msg }, { status }) }
 
-function base64urlDecode(str) {
-  const b = str.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = b + '==='.slice((b.length + 3) % 4)
-  const raw = atob(padded)
-  const bytes = new Uint8Array(raw.length)
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
-  return bytes.buffer
-}
-
+// Delegate token verification to Supabase. The /auth/v1/user endpoint
+// validates the signature against whichever signing key Supabase currently
+// uses (legacy HS256 shared secret, or the newer asymmetric ECC/RSA JWT
+// signing keys), so this endpoint keeps working through key rotations
+// without needing SUPABASE_JWT_SECRET in env. Costs one extra fetch per
+// link request — fine for a low-traffic flow.
 async function verifySupabaseJwt(request, env) {
   const auth = request.headers.get('Authorization') || ''
   if (!auth.startsWith('Bearer ')) {
     return { error: 'Missing bearer token', status: 401 }
   }
   const token = auth.slice(7).trim()
-  const parts = token.split('.')
-  if (parts.length !== 3) return { error: 'Invalid token format', status: 401 }
-  const [headerB64, payloadB64, sigB64] = parts
-  const secret = env.SUPABASE_JWT_SECRET
-  if (!secret) return { error: 'Server not configured', status: 503 }
 
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['verify'],
-  )
-  const ok = await crypto.subtle.verify(
-    'HMAC',
-    key,
-    base64urlDecode(sigB64),
-    new TextEncoder().encode(`${headerB64}.${payloadB64}`),
-  )
-  if (!ok) return { error: 'Invalid token signature', status: 401 }
-
-  const payload = JSON.parse(new TextDecoder().decode(base64urlDecode(payloadB64)))
-  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-    return { error: 'Token expired', status: 401 }
-  }
-  if (!payload.sub) return { error: 'Token missing sub', status: 401 }
-  return { userId: payload.sub }
+  const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  if (resp.status === 401) return { error: 'Invalid or expired token', status: 401 }
+  if (!resp.ok) return { error: `Auth check failed: ${resp.status}`, status: 502 }
+  const user = await resp.json().catch(() => null)
+  if (!user?.id) return { error: 'Auth response missing user id', status: 502 }
+  return { userId: user.id }
 }
 
 function timingSafeEqual(a, b) {
