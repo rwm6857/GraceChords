@@ -14,7 +14,7 @@
 // - Chords on a separate line above the wrapped lyric line; no overlap.
 // - Fonts: Noto Sans family preferred; falls back to jsPDF built-ins.
 
-import jsPDF from 'jspdf'
+import { jsPDF } from 'jspdf'
 import { applyFooterToAllPages } from './footer'
 import { formatInstrumental } from '../songs/instrumental.js'
 
