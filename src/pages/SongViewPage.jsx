@@ -15,6 +15,7 @@ import { normalizeSongInput } from '../utils/media/jpgPlanner'
 import { useSongs } from '../hooks/useSongs'
 import { useRole } from '../hooks/useRole'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
+import PushToTelegramButton from '../components/PushToTelegramButton'
 import { showToast } from '../utils/app/toast'
 import { headOk, clearHeadCache } from '../utils/network/headCache'
 import { smartPreviewAndShareJPG } from '../utils/media/smartPreviewAndShareJPG'
@@ -566,6 +567,12 @@ export default function SongView(){
         >
           {t('worshipMode')}
         </Button>
+        {entry?.dbId ? (
+          <PushToTelegramButton
+            items={[{ song_id: entry.dbId, key: toKey }]}
+            context="song"
+          />
+        ) : null}
         {entry?.gracetracks_url && (
           <a
             href={entry.gracetracks_url}
@@ -697,6 +704,14 @@ export default function SongView(){
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
           <Button variant="primary" leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download">Download</Button>
           <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode">Worship</Button>
+          {entry?.dbId ? (
+            <PushToTelegramButton
+              items={[{ song_id: entry.dbId, key: toKey }]}
+              context="song"
+              iconOnly
+              title="Send to Telegram"
+            />
+          ) : null}
           {isAtLeast('collaborator') && (
             <Button
               variant="secondary"

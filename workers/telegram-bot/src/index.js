@@ -2,6 +2,7 @@
 // Routes:
 //   POST /webhook            — Telegram updates (DM flow)
 //   POST /internal/feature   — GitHub Action calls this on merged "post" PRs
+//   POST /internal/push      — Pages Function pushes a song/setlist to a linked user
 //   GET  /healthz            — liveness
 // Scheduled: digest cron, Mon + Fri 17:00 ET (see wrangler.toml).
 
@@ -9,6 +10,7 @@ import { verifyTelegramWebhookSecret, verifyInternalBearer } from './auth.js'
 import { handleTelegramUpdate } from './webhook.js'
 import { runDigest } from './digest.js'
 import { postFeature } from './feature.js'
+import { pushToUser } from './push.js'
 
 function notFound() {
   return new Response('Not found', { status: 404 })
@@ -60,6 +62,25 @@ export default {
       } catch (err) {
         return new Response(`Feature post failed: ${err.message || err}`, { status: 500 })
       }
+    }
+
+    if (url.pathname === '/internal/push') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+      if (!verifyInternalBearer(request, env)) return unauthorized()
+      let body
+      try {
+        body = await request.json()
+      } catch {
+        return new Response('Invalid JSON', { status: 400 })
+      }
+      // Render + send is multi-second; queue it on waitUntil so the Pages
+      // Function gets a fast ACK and the user doesn't wait on a spinner.
+      ctx.waitUntil(
+        pushToUser(env, body).catch(err => {
+          console.warn('push failed', err?.message || err)
+        })
+      )
+      return ok()
     }
 
     return notFound()
