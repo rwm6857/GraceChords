@@ -33,6 +33,12 @@ id = "7c716aa9f03e4cf7bc89a3ed477270a7"
 binding = "R2_BUCKET"
 bucket_name = "gracechords-bible"
 
+# Workers AI — powers the friendly rewrite in feature.js. Free tier covers
+# the ~daily volume of feature posts; if the call fails for any reason
+# feature.js falls back to posting the raw PR body.
+[ai]
+binding = "AI"
+
 [vars]
 # Empty — every runtime value comes from `wrangler secret put`.
 
