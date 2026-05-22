@@ -1,9 +1,16 @@
 name: Notify dev channel on flagged merge
 
-# Triggers (any of):
-#   1. PR labelled "post" is merged.
-#   2. PR title or body contains "#post" (case-insensitive) and is merged.
-# Backward-compatible with the original label-only flow.
+# Fires on merge when ANY of the following is true:
+#   1. PR title starts with "feat(" or "feat:" — new user-visible features
+#      are announced by default.
+#   2. PR is labelled "post" — manual override for non-feat changes worth
+#      announcing (e.g. a significant fix).
+#   3. PR title or body contains "#post" — same intent as the label, but
+#      settable at commit time without touching the GitHub UI.
+#
+# Empty-body PRs are passed through and skipped on the worker side. We
+# could short-circuit here too, but doing it in one place (feature.js)
+# keeps the gating logic auditable.
 
 on:
   pull_request:
@@ -18,6 +25,8 @@ jobs:
     if: >-
       github.event.pull_request.merged == true &&
       (
+        startsWith(github.event.pull_request.title, 'feat(') ||
+        startsWith(github.event.pull_request.title, 'feat:') ||
         contains(github.event.pull_request.labels.*.name, 'post') ||
         contains(github.event.pull_request.title, '#post') ||
         contains(github.event.pull_request.body, '#post')
@@ -38,7 +47,8 @@ jobs:
           fi
 
           # Strip the "#post" marker from the title before sending so it
-          # doesn't appear in the user-facing announcement.
+          # doesn't appear in the user-facing announcement. The worker
+          # strips the conventional-commit prefix itself.
           cleaned_title=$(printf '%s' "$PR_TITLE" | sed -E 's/[[:space:]]*#post\b//gi' | sed -E 's/[[:space:]]+$//')
 
           # Use jq to safely encode env vars into JSON (handles quotes/newlines).

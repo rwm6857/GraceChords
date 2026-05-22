@@ -22,6 +22,12 @@ const SYSTEM_PROMPT = [
   '',
   'Style rules:',
   '- Tone: warm, encouraging, plain English. No marketing fluff.',
+  '- Be specific. Name the actual feature, page, or behaviour from the source.',
+  '  Reuse at least one concrete noun from the title or body verbatim.',
+  '- Banned filler phrases: "improvements", "smoothly", "helpful information",',
+  '  "more reliable", "great music", "experience", "enhancements", "behind',
+  '  the scenes". If you cannot avoid these, the source is too thin — output',
+  '  exactly the single word SKIP and nothing else.',
   '- One or two tasteful emoji at most. Never start a line with an emoji-only.',
   '- Do NOT include any URLs, GitHub references, PR numbers, commit hashes,',
   '  branch names, or developer jargon (refactor, lint, CI, dependency, etc.).',
@@ -71,6 +77,12 @@ export async function summarizeFeature(env, { title, summary }) {
 
   const raw = stripCodeFences(response?.response || '')
   if (!raw) return null
+
+  // SKIP is the model's escape hatch when the source is too thin to write
+  // a non-generic note. Treat it the same as a failed rewrite — caller
+  // falls back to the raw body. We match defensively because the model
+  // sometimes wraps the keyword in quotes or punctuation.
+  if (/^["']?\s*SKIP\s*["']?\.?\s*$/i.test(raw)) return null
 
   const trimmed = raw.length > MAX_OUTPUT_CHARS
     ? raw.slice(0, MAX_OUTPUT_CHARS - 1).trimEnd() + '…'
