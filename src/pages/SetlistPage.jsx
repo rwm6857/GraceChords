@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
-import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
+import { MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, SlidersIcon } from '../components/Icons'
 import PushToTelegramButton from '../components/PushToTelegramButton'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
@@ -166,6 +166,10 @@ export default function Setlist(){
     try { return localStorage.getItem('setlist:mobileTab') || 'add' } catch { return 'add' }
   })
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const [pptMenuOpen, setPptMenuOpen] = useState(false)
+  const pptMenuRef = useRef(null)
+  const [mobilePptOpen, setMobilePptOpen] = useState(false)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
   const originalHtmlOverflow = useRef('')
   const originalBodyOverflow = useRef('')
   const quickAppliedRef = useRef(false)
@@ -395,6 +399,20 @@ export default function Setlist(){
   useEffect(() => {
     if (!isStacked && mobileActionsOpen) setMobileActionsOpen(false)
   }, [isStacked, mobileActionsOpen])
+
+  useEffect(() => {
+    if (!pptMenuOpen) return
+    function handleOutsideClick(e){
+      if (pptMenuRef.current && !pptMenuRef.current.contains(e.target)) setPptMenuOpen(false)
+    }
+    function onKey(e){ if (e.key === 'Escape') setPptMenuOpen(false) }
+    document.addEventListener('click', handleOutsideClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [pptMenuOpen])
 
   useEffect(() => {
     if (quickAppliedRef.current) return
@@ -1139,10 +1157,6 @@ async function exportPdf() {
         </Toolbar>
       ) : (
         <Toolbar className="gc-card" style={{ marginTop: 8, position: 'static' }}>
-          <div style={{ width: '100%', marginBottom: 6, display:'flex', alignItems:'center', gap:8 }}>
-            <strong title={t('setlist.currentSetTitle')}>{name || t('setlist.newSetlist')}</strong>
-            {currentId && isLoggedIn ? <span className="meta">{t('setlist.saved')}</span> : null}
-          </div>
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', width:'100%' }}>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <Button size="sm" variant="secondary" onClick={onSave} title={t('setlist.saveTooltip')} iconLeft={<SaveIcon />}> <span className="text-when-wide">{t('setlist.save')}</span></Button>
@@ -1150,9 +1164,44 @@ async function exportPdf() {
               <Button size="sm" variant="secondary" onClick={copySetLink} title={t('setlist.shareTooltip')} iconLeft={<LinkIcon />} disabled={list.length===0}> <span className="text-when-wide">{t('setlist.shareSet')}</span></Button>
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-              <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title={t('setlist.exportPdfTooltip')} iconLeft={<DownloadIcon />}>{busy ? t('setlist.exporting') : <><span className="text-when-wide">{t('setlist.exportPdf')}</span><span className="text-when-narrow">{t('setlist.exportPdfShort')}</span></>}</Button>
-              <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.exportPptDisabled') : t('setlist.exportPptTooltip')} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">{t('setlist.exportPpt')}</span><span className="text-when-narrow">{t('setlist.exportPpt')}</span></>}</Button>
-              <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.pptZipDisabled') : t('setlist.pptZipTooltip')} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">{t('setlist.pptZip')}</span><span className="text-when-narrow">{t('setlist.pptZip')}</span></>}</Button>
+              <Button variant="primary" size="md" onClick={exportPdf} onMouseEnter={prefetchPdf} onFocus={prefetchPdf} disabled={busy || list.length===0} title={t('setlist.exportPdfTooltip')} aria-label={t('setlist.exportPdfTooltip')} iconLeft={<DownloadIcon />}>{busy ? t('setlist.exporting') : t('setlist.exportPdf')}</Button>
+              <div ref={pptMenuRef} className="gc-ppt-menu" style={{ position:'relative' }}>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setPptMenuOpen(o => !o)}
+                  disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}
+                  title={list.length===0 ? t('setlist.exportPptDisabled') : t('setlist.exportPptTooltip')}
+                  aria-label={t('setlist.exportPptTooltip')}
+                  aria-haspopup="menu"
+                  aria-expanded={pptMenuOpen}
+                  iconLeft={<DownloadIcon />}
+                >
+                  {combinePptxProgress || pptxProgress || t('setlist.exportPpt')}
+                </Button>
+                {pptMenuOpen ? (
+                  <div className="gc-user-dropdown gc-ppt-menu__panel" role="menu" aria-label={t('setlist.exportPptAria')}>
+                    <button
+                      type="button"
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => { setPptMenuOpen(false); combineSetlistPptx() }}
+                    >
+                      <div style={{ fontWeight:600 }}>{t('setlist.pptCombined')}</div>
+                      <div className="meta" style={{ marginTop: 2, fontSize:'var(--gc-font-cap)' }}>{t('setlist.pptCombinedBeta')}</div>
+                    </button>
+                    <hr className="gc-user-dropdown__divider" />
+                    <button
+                      type="button"
+                      className="gc-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => { setPptMenuOpen(false); bundlePptx() }}
+                    >
+                      {t('setlist.pptSeparate')}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
               <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={t('setlist.worshipModeTooltip')} iconLeft={<MediaIcon />}> <span className="text-when-wide">{t('setlist.worshipMode')}</span><span className="text-when-narrow">{t('setlist.worshipModeShort')}</span></Button>
               <PushToTelegramButton
                 items={list
@@ -1184,13 +1233,13 @@ async function exportPdf() {
         <div className="BuilderLeft builder-pane" hidden={isStacked && mobileTab !== 'add'}>
           <section className="setlist-section setlist-add" data-role="add">
             <div className="card setlist-pane">
-              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'grid', gap:8 }}>
-                <div className="builder-search-row">
-                  <strong style={{ whiteSpace:'nowrap' }}>{t('setlist.addSongs')}</strong>
-                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder={t('setlist.search')} style={{flex:1, minWidth:0}} />
+              <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'grid', gap:6 }}>
+                <div className="builder-title-row">
+                  <strong>{t('setlist.addSongs')}</strong>
                 </div>
-                <div className="builder-options-row">
-                  <label className="row" style={{gap:6, alignItems:'center'}}>
+                <div className="builder-search-row">
+                  <Input value={q} onChange={e=> setQ(e.target.value)} placeholder={t('setlist.search')} style={{flex:1, minWidth:0}} />
+                  <label className="row builder-community-toggle" style={{gap:6, alignItems:'center'}}>
                     <input type="checkbox" checked={communityOnly} onChange={e=> setCommunityOnly(e.target.checked)} />
                     <span className="meta" title={t('setlist.communitySetlistTooltip')}>{t('setlist.communitySetlist')}</span>
                   </label>
@@ -1243,12 +1292,21 @@ async function exportPdf() {
             <div className="card setlist-pane">
               <div className={["BuilderHeader", "section-header", isStacked ? 'no-sticky' : ''].filter(Boolean).join(' ')} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
                 <strong>{t('setlist.currentSetlistCount', { count: list.length })}</strong>
-                <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>{t('setlist.addVerse')}</Button>
+                <Button size="sm" variant="secondary" onClick={() => { setVerseOpen(true); setVerseError('') }} iconLeft={<PlusIcon />}>{t('setlist.scripture')}</Button>
               </div>
               <div className={["BuilderScroll", "setlist-scroll", "setlist-list", isStacked ? 'no-pane-scroll' : 'pane-scroll', 'pane--currentSet'].join(' ')} style={{ marginTop: 6 }}>
                 <div style={{ display:'grid', gap:8 }}>
                 {list.map((sel, idx)=>{
                   const isVerse = isVerseId(sel.id)
+                  const dragHandlers = {
+                    draggable: true,
+                    onDragStart: (e) => { e.dataTransfer.setData('text/plain', String(sel.uid || sel.id)); e.dataTransfer.effectAllowed = 'move' },
+                    onDragOver: (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOverIdx !== idx) setDragOverIdx(idx) },
+                    onDragLeave: () => { setDragOverIdx((cur) => cur === idx ? null : cur) },
+                    onDrop: (e) => { e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); setDragOverIdx(null); moveToIndex(srcId, idx) },
+                    onDragEnd: () => setDragOverIdx(null),
+                  }
+                  const rowClass = `setlist-row ${dragOverIdx === idx ? 'is-drag-over' : ''}`.trim()
                   if (isVerse) {
                     const parsed = parseVerseId(sel.id)
                     const title = parsed?.refDisplay || sel.id
@@ -1256,16 +1314,12 @@ async function exportPdf() {
                     return (
                       <SongCard
                         key={sel.uid || `${sel.id}-${idx}`}
-                        draggable
-                        onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.uid || sel.id)); e.dataTransfer.effectAllowed = 'move' }}
-                        onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                        onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
+                        className={rowClass}
+                        {...dragHandlers}
                         title={title}
                         subtitle={translationLabel}
                         rightSlot={
                           <div className="setlist-row-actions">
-                            <Button onClick={()=> move(sel.uid,'up')} title={t('setlist.moveUp')} iconLeft={<ArrowUp />} />
-                            <Button onClick={()=> move(sel.uid,'down')} title={t('setlist.moveDown')} iconLeft={<ArrowDown />} />
                             <Button onClick={()=> removeSong(sel.uid)} title={t('setlist.remove')} iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                           </div>
                         }
@@ -1277,20 +1331,17 @@ async function exportPdf() {
                   return (
                     <SongCard
                       key={sel.uid || `${sel.id}-${idx}`}
-                      draggable
-                      onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', String(sel.uid || sel.id)); e.dataTransfer.effectAllowed = 'move' }}
-                      onDragOver={(e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                      onDrop={(e)=>{ e.preventDefault(); const srcId = e.dataTransfer.getData('text/plain'); moveToIndex(srcId, idx) }}
+                      className={rowClass}
+                      {...dragHandlers}
                       title={s.title}
                       rightSlot={
                         <div className="setlist-row-actions">
                           <KeySelector
+                            className="gc-key-select"
                             baseKey={s.originalKey || 'C'}
                             valueKey={sel.toKey || s.originalKey || 'C'}
                             onChange={(full) => changeKey(sel.uid, full)}
                           />
-                          <Button onClick={()=> move(sel.uid,'up')} title="Move up" iconLeft={<ArrowUp />} />
-                          <Button onClick={()=> move(sel.uid,'down')} title="Move down" iconLeft={<ArrowDown />} />
                           <Button onClick={()=> removeSong(sel.uid)} title="Remove" iconLeft={<MinusIcon />} iconOnly style={{ color:'#b91c1c' }} />
                         </div>
                       }
@@ -1405,16 +1456,10 @@ async function exportPdf() {
       </div>
       <MobileActionSheet
         open={mobileActionsOpen}
-        onClose={() => setMobileActionsOpen(false)}
+        onClose={() => { setMobileActionsOpen(false); setMobilePptOpen(false) }}
         title={t('setlist.actionsTitle')}
       >
         <div className="gc-mobile-actions">
-          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>{t('setlist.save')}</Button>
-          <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>{t('setlist.savedSetsAction')}</Button>
-          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>{t('setlist.new')}</Button>
-          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
-          <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || t('setlist.exportPpt')}</Button>
-          <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || t('setlist.pptZip')}</Button>
           <PushToTelegramButton
             items={list
               .filter(sel => !isVerseId(sel.id))
@@ -1425,8 +1470,26 @@ async function exportPdf() {
               .filter(Boolean)}
             context="setlist"
             label="Send to Telegram"
-            variant="secondary"
+            variant="primary"
+            className="gc-btn--telegram"
           />
+          {mobilePptOpen ? (
+            <div className="gc-mobile-ppt-chooser">
+              <Button onClick={() => { setMobilePptOpen(false); setMobileActionsOpen(false); combineSetlistPptx() }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>
+                <span style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
+                  <span>{t('setlist.pptCombined')}</span>
+                  <span className="meta" style={{ fontSize:'var(--gc-font-cap)' }}>{t('setlist.pptCombinedBeta')}</span>
+                </span>
+              </Button>
+              <Button onClick={() => { setMobilePptOpen(false); setMobileActionsOpen(false); bundlePptx() }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{t('setlist.pptSeparate')}</Button>
+              <Button variant="tertiary" onClick={() => setMobilePptOpen(false)}>{t('setlist.cancel')}</Button>
+            </div>
+          ) : (
+            <Button onClick={() => setMobilePptOpen(true)} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || pptxProgress || t('setlist.exportPpt')}</Button>
+          )}
+          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>{t('setlist.save')}</Button>
+          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>{t('setlist.new')}</Button>
         </div>
       </MobileActionSheet>
     </PageContainer>
