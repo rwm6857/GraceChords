@@ -3,13 +3,25 @@
 Cloudflare Worker that powers `@gracechords_bot`. Replaces the old
 `.github/workflows/notify_telegram.yml` GitHub Action.
 
-Three surfaces:
+Surfaces:
 
 | Surface | How it's triggered |
 |---|---|
-| Direct messages | Telegram webhook → `POST /webhook` |
-| Feature announcements | GitHub Action (PR labelled `post` merges) → `POST /internal/feature` |
+| Direct messages | Telegram webhook → `POST /webhook` (`chat.type === 'private'`) |
+| Group / guest-chat mentions | Same webhook, when the bot is `@`-mentioned in a group/supergroup |
+| Feature announcements | GitHub Action (PR labelled `post`, or `#post` in PR title/body) → `POST /internal/feature` |
 | Mon/Fri digest | Cloudflare cron → `scheduled()` |
+
+## Group chat behaviour
+
+The bot listens to group/supergroup messages only when it is explicitly
+`@`-mentioned. To allow mentions from groups the bot has not been added
+to, enable **Guest Chat Mode** in BotFather → Bot Settings → Mode
+Settings. Account linking is **not** required in groups — anyone in the
+chat can summon the bot — but a per-chat cooldown
+(`src/groupRateLimit.js`, 6 renders per minute) keeps things from going
+sideways. Replies thread to the originating message via
+`reply_to_message_id` so they don't get lost in busy chats.
 
 ## Provisioning
 
@@ -116,4 +128,6 @@ curl -X POST http://127.0.0.1:8787/internal/feature \
 | `src/pdfRender.js` | PDF (always) + JPG (best-effort, pdfium WASM) |
 | `src/digest.js` | scheduled digest builder |
 | `src/feature.js` | feature post handler |
-| `src/webhook.js` | DM router (messages + callback queries) |
+| `src/aiSummary.js` | Workers AI rewrite for feature posts (with fallback) |
+| `src/groupRateLimit.js` | per-chat cooldown for group/guest-chat traffic |
+| `src/webhook.js` | DM + group router (messages + callback queries) |

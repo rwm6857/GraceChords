@@ -24,6 +24,10 @@ export async function sendMessage(token, params) {
   return callJson(token, 'sendMessage', params)
 }
 
+export async function getMe(token) {
+  return callJson(token, 'getMe', {})
+}
+
 export async function sendChatAction(token, chatId, action = 'typing') {
   return callJson(token, 'sendChatAction', { chat_id: chatId, action })
 }
