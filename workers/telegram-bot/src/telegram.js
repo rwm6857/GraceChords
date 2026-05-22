@@ -108,3 +108,36 @@ export async function sendMediaGroup(token, { chatId, media, replyToMessageId } 
   }
   return data.result
 }
+
+// answerGuestQuery — reply to a guest_message delivery (mentions in chats
+// the bot has not joined). The exact accepted parameter set isn't published
+// in the changelog yet, so this helper supports two modes and we try them
+// empirically:
+//   { photo, caption }  — multipart upload, mirrors sendPhoto's shape
+//   { text }            — JSON, mirrors sendMessage's shape
+// Returns a SentGuestMessage on success. Throws with the verbatim Telegram
+// error response on failure — the caller inspects the error to decide
+// whether to fall back to a different shape.
+export async function answerGuestQuery(token, params = {}) {
+  const { guestQueryId, photo, caption, text, filename } = params
+  if (!guestQueryId) throw new Error('answerGuestQuery requires guestQueryId')
+
+  if (photo) {
+    const form = new FormData()
+    form.append('guest_query_id', String(guestQueryId))
+    if (caption) form.append('caption', caption)
+    const blob = photo instanceof Uint8Array ? new Blob([photo], { type: 'image/jpeg' }) : photo
+    form.append('photo', blob, filename || 'song.jpg')
+    const resp = await fetch(botUrl(token, 'answerGuestQuery'), { method: 'POST', body: form })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok || !data.ok) {
+      throw new Error(`answerGuestQuery (photo) failed: ${resp.status} ${JSON.stringify(data)}`)
+    }
+    return data.result
+  }
+
+  return callJson(token, 'answerGuestQuery', {
+    guest_query_id: guestQueryId,
+    text: String(text || ''),
+  })
+}
