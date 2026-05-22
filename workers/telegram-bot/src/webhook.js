@@ -207,9 +207,12 @@ async function sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId 
 
   const items = songs.map((s, i) => ({ song_id: s.id, key: keys[i] || s.default_key || '' }))
   const token = await storeSetlistToken(env, items)
+  // sendMessage requires non-empty text and sendMediaGroup doesn't support
+  // reply_markup, so the inline button has to ride on a follow-up message.
+  // Keep it as visually quiet as possible — the button label is the CTA.
   await sendMessage(env.TELEGRAM_BOT_TOKEN, {
     chat_id: chatId,
-    text: 'Want it as one combined PDF?',
+    text: '—',
     reply_markup: {
       inline_keyboard: [[
         { text: '📄 Get setlist as PDF', callback_data: setlistPdfCallbackData(token) },
