@@ -5,6 +5,7 @@ import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
 import { ArrowUp, ArrowDown, MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
+import PushToTelegramButton from '../components/PushToTelegramButton'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
 import { useChordStyle } from '../hooks/useSettings'
@@ -1153,6 +1154,18 @@ async function exportPdf() {
               <Button variant="primary" size="md" onClick={combineSetlistPptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.exportPptDisabled') : t('setlist.exportPptTooltip')} iconLeft={<DownloadIcon />}>{combinePptxProgress ? combinePptxProgress : <><span className="text-when-wide">{t('setlist.exportPpt')}</span><span className="text-when-narrow">{t('setlist.exportPpt')}</span></>}</Button>
               <Button variant="primary" size="md" onClick={bundlePptx} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress} title={list.length===0 ? t('setlist.pptZipDisabled') : t('setlist.pptZipTooltip')} iconLeft={<DownloadIcon />}>{pptxProgress ? pptxProgress : <><span className="text-when-wide">{t('setlist.pptZip')}</span><span className="text-when-narrow">{t('setlist.pptZip')}</span></>}</Button>
               <Button variant="primary" size="md" as={Link} to={(list.length ? `/worship/${list.map(s=> encodeURIComponent(s.id)).join(',')}?toKeys=${list.map(sel => encodeURIComponent(sel.toKey || '')).join(',')}` : '/worship')} title={t('setlist.worshipModeTooltip')} iconLeft={<MediaIcon />}> <span className="text-when-wide">{t('setlist.worshipMode')}</span><span className="text-when-narrow">{t('setlist.worshipModeShort')}</span></Button>
+              <PushToTelegramButton
+                items={list
+                  .filter(sel => !isVerseId(sel.id))
+                  .map(sel => {
+                    const song = getSongById(sel.id)
+                    return song?.dbId ? { song_id: song.dbId, key: sel.toKey || song.originalKey || '' } : null
+                  })
+                  .filter(Boolean)}
+                context="setlist"
+                label="Send to Telegram"
+                shortLabel="Telegram"
+              />
             </div>
           </div>
         </Toolbar>
@@ -1402,6 +1415,18 @@ async function exportPdf() {
           <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
           <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || t('setlist.exportPpt')}</Button>
           <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || t('setlist.pptZip')}</Button>
+          <PushToTelegramButton
+            items={list
+              .filter(sel => !isVerseId(sel.id))
+              .map(sel => {
+                const song = getSongById(sel.id)
+                return song?.dbId ? { song_id: song.dbId, key: sel.toKey || song.originalKey || '' } : null
+              })
+              .filter(Boolean)}
+            context="setlist"
+            label="Send to Telegram"
+            variant="secondary"
+          />
         </div>
       </MobileActionSheet>
     </PageContainer>

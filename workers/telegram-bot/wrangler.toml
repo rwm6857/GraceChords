@@ -6,7 +6,10 @@
 #   GRACECHORDS_API_TOKEN     — matches the site's BOT_API_TOKEN env
 #   SUPABASE_URL              — e.g. https://xyz.supabase.co
 #   SUPABASE_SERVICE_ROLE_KEY — read-only role recommended for digest queries
-#   BOT_WEBHOOK_TOKEN         — shared with the GitHub Action
+#   BOT_WEBHOOK_TOKEN         — shared with the GitHub Action and with
+#                               the Pages Function /api/telegram/push,
+#                               which calls /internal/push to deliver
+#                               web-initiated charts to linked users.
 #   MEDIA_STAGING_CHAT_ID     — private chat the bot uploads JPGs to so it
 #                               can capture file_ids for guest-message
 #                               photo replies. Typically a 1-person private

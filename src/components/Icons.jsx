@@ -3,6 +3,7 @@ const S = ({children,size=18}) => <svg width={size} height={size} viewBox="0 0 2
 export const DownloadIcon = (p)=> <S {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></S>
 export const TransposeIcon = (p)=> <S {...p}><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/><path d="M12 8v8"/></S>
 export const MediaIcon = (p)=> <S {...p}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></S>
+export const SendIcon = (p)=> <S {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></S>
 export const SelectAllIcon = (p)=> <S {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></S>
 export const ClearIcon = (p)=> <S {...p}><path d="M3 6h18"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></S>
 export const EyeIcon = (p)=> <S {...p}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></S>
