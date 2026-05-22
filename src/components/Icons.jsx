@@ -33,6 +33,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Send,
 } from 'lucide-react'
 
 const DEFAULT_SIZE = 18
@@ -77,3 +78,4 @@ export const HomeIcon = wrap(Home)
 export const PlayIcon = wrap(Play)
 export const PauseIcon = wrap(Pause)
 export const ResetIcon = wrap(RotateCcw)
+export const SendIcon = wrap(Send)
