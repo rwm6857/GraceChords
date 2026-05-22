@@ -42,8 +42,8 @@
 .gc-drawer .gc-settings-cluster__control { justify-content: flex-end; }
 
 /* ---------- Pill toggle (theme + chord style) ----------
-   Two-state pill: both labels always visible. Active half filled with
-   the brand/accent color; inactive half is text only. */
+   iOS-style segmented control. Track holds both options at fixed
+   positions; a thumb slides between them to indicate active state. */
 
 .gc-pill-toggle {
   display: inline-block;
@@ -62,24 +62,25 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 44px;
+  height: 36px;
   border-radius: var(--radius-pill);
   background: var(--gc-surface-3);
   border: 1px solid var(--gc-separator);
   transition: background var(--gc-dur-quick) var(--gc-ease);
-  padding: 2px;
+  padding: 3px;
+  box-sizing: border-box;
 }
 
 .gc-pill-toggle__thumb {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: calc(50% - 2px);
-  height: calc(100% - 4px);
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
   border-radius: var(--radius-pill);
-  background: var(--gc-primary);
-  box-shadow: var(--gc-shadow-1);
-  transition: transform var(--gc-dur) var(--gc-ease), background var(--gc-dur-quick) var(--gc-ease);
+  background: var(--gc-surface-1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 1px 1px rgba(0, 0, 0, 0.10);
+  transition: transform var(--gc-dur) var(--gc-ease);
 }
 .gc-pill-toggle.is-right .gc-pill-toggle__thumb {
   transform: translateX(100%);
@@ -87,24 +88,36 @@
 
 .gc-pill-toggle__option {
   flex: 1 1 0;
-  min-width: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
-  padding: 0 10px;
   color: var(--gc-text-tertiary);
-  font-size: var(--gc-font-sub);
-  font-weight: 500;
-  font-family: var(--gc-font-family);
-  white-space: nowrap;
   transition: color var(--gc-dur-quick) var(--gc-ease);
   pointer-events: none;
 }
 .gc-pill-toggle.is-left .gc-pill-toggle__option--left,
 .gc-pill-toggle.is-right .gc-pill-toggle__option--right {
-  color: var(--primary-text);
+  color: var(--gc-text);
+}
+
+/* Icon variant — compact, used for theme toggle */
+.gc-pill-toggle--icon .gc-pill-toggle__track { min-width: 76px; }
+.gc-pill-toggle--icon .gc-pill-toggle__option { min-width: 36px; height: 100%; }
+
+/* Text variant — wider, used for chord style (ABC / DoReMi) */
+.gc-pill-toggle--text .gc-pill-toggle__option {
+  min-width: 56px;
+  padding: 0 10px;
+  font-size: var(--gc-font-sub);
+  font-weight: 500;
+  font-family: var(--gc-font-family);
+  white-space: nowrap;
+}
+.gc-pill-toggle--text.is-left .gc-pill-toggle__option--left,
+.gc-pill-toggle--text.is-right .gc-pill-toggle__option--right {
+  color: var(--gc-primary);
   font-weight: 600;
 }
 

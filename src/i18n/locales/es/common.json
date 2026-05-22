@@ -12,6 +12,7 @@
   "language": "Idioma",
   "light": "Claro",
   "dark": "Oscuro",
+  "theme": "Tema",
   "lightMode": "Modo claro",
   "darkMode": "Modo oscuro",
   "toggleDarkMode": "Alternar modo oscuro",
