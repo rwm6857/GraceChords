@@ -39,6 +39,13 @@ export async function answerCallbackQuery(token, callbackQueryId, text = '') {
   })
 }
 
+export async function deleteMessage(token, { chatId, messageId }) {
+  return callJson(token, 'deleteMessage', {
+    chat_id: chatId,
+    message_id: messageId,
+  })
+}
+
 // sendPhoto with binary upload (multipart/form-data). Caption + chat_id +
 // reply_markup are encoded as form fields alongside the photo blob.
 export async function sendPhoto(token, { chatId, photo, filename = 'song.jpg', caption, replyMarkup, replyToMessageId } = {}) {

@@ -7,7 +7,7 @@ import { checkRateLimit, formatCooldown } from './ratelimit.js'
 import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
 import { searchSongs, fetchSong, fetchSetlistSongs, classifyMatch } from './searchClient.js'
-import { getOrStageFileId } from './mediaCache.js'
+import { stagePhoto } from './mediaCache.js'
 import {
   sendMessage,
   sendPhoto,
@@ -16,6 +16,7 @@ import {
   sendChatAction,
   answerCallbackQuery,
   answerGuestQuery,
+  deleteMessage,
   getMe,
 } from './telegram.js'
 import { renderSongPdf, renderSetlistPdf, renderSongJpg } from './pdfRender.js'
@@ -29,9 +30,8 @@ async function getBotUsername(env) {
   try {
     const me = await getMe(env.TELEGRAM_BOT_TOKEN)
     cachedBotUsername = (me?.username || '').toLowerCase()
-    console.info('[grp] getMe ok', { username: cachedBotUsername })
   } catch (err) {
-    console.warn('[grp] getMe failed', err?.message || err)
+    console.warn('getMe failed', err?.message || err)
     cachedBotUsername = ''
   }
   return cachedBotUsername
@@ -40,33 +40,18 @@ async function getBotUsername(env) {
 // Pulls out the @bot mention (if any) and returns the remaining text. Only
 // returns non-null when this message is actually directed at the bot.
 function extractMentionPayload(message, botUsername) {
-  if (!botUsername) {
-    console.warn('[grp] mention check: empty botUsername')
-    return null
-  }
+  if (!botUsername) return null
   const text = String(message?.text || '')
   const entities = Array.isArray(message?.entities) ? message.entities : []
   const want = `@${botUsername}`.toLowerCase()
-  console.info('[grp] mention scan', {
-    want,
-    entityCount: entities.length,
-    entityTypes: entities.map(e => e.type),
-    textPreview: text.slice(0, 80),
-  })
   for (const ent of entities) {
     if (ent.type !== 'mention') continue
     const slice = text.slice(ent.offset, ent.offset + ent.length).toLowerCase()
-    if (slice !== want) {
-      console.info('[grp] mention slice mismatch', { slice, want })
-      continue
-    }
+    if (slice !== want) continue
     const before = text.slice(0, ent.offset)
     const after = text.slice(ent.offset + ent.length)
-    const payload = (before + ' ' + after).replace(/\s+/g, ' ').trim()
-    console.info('[grp] mention matched', { payload })
-    return payload
+    return (before + ' ' + after).replace(/\s+/g, ' ').trim()
   }
-  console.info('[grp] no matching mention entity')
   return null
 }
 
@@ -83,6 +68,28 @@ function onboardingText() {
     '➡️ Open https://www.gracechords.com/profile and use the "Link Telegram" section.',
     '',
     'Once linked, just send me a song title (or a comma-separated setlist) and I\'ll do the rest.',
+  ].join('\n')
+}
+
+function startText(name) {
+  const greeting = name ? `Hi ${name}!` : 'Hi!'
+  return [
+    `${greeting} You can send me a song (or comma-separated list of songs) to get chord sheets. To transpose, simply include the desired key!`,
+    '',
+    'Use /help for more details — enjoy!',
+  ].join('\n')
+}
+
+function helpText() {
+  return [
+    'Quick guide:',
+    '',
+    '• Song title → chord chart, e.g. "Build My Life"',
+    '• Add a key to transpose → "Build My Life in G"',
+    '• Setlist → comma-separated, e.g. "Build My Life in G, 10000 Reasons in A"',
+    '• Each chart comes as a JPG. Tap "Get as PDF" on any chart to download the PDF version instead.',
+    '',
+    'In a group chat, mention me first: "@gracechords_bot Build My Life in G".',
   ].join('\n')
 }
 
@@ -225,7 +232,9 @@ async function handleTextMessage(env, ctx, message, options = {}) {
 
   // /start and /help — always responsive even when not linked. In groups
   // we keep the message short to avoid spamming the chat with onboarding.
-  if (/^\/(start|help)\b/i.test(text)) {
+  const startMatch = /^\/start\b/i.test(text)
+  const helpMatch = /^\/help\b/i.test(text)
+  if (startMatch || helpMatch) {
     if (isGroup) {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, {
         chat_id: chatId,
@@ -235,12 +244,13 @@ async function handleTextMessage(env, ctx, message, options = {}) {
       return
     }
     const user = await getLinkedUser(env, telegramUserId)
-    await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-      chat_id: chatId,
-      text: user
-        ? `Hi ${user.display_name || ''}! Send me a song title (or "Song A in G, Song B" for a setlist) and I'll send the chord chart.`
-        : onboardingText(),
-    })
+    if (!user) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: onboardingText() })
+      return
+    }
+    const name = (user.display_name || '').trim()
+    const body = helpMatch ? helpText() : startText(name)
+    await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: body })
     return
   }
 
@@ -288,7 +298,7 @@ async function handleTextMessage(env, ctx, message, options = {}) {
   const resolved = []
   for (const item of items) {
     const results = await searchSongs(env, item.title).catch(() => [])
-    const classified = classifyMatch(results)
+    const classified = classifyMatch(results, item.title)
     if (classified.kind === 'none') {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, {
         chat_id: chatId,
@@ -342,23 +352,18 @@ function songPageUrl(song, key) {
 async function handleGuestMessage(env, ctx, message) {
   const guestQueryId = message?.guest_query_id
   if (!guestQueryId) {
-    console.warn('[grp] guest_message missing guest_query_id', {
-      keys: Object.keys(message || {}),
-    })
+    console.warn('guest_message missing guest_query_id', { keys: Object.keys(message || {}) })
     return
   }
 
   const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
     .catch(err => {
-      console.warn('[grp] answerGuestQuery text failed', err?.message || err)
+      console.warn('answerGuestQuery text failed', err?.message || err)
     })
 
   const botUsername = await getBotUsername(env)
   const payload = extractMentionPayload(message, botUsername)
-  if (payload === null) {
-    console.info('[grp] guest payload empty, ignoring')
-    return
-  }
+  if (payload === null) return
 
   if (/^\/(start|help)\b/i.test(payload)) {
     return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
@@ -374,7 +379,7 @@ async function handleGuestMessage(env, ctx, message) {
 
   const item = items[0]
   const results = await searchSongs(env, item.title).catch(() => [])
-  const classified = classifyMatch(results)
+  const classified = classifyMatch(results, item.title)
   if (classified.kind === 'none') {
     return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
   }
@@ -389,34 +394,41 @@ async function handleGuestMessage(env, ctx, message) {
   const key = item.key || classified.pick.default_key || ''
   const caption = `${song.title}${key ? ` — ${key}` : ''}`
 
-  // Photo path: render the JPG, upload to the staging chat (or hit the
-  // KV cache for previously-staged file_ids), then reply with an
-  // InlineQueryResultCachedPhoto. Any failure here falls back to the
-  // text + link reply that we already know works.
+  // Photo path: render the JPG, upload to the staging chat to capture a
+  // file_id, reply with InlineQueryResultCachedPhoto, then delete the
+  // staging message so the channel stays clean. Any failure here falls
+  // back to the text + link reply.
   const jpg = await renderSongJpg(env, song, key).catch(err => {
-    console.warn('[grp] renderSongJpg failed', err?.message || err)
+    console.warn('renderSongJpg failed', err?.message || err)
     return null
   })
 
   if (jpg) {
     try {
-      const { fileId, cached } = await getOrStageFileId(env, {
-        songId: song.id,
-        key,
+      const staged = await stagePhoto(env, {
         jpg,
         filename: `${(song.slug || song.id || 'song')}.png`,
         caption,
       })
-      console.info('[grp] staged file_id', { cached, fileIdPreview: String(fileId).slice(0, 24) })
       await answerGuestQuery(env.TELEGRAM_BOT_TOKEN, {
         guestQueryId,
-        photoFileId: fileId,
+        photoFileId: staged.fileId,
         caption,
       })
-      console.info('[grp] answerGuestQuery cached photo: ok')
+      // Best-effort cleanup. Telegram keeps the file backing the file_id
+      // alive after the message is deleted, so the reply we just sent
+      // continues to work for the recipient.
+      ctx.waitUntil(
+        deleteMessage(env.TELEGRAM_BOT_TOKEN, {
+          chatId: staged.chatId,
+          messageId: staged.messageId,
+        }).catch(err => {
+          console.warn('staging deleteMessage failed', err?.message || err)
+        })
+      )
       return
     } catch (err) {
-      console.warn('[grp] cached photo reply failed, falling back to text', err?.message || err)
+      console.warn('guest photo reply failed, falling back to text', err?.message || err)
     }
   }
 
@@ -496,46 +508,17 @@ export async function handleTelegramUpdate(env, ctx, update) {
   }
 
   // Accept either the standard message envelope or the guest_message one.
-  // Track which envelope we got so downstream logic can force the group
-  // flow for guest deliveries regardless of chat.type.
-  const message = update?.message ?? update?.guest_message
-  const isGuest = !update?.message && !!update?.guest_message
-
-  // Top-level breadcrumb: prints the keys of the update so we can see what
-  // Telegram actually delivered (message vs channel_post vs edited_* etc.).
-  console.info('[grp] update', {
-    keys: Object.keys(update || {}),
-    isGuest,
-    chatType: message?.chat?.type,
-    chatId: message?.chat?.id,
-    messageId: message?.message_id,
-    fromId: message?.from?.id,
-    hasText: typeof message?.text === 'string',
-    entityTypes: Array.isArray(message?.entities) ? message.entities.map(e => e.type) : null,
-  })
-
-  // First-look diagnostic for guest_message — the schema is new and we
-  // want to confirm field names before relying on them. Verbose on
-  // purpose; once verified this can be tightened or removed.
-  if (isGuest) {
-    console.info('[grp] guest_message shape', {
-      topKeys: Object.keys(update.guest_message || {}),
-      chatKeys: update.guest_message?.chat ? Object.keys(update.guest_message.chat) : null,
-      fromKeys: update.guest_message?.from ? Object.keys(update.guest_message.from) : null,
-      textPreview: typeof update.guest_message?.text === 'string'
-        ? update.guest_message.text.slice(0, 120)
-        : null,
-    })
-  }
-
-  if (typeof message?.text !== 'string') return
-
   // Guest deliveries take a completely separate handler because the reply
   // channel (answerGuestQuery + guest_query_id) is incompatible with the
   // chat-id-based sendPhoto/sendMessage path the regular flows use.
+  const message = update?.message ?? update?.guest_message
+  const isGuest = !update?.message && !!update?.guest_message
+
+  if (typeof message?.text !== 'string') return
+
   if (isGuest) {
     return handleGuestMessage(env, ctx, message).catch(err => {
-      console.warn('[grp] guest handler error', err?.message || err)
+      console.warn('guest handler error', err?.message || err)
     })
   }
 

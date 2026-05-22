@@ -45,14 +45,30 @@ export async function fetchSetlistSongs(env, items) {
 
 // Classifies search results for a single parsed query item.
 // - "auto":   one clear winner (top score >= AUTO_PICK_THRESHOLD and well
-//              above the runner-up, or only one above the threshold).
+//              above the runner-up, or only one above the threshold, or
+//              the user typed a title that matches a candidate exactly).
 // - "choose": multiple plausible candidates → present a disambiguation keyboard.
 // - "none":   top score too low → reply "couldn't find that".
-export function classifyMatch(results) {
+//
+// `query` is the original parsed title string. When provided, an exact
+// case-insensitive match against any candidate's title short-circuits
+// disambiguation — the user was specific, don't bother them with options.
+export function classifyMatch(results, query) {
   if (!Array.isArray(results) || results.length === 0) {
     return { kind: 'none', candidates: [] }
   }
   const sorted = [...results].sort((a, b) => (b.match_score || 0) - (a.match_score || 0))
+
+  if (query) {
+    const normalized = String(query).trim().toLowerCase().replace(/\s+/g, ' ')
+    if (normalized) {
+      const exact = sorted.find(r =>
+        String(r.title || '').trim().toLowerCase().replace(/\s+/g, ' ') === normalized
+      )
+      if (exact) return { kind: 'auto', pick: exact, candidates: sorted }
+    }
+  }
+
   const top = sorted[0]
   const second = sorted[1]
 

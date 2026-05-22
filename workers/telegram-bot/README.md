@@ -28,23 +28,32 @@ sideways. Replies thread to the originating message via
 Guest-mode replies (`update.guest_message`) go through Telegram's
 `answerGuestQuery` method, which only accepts URLs or file_ids — not
 raw bytes. To send the chord-chart JPG without external hosting, the
-bot uploads each new chart to a private staging chat and reuses the
-`file_id` Telegram returns. Subsequent guest requests for the same
-song+key hit the KV cache and skip the upload.
+bot uploads each chart to a private staging chat, captures the
+`file_id` Telegram returns, references that file_id in the guest
+reply, then deletes the staging message. The recipient still sees the
+photo because the file backing the file_id outlives the source
+message.
 
 To set this up:
 
 1. Create a Telegram channel (or group) with just yourself + the bot.
-   This is the scratch space — messages there are never read by
-   anyone.
-2. Add the bot as an admin so it can post.
+   This is the scratch space — messages there are auto-deleted after
+   use, but the channel itself stays around.
+2. Add the bot as an admin with **both Post Messages and Delete
+   Messages** permissions.
 3. Send any message in the channel to make Telegram surface its ID
    (e.g. via `@RawDataBot` or by forwarding to `@JsonDumpBot`).
 4. `npx wrangler secret put MEDIA_STAGING_CHAT_ID` — paste the
    negative integer.
 
-If the secret isn't set, the bot quietly falls back to a text reply
-with a link to the song page on gracechords.com.
+There is no file_id cache: every guest request re-stages and re-
+deletes. This keeps lyric/chord edits visible instantly with no
+staleness window, and the Telegram round-trip cost is negligible for
+worship traffic volumes.
+
+If `MEDIA_STAGING_CHAT_ID` isn't set or the upload fails, the bot
+falls back to a text reply with a link to the song page on
+gracechords.com.
 
 ## Provisioning
 
@@ -166,5 +175,5 @@ curl -X POST http://127.0.0.1:8787/internal/feature \
 | `src/feature.js` | feature post handler |
 | `src/aiSummary.js` | Workers AI rewrite for feature posts (with fallback) |
 | `src/groupRateLimit.js` | per-chat cooldown for group/guest-chat traffic |
-| `src/mediaCache.js` | file_id cache for guest-mode photo replies |
+| `src/mediaCache.js` | stage-then-delete helper for guest-mode photo replies |
 | `src/webhook.js` | DM + group + guest router (messages + callback queries) |
