@@ -71,6 +71,28 @@ function onboardingText() {
   ].join('\n')
 }
 
+function startText(name) {
+  const greeting = name ? `Hi ${name}!` : 'Hi!'
+  return [
+    `${greeting} You can send me a song (or comma-separated list of songs) to get chord sheets. To transpose, simply include the desired key!`,
+    '',
+    'Use /help for more details — enjoy!',
+  ].join('\n')
+}
+
+function helpText() {
+  return [
+    'Quick guide:',
+    '',
+    '• Song title → chord chart, e.g. "Build My Life"',
+    '• Add a key to transpose → "Build My Life in G"',
+    '• Setlist → comma-separated, e.g. "Build My Life in G, 10000 Reasons in A"',
+    '• Each chart comes as a JPG. Tap "Get as PDF" on any chart to download the PDF version instead.',
+    '',
+    'In a group chat, mention me first: "@gracechords_bot Build My Life in G".',
+  ].join('\n')
+}
+
 async function getLinkedUser(env, telegramUserId) {
   const cacheKey = `userlookup:${telegramUserId}`
   if (env.BOT_KV) {
@@ -210,7 +232,9 @@ async function handleTextMessage(env, ctx, message, options = {}) {
 
   // /start and /help — always responsive even when not linked. In groups
   // we keep the message short to avoid spamming the chat with onboarding.
-  if (/^\/(start|help)\b/i.test(text)) {
+  const startMatch = /^\/start\b/i.test(text)
+  const helpMatch = /^\/help\b/i.test(text)
+  if (startMatch || helpMatch) {
     if (isGroup) {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, {
         chat_id: chatId,
@@ -220,12 +244,13 @@ async function handleTextMessage(env, ctx, message, options = {}) {
       return
     }
     const user = await getLinkedUser(env, telegramUserId)
-    await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-      chat_id: chatId,
-      text: user
-        ? `Hi ${user.display_name || ''}! Send me a song title (or "Song A in G, Song B" for a setlist) and I'll send the chord chart.`
-        : onboardingText(),
-    })
+    if (!user) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: onboardingText() })
+      return
+    }
+    const name = (user.display_name || '').trim()
+    const body = helpMatch ? helpText() : startText(name)
+    await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: body })
     return
   }
 
@@ -273,7 +298,7 @@ async function handleTextMessage(env, ctx, message, options = {}) {
   const resolved = []
   for (const item of items) {
     const results = await searchSongs(env, item.title).catch(() => [])
-    const classified = classifyMatch(results)
+    const classified = classifyMatch(results, item.title)
     if (classified.kind === 'none') {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, {
         chat_id: chatId,
@@ -354,7 +379,7 @@ async function handleGuestMessage(env, ctx, message) {
 
   const item = items[0]
   const results = await searchSongs(env, item.title).catch(() => [])
-  const classified = classifyMatch(results)
+  const classified = classifyMatch(results, item.title)
   if (classified.kind === 'none') {
     return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
   }
