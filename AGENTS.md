@@ -174,6 +174,12 @@
   `ALLOWED_ORIGINS`. Set via `wrangler secret put`.
 - **`gracechords-sitemap-rebuild`** (`workers/sitemap-rebuild/`) — cron
   `0 0 * * 0` (Sunday 00:00 UTC) rebuilds `public/sitemap.xml`.
+- **`gracechords-telegram-bot`** (`workers/telegram-bot/`) — powers
+  `@gracechords_bot`. Webhook DMs + `/internal/feature` from a GitHub
+  Action + Mon/Fri digest cron. Renders chord charts as inline JPG photos
+  (pdfium WASM bundled at deploy time) with PDF fallback. Architecture
+  doc: `workers/telegram-bot/ARCHITECTURE.md` — read before structural
+  changes; provisioning in the same dir's `README.md`.
 - Worker configs: `workers/*/wrangler.toml`. Deploy individually with `wrangler deploy`.
 
 ### Cloudinary
