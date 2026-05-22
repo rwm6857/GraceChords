@@ -110,34 +110,43 @@ export async function sendMediaGroup(token, { chatId, media, replyToMessageId } 
 }
 
 // answerGuestQuery — reply to a guest_message delivery (mentions in chats
-// the bot has not joined). The exact accepted parameter set isn't published
-// in the changelog yet, so this helper supports two modes and we try them
-// empirically:
-//   { photo, caption }  — multipart upload, mirrors sendPhoto's shape
-//   { text }            — JSON, mirrors sendMessage's shape
-// Returns a SentGuestMessage on success. Throws with the verbatim Telegram
-// error response on failure — the caller inspects the error to decide
-// whether to fall back to a different shape.
+// the bot has not joined). The empirical probe in the earlier commit
+// revealed two things from Telegram's error response ("result isn't
+// specified"):
+//   1. The reply payload is wrapped in a `result` field (singular), not
+//      bare `text`/`photo` at the top level.
+//   2. The method is JSON, not multipart — there's no top-level file
+//      upload the way sendPhoto has.
+//
+// The exact `result` shape is still undocumented publicly, but the
+// strongest precedent is answerInlineQuery, which takes InlineQueryResult
+// objects. We send an InlineQueryResultArticle wrapping
+// InputTextMessageContent for text replies. If Telegram returns a
+// different error (e.g. demanding a different field name), the next
+// iteration will refine the shape.
+//
+// Photo replies are deferred: the JPG renderer produces bytes, not a
+// hosted URL, and InlineQueryResultPhoto needs a photo_url. We can add
+// either an R2 upload step or a cached-file_id pattern once we know
+// whether answerGuestQuery accepts those result types at all.
 export async function answerGuestQuery(token, params = {}) {
-  const { guestQueryId, photo, caption, text, filename } = params
+  const { guestQueryId, text } = params
   if (!guestQueryId) throw new Error('answerGuestQuery requires guestQueryId')
+  if (!text) throw new Error('answerGuestQuery requires text (photo path not yet supported)')
 
-  if (photo) {
-    const form = new FormData()
-    form.append('guest_query_id', String(guestQueryId))
-    if (caption) form.append('caption', caption)
-    const blob = photo instanceof Uint8Array ? new Blob([photo], { type: 'image/jpeg' }) : photo
-    form.append('photo', blob, filename || 'song.jpg')
-    const resp = await fetch(botUrl(token, 'answerGuestQuery'), { method: 'POST', body: form })
-    const data = await resp.json().catch(() => ({}))
-    if (!resp.ok || !data.ok) {
-      throw new Error(`answerGuestQuery (photo) failed: ${resp.status} ${JSON.stringify(data)}`)
-    }
-    return data.result
+  const body = String(text)
+  const result = {
+    type: 'article',
+    id: '1',
+    title: body.split('\n')[0].slice(0, 64) || 'Reply',
+    input_message_content: {
+      message_text: body,
+      disable_web_page_preview: false,
+    },
   }
 
   return callJson(token, 'answerGuestQuery', {
     guest_query_id: guestQueryId,
-    text: String(text || ''),
+    result,
   })
 }
