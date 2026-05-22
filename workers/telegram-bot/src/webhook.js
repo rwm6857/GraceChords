@@ -388,29 +388,12 @@ async function handleGuestMessage(env, ctx, message) {
   const key = item.key || classified.pick.default_key || ''
   const caption = `${song.title}${key ? ` — ${key}` : ''}`
 
-  // Empirical probe: try photo first. If answerGuestQuery turns out to be
-  // text-only, Telegram returns a specific error which we log verbatim so
-  // we can decide on a permanent shape.
-  const jpg = await renderSongJpg(env, song, key).catch(err => {
-    console.warn('[grp] renderSongJpg failed', err?.message || err)
-    return null
-  })
-
-  if (jpg) {
-    try {
-      await answerGuestQuery(env.TELEGRAM_BOT_TOKEN, {
-        guestQueryId,
-        photo: jpg,
-        filename: `${(song.slug || song.id || 'song')}.png`,
-        caption,
-      })
-      console.info('[grp] answerGuestQuery photo: ok')
-      return
-    } catch (err) {
-      console.warn('[grp] answerGuestQuery photo rejected, falling back to text', err?.message || err)
-    }
-  }
-
+  // Previous round confirmed answerGuestQuery rejects bare text/photo
+  // with "result isn't specified". Reply now goes through the
+  // InlineQueryResult-shaped wrapper in telegram.js. Photo support is
+  // deferred until we confirm answerGuestQuery accepts a photo-typed
+  // result at all (and even then we'd need to host the JPG, since
+  // InlineQueryResultPhoto wants a URL not bytes).
   const url = songPageUrl(song, key)
   const text = url
     ? `${caption}\nOpen the chart: ${url}`
