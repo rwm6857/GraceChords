@@ -26,9 +26,26 @@
 }
 .gc-settings-cluster__control { display: flex; align-items: center; }
 
-/* ---------- Pill switch (theme + chord style) ---------- */
+/* Mobile drawer: row layout with consistent height across all three settings */
+.gc-drawer .gc-settings-cluster--column { gap: 0; }
+.gc-drawer .gc-settings-cluster__row {
+  min-height: 56px;
+  gap: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--drawer-text) 14%, transparent);
+}
+.gc-drawer .gc-settings-cluster__row:first-child { border-top: none; }
+.gc-drawer .gc-settings-cluster__label {
+  font-size: var(--gc-font-body);
+  color: var(--drawer-text);
+  font-weight: 400;
+}
+.gc-drawer .gc-settings-cluster__control { justify-content: flex-end; }
 
-.gc-pill-switch {
+/* ---------- Pill toggle (theme + chord style) ----------
+   Two-state pill: both labels always visible. Active half filled with
+   the brand/accent color; inactive half is text only. */
+
+.gc-pill-toggle {
   display: inline-block;
   background: none;
   border: none;
@@ -36,60 +53,59 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.gc-pill-switch:focus { outline: none; }
-.gc-pill-switch:focus-visible .gc-pill-switch__track {
+.gc-pill-toggle:focus { outline: none; }
+.gc-pill-toggle:focus-visible .gc-pill-toggle__track {
   box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
 }
 
-.gc-pill-switch__track {
+.gc-pill-toggle__track {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 56px;
-  height: 28px;
+  height: 44px;
   border-radius: var(--radius-pill);
   background: var(--gc-surface-3);
   border: 1px solid var(--gc-separator);
   transition: background var(--gc-dur-quick) var(--gc-ease);
+  padding: 2px;
 }
-.gc-pill-switch--text .gc-pill-switch__track { width: 64px; }
 
-.gc-pill-switch__thumb {
+.gc-pill-toggle__thumb {
   position: absolute;
   top: 2px;
   left: 2px;
   width: calc(50% - 2px);
   height: calc(100% - 4px);
   border-radius: var(--radius-pill);
-  background: var(--gc-surface-1);
+  background: var(--gc-primary);
   box-shadow: var(--gc-shadow-1);
   transition: transform var(--gc-dur) var(--gc-ease), background var(--gc-dur-quick) var(--gc-ease);
 }
-.gc-pill-switch.is-right .gc-pill-switch__thumb {
-  transform: translateX(calc(100% + 0px));
+.gc-pill-toggle.is-right .gc-pill-toggle__thumb {
+  transform: translateX(100%);
 }
 
-.gc-pill-switch__option {
+.gc-pill-toggle__option {
   flex: 1 1 0;
+  min-width: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
+  padding: 0 10px;
   color: var(--gc-text-tertiary);
+  font-size: var(--gc-font-sub);
+  font-weight: 500;
+  font-family: var(--gc-font-family);
+  white-space: nowrap;
   transition: color var(--gc-dur-quick) var(--gc-ease);
   pointer-events: none;
 }
-.gc-pill-switch.is-left .gc-pill-switch__option--left,
-.gc-pill-switch.is-right .gc-pill-switch__option--right {
-  color: var(--gc-text);
-}
-
-.gc-pill-switch__text {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  font-family: var(--gc-font-family);
+.gc-pill-toggle.is-left .gc-pill-toggle__option--left,
+.gc-pill-toggle.is-right .gc-pill-toggle__option--right {
+  color: var(--primary-text);
+  font-weight: 600;
 }
 
 /* ---------- Locale picker ---------- */
@@ -108,7 +124,7 @@
   border-radius: var(--radius-pill);
   font: 500 13px/1 var(--gc-font-family);
   height: 28px;
-  padding: 0 26px 0 12px;
+  padding: 0 12px;
   cursor: pointer;
   transition: background var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease);
 }
@@ -117,15 +133,6 @@
   outline: none;
   box-shadow: 0 0 0 var(--gc-focus-size) var(--gc-primary);
   border-color: var(--gc-primary);
-}
-.gc-locale-picker__chev {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  color: var(--gc-text-secondary);
-  pointer-events: none;
 }
 
 /* ---------- Desktop gear tray ---------- */
@@ -181,10 +188,14 @@
 /* ---------- Drawer overrides ---------- */
 
 .gc-drawer .gc-settings-cluster { width: 100%; }
-.gc-drawer .gc-settings-cluster--column { gap: var(--space-3); }
-.gc-drawer .gc-locale-picker,
-.gc-drawer .gc-locale-picker__select { width: 100%; }
-.gc-drawer .gc-locale-picker__select { height: 36px; }
+.gc-drawer .gc-locale-picker { width: auto; max-width: 140px; }
+.gc-drawer .gc-locale-picker__select {
+  width: 100%;
+  max-width: 140px;
+  height: 36px;
+  text-align: right;
+  text-align-last: right;
+}
 
 /* Sign Out gets a quieter, secondary treatment */
 .gc-drawer .gc-signout-link {

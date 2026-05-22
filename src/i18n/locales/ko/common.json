@@ -10,6 +10,8 @@
   "loading": "불러오는 중…",
   "search": "검색",
   "language": "언어",
+  "light": "라이트",
+  "dark": "다크",
   "lightMode": "라이트 모드",
   "darkMode": "다크 모드",
   "toggleDarkMode": "다크 모드 전환",

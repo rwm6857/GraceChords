@@ -9,12 +9,13 @@ export default function SiteDisclaimer(){
   const inWorship = (pathname && pathname.startsWith('/worship')) || (hash && hash.includes('/worship'))
   const inReading = (pathname && pathname.startsWith('/reading')) || (hash && hash.includes('/reading'))
   if (inWorship) return null
+  if (inReading) return null
   if (!isDisclaimerEnabled()) return null
   const year = new Date().getFullYear()
   const base = 2023
   const range = year === base ? `${year}` : `${base}–${year}`
   return (
-    <footer style={{ marginTop: inReading ? '1.5rem' : '3rem' }}>
+    <footer style={{ marginTop: '3rem' }}>
       <div
         style={{
           fontSize: '0.85rem',

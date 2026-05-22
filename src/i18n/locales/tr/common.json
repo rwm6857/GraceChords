@@ -10,6 +10,8 @@
   "loading": "Yükleniyor…",
   "search": "Ara",
   "language": "Dil",
+  "light": "Açık",
+  "dark": "Koyu",
   "lightMode": "Açık tema",
   "darkMode": "Koyu tema",
   "toggleDarkMode": "Koyu temaya geç",

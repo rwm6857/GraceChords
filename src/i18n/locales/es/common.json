@@ -10,6 +10,8 @@
   "loading": "Cargando…",
   "search": "Buscar",
   "language": "Idioma",
+  "light": "Claro",
+  "dark": "Oscuro",
   "lightMode": "Modo claro",
   "darkMode": "Modo oscuro",
   "toggleDarkMode": "Alternar modo oscuro",

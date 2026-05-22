@@ -10,6 +10,8 @@
   "loading": "Loading…",
   "search": "Search",
   "language": "Language",
+  "light": "Light",
+  "dark": "Dark",
   "lightMode": "Light mode",
   "darkMode": "Dark mode",
   "toggleDarkMode": "Toggle dark mode",
