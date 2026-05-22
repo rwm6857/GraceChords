@@ -7,6 +7,7 @@ import { checkRateLimit, formatCooldown } from './ratelimit.js'
 import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
 import { searchSongs, fetchSong, fetchSetlistSongs, classifyMatch } from './searchClient.js'
+import { getOrStageFileId } from './mediaCache.js'
 import {
   sendMessage,
   sendPhoto,
@@ -388,12 +389,37 @@ async function handleGuestMessage(env, ctx, message) {
   const key = item.key || classified.pick.default_key || ''
   const caption = `${song.title}${key ? ` — ${key}` : ''}`
 
-  // Previous round confirmed answerGuestQuery rejects bare text/photo
-  // with "result isn't specified". Reply now goes through the
-  // InlineQueryResult-shaped wrapper in telegram.js. Photo support is
-  // deferred until we confirm answerGuestQuery accepts a photo-typed
-  // result at all (and even then we'd need to host the JPG, since
-  // InlineQueryResultPhoto wants a URL not bytes).
+  // Photo path: render the JPG, upload to the staging chat (or hit the
+  // KV cache for previously-staged file_ids), then reply with an
+  // InlineQueryResultCachedPhoto. Any failure here falls back to the
+  // text + link reply that we already know works.
+  const jpg = await renderSongJpg(env, song, key).catch(err => {
+    console.warn('[grp] renderSongJpg failed', err?.message || err)
+    return null
+  })
+
+  if (jpg) {
+    try {
+      const { fileId, cached } = await getOrStageFileId(env, {
+        songId: song.id,
+        key,
+        jpg,
+        filename: `${(song.slug || song.id || 'song')}.png`,
+        caption,
+      })
+      console.info('[grp] staged file_id', { cached, fileIdPreview: String(fileId).slice(0, 24) })
+      await answerGuestQuery(env.TELEGRAM_BOT_TOKEN, {
+        guestQueryId,
+        photoFileId: fileId,
+        caption,
+      })
+      console.info('[grp] answerGuestQuery cached photo: ok')
+      return
+    } catch (err) {
+      console.warn('[grp] cached photo reply failed, falling back to text', err?.message || err)
+    }
+  }
+
   const url = songPageUrl(song, key)
   const text = url
     ? `${caption}\nOpen the chart: ${url}`
