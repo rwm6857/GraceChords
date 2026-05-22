@@ -1,8 +1,10 @@
-// Telegram webhook handler — DM flow only.
-// Channel posts and group messages are ignored.
+// Telegram webhook handler — routes DM messages, group/guest-chat @mentions,
+// and inline-button callback queries. Channel posts and edited messages are
+// silently ignored.
 
 import { findUserByTelegramId } from './supabase.js'
 import { checkRateLimit, formatCooldown } from './ratelimit.js'
+import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
 import { searchSongs, fetchSong, fetchSetlistSongs, classifyMatch } from './searchClient.js'
 import {
@@ -12,8 +14,43 @@ import {
   sendMediaGroup,
   sendChatAction,
   answerCallbackQuery,
+  getMe,
 } from './telegram.js'
 import { renderSongPdf, renderSetlistPdf, renderSongJpg } from './pdfRender.js'
+
+// Bot username is needed to detect @mentions in group chats. Cache once
+// per isolate — getMe() is a single Telegram round-trip and the username
+// only changes if the maintainer renames the bot via BotFather.
+let cachedBotUsername = null
+async function getBotUsername(env) {
+  if (cachedBotUsername) return cachedBotUsername
+  try {
+    const me = await getMe(env.TELEGRAM_BOT_TOKEN)
+    cachedBotUsername = (me?.username || '').toLowerCase()
+  } catch (err) {
+    console.warn('getMe failed', err?.message || err)
+    cachedBotUsername = ''
+  }
+  return cachedBotUsername
+}
+
+// Pulls out the @bot mention (if any) and returns the remaining text. Only
+// returns non-null when this message is actually directed at the bot.
+function extractMentionPayload(message, botUsername) {
+  if (!botUsername) return null
+  const text = String(message?.text || '')
+  const entities = Array.isArray(message?.entities) ? message.entities : []
+  const want = `@${botUsername}`.toLowerCase()
+  for (const ent of entities) {
+    if (ent.type !== 'mention') continue
+    const slice = text.slice(ent.offset, ent.offset + ent.length).toLowerCase()
+    if (slice !== want) continue
+    const before = text.slice(0, ent.offset)
+    const after = text.slice(ent.offset + ent.length)
+    return (before + ' ' + after).replace(/\s+/g, ' ').trim()
+  }
+  return null
+}
 
 const USER_CACHE_TTL_S = 5 * 60
 const SETLIST_KV_TTL_S = 24 * 60 * 60
@@ -79,7 +116,7 @@ function setlistPdfCallbackData(token) {
   return `slpdf:${token}`
 }
 
-async function sendSongJpgOrPdf({ env, chatId, song, key, label }) {
+async function sendSongJpgOrPdf({ env, chatId, song, key, label, replyToMessageId }) {
   // Best-effort JPG. If the rasteriser isn't available (cold WASM, etc.)
   // fall back to sending the PDF directly.
   const jpg = await renderSongJpg(env, song, key).catch(() => null)
@@ -90,6 +127,7 @@ async function sendSongJpgOrPdf({ env, chatId, song, key, label }) {
       photo: jpg,
       filename: `${(song.slug || song.id || 'song')}.png`,
       caption,
+      replyToMessageId,
       replyMarkup: {
         inline_keyboard: [[
           { text: '📄 Get as PDF', callback_data: pdfCallbackData(song.id, key) },
@@ -104,10 +142,11 @@ async function sendSongJpgOrPdf({ env, chatId, song, key, label }) {
     document: pdf,
     filename: `${(song.slug || song.id || 'song')}.pdf`,
     caption,
+    replyToMessageId,
   })
 }
 
-async function sendSetlistResponse({ env, chatId, songs, keys }) {
+async function sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId }) {
   // Build per-song JPGs (best-effort). If any fail we fall back to PDF for
   // the whole set so the user always gets something usable.
   const media = []
@@ -120,6 +159,7 @@ async function sendSetlistResponse({ env, chatId, songs, keys }) {
         document: pdf,
         filename: `setlist.pdf`,
         caption: 'Setlist',
+        replyToMessageId,
       })
       return
     }
@@ -131,10 +171,12 @@ async function sendSetlistResponse({ env, chatId, songs, keys }) {
   }
 
   // Telegram allows up to 10 in a single media group; chunk if needed.
+  // Only thread the first chunk back to the originating message.
   for (let start = 0; start < media.length; start += 10) {
     await sendMediaGroup(env.TELEGRAM_BOT_TOKEN, {
       chatId,
       media: media.slice(start, start + 10),
+      replyToMessageId: start === 0 ? replyToMessageId : undefined,
     })
   }
 
@@ -151,15 +193,29 @@ async function sendSetlistResponse({ env, chatId, songs, keys }) {
   })
 }
 
-async function handleTextMessage(env, ctx, message) {
+async function handleTextMessage(env, ctx, message, options = {}) {
+  // options.text       — pre-cleaned text (mention stripped) for group flow.
+  // options.isGroup    — true for group/supergroup/guest-chat messages.
+  // options.replyToMessageId — message_id to thread replies under in groups.
   const chatId = message.chat.id
   const telegramUserId = message.from?.id
-  const text = String(message.text || '').trim()
+  const text = String(options.text ?? message.text ?? '').trim()
+  const isGroup = !!options.isGroup
+  const replyToMessageId = options.replyToMessageId
 
   if (!telegramUserId || !text) return
 
-  // /start and /help — always responsive even when not linked.
+  // /start and /help — always responsive even when not linked. In groups
+  // we keep the message short to avoid spamming the chat with onboarding.
   if (/^\/(start|help)\b/i.test(text)) {
+    if (isGroup) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: chatId,
+        text: 'Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll drop the chord chart in the chat.',
+        reply_to_message_id: replyToMessageId,
+      })
+      return
+    }
     const user = await getLinkedUser(env, telegramUserId)
     await sendMessage(env.TELEGRAM_BOT_TOKEN, {
       chat_id: chatId,
@@ -170,19 +226,32 @@ async function handleTextMessage(env, ctx, message) {
     return
   }
 
-  const user = await getLinkedUser(env, telegramUserId)
-  if (!user) {
-    await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: onboardingText() })
-    return
-  }
-
-  const limit = await checkRateLimit(env, telegramUserId)
-  if (!limit.ok) {
-    await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-      chat_id: chatId,
-      text: `Whoa, slow down — try again in ${formatCooldown(limit.retryAfterSeconds)}.`,
-    })
-    return
+  // Account-link gating is DM-only. In a group chat anyone can summon the
+  // bot — we still rate-limit per chat so a single group can't flood.
+  if (!isGroup) {
+    const user = await getLinkedUser(env, telegramUserId)
+    if (!user) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: onboardingText() })
+      return
+    }
+    const limit = await checkRateLimit(env, telegramUserId)
+    if (!limit.ok) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: chatId,
+        text: `Whoa, slow down — try again in ${formatCooldown(limit.retryAfterSeconds)}.`,
+      })
+      return
+    }
+  } else {
+    const groupLimit = await checkGroupRateLimit(env, chatId)
+    if (!groupLimit.ok) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: chatId,
+        text: `Busy chat — try again in ${formatCooldown(groupLimit.retryAfterSeconds)}.`,
+        reply_to_message_id: replyToMessageId,
+      })
+      return
+    }
   }
 
   const items = parseRequest(text)
@@ -190,6 +259,7 @@ async function handleTextMessage(env, ctx, message) {
     await sendMessage(env.TELEGRAM_BOT_TOKEN, {
       chat_id: chatId,
       text: "I couldn't read that. Try a title like \"Build My Life in G\".",
+      reply_to_message_id: replyToMessageId,
     })
     return
   }
@@ -205,6 +275,7 @@ async function handleTextMessage(env, ctx, message) {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, {
         chat_id: chatId,
         text: `I couldn't find "${item.title}". Try a different spelling?`,
+        reply_to_message_id: replyToMessageId,
       })
       return
     }
@@ -217,6 +288,7 @@ async function handleTextMessage(env, ctx, message) {
         chat_id: chatId,
         text: `Which "${item.title}" did you mean?`,
         reply_markup: { inline_keyboard: keyboard },
+        reply_to_message_id: replyToMessageId,
       })
       return
     }
@@ -225,13 +297,13 @@ async function handleTextMessage(env, ctx, message) {
 
   if (resolved.length === 1) {
     const song = await fetchSong(env, resolved[0].id)
-    await sendSongJpgOrPdf({ env, chatId, song, key: resolved[0].key })
+    await sendSongJpgOrPdf({ env, chatId, song, key: resolved[0].key, replyToMessageId })
     return
   }
 
   const songs = await fetchSetlistSongs(env, resolved.map(r => ({ song_id: r.id, key: r.key })))
   const keys = resolved.map(r => r.key)
-  await sendSetlistResponse({ env, chatId, songs, keys })
+  await sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId })
 }
 
 async function handleCallbackQuery(env, ctx, cbq) {
@@ -287,8 +359,11 @@ async function handleCallbackQuery(env, ctx, cbq) {
 }
 
 export async function handleTelegramUpdate(env, ctx, update) {
-  // DM-only. Anything else is silently ignored — channel/group flows are
-  // handled by separate worker paths (digest, feature post).
+  // Three flows:
+  //   private chat  → full DM experience (account link, per-user limit).
+  //   group / supergroup / guest-chat → only respond to @mentions, per-chat
+  //                                     limit, no account-link requirement.
+  //   anything else (channel_post, edited_*) → silently ignore.
   const message = update?.message
   const cbq = update?.callback_query
 
@@ -298,14 +373,36 @@ export async function handleTelegramUpdate(env, ctx, update) {
     })
   }
 
-  if (message?.chat?.type !== 'private') return
-  if (typeof message.text !== 'string') return
+  if (typeof message?.text !== 'string') return
 
-  return handleTextMessage(env, ctx, message).catch(err => {
-    console.warn('message handler error', err)
-    return sendMessage(env.TELEGRAM_BOT_TOKEN, {
-      chat_id: message.chat.id,
-      text: 'Something went wrong on my end. Try again in a moment.',
-    }).catch(() => {})
-  })
+  const chatType = message.chat?.type
+  if (chatType === 'private') {
+    return handleTextMessage(env, ctx, message).catch(err => {
+      console.warn('message handler error', err)
+      return sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: message.chat.id,
+        text: 'Something went wrong on my end. Try again in a moment.',
+      }).catch(() => {})
+    })
+  }
+
+  if (chatType === 'group' || chatType === 'supergroup') {
+    const botUsername = await getBotUsername(env)
+    const payload = extractMentionPayload(message, botUsername)
+    // No mention of this bot → not for us. Stay quiet so we don't pollute
+    // the group with replies to unrelated chatter.
+    if (payload === null) return
+    return handleTextMessage(env, ctx, message, {
+      text: payload,
+      isGroup: true,
+      replyToMessageId: message.message_id,
+    }).catch(err => {
+      console.warn('group message handler error', err)
+      return sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: message.chat.id,
+        text: 'Something went wrong on my end. Try again in a moment.',
+        reply_to_message_id: message.message_id,
+      }).catch(() => {})
+    })
+  }
 }
