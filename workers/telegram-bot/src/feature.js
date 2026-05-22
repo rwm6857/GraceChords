@@ -1,9 +1,15 @@
-// POST /internal/feature — called by the GitHub Action when a PR labelled
-// `post` is merged, or when its title/body contains "#post". Body is the
-// PR title, summary, and URL. We rewrite the summary through Workers AI
-// for a friendlier, end-user-facing tone, then post to the dev channel.
-// If the AI call fails for any reason we fall back to the raw summary so
-// a deploy or AI outage never silently drops the announcement.
+// POST /internal/feature — called by the GitHub Action on merged PRs that
+// pass the workflow's gating (feat-prefix, or "#post" override). Body is
+// the PR title, summary, and URL.
+//
+// Behaviour:
+//   - The conventional-commit prefix (e.g. "feat(scope):") is stripped from
+//     the title before anything is posted to end users.
+//   - If the PR body is empty, the post is skipped entirely. Empty bodies
+//     produced uselessly generic AI summaries; we'd rather say nothing.
+//   - Otherwise the body is rewritten by Workers AI for a friendlier tone.
+//     Any AI failure falls back to the raw body (truncated) so an outage
+//     never silently drops a real announcement.
 
 import { sendMessage } from './telegram.js'
 import { summarizeFeature } from './aiSummary.js'
@@ -23,16 +29,32 @@ function truncate(s, max) {
   return s.slice(0, max - 1).trimEnd() + '…'
 }
 
+// Strip the conventional-commit prefix (type, optional scope, optional
+// breaking "!") so end users see "Setlist sharing" instead of
+// "feat(setlist)!: setlist sharing". The recognised types match the
+// Angular / conventional-commits spec; anything unrecognised is left as-is.
+const CC_PREFIX = /^(feat|fix|chore|refactor|docs|style|test|ci|build|perf|revert)(\([^)]*\))?!?:\s*/i
+
+function cleanTitle(title) {
+  return String(title || '').trim().replace(CC_PREFIX, '').trim()
+}
+
 export async function postFeature(env, body) {
   if (!env.DEV_CHANNEL_ID || !env.TELEGRAM_BOT_TOKEN) {
     throw new Error('Bot not configured')
   }
-  const title = String(body?.title || '').trim()
-  if (!title) {
+  const rawTitle = String(body?.title || '').trim()
+  if (!rawTitle) {
     throw new Error('title required')
   }
+  const title = cleanTitle(rawTitle) || rawTitle
   const rawSummary = String(body?.summary || '').trim()
   const url = String(body?.url || '').trim()
+
+  if (!rawSummary) {
+    console.info('feature post skipped: empty body', { title: rawTitle })
+    return { skipped: 'empty-body' }
+  }
 
   // Try AI rewrite first. summarizeFeature() returns HTML-escaped text or
   // null. Any thrown error (rate limit, quota, transient) → fall back.
@@ -46,7 +68,7 @@ export async function postFeature(env, body) {
   const parts = [`<b>🚀 ${escapeHtml(title)}</b>`]
   if (aiBody) {
     parts.push('', aiBody)
-  } else if (rawSummary) {
+  } else {
     parts.push('', escapeHtml(truncate(rawSummary, 600)))
   }
   if (url) parts.push('', `<a href="${escapeHtml(url)}">Details on GitHub</a>`)
@@ -57,4 +79,5 @@ export async function postFeature(env, body) {
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   })
+  return { posted: true }
 }

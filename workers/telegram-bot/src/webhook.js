@@ -27,8 +27,9 @@ async function getBotUsername(env) {
   try {
     const me = await getMe(env.TELEGRAM_BOT_TOKEN)
     cachedBotUsername = (me?.username || '').toLowerCase()
+    console.info('[grp] getMe ok', { username: cachedBotUsername })
   } catch (err) {
-    console.warn('getMe failed', err?.message || err)
+    console.warn('[grp] getMe failed', err?.message || err)
     cachedBotUsername = ''
   }
   return cachedBotUsername
@@ -37,18 +38,33 @@ async function getBotUsername(env) {
 // Pulls out the @bot mention (if any) and returns the remaining text. Only
 // returns non-null when this message is actually directed at the bot.
 function extractMentionPayload(message, botUsername) {
-  if (!botUsername) return null
+  if (!botUsername) {
+    console.warn('[grp] mention check: empty botUsername')
+    return null
+  }
   const text = String(message?.text || '')
   const entities = Array.isArray(message?.entities) ? message.entities : []
   const want = `@${botUsername}`.toLowerCase()
+  console.info('[grp] mention scan', {
+    want,
+    entityCount: entities.length,
+    entityTypes: entities.map(e => e.type),
+    textPreview: text.slice(0, 80),
+  })
   for (const ent of entities) {
     if (ent.type !== 'mention') continue
     const slice = text.slice(ent.offset, ent.offset + ent.length).toLowerCase()
-    if (slice !== want) continue
+    if (slice !== want) {
+      console.info('[grp] mention slice mismatch', { slice, want })
+      continue
+    }
     const before = text.slice(0, ent.offset)
     const after = text.slice(ent.offset + ent.length)
-    return (before + ' ' + after).replace(/\s+/g, ' ').trim()
+    const payload = (before + ' ' + after).replace(/\s+/g, ' ').trim()
+    console.info('[grp] mention matched', { payload })
+    return payload
   }
+  console.info('[grp] no matching mention entity')
   return null
 }
 
@@ -372,6 +388,18 @@ export async function handleTelegramUpdate(env, ctx, update) {
       console.warn('callback handler error', err)
     })
   }
+
+  // Top-level breadcrumb: prints the keys of the update so we can see what
+  // Telegram actually delivered (message vs channel_post vs edited_* etc.).
+  console.info('[grp] update', {
+    keys: Object.keys(update || {}),
+    chatType: message?.chat?.type,
+    chatId: message?.chat?.id,
+    messageId: message?.message_id,
+    fromId: message?.from?.id,
+    hasText: typeof message?.text === 'string',
+    entityTypes: Array.isArray(message?.entities) ? message.entities.map(e => e.type) : null,
+  })
 
   if (typeof message?.text !== 'string') return
 
