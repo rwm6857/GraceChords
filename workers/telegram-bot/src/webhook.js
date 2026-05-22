@@ -12,7 +12,6 @@ import {
   sendMessage,
   sendPhoto,
   sendDocument,
-  sendMediaGroup,
   sendChatAction,
   answerCallbackQuery,
   answerGuestQuery,
@@ -172,9 +171,9 @@ async function sendSongJpgOrPdf({ env, chatId, song, key, label, replyToMessageI
 }
 
 async function sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId }) {
-  // Build per-song JPGs (best-effort). If any fail we fall back to PDF for
-  // the whole set so the user always gets something usable.
-  const media = []
+  // Render each JPG up-front. If any fail we drop to a single combined
+  // PDF for the whole set so the user always gets something usable.
+  const jpgs = []
   for (let i = 0; i < songs.length; i++) {
     const jpg = await renderSongJpg(env, songs[i], keys[i]).catch(() => null)
     if (!jpg) {
@@ -188,34 +187,35 @@ async function sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId 
       })
       return
     }
-    media.push({
-      jpg,
-      filename: `${(songs[i].slug || songs[i].id || `song${i}`)}.png`,
-      caption: i === 0 ? songs.map((s, idx) => `${idx + 1}. ${s.title}${keys[idx] ? ` (${keys[idx]})` : ''}`).join('\n') : undefined,
-    })
+    jpgs.push(jpg)
   }
 
-  // Telegram allows up to 10 in a single media group; chunk if needed.
-  // Only thread the first chunk back to the originating message.
-  for (let start = 0; start < media.length; start += 10) {
-    await sendMediaGroup(env.TELEGRAM_BOT_TOKEN, {
-      chatId,
-      media: media.slice(start, start + 10),
-      replyToMessageId: start === 0 ? replyToMessageId : undefined,
-    })
-  }
-
+  // Send each chart as its own sendPhoto so the final one can carry the
+  // "Get setlist as PDF" inline button. sendMediaGroup would let us
+  // collapse them into a side-by-side grid but doesn't accept
+  // reply_markup, which would force a separate text message just to host
+  // the button.
   const items = songs.map((s, i) => ({ song_id: s.id, key: keys[i] || s.default_key || '' }))
   const token = await storeSetlistToken(env, items)
-  await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-    chat_id: chatId,
-    text: 'Want it as one combined PDF?',
-    reply_markup: {
-      inline_keyboard: [[
-        { text: '📄 Get setlist as PDF', callback_data: setlistPdfCallbackData(token) },
-      ]],
-    },
-  })
+
+  for (let i = 0; i < songs.length; i++) {
+    const song = songs[i]
+    const key = keys[i]
+    const isLast = i === songs.length - 1
+    const caption = `${i + 1}. ${song.title}${key ? ` — ${key}` : ''}`
+    await sendPhoto(env.TELEGRAM_BOT_TOKEN, {
+      chatId,
+      photo: jpgs[i],
+      filename: `${(song.slug || song.id || `song${i}`)}.png`,
+      caption,
+      replyToMessageId: i === 0 ? replyToMessageId : undefined,
+      replyMarkup: isLast ? {
+        inline_keyboard: [[
+          { text: '📄 Get setlist as PDF', callback_data: setlistPdfCallbackData(token) },
+        ]],
+      } : undefined,
+    })
+  }
 }
 
 async function handleTextMessage(env, ctx, message, options = {}) {
