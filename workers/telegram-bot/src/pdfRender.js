@@ -83,9 +83,16 @@ export async function renderSetlistPdf(env, songs, keys = []) {
 // ---- JPG (best-effort) -----------------------------------------------------
 
 let _pdfiumLib = null
+// On init failure, suppress retries for a bounded window so a transient
+// breakage doesn't cause every request to re-attempt instantiation. After
+// the window the next request retries, so a fix (or fresh deploy with a
+// fresh isolate) recovers automatically.
+let _pdfiumFailedUntil = 0
+const PDFIUM_FAILURE_TTL_MS = 60_000
 
 async function getPdfium() {
   if (_pdfiumLib) return _pdfiumLib
+  if (Date.now() < _pdfiumFailedUntil) return null
   try {
     // instantiateWasm is Emscripten's hook for caller-controlled
     // instantiation. We use it to feed the bundled WebAssembly.Module
@@ -105,6 +112,7 @@ async function getPdfium() {
     })
     return _pdfiumLib
   } catch (err) {
+    _pdfiumFailedUntil = Date.now() + PDFIUM_FAILURE_TTL_MS
     console.warn('pdfium init failed; JPG rendering disabled:', err?.message || err, err?.stack || '')
     return null
   }
