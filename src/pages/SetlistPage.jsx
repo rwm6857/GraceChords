@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { KEYS } from '../utils/chordpro'
-import { MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, CloudDownloadIcon, SlidersIcon } from '../components/Icons'
+import { MinusIcon, DownloadIcon, PlusIcon, SaveIcon, TrashIcon, MediaIcon, LinkIcon, SlidersIcon } from '../components/Icons'
 import PushToTelegramButton from '../components/PushToTelegramButton'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
@@ -168,6 +168,7 @@ export default function Setlist(){
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const [pptMenuOpen, setPptMenuOpen] = useState(false)
   const pptMenuRef = useRef(null)
+  const [mobilePptOpen, setMobilePptOpen] = useState(false)
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const originalHtmlOverflow = useRef('')
   const originalBodyOverflow = useRef('')
@@ -1455,16 +1456,10 @@ async function exportPdf() {
       </div>
       <MobileActionSheet
         open={mobileActionsOpen}
-        onClose={() => setMobileActionsOpen(false)}
+        onClose={() => { setMobileActionsOpen(false); setMobilePptOpen(false) }}
         title={t('setlist.actionsTitle')}
       >
         <div className="gc-mobile-actions">
-          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>{t('setlist.save')}</Button>
-          <Button onClick={() => { setMobileActionsOpen(false); setMobileTab('saved') }} iconLeft={<CloudDownloadIcon />} disabled={!isLoggedIn}>{t('setlist.savedSetsAction')}</Button>
-          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>{t('setlist.new')}</Button>
-          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
-          <Button onClick={() => { combineSetlistPptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || `${t('setlist.exportPpt')} — ${t('setlist.pptCombined')}`}</Button>
-          <Button onClick={() => { bundlePptx(); setMobileActionsOpen(false) }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{pptxProgress || `${t('setlist.exportPpt')} — ${t('setlist.pptSeparate')}`}</Button>
           <PushToTelegramButton
             items={list
               .filter(sel => !isVerseId(sel.id))
@@ -1475,8 +1470,26 @@ async function exportPdf() {
               .filter(Boolean)}
             context="setlist"
             label="Send to Telegram"
-            variant="secondary"
+            variant="primary"
+            className="gc-btn--telegram"
           />
+          {mobilePptOpen ? (
+            <div className="gc-mobile-ppt-chooser">
+              <Button onClick={() => { setMobilePptOpen(false); setMobileActionsOpen(false); combineSetlistPptx() }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>
+                <span style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
+                  <span>{t('setlist.pptCombined')}</span>
+                  <span className="meta" style={{ fontSize:'var(--gc-font-cap)' }}>{t('setlist.pptCombinedBeta')}</span>
+                </span>
+              </Button>
+              <Button onClick={() => { setMobilePptOpen(false); setMobileActionsOpen(false); bundlePptx() }} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{t('setlist.pptSeparate')}</Button>
+              <Button variant="tertiary" onClick={() => setMobilePptOpen(false)}>{t('setlist.cancel')}</Button>
+            </div>
+          ) : (
+            <Button onClick={() => setMobilePptOpen(true)} iconLeft={<DownloadIcon />} disabled={list.length===0 || !!pptxProgress || !!combinePptxProgress}>{combinePptxProgress || pptxProgress || t('setlist.exportPpt')}</Button>
+          )}
+          <Button onClick={() => { copySetLink(); setMobileActionsOpen(false) }} iconLeft={<LinkIcon />} disabled={list.length===0}>{t('setlist.shareAction')}</Button>
+          <Button onClick={() => { setMobileActionsOpen(false); onSave() }} iconLeft={<SaveIcon />}>{t('setlist.save')}</Button>
+          <Button onClick={() => { onNew(); setMobileActionsOpen(false) }} iconLeft={<PlusIcon />}>{t('setlist.new')}</Button>
         </div>
       </MobileActionSheet>
     </PageContainer>
