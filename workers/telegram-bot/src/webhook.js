@@ -375,12 +375,13 @@ async function handleCallbackQuery(env, ctx, cbq) {
 }
 
 export async function handleTelegramUpdate(env, ctx, update) {
-  // Three flows:
-  //   private chat  → full DM experience (account link, per-user limit).
-  //   group / supergroup / guest-chat → only respond to @mentions, per-chat
-  //                                     limit, no account-link requirement.
-  //   anything else (channel_post, edited_*) → silently ignore.
-  const message = update?.message
+  // Four flows:
+  //   private chat   → full DM experience (account link, per-user limit).
+  //   group / super  → only respond to @mentions, per-chat limit, no link.
+  //   guest_message  → Telegram delivers mentions from chats the bot has
+  //                    not joined under update.guest_message (separate top-
+  //                    level field from update.message). Treated as group.
+  //   anything else  → silently ignore.
   const cbq = update?.callback_query
 
   if (cbq) {
@@ -389,10 +390,17 @@ export async function handleTelegramUpdate(env, ctx, update) {
     })
   }
 
+  // Accept either the standard message envelope or the guest_message one.
+  // Track which envelope we got so downstream logic can force the group
+  // flow for guest deliveries regardless of chat.type.
+  const message = update?.message ?? update?.guest_message
+  const isGuest = !update?.message && !!update?.guest_message
+
   // Top-level breadcrumb: prints the keys of the update so we can see what
   // Telegram actually delivered (message vs channel_post vs edited_* etc.).
   console.info('[grp] update', {
     keys: Object.keys(update || {}),
+    isGuest,
     chatType: message?.chat?.type,
     chatId: message?.chat?.id,
     messageId: message?.message_id,
@@ -401,10 +409,24 @@ export async function handleTelegramUpdate(env, ctx, update) {
     entityTypes: Array.isArray(message?.entities) ? message.entities.map(e => e.type) : null,
   })
 
+  // First-look diagnostic for guest_message — the schema is new and we
+  // want to confirm field names before relying on them. Verbose on
+  // purpose; once verified this can be tightened or removed.
+  if (isGuest) {
+    console.info('[grp] guest_message shape', {
+      topKeys: Object.keys(update.guest_message || {}),
+      chatKeys: update.guest_message?.chat ? Object.keys(update.guest_message.chat) : null,
+      fromKeys: update.guest_message?.from ? Object.keys(update.guest_message.from) : null,
+      textPreview: typeof update.guest_message?.text === 'string'
+        ? update.guest_message.text.slice(0, 120)
+        : null,
+    })
+  }
+
   if (typeof message?.text !== 'string') return
 
   const chatType = message.chat?.type
-  if (chatType === 'private') {
+  if (!isGuest && chatType === 'private') {
     return handleTextMessage(env, ctx, message).catch(err => {
       console.warn('message handler error', err)
       return sendMessage(env.TELEGRAM_BOT_TOKEN, {
@@ -414,7 +436,7 @@ export async function handleTelegramUpdate(env, ctx, update) {
     })
   }
 
-  if (chatType === 'group' || chatType === 'supergroup') {
+  if (isGuest || chatType === 'group' || chatType === 'supergroup') {
     const botUsername = await getBotUsername(env)
     const payload = extractMentionPayload(message, botUsername)
     // No mention of this bot → not for us. Stay quiet so we don't pollute
