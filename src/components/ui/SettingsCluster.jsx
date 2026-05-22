@@ -89,7 +89,6 @@ export function LocalePicker({ className = '' }) {
 export default function SettingsCluster({
   orientation = 'row',
   className = '',
-  showLabels = false,
 }) {
   const { t } = useTranslation('common')
   return (
@@ -98,28 +97,9 @@ export default function SettingsCluster({
       role="group"
       aria-label={t('settings', { defaultValue: 'Settings' })}
     >
-      {showLabels ? (
-        <>
-          <SettingRow label={t('theme', { defaultValue: 'Theme' })}><ThemeSwitch /></SettingRow>
-          <SettingRow label={t('language')}><LocalePicker /></SettingRow>
-          <SettingRow label={t('chordStyle', { defaultValue: 'Chord style' })}><ChordStyleSwitch /></SettingRow>
-        </>
-      ) : (
-        <>
-          <ThemeSwitch />
-          <LocalePicker />
-          <ChordStyleSwitch />
-        </>
-      )}
-    </div>
-  )
-}
-
-function SettingRow({ label, children }) {
-  return (
-    <div className="gc-settings-cluster__row">
-      <span className="gc-settings-cluster__label">{label}</span>
-      <div className="gc-settings-cluster__control">{children}</div>
+      <ThemeSwitch />
+      <LocalePicker />
+      <ChordStyleSwitch />
     </div>
   )
 }

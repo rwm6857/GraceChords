@@ -12,34 +12,13 @@
   gap: var(--space-3);
 }
 
-.gc-settings-cluster__row {
+/* Each control gets a comfortable touch target with consistent height. */
+.gc-settings-cluster--column > * {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 32px;
+  justify-content: flex-end;
+  min-height: 44px;
 }
-.gc-settings-cluster__label {
-  font-size: var(--gc-font-sub);
-  color: var(--gc-text-secondary);
-  font-weight: 500;
-}
-.gc-settings-cluster__control { display: flex; align-items: center; }
-
-/* Mobile drawer: row layout with consistent height across all three settings */
-.gc-drawer .gc-settings-cluster--column { gap: 0; }
-.gc-drawer .gc-settings-cluster__row {
-  min-height: 56px;
-  gap: var(--space-3);
-  border-top: 1px solid color-mix(in srgb, var(--drawer-text) 14%, transparent);
-}
-.gc-drawer .gc-settings-cluster__row:first-child { border-top: none; }
-.gc-drawer .gc-settings-cluster__label {
-  font-size: var(--gc-font-body);
-  color: var(--drawer-text);
-  font-weight: 400;
-}
-.gc-drawer .gc-settings-cluster__control { justify-content: flex-end; }
 
 /* ---------- Pill toggle (theme + chord style) ----------
    iOS-style segmented control. Track holds both options at fixed
