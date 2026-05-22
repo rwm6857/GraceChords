@@ -1425,7 +1425,6 @@ async function exportPdf() {
               .filter(Boolean)}
             context="setlist"
             label="Send to Telegram"
-            variant="secondary"
           />
         </div>
       </MobileActionSheet>

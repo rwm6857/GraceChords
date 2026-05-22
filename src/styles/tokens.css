@@ -81,6 +81,10 @@
   --gc-teal: #5AC8FA;
   --gc-yellow: #FFCC00;
 
+  /* Telegram brand (matches the official Login Widget button) */
+  --gc-telegram: #54a9eb;
+  --gc-telegram-hover: #3d9adb;
+
   /* Neutrals / surfaces */
   --gc-bg: #faf7f2;
   --gc-surface-1: #ffffff;
@@ -122,6 +126,9 @@
   --gc-purple: #BF5AF2;
   --gc-teal: #64D2FF;
   --gc-yellow: #FFD60A;
+
+  --gc-telegram: #54a9eb;
+  --gc-telegram-hover: #6cb3ed;
 
   --gc-bg: #100e0b;
   --gc-surface-1: #1a1612;
