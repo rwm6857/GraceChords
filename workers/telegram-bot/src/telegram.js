@@ -110,39 +110,41 @@ export async function sendMediaGroup(token, { chatId, media, replyToMessageId } 
 }
 
 // answerGuestQuery — reply to a guest_message delivery (mentions in chats
-// the bot has not joined). The empirical probe in the earlier commit
-// revealed two things from Telegram's error response ("result isn't
-// specified"):
-//   1. The reply payload is wrapped in a `result` field (singular), not
-//      bare `text`/`photo` at the top level.
-//   2. The method is JSON, not multipart — there's no top-level file
-//      upload the way sendPhoto has.
+// the bot has not joined). Empirical findings so far:
+//   - The reply payload sits under a `result` field (singular).
+//   - The method is JSON-only — no top-level file upload.
+//   - Text replies work as InlineQueryResultArticle wrapping
+//     InputTextMessageContent.
+//   - Photo replies use InlineQueryResultCachedPhoto with a file_id the
+//     caller obtained by uploading the JPG to a staging chat first.
 //
-// The exact `result` shape is still undocumented publicly, but the
-// strongest precedent is answerInlineQuery, which takes InlineQueryResult
-// objects. We send an InlineQueryResultArticle wrapping
-// InputTextMessageContent for text replies. If Telegram returns a
-// different error (e.g. demanding a different field name), the next
-// iteration will refine the shape.
-//
-// Photo replies are deferred: the JPG renderer produces bytes, not a
-// hosted URL, and InlineQueryResultPhoto needs a photo_url. We can add
-// either an R2 upload step or a cached-file_id pattern once we know
-// whether answerGuestQuery accepts those result types at all.
+// Mode is inferred from the params: pass photoFileId for a cached photo,
+// otherwise text.
 export async function answerGuestQuery(token, params = {}) {
-  const { guestQueryId, text } = params
+  const { guestQueryId, text, photoFileId, caption } = params
   if (!guestQueryId) throw new Error('answerGuestQuery requires guestQueryId')
-  if (!text) throw new Error('answerGuestQuery requires text (photo path not yet supported)')
 
-  const body = String(text)
-  const result = {
-    type: 'article',
-    id: '1',
-    title: body.split('\n')[0].slice(0, 64) || 'Reply',
-    input_message_content: {
-      message_text: body,
-      disable_web_page_preview: false,
-    },
+  let result
+  if (photoFileId) {
+    result = {
+      type: 'photo',
+      id: '1',
+      photo_file_id: String(photoFileId),
+      ...(caption ? { caption: String(caption) } : {}),
+    }
+  } else if (text) {
+    const body = String(text)
+    result = {
+      type: 'article',
+      id: '1',
+      title: body.split('\n')[0].slice(0, 64) || 'Reply',
+      input_message_content: {
+        message_text: body,
+        disable_web_page_preview: false,
+      },
+    }
+  } else {
+    throw new Error('answerGuestQuery requires text or photoFileId')
   }
 
   return callJson(token, 'answerGuestQuery', {

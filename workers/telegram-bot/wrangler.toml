@@ -7,6 +7,11 @@
 #   SUPABASE_URL              — e.g. https://xyz.supabase.co
 #   SUPABASE_SERVICE_ROLE_KEY — read-only role recommended for digest queries
 #   BOT_WEBHOOK_TOKEN         — shared with the GitHub Action
+#   MEDIA_STAGING_CHAT_ID     — private chat the bot uploads JPGs to so it
+#                               can capture file_ids for guest-message
+#                               photo replies. Typically a 1-person private
+#                               channel containing just you + the bot.
+#                               Without it, guest replies fall back to text.
 
 name = "gracechords-telegram-bot"
 main = "src/index.js"

@@ -23,6 +23,29 @@ chat can summon the bot — but a per-chat cooldown
 sideways. Replies thread to the originating message via
 `reply_to_message_id` so they don't get lost in busy chats.
 
+### Guest-chat photo delivery
+
+Guest-mode replies (`update.guest_message`) go through Telegram's
+`answerGuestQuery` method, which only accepts URLs or file_ids — not
+raw bytes. To send the chord-chart JPG without external hosting, the
+bot uploads each new chart to a private staging chat and reuses the
+`file_id` Telegram returns. Subsequent guest requests for the same
+song+key hit the KV cache and skip the upload.
+
+To set this up:
+
+1. Create a Telegram channel (or group) with just yourself + the bot.
+   This is the scratch space — messages there are never read by
+   anyone.
+2. Add the bot as an admin so it can post.
+3. Send any message in the channel to make Telegram surface its ID
+   (e.g. via `@RawDataBot` or by forwarding to `@JsonDumpBot`).
+4. `npx wrangler secret put MEDIA_STAGING_CHAT_ID` — paste the
+   negative integer.
+
+If the secret isn't set, the bot quietly falls back to a text reply
+with a link to the song page on gracechords.com.
+
 ## Provisioning
 
 ```bash
@@ -55,6 +78,7 @@ npx wrangler secret put GRACECHORDS_API_TOKEN     # shared with site's BOT_API_T
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put BOT_WEBHOOK_TOKEN         # shared with GitHub Action
+npx wrangler secret put MEDIA_STAGING_CHAT_ID     # private chat ID; see "Guest chat behaviour"
 
 # 5. Deploy
 npx wrangler deploy
@@ -130,4 +154,5 @@ curl -X POST http://127.0.0.1:8787/internal/feature \
 | `src/feature.js` | feature post handler |
 | `src/aiSummary.js` | Workers AI rewrite for feature posts (with fallback) |
 | `src/groupRateLimit.js` | per-chat cooldown for group/guest-chat traffic |
-| `src/webhook.js` | DM + group router (messages + callback queries) |
+| `src/mediaCache.js` | file_id cache for guest-mode photo replies |
+| `src/webhook.js` | DM + group + guest router (messages + callback queries) |
