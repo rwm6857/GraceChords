@@ -14,6 +14,7 @@ import {
   sendMediaGroup,
   sendChatAction,
   answerCallbackQuery,
+  answerGuestQuery,
   getMe,
 } from './telegram.js'
 import { renderSongPdf, renderSetlistPdf, renderSongJpg } from './pdfRender.js'
@@ -322,6 +323,101 @@ async function handleTextMessage(env, ctx, message, options = {}) {
   await sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId })
 }
 
+// Build the public song URL used in text fallbacks. Mirrors the format
+// the digest builder uses so users see a familiar gracechords.com link.
+function songPageUrl(song, key) {
+  const slug = song?.slug || song?.id
+  if (!slug) return null
+  const base = `https://www.gracechords.com/song/${encodeURIComponent(slug)}`
+  return key ? `${base}?key=${encodeURIComponent(key)}` : base
+}
+
+// Dedicated guest-message flow. Kept separate from handleTextMessage on
+// purpose: guest replies go through answerGuestQuery, not sendPhoto, and
+// the accepted parameter set for that method is still empirical. Single-
+// song requests try the photo shape first, then fall back to a text reply
+// with a deep link to the song page. Setlists short-circuit to text
+// because answerGuestQuery returns one SentGuestMessage per call.
+async function handleGuestMessage(env, ctx, message) {
+  const guestQueryId = message?.guest_query_id
+  if (!guestQueryId) {
+    console.warn('[grp] guest_message missing guest_query_id', {
+      keys: Object.keys(message || {}),
+    })
+    return
+  }
+
+  const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
+    .catch(err => {
+      console.warn('[grp] answerGuestQuery text failed', err?.message || err)
+    })
+
+  const botUsername = await getBotUsername(env)
+  const payload = extractMentionPayload(message, botUsername)
+  if (payload === null) {
+    console.info('[grp] guest payload empty, ignoring')
+    return
+  }
+
+  if (/^\/(start|help)\b/i.test(payload)) {
+    return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
+  }
+
+  const items = parseRequest(payload)
+  if (items.length === 0) {
+    return replyText('I couldn\'t read that. Try a title like "Build My Life in G".')
+  }
+  if (items.length > 1) {
+    return replyText('Setlists work in DM with me. Open: https://t.me/gracechords_bot')
+  }
+
+  const item = items[0]
+  const results = await searchSongs(env, item.title).catch(() => [])
+  const classified = classifyMatch(results)
+  if (classified.kind === 'none') {
+    return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
+  }
+  if (classified.kind === 'choose') {
+    const list = classified.candidates.slice(0, 3)
+      .map((c, i) => `${i + 1}. ${c.title}${c.artist ? ` — ${c.artist}` : ''}`)
+      .join('\n')
+    return replyText(`Multiple matches for "${item.title}":\n${list}\n\nTry being more specific.`)
+  }
+
+  const song = await fetchSong(env, classified.pick.id)
+  const key = item.key || classified.pick.default_key || ''
+  const caption = `${song.title}${key ? ` — ${key}` : ''}`
+
+  // Empirical probe: try photo first. If answerGuestQuery turns out to be
+  // text-only, Telegram returns a specific error which we log verbatim so
+  // we can decide on a permanent shape.
+  const jpg = await renderSongJpg(env, song, key).catch(err => {
+    console.warn('[grp] renderSongJpg failed', err?.message || err)
+    return null
+  })
+
+  if (jpg) {
+    try {
+      await answerGuestQuery(env.TELEGRAM_BOT_TOKEN, {
+        guestQueryId,
+        photo: jpg,
+        filename: `${(song.slug || song.id || 'song')}.png`,
+        caption,
+      })
+      console.info('[grp] answerGuestQuery photo: ok')
+      return
+    } catch (err) {
+      console.warn('[grp] answerGuestQuery photo rejected, falling back to text', err?.message || err)
+    }
+  }
+
+  const url = songPageUrl(song, key)
+  const text = url
+    ? `${caption}\nOpen the chart: ${url}`
+    : `${caption}\nDM me for the chord chart: https://t.me/gracechords_bot`
+  await replyText(text)
+}
+
 async function handleCallbackQuery(env, ctx, cbq) {
   const chatId = cbq.message?.chat?.id
   const data = String(cbq.data || '')
@@ -375,12 +471,13 @@ async function handleCallbackQuery(env, ctx, cbq) {
 }
 
 export async function handleTelegramUpdate(env, ctx, update) {
-  // Three flows:
-  //   private chat  → full DM experience (account link, per-user limit).
-  //   group / supergroup / guest-chat → only respond to @mentions, per-chat
-  //                                     limit, no account-link requirement.
-  //   anything else (channel_post, edited_*) → silently ignore.
-  const message = update?.message
+  // Four flows:
+  //   private chat   → full DM experience (account link, per-user limit).
+  //   group / super  → only respond to @mentions, per-chat limit, no link.
+  //   guest_message  → Telegram delivers mentions from chats the bot has
+  //                    not joined under update.guest_message (separate top-
+  //                    level field from update.message). Treated as group.
+  //   anything else  → silently ignore.
   const cbq = update?.callback_query
 
   if (cbq) {
@@ -389,10 +486,17 @@ export async function handleTelegramUpdate(env, ctx, update) {
     })
   }
 
+  // Accept either the standard message envelope or the guest_message one.
+  // Track which envelope we got so downstream logic can force the group
+  // flow for guest deliveries regardless of chat.type.
+  const message = update?.message ?? update?.guest_message
+  const isGuest = !update?.message && !!update?.guest_message
+
   // Top-level breadcrumb: prints the keys of the update so we can see what
   // Telegram actually delivered (message vs channel_post vs edited_* etc.).
   console.info('[grp] update', {
     keys: Object.keys(update || {}),
+    isGuest,
     chatType: message?.chat?.type,
     chatId: message?.chat?.id,
     messageId: message?.message_id,
@@ -401,7 +505,30 @@ export async function handleTelegramUpdate(env, ctx, update) {
     entityTypes: Array.isArray(message?.entities) ? message.entities.map(e => e.type) : null,
   })
 
+  // First-look diagnostic for guest_message — the schema is new and we
+  // want to confirm field names before relying on them. Verbose on
+  // purpose; once verified this can be tightened or removed.
+  if (isGuest) {
+    console.info('[grp] guest_message shape', {
+      topKeys: Object.keys(update.guest_message || {}),
+      chatKeys: update.guest_message?.chat ? Object.keys(update.guest_message.chat) : null,
+      fromKeys: update.guest_message?.from ? Object.keys(update.guest_message.from) : null,
+      textPreview: typeof update.guest_message?.text === 'string'
+        ? update.guest_message.text.slice(0, 120)
+        : null,
+    })
+  }
+
   if (typeof message?.text !== 'string') return
+
+  // Guest deliveries take a completely separate handler because the reply
+  // channel (answerGuestQuery + guest_query_id) is incompatible with the
+  // chat-id-based sendPhoto/sendMessage path the regular flows use.
+  if (isGuest) {
+    return handleGuestMessage(env, ctx, message).catch(err => {
+      console.warn('[grp] guest handler error', err?.message || err)
+    })
+  }
 
   const chatType = message.chat?.type
   if (chatType === 'private') {
