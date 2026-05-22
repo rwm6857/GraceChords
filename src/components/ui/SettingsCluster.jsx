@@ -2,29 +2,30 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../../hooks/useSettings'
 import { useLocale } from '../../hooks/useLocale'
-import { Sun, Moon } from '../Icons'
 
-function PillSwitch({
-  checked,
+export function PillToggle({
+  leftLabel,
+  rightLabel,
+  value,
   onChange,
-  leftContent,
-  rightContent,
   ariaLabel,
   className = '',
 }) {
+  const isRight = value === 'right'
+  const handleClick = () => onChange(isRight ? 'left' : 'right')
   return (
     <button
       type="button"
-      className={`gc-pill-switch ${checked ? 'is-right' : 'is-left'} ${className}`}
+      className={`gc-pill-toggle ${isRight ? 'is-right' : 'is-left'} ${className}`}
       role="switch"
-      aria-checked={checked}
+      aria-checked={isRight}
       aria-label={ariaLabel}
-      onClick={onChange}
+      onClick={handleClick}
     >
-      <span className="gc-pill-switch__track" aria-hidden="true">
-        <span className="gc-pill-switch__thumb" />
-        <span className="gc-pill-switch__option gc-pill-switch__option--left">{leftContent}</span>
-        <span className="gc-pill-switch__option gc-pill-switch__option--right">{rightContent}</span>
+      <span className="gc-pill-toggle__track" aria-hidden="true">
+        <span className="gc-pill-toggle__thumb" />
+        <span className="gc-pill-toggle__option gc-pill-toggle__option--left">{leftLabel}</span>
+        <span className="gc-pill-toggle__option gc-pill-toggle__option--right">{rightLabel}</span>
       </span>
     </button>
   )
@@ -35,11 +36,11 @@ export function ThemeSwitch({ className }) {
   const { theme, toggleTheme } = useSettings()
   const isDark = theme === 'dark'
   return (
-    <PillSwitch
-      checked={isDark}
+    <PillToggle
+      leftLabel={t('light')}
+      rightLabel={t('dark')}
+      value={isDark ? 'right' : 'left'}
       onChange={toggleTheme}
-      leftContent={<Sun width={14} height={14} />}
-      rightContent={<Moon width={14} height={14} />}
       ariaLabel={t('toggleDarkMode')}
       className={className}
     />
@@ -51,13 +52,13 @@ export function ChordStyleSwitch({ className }) {
   const { chordStyle, toggleChordStyle } = useSettings()
   const isSolfege = chordStyle === 'solfege'
   return (
-    <PillSwitch
-      checked={isSolfege}
+    <PillToggle
+      leftLabel="ABC"
+      rightLabel="DoReMi"
+      value={isSolfege ? 'right' : 'left'}
       onChange={toggleChordStyle}
-      leftContent={<span className="gc-pill-switch__text">ABC</span>}
-      rightContent={<span className="gc-pill-switch__text">Do</span>}
       ariaLabel={t('toggleChordStyle', { defaultValue: 'Toggle chord style' })}
-      className={`gc-pill-switch--text ${className || ''}`}
+      className={className}
     />
   )
 }
@@ -77,7 +78,6 @@ export function LocalePicker({ className = '' }) {
           <option key={loc.code} value={loc.code}>{loc.label}</option>
         ))}
       </select>
-      <span className="gc-locale-picker__chev" aria-hidden="true">▾</span>
     </div>
   )
 }
