@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const { t } = useTranslation('profile')
   const { session, profile, loading, isLoggedIn, refreshProfile, role, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [displayName, setDisplayName] = useState('')
   const [sprite, setSprite] = useState(null)
@@ -48,6 +49,16 @@ export default function ProfilePage() {
       navigate('/login?redirect=/profile', { replace: true })
     }
   }, [isLoggedIn, loading, navigate])
+
+  // Scroll to anchor when the route hash points at a section on this page
+  // (e.g. /profile#telegram from the "Link your Telegram" dialog).
+  useEffect(() => {
+    if (loading) return
+    const hash = (location.hash || '').replace(/^#/, '')
+    if (!hash) return
+    const el = document.getElementById(hash)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [loading, location.hash])
 
   // Sync form state from profile
   useEffect(() => {
@@ -361,7 +372,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Telegram section */}
-      <section className="gc-profile-section">
+      <section id="telegram" className="gc-profile-section">
         <h2>Telegram</h2>
         <p style={{ margin: 0, color: 'var(--gc-text-secondary)' }}>
           Link your account to <strong>@gracechords_bot</strong> on Telegram so you can DM the bot a song title (or a comma-separated setlist) and get chord charts back instantly.
