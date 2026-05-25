@@ -34,6 +34,9 @@ import {
   Pause,
   RotateCcw,
   Send,
+  Globe,
+  ChevronRight,
+  LogOut,
 } from 'lucide-react'
 
 const DEFAULT_SIZE = 18
@@ -79,3 +82,6 @@ export const PlayIcon = wrap(Play)
 export const PauseIcon = wrap(Pause)
 export const ResetIcon = wrap(RotateCcw)
 export const SendIcon = wrap(Send)
+export const GlobeIcon = wrap(Globe)
+export const ChevronRightIcon = wrap(ChevronRight)
+export const LogOutIcon = wrap(LogOut)
