@@ -12,6 +12,7 @@
   "language": "Dil",
   "light": "Açık",
   "dark": "Koyu",
+  "theme": "Tema",
   "lightMode": "Açık tema",
   "darkMode": "Koyu tema",
   "toggleDarkMode": "Koyu temaya geç",

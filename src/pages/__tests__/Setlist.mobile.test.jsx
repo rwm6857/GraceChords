@@ -39,9 +39,9 @@ describe('Setlist mobile layout', () => {
     )
 
     expect(await screen.findByRole('radio', { name: /Add songs/i })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Add Verse/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Scripture$/i })).toBeNull()
 
     fireEvent.click(screen.getByRole('radio', { name: /Current/i }))
-    expect(await screen.findByRole('button', { name: /Add Verse/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /^Scripture$/i })).toBeInTheDocument()
   })
 })

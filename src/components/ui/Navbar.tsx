@@ -191,7 +191,7 @@ export default function Navbar(){
                 <p className="gc-settings-tray__title">
                   {t('common:settings', { defaultValue: 'Settings' })}
                 </p>
-                <SettingsCluster orientation="column" showLabels />
+                <SettingsCluster orientation="column" />
               </div>
             )}
           </div>
@@ -297,7 +297,7 @@ export default function Navbar(){
             <div className="gc-drawer__footer">
               <OfflineBadge forceText />
               <div style={{ marginTop: 12 }}>
-                <SettingsCluster orientation="column" showLabels />
+                <SettingsCluster orientation="column" />
               </div>
               {/* Auth slot — mobile */}
               {!authLoading && (

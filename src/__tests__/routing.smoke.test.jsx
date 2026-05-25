@@ -25,8 +25,8 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    // Button text is "Export PDF" in UI
-    expect(await screen.findByRole('button', { name: /export pdf/i })).toBeInTheDocument()
+    // PDF download button is the primary action in the Setlist toolbar
+    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
   })
 
   test('admin route renders (with gate present)', async () => {
