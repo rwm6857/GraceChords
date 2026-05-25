@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import OfflineBadge from '../OfflineBadge'
-import { GearIcon } from '../Icons'
+import { GearIcon, ChevronRightIcon, LogOutIcon } from '../Icons'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import SpriteAvatar from './SpriteAvatar'
@@ -302,22 +302,24 @@ export default function Navbar(){
               {/* Auth slot — mobile */}
               {!authLoading && (
                 isLoggedIn ? (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                     <Link
                       to="/profile"
-                      className="gc-btn gc-btn--secondary"
+                      className="gc-btn gc-btn--secondary gc-profile-link"
                       onClick={closeDrawer}
-                      style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}
                     >
                       <SpriteAvatar sprite={profile?.preferences?.sprite} size="sm" />
-                      <span>{profile?.display_name || t('profile')}</span>
+                      <span className="gc-profile-link__label">{profile?.display_name || t('profile')}</span>
+                      <ChevronRightIcon className="gc-profile-link__chevron" />
                     </Link>
                     <button
                       type="button"
-                      className="gc-signout-link"
+                      className="gc-btn gc-btn--destructive"
+                      style={{ width: '100%', justifyContent: 'center' }}
                       onClick={async () => { await handleSignOut(); closeDrawer() }}
                     >
-                      {t('signOut')}
+                      <LogOutIcon />
+                      <span>{t('signOut')}</span>
                     </button>
                   </div>
                 ) : (

@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../../hooks/useSettings'
 import { useLocale } from '../../hooks/useLocale'
-import { Sun, Moon } from '../Icons'
+import { Sun, Moon, GlobeIcon } from '../Icons'
 
 export function PillToggle({
   leftContent,
@@ -39,12 +39,12 @@ export function ThemeSwitch({ className }) {
   const isDark = theme === 'dark'
   return (
     <PillToggle
-      leftContent={<Sun width={16} height={16} />}
-      rightContent={<Moon width={16} height={16} />}
+      leftContent={<><Sun width={16} height={16} /><span>{t('light')}</span></>}
+      rightContent={<><Moon width={16} height={16} /><span>{t('dark')}</span></>}
       value={isDark ? 'right' : 'left'}
       onChange={toggleTheme}
       ariaLabel={t('toggleDarkMode')}
-      variant="icon"
+      variant="icon-text"
       className={className}
     />
   )
@@ -72,6 +72,7 @@ export function LocalePicker({ className = '' }) {
   const { t } = useTranslation('common')
   return (
     <div className={`gc-locale-picker ${className}`}>
+      <GlobeIcon className="gc-locale-picker__icon" width={16} height={16} aria-hidden="true" />
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
