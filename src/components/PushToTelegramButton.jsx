@@ -21,7 +21,7 @@ export default function PushToTelegramButton({
   label = 'Send to Telegram',
   shortLabel,
   size = 'md',
-  variant = 'primary',
+  variant = 'telegram',
   disabled = false,
   title,
   className,

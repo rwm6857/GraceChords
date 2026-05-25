@@ -119,6 +119,15 @@
 .gc-btn--destructive:hover{
   background: color-mix(in srgb, var(--gc-danger) 12%, var(--gc-surface-2));
 }
+.gc-btn--telegram{
+  background: var(--gc-telegram);
+  border-color: var(--gc-telegram);
+  color: #fff;
+}
+.gc-btn--telegram:hover{
+  background: var(--gc-telegram-hover);
+  border-color: var(--gc-telegram-hover);
+}
 
 .gc-btn--sm{ padding: var(--gc-btn-pad-y-sm) var(--gc-btn-pad-x-sm); font-size: var(--gc-btn-font-size-sm); }
 .gc-btn--md{ padding: var(--gc-btn-pad-y) var(--gc-btn-pad-x); font-size: var(--gc-btn-font-size); }
