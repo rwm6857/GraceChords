@@ -19,10 +19,15 @@ export async function fetchPosts({ status } = {}) {
   return query
 }
 
+// NOTE: the `users(display_name)` embed is intentionally omitted. The users
+// table has an RLS policy that calls `get_user_role()` unqualified, and that
+// helper was hardened with `SET search_path = ''`, so name resolution fails
+// during the embed and PostgREST 404s the whole query. Restore the embed once
+// the users policies are rewritten to use `public.get_user_role()`.
 export async function fetchPublishedPostsWithAuthors() {
   return supabase
     .from('posts')
-    .select('id, title, slug, excerpt, tags, published_at, author_id, users(display_name)')
+    .select('id, title, slug, excerpt, tags, published_at, author_id')
     .eq('status', 'published')
     .order('published_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
@@ -31,7 +36,7 @@ export async function fetchPublishedPostsWithAuthors() {
 export async function fetchPostBySlug(slug) {
   return supabase
     .from('posts')
-    .select('*, users(display_name)')
+    .select('*')
     .eq('slug', slug)
     .single()
 }
