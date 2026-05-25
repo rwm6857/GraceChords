@@ -571,6 +571,7 @@ export default function SongView(){
           <PushToTelegramButton
             items={[{ song_id: entry.dbId, key: toKey }]}
             context="song"
+            className="gc-btn--telegram"
           />
         ) : null}
         {entry?.gracetracks_url && (
@@ -710,6 +711,7 @@ export default function SongView(){
               context="song"
               iconOnly
               title="Send to Telegram"
+              className="gc-btn--telegram"
             />
           ) : null}
           {isAtLeast('collaborator') && (

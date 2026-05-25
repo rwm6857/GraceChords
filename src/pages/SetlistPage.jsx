@@ -1214,6 +1214,7 @@ async function exportPdf() {
                 context="setlist"
                 label="Send to Telegram"
                 shortLabel="Telegram"
+                className="gc-btn--telegram"
               />
             </div>
           </div>
