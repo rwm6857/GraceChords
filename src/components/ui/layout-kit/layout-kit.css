@@ -348,11 +348,18 @@
     margin: 8px 0 6px;
   }
   .gc-mobile-pane-tabs .gc-segmented{
+    display:flex;
     width:100%;
   }
   .gc-mobile-pane-tabs .gc-segmented__item{
     flex:1 1 0;
+    min-width:0;
+    padding-left: 8px;
+    padding-right: 8px;
     justify-content:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
 }
 
