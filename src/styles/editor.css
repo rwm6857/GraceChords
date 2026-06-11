@@ -883,53 +883,7 @@
   color: var(--gc-text-secondary);
 }
 
-/* ---- EditorFab ---- */
-.gc-editor-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  background: var(--gc-primary);
-  color: #fff;
-  border-radius: 50%;
-  box-shadow: var(--gc-shadow-2);
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: background var(--gc-dur-quick) var(--gc-ease),
-              box-shadow var(--gc-dur-quick) var(--gc-ease),
-              transform var(--gc-dur-quick) var(--gc-ease);
-}
-
-.gc-editor-fab:hover {
-  background: var(--gc-primary-hover);
-  box-shadow: var(--gc-shadow-3);
-  transform: translateY(-1px);
-}
-
-.gc-editor-fab:focus-visible {
-  outline: var(--gc-focus-size) solid var(--gc-focus);
-  outline-offset: 3px;
-}
-
-.gc-editor-fab svg {
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .gc-editor-fab {
-    bottom: 16px;
-    right: 16px;
-    width: 44px;
-    height: 44px;
-  }
-}
+/* EditorFab styles live in components/ui/ui.css (single source of truth). */
 
 /* ---- Unsaved changes guard ---- */
 .gc-unsaved-dialog {

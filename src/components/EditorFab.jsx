@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useRole } from '../hooks/useRole'
+import { PencilIcon } from './Icons'
 
 export default function EditorFab() {
   const { isAtLeast } = useRole()
@@ -25,10 +26,9 @@ export default function EditorFab() {
       to={`/portal/editor/${slug}`}
       className="gc-editor-fab"
       aria-label="Edit this song"
+      title="Edit this song"
     >
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M13.5 2.5l4 4L6 18H2v-4L13.5 2.5z"/>
-      </svg>
+      <PencilIcon size={20} aria-hidden />
     </Link>
   )
 }
