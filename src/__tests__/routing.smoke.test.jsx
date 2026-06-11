@@ -29,7 +29,10 @@ describe('Routing smoke', () => {
     expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
   })
 
-  test('admin route renders (with gate present)', async () => {
+  test('admin route is gated — anonymous users are redirected home', async () => {
+    // /admin is wrapped in <RoleGuard minRole="admin">. With no authenticated
+    // session the guard redirects to "/" instead of rendering the admin page,
+    // so the home Search field should appear and no admin content is shown.
     window.location.hash = '#/admin'
     render(
       <HelmetProvider>
@@ -38,7 +41,6 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    // Gate uses a placeholder instead of a label
-    expect(await screen.findByPlaceholderText(/password/i)).toBeInTheDocument()
+    expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
   })
 })

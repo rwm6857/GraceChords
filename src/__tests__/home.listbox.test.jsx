@@ -3,16 +3,21 @@ import userEvent from '@testing-library/user-event'
 import { HashRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import HomeDashboard from '../pages/HomeDashboardPage.jsx'
 
-vi.mock('../data/index.json', () => ({
-  default: {
-    items: [
-      { id: 'alpha', title: 'Alpha Song', tags: [], authors: [] },
-      { id: 'alabaster', title: 'Alabaster Praise', tags: [], authors: [] }
-    ]
-  }
+// Song data comes from Supabase via useSongs(), not the deprecated
+// src/data/index.json. Mock the hook to supply the search corpus.
+const songMock = vi.hoisted(() => ({
+  songs: [
+    { dbId: 's1', id: 'alpha', songId: 'alpha', title: 'Alpha Song', language: 'en', originalKey: 'C', tags: [], authors: [], chordpro_content: 'title: Alpha Song\n' },
+    { dbId: 's2', id: 'alabaster', songId: 'alabaster', title: 'Alabaster Praise', language: 'en', originalKey: 'C', tags: [], authors: [], chordpro_content: 'title: Alabaster Praise\n' },
+  ],
 }))
+
+vi.mock('../hooks/useSongs', () => ({
+  useSongs: () => ({ songs: songMock.songs, loading: false }),
+}))
+
+import HomeDashboard from '../pages/HomeDashboardPage.jsx'
 
 describe('Home search accessibility', () => {
   beforeEach(() => {

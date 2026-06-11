@@ -1,43 +1,35 @@
 import React from 'react'
-import { describe, it, beforeEach, afterEach, expect } from 'vitest'
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+
+// Song data comes from Supabase via useSongs() (chordpro_content inline), not a
+// static fetch of /songs/*.chordpro. Mock the hook rather than global.fetch.
+const songMock = vi.hoisted(() => ({
+  songs: [
+    {
+      dbId: 's1', id: 'abba', songId: 'abba', title: 'Abba', language: 'en',
+      originalKey: 'Am', tags: [], authors: [],
+      chordpro_content: 'title: Abba\nkey: Am\n[Verse]\nFather we love You\n',
+    },
+    {
+      dbId: 's2', id: 'above-all', songId: 'above-all', title: 'Above All', language: 'en',
+      originalKey: 'A', tags: [], authors: [],
+      chordpro_content: 'title: Above All\nkey: A\n[Verse]\nAbove all powers\n',
+    },
+  ],
+}))
+
+vi.mock('../../hooks/useSongs', () => ({
+  useSongs: () => ({ songs: songMock.songs, loading: false }),
+}))
+
 import WorshipMode from '../WorshipModePage'
 
-const SONGS = {
-  // id -> { filename, content }
-  abba: {
-    filename: 'abba.chordpro',
-    content: `title: Abba\nkey: Am\n[Verse]\nFather we love You\n`,
-  },
-  'above-all': {
-    filename: 'above_all.chordpro',
-    content: `title: Above All\nkey: A\n[Verse]\nAbove all powers\n`,
-  },
-}
-
-function mockFetch(){
-  const orig = global.fetch
-  global.fetch = async (url) => {
-    const u = String(url)
-    const hit = Object.values(SONGS).find(s => u.includes(`/songs/${s.filename}`))
-    if (hit) {
-      return { ok: true, text: async () => hit.content }
-    }
-    return { ok: false, text: async () => '' }
-  }
-  return () => { global.fetch = orig }
-}
-
 describe('WorshipMode', () => {
-  let restore
   beforeEach(() => {
-    restore = mockFetch()
     localStorage.clear()
     document.documentElement.removeAttribute('data-theme')
-  })
-  afterEach(() => {
-    restore?.()
   })
 
   it('loads a single song', async () => {

@@ -5,17 +5,19 @@ import { parseVerseReference } from '../../songs/verseRef'
 describe('setcode verse translation support', () => {
   it('round-trips translation-aware verse ids', () => {
     const parsed = parseVerseReference('John 3:16', { translation: 'kjv' })
-    const code = encodeSet([{ id: parsed.id, toKey: '' }])
+    // encodeSet/decodeSet take (songs, list) — verse entries don't need the
+    // song-code map, so pass an empty songs array.
+    const code = encodeSet([], [{ id: parsed.id, toKey: '' }])
     expect(code.startsWith('V_')).toBe(true)
 
-    const decoded = decodeSet(code)
+    const decoded = decodeSet([], code)
     expect(decoded.error).toBeUndefined()
     expect(decoded.entries).toEqual([{ id: 'v:kjv|John 3:16', toKey: '' }])
   })
 
   it('decodes legacy verse codes as ESV', () => {
     const legacy = `V${encodeLegacyVerse('John', '3:16')}`
-    const decoded = decodeSet(legacy)
+    const decoded = decodeSet([], legacy)
     expect(decoded.error).toBeUndefined()
     expect(decoded.entries).toEqual([{ id: 'v:esv|John 3:16', toKey: '' }])
   })
