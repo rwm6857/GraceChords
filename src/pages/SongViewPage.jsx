@@ -703,8 +703,8 @@ export default function SongView(){
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
-          <Button variant="primary" leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download">Download</Button>
-          <Button variant="primary" as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode">Worship</Button>
+          <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
+          <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>
           {entry?.dbId ? (
             <PushToTelegramButton
               items={[{ song_id: entry.dbId, key: toKey }]}
