@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8']
 const LANGUAGE_OPTIONS = ['', 'English', 'Turkish', 'Spanish', 'Arabic', 'Korean', 'Other']
@@ -18,7 +18,6 @@ function normalizeYoutubeInput(raw) {
 }
 
 export default function MobileDetailsTab({ values, onChange }) {
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const tapTimestamps = useRef([])
   const tapTimeout = useRef(null)
 
@@ -133,49 +132,6 @@ export default function MobileDetailsTab({ values, onChange }) {
           autoCapitalize="none"
           autoCorrect="off"
         />
-      </div>
-
-      {/* Advanced */}
-      <div className="gc-me-advanced">
-        <button
-          type="button"
-          className="gc-me-advanced__toggle"
-          onClick={() => setShowAdvanced(v => !v)}
-          aria-expanded={showAdvanced}
-        >
-          <span>{showAdvanced ? '▼' : '▶'}</span> Advanced (GraceTracks / PPTX)
-        </button>
-        {showAdvanced && (
-          <div className="gc-me-advanced__content">
-            <div className="gc-me-field">
-              <label className="gc-me-label" htmlFor="me-stem">GraceTracks Stem Slug</label>
-              <input
-                id="me-stem"
-                className="gc-me-input"
-                type="text"
-                value={values.stem_slug || ''}
-                onChange={e => onChange({ ...values, stem_slug: e.target.value })}
-                placeholder="R2 folder override (leave blank = song slug)"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-            </div>
-            <div className="gc-me-field">
-              <label className="gc-me-label" htmlFor="me-tracks">GraceTracks URL</label>
-              <input
-                id="me-tracks"
-                className="gc-me-input"
-                type="url"
-                value={values.gracetracks_url || ''}
-                onChange={e => onChange({ ...values, gracetracks_url: e.target.value })}
-                placeholder="https://tracks.gracechords.com/…"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
