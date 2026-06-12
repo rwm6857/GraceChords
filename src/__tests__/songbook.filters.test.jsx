@@ -1,6 +1,23 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { vi } from 'vitest'
+
+// Song data comes from Supabase via useSongs(), not the deprecated
+// src/data/index.json. Mock the hook to supply the searchable corpus.
+const songMock = vi.hoisted(() => ({
+  songs: [
+    { dbId: 's1', id: '10000-reasons', songId: '10000-reasons', title: '10,000 Reasons', language: 'en', originalKey: 'C', tags: [], authors: ['Matt Redman'], chordpro_content: 'title: 10,000 Reasons\n' },
+    { dbId: 's2', id: 'heart-of-worship', songId: 'heart-of-worship', title: 'Heart of Worship', language: 'en', originalKey: 'C', tags: [], authors: ['Matt Redman'], chordpro_content: 'title: Heart of Worship\n' },
+    { dbId: 's3', id: 'holy-forever', songId: 'holy-forever', title: 'Holy Forever', language: 'en', originalKey: 'C', tags: [], authors: ['Chris Tomlin'], chordpro_content: 'title: Holy Forever\n' },
+    { dbId: 's4', id: 'abba', songId: 'abba', title: 'Abba', language: 'en', originalKey: 'Am', tags: [], authors: ['Other Writer'], chordpro_content: 'title: Abba\n' },
+  ],
+}))
+
+vi.mock('../hooks/useSongs', () => ({
+  useSongs: () => ({ songs: songMock.songs, loading: false }),
+}))
+
 import Songbook from '../pages/SongbookPage.jsx'
 
 function setViewport(width){

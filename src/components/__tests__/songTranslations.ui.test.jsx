@@ -4,86 +4,45 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-vi.mock('../../data/index.json', () => ({
-  default: {
-    items: [
-      {
-        id: 'send-us-lord-en',
-        songId: 'send-us-lord',
-        language: 'en',
-        title: 'Send Us Lord',
-        filename: 'translation_demo_send_us_lord_en.chordpro',
-        originalKey: 'A',
-        tags: ['Missions'],
-        authors: ['Test Team'],
-        incomplete: false,
-      },
-      {
-        id: 'send-us-lord-tr',
-        songId: 'send-us-lord',
-        language: 'tr',
-        title: 'Rab Bizi Gönder',
-        filename: 'translation_demo_send_us_lord_tr.chordpro',
-        originalKey: 'A',
-        tags: ['Missions'],
-        authors: ['Test Team'],
-        incomplete: false,
-      },
-      {
-        id: 'only-en',
-        songId: 'only-english',
-        language: 'en',
-        title: 'Only English',
-        filename: 'only_english.chordpro',
-        originalKey: 'C',
-        tags: ['Test'],
-        authors: ['Test Team'],
-        incomplete: false,
-      },
-    ],
-  },
+// Song data (including chordpro_content and the translation grouping fields)
+// comes from Supabase via useSongs(), not the deprecated src/data/index.json
+// + per-song fetch('/songs/*.chordpro'). Mock the hook with both language
+// variants of the "send-us-lord" group plus an English-only song.
+const songMock = vi.hoisted(() => ({
+  songs: [
+    {
+      dbId: 't1', id: 'send-us-lord-en', songId: 'send-us-lord', language: 'en',
+      title: 'Send Us Lord', originalKey: 'A', tags: ['Missions'], authors: ['Test Team'],
+      incomplete: false,
+      chordpro_content: '{title: Send Us Lord}\n{key: A}\n{sov Verse}\n[A]Send us [D]Lord\n{eov}\n',
+    },
+    {
+      dbId: 't2', id: 'send-us-lord-tr', songId: 'send-us-lord', language: 'tr',
+      title: 'Rab Bizi Gönder', originalKey: 'A', tags: ['Missions'], authors: ['Test Team'],
+      incomplete: false,
+      chordpro_content: '{title: Rab Bizi Gönder}\n{key: A}\n{sov Verse}\n[A]Rab bizi [D]gönder\n[A]ıüşiçöğ [D]IÜŞİÇÖĞ\n{eov}\n',
+    },
+    {
+      dbId: 't3', id: 'only-en', songId: 'only-english', language: 'en',
+      title: 'Only English', originalKey: 'C', tags: ['Test'], authors: ['Test Team'],
+      incomplete: false,
+      chordpro_content: '{title: Only English}\n{key: C}\n{sov Verse}\n[C]Only [F]English\n{eov}\n',
+    },
+  ],
+}))
+
+vi.mock('../../hooks/useSongs', () => ({
+  useSongs: () => ({ songs: songMock.songs, loading: false }),
 }))
 
 import Songs from '../../pages/SongsPage'
 import SongView from '../../pages/SongViewPage'
 
-const SONG_TEXT = {
-  'translation_demo_send_us_lord_en.chordpro': `{title: Send Us Lord}
-{key: A}
-{sov Verse}
-[A]Send us [D]Lord
-{eov}
-`,
-  'translation_demo_send_us_lord_tr.chordpro': `{title: Rab Bizi Gönder}
-{key: A}
-{sov Verse}
-[A]Rab bizi [D]gönder
-[A]ıüşiçöğ [D]IÜŞİÇÖĞ
-{eov}
-`,
-  'only_english.chordpro': `{title: Only English}
-{key: C}
-{sov Verse}
-[C]Only [F]English
-{eov}
-`,
-}
-
+// SongView still issues HEAD/asset fetches (e.g. pptx availability). Resolve
+// them all to not-found so they don't interfere with the rendered content.
 function mockFetch() {
   const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, options = {}) => {
-    const u = String(url)
-    if (String(options?.method || '').toUpperCase() === 'HEAD') {
-      return { ok: false, text: async () => '' }
-    }
-    const hit = Object.entries(SONG_TEXT).find(([filename]) =>
-      u.includes(`/songs/${filename}`)
-    )
-    if (hit) {
-      return { ok: true, text: async () => hit[1] }
-    }
-    return { ok: false, text: async () => '' }
-  })
+  global.fetch = vi.fn(async () => ({ ok: false, text: async () => '' }))
   return () => {
     global.fetch = originalFetch
   }
@@ -154,7 +113,13 @@ describe('translation linking UI behavior', () => {
     fireEvent.click(screen.getByRole('button', { name: 'TR' }))
 
     expect(await screen.findByText('Rab Bizi Gönder')).toBeInTheDocument()
-    expect(screen.getByText('ıüşiçöğ IÜŞİÇÖĞ')).toBeInTheDocument()
+    // The chord sheet renders chord-over-lyric, so each syllable lands in its
+    // own cell — assert the Turkish lyrics (with their locale-specific glyphs)
+    // are present in the rendered sheet rather than as one contiguous node.
+    const sheet = document.querySelector('.songpage__sheet')
+    expect(sheet).toBeTruthy()
+    expect(sheet.textContent).toContain('ıüşiçöğ')
+    expect(sheet.textContent).toContain('IÜŞİÇÖĞ')
     await waitFor(() => {
       expect(localStorage.getItem('pref:songLanguage')).toBe('tr')
     })
