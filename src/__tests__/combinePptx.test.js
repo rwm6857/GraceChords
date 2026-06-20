@@ -99,11 +99,11 @@ describe('fitFontSize', () => {
   test('many lines shrink below the max to fit the box height', () => {
     const five = fitFontSize(['a', 'b', 'c', 'd', 'e'])
     expect(five).toBeLessThan(52)
-    expect(five).toBeGreaterThanOrEqual(28)
+    expect(five).toBeGreaterThanOrEqual(40)
   })
 
-  test('never drops below the 28pt floor', () => {
-    expect(fitFontSize(Array(40).fill('x'))).toBe(28)
+  test('never drops below the 40pt floor', () => {
+    expect(fitFontSize(Array(40).fill('x'))).toBe(40)
   })
 })
 
