@@ -43,7 +43,7 @@ const TEXT_BOX = {
 }
 
 const MAX_FONT = 52
-const MIN_FONT = 28
+const MIN_FONT = 40
 // Keep a little breathing room from the literal edges when sizing text.
 const FIT_WIDTH_IN = SLIDE_W - 0.4
 const LINE_HEIGHT = 1.2
