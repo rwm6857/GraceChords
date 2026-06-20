@@ -25,25 +25,62 @@ const LAYOUT_NAME = 'GC_16x9'
 const MASTER_NAME = 'GC_BLACK'
 const BG_COLOR = '000000'
 
-// One standardized text box per slide, running nearly edge-to-edge. Text is
-// anchored to the centre of the box (valign 'middle') in the upper third, and
-// `fit: 'shrink'` (PowerPoint "shrink text on overflow") quietly scales the
-// text down so a long line stays on one line instead of wrapping — explicit
-// line breaks are still honoured.
+// One standardized, bold, centred text box per slide. It spans the slide edge
+// to edge and is anchored to its centre (valign 'middle') in the upper third.
 const TEXT_BOX = {
-  x: 0.1,
-  y: 0.7,
-  w: SLIDE_W - 0.2,
-  h: 2.4,
+  x: 0,
+  y: 0.5,
+  w: SLIDE_W,
+  h: 3.2,
   align: 'center',
   valign: 'middle',
   fontFace: 'Calibri',
-  fontSize: 52,
   bold: true,
   color: 'FFFFFF',
-  fit: 'shrink',
+  fit: 'none',
   wrap: true,
-  margin: 2,
+  margin: 0,
+}
+
+const MAX_FONT = 52
+const MIN_FONT = 28
+// Keep a little breathing room from the literal edges when sizing text.
+const FIT_WIDTH_IN = SLIDE_W - 0.4
+const LINE_HEIGHT = 1.2
+
+// PowerPoint's own "shrink text on overflow" only applies a baked-in fontScale,
+// which we can't compute, so it does nothing on open. Instead we size each
+// slide's text ourselves: the largest size (<= MAX_FONT) at which every line
+// still fits on one line within the box, and the whole block fits its height.
+// Measured with a canvas; when unavailable (SSR/tests) we fall back to the
+// height-only bound. Explicit line breaks (one per source paragraph) are kept.
+let measureCtx
+function getMeasureCtx() {
+  if (measureCtx !== undefined) return measureCtx
+  try {
+    const canvas = document.createElement('canvas')
+    measureCtx = canvas.getContext ? canvas.getContext('2d') : null
+  } catch {
+    measureCtx = null
+  }
+  return measureCtx
+}
+
+export function fitFontSize(lines) {
+  let size = MAX_FONT
+  const ctx = getMeasureCtx()
+  if (ctx) {
+    for (const line of lines) {
+      ctx.font = 'bold 100px Calibri, Arial, sans-serif'
+      const widthAt100 = ctx.measureText(line).width
+      if (widthAt100 > 0) {
+        size = Math.min(size, (FIT_WIDTH_IN * 72 * 100) / widthAt100)
+      }
+    }
+  }
+  const maxForHeight = (TEXT_BOX.h * 72) / (Math.max(lines.length, 1) * LINE_HEIGHT)
+  size = Math.min(size, maxForHeight)
+  return Math.max(MIN_FONT, Math.min(MAX_FONT, Math.round(size)))
 }
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
@@ -193,8 +230,9 @@ export async function buildPresentation(slides = []) {
   for (const s of slides) {
     const slide = pptx.addSlide({ masterName: MASTER_NAME })
     slide.background = { color: BG_COLOR }
-    if (s && Array.isArray(s.lines) && s.lines.length) {
-      slide.addText(s.lines.join('\n'), { ...TEXT_BOX })
+    const lines = s && Array.isArray(s.lines) ? s.lines : []
+    if (lines.length) {
+      slide.addText(lines.join('\n'), { ...TEXT_BOX, fontSize: fitFontSize(lines) })
     }
   }
   return pptx
