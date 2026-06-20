@@ -4,6 +4,7 @@ import {
   extractLinesFromSlideXml,
   extractDeckSlides,
   buildPresentation,
+  fitFontSize,
 } from '../utils/export/combinePptx.js'
 
 const P_NS = 'http://schemas.openxmlformats.org/presentationml/2006/main'
@@ -88,6 +89,24 @@ describe('extractDeckSlides', () => {
   })
 })
 
+describe('fitFontSize', () => {
+  // No canvas in happy-dom, so only the height bound applies here.
+  test('one or two lines stay at the 52pt max', () => {
+    expect(fitFontSize(['Above all'])).toBe(52)
+    expect(fitFontSize(['line one', 'line two'])).toBe(52)
+  })
+
+  test('many lines shrink below the max to fit the box height', () => {
+    const five = fitFontSize(['a', 'b', 'c', 'd', 'e'])
+    expect(five).toBeLessThan(52)
+    expect(five).toBeGreaterThanOrEqual(28)
+  })
+
+  test('never drops below the 28pt floor', () => {
+    expect(fitFontSize(Array(40).fill('x'))).toBe(28)
+  })
+})
+
 describe('buildPresentation', () => {
   test('produces a single-master 16:9 black deck with standardized text', async () => {
     const pptx = await buildPresentation([
@@ -115,7 +134,6 @@ describe('buildPresentation', () => {
     expect(slide1).toMatch(/b="1"/) // bold
     expect(slide1).toMatch(/FFFFFF/i)
     expect(slide1).toMatch(/anchor="ctr"/) // text anchored to box center
-    expect(slide1).toMatch(/normAutofit/) // shrink text on overflow
     expect(slide1).toMatch(/Above all powers/)
   })
 })
