@@ -45,8 +45,12 @@ const TEXT_BOX = {
 const MAX_FONT = 52
 const MIN_FONT = 40
 // Keep a little breathing room from the literal edges when sizing text.
-const FIT_WIDTH_IN = SLIDE_W - 0.4
+const FIT_WIDTH_IN = SLIDE_W - 0.3
 const LINE_HEIGHT = 1.2
+// Calibri renders noticeably narrower than the fonts a browser falls back to
+// when it isn't installed (typically Arial). When we have to measure with a
+// fallback, scale the measured width by this factor so we don't over-shrink.
+const FALLBACK_WIDTH_RATIO = 0.88
 
 // PowerPoint's own "shrink text on overflow" only applies a baked-in fontScale,
 // which we can't compute, so it does nothing on open. Instead we size each
@@ -66,15 +70,34 @@ function getMeasureCtx() {
   return measureCtx
 }
 
+// 1 when Calibri is actually installed (measurements are exact), otherwise a
+// correction factor because we're measuring with a wider fallback font.
+let widthRatio
+function getWidthRatio(ctx) {
+  if (widthRatio !== undefined) return widthRatio
+  widthRatio = 1
+  try {
+    const probe = 'mmmmmwwwwwiiiii0123456789'
+    ctx.font = 'bold 72px monospace'
+    const base = ctx.measureText(probe).width
+    ctx.font = 'bold 72px Calibri, monospace'
+    if (ctx.measureText(probe).width === base) widthRatio = FALLBACK_WIDTH_RATIO
+  } catch {
+    widthRatio = 1
+  }
+  return widthRatio
+}
+
 export function fitFontSize(lines) {
   let size = MAX_FONT
   const ctx = getMeasureCtx()
   if (ctx) {
+    const ratio = getWidthRatio(ctx)
     for (const line of lines) {
       ctx.font = 'bold 100px Calibri, Arial, sans-serif'
       const widthAt100 = ctx.measureText(line).width
       if (widthAt100 > 0) {
-        size = Math.min(size, (FIT_WIDTH_IN * 72 * 100) / widthAt100)
+        size = Math.min(size, (FIT_WIDTH_IN * 72 * 100) / (widthAt100 * ratio))
       }
     }
   }
