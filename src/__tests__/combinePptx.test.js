@@ -111,9 +111,11 @@ describe('buildPresentation', () => {
 
     const slide1 = await zip.file('ppt/slides/slide1.xml').async('string')
     expect(slide1).toMatch(/Calibri/)
-    expect(slide1).toMatch(/sz="5400"/) // 54pt
+    expect(slide1).toMatch(/sz="5200"/) // 52pt
+    expect(slide1).toMatch(/b="1"/) // bold
     expect(slide1).toMatch(/FFFFFF/i)
     expect(slide1).toMatch(/anchor="ctr"/) // text anchored to box center
+    expect(slide1).toMatch(/normAutofit/) // shrink text on overflow
     expect(slide1).toMatch(/Above all powers/)
   })
 })
