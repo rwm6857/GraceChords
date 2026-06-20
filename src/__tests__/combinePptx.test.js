@@ -67,6 +67,19 @@ describe('extractLinesFromSlideXml', () => {
     ])
   })
 
+  test('soft line breaks (<a:br/>) split a paragraph into separate lines', () => {
+    const xml = `<?xml version="1.0"?>
+<p:sld xmlns:p="${P_NS}" xmlns:a="${A_NS}" xmlns:r="${R_NS}">
+  <p:cSld><p:spTree><p:sp><p:txBody>
+    <a:p><a:r><a:t>You're the God who formed my heart</a:t></a:r><a:br/><a:r><a:t>All of me</a:t></a:r></a:p>
+  </p:txBody></p:sp></p:spTree></p:cSld>
+</p:sld>`
+    expect(extractLinesFromSlideXml(xml)).toEqual([
+      "You're the God who formed my heart",
+      'All of me',
+    ])
+  })
+
   test('empty paragraphs (blank separator slide) yield no lines', () => {
     expect(extractLinesFromSlideXml(slideXml([['']]))).toEqual([])
     expect(extractLinesFromSlideXml(slideXml([]))).toEqual([])
@@ -91,19 +104,19 @@ describe('extractDeckSlides', () => {
 
 describe('fitFontSize', () => {
   // No canvas in happy-dom, so only the height bound applies here.
-  test('one or two lines stay at the 52pt max', () => {
-    expect(fitFontSize(['Above all'])).toBe(52)
-    expect(fitFontSize(['line one', 'line two'])).toBe(52)
+  test('one or two lines stay at the 50pt max', () => {
+    expect(fitFontSize(['Above all'])).toBe(50)
+    expect(fitFontSize(['line one', 'line two'])).toBe(50)
   })
 
-  test('many lines shrink below the max to fit the box height', () => {
+  test('stays within the 46-50 range even for many lines', () => {
     const five = fitFontSize(['a', 'b', 'c', 'd', 'e'])
-    expect(five).toBeLessThan(52)
-    expect(five).toBeGreaterThanOrEqual(40)
+    expect(five).toBeLessThanOrEqual(50)
+    expect(five).toBeGreaterThanOrEqual(46)
   })
 
-  test('never drops below the 40pt floor', () => {
-    expect(fitFontSize(Array(40).fill('x'))).toBe(40)
+  test('never drops below the 46pt floor', () => {
+    expect(fitFontSize(Array(40).fill('x'))).toBe(46)
   })
 })
 
@@ -130,7 +143,7 @@ describe('buildPresentation', () => {
 
     const slide1 = await zip.file('ppt/slides/slide1.xml').async('string')
     expect(slide1).toMatch(/Calibri/)
-    expect(slide1).toMatch(/sz="5200"/) // 52pt
+    expect(slide1).toMatch(/sz="5000"/) // 50pt cap
     expect(slide1).toMatch(/b="1"/) // bold
     expect(slide1).toMatch(/FFFFFF/i)
     expect(slide1).toMatch(/anchor="ctr"/) // text anchored to box center

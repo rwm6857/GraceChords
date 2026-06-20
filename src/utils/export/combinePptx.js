@@ -42,10 +42,10 @@ const TEXT_BOX = {
   margin: 0,
 }
 
-const MAX_FONT = 52
-const MIN_FONT = 40
-// Keep a little breathing room from the literal edges when sizing text.
-const FIT_WIDTH_IN = SLIDE_W - 0.3
+const MAX_FONT = 50
+const MIN_FONT = 46
+// Text may run essentially to the slide edge, so only a hair of margin.
+const FIT_WIDTH_IN = SLIDE_W - 0.1
 const LINE_HEIGHT = 1.2
 // Calibri renders noticeably narrower than the fonts a browser falls back to
 // when it isn't installed (typically Arial). When we have to measure with a
@@ -208,8 +208,26 @@ async function getOrderedSlidePaths(zip) {
     .map((f) => f.name)
 }
 
-// Pull the visible lines from one slide's XML: each <a:p> paragraph becomes one
-// line (its <a:t> runs concatenated). Empty paragraphs are dropped.
+// Pull the visible lines from one slide's XML. Each <a:p> paragraph yields one
+// or more lines: text runs (<a:t>) are concatenated, and soft line breaks
+// (<a:br/>) split the paragraph into separate lines. Empty lines are dropped.
+function paragraphToLines(paragraph) {
+  let buffer = ''
+  for (const node of Array.from(paragraph.childNodes)) {
+    if (node.nodeType !== 1 || node.namespaceURI !== A_NS) continue
+    const name = node.localName
+    if (name === 'r' || name === 'fld') {
+      for (const t of selectNS(node, A_NS, 't')) buffer += t.textContent || ''
+    } else if (name === 'br') {
+      buffer += '\n'
+    }
+  }
+  return buffer
+    .split('\n')
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+}
+
 export function extractLinesFromSlideXml(xml) {
   let doc
   try {
@@ -217,12 +235,9 @@ export function extractLinesFromSlideXml(xml) {
   } catch {
     return []
   }
-  const paragraphs = selectNS(doc, A_NS, 'p')
   const lines = []
-  for (const p of paragraphs) {
-    const runs = selectNS(p, A_NS, 't')
-    const line = runs.map((t) => t.textContent || '').join('').replace(/\s+/g, ' ').trim()
-    if (line) lines.push(line)
+  for (const p of selectNS(doc, A_NS, 'p')) {
+    lines.push(...paragraphToLines(p))
   }
   return lines
 }
