@@ -25,21 +25,25 @@ const LAYOUT_NAME = 'GC_16x9'
 const MASTER_NAME = 'GC_BLACK'
 const BG_COLOR = '000000'
 
-// One standardized text box per slide. Anchored to the centre of the box
-// (valign 'middle'), the box sits in the upper third of the slide and is tall
-// enough that even three 54pt lines never clip.
+// One standardized text box per slide, running nearly edge-to-edge. Text is
+// anchored to the centre of the box (valign 'middle') in the upper third, and
+// `fit: 'shrink'` (PowerPoint "shrink text on overflow") quietly scales the
+// text down so a long line stays on one line instead of wrapping — explicit
+// line breaks are still honoured.
 const TEXT_BOX = {
-  x: 0.5,
-  y: 0.5,
-  w: SLIDE_W - 1,
-  h: 3.0,
+  x: 0.1,
+  y: 0.7,
+  w: SLIDE_W - 0.2,
+  h: 2.4,
   align: 'center',
   valign: 'middle',
   fontFace: 'Calibri',
-  fontSize: 54,
+  fontSize: 52,
+  bold: true,
   color: 'FFFFFF',
-  fit: 'none',
+  fit: 'shrink',
   wrap: true,
+  margin: 2,
 }
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main'
