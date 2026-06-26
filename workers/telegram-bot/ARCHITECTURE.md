@@ -156,29 +156,27 @@ The flow in `handleGuestMessage`:
    best-effort. The recipient still sees the photo because Telegram
    keeps the file alive after the source message is deleted.
 
-Setlists work in guest mode too, but they can't be delivered the DM way
-(a single `answerGuestQuery` call delivers one message, with no inline
-buttons and no media-group equivalent). Instead the whole set ships as
-one combined PDF via `InlineQueryResultCachedDocument`: `renderSetlistPdf`
-→ `stageDocument` (uploads the PDF to `MEDIA_STAGING_CHAT_ID`, captures a
-document `file_id`) → `answerGuestQuery({ documentFileId, … })` →
-best-effort `deleteMessage` of the staging copy. If rendering or staging
-fails, it falls back to a text reply listing each song title, key, and
-its gracechords.com link.
+Setlists in guest mode short-circuit to a text reply pointing the user
+to the DM (a single `answerGuestQuery` call delivers one message; there's
+no media-group equivalent, and a combined-PDF cached-document path was
+tried and abandoned). Single-song disambiguation collapses to a numbered
+text reply (no inline buttons in guest mode), driven by the same
+`resolver.js` state machine as DM/group but stashed under
+`resolve:guest:<caller_id>` (10-min TTL). A follow-up message that is just
+a number — e.g. `@gracechords_bot 2` — is applied as the pick and the
+resolution **resumes**, so the chosen chart is delivered.
 
-Disambiguation collapses to a numbered text reply (no inline buttons in
-guest mode), driven by the same `resolver.js` state machine as DM/group
-but stashed under `resolve:guest:<caller_id>` (10-min TTL). A follow-up
-message that is just a number — e.g. `@gracechords_bot 2` — is
-intercepted in `handleGuestMessage` (before `parseRequest`), applied as
-the pick, and the resolution **resumes** so a confusing title inside a
-guest setlist still produces the full set. The mention is required:
-Guest Chat Mode only delivers messages that `@`-mention the bot, so a
-bare `2` never reaches us. With no pending list, a number falls through
-to a normal search. Any failure in the single-song photo path falls back
-to a text reply with the song title, key, and a deep link to the song
-page on gracechords.com — same fallback as when `MEDIA_STAGING_CHAT_ID`
-isn't configured at all.
+The number reply has to reach the bot, and Guest Chat Mode only delivers
+messages that `@`-mention it — so the prompt instructs the user to reply
+`@gracechords_bot <n>`. As a best-effort convenience `handleGuestMessage`
+also accepts a message with **no** mention when it is a `reply_to_message`
+(so a plain "2" reply to the bot works), but whether Telegram actually
+delivers reply-without-mention in guest mode is undocumented; the mention
+is the guaranteed path. With no pending list, a number falls through to a
+normal search. Any failure in the single-song photo path falls back to a
+text reply with the song title, key, and a deep link to the song page on
+gracechords.com — same fallback as when `MEDIA_STAGING_CHAT_ID` isn't
+configured at all.
 
 ## External integrations
 
@@ -192,12 +190,8 @@ isn't configured at all.
 - Guest replies use `answerGuestQuery` and **must** be wrapped in a
   single `result` field shaped like an `InlineQueryResult` (e.g.
   article + InputTextMessageContent for text, cached photo + file_id
-  for a single chart, cached document + file_id for a combined setlist
-  PDF — `InlineQueryResultCachedDocument` requires a non-empty `title`).
-  Bare `text` / `photo` at the top level returns
-  `"result isn't specified"` with HTTP 400. The cached-document path is
-  undocumented like the rest of guest mode; if a guest setlist comes
-  back empty, suspect this shape first.
+  for media). Bare `text` / `photo` at the top level returns
+  `"result isn't specified"` with HTTP 400.
 
 ### Workers AI
 - Binding: `AI` (configured in `wrangler.toml`).

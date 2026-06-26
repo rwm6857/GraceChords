@@ -7,7 +7,7 @@ import { checkRateLimit, formatCooldown } from './ratelimit.js'
 import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
 import { fetchSong, fetchSetlistSongs } from './searchClient.js'
-import { stagePhoto, stageDocument } from './mediaCache.js'
+import { stagePhoto } from './mediaCache.js'
 import {
   saveResolution,
   loadResolution,
@@ -327,61 +327,6 @@ async function sendGuestSong(env, ctx, { guestQueryId, song, key }) {
   await replyText(text)
 }
 
-// Deliver a multi-song setlist over a guest query. Guest mode allows a single
-// message and no inline buttons, so the whole set ships as one combined PDF
-// (cached document). Falls back to a text list of per-song links if rendering
-// or staging fails — same spirit as the single-song text fallback.
-async function sendGuestSetlist(env, ctx, { guestQueryId, picks }) {
-  const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
-    .catch(err => {
-      console.warn('answerGuestQuery text failed', err?.message || err)
-    })
-
-  const songs = await fetchSetlistSongs(env, picks.map(p => ({ song_id: p.id, key: p.key })))
-    .catch(err => {
-      console.warn('fetchSetlistSongs failed', err?.message || err)
-      return []
-    })
-  if (!songs.length) {
-    return replyText('Something went wrong building that setlist. Try again in a moment.')
-  }
-  const keys = picks.map(p => p.key)
-
-  const pdf = await renderSetlistPdf(env, songs, keys).catch(err => {
-    console.warn('renderSetlistPdf failed', err?.message || err)
-    return null
-  })
-  if (pdf) {
-    try {
-      const staged = await stageDocument(env, { pdf, filename: 'setlist.pdf', caption: 'Setlist' })
-      await answerGuestQuery(env.TELEGRAM_BOT_TOKEN, {
-        guestQueryId,
-        documentFileId: staged.fileId,
-        caption: 'Setlist',
-        title: 'Setlist (PDF)',
-      })
-      ctx.waitUntil(
-        deleteMessage(env.TELEGRAM_BOT_TOKEN, {
-          chatId: staged.chatId,
-          messageId: staged.messageId,
-        }).catch(err => {
-          console.warn('staging deleteMessage failed', err?.message || err)
-        })
-      )
-      return
-    } catch (err) {
-      console.warn('guest setlist document failed, falling back to text', err?.message || err)
-    }
-  }
-
-  const lines = songs.map((s, i) => {
-    const url = songPageUrl(s, keys[i])
-    const head = `${i + 1}. ${s.title}${keys[i] ? ` — ${keys[i]}` : ''}`
-    return url ? `${head}\n${url}` : head
-  })
-  await replyText(`Here's your setlist:\n${lines.join('\n')}`)
-}
-
 // Drive a guest resolution to its next stop: ask about an ambiguous title
 // (numbered text — guest mode has no buttons), report a miss, or deliver the
 // finished song/setlist.
@@ -411,20 +356,18 @@ async function continueGuestResolution({ env, ctx, guestQueryId, scope, state, s
   }
 
   if (scope) await clearResolution(env, scope)
-  if (state.picks.length === 1) {
-    const song = await fetchSong(env, state.picks[0].id)
-    return sendGuestSong(env, ctx, { guestQueryId, song, key: state.picks[0].key })
-  }
-  return sendGuestSetlist(env, ctx, { guestQueryId, picks: state.picks })
+  const song = await fetchSong(env, state.picks[0].id)
+  return sendGuestSong(env, ctx, { guestQueryId, song, key: state.picks[0].key })
 }
 
 // Dedicated guest-message flow. Kept separate from handleTextMessage on
 // purpose: guest replies go through answerGuestQuery, not sendPhoto, and
-// the accepted parameter set for that method is still empirical. Disambiguation
-// uses a numbered text list (no inline buttons in guest mode); the caller picks
-// by replying "@bot <n>" — Guest Chat Mode only delivers messages that mention
-// the bot, so a bare number never reaches us. The resolution state machine
-// (resolver.js) lets a pick resume a half-built setlist instead of dropping it.
+// the accepted parameter set for that method is still empirical. Single songs
+// only — setlists point the user to the DM. Disambiguation uses a numbered
+// text list (no inline buttons in guest mode); the caller picks by replying
+// "@bot <n>" (or, best-effort, a plain reply to our message). Guest Chat Mode
+// only delivers messages that mention the bot, so a bare number normally never
+// reaches us.
 async function handleGuestMessage(env, ctx, message) {
   const guestQueryId = message?.guest_query_id
   if (!guestQueryId) {
@@ -438,8 +381,17 @@ async function handleGuestMessage(env, ctx, message) {
     })
 
   const botUsername = await getBotUsername(env)
-  const payload = extractMentionPayload(message, botUsername)
-  if (payload === null) return
+  let payload = extractMentionPayload(message, botUsername)
+  if (payload === null) {
+    // No @-mention. If Telegram delivered this because the user *replied* to
+    // one of our messages, treat the whole text as the request — so a plain
+    // "2" reply works without re-typing the mention. (Whether guest mode
+    // delivers reply-without-mention at all is up to Telegram; if it doesn't,
+    // this branch simply never runs.)
+    if (!message.reply_to_message) return
+    payload = String(message.text || '').trim()
+    if (!payload) return
+  }
 
   if (/^\/(start|help)\b/i.test(payload)) {
     return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
@@ -467,6 +419,9 @@ async function handleGuestMessage(env, ctx, message) {
   const items = parseRequest(payload)
   if (items.length === 0) {
     return replyText('I couldn\'t read that. Try a title like "Build My Life in G".')
+  }
+  if (items.length > 1) {
+    return replyText('Setlists work in DM with me. Open: https://t.me/gracechords_bot')
   }
 
   // Fresh request supersedes any half-finished disambiguation.

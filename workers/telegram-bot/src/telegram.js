@@ -126,10 +126,9 @@ export async function sendMediaGroup(token, { chatId, media, replyToMessageId } 
 //     caller obtained by uploading the JPG to a staging chat first.
 //
 // Mode is inferred from the params: pass photoFileId for a cached photo,
-// documentFileId for a cached document (e.g. a combined setlist PDF),
 // otherwise text.
 export async function answerGuestQuery(token, params = {}) {
-  const { guestQueryId, text, photoFileId, documentFileId, caption, title } = params
+  const { guestQueryId, text, photoFileId, caption } = params
   if (!guestQueryId) throw new Error('answerGuestQuery requires guestQueryId')
 
   let result
@@ -138,15 +137,6 @@ export async function answerGuestQuery(token, params = {}) {
       type: 'photo',
       id: '1',
       photo_file_id: String(photoFileId),
-      ...(caption ? { caption: String(caption) } : {}),
-    }
-  } else if (documentFileId) {
-    // InlineQueryResultCachedDocument requires a title.
-    result = {
-      type: 'document',
-      id: '1',
-      title: String(title || caption || 'Document'),
-      document_file_id: String(documentFileId),
       ...(caption ? { caption: String(caption) } : {}),
     }
   } else if (text) {
