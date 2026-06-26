@@ -152,8 +152,16 @@ The flow in `handleGuestMessage`:
 
 Setlists in guest mode short-circuit to a text reply pointing the
 user to the DM (a single `answerGuestQuery` call delivers one message;
-there's no media-group equivalent). Disambiguation also collapses to
-text. Any failure in the photo path falls back to a text reply with
+there's no media-group equivalent). Disambiguation collapses to a
+numbered text reply (no inline buttons in guest mode). The candidate
+list is stashed in `BOT_KV` under `choose:guest:<caller_id>` (10-min
+TTL); a follow-up message that is just a number — e.g.
+`@gracechords_bot 2` — is intercepted in `handleGuestMessage` (before
+`parseRequest`), resolved against the stashed list, and delivered via
+the shared `sendGuestSong` helper. The mention is required: Guest Chat
+Mode only delivers messages that `@`-mention the bot, so a bare `2`
+never reaches us. With no pending list, a number falls through to a
+normal search. Any failure in the photo path falls back to a text reply with
 the song title, key, and a deep link to the song page on
 gracechords.com — same fallback as when `MEDIA_STAGING_CHAT_ID`
 isn't configured at all.
@@ -218,6 +226,8 @@ isn't configured at all.
 - `rl:grp:<chat_id>:<bucket>` — group + guest cooldown, 6/min per chat.
 - `userlookup:<tg_id>` — user row cache; 5-minute TTL.
 - `setlist:<token>` — short-lived ID for combined-PDF callback (24h TTL).
+- `choose:guest:<caller_id>` — the disambiguation list last offered a guest
+  caller, so a numeric reply can pick from it (10-min TTL). See guest flow.
 - `state:last_digest_at` — debounces digest cron.
 
 No long-lived photo cache. The guest-photo flow re-stages on every
