@@ -13,7 +13,6 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
-import { useRole } from '../hooks/useRole'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
 import PushToTelegramButton from '../components/PushToTelegramButton'
 import { showToast } from '../utils/app/toast'
@@ -102,7 +101,6 @@ export default function SongView(){
   const { id } = useParams()
   const navigate = useNavigate()
   const { songs } = useSongs()
-  const { isAtLeast } = useRole()
   const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
   const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
@@ -714,17 +712,6 @@ export default function SongView(){
               className="gc-btn--telegram"
             />
           ) : null}
-          {isAtLeast('collaborator') && (
-            <Button
-              variant="secondary"
-              as={Link}
-              to={`/portal/editor/${entry.id}`}
-              title="Edit this song"
-              aria-label="Edit this song"
-            >
-              Edit
-            </Button>
-          )}
         </MobileDock>
       )}
       <MobileActionSheet

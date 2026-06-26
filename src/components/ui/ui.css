@@ -215,33 +215,32 @@
     color: var(--primary-text) !important;
     -webkit-text-fill-color: var(--primary-text) !important;
   }
-  /* Floating editor shortcut */
+  /* Floating editor shortcut — mirrors the reader copy FAB (.readings-copy-fab) */
   .gc-editor-fab{
-    position:fixed;
-    right:var(--space-4);
-    bottom:var(--space-4);
+    position: fixed;
+    right: var(--space-4);
+    bottom: var(--space-4);
     width:54px;
     height:54px;
     border-radius:999px;
-    background: var(--primary);
+    border: none;
+    background: var(--gc-primary);
     color: var(--primary-text);
     display:flex;
     align-items:center;
     justify-content:center;
     box-shadow: var(--gc-shadow-2);
     text-decoration:none;
-    z-index:1200;
-    transition: transform var(--gc-dur-quick) var(--gc-ease), box-shadow var(--gc-dur-quick) var(--gc-ease), filter var(--gc-dur-quick) var(--gc-ease);
+    cursor:pointer;
+    z-index: 1200;
+    transition: box-shadow var(--gc-dur-quick) var(--gc-ease), filter var(--gc-dur-quick) var(--gc-ease);
   }
   .gc-editor-fab:hover{
-    transform: translateY(-2px) scale(1.02);
     box-shadow: var(--gc-shadow-3);
     filter: brightness(.98);
   }
-  .gc-editor-fab:active{
-    transform: translateY(0) scale(.98);
-  }
-  @media (max-width: 720px){
+  /* Desktop/tablet only — hidden on mobile (the mobile dock covers actions). */
+  @media (max-width: 599.98px){
     .gc-editor-fab{ display:none; }
   }
   .gc-drawer__footer{
