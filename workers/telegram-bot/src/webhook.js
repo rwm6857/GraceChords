@@ -9,6 +9,12 @@ import { parseRequest } from './parseRequest.js'
 import { searchSongs, fetchSong, fetchSetlistSongs, classifyMatch } from './searchClient.js'
 import { stagePhoto } from './mediaCache.js'
 import {
+  savePendingChoice,
+  loadPendingChoice,
+  clearPendingChoice,
+  parseSelectionNumber,
+} from './pendingChoice.js'
+import {
   sendMessage,
   sendPhoto,
   sendDocument,
@@ -242,61 +248,17 @@ function songPageUrl(song, key) {
   return key ? `${base}?key=${encodeURIComponent(key)}` : base
 }
 
-// Dedicated guest-message flow. Kept separate from handleTextMessage on
-// purpose: guest replies go through answerGuestQuery, not sendPhoto, and
-// the accepted parameter set for that method is still empirical. Single-
-// song requests try the photo shape first, then fall back to a text reply
-// with a deep link to the song page. Setlists short-circuit to text
-// because answerGuestQuery returns one SentGuestMessage per call.
-async function handleGuestMessage(env, ctx, message) {
-  const guestQueryId = message?.guest_query_id
-  if (!guestQueryId) {
-    console.warn('guest_message missing guest_query_id', { keys: Object.keys(message || {}) })
-    return
-  }
-
+// Deliver a single resolved song over a guest query. Tries the photo shape
+// first (render JPG → stage to capture a file_id → cached-photo reply → delete
+// the staging message), and falls back to a text reply with a deep link on any
+// failure. Shared by the direct-match path and the numbered-selection path.
+async function sendGuestSong(env, ctx, { guestQueryId, song, key }) {
+  const caption = `${song.title}${key ? ` — ${key}` : ''}`
   const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
     .catch(err => {
       console.warn('answerGuestQuery text failed', err?.message || err)
     })
 
-  const botUsername = await getBotUsername(env)
-  const payload = extractMentionPayload(message, botUsername)
-  if (payload === null) return
-
-  if (/^\/(start|help)\b/i.test(payload)) {
-    return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
-  }
-
-  const items = parseRequest(payload)
-  if (items.length === 0) {
-    return replyText('I couldn\'t read that. Try a title like "Build My Life in G".')
-  }
-  if (items.length > 1) {
-    return replyText('Setlists work in DM with me. Open: https://t.me/gracechords_bot')
-  }
-
-  const item = items[0]
-  const results = await searchSongs(env, item.title).catch(() => [])
-  const classified = classifyMatch(results, item.title)
-  if (classified.kind === 'none') {
-    return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
-  }
-  if (classified.kind === 'choose') {
-    const list = classified.candidates.slice(0, 3)
-      .map((c, i) => `${i + 1}. ${c.title}${c.artist ? ` — ${c.artist}` : ''}`)
-      .join('\n')
-    return replyText(`Multiple matches for "${item.title}":\n${list}\n\nTry being more specific.`)
-  }
-
-  const song = await fetchSong(env, classified.pick.id)
-  const key = item.key || classified.pick.default_key || ''
-  const caption = `${song.title}${key ? ` — ${key}` : ''}`
-
-  // Photo path: render the JPG, upload to the staging chat to capture a
-  // file_id, reply with InlineQueryResultCachedPhoto, then delete the
-  // staging message so the channel stays clean. Any failure here falls
-  // back to the text + link reply.
   const jpg = await renderSongJpg(env, song, key).catch(err => {
     console.warn('renderSongJpg failed', err?.message || err)
     return null
@@ -336,6 +298,90 @@ async function handleGuestMessage(env, ctx, message) {
     ? `${caption}\nOpen the chart: ${url}`
     : `${caption}\nDM me for the chord chart: https://t.me/gracechords_bot`
   await replyText(text)
+}
+
+// Dedicated guest-message flow. Kept separate from handleTextMessage on
+// purpose: guest replies go through answerGuestQuery, not sendPhoto, and
+// the accepted parameter set for that method is still empirical. Single-
+// song requests try the photo shape first, then fall back to a text reply
+// with a deep link to the song page. Setlists short-circuit to text
+// because answerGuestQuery returns one SentGuestMessage per call.
+async function handleGuestMessage(env, ctx, message) {
+  const guestQueryId = message?.guest_query_id
+  if (!guestQueryId) {
+    console.warn('guest_message missing guest_query_id', { keys: Object.keys(message || {}) })
+    return
+  }
+
+  const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
+    .catch(err => {
+      console.warn('answerGuestQuery text failed', err?.message || err)
+    })
+
+  const botUsername = await getBotUsername(env)
+  const payload = extractMentionPayload(message, botUsername)
+  if (payload === null) return
+
+  if (/^\/(start|help)\b/i.test(payload)) {
+    return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
+  }
+
+  // A bare number after we offered a numbered list picks from that list.
+  // Keyed per caller — Guest Chat Mode delivers a fresh guest_query_id for
+  // this follow-up, so we answer it like any other query. If there's no
+  // pending list, fall through and treat the number as a normal search.
+  const callerId = message.from?.id
+  const selection = parseSelectionNumber(payload)
+  if (selection != null && callerId) {
+    const scope = `guest:${callerId}`
+    const pending = await loadPendingChoice(env, scope)
+    if (pending?.items?.length) {
+      if (selection > pending.items.length) {
+        return replyText(`Please reply with a number between 1 and ${pending.items.length}.`)
+      }
+      const chosen = pending.items[selection - 1]
+      await clearPendingChoice(env, scope)
+      const song = await fetchSong(env, chosen.id)
+      const key = pending.key || song.default_key || ''
+      return sendGuestSong(env, ctx, { guestQueryId, song, key })
+    }
+  }
+
+  const items = parseRequest(payload)
+  if (items.length === 0) {
+    return replyText('I couldn\'t read that. Try a title like "Build My Life in G".')
+  }
+  if (items.length > 1) {
+    return replyText('Setlists work in DM with me. Open: https://t.me/gracechords_bot')
+  }
+
+  const item = items[0]
+  const results = await searchSongs(env, item.title).catch(() => [])
+  const classified = classifyMatch(results, item.title)
+  if (classified.kind === 'none') {
+    return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
+  }
+  if (classified.kind === 'choose') {
+    const candidates = classified.candidates.slice(0, 3)
+    const list = candidates
+      .map((c, i) => `${i + 1}. ${c.title}${c.artist ? ` — ${c.artist}` : ''}`)
+      .join('\n')
+    // Stash the list so the caller can reply with a number to pick one.
+    if (callerId) {
+      await savePendingChoice(env, `guest:${callerId}`, {
+        items: candidates.map(c => ({ id: c.id, title: c.title, artist: c.artist || '' })),
+        key: item.key || '',
+      })
+    }
+    const mention = botUsername ? `@${botUsername}` : '@gracechords_bot'
+    return replyText(
+      `Multiple matches for "${item.title}":\n${list}\n\nReply with the number you want — like "${mention} 2".`
+    )
+  }
+
+  const song = await fetchSong(env, classified.pick.id)
+  const key = item.key || classified.pick.default_key || ''
+  return sendGuestSong(env, ctx, { guestQueryId, song, key })
 }
 
 async function handleCallbackQuery(env, ctx, cbq) {
