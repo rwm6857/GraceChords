@@ -14,7 +14,7 @@
 // Requires env.MEDIA_STAGING_CHAT_ID — typically a one-person private
 // channel containing only the bot, with both Post and Delete permissions.
 
-import { sendPhoto } from './telegram.js'
+import { sendPhoto, sendDocument } from './telegram.js'
 
 // Pick the largest PhotoSize from a sendPhoto response. Telegram returns
 // multiple sizes; the last entry is always the biggest.
@@ -39,6 +39,28 @@ export async function stagePhoto(env, { jpg, filename, caption }) {
   const fileId = largestFileId(staged)
   if (!fileId) {
     throw new Error('sendPhoto returned no file_id; cannot stage for guest reply')
+  }
+  return { fileId, chatId: stagingChatId, messageId: staged.message_id }
+}
+
+// Same idea as stagePhoto but for a PDF, so a guest setlist can be answered
+// with an InlineQueryResultCachedDocument. Returns the document file_id plus
+// the staging message coordinates so the caller can delete it afterward.
+export async function stageDocument(env, { pdf, filename, caption }) {
+  const stagingChatId = env.MEDIA_STAGING_CHAT_ID
+  if (!stagingChatId) {
+    throw new Error('MEDIA_STAGING_CHAT_ID not configured; cannot stage document for guest reply')
+  }
+
+  const staged = await sendDocument(env.TELEGRAM_BOT_TOKEN, {
+    chatId: stagingChatId,
+    document: pdf,
+    filename: filename || 'setlist.pdf',
+    caption,
+  })
+  const fileId = staged?.document?.file_id
+  if (!fileId) {
+    throw new Error('sendDocument returned no file_id; cannot stage for guest reply')
   }
   return { fileId, chatId: stagingChatId, messageId: staged.message_id }
 }
