@@ -75,13 +75,19 @@ WASM, jsPDF, transposition, and the chord-chart engine in
    `helpText()` respectively when the user is linked.
 5. `parseRequest(text)` produces `[{ title, key }]` items.
 6. `checkRateLimit` consumes one slot from the per-user KV bucket.
-7. For each item: `searchSongs(env, title)` →
-   `classifyMatch(results, item.title)`. The second arg is the original
-   parsed query; if any candidate's title equals it (case- and
-   whitespace-insensitive), the result is `auto` regardless of scores.
-   - `auto`: pick the top result.
-   - `choose`: send an inline keyboard with up to 4 candidates.
-   - `none`: "couldn't find that" reply.
+7. `advanceResolution` (`resolver.js`) walks the items, calling
+   `searchSongs` → `classifyMatch(results, item.title)` for each. The
+   second arg is the original parsed query; if any candidate's title
+   equals it (case- and whitespace-insensitive), the result is `auto`
+   regardless of scores.
+   - `auto`: append the pick and continue to the next item.
+   - `choose`: send an inline keyboard with up to 4 candidates
+     (`callback_data: rpick:<song_id>`), stash progress in BOT_KV under
+     `resolve:<scope>`, and stop. When the user taps a button,
+     `handleCallbackQuery` records the pick and **resumes** the walk — so
+     a confusing title midway through a setlist no longer abandons the
+     rest of the set; the whole setlist is delivered once resolved.
+   - `none`: "couldn't find that" reply (aborts the whole request).
 8. `fetchSong(env, id)` (or `fetchSetlistSongs` for multi) loads full
    ChordPro from the site's bot-only API.
 9. `renderSongJpg` parses + transposes the song (see Transposition
@@ -139,7 +145,7 @@ not in the public Bot API docs at time of writing) is a single
 The flow in `handleGuestMessage`:
 
 1. Strip the `@<bot>` mention and dispatch via the existing
-   `parseRequest` → `searchSongs` → `classifyMatch` pipeline.
+   `parseRequest` → `advanceResolution` (`resolver.js`) pipeline.
 2. For a single-song match, render the JPG.
 3. `stagePhoto(env, …)` uploads the JPG to `MEDIA_STAGING_CHAT_ID` (a
    private chat the bot has Post + Delete permissions on) and returns
@@ -150,21 +156,27 @@ The flow in `handleGuestMessage`:
    best-effort. The recipient still sees the photo because Telegram
    keeps the file alive after the source message is deleted.
 
-Setlists in guest mode short-circuit to a text reply pointing the
-user to the DM (a single `answerGuestQuery` call delivers one message;
-there's no media-group equivalent). Disambiguation collapses to a
-numbered text reply (no inline buttons in guest mode). The candidate
-list is stashed in `BOT_KV` under `choose:guest:<caller_id>` (10-min
-TTL); a follow-up message that is just a number — e.g.
-`@gracechords_bot 2` — is intercepted in `handleGuestMessage` (before
-`parseRequest`), resolved against the stashed list, and delivered via
-the shared `sendGuestSong` helper. The mention is required: Guest Chat
-Mode only delivers messages that `@`-mention the bot, so a bare `2`
-never reaches us. With no pending list, a number falls through to a
-normal search. Any failure in the photo path falls back to a text reply with
-the song title, key, and a deep link to the song page on
-gracechords.com — same fallback as when `MEDIA_STAGING_CHAT_ID`
-isn't configured at all.
+Setlists in guest mode short-circuit to a text reply pointing the user
+to the DM (a single `answerGuestQuery` call delivers one message; there's
+no media-group equivalent, and a combined-PDF cached-document path was
+tried and abandoned). Single-song disambiguation collapses to a numbered
+text reply (no inline buttons in guest mode), driven by the same
+`resolver.js` state machine as DM/group but stashed under
+`resolve:guest:<caller_id>` (10-min TTL). A follow-up message that is just
+a number — e.g. `@gracechords_bot 2` — is applied as the pick and the
+resolution **resumes**, so the chosen chart is delivered.
+
+The number reply has to reach the bot, and Guest Chat Mode only delivers
+messages that `@`-mention it — so the prompt instructs the user to reply
+`@gracechords_bot <n>`. As a best-effort convenience `handleGuestMessage`
+also accepts a message with **no** mention when it is a `reply_to_message`
+(so a plain "2" reply to the bot works), but whether Telegram actually
+delivers reply-without-mention in guest mode is undocumented; the mention
+is the guaranteed path. With no pending list, a number falls through to a
+normal search. Any failure in the single-song photo path falls back to a
+text reply with the song title, key, and a deep link to the song page on
+gracechords.com — same fallback as when `MEDIA_STAGING_CHAT_ID` isn't
+configured at all.
 
 ## External integrations
 
@@ -226,8 +238,10 @@ isn't configured at all.
 - `rl:grp:<chat_id>:<bucket>` — group + guest cooldown, 6/min per chat.
 - `userlookup:<tg_id>` — user row cache; 5-minute TTL.
 - `setlist:<token>` — short-lived ID for combined-PDF callback (24h TTL).
-- `choose:guest:<caller_id>` — the disambiguation list last offered a guest
-  caller, so a numeric reply can pick from it (10-min TTL). See guest flow.
+- `resolve:<scope>` — in-flight multi-song resolution (parsed items, picks so
+  far, current candidates) so a button tap or numeric reply can resume a
+  half-built setlist (10-min TTL). Scope is `dm:<user_id>`,
+  `grp:<chat_id>:<user_id>`, or `guest:<caller_id>`. See `resolver.js`.
 - `state:last_digest_at` — debounces digest cron.
 
 No long-lived photo cache. The guest-photo flow re-stages on every

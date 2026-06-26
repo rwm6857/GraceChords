@@ -6,14 +6,17 @@ import { findUserByTelegramId } from './supabase.js'
 import { checkRateLimit, formatCooldown } from './ratelimit.js'
 import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
-import { searchSongs, fetchSong, fetchSetlistSongs, classifyMatch } from './searchClient.js'
+import { fetchSong, fetchSetlistSongs } from './searchClient.js'
 import { stagePhoto } from './mediaCache.js'
 import {
-  savePendingChoice,
-  loadPendingChoice,
-  clearPendingChoice,
+  saveResolution,
+  loadResolution,
+  clearResolution,
   parseSelectionNumber,
-} from './pendingChoice.js'
+  advanceResolution,
+  applyChoice,
+  toCandidate,
+} from './resolver.js'
 import {
   sendMessage,
   sendPhoto,
@@ -28,8 +31,6 @@ import { renderSongPdf, renderSetlistPdf, renderSongJpg } from './pdfRender.js'
 import {
   sendSongJpgOrPdf,
   sendSetlistResponse,
-  pickCallbackData,
-  setlistPdfCallbackData,
 } from './sendChart.js'
 
 // Bot username is needed to detect @mentions in group chats. Cache once
@@ -199,43 +200,69 @@ async function handleTextMessage(env, ctx, message, options = {}) {
 
   ctx.waitUntil(sendChatAction(env.TELEGRAM_BOT_TOKEN, chatId, 'typing').catch(() => {}))
 
-  // Resolve each item to a concrete song (auto-pick or disambiguation).
-  const resolved = []
-  for (const item of items) {
-    const results = await searchSongs(env, item.title).catch(() => [])
-    const classified = classifyMatch(results, item.title)
-    if (classified.kind === 'none') {
-      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-        chat_id: chatId,
-        text: `I couldn't find "${item.title}". Try a different spelling?`,
-        reply_to_message_id: replyToMessageId,
-      })
-      return
-    }
-    if (classified.kind === 'choose') {
-      const keyboard = classified.candidates.map(c => ([{
-        text: `${c.title}${c.artist ? ` — ${c.artist}` : ''}`,
-        callback_data: pickCallbackData(c.id, item.key || ''),
-      }]))
-      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
-        chat_id: chatId,
-        text: `Which "${item.title}" did you mean?`,
-        reply_markup: { inline_keyboard: keyboard },
-        reply_to_message_id: replyToMessageId,
-      })
-      return
-    }
-    resolved.push({ id: classified.pick.id, key: item.key || classified.pick.default_key || '' })
-  }
+  // A fresh request supersedes any half-finished disambiguation.
+  const scope = chatScope({ isGroup, chatId, userId: telegramUserId })
+  await clearResolution(env, scope)
 
-  if (resolved.length === 1) {
-    const song = await fetchSong(env, resolved[0].id)
-    await sendSongJpgOrPdf({ env, chatId, song, key: resolved[0].key, replyToMessageId })
+  const surface = isGroup ? 'group' : 'dm'
+  const picks = []
+  const step = await advanceResolution(env, items, picks)
+  await continueChatResolution({
+    env, scope, surface, chatId, replyToMessageId, items, picks, step,
+  })
+}
+
+// KV scope key for a chat's in-flight resolution. Per-user inside a group so
+// two people disambiguating at once don't clobber each other.
+function chatScope({ isGroup, chatId, userId }) {
+  return isGroup ? `grp:${chatId}:${userId}` : `dm:${userId}`
+}
+
+// Drive a DM/group resolution to its next stop: ask about an ambiguous title
+// (inline buttons), report a miss, or deliver the finished song/setlist.
+async function continueChatResolution({ env, scope, surface, chatId, replyToMessageId, items, picks, step }) {
+  if (step.status === 'none') {
+    await clearResolution(env, scope)
+    await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+      chat_id: chatId,
+      text: `I couldn't find "${step.item.title}". Try a different spelling?`,
+      reply_to_message_id: replyToMessageId,
+    })
     return
   }
 
-  const songs = await fetchSetlistSongs(env, resolved.map(r => ({ song_id: r.id, key: r.key })))
-  const keys = resolved.map(r => r.key)
+  if (step.status === 'choose') {
+    const candidates = step.candidates.slice(0, 4)
+    const keyboard = candidates.map(c => ([{
+      text: `${c.title}${c.artist ? ` — ${c.artist}` : ''}`,
+      callback_data: `rpick:${c.id}`,
+    }]))
+    const prefix = items.length > 1 ? `Song ${step.index + 1}: ` : ''
+    await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+      chat_id: chatId,
+      text: `${prefix}Which "${step.item.title}" did you mean?`,
+      reply_markup: { inline_keyboard: keyboard },
+      reply_to_message_id: replyToMessageId,
+    })
+    await saveResolution(env, scope, {
+      surface, chatId, replyToMessageId, items, picks,
+      candidates: candidates.map(toCandidate),
+    })
+    return
+  }
+
+  await clearResolution(env, scope)
+  await deliverChatResolved({ env, chatId, replyToMessageId, picks })
+}
+
+async function deliverChatResolved({ env, chatId, replyToMessageId, picks }) {
+  if (picks.length === 1) {
+    const song = await fetchSong(env, picks[0].id)
+    await sendSongJpgOrPdf({ env, chatId, song, key: picks[0].key, replyToMessageId })
+    return
+  }
+  const songs = await fetchSetlistSongs(env, picks.map(p => ({ song_id: p.id, key: p.key })))
+  const keys = picks.map(p => p.key)
   await sendSetlistResponse({ env, chatId, songs, keys, replyToMessageId })
 }
 
@@ -300,12 +327,47 @@ async function sendGuestSong(env, ctx, { guestQueryId, song, key }) {
   await replyText(text)
 }
 
+// Drive a guest resolution to its next stop: ask about an ambiguous title
+// (numbered text — guest mode has no buttons), report a miss, or deliver the
+// finished song/setlist.
+async function continueGuestResolution({ env, ctx, guestQueryId, scope, state, step, botUsername }) {
+  const replyText = (text) => answerGuestQuery(env.TELEGRAM_BOT_TOKEN, { guestQueryId, text })
+    .catch(err => {
+      console.warn('answerGuestQuery text failed', err?.message || err)
+    })
+
+  if (step.status === 'none') {
+    if (scope) await clearResolution(env, scope)
+    return replyText(`I couldn't find "${step.item.title}". Try a different spelling?`)
+  }
+
+  if (step.status === 'choose') {
+    const candidates = step.candidates.slice(0, 3)
+    const list = candidates
+      .map((c, i) => `${i + 1}. ${c.title}${c.artist ? ` — ${c.artist}` : ''}`)
+      .join('\n')
+    state.candidates = candidates.map(toCandidate)
+    if (scope) await saveResolution(env, scope, state)
+    const mention = botUsername ? `@${botUsername}` : '@gracechords_bot'
+    const prefix = state.items.length > 1 ? `Song ${step.index + 1}: ` : ''
+    return replyText(
+      `${prefix}Multiple matches for "${step.item.title}":\n${list}\n\nReply with the number you want — like "${mention} 2".`
+    )
+  }
+
+  if (scope) await clearResolution(env, scope)
+  const song = await fetchSong(env, state.picks[0].id)
+  return sendGuestSong(env, ctx, { guestQueryId, song, key: state.picks[0].key })
+}
+
 // Dedicated guest-message flow. Kept separate from handleTextMessage on
 // purpose: guest replies go through answerGuestQuery, not sendPhoto, and
-// the accepted parameter set for that method is still empirical. Single-
-// song requests try the photo shape first, then fall back to a text reply
-// with a deep link to the song page. Setlists short-circuit to text
-// because answerGuestQuery returns one SentGuestMessage per call.
+// the accepted parameter set for that method is still empirical. Single songs
+// only — setlists point the user to the DM. Disambiguation uses a numbered
+// text list (no inline buttons in guest mode); the caller picks by replying
+// "@bot <n>" (or, best-effort, a plain reply to our message). Guest Chat Mode
+// only delivers messages that mention the bot, so a bare number normally never
+// reaches us.
 async function handleGuestMessage(env, ctx, message) {
   const guestQueryId = message?.guest_query_id
   if (!guestQueryId) {
@@ -319,31 +381,38 @@ async function handleGuestMessage(env, ctx, message) {
     })
 
   const botUsername = await getBotUsername(env)
-  const payload = extractMentionPayload(message, botUsername)
-  if (payload === null) return
+  let payload = extractMentionPayload(message, botUsername)
+  if (payload === null) {
+    // No @-mention. If Telegram delivered this because the user *replied* to
+    // one of our messages, treat the whole text as the request — so a plain
+    // "2" reply works without re-typing the mention. (Whether guest mode
+    // delivers reply-without-mention at all is up to Telegram; if it doesn't,
+    // this branch simply never runs.)
+    if (!message.reply_to_message) return
+    payload = String(message.text || '').trim()
+    if (!payload) return
+  }
 
   if (/^\/(start|help)\b/i.test(payload)) {
     return replyText('Mention me with a song title (e.g. "@gracechords_bot Build My Life in G") and I\'ll send the chord chart.')
   }
 
-  // A bare number after we offered a numbered list picks from that list.
-  // Keyed per caller — Guest Chat Mode delivers a fresh guest_query_id for
-  // this follow-up, so we answer it like any other query. If there's no
-  // pending list, fall through and treat the number as a normal search.
-  const callerId = message.from?.id
+  const callerId = message.from?.id ?? message.guest_bot_caller_user?.id
+  const scope = callerId ? `guest:${callerId}` : null
+
+  // A number after we offered a numbered list resumes that disambiguation.
+  // If there's no pending list, fall through and treat the number as a search.
   const selection = parseSelectionNumber(payload)
-  if (selection != null && callerId) {
-    const scope = `guest:${callerId}`
-    const pending = await loadPendingChoice(env, scope)
-    if (pending?.items?.length) {
-      if (selection > pending.items.length) {
-        return replyText(`Please reply with a number between 1 and ${pending.items.length}.`)
+  if (selection != null && scope) {
+    const state = await loadResolution(env, scope)
+    if (state) {
+      const candidates = state.candidates || []
+      if (selection > candidates.length) {
+        return replyText(`Please reply with a number between 1 and ${candidates.length}.`)
       }
-      const chosen = pending.items[selection - 1]
-      await clearPendingChoice(env, scope)
-      const song = await fetchSong(env, chosen.id)
-      const key = pending.key || song.default_key || ''
-      return sendGuestSong(env, ctx, { guestQueryId, song, key })
+      applyChoice(state, candidates[selection - 1])
+      const step = await advanceResolution(env, state.items, state.picks)
+      return continueGuestResolution({ env, ctx, guestQueryId, scope, state, step, botUsername })
     }
   }
 
@@ -355,33 +424,11 @@ async function handleGuestMessage(env, ctx, message) {
     return replyText('Setlists work in DM with me. Open: https://t.me/gracechords_bot')
   }
 
-  const item = items[0]
-  const results = await searchSongs(env, item.title).catch(() => [])
-  const classified = classifyMatch(results, item.title)
-  if (classified.kind === 'none') {
-    return replyText(`I couldn't find "${item.title}". Try a different spelling?`)
-  }
-  if (classified.kind === 'choose') {
-    const candidates = classified.candidates.slice(0, 3)
-    const list = candidates
-      .map((c, i) => `${i + 1}. ${c.title}${c.artist ? ` — ${c.artist}` : ''}`)
-      .join('\n')
-    // Stash the list so the caller can reply with a number to pick one.
-    if (callerId) {
-      await savePendingChoice(env, `guest:${callerId}`, {
-        items: candidates.map(c => ({ id: c.id, title: c.title, artist: c.artist || '' })),
-        key: item.key || '',
-      })
-    }
-    const mention = botUsername ? `@${botUsername}` : '@gracechords_bot'
-    return replyText(
-      `Multiple matches for "${item.title}":\n${list}\n\nReply with the number you want — like "${mention} 2".`
-    )
-  }
-
-  const song = await fetchSong(env, classified.pick.id)
-  const key = item.key || classified.pick.default_key || ''
-  return sendGuestSong(env, ctx, { guestQueryId, song, key })
+  // Fresh request supersedes any half-finished disambiguation.
+  if (scope) await clearResolution(env, scope)
+  const state = { surface: 'guest', items, picks: [], candidates: [] }
+  const step = await advanceResolution(env, items, state.picks)
+  return continueGuestResolution({ env, ctx, guestQueryId, scope, state, step, botUsername })
 }
 
 async function handleCallbackQuery(env, ctx, cbq) {
@@ -410,6 +457,34 @@ async function handleCallbackQuery(env, ctx, cbq) {
     const [, songId, key] = data.split(':')
     const song = await fetchSong(env, songId)
     await sendSongJpgOrPdf({ env, chatId, song, key })
+    return
+  }
+
+  // Resolution pick: record the chosen song and resume building the request.
+  // If the rest of the setlist resolves cleanly, the WHOLE set is delivered —
+  // not just this one song.
+  if (data.startsWith('rpick:')) {
+    const songId = data.slice('rpick:'.length)
+    const userId = cbq.from?.id
+    const isGroup = cbq.message?.chat?.type !== 'private'
+    const scope = chatScope({ isGroup, chatId, userId })
+    const state = await loadResolution(env, scope)
+    if (!state) {
+      await sendMessage(env.TELEGRAM_BOT_TOKEN, {
+        chat_id: chatId,
+        text: 'That menu expired — send the song (or setlist) again.',
+      })
+      return
+    }
+    const candidate = (state.candidates || []).find(c => String(c.id) === String(songId))
+    if (!candidate) return
+    applyChoice(state, candidate)
+    const step = await advanceResolution(env, state.items, state.picks)
+    await continueChatResolution({
+      env, scope, surface: state.surface, chatId,
+      replyToMessageId: state.replyToMessageId,
+      items: state.items, picks: state.picks, step,
+    })
     return
   }
 

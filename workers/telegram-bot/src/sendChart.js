@@ -29,10 +29,6 @@ export function pdfCallbackData(songId, key) {
   return `pdf:${songId}:${key || ''}`
 }
 
-export function pickCallbackData(songId, key) {
-  return `pick:${songId}:${key || ''}`
-}
-
 export function setlistPdfCallbackData(token) {
   return `slpdf:${token}`
 }
