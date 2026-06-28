@@ -1,7 +1,13 @@
 import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { visualizer } from 'rollup-plugin-visualizer'
+
+// Consume packages/core as TS source (no build step). The alias points the
+// @gracechords/core specifier (and its subpaths) at the package source so
+// esbuild/Vite transpile it as part of the app graph.
+const coreSrc = fileURLToPath(new URL('./packages/core/src', import.meta.url))
 
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
 
@@ -45,6 +51,11 @@ export default defineConfig({
   base: '/',
   define: {
     __SW_VERSION__: JSON.stringify(SW_VERSION),
+  },
+  resolve: {
+    alias: [
+      { find: '@gracechords/core', replacement: coreSrc },
+    ],
   },
   plugins: [
     react({

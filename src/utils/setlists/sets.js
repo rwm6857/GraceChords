@@ -1,4 +1,12 @@
-// src/utils/setlists/sets.js
+// src/utils/setlists/sets.js — localStorage-backed CRUD over the pure,
+// storage-agnostic set helpers in @gracechords/core.
+import {
+  newEmptySet as coreNewEmptySet,
+  normalizeSet,
+  sortSetsByUpdated,
+  duplicateSetData,
+} from '@gracechords/core/setlists/setStore'
+
 const STORAGE_KEY = 'gracechords.sets.v1'
 
 function readStore() {
@@ -13,32 +21,15 @@ function writeStore(store) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
 }
 
-function uuid() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
-
-/**
- * Set shape:
- * { id, name, items: [{ id, toKey }], createdAt, updatedAt }
- */
 export function listSets() {
-  const { sets } = readStore()
-  return Object.values(sets).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+  return sortSetsByUpdated(readStore().sets)
 }
 export function getSet(id) {
   const { sets } = readStore()
   return sets[id] || null
 }
 export function saveSet(input) {
-  const now = Date.now()
-  const set = {
-    id: input.id || uuid(),
-    name: input.name?.trim() || 'Untitled Set',
-    items: Array.isArray(input.items) ? input.items : [],
-    createdAt: input.createdAt || now,
-    updatedAt: now,
-  }
+  const set = normalizeSet(input)
   const store = readStore()
   store.sets[set.id] = set
   writeStore(store)
@@ -56,11 +47,8 @@ export function deleteSet(id) {
 export function duplicateSet(id) {
   const orig = getSet(id)
   if (!orig) return null
-  return saveSet({
-    name: `Copy of ${orig.name}`,
-    items: orig.items.map(i => ({ ...i })),
-  })
+  return saveSet(duplicateSetData(orig))
 }
-export function newEmptySet(name = 'Untitled Set') {
-  return { id: null, name, items: [], createdAt: null, updatedAt: null }
+export function newEmptySet(name) {
+  return coreNewEmptySet(name)
 }
