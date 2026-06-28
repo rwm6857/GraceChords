@@ -37,11 +37,11 @@ building unchanged. Verified with `npm run test:run` (157/157 pass) and
   core module needs it.
 
 ### Note on the test baseline
-`AGENTS.md` documents an older baseline of "2 setcode + 11 supabase-load
-failures." The current vitest config injects `VITE_SUPABASE_URL`
-(`vite.config.js` `test.env`), so the import-time Supabase failures do not occur
-— the baseline is now **fully green (157/157)** and stays green after the
-injected-factory refactor.
+The suite is **fully green (157/157)** and stays green after the injected-factory
+refactor. An older "2 setcode + 11 supabase-load failures" baseline no longer
+applies (the vitest config injects `VITE_SUPABASE_URL` and the client is behind
+`createGcSupabase`). The `AGENTS.md` "Known baselines" section has been corrected
+to reflect this — treat any test failure as a real regression.
 
 ## Remaining — requires your Cloudflare dashboard (could not run from here)
 

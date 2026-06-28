@@ -67,14 +67,20 @@ in a later migration step). A future Expo iOS app will live in `apps/mobile/`.
 - `npm run lint`: ESLint flat config (`eslint.config.js`), focused on
   `react-hooks/rules-of-hooks` (error) and `react-hooks/exhaustive-deps` (warn).
 
-### Known baselines (don't try to fix in unrelated PRs)
-- **Tests**: 2 failed | 102 passed (104) — Test Files: 11 failed | 34 passed.
-  The 11 file-load failures all stem from `src/lib/supabase.js` calling
-  `createClient()` at import time without a `VITE_SUPABASE_URL` test env. The
-  2 actual test failures are in `setcode.verseTranslation`. Both are pre-
-  existing — leave alone unless your PR is specifically about them.
-- **Lint**: 27 warnings, 0 errors, all `react-hooks/exhaustive-deps`. Chip
-  away as you touch each file; don't try to fix in bulk.
+### Known baselines
+- **Tests**: clean — **157 passed (157)**, Test Files **44 passed (44)**. The
+  suite is fully green: `npm test` should report zero failures. Any failure is a
+  real regression — investigate it, do not wave it through.
+  - History: an older baseline noted "2 setcode + 11 supabase-load failures."
+    The 11 load failures came from `src/lib/supabase.js` calling `createClient()`
+    at import time without a test env; the vitest config now injects
+    `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` (`vite.config.js` `test.env`) and
+    the Supabase client moved behind an injected factory
+    (`@gracechords/core`'s `createGcSupabase`), so those no longer occur. The
+    setcode failures are also resolved. Do not reintroduce a "failures expected"
+    baseline.
+- **Lint**: clean — **0 warnings, 0 errors** (`npm run lint`). Keep it at zero;
+  fix new `react-hooks/exhaustive-deps` warnings as you introduce them.
 
 ## Coding Style & Naming Conventions
 - Indentation: 2 spaces; single quotes; prefer no semicolons (match existing files).
