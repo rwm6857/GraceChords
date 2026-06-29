@@ -135,17 +135,26 @@ It is already covered by the root `"workspaces": ["apps/*","packages/*"]` glob
 
 ### Cloudflare Pages — Build watch paths to apply (dashboard)
 
-In **Pages → Settings → Builds & deployments → Build watch paths**:
+In **Pages → Settings → Builds & deployments → Build watch paths** there are two
+inputs: **Include paths** (pre-filled with `*`) and **Exclude paths** (the empty
+box below it). Set:
 
 | Field | Value |
 |---|---|
+| **Include paths** | `*` (keep the default chip) |
 | **Exclude paths** | `apps/mobile/*` |
-| **Include paths** | default (`*`) |
 
-A commit touching only `apps/mobile/**` then **skips** the web build, while
-changes under `packages/**` and `apps/web/**` still **trigger** it. (Watch paths
-are evaluated relative to the repo root; excludes cover nested paths and `*`
-spans `/`, so the single `apps/mobile/*` entry fully scopes out the mobile app.)
+This matches the CF docs' "exclude a directory" example (`Include: *`,
+`Exclude: docs/*`). `*` matches across path separators, so `apps/mobile/*`
+covers nested paths like `apps/mobile/src/index.ts`. A build is skipped only when
+**every** changed file is excluded:
+- commit touching only `apps/mobile/**` → all excluded → **build skipped** ✓
+- commit touching `apps/web/**` or `packages/**` → not excluded → **build triggered** ✓
+- mixed commit (mobile + web) → web files aren't excluded → **build triggered** ✓
+
+(Alternative, if you prefer an allowlist instead of an exclude: Include
+`apps/web/*, packages/*, package.json, package-lock.json`, Exclude empty — same
+net effect, but you must remember to add any future web-affecting top-level path.)
 
 > Out of scope here: any Expo/React Native setup and applying the watch-paths
 > setting in the dashboard (that one's yours).
