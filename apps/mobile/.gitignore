@@ -1,0 +1,22 @@
+# Continuous Native Generation — native dirs are regenerated via `expo prebuild`,
+# never committed. See AGENTS.md (Continuous Native Generation).
+/ios
+/android
+
+# Expo / Metro
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Dependencies
+node_modules/
+
+# Env (local only — commit .env.example, never .env)
+.env
+.env.*
+!.env.example
+
+# Native build cruft / logs
+*.log
+*.tsbuildinfo

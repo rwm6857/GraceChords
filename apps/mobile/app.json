@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "GraceChords",
+    "slug": "gracechords",
+    "scheme": "gracechords",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.gracechords.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.gracechords.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
