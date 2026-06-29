@@ -39,16 +39,16 @@ jobs:
 
       - name: Tests (warn-only)
         continue-on-error: true
-        # Several component test files fail to load because src/lib/supabase.js
-        # creates the client at module-import time and throws if VITE_SUPABASE_URL
-        # is missing. Tracked as a follow-up; for now the workflow surfaces the
-        # same baseline as a local `npm run test:run`.
+        # Suite is green (157/157); any failure is a real regression. Root
+        # script delegates to the @gracechords/web workspace.
         run: npm run test:run
 
       - name: Build (warn-only, vite only)
         continue-on-error: true
         # Skip the SEO/sitemap scripts that need a real Supabase service-role
-        # key — only the bundle compile matters for a PR check.
+        # key — only the bundle compile matters for a PR check. Run from the web
+        # workspace so Vite finds apps/web/vite.config.js + index.html.
+        working-directory: apps/web
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
         run: npx vite build

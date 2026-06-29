@@ -1,5 +1,35 @@
 # Repository Guidelines
 
+## Monorepo & Shared Core
+This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`**
+(its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`,
+and `eslint.config.js` all moved there — paths elsewhere in this doc that say
+`src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
+A future Expo iOS app will live in `apps/mobile/`. The repo root holds only the
+workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
+`supabase/`, and docs.
+- Run web tasks from the repo root via the delegating scripts (`npm run dev`,
+  `npm run build`, `npm run test:run`, `npm run lint` → `-w @gracechords/web`), or
+  from inside `apps/web/` directly.
+- Cloudflare Pages root directory is `apps/web` (so `functions/` and the build
+  output are where CF expects). See `MONOREPO_MIGRATION.md` for the exact CF
+  settings.
+- `packages/core/` (`@gracechords/core`): pure, DOM-free, bundler-free TypeScript/JS
+  shared across web and mobile — ChordPro **parser** (not the renderer),
+  transposition, chord placement, verse refs, song metadata/sort, the setlist
+  codec, role hierarchy, and the Supabase **factory** (`supabase/client.js`,
+  `createGcSupabase({ url, anonKey, storage })`). Consumed as **source, no build
+  step** via the `@gracechords/core` alias (`vite.config.js`) and the workspace
+  symlink.
+- `packages/tokens/` (`@gracechords/tokens`): canonical design tokens
+  (`tokens.css`). The web imports it from `src/styles/index.css`.
+- **Compatibility shims:** every module moved into `packages/core` left a thin
+  re-export shim at its original `src/...` path (e.g. `src/utils/chordpro/parser.ts`,
+  `src/lib/roles.js`), so existing web imports are unchanged. **Edit the real
+  implementation under `packages/core/src/`, not the shim.** The ChordPro
+  **renderer** (PDF/JPG/Canvas — `src/utils/pdf_mvp/`, `src/utils/media/`) stays
+  web-side and is not shared.
+
 ## Project Structure & Module Organization
 - `src/`: React app (components, pages, utils, styles, tests).
   - `src/pages/AdminPage.jsx` — Admin Portal (user/role management); requires `admin` role via `RoleGuard`
@@ -7,13 +37,13 @@
   - `src/components/auth/RoleGuard.jsx` — redirects users lacking the required minimum role
   - `src/components/CollaboratorRequest.jsx` — collaborator access request UI for `user`-role accounts
   - `src/hooks/useAuth.jsx` — auth context: `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`, `isCollaborator`
-  - `src/lib/supabase.js` — Supabase client
+  - `src/lib/supabase.js` — web Supabase client (thin wrapper over `@gracechords/core`'s `createGcSupabase`, injecting Vite env + `cookieStorage`)
   - `src/utils/setlists/supabaseSets.js` — Supabase-backed saved set CRUD
   - `src/utils/pdf_mvp/` — PDF engine (single-song, setlist, songbook) with tests and font registrar
   - `src/utils/media/jpgPlanner.js` + `src/utils/media/canvasFonts.js` — JPG-only Canvas2D planner and font registration (used by `src/utils/media/image.js`)
-  - `src/utils/chordpro/` — parser, serializer, normalization, helpers
+  - `src/utils/chordpro/` — re-export shims; real parser/serializer/normalization/helpers live in `packages/core/src/chordpro/`. `disclaimer.ts` stays here (depends on web config).
   - `src/data/index.json` — generated song index (legacy static fallback); do not hand-edit
-  - `src/styles/tokens.css` — `--gc-*` design tokens (light/dark, spacing, type scale)
+  - `packages/tokens/tokens.css` — `--gc-*` design tokens (light/dark, spacing, type scale); imported via `src/styles/index.css`
   - `src/styles/admin-portal.css` — Admin/Editor portal styles
   - `src/components/ui/layout-kit/` — reusable UI primitives (Card, Toolbar, Chip, etc.)
 - `public/`: static assets — `resources/` for blog posts, `wiki/` as wiki source, `bible/` for translation manifest + chapter JSON, `fonts/` for UI fonts. **Songs are in Supabase, not `public/songs/`.**
@@ -25,10 +55,11 @@
 - Supabase is used for auth, song storage, starred songs, saved sets, and collaborator requests.
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 - Role system: `user → collaborator → editor → admin → owner` (stored in `public.users.role`).
-- **Single source of truth**: `src/lib/roles.js` exports `ROLE_ORDER`,
-  `ROLES_BY_RANK_DESC`, and `hasMinRole()`. Frontend code imports from there.
-  The `workers/pptx-upload/` worker keeps its own copy because it's bundled
-  separately — keep the two in sync if the hierarchy changes.
+- **Single source of truth**: `packages/core/src/rbac/roles.js` exports `ROLE_ORDER`,
+  `ROLES_BY_RANK_DESC`, and `hasMinRole()` (re-exported via the `src/lib/roles.js`
+  shim, which frontend code may still import). The `workers/pptx-upload/` worker
+  keeps its own copy because it's bundled separately — keep the two in sync if the
+  hierarchy changes.
 - Use `hasMinRole(minRole)` from `useAuth` (or `useRole().isAtLeast`) for role
   checks; never hardcode role strings in conditionals unless adding a new role.
 - RLS policies on all tables — test with a non-owner account before shipping.
@@ -46,14 +77,20 @@
 - `npm run lint`: ESLint flat config (`eslint.config.js`), focused on
   `react-hooks/rules-of-hooks` (error) and `react-hooks/exhaustive-deps` (warn).
 
-### Known baselines (don't try to fix in unrelated PRs)
-- **Tests**: 2 failed | 102 passed (104) — Test Files: 11 failed | 34 passed.
-  The 11 file-load failures all stem from `src/lib/supabase.js` calling
-  `createClient()` at import time without a `VITE_SUPABASE_URL` test env. The
-  2 actual test failures are in `setcode.verseTranslation`. Both are pre-
-  existing — leave alone unless your PR is specifically about them.
-- **Lint**: 27 warnings, 0 errors, all `react-hooks/exhaustive-deps`. Chip
-  away as you touch each file; don't try to fix in bulk.
+### Known baselines
+- **Tests**: clean — **157 passed (157)**, Test Files **44 passed (44)**. The
+  suite is fully green: `npm test` should report zero failures. Any failure is a
+  real regression — investigate it, do not wave it through.
+  - History: an older baseline noted "2 setcode + 11 supabase-load failures."
+    The 11 load failures came from `src/lib/supabase.js` calling `createClient()`
+    at import time without a test env; the vitest config now injects
+    `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` (`vite.config.js` `test.env`) and
+    the Supabase client moved behind an injected factory
+    (`@gracechords/core`'s `createGcSupabase`), so those no longer occur. The
+    setcode failures are also resolved. Do not reintroduce a "failures expected"
+    baseline.
+- **Lint**: clean — **0 warnings, 0 errors** (`npm run lint`). Keep it at zero;
+  fix new `react-hooks/exhaustive-deps` warnings as you introduce them.
 
 ## Coding Style & Naming Conventions
 - Indentation: 2 spaces; single quotes; prefer no semicolons (match existing files).
@@ -64,7 +101,7 @@
   intentionally not enabled. Add new rules sparingly so the hook signal stays loud.
 
 ## UI Styling (UIKit Tokens + Layout Kit)
-- Tokens live in `src/styles/tokens.css`. Always use the `--gc-*` tokens for colors, spacing, radii, and type scale.
+- Tokens live in `packages/tokens/tokens.css` (imported via `src/styles/index.css`). Always use the `--gc-*` tokens for colors, spacing, radii, and type scale.
 - Legacy aliases in `src/styles.css` map older variables (e.g., `--primary`, `--card`) to tokens. Do not introduce new hardcoded hex values.
 - Reusable UI primitives live in `src/components/ui/layout-kit/` with `gc-*` classnames and `layout-kit.css`.
 - Prefer the layout kit components (Card, InsetCard, Toolbar, SegmentedControl, Chip, Field, IconButton, PageHeader) for new UI.
@@ -96,7 +133,7 @@
 ## Design System & Properties
 
 ### Token System
-- All colours, spacing, radii, type scale, and motion values live in `src/styles/tokens.css`
+- All colours, spacing, radii, type scale, and motion values live in `packages/tokens/tokens.css`
   as `--gc-*` CSS custom properties. This file is the **single source of truth**.
 - Never introduce hardcoded hex values, `px` sizes, or timing literals anywhere in
   component or page CSS. Always reference a token.
@@ -152,13 +189,18 @@
   (`generate-seo-pages.mjs`, `generate-sitemap.mjs`). Never bundle it into the frontend.
 
 ### Cloudflare Pages
-- SPA is hosted on Cloudflare Pages. Auto-deploy fires on every push to `main` via
-  `.github/workflows/pages-deploy.yml`.
+- SPA is hosted on Cloudflare Pages via CF's Git integration.
+- **Monorepo deploy settings (CF dashboard):** root directory `apps/web`, build
+  command installs from the repo root then builds the web workspace, output
+  directory `dist` (→ `apps/web/dist`). Full settings + rationale in
+  `MONOREPO_MIGRATION.md`.
 - All `VITE_*` production env vars are set in Pages → Settings → Variables — do not
   change them without coordinating a deploy.
-- `functions/` contains Pages Functions (run server-side, no separate Worker deployment
-  required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to avoid CORS.
-- `404.html` + `BrowserRouter` together handle SPA deep-link routing.
+- `apps/web/functions/` contains Pages Functions (run server-side, no separate Worker
+  deployment required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to
+  avoid CORS, plus `api/*`. They sit at the CF root directory (`apps/web`), which is
+  why `functions/` moved with the app.
+- `apps/web/404.html` + `BrowserRouter` together handle SPA deep-link routing.
 
 ### Cloudflare R2
 - Bucket: `gracechords-bible`. Public base URL: `VITE_R2_PUBLIC_URL`.
