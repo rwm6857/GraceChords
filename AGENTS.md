@@ -1,9 +1,19 @@
 # Repository Guidelines
 
 ## Monorepo & Shared Core
-This repo is an npm-workspaces monorepo. Platform-agnostic logic lives in
-`packages/`; the web app is still at the repo root (it will move to `apps/web/`
-in a later migration step). A future Expo iOS app will live in `apps/mobile/`.
+This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`**
+(its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`,
+and `eslint.config.js` all moved there — paths elsewhere in this doc that say
+`src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
+A future Expo iOS app will live in `apps/mobile/`. The repo root holds only the
+workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
+`supabase/`, and docs.
+- Run web tasks from the repo root via the delegating scripts (`npm run dev`,
+  `npm run build`, `npm run test:run`, `npm run lint` → `-w @gracechords/web`), or
+  from inside `apps/web/` directly.
+- Cloudflare Pages root directory is `apps/web` (so `functions/` and the build
+  output are where CF expects). See `MONOREPO_MIGRATION.md` for the exact CF
+  settings.
 - `packages/core/` (`@gracechords/core`): pure, DOM-free, bundler-free TypeScript/JS
   shared across web and mobile — ChordPro **parser** (not the renderer),
   transposition, chord placement, verse refs, song metadata/sort, the setlist
@@ -179,13 +189,18 @@ in a later migration step). A future Expo iOS app will live in `apps/mobile/`.
   (`generate-seo-pages.mjs`, `generate-sitemap.mjs`). Never bundle it into the frontend.
 
 ### Cloudflare Pages
-- SPA is hosted on Cloudflare Pages. Auto-deploy fires on every push to `main` via
-  `.github/workflows/pages-deploy.yml`.
+- SPA is hosted on Cloudflare Pages via CF's Git integration.
+- **Monorepo deploy settings (CF dashboard):** root directory `apps/web`, build
+  command installs from the repo root then builds the web workspace, output
+  directory `dist` (→ `apps/web/dist`). Full settings + rationale in
+  `MONOREPO_MIGRATION.md`.
 - All `VITE_*` production env vars are set in Pages → Settings → Variables — do not
   change them without coordinating a deploy.
-- `functions/` contains Pages Functions (run server-side, no separate Worker deployment
-  required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to avoid CORS.
-- `404.html` + `BrowserRouter` together handle SPA deep-link routing.
+- `apps/web/functions/` contains Pages Functions (run server-side, no separate Worker
+  deployment required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to
+  avoid CORS, plus `api/*`. They sit at the CF root directory (`apps/web`), which is
+  why `functions/` moved with the app.
+- `apps/web/404.html` + `BrowserRouter` together handle SPA deep-link routing.
 
 ### Cloudflare R2
 - Bucket: `gracechords-bible`. Public base URL: `VITE_R2_PUBLIC_URL`.

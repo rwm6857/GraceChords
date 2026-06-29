@@ -6,8 +6,10 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // Consume packages/core as TS source (no build step). The alias points the
 // @gracechords/core specifier (and its subpaths) at the package source so
-// esbuild/Vite transpile it as part of the app graph.
-const coreSrc = fileURLToPath(new URL('./packages/core/src', import.meta.url))
+// esbuild/Vite transpile it as part of the app graph. Paths are relative to
+// apps/web/ — packages/ and the repo-root .env live two levels up.
+const coreSrc = fileURLToPath(new URL('../../packages/core/src', import.meta.url))
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
 
@@ -49,6 +51,8 @@ const injectLcpPreload = {
 export default defineConfig({
   // Keep assets rooted at the site origin for absolute public paths.
   base: '/',
+  // .env stays at the repo root (alongside .env.example), not in apps/web.
+  envDir: repoRoot,
   define: {
     __SW_VERSION__: JSON.stringify(SW_VERSION),
   },

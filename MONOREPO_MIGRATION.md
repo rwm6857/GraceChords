@@ -43,31 +43,85 @@ applies (the vitest config injects `VITE_SUPABASE_URL` and the client is behind
 `createGcSupabase`). The `AGENTS.md` "Known baselines" section has been corrected
 to reflect this — treat any test failure as a real regression.
 
-## Remaining — requires your Cloudflare dashboard (could not run from here)
+## Done — Step 4: web app moved under `apps/web/` (locally verified)
 
-These need Cloudflare account access and CF preview observation; they were not
-executed. Order matches the approved plan.
+The web app now lives in `apps/web/`. Verified after the move: `npm run test:run`
+**157/157 pass**, `vite build` emits **`apps/web/dist/`** (with `index.html`,
+`_headers`, `sw.js`, `404.html`), `npm run lint` clean, and `vite preview` serves
+the SPA (HTTP 200, deep-link `/songs/` falls back to index). CF Functions
+runtime was not exercised (wrangler not installable in the sandbox); all 8
+Functions pass `node --check` and sit at `apps/web/functions/`.
 
-1. **Build System V2 gate (Step 0).** Confirm the Pages project is on Build
-   System V2 (Settings → Build → Build system version); upgrade if on V1.
-   Monorepo support — root directory + build watch paths — requires V2. (Limit:
-   max 5 Pages projects per repository.)
-2. **Install/Functions spike (Step 0.5).** On a throwaway branch or scratch
-   Pages project with root directory = `apps/web`, prove (a) `npm ci` resolves
-   the `@gracechords/core` workspace dep for the web build (verify whether CF
-   runs install in the repo root or the project root dir, per current CF docs),
-   and (b) `functions/` at `apps/web/functions/` is auto-detected. Record the
-   working build command before any real move.
-3. **Move web app under `apps/web/` (Step 4).** `git mv` `index.html`,
-   `vite.config.js`, `src/`, `public/`, `scripts/`, `functions/`, and the web
-   `package.json` into `apps/web/`; add `"apps/*"` to root workspaces. Keep
-   `functions/` and `public/_headers` at `apps/web/`'s root. `workers/` stays at
-   repo root.
-4. **CF Pages config cutover (Step 5).** Root directory → `apps/web`; build
-   command → the Step 0.5-proven command; output directory → `dist`. Validate on
-   a per-branch preview (SPA routes, `/bible/*`, `/pptx/*`, `/api/*`) before
-   merging to the production branch.
-5. **Mobile placeholder + watch paths (Step 6).** Add empty `apps/mobile/`.
-   Set CF build watch paths (relative to repo root): **Exclude `apps/mobile/*`**,
-   Include default. Mobile-only commits then skip the web build; `packages/**`
-   and `apps/web/**` still rebuild it.
+- **Moved into `apps/web/`** via `git mv`: `index.html`, `404.html`,
+  `vite.config.js`, `eslint.config.js`, `src/`, `public/` (with `_headers`),
+  `scripts/`, `functions/`, and the web `package.json`. `404.html` and
+  `eslint.config.js` were not in the original list but had to move (the former is
+  copied by `viteStaticCopy`; the latter keeps flat-config base-path aligned with
+  the web lint cwd).
+- **Stayed at repo root:** `packages/`, `workers/`, `supabase/`, the workspace
+  `package.json`, and `package-lock.json`.
+- **package.json split:** the old root manifest became `apps/web/package.json`
+  (`@gracechords/web`, with `@gracechords/core` + `@gracechords/tokens` as
+  workspace deps); a new root `package.json` (`gracechords-monorepo`) holds
+  `"workspaces": ["apps/*","packages/*"]` and delegating scripts
+  (`npm run build` → `-w @gracechords/web`, etc.).
+- **Paths fixed for the new depth:**
+  - `apps/web/vite.config.js`: `@gracechords/core` alias → `../../packages/core/src`;
+    added `envDir` → repo root so the root `.env` (next to `.env.example`) still loads.
+  - `apps/web/src/styles/index.css`: token import switched to the package
+    specifier `@gracechords/tokens/tokens.css` (move-stable, no relative depth).
+  - `apps/web/scripts/generate-seo-pages.mjs` and `generate-sitemap.mjs`: now
+    resolve paths from `import.meta.url` (not `process.cwd()`) — `dist`/`src`/
+    `public` from `apps/web/`, `.env` from the repo root — so they are
+    cwd-independent (same pattern `i18n-check.mjs` already used).
+  - `functions/` import only each other (`../_shared.js`) and no `src`/`packages`
+    paths, so they needed no edits.
+
+## Cloudflare Pages settings to apply (dashboard) — Step 5 cutover
+
+Build System is **V3** (confirmed), so monorepo root-directory + build watch
+paths are available. Apply these in **Pages → Settings → Builds & deployments**.
+
+| Setting | Value |
+|---|---|
+| **Root directory** | `apps/web` |
+| **Build command** | `cd ../.. && npm ci && npm run build -w @gracechords/web` |
+| **Build output directory** | `dist`  *(relative to root directory → `apps/web/dist`)* |
+| **Functions** | auto-detected at `apps/web/functions/` (it sits at the root directory) |
+| **Env vars** | unchanged — already set in Pages → Variables (`VITE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_R2_PUBLIC_URL`/`BIBLE_CDN_URL`, bot tokens) |
+| **Node version** | ensure 18+ (Vite 7). CF V3 default is fine; pin via `NODE_VERSION` env or a `.node-version` file if a build picks an older Node. |
+
+**Why this build command.** Root directory must be `apps/web` so CF finds
+`functions/` and the `dist/` output there. But the npm **lockfile and the
+`@gracechords/*` workspace links live at the repo root**, and the web's
+`"@gracechords/core": "*"` / `"@gracechords/tokens": "*"` deps only resolve when
+npm runs at the workspace root. So the build command `cd ../..` to the repo root,
+runs `npm ci` (installs all workspaces from the root lockfile, hoisting
+`node_modules` to the root and creating the `@gracechords/*` symlinks), then
+`npm run build -w @gracechords/web` (npm runs the web build with cwd =
+`apps/web`, so `vite build` → `apps/web/dist` and the SEO scripts resolve via
+`import.meta.url`). Node's module resolution walks up to the root `node_modules`,
+so building from `apps/web` finds the hoisted deps.
+
+> **First-deploy check (the one thing the skipped spike would have confirmed):**
+> watch the build log to confirm the install step resolves `@gracechords/core`
+> (no "404 Not Found" for `@gracechords/*`). If CF's *automatic* pre-build
+> install runs inside `apps/web` and fails on the `*` workspace specifiers before
+> the build command runs, the workspace deps aren't resolving at the root — in
+> that case rely solely on the `cd ../.. && npm ci` in the build command (it
+> installs correctly at the root). The `cd ../..` form above is written to be
+> self-sufficient regardless of CF's auto-install behavior.
+
+**Validate on a per-branch preview before merging to the production branch:**
+push this branch, open the CF `*.pages.dev` preview, and check SPA routes load,
+deep links resolve (`/songs/...`), and Functions respond: `/bible/<lang>/<id>`,
+`/pptx/<slug>.pptx`, and an `/api/*` endpoint. Only then point the production
+branch at the new settings.
+
+## Remaining after cutover
+
+- **Mobile placeholder + watch paths (Step 6).** Add an empty `apps/mobile/`.
+  Set CF build watch paths (evaluated relative to the repo root): **Exclude
+  `apps/mobile/*`**, Include default. Mobile-only commits then skip the web
+  build; `packages/**` and `apps/web/**` still rebuild it. (Verified CF semantics:
+  excludes cover nested paths and `*` spans `/`.)

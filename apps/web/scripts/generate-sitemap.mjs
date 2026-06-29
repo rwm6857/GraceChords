@@ -1,14 +1,18 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
 const BASE_URL = 'https://gracechords.com'
-const root = process.cwd()
+// Resolve paths from this script's location, not process.cwd(). scriptDir = apps/web/scripts.
+const scriptDir = path.dirname(fileURLToPath(import.meta.url))
+const root = path.resolve(scriptDir, '..')                 // apps/web (dist, src)
+const repoRoot = path.resolve(scriptDir, '..', '..', '..') // monorepo root (.env)
 const outPath = path.join(root, 'dist', 'sitemap.xml')
 
 async function loadDotEnv() {
   try {
-    const txt = await fs.readFile(path.join(root, '.env'), 'utf8')
+    const txt = await fs.readFile(path.join(repoRoot, '.env'), 'utf8')
     for (const line of txt.split('\n')) {
       const trimmed = line.trim()
       if (!trimmed || trimmed.startsWith('#')) continue
