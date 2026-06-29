@@ -5,8 +5,9 @@ This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`*
 (its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`,
 and `eslint.config.js` all moved there — paths elsewhere in this doc that say
 `src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
-A future Expo iOS app will live in `apps/mobile/`. The repo root holds only the
-workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
+A future Expo iOS app will live in `apps/mobile/` — currently an empty workspace
+placeholder (no Expo/React Native, no deps, in no build). The repo root holds
+only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
 `supabase/`, and docs.
 - Run web tasks from the repo root via the delegating scripts (`npm run dev`,
   `npm run build`, `npm run test:run`, `npm run lint` → `-w @gracechords/web`), or

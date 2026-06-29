@@ -118,10 +118,34 @@ deep links resolve (`/songs/...`), and Functions respond: `/bible/<lang>/<id>`,
 `/pptx/<slug>.pptx`, and an `/api/*` endpoint. Only then point the production
 branch at the new settings.
 
-## Remaining after cutover
+## Done — Step 6 (repo work): `apps/mobile/` placeholder (locally verified)
 
-- **Mobile placeholder + watch paths (Step 6).** Add an empty `apps/mobile/`.
-  Set CF build watch paths (evaluated relative to the repo root): **Exclude
-  `apps/mobile/*`**, Include default. Mobile-only commits then skip the web
-  build; `packages/**` and `apps/web/**` still rebuild it. (Verified CF semantics:
-  excludes cover nested paths and `*` spans `/`.)
+Added an empty `apps/mobile/` workspace placeholder — **no Expo/React Native, no
+dependencies, in no build**:
+- `apps/mobile/package.json` — `@gracechords/mobile`, `private`, version `1.0.0`,
+  no dependencies, no scripts.
+- `apps/mobile/README.md` — states it is a reserved placeholder and that no Expo
+  work has begun.
+
+It is already covered by the root `"workspaces": ["apps/*","packages/*"]` glob
+(`npm query .workspace` lists `@gracechords/mobile`; it linked at
+`node_modules/@gracechords/mobile`). Adding it did not change the web app: after
+`npm install`, `npm run test:run` = **157/157**, `npm run lint` clean, and
+`vite build` still emits **`apps/web/dist/`** (`index.html` + `_headers`).
+
+### Cloudflare Pages — Build watch paths to apply (dashboard)
+
+In **Pages → Settings → Builds & deployments → Build watch paths**:
+
+| Field | Value |
+|---|---|
+| **Exclude paths** | `apps/mobile/*` |
+| **Include paths** | default (`*`) |
+
+A commit touching only `apps/mobile/**` then **skips** the web build, while
+changes under `packages/**` and `apps/web/**` still **trigger** it. (Watch paths
+are evaluated relative to the repo root; excludes cover nested paths and `*`
+spans `/`, so the single `apps/mobile/*` entry fully scopes out the mobile app.)
+
+> Out of scope here: any Expo/React Native setup and applying the watch-paths
+> setting in the dashboard (that one's yours).
