@@ -1,5 +1,5 @@
 // Render a song to PDF (always) and JPG (best-effort). The pure PDF engine
-// from src/utils/pdf_mvp/pure.js is imported directly across the monorepo;
+// from apps/web/src/utils/pdf_mvp/pure.js is imported directly across the monorepo;
 // wrangler bundles it. Fonts fall back to jsPDF's built-in Helvetica/Courier
 // because Noto TTFs (~3.3 MB total) would bust the free-tier 3 MiB worker
 // budget — chord charts remain legible. See plan for the trade-off note.
@@ -9,7 +9,7 @@
 // encoder needed). If the WASM rasteriser fails to initialise the caller
 // gets `null` back and should send the PDF via sendDocument instead.
 
-import { renderSingleSongPdfBuffer, renderMultiSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
+import { renderSingleSongPdfBuffer, renderMultiSongPdfBuffer } from '../../../apps/web/src/utils/pdf_mvp/pure.js'
 import { makeFontRegistrar } from './fontsWorker.js'
 // Bundle the pdfium WASM at deploy time. Workers block
 // WebAssembly.instantiate(buffer); only pre-compiled WebAssembly.Module
@@ -36,8 +36,8 @@ if (typeof globalThis.window === 'undefined') {
 // symbols verbatim) — the site does it in SongViewPage; we do it here.
 async function toRenderableSong(song, key) {
   const [{ parseChordProOrLegacy }, { stepsBetween, transposeSymPrefer }] = await Promise.all([
-    import('../../../src/utils/chordpro/parser.ts'),
-    import('../../../src/utils/chordpro/index.js'),
+    import('../../../apps/web/src/utils/chordpro/parser.ts'),
+    import('../../../apps/web/src/utils/chordpro/index.js'),
   ])
   const parsed = parseChordProOrLegacy(song.chordpro_content || '')
   const originalKey = song.default_key || parsed.meta?.key || ''
