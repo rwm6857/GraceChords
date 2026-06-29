@@ -5,8 +5,12 @@ This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`*
 (its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`,
 and `eslint.config.js` all moved there — paths elsewhere in this doc that say
 `src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
-A future Expo iOS app will live in `apps/mobile/` — currently an empty workspace
-placeholder (no Expo/React Native, no deps, in no build). The repo root holds
+The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`) — an Expo SDK 55
++ Expo Router v7 vertical slice that consumes `@gracechords/core` and Supabase
+auth natively. **See [`apps/mobile/AGENTS.md`](./apps/mobile/AGENTS.md) for all
+mobile-specific conventions** (Metro monorepo resolution, CNG, env, Supabase
+wiring); it is the single mobile sub-doc — do not add competing instruction files
+under `apps/mobile/`. The repo root holds
 only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
 `supabase/`, and docs.
 - Run web tasks from the repo root via the delegating scripts (`npm run dev`,

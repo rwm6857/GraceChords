@@ -20,9 +20,16 @@ export * from './songs/instrumental'
 export * from './songs/verseRef'
 export * from './songs/songMetadata'
 export * from './songs/sort'
+export * from './songs/songsRepo'
 
 // Setlist codec
 export * from './setlists/setcode'
 
 // Role hierarchy
 export * from './rbac/roles'
+
+// Supabase factory (createGcSupabase). Web imports it via the
+// '@gracechords/core/supabase/client' subpath, which works under Vite; exposing
+// it on the barrel too lets Metro (React Native) consume the same factory
+// without the extensionless subpath its package-exports resolver rejects.
+export * from './supabase/client'
