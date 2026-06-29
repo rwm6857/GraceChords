@@ -61,5 +61,18 @@ binding = "AI"
 [alias]
 "jspdf" = "./node_modules/jspdf"
 
+# The shared ChordPro parser / transposition / song logic now lives in the
+# @gracechords/core workspace package (packages/core). The worker's own
+# `npm clean-install` only installs this package.json's deps, so the
+# workspace symlink that would normally resolve `@gracechords/core/*` is
+# absent and esbuild fails with "Could not resolve '@gracechords/core/...'".
+# Point the package and its subpaths straight at the source — esbuild
+# resolves the .js/.ts extensions. Wrangler's alias matches specifiers
+# exactly (no subpath/directory aliasing), so each subpath the worker pulls
+# in via the src/utils compatibility shims is listed explicitly.
+"@gracechords/core/chordpro/index.js" = "../../packages/core/src/chordpro/index.js"
+"@gracechords/core/chordpro/parser" = "../../packages/core/src/chordpro/parser.ts"
+"@gracechords/core/songs/instrumental" = "../../packages/core/src/songs/instrumental.js"
+
 [observability]
 enabled = true
