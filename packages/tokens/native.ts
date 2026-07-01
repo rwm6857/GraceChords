@@ -10,6 +10,17 @@
 
 export type ThemeMode = 'light' | 'dark'
 
+/**
+ * A vertical linear gradient: `colors` paired with `locations` (0–1 stops).
+ * React Native has no radial gradient, so the atmospheric hero is expressed as
+ * a vertical linear gradient plus a separate soft highlight overlay (heroGlow).
+ */
+export type Gradient = {
+  // Tuple types (≥2 stops) so these satisfy expo-linear-gradient's props directly.
+  colors: readonly [string, string, ...string[]]
+  locations: readonly [number, number, ...number[]]
+}
+
 export type ThemeColors = {
   /** Page background (the surface the list scrolls on). */
   bg: string
@@ -35,6 +46,13 @@ export type ThemeColors = {
   onAccent: string
   /** Dimmed color for inactive scrubber letters. */
   off: string
+  /**
+   * The atmospheric hero gradient (Home) — the one sanctioned gradient, an
+   * atmospheric header, never a UI-surface gradient.
+   */
+  heroGradient: Gradient
+  /** Soft top-center highlight overlaid on the hero to hint the radial glow. */
+  heroGlow: string
 }
 
 export const lightColors: ThemeColors = {
@@ -50,6 +68,11 @@ export const lightColors: ThemeColors = {
   border: '#E3E8EC',
   onAccent: '#FFFFFF',
   off: 'rgba(138,146,155,0.45)',
+  heroGradient: {
+    colors: ['#BFD3E3', '#CFE0EA', '#E3EDF2', '#F5F7F9'],
+    locations: [0, 0.34, 0.72, 1],
+  },
+  heroGlow: 'rgba(255,255,255,0.55)',
 }
 
 export const darkColors: ThemeColors = {
@@ -65,6 +88,11 @@ export const darkColors: ThemeColors = {
   border: '#2A3036',
   onAccent: '#14171A',
   off: 'rgba(124,133,142,0.5)',
+  heroGradient: {
+    colors: ['#1C2A36', '#18222A', '#15191D', '#14171A'],
+    locations: [0, 0.38, 0.78, 1],
+  },
+  heroGlow: 'rgba(78,166,230,0.18)',
 }
 
 /** 4-pt spacing scale (shared across modes). */
