@@ -70,6 +70,7 @@ hardcode token values in either app.
 - **Security first.** Never introduce command injection, XSS, SQL injection, or other OWASP Top 10 issues. Fix insecure code when you spot it.
 - **No half-finished implementations.** If a feature can't be completed safely in the current change, leave existing code intact and raise the gap explicitly.
 - **Prefer editing existing files over creating new ones.** Never commit `.env` or secrets.
+- **Don't offer to watch, subscribe to, auto-respond to, or autofix PRs, and don't ask to.** Creating and pushing the PR is the end of the task; the maintainer drives it from there.
 
 ## Branching, commits & PRs
 - Development branches follow `claude/<short-description>-<id>`.
