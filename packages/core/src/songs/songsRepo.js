@@ -26,3 +26,26 @@ export async function fetchSongList(client, opts = {}) {
   if (error) throw error
   return data || []
 }
+
+/**
+ * Fetch a single non-deleted song by slug, including its renderable
+ * ChordPro body. Returns the raw Supabase row, or null when not found.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} client
+ * @param {string} slug
+ * @param {{ columns?: string }} [opts] - override the selected columns.
+ * @returns {Promise<{ id: string, slug: string, title: string, artist: string|null, default_key: string|null, time_signature: string|null, tempo: number|null, chordpro_content: string|null }|null>}
+ */
+export async function fetchSongBySlug(client, slug, opts = {}) {
+  const columns =
+    opts.columns ||
+    'id, slug, title, artist, default_key, time_signature, tempo, chordpro_content'
+  const { data, error } = await client
+    .from('songs')
+    .select(columns)
+    .eq('slug', slug)
+    .eq('is_deleted', false)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
