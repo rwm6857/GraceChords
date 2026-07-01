@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { errMessage } from './errors'
 import type { Song } from './useSongList'
 
 // The fields the Home "Starred songs" rows need. A subset of the full Song.
@@ -8,22 +9,14 @@ export type StarredSong = Pick<
   'id' | 'slug' | 'title' | 'artist' | 'default_key' | 'time_signature'
 >
 
-// The current schema (20260305_songs_migration.sql) stores
-// user_starred_songs.song_id as a uuid FK to songs.id, so one embedded select
-// returns each starred song's metadata directly, newest star first. RLS already
-// scopes the read to the signed-in user; we also pass the explicit user_id
-// filter (mirrors the web's ProfilePage query) and to short-circuit when signed
-// out. Read-only: starring/unstarring is a later feature.
-const STAR_SELECT =
-  'songs!inner(id, slug, title, artist, default_key, time_signature)'
+const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
 
-// Supabase types an embedded relation as either an object or an array depending
-// on inference; normalize both.
-function pickSong(row: { songs: StarredSong | StarredSong[] }): StarredSong | null {
-  const s = Array.isArray(row.songs) ? row.songs[0] : row.songs
-  return s ?? null
-}
-
+// Read the current user's starred songs. Two steps rather than a PostgREST embed
+// (`songs!inner(...)`): first the star rows (newest first), then the songs by id.
+// This avoids any relationship-embedding ambiguity and reuses the plain songs
+// select. `user_starred_songs.song_id` is a uuid FK to `songs.id`; RLS scopes the
+// star read to the signed-in user. Read-only — starring/unstarring is a later
+// feature.
 export function useStarredSongs() {
   const [songs, setSongs] = useState<StarredSong[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,20 +35,44 @@ export function useStarredSongs() {
           }
           return
         }
-        const { data, error: qErr } = await supabase
+
+        const { data: stars, error: starsErr } = await supabase
           .from('user_starred_songs')
-          .select(STAR_SELECT)
+          .select('song_id, created_at')
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
-        if (qErr) throw qErr
-        const rows = (data ?? []) as unknown as { songs: StarredSong | StarredSong[] }[]
-        const mapped = rows.map(pickSong).filter((s): s is StarredSong => s != null)
+        if (starsErr) throw starsErr
+
+        const ids = (stars ?? []).map((r: { song_id: string }) => r.song_id)
+        if (ids.length === 0) {
+          if (alive) {
+            setSongs([])
+            setError(null)
+          }
+          return
+        }
+
+        const { data: rows, error: songsErr } = await supabase
+          .from('songs')
+          .select(SONG_COLUMNS)
+          .in('id', ids)
+          .eq('is_deleted', false)
+        if (songsErr) throw songsErr
+
+        // Preserve the star order (newest first) from the first query.
+        const byId = new Map(
+          (rows ?? []).map((s) => [(s as StarredSong).id, s as StarredSong]),
+        )
+        const ordered = ids
+          .map((id) => byId.get(id))
+          .filter((s): s is StarredSong => s != null)
+
         if (alive) {
-          setSongs(mapped)
+          setSongs(ordered)
           setError(null)
         }
       } catch (err: unknown) {
-        if (alive) setError(err instanceof Error ? err.message : String(err))
+        if (alive) setError(errMessage(err))
       } finally {
         if (alive) setLoading(false)
       }

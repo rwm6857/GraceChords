@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchSongList } from '@gracechords/core'
 import { supabase } from './supabase'
+import { errMessage } from './errors'
 
 // Shape of a song row as the Library needs it. The base fetchSongList selects
 // only id/slug/title/artist/default_key, so we widen the column list to also
@@ -38,7 +39,7 @@ export function useSongList() {
         }
       })
       .catch((err: unknown) => {
-        if (alive) setError(err instanceof Error ? err.message : String(err))
+        if (alive) setError(errMessage(err))
       })
       .finally(() => {
         if (alive) setLoading(false)
