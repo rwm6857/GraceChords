@@ -7,9 +7,16 @@ doc first.
 
 ## What this is
 
-A native (Expo / React Native) client for GraceChords, scaffolded as a thin
-vertical slice that proves the shared `@gracechords/core` package and Supabase
-auth run on-device. It is intentionally minimal — **not** the real/native UI.
+A native (Expo / React Native) client for GraceChords. It carries real UI built
+from the design reference: a themed four-tab shell, the **Song Library** and
+**Home** screens, a placeholder **Song Viewer** route, and an
+**authenticated-only** route gate. Build new screens on the shared theme +
+primitives below — don't add one-off styles or hardcoded colors where a
+primitive/token fits.
+
+Design source: `gc-ios-design-reference/` (repo root). Follow its
+non-negotiables — HIG/UIKit over the mockups, **SF Symbols only**, and translate
+the visual rather than porting the HTML/CSS.
 
 ## Stack
 
@@ -20,6 +27,10 @@ auth run on-device. It is intentionally minimal — **not** the real/native UI.
 - **Continuous Native Generation (CNG).** `ios/` and `android/` are **gitignored
   and never committed** — regenerate them with `npx expo prebuild`. Treat
   `app.json` (+ config plugins) as the source of truth for native config.
+- **UI deps:** `expo-symbols` (SF Symbols), `expo-linear-gradient` (the Home
+  hero), `expo-splash-screen` (auth-gate hold). Add Expo deps with
+  `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
+  version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
 
 ## Commands (run from `apps/mobile/`)
 
@@ -61,7 +72,61 @@ Mobile uses core's exports only. If a query/util is missing, add an **additive**
 export to `packages/core` (see `songs/songsRepo.js` → `fetchSongList`); never
 duplicate logic here and never edit core internals to suit mobile.
 
-## Out of scope (this slice)
+## Theme & tokens
 
-Reimagined native UI, tablet master-detail, Google OAuth (see the `TODO: OAuth`
-in `src/screens/LoginScreen.tsx`), EAS Build / TestFlight, Android, GraceTracks.
+- Colors/spacing/radii/type come from `@gracechords/tokens/native`
+  (`packages/tokens/native.ts`) — the iOS Signal-blue palette, light + dark.
+  **Never hardcode hex values** in the app.
+- Consume via `useTheme()` from `src/theme/ThemeProvider.tsx`
+  (`const t = useTheme()` → `t.colors.*`, `t.spacing.*`, `t.radii.*`,
+  `t.typography.*`). The provider follows the system scheme (`app.json`
+  `userInterfaceStyle: automatic`); **both light and dark must look correct**.
+- New shared token values (e.g. the hero gradient) go in `native.ts`, not inline.
+
+## Primitives & UI conventions
+
+- Reusable primitives live in `src/components/`: `Screen`, `Button`, `Card`,
+  `ListRow`, `Chip`, `SectionHeader`. Prefer them over bespoke views.
+- **Icons are SF Symbols only**, via `src/components/SymbolIcon.tsx` (wraps
+  `expo-symbols`) — no hand-drawn/SVG glyphs. SF Symbols render on iOS/iPadOS only
+  (the current target).
+- Gradients use `expo-linear-gradient` with tokens from `native.ts`
+  (`heroGradient`/`heroGlow`). The atmospheric Home hero is the **only** sanctioned
+  gradient — never a UI-surface gradient. (RN has no radial gradient; the hero
+  approximates it with a linear gradient + a soft glow overlay.)
+- Screens live in `src/screens/`; route files under `app/` are thin wrappers that
+  render them.
+
+## Routing, screens & auth
+
+- `app/(tabs)/_layout.tsx` — the four-tab shell (Home · Songs · Setlists · Daily
+  Word), `headerShown:false` (screens draw their own large-title headers).
+- `app/viewer/[slug].tsx` — Song Viewer, **outside** the tab group (pushes over the
+  shell); currently a placeholder. `app/login.tsx` — the auth screen.
+- **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
+  session (redirect to `/login` when signed out, into the tabs when signed in) and
+  holds the native splash (`expo-splash-screen`) until the session resolves *and*
+  the correct screen is mounted, so nothing flashes on first open. Session persists
+  via AsyncStorage until uninstall — don't add proactive sign-outs.
+
+## Data & stubs
+
+- Song data uses core's `fetchSongList` (widen columns via its `opts.columns`);
+  screen data hooks live in `src/lib/` (`useSongList`, `useStarredSongs`).
+- **Stars** are per-user Supabase data — table `user_starred_songs` (`song_id` is a
+  uuid FK to `songs.id`, RLS-scoped to `auth.uid()`). `useStarredSongs` reads them
+  via an inline joined query (read-only for now; starring/unstarring is later). This
+  inline query is the **one sanctioned exception** to "queries live in core" — kept
+  in mobile to avoid a core change; promote it to core when stars grow.
+- **Local history is stubbed.** `src/lib/recents.ts` (`getRecentlyOpened`,
+  `getLastSet`) returns empty and will be backed by the on-device history / setlist
+  layer shipping with the Setlist Builder — consume the stubs, don't mock data.
+  Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
+
+## Out of scope (for now)
+
+The real Song Viewer (chord chart), the Setlists & Daily Word/Reader screens
+(placeholders today), the on-device history/setlist storage layer + star writes,
+the full Auth screen redesign / Google OAuth (see the `TODO: OAuth` in
+`src/screens/LoginScreen.tsx`), tablet master-detail, EAS Build / TestFlight,
+Android, GraceTracks.
