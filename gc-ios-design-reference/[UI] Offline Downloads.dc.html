@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; -webkit-font-smoothing:antialiased; }
+    @keyframes odSpin { to { transform:rotate(360deg); } }
+  </style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+
+    <!-- header -->
+    <div style="padding:54px var(--safe-x) 4px;background:var(--bg);position:relative;z-index:4;">
+      <button onClick="{{ onBack }}" aria-label="Back to Settings" style="display:inline-flex;align-items:center;gap:3px;background:transparent;border:0;padding:4px 0;color:var(--accent);cursor:pointer;">
+        <svg width="11" height="18" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5 2 8l5.5 6.5"></path></svg>
+        <span style="font-size:16px;font-weight:500;letter-spacing:-0.2px;">Settings</span>
+      </button>
+      <div style="font-size:30px;font-weight:700;letter-spacing:-0.5px;color:var(--ink);margin-top:6px;">Offline &amp; Downloads</div>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:auto;padding:14px var(--safe-x) 30px;">
+
+      <!-- storage summary -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;">
+          <span style="font-size:15px;font-weight:600;color:var(--ink);">Translations on this device</span>
+          <span style="font-size:15px;font-weight:700;color:var(--ink);">{{ totalLabel }}</span>
+        </div>
+        <div style="margin-top:12px;height:7px;border-radius:9999px;background:var(--surfaceAlt);overflow:hidden;">
+          <div style="{{ usageBarStyle }}"></div>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:9px;">{{ usageSub }}</div>
+      </div>
+
+      <!-- in progress -->
+      <sc-if value="{{ hasBusy }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:24px;">Downloading</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <sc-for list="{{ busyRows }}" as="r" hint-placeholder-count="1">
+            <div style="{{ r.rowStyle }}">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:16px;font-weight:500;letter-spacing:-0.2px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</div>
+                <div style="height:5px;border-radius:9999px;background:var(--surfaceAlt);overflow:hidden;margin-top:8px;"><div style="{{ r.barStyle }}"></div></div>
+                <div style="font-size:12px;color:var(--muted);margin-top:6px;">{{ r.pctLabel }}</div>
+              </div>
+              <button onClick="{{ r.onCancel }}" aria-label="Cancel download" style="flex:none;width:30px;height:30px;border-radius:9999px;background:var(--surfaceAlt);border:0;display:flex;align-items:center;justify-content:center;color:var(--sec);cursor:pointer;">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- downloaded -->
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:24px;">On this device · {{ downloadedCount }}</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+        <sc-for list="{{ downloadedRows }}" as="r" hint-placeholder-count="3">
+          <div style="{{ r.rowStyle }}">
+            <span style="flex:none;display:flex;align-items:center;justify-content:center;color:var(--accent);"><svg width="23" height="23" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor"></circle><path d="M12 7.8v8.4M8.4 12.4 12 16l3.6-3.6" fill="none" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+            <div style="flex:1;min-width:0;"><div style="font-size:16px;font-weight:500;letter-spacing:-0.2px;color:var(--ink);">{{ r.name }}</div><div style="font-size:12.5px;color:var(--muted);margin-top:1px;">{{ r.sub }}</div></div>
+            <button onClick="{{ r.onRemove }}" aria-label="Delete download" style="flex:none;width:32px;height:32px;border-radius:9999px;background:transparent;border:0;display:flex;align-items:center;justify-content:center;color:var(--danger);cursor:pointer;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16"></path><path d="M9 6.5V5.2A1.6 1.6 0 0 1 10.6 3.6h2.8A1.6 1.6 0 0 1 15 5.2V6.5"></path><path d="M6.7 6.5l.7 12.1a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.7-12.1"></path><path d="M10 10v6M14 10v6"></path></svg>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- available -->
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:24px;">Available to download</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+        <sc-for list="{{ availableRows }}" as="r" hint-placeholder-count="3">
+          <div onClick="{{ r.onDownload }}" role="button" style="{{ r.rowStyle }}">
+            <div style="flex:1;min-width:0;"><div style="font-size:16px;font-weight:500;letter-spacing:-0.2px;color:var(--ink);">{{ r.name }}</div><div style="font-size:12.5px;color:var(--muted);margin-top:1px;">{{ r.sub }}</div></div>
+            <span style="flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;color:var(--accent);"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.8v8.4M8.4 12.4 12 16l3.6-3.6"></path></svg></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- options -->
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:24px;">Options</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+        <div style="display:flex;align-items:center;gap:12px;padding:0 16px;min-height:54px;">
+          <span style="flex:1;font-size:16px;letter-spacing:-0.2px;color:var(--ink);">Download over Wi-Fi only</span>
+          <button onClick="{{ toggleWifi }}" aria-label="Wi-Fi only" style="{{ wifiTrackStyle }}"><span style="{{ wifiKnobStyle }}"></span></button>
+        </div>
+      </div>
+      <div style="font-size:12.5px;line-height:1.5;color:var(--muted);padding:8px 16px 0;">Downloaded translations stay readable with no connection. Daily devotionals from The Gospel Coalition stream over the network and aren't stored offline.</div>
+
+    </div>
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dl: { ESV:'on', KJV:'on', NIV:'off', NLT:'busy', KEH:'on', SVD:'off', NTB:'off' },
+      prog: { NLT: 62 },
+      wifiOnly: true,
+    };
+    this._timers = {};
+  }
+  componentWillUnmount() { Object.values(this._timers).forEach(clearInterval); }
+
+  download(code) {
+    if (this.state.dl[code] === 'on' || this.state.dl[code] === 'busy') return;
+    this.setState(s => ({ dl: Object.assign({}, s.dl, { [code]:'busy' }), prog: Object.assign({}, s.prog, { [code]: 0 }) }));
+    clearInterval(this._timers[code]);
+    this._timers[code] = setInterval(() => {
+      this.setState(s => {
+        const p = Math.min(100, (s.prog[code] || 0) + 9);
+        if (p >= 100) {
+          clearInterval(this._timers[code]);
+          const dl = Object.assign({}, s.dl, { [code]:'on' });
+          const prog = Object.assign({}, s.prog); delete prog[code];
+          return { dl, prog };
+        }
+        return { prog: Object.assign({}, s.prog, { [code]: p }) };
+      });
+    }, 95);
+  }
+  remove(code) {
+    clearInterval(this._timers[code]);
+    this.setState(s => {
+      const prog = Object.assign({}, s.prog); delete prog[code];
+      return { dl: Object.assign({}, s.dl, { [code]:'off' }), prog };
+    });
+  }
+
+  renderVals() {
+    const dark = !!this.props.dark;
+    const L = { bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4', ink:'#1E2227', sec:'#5C656F', muted:'#8A929B', accent:'#1F84C9', accentSoft:'#D9EAF6', textAccent:'#15619A', border:'#E3E8EC', danger:'#E5484D', onAccent:'#FFFFFF' };
+    const D = { bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30', ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E', accent:'#4EA6E6', accentSoft:'#243340', textAccent:'#6FB6EA', border:'#2A3036', danger:'#FF6B6B', onAccent:'#14171A' };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,'--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--textAccent':t.textAccent,'--border':t.border,'--danger':t.danger,'--onAccent':t.onAccent,
+      '--r-card':'14px','--safe-x':'18px',
+      position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:t.bg, fontFamily:'-apple-system, system-ui, sans-serif',
+    };
+
+    const META = [
+      { code:'ESV', name:'English Standard Version', lang:'English', mb:9.4 },
+      { code:'KJV', name:'King James Version', lang:'English', mb:8.1 },
+      { code:'NIV', name:'New International Version', lang:'English', mb:9.8 },
+      { code:'NLT', name:'New Living Translation', lang:'English', mb:9.1 },
+      { code:'KEH', name:'Ketab El Hayat', lang:'Arabic', mb:11.0 },
+      { code:'SVD', name:'Smith Van Dyck', lang:'Arabic', mb:10.0 },
+      { code:'NTB', name:'Yeni Çeviri', lang:'Turkish', mb:7.6 },
+    ];
+    const stOf = (c) => this.state.dl[c] || 'off';
+    const rowBase = (i) => ({ display:'flex', alignItems:'center', gap:'12px', padding:'12px 16px', minHeight:'54px', borderTop: i === 0 ? '0' : ('1px solid ' + t.border), boxSizing:'border-box' });
+
+    const downloaded = META.filter(m => stOf(m.code) === 'on');
+    const busy = META.filter(m => stOf(m.code) === 'busy');
+    const available = META.filter(m => stOf(m.code) === 'off');
+
+    const downloadedRows = downloaded.map((m, i) => ({
+      name: m.name, sub: m.lang + ' · ' + m.mb.toFixed(1) + ' MB',
+      rowStyle: rowBase(i), onRemove: () => this.remove(m.code),
+    }));
+    const availableRows = available.map((m, i) => ({
+      name: m.name, sub: m.lang + ' · ' + m.mb.toFixed(1) + ' MB',
+      rowStyle: Object.assign(rowBase(i), { cursor:'pointer' }), onDownload: () => this.download(m.code),
+    }));
+    const busyRows = busy.map((m, i) => {
+      const p = this.state.prog[m.code] || 0;
+      return {
+        name: m.name, pctLabel: Math.round(p) + '%  ·  ' + m.mb.toFixed(1) + ' MB',
+        rowStyle: Object.assign(rowBase(i), { alignItems:'center' }),
+        barStyle: { height:'100%', width: p + '%', background: t.accent, borderRadius:'9999px', transition:'width .12s linear' },
+        onCancel: () => this.remove(m.code),
+      };
+    });
+
+    const totalMB = downloaded.reduce((a, m) => a + m.mb, 0);
+    const capMB = 80;
+    const usagePct = Math.min(100, Math.round((totalMB / capMB) * 100));
+
+    return {
+      dark, rootStyle,
+      onBack: this.props.onBack || (() => {}),
+      totalLabel: totalMB.toFixed(1) + ' MB',
+      usageSub: downloaded.length + ' of ' + META.length + ' translations downloaded',
+      usageBarStyle: { height:'100%', width: usagePct + '%', background: t.accent, borderRadius:'9999px' },
+      hasBusy: busy.length > 0, busyRows,
+      downloadedRows, downloadedCount: downloaded.length,
+      availableRows,
+      toggleWifi: () => this.setState(s => ({ wifiOnly: !s.wifiOnly })),
+      wifiTrackStyle: { position:'relative', width:'51px', height:'31px', border:0, padding:0, borderRadius:'9999px', flex:'none', cursor:'pointer', background: this.state.wifiOnly ? t.accent : (dark ? '#3A4048' : '#E3E6E9') },
+      wifiKnobStyle: { position:'absolute', top:'2px', left: this.state.wifiOnly ? '22px' : '2px', width:'27px', height:'27px', borderRadius:'9999px', background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,.25)', transition:'left .16s ease' },
+    };
+  }
+}
+</script>
+</body>
+</html>

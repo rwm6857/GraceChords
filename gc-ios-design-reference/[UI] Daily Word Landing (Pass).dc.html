@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; -webkit-font-smoothing:antialiased; }
+    @keyframes dwlFade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+  </style>
+</helmet>
+
+<!-- ===== LANDING ===== -->
+<sc-if value="{{ screenLanding }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+    <div style="flex:1;min-height:0;overflow:auto;padding:58px 22px 18px;">
+
+      <!-- header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.3px;color:var(--muted);">Tuesday, June 30</div>
+          <div style="font-family:ui-serif,'New York',Georgia,'Times New Roman',serif;font-size:30px;font-weight:700;letter-spacing:-0.4px;color:var(--ink);margin-top:3px;">Daily Word</div>
+        </div>
+        <button aria-label="Calendar" style="flex:none;width:38px;height:38px;border-radius:9999px;background:var(--surfaceAlt);border:0;display:flex;align-items:center;justify-content:center;color:var(--sec);cursor:pointer;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"></rect><path d="M3.5 9h17M8 2.5v4M16 2.5v4"></path></svg>
+        </button>
+      </div>
+
+      <!-- featured devotional (hero) -->
+      <div onClick="{{ goDevotional }}" role="button" style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 8px 26px rgba(0,0,0,.22);">
+        <div style="height:4px;background:var(--accent);"></div>
+        <div style="padding:18px 18px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--textAccent);">Today's devotional</span>
+            <span style="font-size:11px;font-weight:600;color:var(--muted);">The Gospel Coalition</span>
+          </div>
+          <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:23px;font-weight:700;line-height:1.22;letter-spacing:-0.3px;color:var(--ink);margin-top:11px;">{{ devTitle }}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--textAccent);margin-top:5px;">{{ devRef }}</div>
+          <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:15.5px;line-height:1.55;color:var(--sec);margin-top:10px;">{{ devExcerpt }}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:15px;font-size:14px;font-weight:600;color:var(--accent);">Read devotional <svg width="7" height="12" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg></div>
+        </div>
+      </div>
+
+      <!-- today's reading -->
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.9px;text-transform:uppercase;color:var(--muted);margin:26px 2px 11px;">Today's reading · M'Cheyne</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <sc-for list="{{ chapters }}" as="ch" hint-placeholder-count="4">
+          <div onClick="{{ goReader }}" role="button" style="{{ ch.rowStyle }}">
+            <span style="flex:none;width:30px;height:30px;border-radius:8px;background:var(--surfaceAlt);display:flex;align-items:center;justify-content:center;color:var(--textAccent);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v15H5.5A1.5 1.5 0 0 0 4 20.5z"></path><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H12v15h6.5A1.5 1.5 0 0 1 20 20.5z"></path></svg></span>
+            <span style="flex:1;min-width:0;font-size:16px;font-weight:600;letter-spacing:-0.2px;color:var(--ink);">{{ ch.title }}</span>
+            <sc-if value="{{ ch.isDev }}" hint-placeholder-val="{{ true }}"><span style="flex:none;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--textAccent);background:var(--accentSoft);border-radius:6px;padding:3px 7px;">Devotional</span></sc-if>
+            <svg width="7" height="13" viewBox="0 0 9 16" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+          </div>
+        </sc-for>
+      </div>
+
+      <button onClick="{{ goReader }}" style="width:100%;margin-top:14px;height:50px;border-radius:13px;background:var(--accent);color:var(--onAccent);border:0;font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 18px rgba(31,132,201,.32);">Read today's passages <svg width="8" height="14" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg></button>
+
+      <!-- notes shortcut -->
+      <div role="button" style="margin-top:20px;display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 15px;cursor:pointer;">
+        <span style="flex:none;width:34px;height:34px;border-radius:9px;background:var(--surfaceAlt);display:flex;align-items:center;justify-content:center;color:var(--sec);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16M4 11h16M4 16.5h9"></path></svg></span>
+        <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:var(--ink);">My notes</div><div style="font-size:12.5px;color:var(--muted);margin-top:1px;">Today · empty</div></div>
+        <svg width="7" height="13" viewBox="0 0 9 16" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+      </div>
+      <div style="height:6px;"></div>
+    </div>
+    <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;position:relative;z-index:5;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span></div>
+    </div>
+  </div>
+</x-import>
+</sc-if>
+
+<!-- ===== DEVOTIONAL ===== -->
+<sc-if value="{{ screenDevotional }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+    <!-- top bar -->
+    <div style="padding:54px var(--safe-x) 8px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:relative;z-index:4;">
+      <button onClick="{{ goLanding }}" aria-label="Back to Daily Word" style="flex:none;display:flex;align-items:center;gap:4px;background:var(--surfaceAlt);border:0;border-radius:10px;padding:7px 12px 7px 9px;color:var(--ink);cursor:pointer;">
+        <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 1.5 2 8l5.5 6.5"></path></svg>
+        <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;">Daily Word</span>
+      </button>
+      <button aria-label="Share" style="flex:none;width:36px;height:36px;border-radius:9999px;background:var(--surfaceAlt);border:0;display:flex;align-items:center;justify-content:center;color:var(--sec);cursor:pointer;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"></path></svg>
+      </button>
+    </div>
+
+    <div style="flex:1;min-height:0;overflow:auto;padding:8px 24px 18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--textAccent);">The Gospel Coalition · Daily Devotional</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:7px;">Tuesday, June 30</div>
+      <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:28px;font-weight:700;line-height:1.18;letter-spacing:-0.4px;color:var(--ink);margin-top:6px;">{{ devTitle }}</div>
+
+      <button onClick="{{ goReader }}" style="margin-top:13px;display:inline-flex;align-items:center;gap:7px;background:var(--surfaceAlt);border:0;border-radius:10px;padding:8px 13px;color:var(--textAccent);font-size:13.5px;font-weight:600;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H12v15H5.5A1.5 1.5 0 0 0 4 20.5z"></path><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H12v15h6.5A1.5 1.5 0 0 1 20 20.5z"></path></svg>
+        {{ devRef }} · Read passage
+      </button>
+
+      <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:16.5px;line-height:1.72;color:var(--ink);margin-top:20px;">
+        <sc-for list="{{ devParas }}" as="p" hint-placeholder-count="4">
+          <p style="margin:0 0 16px;">{{ p }}</p>
+        </sc-for>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:8px 0 18px;"></div>
+      <div style="font-size:13.5px;line-height:1.55;color:var(--muted);">Adapted from a daily devotional by The Gospel Coalition.</div>
+      <a href="https://www.thegospelcoalition.org/devotionals/" target="_blank" rel="noopener" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:12px;background:var(--surfaceAlt);border:1px solid var(--border);color:var(--ink);font-size:14.5px;font-weight:600;text-decoration:none;cursor:pointer;">
+        Read more daily devotionals at The Gospel Coalition
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--textAccent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>
+      </a>
+      <div style="height:6px;"></div>
+    </div>
+    <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;position:relative;z-index:5;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg><span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span></div>
+    </div>
+  </div>
+</x-import>
+</sc-if>
+
+<!-- ===== READER (real reader, back chevron → landing) ===== -->
+<sc-if value="{{ screenReader }}" hint-placeholder-val="{{ true }}">
+  <dc-import name="[UI] Daily Word" dark="{{ dark }}" backNav="{{ true }}" on-back="{{ goLanding }}" controlBar="default" showTitle="{{ true }}" chipPos="top" hint-size="402px,874px"></dc-import>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;landing&quot;,&quot;devotional&quot;,&quot;reader&quot;],&quot;default&quot;:&quot;landing&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: props.screen || 'landing' };
+  }
+  go(screen) { this.setState({ screen }); }
+
+  renderVals() {
+    const dark = this.props.dark !== false;
+    const L = { bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4', ink:'#1E2227', sec:'#5C656F', muted:'#8A929B', accent:'#1F84C9', accentSoft:'#D9EAF6', textAccent:'#15619A', border:'#E3E8EC', onAccent:'#FFFFFF' };
+    const D = { bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30', ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E', accent:'#4EA6E6', accentSoft:'#243340', textAccent:'#6FB6EA', border:'#2A3036', onAccent:'#14171A' };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,'--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--textAccent':t.textAccent,'--border':t.border,'--onAccent':t.onAccent,
+      '--safe-x':'16px','--safe-bottom':'24px',
+      position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:t.bg, fontFamily:'-apple-system, system-ui, sans-serif',
+    };
+
+    const chapData = [
+      { title:'Joshua 1', isDev:false },
+      { title:'Psalm 121', isDev:true },
+      { title:'Isaiah 6', isDev:false },
+      { title:'Acts 1', isDev:false },
+    ];
+    const chapters = chapData.map((c, i) => ({
+      title: c.title, isDev: c.isDev,
+      rowStyle: {
+        display:'flex', alignItems:'center', gap:'12px', padding:'13px 15px', cursor:'pointer',
+        borderTop: i === 0 ? '0' : ('1px solid ' + t.border),
+      },
+    }));
+
+    const devParas = [
+      'The pilgrim lifts his eyes to the hills — not because the hills will help him, but to ask where help truly comes from. The answer reframes the whole journey: his help, and yours, comes from the Lord, the Maker of heaven and earth.',
+      'Twice the psalm promises that God will not let your foot be moved, and twice it insists that He does not sleep. The One who watches over you is never off duty, never distracted, never caught off guard by the thing that blindsided you this week.',
+      'He is named your keeper — the shade at your right hand. The sun will not strike you by day, nor the moon by night. Every hour carries its own dangers, and every hour is met by the same unsleeping Guardian.',
+      'And the promise stretches past today: the Lord will keep your going out and your coming in, from this time forth and forevermore. So begin the morning here — not anxious about the climb ahead, but quiet under the care of the One who never once looks away.',
+    ];
+
+    return {
+      dark, rootStyle,
+      screenLanding: this.state.screen === 'landing',
+      screenDevotional: this.state.screen === 'devotional',
+      screenReader: this.state.screen === 'reader',
+      goLanding: () => this.go('landing'),
+      goDevotional: () => this.go('devotional'),
+      goReader: () => this.go('reader'),
+      devTitle: 'My Help Comes from the Lord',
+      devRef: 'Psalm 121',
+      devExcerpt: 'The pilgrim lifts his eyes to the hills and asks where help truly comes from — and the answer reframes the whole journey.',
+      devParas, chapters,
+    };
+  }
+}
+</script>
+</body>
+</html>

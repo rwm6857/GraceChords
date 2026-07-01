@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+    .badge { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:#1A1A1A; color:#fff; border-radius:5px; letter-spacing:0.3px; }
+    .badge-soft { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:rgba(0,0,0,.08); color:#1E2227; border-radius:5px; }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 90px;max-width:1280px;margin:0 auto;">
+
+  <!-- Intro -->
+  <div style="max-width:720px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">Home layouts</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">Loose directions, not final. No media player and no cover art — the "Continue" card resumes into the Viewer (chevron, not play) and the one art slot becomes a useful <strong style="color:#1E2227;">key badge</strong>. Home swaps the large title for the brand logo and keeps the avatar (settings) top-right. The logo is a <strong style="color:#1E2227;">placeholder</strong> — you're handling the mark elsewhere.</p>
+  </div>
+
+  <!-- ============ HOME LAYOUTS ============ -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:54px 0 6px;">
+    <span class="badge">H</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Home layouts</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 26px;max-width:760px;">Each has greeting → continue card → an <strong style="color:#1E2227;">Up next</strong> card that launches the upcoming set into performer mode (surfacing the setlist summary the brief prizes) → recent setlists → a daily-reading teaser. The bottom tabs handle navigation, so Home leads with doing. Logo shown is a placeholder.</p>
+
+  <div style="display:flex;gap:46px;flex-wrap:wrap;">
+    <div id="H1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Home Screen" dark="{{ false }}" hero="{{ true }}" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">H1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · full atmospheric hero</span></div>
+    </div>
+    <div id="H2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Home Screen" dark="{{ false }}" hero="{{ false }}" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">H2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · flat / minimal</span></div>
+    </div>
+    <div id="H3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Home Screen" dark="{{ true }}" hero="{{ true }}" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">H3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · stage-first (primary mode)</span></div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 16px;">Notes &amp; open questions</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;max-width:1040px;">
+    <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3">
+      <div style="flex:1;min-width:280px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ n.q }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ n.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="font-size:12px;line-height:1.6;color:#8A929B;margin:26px 2px 0;max-width:760px;">Try next: "go with <a class="badge-soft" href="#L3" style="text-decoration:none;">L3</a> and build <a class="badge-soft" href="#H1" style="text-decoration:none;">H1</a>" · "show <a class="badge-soft" href="#H1" style="text-decoration:none;">H1</a> with <a class="badge-soft" href="#L2" style="text-decoration:none;">L2</a>" · "drop the daily-reading teaser" · "let me drop a real hero photo in".</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      logos: [
+        {id:'L1', id2:'mono',  name:'GC monogram', note:'Concentric G + C arcs — reads as an echo / soundwave. Safe, refined, brand-literal.'},
+        {id:'L2', id2:'pick',  name:'Guitar pick', note:'Pick outline with three strings. Warm, player-first, instantly music.'},
+        {id:'L3', id2:'grid',  name:'Chord diagram', note:'Strings + fret dots. Unique to a chord app — distinctive and ownable.'},
+        {id:'L4', id2:'cross', name:'Cross + note', note:'Faith-forward; the stem foot becomes a notehead. Music meets worship.'},
+        {id:'L5', id2:'line',  name:'Grace line', note:'A single stroke draws a G that resolves into a note. Elegant, fluid.'},
+        {id:'L6', id2:'leaf',  name:'Leaf', note:'Calm, growth, grace. More devotional than musical — included for range.'},
+      ],
+      notes: [
+        {q:'No media player', note:'The Continue card resumes into the Chord Viewer — a chevron, never a play/transport control. Confirmed in the design.'},
+        {q:'No cover art', note:'No song thumbnails anywhere. The one art slot is a key badge ("G"), which is genuinely useful on stage.'},
+        {q:'Logo direction', note:'Pick one (or a hybrid) and I will produce the app icon, favicon, and a mono/knockout version. Leaning L3.'},
+        {q:'Hero treatment', note:'Placeholder gradient now. I can wire an image slot so you drop a real misty photo, or keep an illustrated gradient.'},
+        {q:'Bell vs avatar', note:'I dropped the inspo bell (no notifications system) and kept the avatar for settings. Add a bell later if notifications ship.'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

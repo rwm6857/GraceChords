@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    .lg::-webkit-scrollbar{width:0;height:0;}
+    .caret{animation:gcblink 1.05s steps(1) infinite;}
+    @keyframes gcblink{50%{opacity:0;}}
+    #gc-name-input::placeholder{color:#7C858E;}
+  </style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" keyboard="{{ editing }}" hint-size="402px,874px">
+  <div style="position:relative;height:100%;overflow:hidden;background:#14171A;font-family:-apple-system,system-ui,sans-serif;">
+    <div style="{{ builderLayerStyle }}">
+
+    <!-- header -->
+    <div style="flex:none;padding:50px 12px 8px 8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <button onClick="{{ onExit }}" style="display:flex;align-items:center;gap:2px;border:0;background:transparent;color:#4EA6E6;cursor:pointer;padding:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg><span style="font-size:16px;font-weight:500;">Setlists</span></button>
+        <div style="display:flex;gap:6px;padding-right:4px;">
+          <button onClick="{{ openShare }}" aria-label="Share and export" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg></button>
+          <button onClick="{{ openMore }}" aria-label="More" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- hero set card -->
+    <div style="flex:none;margin:2px 16px 0;background:linear-gradient(135deg,#213240 0%,#1A232A 70%);border:1px solid #2A3036;border-radius:18px;padding:15px 16px 14px;">
+      <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ startRename }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <span style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:#F2F4F6;white-space:nowrap;">{{ name }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5l4-1L19 8.5a2.1 2.1 0 0 0-3-3L5 16.5z"></path><path d="M14.5 7l3 3"></path></svg>
+        </div>
+        <div style="font-size:13px;color:#AEB6BE;margin-top:6px;">{{ metaLine }}</div>
+        <div style="font-size:11.5px;color:#7C858E;margin-top:2px;">Last edited 2d ago</div>
+      </sc-if>
+      <sc-if value="{{ editing }}" hint-placeholder-val="{{ true }}">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:#7C858E;margin-bottom:9px;">SET NAME</div>
+        <div style="display:flex;align-items:center;gap:8px;background:#14181B;border:1.5px solid #4EA6E6;border-radius:12px;padding:10px 12px;">
+          <input id="gc-name-input" value="{{ nameDraft }}" onInput="{{ onNameInput }}" onKeyDown="{{ onNameKey }}" placeholder="Set name" style="flex:1;min-width:0;border:0;background:transparent;outline:none;color:#F2F4F6;font-size:20px;font-weight:700;font-family:-apple-system,system-ui,sans-serif;">
+          <button onClick="{{ clearName }}" aria-label="Clear" style="flex:none;width:22px;height:22px;border-radius:9999px;border:0;background:#3A4148;color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"></path></svg></button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+          <span style="font-size:11.5px;color:#7C858E;">{{ metaLine }}</span>
+          <button onClick="{{ commitName }}" style="border:0;background:#4EA6E6;color:#0E1417;font-size:14px;font-weight:700;border-radius:9px;padding:7px 16px;cursor:pointer;">Done</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- timeline list -->
+    <div class="lg" id="gc-builder-list" style="flex:1;min-height:0;overflow:auto;padding:12px 12px 6px;">
+      <sc-for list="{{ setSongs }}" as="song" hint-placeholder-count="6">
+        <div data-row="{{ song.id }}" style="{{ song.rowStyle }}">
+          <button onPointerDown="{{ song.onDragDown }}" aria-label="Drag to reorder" style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+          <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;">
+            <div style="{{ song.connectorStyle }}"></div>
+            <div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">{{ song.num }}</div>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid #20262B;">
+            <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ song.t }}</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ song.a }}</div></div>
+            <button onClick="{{ song.onKeyTap }}" aria-label="Change key" style="flex:none;display:flex;align-items:center;gap:3px;background:#243340;border:0;border-radius:8px;padding:5px 8px;color:#6FB6EA;font-size:14px;font-weight:700;cursor:pointer;">{{ song.k }}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4"></path><path d="M8 14l4 4 4-4"></path></svg></button>
+            <button onClick="{{ song.onRowMenu }}" aria-label="Song options" style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ true }}">
+        <div style="text-align:center;padding:48px 24px;color:#7C858E;"><div style="font-size:15px;font-weight:600;color:#AEB6BE;">No songs yet</div><div style="font-size:13px;margin-top:6px;">Tap Add to search your library.</div></div>
+      </sc-if>
+    </div>
+
+    <!-- bottom action bar -->
+    <div style="flex:none;padding:10px 14px 12px;display:flex;gap:10px;background:#14171A;border-top:1px solid #20262B;">
+      <button onClick="{{ openAdd }}" style="flex:none;display:flex;align-items:center;gap:7px;background:#242A30;border:1px solid #2A3036;border-radius:13px;padding:0 16px;height:48px;color:#DCE3E9;font-size:15px;font-weight:600;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button>
+      <button onClick="{{ startSet }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:#4EA6E6;border:0;border-radius:13px;height:48px;color:#0E1417;font-size:16px;font-weight:700;cursor:pointer;">Start set<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+    </div>
+
+    <!-- tab bar -->
+    <div style="flex:none;background:#1E2227;border-top:1px solid #2A3036;padding:8px 6px 22px;display:flex;align-items:flex-end;justify-content:space-around;">
+      <div onClick="{{ onGoHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg><span style="font-size:10px;font-weight:600;">Home</span></div>
+      <div onClick="{{ onGoSongs }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Songs</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#4EA6E6;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Setlists</span></div>
+      <div onClick="{{ onGoDaily }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg><span style="font-size:10px;font-weight:600;">Daily Word</span></div>
+    </div>
+
+    <!-- toast -->
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;left:0;right:0;bottom:118px;z-index:50;display:flex;justify-content:center;pointer-events:none;">
+        <div style="background:rgba(20,24,27,0.94);border:1px solid #363D44;color:#EDF1F4;font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.5);">{{ toast }}</div>
+      </div>
+    </sc-if>
+
+    <!-- ================= ADD-SONGS PICKER (full-screen, slides up) ================= -->
+    <div style="{{ pickerStyle }}">
+      <div style="flex:none;padding:50px 16px 6px;display:flex;align-items:center;justify-content:space-between;background:#14171A;">
+        <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#F2F4F6;">Add songs</span>
+        <button onClick="{{ closeAdd }}" style="border:0;background:transparent;color:#4EA6E6;font-size:16px;font-weight:700;cursor:pointer;">Done</button>
+      </div>
+      <div style="flex:1;min-height:0;">
+        <dc-import name="SongLibraryContent" dark="{{ true }}" chromeless="{{ true }}" add-mode="{{ true }}" added-titles="{{ addedTitles }}" on-toggle-add="{{ onToggleAdd }}" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+      </div>
+      <div style="flex:none;padding:11px 16px 24px;border-top:1px solid #20262B;display:flex;align-items:center;gap:12px;background:#1A1E22;">
+        <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:700;letter-spacing:0.1em;color:#7C858E;">{{ setLabel }}</div><div style="font-size:14px;font-weight:600;color:#E8ECF0;margin-top:2px;">{{ metaLine }}</div></div>
+        <button onClick="{{ closeAdd }}" style="flex:none;display:flex;align-items:center;gap:7px;background:#4EA6E6;border:0;border-radius:12px;padding:0 18px;height:46px;color:#0E1417;font-size:15px;font-weight:700;cursor:pointer;">Done</button>
+      </div>
+    </div>
+
+    <!-- ================= KEY SHEET ================= -->
+    <sc-if value="{{ keyOpen }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);padding:8px 18px 36px;">
+        <div style="display:flex;justify-content:center;padding:2px 0 10px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Key</span><span style="font-size:13px;color:#7C858E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">{{ keySongTitle }}</span></div>
+        <div style="font-size:12px;color:#7C858E;margin-bottom:14px;">Play this song in…</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;">
+          <sc-for list="{{ keyCells }}" as="cell" hint-placeholder-count="12">
+            <button onClick="{{ cell.onPick }}" style="{{ cell.style }}">{{ cell.k }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ================= ROW MENU SHEET ================= -->
+    <sc-if value="{{ rowOpen }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);padding:8px 16px 34px;">
+        <div style="display:flex;justify-content:center;padding:2px 0 8px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+        <div style="font-size:15px;font-weight:700;color:#E8ECF0;padding:2px 4px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ rowSongTitle }}</div>
+        <button onClick="{{ rowChangeKey }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#E8ECF0;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:9px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v11"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="19" cy="15" r="2.5"></circle></svg>Change key</button>
+        <button onClick="{{ rowDuplicate }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#E8ECF0;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:9px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>Duplicate</button>
+        <button onClick="{{ rowRemove }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#F0736A;font-size:15.5px;font-weight:600;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"></path></svg>Remove from set</button>
+      </div>
+    </sc-if>
+
+    <!-- ================= SETLIST ACTIONS (•••) ================= -->
+    <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);padding:8px 16px 34px;">
+        <div style="display:flex;justify-content:center;padding:2px 0 8px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Setlist</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+        <button onClick="{{ actRename }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#E8ECF0;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:9px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5l4-1L19 8.5a2.1 2.1 0 0 0-3-3L5 16.5z"></path><path d="M14.5 7l3 3"></path></svg>Rename set</button>
+        <button onClick="{{ openSaved }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#E8ECF0;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:9px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.2" fill="#6FB6EA" stroke="none"></circle><circle cx="4.5" cy="12" r="1.2" fill="#6FB6EA" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.2" fill="#6FB6EA" stroke="none"></circle></svg>Saved sets…</button>
+        <button onClick="{{ actNew }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#E8ECF0;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:9px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New set</button>
+        <button onClick="{{ actDelete }}" style="width:100%;display:flex;align-items:center;gap:13px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px;color:#F0736A;font-size:15.5px;font-weight:600;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"></path></svg>Delete set</button>
+      </div>
+    </sc-if>
+
+    <!-- ================= SHARE / EXPORT ================= -->
+    <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:41;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);padding:8px 16px 34px;">
+        <div style="display:flex;justify-content:center;padding:2px 0 8px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Export &amp; share</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+        <button onClick="{{ shExport }}" style="width:100%;height:50px;border:0;border-radius:13px;background:#4EA6E6;color:#0E1417;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M8 11l4 4 4-4"></path><path d="M5 20h14"></path></svg>Export set as PDF · {{ setCountLabel }}</button>
+        <div style="display:flex;gap:9px;margin-bottom:9px;">
+          <div onClick="{{ shCharts }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"></path><path d="M3 8V6a1 1 0 0 1 1-1h6l2 2"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">Charts ZIP</span></div>
+          <div onClick="{{ shPro }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V7.5L20 5.5V16"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="17.5" cy="16" r="2.5"></circle></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">ChordPro</span></div>
+          <div onClick="{{ shLink }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2.5-2.5a5 5 0 0 0-7-7L11.5 5.5"></path><path d="M14 11a5 5 0 0 0-7.5-.5L4 13a5 5 0 0 0 7 7l1.5-1.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">Copy link</span></div>
+        </div>
+        <div onClick="{{ shTelegram }}" style="display:flex;align-items:center;gap:11px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:12px 14px;cursor:pointer;"><span style="width:30px;height:30px;border-radius:9999px;background:#2AABEE;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 4.3L2.8 11.6c-1 .4-1 1 .1 1.3l4.7 1.5 1.8 5.6c.2.6.4.7.9.3l2.6-2.1 4.6 3.4c.8.4 1.4.2 1.6-.8l3-14c.3-1.2-.5-1.7-1.2-1.5z"></path></svg></span><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#E8ECF0;">Send set to Telegram</div><div style="font-size:11.5px;color:#7C858E;">Optional bot</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div>
+      </div>
+    </sc-if>
+
+    <!-- ================= SAVED SETS ================= -->
+    <sc-if value="{{ savedOpen }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:42;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;top:120px;z-index:43;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);display:flex;flex-direction:column;overflow:hidden;">
+        <div style="flex:none;display:flex;justify-content:center;padding:8px 0 6px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+        <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:2px 18px 12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Saved sets</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+        <div class="lg" style="flex:1;min-height:0;overflow:auto;padding:0 16px 24px;">
+          <sc-for list="{{ savedList }}" as="set" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px;background:#14181B;border:1px solid #2A3036;border-radius:14px;padding:13px 12px 13px 15px;margin-bottom:10px;">
+              <div onClick="{{ set.onOpen }}" style="flex:1;min-width:0;cursor:pointer;"><div style="font-size:16px;font-weight:700;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ set.name }}</div><div style="font-size:12.5px;color:#8A929B;margin-top:3px;">{{ set.meta }}</div></div>
+              <button onClick="{{ set.onOpen }}" style="flex:none;display:flex;align-items:center;gap:6px;background:#243340;border:0;border-radius:10px;padding:8px 13px;color:#6FB6EA;font-size:13.5px;font-weight:700;cursor:pointer;">Open</button>
+              <button onClick="{{ set.onDelete }}" aria-label="Delete set" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:transparent;color:#8A5A57;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"></path></svg></button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    </div>
+    <div style="{{ viewerPanelStyle }}">
+      <dc-import name="SetlistViewerContent" songs-data="{{ viewerSongs }}" start-index="{{ zero }}" on-back="{{ closeViewer }}" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+    </div>
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this._nid = 100;
+    const mk = (t, a, k, bpm, min) => ({ id: this._nid++, t, a, k, bpm, min });
+    this.state = {
+      name: 'Sunday Service',
+      editing: false,
+      nameDraft: '',
+      songs: [
+        mk('Great Are You Lord', 'All Sons & Daughters', 'G', 72, 6),
+        mk('What a Beautiful Name', 'Hillsong Worship', 'A', 68, 6),
+        mk('How Great Is Our God', 'Chris Tomlin', 'D', 68, 5),
+        mk('Build My Life', 'Housefires', 'D', 72, 6),
+        mk('Goodness of God', 'Bethel Music', 'C', 72, 6),
+        mk('O Come to the Altar', 'Elevation Worship', 'C', 70, 6),
+        mk('Way Maker', 'Sinach', 'G', 70, 6),
+        mk('Blessed Be Your Name', 'Matt Redman', 'D', 72, 5),
+      ],
+      saved: [
+        { name: 'Youth Night', songs: [mk('Graves Into Gardens','Elevation Worship','B',72,6), mk('Battle Belongs','Phil Wickham','E',72,5), mk('Way Maker','Sinach','G',70,6), mk('Gratitude','Brandon Lake','G',72,5)] },
+        { name: 'Acoustic Night', songs: [mk('Build My Life','Housefires','D',72,6), mk('Cornerstone','Hillsong Worship','C',72,6), mk('Great Are You Lord','All Sons & Daughters','G',72,6)] },
+        { name: 'Christmas Eve', songs: [mk('Above All','Michael W. Smith','A',68,5), mk('How Great Is Our God','Chris Tomlin','C',68,5)] },
+      ],
+      dragId: null, addOpen: false, keyId: null, rowId: null, viewerOpen: false,
+      moreOpen: false, shareOpen: false, savedOpen: false, toast: null,
+    };
+  }
+
+  componentDidMount() {
+    this._move = (e) => {
+      const dragId = this.state.dragId;
+      if (dragId == null) return;
+      const list = document.getElementById('gc-builder-list');
+      if (!list) return;
+      e.preventDefault();
+      const rows = Array.prototype.slice.call(list.querySelectorAll('[data-row]'));
+      const y = e.clientY;
+      let target = rows.length - 1;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i].getBoundingClientRect();
+        if (y < r.top + r.height / 2) { target = i; break; }
+      }
+      const songs = this.state.songs.slice();
+      const from = songs.findIndex(s => s.id === dragId);
+      if (from < 0 || from === target) return;
+      const it = songs.splice(from, 1)[0];
+      songs.splice(target, 0, it);
+      this.setState({ songs });
+    };
+    this._up = () => { if (this.state.dragId != null) this.setState({ dragId: null }); };
+    document.addEventListener('pointermove', this._move, { passive: false });
+    document.addEventListener('pointerup', this._up);
+  }
+  componentWillUnmount() {
+    document.removeEventListener('pointermove', this._move);
+    document.removeEventListener('pointerup', this._up);
+    if (this._toastT) clearTimeout(this._toastT);
+  }
+
+  toast(msg) {
+    this.setState({ toast: msg });
+    if (this._toastT) clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 1900);
+  }
+  closeAll(extra) { this.setState(Object.assign({ moreOpen: false, shareOpen: false, savedOpen: false, keyId: null, rowId: null }, extra || {})); }
+
+  renderVals() {
+    const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const songs = this.state.songs;
+    const len = songs.length;
+    const totalMin = songs.reduce((a, s) => a + (s.min || 5), 0);
+    const metaLine = len + (len === 1 ? ' song · ' : ' songs · ') + totalMin + ' min';
+    const dragId = this.state.dragId;
+
+    const baseRow = { display: 'flex', alignItems: 'stretch', gap: '2px' };
+    const dragRow = Object.assign({}, baseRow, { background: '#1E252B', boxShadow: '0 14px 32px rgba(0,0,0,0.55)', borderRadius: '12px', position: 'relative', zIndex: 5 });
+    const connector = (i) => {
+      const b = { position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: '2px', background: '#242C32' };
+      if (len === 1) return Object.assign(b, { display: 'none' });
+      if (i === 0) return Object.assign(b, { top: '50%', bottom: 0 });
+      if (i === len - 1) return Object.assign(b, { top: 0, bottom: '50%' });
+      return Object.assign(b, { top: 0, bottom: 0 });
+    };
+
+    const setSongs = songs.map((s, i) => ({
+      id: String(s.id), t: s.t, a: s.a, k: s.k, num: i + 1,
+      rowStyle: dragId === s.id ? dragRow : baseRow,
+      connectorStyle: connector(i),
+      onDragDown: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ dragId: s.id }); },
+      onKeyTap: () => this.closeAll({ keyId: s.id }),
+      onRowMenu: () => this.closeAll({ rowId: s.id }),
+    }));
+
+    const keySong = this.state.keyId != null ? songs.find(s => s.id === this.state.keyId) : null;
+    const keyCells = KEYS.map(k => {
+      const active = keySong && keySong.k === k;
+      return {
+        k,
+        style: {
+          border: 0, cursor: 'pointer', height: '46px', borderRadius: '11px', fontSize: '16px', fontWeight: 700,
+          background: active ? '#4EA6E6' : '#14181B', color: active ? '#0E1417' : '#DCE3E9',
+          boxShadow: active ? 'none' : 'inset 0 0 0 1px #2A3036',
+        },
+        onPick: () => { this.setState(st => ({ songs: st.songs.map(x => x.id === this.state.keyId ? Object.assign({}, x, { k }) : x), keyId: null })); },
+      };
+    });
+
+    const rowSong = this.state.rowId != null ? songs.find(s => s.id === this.state.rowId) : null;
+
+    const savedList = this.state.saved.map((set, idx) => {
+      const m = set.songs.length + ' songs · ' + set.songs.reduce((a, s) => a + (s.min || 5), 0) + ' min';
+      return {
+        name: set.name, meta: m,
+        onOpen: () => {
+          const cloned = set.songs.map(s => Object.assign({}, s, { id: this._nid++ }));
+          this.setState({ name: set.name, songs: cloned, savedOpen: false });
+          this.toast('Opened “' + set.name + '”');
+        },
+        onDelete: () => this.setState(st => ({ saved: st.saved.filter((_, j) => j !== idx) })),
+      };
+    });
+
+    const addedTitles = songs.map(s => s.t);
+    const onToggleAdd = (song) => {
+      this.setState(st => {
+        const exists = st.songs.some(s => s.t === song.t);
+        if (exists) return { songs: st.songs.filter(s => s.t !== song.t) };
+        return { songs: st.songs.concat([{ id: this._nid++, t: song.t, a: song.a, k: song.k, bpm: song.bpm || 72, min: song.min || 5 }]) };
+      });
+    };
+
+    const pickerBase = { position: 'absolute', inset: 0, zIndex: 30, display: 'flex', flexDirection: 'column', background: '#14171A', transition: 'transform .32s cubic-bezier(.2,0,0,1)' };
+    const pickerStyle = Object.assign({}, pickerBase, { transform: this.state.addOpen ? 'translateY(0)' : 'translateY(100%)' });
+
+    const viewerOpen = this.state.viewerOpen;
+    const viewerSongs = songs.map(s => ({ t: s.t, a: s.a, k: s.k }));
+    const builderLayerStyle = { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#14171A', transition: 'transform .34s cubic-bezier(.2,0,0,1), filter .34s', transform: viewerOpen ? 'translateX(-24%)' : 'translateX(0)', filter: viewerOpen ? 'brightness(0.55)' : 'brightness(1)' };
+    const viewerPanelStyle = { position: 'absolute', inset: 0, zIndex: 25, transform: viewerOpen ? 'translateX(0)' : 'translateX(100%)', transition: 'transform .34s cubic-bezier(.2,0,0,1)', boxShadow: '-10px 0 30px rgba(0,0,0,0.45)' };
+
+    return {
+      name: this.state.name, metaLine, setSongs,
+      notEditing: !this.state.editing, editing: this.state.editing, nameDraft: this.state.nameDraft,
+      isEmpty: len === 0,
+      setLabel: this.state.name.toUpperCase(), setCountLabel: len + (len === 1 ? ' song' : ' songs'),
+      addedTitles, onToggleAdd, pickerStyle,
+      viewerSongs, builderLayerStyle, viewerPanelStyle, zero: 0,
+      closeViewer: () => this.setState({ viewerOpen: false }),
+      onExit: this.props.onExit || (() => {}),
+      onGoHome: this.props.onGoHome || (() => {}),
+      onGoSongs: this.props.onGoSongs || (() => {}),
+      onGoDaily: this.props.onGoDaily || (() => {}),
+      keyOpen: this.state.keyId != null, keyCells, keySongTitle: keySong ? keySong.t : '',
+      rowOpen: this.state.rowId != null, rowSongTitle: rowSong ? rowSong.t : '',
+      moreOpen: this.state.moreOpen, shareOpen: this.state.shareOpen, savedOpen: this.state.savedOpen, savedList,
+      hasToast: !!this.state.toast, toast: this.state.toast,
+
+      openAdd: () => this.closeAll({ addOpen: true }),
+      closeAdd: () => this.setState({ addOpen: false }),
+      openShare: () => this.closeAll({ shareOpen: true }),
+      openMore: () => this.closeAll({ moreOpen: true }),
+      openSaved: () => this.setState({ moreOpen: false, savedOpen: true }),
+      closeSheets: () => this.closeAll(),
+
+      startRename: () => { this.setState({ editing: true, nameDraft: this.state.name, moreOpen: false }); setTimeout(() => { const el = document.getElementById('gc-name-input'); if (el) { el.focus(); el.select(); } }, 50); },
+      onNameInput: (e) => this.setState({ nameDraft: e.target.value }),
+      onNameKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.setState(st => ({ name: st.nameDraft.trim() || st.name, editing: false })); } },
+      clearName: () => { this.setState({ nameDraft: '' }); const el = document.getElementById('gc-name-input'); if (el) el.focus(); },
+      commitName: () => this.setState(st => ({ name: st.nameDraft.trim() || st.name, editing: false })),
+
+      rowChangeKey: () => this.setState(st => ({ keyId: st.rowId, rowId: null })),
+      rowDuplicate: () => this.setState(st => {
+        const i = st.songs.findIndex(s => s.id === st.rowId);
+        if (i < 0) return { rowId: null };
+        const copy = Object.assign({}, st.songs[i], { id: this._nid++ });
+        const arr = st.songs.slice(); arr.splice(i + 1, 0, copy);
+        return { songs: arr, rowId: null };
+      }),
+      rowRemove: () => this.setState(st => ({ songs: st.songs.filter(s => s.id !== st.rowId), rowId: null })),
+
+      actRename: () => { this.setState({ moreOpen: false }); setTimeout(() => { this.setState({ editing: true, nameDraft: this.state.name }); setTimeout(() => { const el = document.getElementById('gc-name-input'); if (el) { el.focus(); el.select(); } }, 50); }, 10); },
+      actNew: () => { this.setState({ name: 'New Setlist', songs: [], moreOpen: false }); this.toast('New set'); },
+      actDelete: () => { this.setState({ name: 'New Setlist', songs: [], moreOpen: false }); this.toast('Set deleted'); },
+
+      startSet: () => this.setState({ viewerOpen: true, moreOpen: false, shareOpen: false, addOpen: false }),
+      shExport: () => { this.setState({ shareOpen: false }); this.toast('Exporting set as PDF…'); },
+      shCharts: () => { this.setState({ shareOpen: false }); this.toast('Zipping charts…'); },
+      shPro: () => { this.setState({ shareOpen: false }); this.toast('Exporting ChordPro…'); },
+      shLink: () => { this.setState({ shareOpen: false }); this.toast('Set link copied'); },
+      shTelegram: () => { this.setState({ shareOpen: false }); this.toast('Sent to Telegram'); },
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+    .badge { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:#1A1A1A; color:#fff; border-radius:5px; letter-spacing:0.3px; }
+    .badge-soft { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:rgba(0,0,0,.08); color:#1E2227; border-radius:5px; }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 90px;max-width:1280px;margin:0 auto;">
+
+  <!-- Intro -->
+  <div style="max-width:720px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">Sign in &amp; sign up</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">Two separate pages — <strong style="color:#1E2227;">Sign in</strong> and <strong style="color:#1E2227;">Create account</strong> — no segmented toggle, so each stays uncrowded. Sign-up adds a name field, terms line, and a "new password" hint; sign-in adds a "Forgot?" link. Email / password with a show-hide eye, then Google and Apple. After creating an account, an optional <strong style="color:#1E2227;">Choose your icon</strong> step (section B) lets users pick a sprite. The Apple button follows Apple's rule — black on light, white on dark. Logo mark is a placeholder.</p>
+    <p style="font-size:13.5px;line-height:1.6;color:#8A929B;margin:14px 0 0;"><strong style="color:#5C656F;">These are live.</strong> The footer link moves between the two pages, tap the eye to reveal the password, and type into the fields.</p>
+  </div>
+
+  <!-- Screens -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:52px 0 6px;">
+    <span class="badge">A</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Auth screen — modes &amp; themes</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 28px;max-width:760px;">Both entry modes shown in both themes. Dark is the primary stage mode.</p>
+
+  <div style="display:flex;gap:46px;flex-wrap:wrap;">
+    <div id="A1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ false }}" mode="signin" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">A1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · Sign in</span></div>
+    </div>
+    <div id="A2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ false }}" mode="signup" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">A2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · Create account</span></div>
+    </div>
+    <div id="A3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ true }}" mode="signin" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">A3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · Sign in (primary)</span></div>
+    </div>
+    <div id="A4" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ true }}" mode="signup" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">A4</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · Create account</span></div>
+    </div>
+  </div>
+
+  <!-- Icon picker step -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:52px 0 6px;">
+    <span class="badge">B</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Choose your icon — optional step 2</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 28px;max-width:760px;">After tapping <strong style="color:#1E2227;">Create account</strong>, sign-up advances to this sprite picker (your real sprites). It's optional — <strong style="color:#1E2227;">Continue</strong> to save the pick or <strong style="color:#1E2227;">Skip for now</strong>. Tapping a sprite rings it with a checkmark. Selection can be changed later in Profile.</p>
+
+  <div style="display:flex;gap:46px;flex-wrap:wrap;">
+    <div id="B1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ false }}" mode="signup" step="icon" selected="lamb" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">B1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · picker (Lamb selected)</span></div>
+    </div>
+    <div id="B2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Auth" dark="{{ true }}" mode="signup" step="icon" selected="electric-guitar" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">B2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · picker (Guitar selected)</span></div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 16px;">Notes &amp; open questions</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;max-width:1040px;">
+    <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3">
+      <div style="flex:1;min-width:280px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ n.q }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ n.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="font-size:12px;line-height:1.6;color:#8A929B;margin:26px 2px 0;max-width:760px;">Try next: "drop the name field on sign up" · "add Apple as the primary button" · "make it social-only, no password" · "add a confirm-password field" · "wire a real hero photo behind the logo".</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      notes: [
+        {q:'Two separate pages', note:'Sign in and Create account are now distinct pages linked by the footer text — cleaner, less crowded. Tapping the footer link swaps pages in the prototype.'},
+        {q:'Social providers', note:'Google and Apple as requested. Apple button auto-inverts by theme per Apple HIG. Email/password is the primary path above them.'},
+        {q:'Sign-up fields', note:'Currently full name + email + password. I can add confirm-password, or drop name to keep it to two fields.'},
+        {q:'Forgot password', note:'A "Forgot?" link sits on the password row in sign-in mode. Not yet wired to a reset flow — tell me if you want that screen too.'},
+        {q:'Sprite picker', note:'Added as an optional step 2 after Create account (section B), using your real sprites. Continue saves the pick, Skip moves on. Want it also reachable from Profile to change later?'},
+        {q:'Brand mark', note:'The GC tile is a placeholder, matching Home. I will swap in the real logo once the mark is finalized.'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 80px;max-width:1320px;margin:0 auto;">
+
+  <!-- Intro -->
+  <div style="max-width:680px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">App Shell &amp; design tokens</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">The frame every screen inherits — Signal blue tokens (light + dark), SF Pro type, an atmospheric header with a top-right avatar that opens Profile/Settings, and the four-tab bottom bar. Built first for your sign-off before any other screens.</p>
+  </div>
+
+  <!-- Tokens -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:48px 0 16px;">Palette — Signal blue</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:340px;background:#FFFFFF;border:1px solid #E3E8EC;border-radius:16px;padding:22px 22px 8px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.4px;color:#1E2227;margin-bottom:14px;">Light mode</div>
+      <sc-for list="{{ lightTokens }}" as="tk" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #EEF1F4;">
+          <span style="width:30px;height:30px;border-radius:8px;flex:none;border:1px solid rgba(0,0,0,.08);background:{{ tk.hex }};"></span>
+          <span style="flex:1;font-size:13px;color:#1E2227;">{{ tk.role }}</span>
+          <span style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">{{ tk.hex }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex:1;min-width:340px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:22px 22px 8px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.4px;color:#E8ECF0;margin-bottom:14px;">Dark mode — primary for stage use</div>
+      <sc-for list="{{ darkTokens }}" as="tk" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #242A30;">
+          <span style="width:30px;height:30px;border-radius:8px;flex:none;border:1px solid rgba(255,255,255,.12);background:{{ tk.hex }};"></span>
+          <span style="flex:1;font-size:13px;color:#E8ECF0;">{{ tk.role }}</span>
+          <span style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#7C858E;">{{ tk.hex }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:14px 2px 0;max-width:760px;">One accent only — no second brand color, no gradients on UI surfaces. Button text flips by mode (white on the deeper light blue, dark ink on the brighter dark blue) for legibility.</p>
+
+  <!-- Type -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:44px 0 16px;">Typography — SF Pro (system)</h2>
+  <div style="background:#FFFFFF;border:1px solid #E3E8EC;border-radius:16px;padding:8px 24px;max-width:760px;">
+    <sc-for list="{{ typeScale }}" as="ts" hint-placeholder-count="4">
+      <div style="display:flex;align-items:baseline;gap:18px;padding:14px 0;border-bottom:1px solid #EEF1F4;">
+        <span style="width:120px;flex:none;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">{{ ts.spec }}</span>
+        <span style="flex:1;color:#1E2227;font-weight:{{ ts.weight }};font-size:{{ ts.px }};letter-spacing:-0.2px;">{{ ts.sample }}</span>
+      </div>
+    </sc-for>
+    <div style="display:flex;align-items:baseline;gap:18px;padding:14px 0;">
+      <span style="width:120px;flex:none;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">mono · chords</span>
+      <span style="flex:1;color:#15619A;font-family:ui-monospace,Menlo,monospace;font-size:17px;">G    C    D    Em</span>
+    </div>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:14px 2px 0;max-width:760px;">SF Pro everywhere — chrome and content. The only exception is chord charts, which use a monospace so chord labels align over lyrics. Large titles collapse to an inline title on scroll (iOS standard).</p>
+
+  <!-- Icon options -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:48px 0 6px;">Tab bar icons — options</h2>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Same four tabs, three real icon families — Home shown active. All ship with Expo. <strong style="color:#1E2227;">SF Symbols is now wired into the shell below.</strong> Lucide and Ionicons stay here for comparison if you want to switch.</p>
+
+  <div style="display:flex;gap:18px;flex-wrap:wrap;max-width:1180px;">
+
+    <!-- SF Symbols -->
+    <div style="flex:1;min-width:340px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden;">
+      <div style="padding:15px 18px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;">SF Symbols <span style="font-weight:600;color:#1F84C9;font-size:11px;">· my pick</span></div>
+        <div style="font-size:12px;line-height:1.45;color:#8A929B;margin-top:3px;">Apple-native via <code style="font-family:ui-monospace,monospace;">expo-symbols</code>. Most native feel; renders on iOS/iPadOS only. Active tab uses the filled (.fill) variant.</div>
+      </div>
+      <div style="border-top:1px solid #EEF1F4;padding:13px 8px 15px;display:flex;justify-content:space-around;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="27" height="27" viewBox="0 0 24 24" fill="#1F84C9"><path d="M11.34 3.27 3.4 10.2c-.45.39-.7.95-.7 1.54V19.5A1.5 1.5 0 0 0 4.2 21h3.3a1 1 0 0 0 1-1v-4.6a1 1 0 0 1 1-1h2.9a1 1 0 0 1 1 1V20a1 1 0 0 0 1 1h3.3a1.5 1.5 0 0 0 1.5-1.5v-7.76c0-.59-.25-1.15-.7-1.54l-7.94-6.93a1 1 0 0 0-1.32 0z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#1F84C9;">Home</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="#8A929B" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="#8A929B" stroke="none"></circle></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Songs</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="#8A929B" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="#8A929B" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="#8A929B" stroke="none"></circle></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Setlists</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Daily Reading</span></div>
+      </div>
+    </div>
+
+    <!-- Lucide -->
+    <div style="flex:1;min-width:340px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden;">
+      <div style="padding:15px 18px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;">Lucide</div>
+        <div style="font-size:12px;line-height:1.45;color:#8A929B;margin-top:3px;"><code style="font-family:ui-monospace,monospace;">lucide-react-native</code> (on react-native-svg). Matches your web app exactly; cross-platform. Outline-only — active state by color.</div>
+      </div>
+      <div style="border-top:1px solid #EEF1F4;padding:13px 8px 15px;display:flex;justify-content:space-around;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#1F84C9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#1F84C9;">Home</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Songs</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6"></path><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"></path><path d="M12 12H3"></path><path d="M16 6H3"></path><path d="M12 18H3"></path></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Setlists</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Daily Reading</span></div>
+      </div>
+    </div>
+
+    <!-- Ionicons -->
+    <div style="flex:1;min-width:340px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden;">
+      <div style="padding:15px 18px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;">Ionicons</div>
+        <div style="font-size:12px;line-height:1.45;color:#8A929B;margin-top:3px;">Bundled free in <code style="font-family:ui-monospace,monospace;">@expo/vector-icons</code>. Designed in an iOS idiom — rounder, heavier. Active tab uses the filled variant.</div>
+      </div>
+      <div style="border-top:1px solid #EEF1F4;padding:13px 8px 15px;display:flex;justify-content:space-around;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="#1F84C9"><path d="M12 3.2 3.6 10a1.5 1.5 0 0 0-.6 1.2V20a1 1 0 0 0 1 1h4.2a.8.8 0 0 0 .8-.8V15a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8v5.2a.8.8 0 0 0 .8.8H20a1 1 0 0 0 1-1v-8.8a1.5 1.5 0 0 0-.6-1.2L12 3.2z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#1F84C9;">Home</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="#8A929B"><path d="M19.7 3.1 9.2 5.2a1 1 0 0 0-.8 1V15a3 3 0 1 0 1.6 2.66V9.04l8-1.6v5.16a3 3 0 1 0 1.6 2.66V4.08a1 1 0 0 0-1.2-.98z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Songs</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="2.2" stroke-linecap="round"><path d="M8 6.5h12M8 12h12M8 17.5h12"></path><circle cx="4" cy="6.5" r="1.4" fill="#8A929B" stroke="none"></circle><circle cx="4" cy="12" r="1.4" fill="#8A929B" stroke="none"></circle><circle cx="4" cy="17.5" r="1.4" fill="#8A929B" stroke="none"></circle></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Setlists</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="height:27px;display:flex;align-items:center;"><svg width="25" height="25" viewBox="0 0 24 24" fill="#8A929B"><path d="M11 5.5A3.5 3.5 0 0 0 7.5 2H4a1 1 0 0 0-1 1v13.5a1 1 0 0 0 1 1h4a3 3 0 0 1 3 3zM13 5.5A3.5 3.5 0 0 1 16.5 2H20a1 1 0 0 1 1 1v13.5a1 1 0 0 1-1 1h-4a3 3 0 0 0-3 3z"></path></svg></span><span style="font-size:10px;font-weight:600;color:#8A929B;">Daily Reading</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Shells -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:52px 0 6px;">App shell — both modes</h2>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 26px;max-width:760px;">Header: large title left, avatar top-right (opens Profile/Settings). Tabs: Home · Songs · Setlists · Daily Reading, SF Symbol + label each, active tab in accent blue. The Chord Chart Viewer is not a tab — it pushes full-screen over this shell and hides the tab bar while reading.</p>
+
+  <div style="display:flex;gap:48px;flex-wrap:wrap;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <dc-import name="[UI] App Shell" dark="{{ false }}" title="Home" hint-size="402px,874px"></dc-import>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Light · flat four-tab</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <dc-import name="[UI] App Shell" dark="{{ true }}" title="Home" hint-size="402px,874px"></dc-import>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · flat four-tab</span>
+    </div>
+  </div>
+
+  <!-- Avatar destinations -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 6px;">Avatar destination — sheet vs. pushed screen</h2>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 26px;max-width:760px;">Tapping the top-right avatar opens Profile &amp; Settings. Two ways it can present — shown in context, content not built yet. <strong style="color:#1E2227;">Sheet</strong>: a dismissible modal card over the dimmed app (fast, my lean). <strong style="color:#1E2227;">Push</strong>: a full-screen page with a back button.</p>
+
+  <div style="display:flex;gap:48px;flex-wrap:wrap;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <dc-import name="[UI] App Shell" dark="{{ false }}" overlay="sheet" title="Home" hint-size="402px,874px"></dc-import>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Settings sheet</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <dc-import name="[UI] App Shell" dark="{{ false }}" overlay="push" title="Home" hint-size="402px,874px"></dc-import>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Pushed screen</span>
+    </div>
+  </div>
+
+  <!-- Decisions to confirm -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 16px;">Confirm before I build screens</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;max-width:1000px;">
+    <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="3">
+      <div style="flex:1;min-width:280px;background:#FFFFFF;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ d.q }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ d.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Archive -->
+  <div style="margin-top:64px;border-top:1px dashed #C7CFD6;padding-top:30px;">
+    <div style="display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#A6AEB6;background:#E0E5E9;border-radius:999px;padding:5px 12px;">Archive · parked</div>
+    <p style="font-size:13px;line-height:1.55;color:#8A929B;margin:14px 2px 24px;max-width:760px;">Not in the current direction. Kept here in case we want quick-add back later: the original center <strong>"+"</strong> FAB (Home · Songs · + · Setlists · Daily Reading).</p>
+    <div style="display:flex;gap:48px;flex-wrap:wrap;opacity:0.85;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <dc-import name="[UI] App Shell" dark="{{ false }}" fab="{{ true }}" title="Home" hint-size="402px,874px"></dc-import>
+        <span style="font-size:12px;font-weight:600;color:#8A929B;">Light · "+" FAB</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <dc-import name="[UI] App Shell" dark="{{ true }}" fab="{{ true }}" title="Home" hint-size="402px,874px"></dc-import>
+        <span style="font-size:12px;font-weight:600;color:#8A929B;">Dark · "+" FAB</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      lightTokens: [
+        {role:'bg (page)', hex:'#F5F7F9'},
+        {role:'surface (cards)', hex:'#FFFFFF'},
+        {role:'surface-alt', hex:'#EEF1F4'},
+        {role:'text.primary (ink)', hex:'#1E2227'},
+        {role:'text.secondary', hex:'#5C656F'},
+        {role:'text.muted', hex:'#8A929B'},
+        {role:'accent (blue)', hex:'#1F84C9'},
+        {role:'accent.pressed', hex:'#1A6FA8'},
+        {role:'accent.soft', hex:'#D9EAF6'},
+        {role:'text.accent', hex:'#15619A'},
+        {role:'on-accent', hex:'#FFFFFF'},
+        {role:'border (hairline)', hex:'#E3E8EC'},
+      ],
+      darkTokens: [
+        {role:'bg (page)', hex:'#14171A'},
+        {role:'surface (cards)', hex:'#1E2227'},
+        {role:'surface-alt', hex:'#242A30'},
+        {role:'text.primary (ink)', hex:'#E8ECF0'},
+        {role:'text.secondary', hex:'#AEB6BE'},
+        {role:'text.muted', hex:'#7C858E'},
+        {role:'accent (blue)', hex:'#4EA6E6'},
+        {role:'accent.pressed', hex:'#3E8BC6'},
+        {role:'accent.soft', hex:'#243340'},
+        {role:'text.accent', hex:'#6FB6EA'},
+        {role:'on-accent', hex:'#14171A'},
+        {role:'border (hairline)', hex:'#2A3036'},
+      ],
+      typeScale: [
+        {spec:'Large title · 34/700', weight:700, px:'30px', sample:'Songs'},
+        {spec:'Title · 22/700', weight:700, px:'21px', sample:'Setlist summary'},
+        {spec:'Body · 17/400', weight:400, px:'17px', sample:'Read the full chapter'},
+        {spec:'Footnote · 13/600', weight:600, px:'13px', sample:'4 chapters · today'},
+      ],
+      decisions: [
+        {q:'Avatar destination', note:'Both shown above — a dismissible settings sheet (my lean, fast in-context) or a pushed full screen. Pick one.'},
+        {q:'Tab bar layout', note:'Decided: flat four-tab, no FAB. The center "+" is parked in the Archive below if we ever want quick-add back.'},
+        {q:'Tab bar icons', note:'Three families shown above — leaning SF Symbols for max-native. Tell me which to wire in.'},
+        {q:'Header atmosphere', note:'Placeholder calm gradient stands in for the photographic/illustrated header. I can wire image slots once you pick photo vs. illustrated.'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

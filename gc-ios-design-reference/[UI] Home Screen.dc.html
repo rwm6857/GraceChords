@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+
+    <!-- Scrollable content -->
+    <div style="flex:1;min-height:0;overflow:auto;">
+
+      <!-- ===== HERO header ===== -->
+      <sc-if value="{{ hero }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;background:var(--atmoHero);padding:var(--safe-top) var(--safe-x) 0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;height:40px;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;letter-spacing:0.3px;" title="Logo placeholder">GC</span>
+              <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">GraceChords</span>
+            </div>
+            <button onClick="{{ onOpenSettings }}" aria-label="Profile and settings" style="flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <span style="width:36px;height:36px;border-radius:9999px;background:var(--accentSoft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--accent);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.4"></circle><path d="M5.5 20c0-3.7 2.9-6.2 6.5-6.2s6.5 2.5 6.5 6.2"></path></svg>
+              </span>
+            </button>
+          </div>
+          <div style="padding:22px 4px 84px;">
+            <div style="font-size:30px;font-weight:700;letter-spacing:-0.4px;line-height:36px;color:var(--ink);">Good morning, Alex</div>
+            <div style="font-size:15px;line-height:1.5;color:var(--sec);margin-top:6px;">Let's make music that honors His name.</div>
+          </div>
+        </div>
+        <div style="padding:0 var(--safe-x);margin-top:-66px;position:relative;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px;box-shadow:0 8px 26px rgba(20,40,60,.12);">
+            <div style="font-size:13px;font-weight:700;letter-spacing:0.2px;color:var(--ink);margin-bottom:13px;">Continue where you left off</div>
+            <div onClick="{{ onContinue }}" style="display:flex;align-items:center;gap:13px;cursor:pointer;">
+              <span style="flex:none;width:52px;height:52px;border-radius:12px;background:var(--accentSoft);display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:var(--textAccent);">G</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Great Are You Lord</div>
+                <div style="font-size:14px;color:var(--sec);margin-top:1px;">All Sons &amp; Daughters</div>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Key of G · 4/4 · 72 BPM</div>
+              </div>
+              <span style="flex:none;width:40px;height:40px;border-radius:9999px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;">
+                <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== FLAT header ===== -->
+      <sc-if value="{{ flat }}" hint-placeholder-val="{{ true }}">
+        <div style="background:var(--bg);padding:var(--safe-top) var(--safe-x) 0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;height:40px;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;letter-spacing:0.3px;" title="Logo placeholder">GC</span>
+              <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">GraceChords</span>
+            </div>
+            <button onClick="{{ onOpenSettings }}" aria-label="Profile and settings" style="flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <span style="width:36px;height:36px;border-radius:9999px;background:var(--accentSoft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--accent);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.4"></circle><path d="M5.5 20c0-3.7 2.9-6.2 6.5-6.2s6.5 2.5 6.5 6.2"></path></svg>
+              </span>
+            </button>
+          </div>
+          <div style="padding:18px 4px 18px;">
+            <div style="font-size:30px;font-weight:700;letter-spacing:-0.4px;line-height:36px;color:var(--ink);">Good morning, Alex</div>
+            <div style="font-size:15px;line-height:1.5;color:var(--sec);margin-top:6px;">Let's make music that honors His name.</div>
+          </div>
+        </div>
+        <div style="padding:0 var(--safe-x);">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+            <div style="font-size:13px;font-weight:700;letter-spacing:0.2px;color:var(--ink);margin-bottom:13px;">Continue where you left off</div>
+            <div onClick="{{ onContinue }}" style="display:flex;align-items:center;gap:13px;cursor:pointer;">
+              <span style="flex:none;width:52px;height:52px;border-radius:12px;background:var(--accentSoft);display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:var(--textAccent);">G</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Great Are You Lord</div>
+                <div style="font-size:14px;color:var(--sec);margin-top:1px;">All Sons &amp; Daughters</div>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Key of G · 4/4 · 72 BPM</div>
+              </div>
+              <span style="flex:none;width:40px;height:40px;border-radius:9999px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;">
+                <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== Up next: launch the upcoming set into performer mode ===== -->
+      <div style="padding:0 var(--safe-x);margin-top:26px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--textAccent);">Next set</div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:6px;">
+            <div style="min-width:0;">
+              <div style="font-size:19px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Sunday Service</div>
+              <div style="font-size:13px;color:var(--sec);margin-top:4px;">10 songs · 45 min</div>
+            </div>
+            <span style="flex:none;font-size:12px;font-weight:600;color:var(--textAccent);background:var(--accentSoft);border-radius:8px;padding:5px 9px;">Keys G–D</span>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px;">
+            <button onClick="{{ onStartSet }}" style="flex:1;height:46px;border-radius:12px;background:var(--accent);color:var(--onAccent);font-size:16px;font-weight:600;letter-spacing:-0.2px;display:flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;">
+              Start set
+              <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+            </button>
+            <button onClick="{{ onStartSet }}" aria-label="Edit set" style="flex:none;width:46px;height:46px;border-radius:12px;background:var(--accentSoft);color:var(--textAccent);display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"></path><path d="M18.4 2.6a2 2 0 0 1 2.9 2.9L12 14.8l-3.8 1 1-3.8z"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Recent setlists ===== -->
+      <div style="padding:0 var(--safe-x);margin-top:28px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;">
+          <span style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Recent setlists</span>
+          <span style="font-size:14px;font-weight:600;color:var(--textAccent);">View all</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:14px;">
+          <div onClick="{{ onRecent }}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:14px 14px 14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Acoustic Night</div>
+              <div style="font-size:13px;color:var(--sec);margin-top:3px;">8 songs · 32 min</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Updated 1w ago</div>
+            </div>
+            <span style="flex:none;color:var(--muted);display:flex;padding:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></span>
+          </div>
+          <div onClick="{{ onRecent }}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:14px 14px 14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Youth Night</div>
+              <div style="font-size:13px;color:var(--sec);margin-top:3px;">12 songs · 50 min</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Updated 4d ago</div>
+            </div>
+            <span style="flex:none;color:var(--muted);display:flex;padding:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Today's reading teaser ===== -->
+      <div style="padding:0 var(--safe-x);margin-top:28px;">
+        <div onClick="{{ onReading }}" style="background:var(--accentSoft);border-radius:var(--r-card);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--textAccent);">Today's reading</div>
+            <div style="font-size:16px;font-weight:600;letter-spacing:-0.2px;color:var(--ink);margin-top:5px;line-height:1.35;">"Make a joyful noise to the Lord, all the earth."</div>
+            <div style="font-size:12.5px;color:var(--sec);margin-top:6px;">Psalm 100 · 4 chapters today</div>
+          </div>
+          <span style="flex:none;color:var(--textAccent);display:flex;"><svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg></span>
+        </div>
+      </div>
+
+      <div style="height:22px;"></div>
+    </div>
+
+    <!-- ===== Tab bar (Home active, SF Symbols) ===== -->
+    <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M11.34 3.27 3.4 10.2c-.45.39-.7.95-.7 1.54V19.5A1.5 1.5 0 0 0 4.2 21h3.3a1 1 0 0 0 1-1v-4.6a1 1 0 0 1 1-1h2.9a1 1 0 0 1 1 1V20a1 1 0 0 0 1 1h3.3a1.5 1.5 0 0 0 1.5-1.5v-7.76c0-.59-.25-1.15-.7-1.54l-7.94-6.93a1 1 0 0 0-1.32 0z"></path></svg>
+        <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span>
+      </div>
+      <div onClick="{{ onGoSongs }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+        <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span>
+      </div>
+      <div onClick="{{ onGoSetlists }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg>
+        <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span>
+      </div>
+      <div onClick="{{ onGoDaily }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg>
+        <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span>
+      </div>
+    </div>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;hero&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;logo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mono&quot;,&quot;pick&quot;,&quot;grid&quot;,&quot;cross&quot;,&quot;line&quot;,&quot;leaf&quot;],&quot;default&quot;:&quot;mono&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const dark = !!this.props.dark;
+    const L = {
+      bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4',
+      ink:'#1E2227', sec:'#5C656F', muted:'#8A929B',
+      accent:'#1F84C9', accentSoft:'#D9EAF6', textAccent:'#15619A', border:'#E3E8EC', onAccent:'#FFFFFF',
+      atmoHero:'radial-gradient(120% 78% at 50% 16%, rgba(255,255,255,.55), rgba(255,255,255,0) 52%), linear-gradient(180deg,#BFD3E3 0%,#CFE0EA 34%,#E3EDF2 72%,#F5F7F9 100%)'
+    };
+    const D = {
+      bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30',
+      ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E',
+      accent:'#4EA6E6', accentSoft:'#243340', textAccent:'#6FB6EA', border:'#2A3036', onAccent:'#14171A',
+      atmoHero:'radial-gradient(120% 78% at 50% 14%, rgba(78,166,230,.18), rgba(78,166,230,0) 55%), linear-gradient(180deg,#1C2A36 0%,#18222A 38%,#15191D 78%,#14171A 100%)'
+    };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,
+      '--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--textAccent':t.textAccent,
+      '--border':t.border,'--onAccent':t.onAccent,'--atmoHero':t.atmoHero,
+      // — locked design tokens —
+      '--sp-2':'2px','--sp-4':'4px','--sp-8':'8px','--sp-12':'12px','--sp-16':'16px','--sp-20':'20px','--sp-24':'24px','--sp-32':'32px','--sp-40':'40px',
+      '--r-xs':'6px','--r-sm':'8px','--r-md':'10px','--r-card':'14px','--r-sheet':'20px','--r-pill':'9999px',
+      '--safe-top':'54px','--safe-bottom':'24px','--safe-x':'16px',
+      position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:'var(--bg)', fontFamily:'-apple-system, system-ui, sans-serif'
+    };
+    const hero = this.props.hero !== false;
+    const noop = () => {};
+    return {
+      dark, hero, flat: !hero, logo: this.props.logo || 'mono', rootStyle,
+      onOpenSettings: this.props.onOpenSettings || noop,
+      onGoSongs: this.props.onGoSongs || noop,
+      onGoSetlists: this.props.onGoSetlists || noop,
+      onGoDaily: this.props.onGoDaily || noop,
+      onContinue: this.props.onContinue || noop,
+      onStartSet: this.props.onStartSet || noop,
+      onRecent: this.props.onRecent || noop,
+      onReading: this.props.onReading || noop,
+    };
+  }
+}
+</script>
+</body>
+</html>

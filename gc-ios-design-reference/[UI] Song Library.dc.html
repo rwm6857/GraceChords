@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    .lg-scroll::-webkit-scrollbar { width:0; height:0; }
+  </style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" keyboard="{{ activeSearch }}" hint-size="402px,874px">
+  <dc-import name="SongLibraryContent" dark="{{ dark }}" search-mode="{{ searchMode }}" filter="{{ filter }}" select-song="{{ selectSong }}" on-go-home="{{ onGoHome }}" on-go-setlists="{{ onGoSetlists }}" on-go-daily="{{ onGoDaily }}" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;searchMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;browse&quot;,&quot;active&quot;,&quot;sheet&quot;],&quot;default&quot;:&quot;browse&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;filter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;artist&quot;,&quot;key&quot;,&quot;themes&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      dark: !!this.props.dark,
+      searchMode: this.props.searchMode || 'browse',
+      filter: this.props.filter || 'all',
+      activeSearch: (this.props.searchMode || 'browse') === 'active',
+      selectSong: this.props.selectSong || (() => {}),
+      onGoHome: this.props.onGoHome || (() => {}),
+      onGoSetlists: this.props.onGoSetlists || (() => {}),
+      onGoDaily: this.props.onGoDaily || (() => {}),
+    };
+  }
+}
+</script>
+</body>
+</html>

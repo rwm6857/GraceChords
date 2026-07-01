@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+  </style>
+</helmet>
+<div style="{{ backdropStyle }}">
+  <div data-screen-label="GC iOS demo" style="{{ stageStyle }}">
+
+    <!-- ============ HOME ============ -->
+    <div data-screen-label="Home" style="{{ homeLayerStyle }}">
+      <dc-import name="[UI] Home Screen" dark="{{ dark }}" hero="{{ homeHero }}" on-open-settings="{{ openSettings }}" on-go-songs="{{ goLibrary }}" on-go-setlists="{{ goSetlists }}" on-go-daily="{{ goDaily }}" on-continue="{{ openContinue }}" on-start-set="{{ goSetlists }}" on-recent="{{ goSetlists }}" on-reading="{{ goDaily }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <!-- ============ SONG LIBRARY ============ -->
+    <div data-screen-label="Song Library" style="{{ libraryLayerStyle }}">
+      <dc-import name="[UI] Song Library" dark="{{ dark }}" search-mode="browse" filter="all" select-song="{{ openSong }}" on-go-home="{{ goHome }}" on-go-setlists="{{ goSetlists }}" on-go-daily="{{ goDaily }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <!-- ============ SETLISTS (builder → viewer, self-contained) ============ -->
+    <div data-screen-label="Setlist Builder" style="{{ setlistsLayerStyle }}">
+      <dc-import name="[UI] Setlist Builder" on-exit="{{ goHome }}" on-go-home="{{ goHome }}" on-go-songs="{{ goLibrary }}" on-go-daily="{{ goDaily }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <!-- ============ DAILY WORD ============ -->
+    <div data-screen-label="Daily Word" style="{{ dailyLayerStyle }}">
+      <dc-import name="[UI] Daily Word" dark="{{ dark }}" on-go-home="{{ goHome }}" on-go-songs="{{ goLibrary }}" on-go-setlists="{{ goSetlists }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <!-- ============ SONG READER (push) ============ -->
+    <div data-screen-label="Song View" style="{{ songLayerStyle }}">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <dc-import name="SetlistViewerContent" songs-data="{{ songArr }}" start-index="{{ zero }}" on-back="{{ closePush }}" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+      </x-import>
+    </div>
+
+    <!-- ============ PROFILE & SETTINGS (push) ============ -->
+    <div data-screen-label="Settings" style="{{ settingsLayerStyle }}">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+        <div style="{{ settingsRootStyle }}">
+          <div style="flex:none;padding:54px 8px 9px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
+            <div style="display:flex;align-items:center;height:32px;">
+              <button onClick="{{ closePush }}" aria-label="Back" style="display:flex;align-items:center;gap:1px;padding:0 6px;border:0;background:transparent;color:var(--accent);cursor:pointer;">
+                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 2 10l7 8"></path></svg>
+                <span style="font-size:17px;letter-spacing:-0.2px;">Home</span>
+              </button>
+              <span style="position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;color:var(--ink);pointer-events:none;">Profile &amp; Settings</span>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;overflow:hidden;">
+            <dc-import name="[UI] Settings Content" dark="{{ dark }}" on-logout="{{ logout }}" on-open-offline="{{ openOffline }}" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ OFFLINE & DOWNLOADS (push over settings) ============ -->
+    <div data-screen-label="Offline Downloads" style="{{ offlineLayerStyle }}">
+      <dc-import name="[UI] Offline Downloads" dark="{{ dark }}" on-back="{{ openSettings }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <!-- ============ LOGIN (gate) ============ -->
+    <div data-screen-label="Login" style="{{ authLayerStyle }}">
+      <dc-import name="[UI] Auth" dark="{{ dark }}" mode="signin" on-authed="{{ doAuth }}" hint-size="402px,874px"></dc-import>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;skipLogin&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;homeHero&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      authed: !!props.skipLogin,
+      tab: 'home',
+      push: null,
+      pushSong: { t: 'Great Are You Lord', a: 'All Sons & Daughters', k: 'G' },
+    };
+  }
+
+  go(patch) { this.setState(patch); }
+
+  renderVals() {
+    const dark = this.props.dark !== false;
+    const { tab, push, authed, pushSong } = this.state;
+
+    const backdrop = dark
+      ? 'radial-gradient(120% 90% at 50% 0%, #1b2733 0%, #10151a 55%, #0b0e12 100%)'
+      : 'radial-gradient(120% 90% at 50% 0%, #eef2f6 0%, #dfe6ec 60%, #d3dbe2 100%)';
+
+    const backdropStyle = {
+      position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: backdrop, overflow: 'auto', padding: '24px',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+    };
+    const stageStyle = { position: 'relative', width: '402px', height: '874px', flex: 'none' };
+
+    // ---- tab layers (underneath) ----
+    const tabLayer = (name) => ({
+      position: 'absolute', inset: 0,
+      opacity: tab === name ? 1 : 0,
+      pointerEvents: (tab === name && !push) ? 'auto' : 'none',
+      zIndex: tab === name ? 1 : 0,
+      transition: 'opacity .2s ease',
+    });
+
+    // ---- push layers (slide from right) ----
+    const slide = (visible, z) => ({
+      position: 'absolute', inset: 0,
+      transform: visible ? 'translateX(0)' : 'translateX(100%)',
+      opacity: visible ? 1 : 0,
+      pointerEvents: visible ? 'auto' : 'none',
+      zIndex: visible ? z : -1,
+      transition: 'transform .32s cubic-bezier(.2,0,0,1), opacity .28s ease',
+      boxShadow: visible ? '-16px 0 44px rgba(0,0,0,0.4)' : 'none',
+    });
+
+    const settingsHeld = push === 'settings' || push === 'offline';
+
+    // settings theme vars for the pushed header
+    const t = dark
+      ? { surface: '#1E2227', border: '#2A3036', ink: '#E8ECF0', accent: '#4EA6E6', bg: '#14171A' }
+      : { surface: '#FFFFFF', border: '#E3E8EC', ink: '#1E2227', accent: '#1F84C9', bg: '#F5F7F9' };
+    const settingsRootStyle = {
+      '--surface': t.surface, '--border': t.border, '--ink': t.ink, '--accent': t.accent,
+      position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+      background: t.bg, fontFamily: '-apple-system, system-ui, sans-serif',
+    };
+
+    return {
+      dark, homeHero: this.props.homeHero !== false,
+      backdropStyle, stageStyle, settingsRootStyle,
+      zero: 0,
+      songArr: [{ t: pushSong.t, a: pushSong.a, k: pushSong.k }],
+
+      homeLayerStyle: tabLayer('home'),
+      libraryLayerStyle: tabLayer('library'),
+      setlistsLayerStyle: tabLayer('setlists'),
+      dailyLayerStyle: tabLayer('daily'),
+
+      songLayerStyle: slide(push === 'song', 40),
+      settingsLayerStyle: slide(settingsHeld, 30),
+      offlineLayerStyle: slide(push === 'offline', 35),
+      authLayerStyle: {
+        position: 'absolute', inset: 0, zIndex: 50,
+        opacity: authed ? 0 : 1,
+        pointerEvents: authed ? 'none' : 'auto',
+        transition: 'opacity .3s ease',
+      },
+
+      // navigation
+      goHome: () => this.go({ tab: 'home', push: null }),
+      goLibrary: () => this.go({ tab: 'library', push: null }),
+      goSetlists: () => this.go({ tab: 'setlists', push: null }),
+      goDaily: () => this.go({ tab: 'daily', push: null }),
+      openSettings: () => this.go({ push: 'settings' }),
+      openOffline: () => this.go({ push: 'offline' }),
+      openContinue: () => this.go({ pushSong: { t: 'Great Are You Lord', a: 'All Sons & Daughters', k: 'G' }, push: 'song' }),
+      openSong: (song) => this.go({ pushSong: { t: song.t, a: song.a, k: song.k }, push: 'song' }),
+      closePush: () => this.go({ push: null }),
+      logout: () => this.go({ authed: false, push: null, tab: 'home' }),
+      doAuth: () => this.go({ authed: true, push: null, tab: 'home' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

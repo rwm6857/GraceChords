@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    .lg-scroll::-webkit-scrollbar { width:0; height:0; }
+  </style>
+</helmet>
+<div style="position:relative;height:100%;display:flex;flex-direction:column;background:#131619;font-family:-apple-system,system-ui,sans-serif;">
+
+  <!-- Header -->
+  <div style="flex:none;padding:50px 16px 12px;background:#131619;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <button onClick="{{ back }}" aria-label="Back to setlist" style="width:40px;height:40px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+      <div style="display:flex;gap:8px;">
+        <button onClick="{{ openMore }}" aria-label="More" style="width:40px;height:40px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+        <button onClick="{{ openShare }}" aria-label="Share" style="width:40px;height:40px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg></button>
+      </div>
+    </div>
+
+    <!-- Set progress rail (multi-song sets only) -->
+    <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:16px;">
+      <div style="display:flex;align-items:center;gap:5px;">
+        <sc-for list="{{ cells }}" as="cell" hint-placeholder-count="6">
+          <span onClick="{{ cell.onClick }}" style="{{ cell.barStyle }}"></span>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <div style="margin-top:14px;">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;color:#F2F4F6;line-height:1.1;white-space:nowrap;">{{ title }}</div>
+        <button onClick="{{ toggleStar }}" aria-label="Favorite" style="flex:none;border:0;background:transparent;padding:2px;margin:0;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <sc-if value="{{ starred }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="#FFCC00" stroke="#FFCC00" stroke-width="1.2" stroke-linejoin="round"><path d="M12 3.2l2.7 5.5 6.1.9-4.4 4.3 1 6L12 17.9 6.6 20l1-6-4.4-4.3 6.1-.9z"></path></svg></sc-if>
+          <sc-if value="{{ notStarred }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C858E" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.2l2.7 5.5 6.1.9-4.4 4.3 1 6L12 17.9 6.6 20l1-6-4.4-4.3 6.1-.9z"></path></svg></sc-if>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;margin-top:7px;">
+        <span style="font-size:13.5px;color:#9AA2AA;">{{ artist }}</span>
+        <span style="width:3px;height:3px;border-radius:9999px;background:#5A626B;"></span>
+        <span style="font-size:12.5px;font-weight:700;color:#6FB6EA;background:#1E2C38;border-radius:7px;padding:3px 9px;">{{ keyLine }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart · swipe ◀▶ to change song, slides in -->
+  <div class="lg-scroll" onPointerDown="{{ onDown }}" onPointerUp="{{ onUp }}" style="flex:1;min-height:0;overflow:auto;padding:8px 18px 96px;touch-action:pan-y;">
+    <div style="{{ slideStyle }}">
+      <dc-import name="SongChart" sections="{{ displaySections }}" lyrics-only="{{ lyricsOnly }}" show-sections="{{ showSections }}" chord-color="#5AB0EE" lyric-color="#ECEFF2" section-color="#79818A" lyric-size="{{ size }}" hint-size="100%,460px"></dc-import>
+    </div>
+  </div>
+
+  <!-- Control bar · nav ◀ ▶ float near edges, transpose ▾▴ its own island -->
+  <div style="position:absolute;left:0;right:0;bottom:29px;z-index:6;display:flex;align-items:center;justify-content:{{ ctrlJustify }};padding:0 12px;pointer-events:none;">
+    <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ prev }}" aria-label="Previous song" style="{{ prevStyle }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    </sc-if>
+
+    <div style="pointer-events:auto;display:flex;align-items:center;gap:6px;background:rgba(28,33,38,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #363D44;border-radius:16px;padding:6px 8px;box-shadow:0 10px 28px rgba(0,0,0,0.5);">
+      <button onClick="{{ decKey }}" aria-label="Key down" style="width:46px;height:44px;border:0;background:#14181B;color:#5AB0EE;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:11px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+      <div style="min-width:48px;height:44px;display:flex;align-items:center;justify-content:center;padding:0 1px;"><div style="font-size:24px;font-weight:700;color:#EDF1F4;">{{ keyLetter }}</div></div>
+      <button onClick="{{ incKey }}" aria-label="Key up" style="width:46px;height:44px;border:0;background:#14181B;color:#5AB0EE;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:11px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"></path></svg></button>
+    </div>
+
+    <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ next }}" aria-label="Next song" style="{{ nextStyle }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+    </sc-if>
+  </div>
+
+  <!-- ••• More / view options sheet -->
+  <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:10;"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:11;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.5);padding:8px 18px 36px;">
+      <div style="display:flex;justify-content:center;padding:2px 0 10px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;white-space:nowrap;">View options</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#7C858E;margin-bottom:8px;">SHOW</div>
+      <div style="display:flex;background:#14181B;border-radius:12px;padding:3px;margin-bottom:18px;">
+        <button onClick="{{ chordsOn }}" style="{{ segChordsStyle }}">Chords &amp; lyrics</button>
+        <button onClick="{{ lyricsOn }}" style="{{ segLyricsStyle }}">Lyrics only</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 16px;">
+        <span style="font-size:16px;color:#E8ECF0;">Section labels</span>
+        <div onClick="{{ toggleSections }}" style="{{ switchTrackStyle }}"><div style="{{ switchKnobStyle }}"></div></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px;">
+        <span style="font-size:16px;color:#E8ECF0;">Font size</span>
+        <div style="display:flex;align-items:center;gap:2px;background:#14181B;border:1px solid #2A3036;border-radius:12px;padding:3px;">
+          <button onClick="{{ decFont }}" aria-label="Smaller" style="width:40px;height:36px;border:0;background:transparent;color:#C9D0D6;font-size:13px;font-weight:700;cursor:pointer;border-radius:9px;">A</button>
+          <div style="min-width:52px;text-align:center;font-size:13px;font-weight:600;color:#9AA2AA;">{{ fontLabel }}</div>
+          <button onClick="{{ incFont }}" aria-label="Larger" style="width:40px;height:36px;border:0;background:transparent;color:#EDF1F4;font-size:20px;font-weight:700;cursor:pointer;border-radius:9px;">A</button>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#7C858E;margin:20px 0 8px;">CHORD STYLE</div>
+      <div style="display:flex;background:#14181B;border-radius:12px;padding:3px;">
+        <button onClick="{{ setLetters }}" style="{{ csLetters }}">Letters</button>
+        <button onClick="{{ setNumbers }}" style="{{ csNumbers }}">Numbers</button>
+        <button onClick="{{ setSolfege }}" style="{{ csSolfege }}">Solfège</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Share / export sheet · This song ↔ Whole set -->
+  <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:10;"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:11;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.5);padding:8px 16px 36px;">
+      <div style="display:flex;justify-content:center;padding:2px 0 8px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Export &amp; share</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+
+      <div style="display:flex;background:#14181B;border-radius:12px;padding:3px;margin-bottom:14px;">
+        <button onClick="{{ scopeSong }}" style="{{ scopeSongStyle }}">This song</button>
+        <button onClick="{{ scopeSet }}" style="{{ scopeSetStyle }}">Whole set</button>
+      </div>
+
+      <sc-if value="{{ setScope }}" hint-placeholder-val="{{ true }}">
+        <button style="width:100%;height:50px;border:0;border-radius:13px;background:#4EA6E6;color:#0E1417;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M8 11l4 4 4-4"></path><path d="M5 20h14"></path></svg>Export set as PDF · {{ setCountLabel }}</button>
+        <div style="display:flex;gap:9px;margin-bottom:9px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h9M8 12h9M8 18h6"></path><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">Set list</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"></path><path d="M3 8V6a1 1 0 0 1 1-1h6l2 2"></path><path d="M12 11v5M9.5 13.5L12 16l2.5-2.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">Charts ZIP</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V7.5L20 5.5V16"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="17.5" cy="16" r="2.5"></circle></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">ChordPro</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:12px 14px;cursor:pointer;margin-bottom:9px;"><span style="width:30px;height:30px;border-radius:9999px;background:#243340;display:flex;align-items:center;justify-content:center;flex:none;color:#6FB6EA;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2.5-2.5a5 5 0 0 0-7-7L11.5 5.5"></path><path d="M14 11a5 5 0 0 0-7.5-.5L4 13a5 5 0 0 0 7 7l1.5-1.5"></path></svg></span><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#E8ECF0;">Copy set link</div><div style="font-size:11.5px;color:#7C858E;">Shareable, opens in GraceChords</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:12px 14px;cursor:pointer;"><span style="width:30px;height:30px;border-radius:9999px;background:#2AABEE;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 4.3L2.8 11.6c-1 .4-1 1 .1 1.3l4.7 1.5 1.8 5.6c.2.6.4.7.9.3l2.6-2.1 4.6 3.4c.8.4 1.4.2 1.6-.8l3-14c.3-1.2-.5-1.7-1.2-1.5z"></path></svg></span><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#E8ECF0;">Send set to Telegram</div><div style="font-size:11.5px;color:#7C858E;">Optional bot</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div>
+      </sc-if>
+
+      <sc-if value="{{ songScope }}" hint-placeholder-val="{{ true }}">
+        <button style="width:100%;height:50px;border:0;border-radius:13px;background:#4EA6E6;color:#0E1417;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg>Open share sheet…</button>
+        <div style="display:flex;gap:9px;margin-bottom:9px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">PDF</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">JPG</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">ChordPro</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:12px 14px;cursor:pointer;"><span style="width:30px;height:30px;border-radius:9999px;background:#2AABEE;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 4.3L2.8 11.6c-1 .4-1 1 .1 1.3l4.7 1.5 1.8 5.6c.2.6.4.7.9.3l2.6-2.1 4.6 3.4c.8.4 1.4.2 1.6-.8l3-14c.3-1.2-.5-1.7-1.2-1.5z"></path></svg></span><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#E8ECF0;">Send to Telegram</div><div style="font-size:11.5px;color:#7C858E;">Optional bot</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;chordStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;letters&quot;,&quot;numbers&quot;,&quot;solfege&quot;],&quot;default&quot;:&quot;letters&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Display&quot;}}">
+class Component extends DCLogic {
+  state = { steps: 0, lyricsOnly: false, showSections: true, fontScale: 1, starred: true, moreOpen: false, shareOpen: false, chordStyleSel: null, idx: null, dir: 'next', sliding: false, shareScope: 'set' };
+
+  renderVals() {
+    const SH = ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'];
+    const NI = { A:0,'A#':1,Bb:1,B:2,C:3,'C#':4,Db:4,D:5,'D#':6,Eb:6,E:7,F:8,'F#':9,Gb:9,G:10,'G#':11,Ab:11 };
+    const numMap = {0:'1',2:'2',4:'3',5:'4',7:'5',9:'6',11:'7',1:'#1',3:'#2',6:'#4',8:'#5',10:'#6'};
+    const solMap = {0:'Do',2:'Re',4:'Mi',5:'Fa',7:'Sol',9:'La',11:'Ti',1:'Di',3:'Ri',6:'Fi',8:'Si',10:'Li'};
+    const mode = this.state.chordStyleSel || this.props.chordStyle || 'letters';
+    const tn = (n, st) => { let i = (NI[n] + st) % 12; if (i < 0) i += 12; return SH[i]; };
+    const deg = (n) => (mode === 'solfege' ? solMap[NI[n]] : numMap[NI[n]]);
+
+    const CHARTS = {
+      'Great Are You Lord': { k:'G', raw:[
+        { label:'Verse', lines:[
+          [{c:'G',t:'You give '},{c:'C',t:'life, You are '},{c:'G',t:'love'}],
+          [{c:'G',t:'You bring '},{c:'C',t:'light to the '},{c:'D',t:'dark'}],
+          [{c:'Em',t:'You give '},{c:'C',t:'hope, You re'},{c:'G',t:'store'}],
+          [{c:'C',t:'Every heart that is '},{c:'D',t:'broken'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'C',t:"And it's Your "},{c:'G',t:'breath in our '},{c:'D',t:'lungs'}],
+          [{c:'Em',t:'So we pour out our '},{c:'C',t:'praise to You '},{c:'D',t:'only'}],
+          [{c:'C',t:"And it's Your "},{c:'G',t:'breath in our '},{c:'D',t:'lungs'}],
+          [{c:'Em',t:'So we pour out our '},{c:'C',t:'praise, we pour out our '},{c:'D',t:'praise'}],
+        ]},
+      ]},
+      'Goodness of God': { k:'C', raw:[
+        { label:'Verse 1', lines:[
+          [{c:'C',t:'I love You, '},{c:'G',t:'Lord'}],
+          [{c:'Am',t:'Oh Your mercy '},{c:'F',t:'never fails me'}],
+          [{c:'C',t:'All my days, '},{c:'G',t:"I've been held in Your "},{c:'Am',t:'hands'}],
+          [{c:'F',t:'From the moment that I wake up'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'C',t:'All my life You have '},{c:'G',t:'been faithful'}],
+          [{c:'Am',t:'All my life You have '},{c:'F',t:'been so, so good'}],
+          [{c:'C',t:'With every breath that '},{c:'G',t:'I am able'}],
+          [{c:'Am',t:'I will sing of the '},{c:'F',t:'goodness of God'}],
+        ]},
+      ]},
+      'Above All': { k:'A', raw:[
+        { label: 'Verse 1', lines: [
+          [{c:'A',t:'Above all '},{c:'D',t:'powers, above all '},{c:'E',t:'kings,'}],
+          [{c:'A/C#',t:'Above all '},{c:'D',t:'nature and all '},{c:'E',t:'created '},{c:'A',t:'things.'}],
+          [{c:'A/G#',t:'Above all '},{c:'F#m',t:'wisdom and '},{c:'Amaj7/E',t:'all the ways of man,'}],
+          [{c:'Bm7',t:'You were here be'},{c:'E/G#',t:'fore the world be'},{c:'A',t:'gan.'}],
+        ]},
+        { label: 'Chorus', lines: [
+          [{c:'D',t:'Cru'},{c:'A/C#',t:'cified, laid be'},{c:'Bm7',t:'hind the '},{c:'E',t:'stone,'}],
+          [{c:'D',t:'You lived to '},{c:'A/C#',t:'die, re'},{c:'Bm7',t:'jected and a'},{c:'E',t:'lone.'}],
+          [{c:'D',t:'Like a '},{c:'A/C#',t:'rose, '},{c:'Bm7',t:'trampled on the '},{c:'E',t:'ground,'}],
+          [{c:'D',t:'You took the '},{c:'E',t:'fall, and '},{c:'F#m',t:'thought of '},{c:'E',t:'me,'}],
+          [{c:'D',t:'A'},{c:'E',t:'bove '},{c:'A',t:'all.'}],
+        ]},
+      ]},
+      'King of Kings': { k:'D', raw:[
+        { label:'Verse 1', lines:[
+          [{c:'D',t:'In the darkness we were '},{c:'A',t:'waiting'}],
+          [{c:'Bm',t:'Without hope with'},{c:'G',t:'out light'}],
+          [{c:'D',t:'Till from Heaven You came '},{c:'A',t:'running'}],
+          [{c:'G',t:'There was mercy in Your '},{c:'A',t:'eyes'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'D',t:'Praise the Father, '},{c:'A',t:'praise the Son'}],
+          [{c:'Bm',t:'Praise the Spirit, three in '},{c:'G',t:'one'}],
+          [{c:'D',t:'God of glory, '},{c:'A',t:'Majesty'}],
+          [{c:'G',t:'Praise forever to the '},{c:'A',t:'King of kings'}],
+        ]},
+      ]},
+      'What a Beautiful Name': { k:'A', raw:[
+        { label:'Verse 1', lines:[
+          [{c:'A',t:'You were the Word at the be'},{c:'E',t:'ginning'}],
+          [{c:'F#m',t:'One with God the Lord most '},{c:'D',t:'high'}],
+          [{c:'A',t:'Your hidden glory in cre'},{c:'E',t:'ation'}],
+          [{c:'F#m',t:'Now revealed in You our '},{c:'D',t:'Christ'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'A',t:'What a beautiful '},{c:'E',t:'Name it is'}],
+          [{c:'F#m',t:'What a beautiful '},{c:'D',t:'Name it is'}],
+          [{c:'A',t:'The Name of '},{c:'E',t:'Jesus Christ my '},{c:'D',t:'King'}],
+        ]},
+      ]},
+      'Way Maker': { k:'E', raw:[
+        { label:'Verse 1', lines:[
+          [{c:'E',t:'You are here, '},{c:'C#m',t:'moving in our midst'}],
+          [{c:'A',t:'I worship You, '},{c:'B',t:'I worship You'}],
+          [{c:'E',t:'You are here, '},{c:'C#m',t:'working in this place'}],
+          [{c:'A',t:'I worship You, '},{c:'B',t:'I worship You'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'E',t:'Way maker, '},{c:'C#m',t:'miracle worker'}],
+          [{c:'A',t:'Promise keeper, '},{c:'B',t:'light in the darkness'}],
+          [{c:'E',t:'My God, '},{c:'C#m',t:'that is who You '},{c:'A',t:'are'}],
+        ]},
+      ]},
+      'How Great Is Our God': { k:'C', raw:[
+        { label:'Verse', lines:[
+          [{c:'C',t:'The splendor of the '},{c:'Am',t:'King, '},{c:'F',t:'clothed in majesty'}],
+          [{c:'C',t:'Let all the earth re'},{c:'Am',t:'joice, '},{c:'F',t:'all the earth rejoice'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'F',t:'How great is our '},{c:'C',t:'God, sing with me'}],
+          [{c:'Am',t:'How great is our '},{c:'F',t:'God'}],
+          [{c:'C',t:'And all will see how '},{c:'Am',t:'great, how '},{c:'F',t:'great is our God'}],
+        ]},
+      ]},
+      'Build My Life': { k:'D', raw:[
+        { label:'Verse', lines:[
+          [{c:'D',t:'Worthy of every '},{c:'Gsus',t:'song we could ever sing'}],
+          [{c:'A',t:'Worthy of all the '},{c:'G',t:'praise we could ever bring'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'D',t:'Holy, there is no '},{c:'A',t:'one like You'}],
+          [{c:'Bm',t:'There is none be'},{c:'G',t:'side You'}],
+          [{c:'D',t:'Open up my '},{c:'A',t:'eyes in wonder and '},{c:'G',t:'show me who You are'}],
+        ]},
+      ]},
+      'O Come to the Altar': { k:'C', raw:[
+        { label:'Verse', lines:[
+          [{c:'C',t:'Are you hurting and '},{c:'Am',t:'broken within'}],
+          [{c:'F',t:'Overwhelmed by the '},{c:'C',t:'weight of your sin'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'C',t:'O come to the '},{c:'G',t:'altar'}],
+          [{c:'Am',t:"The Father's arms are "},{c:'F',t:'open wide'}],
+          [{c:'C',t:'Forgiveness was '},{c:'G',t:'bought with the '},{c:'Am',t:'precious blood of '},{c:'F',t:'Jesus Christ'}],
+        ]},
+      ]},
+      'Blessed Be Your Name': { k:'D', raw:[
+        { label:'Verse', lines:[
+          [{c:'D',t:'Blessed be Your '},{c:'G',t:'name'}],
+          [{c:'D',t:'In the land that is '},{c:'A',t:'plentiful'}],
+        ]},
+        { label:'Chorus', lines:[
+          [{c:'D',t:'Blessed be the '},{c:'A',t:'name of the '},{c:'Bm',t:'Lord'}],
+          [{c:'G',t:'Blessed be Your '},{c:'A',t:'name'}],
+        ]},
+      ]},
+    };
+    const GENERIC = [{ label:'Chorus', lines:[[{c:'',t:'Chart coming soon — this song is in your set.'}]] }];
+
+    const DEFAULT_SET = [
+      { t:'Great Are You Lord', a:'All Sons & Daughters', k:'G' },
+      { t:'Goodness of God', a:'Bethel Music', k:'C' },
+      { t:'Above All', a:'Michael W. Smith', k:'A' },
+      { t:'King of Kings', a:'Hillsong Worship', k:'D' },
+      { t:'What a Beautiful Name', a:'Hillsong Worship', k:'A' },
+      { t:'Way Maker', a:'Sinach', k:'E' },
+    ];
+
+    const songs = (Array.isArray(this.props.songsData) && this.props.songsData.length) ? this.props.songsData : DEFAULT_SET;
+    const n = songs.length;
+    const rawStart = this.props.startIndex != null ? parseInt(this.props.startIndex, 10) : 0;
+    const startIdx = Math.min(n - 1, Math.max(0, isNaN(rawStart) ? 0 : rawStart));
+    const idx = this.state.idx == null ? startIdx : Math.min(n - 1, this.state.idx);
+    const song = songs[idx] || songs[0];
+
+    const chart = CHARTS[song.t] || { k: song.k || 'C', raw: GENERIC };
+    const nativeKey = chart.k;
+    const targetKey = song.k || nativeKey;
+    const baseShift = ((NI[targetKey] - NI[nativeKey]) % 12 + 12) % 12;
+    const shift = baseShift + this.state.steps;
+
+    const render = (tok) => {
+      if (!tok) return '';
+      const sl = tok.split('/');
+      const pm = sl[0].match(/^([A-G][#b]?)(.*)$/);
+      if (!pm) return tok;
+      const root = pm[1], q = pm[2] || '';
+      let out = mode === 'letters' ? tn(root, shift) : deg(root);
+      let s = out + q;
+      if (sl[1]) {
+        const bp = sl[1].match(/^([A-G][#b]?)(.*)$/);
+        if (bp) s += '/' + (mode === 'letters' ? tn(bp[1], shift) : deg(bp[1])) + (bp[2] || '');
+      }
+      return s;
+    };
+
+    const displaySections = chart.raw.map(sec => ({
+      label: sec.label,
+      lines: sec.lines.map(line => line.map(seg => ({ c: render(seg.c), t: seg.t }))),
+    }));
+
+    const keyLetter = tn(nativeKey, shift);
+    const keyLine = 'Key of ' + keyLetter;
+    const fs = this.state.fontScale;
+    const lyricsOnly = this.state.lyricsOnly;
+    const showSections = this.state.showSections;
+
+    const go = (i, dir) => {
+      if (i < 0 || i >= n || i === idx) return;
+      this.setState({ idx: i, steps: 0, dir, sliding: true, moreOpen: false, shareOpen: false });
+      setTimeout(() => this.setState({ sliding: false }), 28);
+    };
+
+    const cells = songs.map((s, i) => ({
+      onClick: () => go(i, i > idx ? 'next' : 'prev'),
+      barStyle: i === idx
+        ? { flex: '1.6', height: '5px', borderRadius: '3px', background: '#4EA6E6', boxShadow: '0 0 8px rgba(78,166,230,0.55)', cursor: 'pointer' }
+        : (i < idx
+          ? { flex: '1', height: '5px', borderRadius: '3px', background: '#3A6F91', cursor: 'pointer' }
+          : { flex: '1', height: '5px', borderRadius: '3px', background: '#242A30', cursor: 'pointer' }),
+    }));
+
+    const navBase = { pointerEvents: 'auto', width: '50px', height: '50px', flex: 'none', borderRadius: '9999px', border: '1px solid #363D44', background: 'rgba(28,33,38,0.86)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 10px 28px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+    const prevStyle = idx > 0 ? Object.assign({}, navBase, { color: '#DCE3E9', cursor: 'pointer' }) : Object.assign({}, navBase, { color: '#4A525A', cursor: 'default', opacity: 0.5 });
+    const nextStyle = idx < n - 1 ? Object.assign({}, navBase, { color: '#DCE3E9', cursor: 'pointer' }) : Object.assign({}, navBase, { color: '#4A525A', cursor: 'default', opacity: 0.5 });
+
+    const slideStyle = this.state.sliding
+      ? { transform: (this.state.dir === 'next' ? 'translateX(26px)' : 'translateX(-26px)'), opacity: 0.15, transition: 'none' }
+      : { transform: 'translateX(0)', opacity: 1, transition: 'transform .26s cubic-bezier(.2,0,0,1), opacity .24s ease' };
+
+    const segBase = { flex: 1, border: '0', cursor: 'pointer', fontSize: '14px', fontWeight: 600, padding: '9px 0', borderRadius: '9px', textAlign: 'center' };
+    const segActive = Object.assign({}, segBase, { background: '#2C343B', color: '#E8ECF0' });
+    const segIdle = Object.assign({}, segBase, { background: 'transparent', color: '#9AA2AA' });
+
+    const scope = this.state.shareScope;
+    const back = typeof this.props.onBack === 'function' ? this.props.onBack : () => {};
+
+    return {
+      displaySections, keyLetter, keyLine,
+      title: song.t, artist: song.a,
+      setCountLabel: n + ' songs',
+      cells, showRail: n > 1, ctrlJustify: n > 1 ? 'space-between' : 'center', prevStyle, nextStyle, slideStyle,
+      size: Math.round(20 * fs),
+      fontLabel: Math.round(fs * 100) + '%',
+      lyricsOnly, showSections, showChords: !lyricsOnly,
+      starred: this.state.starred, notStarred: !this.state.starred,
+      moreOpen: this.state.moreOpen, shareOpen: this.state.shareOpen,
+      songScope: scope === 'song', setScope: scope === 'set',
+      scopeSongStyle: scope === 'song' ? segActive : segIdle,
+      scopeSetStyle: scope === 'set' ? segActive : segIdle,
+      scopeSong: () => this.setState({ shareScope: 'song' }),
+      scopeSet: () => this.setState({ shareScope: 'set' }),
+      back,
+      prev: () => go(idx - 1, 'prev'),
+      next: () => go(idx + 1, 'next'),
+      onDown: (e) => { this._sx = e.clientX; this._sy = e.clientY; },
+      onUp: (e) => {
+        if (this._sx == null) return;
+        const dx = e.clientX - this._sx, dy = e.clientY - this._sy;
+        this._sx = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) + 8) { go(idx + (dx < 0 ? 1 : -1), dx < 0 ? 'next' : 'prev'); }
+      },
+      segChordsStyle: lyricsOnly ? segIdle : segActive,
+      segLyricsStyle: lyricsOnly ? segActive : segIdle,
+      csLetters: mode === 'letters' ? segActive : segIdle,
+      csNumbers: mode === 'numbers' ? segActive : segIdle,
+      csSolfege: mode === 'solfege' ? segActive : segIdle,
+      setLetters: () => this.setState({ chordStyleSel: 'letters' }),
+      setNumbers: () => this.setState({ chordStyleSel: 'numbers' }),
+      setSolfege: () => this.setState({ chordStyleSel: 'solfege' }),
+      switchTrackStyle: {
+        width: 50, height: 30, borderRadius: 9999, padding: 2, display: 'flex', alignItems: 'center',
+        cursor: 'pointer', justifyContent: showSections ? 'flex-end' : 'flex-start',
+        background: showSections ? '#4EA6E6' : '#3A4148', transition: 'background .15s',
+      },
+      switchKnobStyle: { width: 26, height: 26, borderRadius: 9999, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' },
+      toggleStar: () => this.setState(s => ({ starred: !s.starred })),
+      openMore: () => this.setState({ moreOpen: true, shareOpen: false }),
+      openShare: () => this.setState({ shareOpen: true, moreOpen: false }),
+      closeSheets: () => this.setState({ moreOpen: false, shareOpen: false }),
+      incKey: () => this.setState(s => ({ steps: Math.min(11, s.steps + 1) })),
+      decKey: () => this.setState(s => ({ steps: Math.max(-11, s.steps - 1) })),
+      toggleSections: () => this.setState(s => ({ showSections: !s.showSections })),
+      chordsOn: () => this.setState({ lyricsOnly: false }),
+      lyricsOn: () => this.setState({ lyricsOnly: true }),
+      incFont: () => this.setState(s => ({ fontScale: Math.min(1.6, +(s.fontScale + 0.1).toFixed(2)) })),
+      decFont: () => this.setState(s => ({ fontScale: Math.max(0.8, +(s.fontScale - 0.1).toFixed(2)) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

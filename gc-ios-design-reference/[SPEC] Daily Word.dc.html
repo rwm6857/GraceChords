@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+    .badge { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:#1A1A1A; color:#fff; border-radius:5px; letter-spacing:0.3px; }
+    .badge-soft { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:rgba(0,0,0,.08); color:#1E2227; border-radius:5px; }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 90px;max-width:1320px;margin:0 auto;">
+
+  <div style="max-width:720px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">Daily Word</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">The M'Cheyne reader is the focus — forward reading through the day's chapters, not a full Bible app. Compact chrome, maximum reading space, serif body type. Tap any verse to select (one tap), then copy via the contextual button. Translation picker spans languages incl. right-to-left; swipe or tap a chapter chip to move through the day. Lorem placeholder stands in for real passages.</p>
+  </div>
+
+  <!-- ===== Alt direction: landing-first ===== -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:46px 0 6px;">
+    <span class="badge">NEW</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Alt direction · landing-first</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 14px;max-width:780px;">Instead of the Daily Word tab dropping you straight into the reader, it opens a <strong style="color:#1E2227;">landing hub</strong>. The hub leads with a daily devotional from The Gospel Coalition (RSS, tied to one of the day's chapters), surfaces today's M'Cheyne reading, and routes you onward. The devotional is a long read, so it gets its own page — with a backlink to TGC. The reader and the devotional each gain a <strong style="color:#1E2227;">back chevron</strong> to the landing (this alt only). <strong style="color:#1E2227;">These three phones are live — tap through them.</strong></p>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="LF1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word Landing" dark="{{ true }}" screen="landing" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">LF1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Landing · devotional + today's reading</span></div></div>
+    <div id="LF2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word Landing" dark="{{ true }}" screen="devotional" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">LF2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Devotional · long read + TGC backlink</span></div></div>
+    <div id="LF3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word Landing" dark="{{ true }}" screen="reader" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">LF3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Reader · back chevron → landing</span></div></div>
+  </div>
+
+  <!-- Reader states -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:46px 0 6px;">
+    <span class="badge">DR</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">M'Cheyne reader</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Every frame is the same live component — tap verses to select, switch chapters (fades), open the menus. Each group below auditions one decision; reference an id (e.g. “DR10”) to lock a choice. Universal now: no FAB counter, plain verse numbers, tighter verses.</p>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:6px 2px 12px;">Control bar</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" controlBar="default" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Default · translation, date, accent Aa</span></div></div>
+    <div id="DR2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" controlBar="centered" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Centered date · uniform Aa</span></div></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:30px 2px 12px;">Chapter chips position</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" chipPos="bottom" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Bottom · above the tab bar</span></div></div>
+    <div id="DR4" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" chipPos="top" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR4</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Top · under the controls</span></div></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:30px 2px 12px;">Verse selection style</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR5" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" preselect="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR5</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Highlight + underline</span></div></div>
+    <div id="DR6" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" preselect="{{ true }}" boldSelect="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR6</span><span style="font-size:12px;font-weight:600;color:#5C656F;">+ bold text</span></div></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:30px 2px 12px;">Chapter title</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR7" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" showTitle="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR7</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Title shown</span></div></div>
+    <div id="DR8" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" showTitle="{{ false }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR8</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Hidden · chips identify the chapter</span></div></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:30px 2px 12px;">Verse layout</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR9" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR9</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Per-verse lines</span></div></div>
+    <div id="DR10" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" layout="prose" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR10</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Flowing prose (inline verses)</span></div></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;letter-spacing:0.3px;color:#1E2227;margin:30px 2px 12px;">Core states</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="DR11" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" open="translations" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR11</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Translation picker</span></div></div>
+    <div id="DR12" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" rtl="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR12</span><span style="font-size:12px;font-weight:600;color:#5C656F;">RTL · Arabic</span></div></div>
+    <div id="DR13" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ false }}" open="settings" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR13</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · reader settings (size, face, layout, spacing)</span></div></div>
+    <div id="DR14" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" open="date" dateMode="wheel" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR14</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Date · native iOS wheel</span></div></div>
+    <div id="DR15" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" open="date" dateMode="calendar" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">DR15</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Date · floating calendar</span></div></div>
+  </div>
+
+  <!-- ===== Offline downloads (exploration) ===== -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:54px 0 6px;">
+    <span class="badge">NEW</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Offline downloads · exploring</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 14px;max-width:780px;">When there's no connection, the reader makes clear which translations are usable. The translation picker shows each one's state — <strong style="color:#1E2227;">downloaded</strong>, downloadable (with size), or downloading — and an offline banner explains the limit. Choosing and deleting downloads is managed in <strong style="color:#1E2227;">Settings → Offline &amp; downloads</strong>. The daily devotional streams from TGC, so it stays online-only. <strong style="color:#1E2227;">Live — tap a download icon, or cancel an in-progress one.</strong></p>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+    <div id="OF1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" offline="{{ true }}" open="translations" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">OF1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Picker · download state per translation</span></div></div>
+    <div id="OF2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Daily Word" dark="{{ true }}" offline="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">OF2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Reader · offline banner</span></div></div>
+    <div id="OF3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;"><dc-import name="[UI] Offline Downloads" dark="{{ true }}" hint-size="402px,874px"></dc-import><div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">OF3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Manage · Settings → Offline &amp; downloads</span></div></div>
+  </div>
+
+  <!-- Reflection alt -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:54px 0 6px;">
+    <span class="badge">ALT</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Earlier sketch · curated reflection</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 26px;max-width:760px;">The first pass at a devotional day — pull-quote, short reflection, a worship prompt that links to a song, My Notes. The landing-first flow above supersedes it: the long-form TGC devotional gets its own page rather than a teaser, and the reader stays the place you actually read. Kept here for reference.</p>
+
+  <div id="ALT" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+      <div style="width:100%;height:100%;display:flex;flex-direction:column;background:#F5F7F9;font-family:-apple-system,system-ui,sans-serif;">
+        <div style="flex:1;min-height:0;overflow:auto;padding:56px 22px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-family:ui-serif,'New York',Georgia,serif;font-size:24px;font-weight:700;letter-spacing:-0.3px;color:#1E2227;">Daily Word</span>
+            <span style="width:36px;height:36px;border-radius:9999px;background:#EEF1F4;display:flex;align-items:center;justify-content:center;color:#5C656F;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"></rect><path d="M3.5 9h17M8 2.5v4M16 2.5v4"></path></svg></span>
+          </div>
+          <div style="font-size:13px;color:#8A929B;margin-top:22px;">Today · Jun 29</div>
+          <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:27px;font-weight:700;line-height:1.2;letter-spacing:-0.4px;color:#1E2227;margin-top:5px;">The Steadfast Love of the Lord</div>
+          <div style="font-size:14px;color:#5C656F;margin-top:6px;">Lamentations 3:22–23</div>
+
+          <div style="margin-top:18px;background:#FFFFFF;border:1px solid #E3E8EC;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+            <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:38px;line-height:0.6;color:#1F84C9;">&ldquo;</div>
+            <div style="font-family:ui-serif,'New York',Georgia,serif;font-size:18px;line-height:1.55;color:#1E2227;margin-top:8px;">The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness.</div>
+            <button style="width:100%;margin-top:18px;height:46px;border-radius:12px;background:#1F84C9;color:#fff;border:0;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">Read full chapter <svg width="8" height="14" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg></button>
+          </div>
+
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.2px;color:#1E2227;margin-top:24px;">Reflection</div>
+          <div style="font-size:15px;line-height:1.6;color:#5C656F;margin-top:7px;">Start your day remembering that His mercies are new every morning. Take a moment to worship and thank Him for His faithfulness.</div>
+
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.2px;color:#1E2227;margin-top:22px;">Worship prompt</div>
+          <div style="margin-top:10px;background:#FFFFFF;border:1px solid #E3E8EC;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:13px;">
+            <span style="flex:none;width:46px;height:46px;border-radius:11px;background:#D9EAF6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#15619A;">G</span>
+            <div style="flex:1;min-width:0;"><div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#1E2227;">Great Are You Lord</div><div style="font-size:13px;color:#5C656F;margin-top:1px;">All Sons &amp; Daughters</div></div>
+            <span style="flex:none;width:36px;height:36px;border-radius:9999px;background:#1F84C9;color:#fff;display:flex;align-items:center;justify-content:center;"><svg width="8" height="14" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg></span>
+          </div>
+
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.2px;color:#1E2227;margin-top:22px;">My notes</div>
+          <div style="margin-top:10px;background:#FFFFFF;border:1px solid #E3E8EC;border-radius:14px;padding:14px 15px;min-height:74px;font-size:15px;color:#8A929B;">Write your thoughts…</div>
+          <div style="height:8px;"></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #E3E8EC;padding:9px 6px 24px;display:flex;align-items:flex-end;justify-content:space-around;">
+          <div style="flex:1;text-align:center;color:#8A929B;font-size:10px;font-weight:600;">Home</div>
+          <div style="flex:1;text-align:center;color:#8A929B;font-size:10px;font-weight:600;">Songs</div>
+          <div style="flex:1;text-align:center;color:#8A929B;font-size:10px;font-weight:600;">Setlists</div>
+          <div style="flex:1;text-align:center;color:#1F84C9;font-size:10px;font-weight:600;">Daily Word</div>
+        </div>
+      </div>
+    </x-import>
+    <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">ALT</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Curated reflection (needs a content source)</span></div>
+  </div>
+
+  <!-- Notes -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 16px;">Notes &amp; open questions</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;max-width:1040px;">
+    <sc-for list="{{ notes }}" as="n" hint-placeholder-count="4">
+      <div style="flex:1;min-width:280px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ n.q }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ n.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="font-size:12px;line-height:1.6;color:#8A929B;margin:26px 2px 0;max-width:760px;">Try next: "make the date button open a calendar sheet" · "add My Notes to the reader too" · "show a 6-chapter day" · "tune the selection highlight".</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      notes: [
+        {q:'Forward reading, not a Bible app', note:'The plan drives it — the day\u2019s 4\u20136 chapters as chips, swipe or tap to move through them. Any date is selectable, but the focus is today\u2019s passages.'},
+        {q:'Select & copy', note:'One tap selects a whole verse (multi-select). A contextual copy button appears only while something is selected, with a count.'},
+        {q:'Multi-language + RTL', note:'Translation picker groups by language (English, Arabic, Turkish…). Choosing an Arabic translation flips the reader to right-to-left, including swipe direction.'},
+        {q:'Reading comfort', note:'Serif by default (Apple\u2019s New York), with an Aa menu for size and a serif/sans toggle. These could also live in Profile \u2192 reader preferences.'},
+        {q:'Swipe animation', note:'Chapter changes fade + lift. Real swipe is wired to the reading area; chips and the fade make direction obvious.'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

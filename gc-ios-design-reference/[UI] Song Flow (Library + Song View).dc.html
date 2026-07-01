@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    .lg-scroll::-webkit-scrollbar { width:0; height:0; }
+  </style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+  <div style="position:relative;height:100%;overflow:hidden;background:#0E1114;font-family:-apple-system,system-ui,sans-serif;">
+
+    <!-- ===================== LIBRARY LAYER ===================== -->
+    <div style="{{ libStyle }}" onClick="{{ onLibClick }}">
+      <dc-import name="SongLibraryContent" dark="{{ true }}" search-mode="browse" filter="all" style="width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+    </div>
+
+    <!-- ===================== SONG VIEW LAYER ===================== -->
+    <div style="{{ songStyle }}">
+      <div style="position:relative;height:100%;display:flex;flex-direction:column;background:#131619;">
+
+        <div style="flex:none;padding:50px 16px 12px;background:#131619;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <button onClick="{{ back }}" aria-label="Back" style="display:flex;align-items:center;gap:2px;border:0;background:transparent;color:#4EA6E6;cursor:pointer;padding:0;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg><span style="font-size:16px;font-weight:500;">Songs</span></button>
+            <div style="display:flex;gap:8px;">
+              <button onClick="{{ openMore }}" aria-label="More" style="width:40px;height:40px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+              <button onClick="{{ openShare }}" aria-label="Share" style="width:40px;height:40px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg></button>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="display:flex;align-items:center;gap:9px;">
+              <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;color:#F2F4F6;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ title }}</div>
+              <button onClick="{{ toggleStar }}" aria-label="Favorite" style="flex:none;border:0;background:transparent;padding:2px;margin:0;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <sc-if value="{{ starred }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="#FFCC00" stroke="#FFCC00" stroke-width="1.2" stroke-linejoin="round"><path d="M12 3.2l2.7 5.5 6.1.9-4.4 4.3 1 6L12 17.9 6.6 20l1-6-4.4-4.3 6.1-.9z"></path></svg></sc-if>
+                <sc-if value="{{ notStarred }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C858E" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.2l2.7 5.5 6.1.9-4.4 4.3 1 6L12 17.9 6.6 20l1-6-4.4-4.3 6.1-.9z"></path></svg></sc-if>
+              </button>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:7px;">
+              <span style="font-size:13.5px;color:#9AA2AA;">{{ artist }}</span>
+              <span style="width:3px;height:3px;border-radius:9999px;background:#5A626B;"></span>
+              <span style="font-size:12.5px;font-weight:700;color:#6FB6EA;background:#1E2C38;border-radius:7px;padding:3px 9px;">{{ keyLine }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg-scroll" style="flex:1;min-height:0;overflow:auto;padding:8px 18px 96px;">
+          <dc-import name="SongChart" sections="{{ displaySections }}" lyrics-only="{{ lyricsOnly }}" show-sections="{{ showSections }}" chord-color="#5AB0EE" lyric-color="#ECEFF2" section-color="#79818A" lyric-size="{{ size }}" hint-size="100%,460px"></dc-import>
+        </div>
+
+        <div style="position:absolute;left:0;right:0;bottom:26px;z-index:6;display:flex;justify-content:center;pointer-events:none;">
+          <div style="pointer-events:auto;display:flex;align-items:center;gap:6px;background:rgba(28,33,38,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #363D44;border-radius:16px;padding:6px 8px;box-shadow:0 10px 28px rgba(0,0,0,0.5);">
+            <button onClick="{{ decKey }}" aria-label="Key down" style="width:46px;height:44px;border:0;background:#14181B;color:#5AB0EE;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:11px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+            <div style="min-width:88px;height:44px;display:flex;align-items:center;justify-content:center;padding:0 6px;"><div style="font-size:24px;font-weight:700;color:#EDF1F4;">{{ keyLetter }}</div></div>
+            <button onClick="{{ incKey }}" aria-label="Key up" style="width:46px;height:44px;border:0;background:#14181B;color:#5AB0EE;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:11px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"></path></svg></button>
+          </div>
+        </div>
+
+        <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:10;"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;z-index:11;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.5);padding:8px 18px 36px;">
+            <div style="display:flex;justify-content:center;padding:2px 0 10px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;white-space:nowrap;">View options</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#7C858E;margin-bottom:8px;">SHOW</div>
+            <div style="display:flex;background:#14181B;border-radius:12px;padding:3px;margin-bottom:18px;">
+              <button onClick="{{ chordsOn }}" style="{{ segChordsStyle }}">Chords &amp; lyrics</button>
+              <button onClick="{{ lyricsOn }}" style="{{ segLyricsStyle }}">Lyrics only</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 16px;">
+              <span style="font-size:16px;color:#E8ECF0;">Section labels</span>
+              <div onClick="{{ toggleSections }}" style="{{ switchTrackStyle }}"><div style="{{ switchKnobStyle }}"></div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px;">
+              <span style="font-size:16px;color:#E8ECF0;">Font size</span>
+              <div style="display:flex;align-items:center;gap:2px;background:#14181B;border:1px solid #2A3036;border-radius:12px;padding:3px;">
+                <button onClick="{{ decFont }}" aria-label="Smaller" style="width:40px;height:36px;border:0;background:transparent;color:#C9D0D6;font-size:13px;font-weight:700;cursor:pointer;border-radius:9px;">A</button>
+                <div style="min-width:52px;text-align:center;font-size:13px;font-weight:600;color:#9AA2AA;">{{ fontLabel }}</div>
+                <button onClick="{{ incFont }}" aria-label="Larger" style="width:40px;height:36px;border:0;background:transparent;color:#EDF1F4;font-size:20px;font-weight:700;cursor:pointer;border-radius:9px;">A</button>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#7C858E;margin:20px 0 8px;">CHORD STYLE</div>
+            <div style="display:flex;background:#14181B;border-radius:12px;padding:3px;">
+              <button onClick="{{ setLetters }}" style="{{ csLetters }}">Letters</button>
+              <button onClick="{{ setNumbers }}" style="{{ csNumbers }}">Numbers</button>
+              <button onClick="{{ setSolfege }}" style="{{ csSolfege }}">Solfège</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ closeSheets }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:10;"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;z-index:11;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.5);padding:8px 16px 36px;">
+            <div style="display:flex;justify-content:center;padding:2px 0 8px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Export &amp; share</span><button onClick="{{ closeSheets }}" style="font-size:15px;font-weight:600;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+            <button style="width:100%;height:50px;border:0;border-radius:13px;background:#4EA6E6;color:#0E1417;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg>Open share sheet…</button>
+            <div style="display:flex;gap:9px;margin-bottom:9px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">PDF</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">JPG</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:14px 0;cursor:pointer;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"></path></svg><span style="font-size:13px;font-weight:600;color:#E8ECF0;">ChordPro</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:11px;background:#14181B;border:1px solid #2A3036;border-radius:13px;padding:12px 14px;cursor:pointer;"><span style="width:30px;height:30px;border-radius:9999px;background:#2AABEE;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 4.3L2.8 11.6c-1 .4-1 1 .1 1.3l4.7 1.5 1.8 5.6c.2.6.4.7.9.3l2.6-2.1 4.6 3.4c.8.4 1.4.2 1.6-.8l3-14c.3-1.2-.5-1.7-1.2-1.5z"></path></svg></span><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#E8ECF0;">Send to Telegram</div><div style="font-size:11.5px;color:#7C858E;">Optional bot</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874}}">
+class Component extends DCLogic {
+  state = { view: 'library', selected: null, steps: 0, lyricsOnly: false, showSections: true, fontScale: 1, starred: true, moreOpen: false, shareOpen: false, chordStyleSel: null };
+
+  componentDidMount() {
+    this._onDocClick = (e) => {
+      if (this.state.view !== 'library') return;
+      const r = e.target.closest && e.target.closest('[data-song-t]');
+      if (!r) return;
+      this.setState({ view: 'song', steps: 0, moreOpen: false, shareOpen: false,
+        selected: { t: r.getAttribute('data-song-t'), a: r.getAttribute('data-song-a'), k: r.getAttribute('data-song-k') } });
+    };
+    document.addEventListener('click', this._onDocClick);
+  }
+  componentWillUnmount() { if (this._onDocClick) document.removeEventListener('click', this._onDocClick); }
+
+  renderVals() {
+    const SH = ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'];
+    const NI = { A:0,'A#':1,Bb:1,B:2,C:3,'C#':4,Db:4,D:5,'D#':6,Eb:6,E:7,F:8,'F#':9,Gb:9,G:10,'G#':11,Ab:11 };
+    const numMap = {0:'1',2:'2',4:'3',5:'4',7:'5',9:'6',11:'7',1:'#1',3:'#2',6:'#4',8:'#5',10:'#6'};
+    const solMap = {0:'Do',2:'Re',4:'Mi',5:'Fa',7:'Sol',9:'La',11:'Ti',1:'Di',3:'Ri',6:'Fi',8:'Si',10:'Li'};
+    const steps = this.state.steps;
+    const mode = this.state.chordStyleSel || 'letters';
+    const tn = (n, st) => { let i = (NI[n] + st) % 12; if (i < 0) i += 12; return SH[i]; };
+    const deg = (n) => (mode === 'solfege' ? solMap[NI[n]] : numMap[NI[n]]);
+    const render = (tok) => {
+      if (!tok) return '';
+      const sl = tok.split('/');
+      const pm = sl[0].match(/^([A-G][#b]?)(.*)$/);
+      if (!pm) return tok;
+      const root = pm[1], q = pm[2] || '';
+      let out = mode === 'letters' ? tn(root, steps) : deg(root);
+      let s = out + q;
+      if (sl[1]) {
+        const bp = sl[1].match(/^([A-G][#b]?)(.*)$/);
+        if (bp) s += '/' + (mode === 'letters' ? tn(bp[1], steps) : deg(bp[1])) + (bp[2] || '');
+      }
+      return s;
+    };
+
+    const raw = [
+      { label: 'Verse 1', lines: [
+        [{c:'A',t:'Above all '},{c:'D',t:'powers, above all '},{c:'E',t:'kings,'}],
+        [{c:'A/C#',t:'Above all '},{c:'D',t:'nature and all '},{c:'E',t:'created '},{c:'A',t:'things.'}],
+        [{c:'A/G#',t:'Above all '},{c:'F#m',t:'wisdom and '},{c:'Amaj7/E',t:'all the ways of man,'}],
+        [{c:'Bm7',t:'You were here be'},{c:'E/G#',t:'fore the world be'},{c:'A',t:'gan.'}],
+      ]},
+      { label: 'Chorus', lines: [
+        [{c:'D',t:'Cru'},{c:'A/C#',t:'cified, laid be'},{c:'Bm7',t:'hind the '},{c:'E',t:'stone,'}],
+        [{c:'D',t:'You lived to '},{c:'A/C#',t:'die, re'},{c:'Bm7',t:'jected and a'},{c:'E',t:'lone.'}],
+        [{c:'D',t:'Like a '},{c:'A/C#',t:'rose, '},{c:'Bm7',t:'trampled on the '},{c:'E',t:'ground,'}],
+        [{c:'D',t:'You took the '},{c:'E',t:'fall, and '},{c:'F#m',t:'thought of '},{c:'E',t:'me,'}],
+        [{c:'D',t:'A'},{c:'E',t:'bove '},{c:'A',t:'all.'}],
+      ]},
+      { label: 'Verse 2', lines: [
+        [{c:'A',t:'Above all '},{c:'E/D',t:'king'},{c:'D',t:'doms, above all '},{c:'E',t:'thrones.'}],
+        [{c:'A/C#',t:'Above all '},{c:'E/D',t:'wonders this '},{c:'D',t:'world has '},{c:'Esus4',t:'ever known.'}],
+        [{c:'A/G#',t:'Above all '},{c:'F#m',t:'wealth and '},{c:'Amaj7/E',t:'treasures of the earth,'}],
+        [{c:'Bm7',t:"There's no way to "},{c:'D/A',t:'measure what '},{c:'C#sus4/G#',t:"you're worth."}],
+      ]},
+    ];
+    const displaySections = raw.map(sec => ({
+      label: sec.label,
+      lines: sec.lines.map(line => line.map(seg => ({ c: render(seg.c), t: seg.t }))),
+    }));
+
+    const sel = this.state.selected || { t:'Above All', a:'Michael W. Smith', k:'A' };
+    const baseKey = sel.k || 'A';
+    const keyLetter = tn(baseKey, steps);
+    const keyLine = 'Key of ' + keyLetter;
+
+    const fs = this.state.fontScale;
+    const lyricsOnly = this.state.lyricsOnly;
+    const showSections = this.state.showSections;
+    const inSong = this.state.view === 'song';
+
+    const segBase = { flex: 1, border: '0', cursor: 'pointer', fontSize: '14px', fontWeight: 600, padding: '9px 0', borderRadius: '9px', textAlign: 'center' };
+    const segActive = Object.assign({}, segBase, { background: '#2C343B', color: '#E8ECF0' });
+    const segIdle = Object.assign({}, segBase, { background: 'transparent', color: '#9AA2AA' });
+
+    const ease = 'transform .3s cubic-bezier(.2,0,0,1), filter .3s cubic-bezier(.2,0,0,1)';
+
+    return {
+      displaySections,
+      title: sel.t, artist: sel.a, keyLine, keyLetter,
+      size: Math.round(20 * fs),
+      fontLabel: Math.round(fs * 100) + '%',
+      lyricsOnly, showSections, showChords: !lyricsOnly,
+      starred: this.state.starred, notStarred: !this.state.starred,
+      moreOpen: this.state.moreOpen, shareOpen: this.state.shareOpen,
+      libStyle: {
+        position: 'absolute', inset: 0, zIndex: 1,
+        transform: inSong ? 'translateX(-25%)' : 'translateX(0)',
+        filter: inSong ? 'brightness(0.55)' : 'brightness(1)',
+        transition: ease,
+      },
+      songStyle: {
+        position: 'absolute', inset: 0, zIndex: 2,
+        transform: inSong ? 'translateX(0)' : 'translateX(100%)',
+        boxShadow: '-10px 0 30px rgba(0,0,0,0.45)',
+        transition: 'transform .3s cubic-bezier(.2,0,0,1)',
+      },
+      segChordsStyle: lyricsOnly ? segIdle : segActive,
+      segLyricsStyle: lyricsOnly ? segActive : segIdle,
+      csLetters: mode === 'letters' ? segActive : segIdle,
+      csNumbers: mode === 'numbers' ? segActive : segIdle,
+      csSolfege: mode === 'solfege' ? segActive : segIdle,
+      setLetters: () => this.setState({ chordStyleSel: 'letters' }),
+      setNumbers: () => this.setState({ chordStyleSel: 'numbers' }),
+      setSolfege: () => this.setState({ chordStyleSel: 'solfege' }),
+      switchTrackStyle: {
+        width: 50, height: 30, borderRadius: 9999, padding: 2, display: 'flex', alignItems: 'center',
+        cursor: 'pointer', justifyContent: showSections ? 'flex-end' : 'flex-start',
+        background: showSections ? '#4EA6E6' : '#3A4148', transition: 'background .15s',
+      },
+      switchKnobStyle: { width: 26, height: 26, borderRadius: 9999, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' },
+      back: () => this.setState({ view: 'library', moreOpen: false, shareOpen: false }),
+      openSong: (s) => this.setState({ view: 'song', selected: s, steps: 0, moreOpen: false, shareOpen: false }),
+      onLibClick: (e) => {
+        const r = e.target.closest('[data-song-t]');
+        if (!r) return;
+        this.setState({ view: 'song', steps: 0, moreOpen: false, shareOpen: false,
+          selected: { t: r.getAttribute('data-song-t'), a: r.getAttribute('data-song-a'), k: r.getAttribute('data-song-k') } });
+      },
+      toggleStar: () => this.setState(s => ({ starred: !s.starred })),
+      openMore: () => this.setState({ moreOpen: true, shareOpen: false }),
+      openShare: () => this.setState({ shareOpen: true, moreOpen: false }),
+      closeSheets: () => this.setState({ moreOpen: false, shareOpen: false }),
+      incKey: () => this.setState(s => ({ steps: Math.min(11, s.steps + 1) })),
+      decKey: () => this.setState(s => ({ steps: Math.max(-11, s.steps - 1) })),
+      toggleSections: () => this.setState(s => ({ showSections: !s.showSections })),
+      chordsOn: () => this.setState({ lyricsOnly: false }),
+      lyricsOn: () => this.setState({ lyricsOnly: true }),
+      incFont: () => this.setState(s => ({ fontScale: Math.min(1.6, +(s.fontScale + 0.1).toFixed(2)) })),
+      decFont: () => this.setState(s => ({ fontScale: Math.max(0.8, +(s.fontScale - 0.1).toFixed(2)) })),
+    };
+  }
+
+  openSong(song) {
+    this.setState({ view: 'song', selected: song, steps: 0, moreOpen: false, shareOpen: false });
+  }
+}
+</script>
+</body>
+</html>

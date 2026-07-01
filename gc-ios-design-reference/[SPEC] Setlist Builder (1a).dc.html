@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+  <meta name="design_doc_mode" content="canvas">
+  <style>
+    body{margin:0;background:#0c0e10;font-family:-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+    .dv-turn{padding:44px 48px 48px;}
+    .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;}
+    .dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E8ECF0;color:#14171A;border-radius:4px;text-decoration:none;}
+    .dv-tname{font:600 14px system-ui;color:#E8ECF0;}
+    .dv-sub{font:13px/1.6 system-ui;color:#8A929B;margin:0 0 30px;max-width:720px;}
+    .dv-sub b{color:#C9D0D6;font-weight:600;}
+    .dv-opts{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start;}
+    .dv-opt{flex:none;display:flex;flex-direction:column;gap:12px;width:402px;}
+    .dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E8ECF0;border-radius:5px;text-decoration:none;}
+    .dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12.5px/1.4 system-ui;color:#9AA2AA;}
+    .dv-olabel b{color:#E8ECF0;font-weight:700;}
+    .dv-opt:target .dv-oid{background:#4EA6E6;color:#fff;}
+    .dv-cap{font:11.5px/1.55 system-ui;color:#7C858E;width:402px;}
+    .dv-next{margin:34px 0 0;font:12.5px/1.7 system-ui;color:#8A929B;}
+    .dv-next a{color:#6FB6EA;text-decoration:none;font-weight:600;}
+    .lg::-webkit-scrollbar{width:0;height:0;}
+    .caret{animation:gcblink 1.05s steps(1) infinite;}
+    @keyframes gcblink{50%{opacity:0;}}
+  </style>
+</helmet>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Add-song UI &amp; inline rename for <a class="dv-oid" href="#1a">1a</a></span></div>
+  <p class="dv-sub">Two states the Timeline direction needs. <b>2a</b> — tap the name (or ✎) → it becomes a text field in place, no modal. <b>2b</b> — the Add button opens a slide-up search sheet over the set, so you search, tap ＋ and watch the set grow without leaving the screen.</p>
+  <div class="dv-opts">
+
+    <!-- =================== 2a — INLINE RENAME =================== -->
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><b>Inline rename</b> · field in place + keyboard</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" keyboard="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;background:#14171A;font-family:-apple-system,system-ui,sans-serif;">
+
+          <div style="flex:none;padding:50px 16px 8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button style="border:0;background:transparent;color:#4EA6E6;font-size:16px;font-weight:500;cursor:pointer;padding:0;">Cancel</button>
+              <span style="font-size:16px;font-weight:600;color:#E8ECF0;">Rename set</span>
+              <button style="border:0;background:transparent;color:#4EA6E6;font-size:16px;font-weight:700;cursor:pointer;padding:0;">Done</button>
+            </div>
+          </div>
+
+          <div style="flex:none;margin:8px 16px 0;background:linear-gradient(135deg,#213240 0%,#1A232A 70%);border:1px solid #2A3036;border-radius:18px;padding:15px 16px 16px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:#7C858E;margin-bottom:9px;">SET NAME</div>
+            <div style="display:flex;align-items:center;gap:8px;background:#14181B;border:1.5px solid #4EA6E6;border-radius:12px;padding:11px 12px;">
+              <div style="flex:1;min-width:0;display:flex;align-items:center;font-size:20px;font-weight:700;color:#F2F4F6;">Sunday Service<span class="caret" style="width:2px;height:24px;background:#4EA6E6;margin-left:2px;border-radius:1px;"></span></div>
+              <button aria-label="Clear" style="flex:none;width:22px;height:22px;border-radius:9999px;border:0;background:#3A4148;color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"></path></svg></button>
+            </div>
+            <div style="font-size:11.5px;color:#7C858E;margin-top:10px;">8 songs · 45 min · Last edited 2d ago</div>
+          </div>
+
+          <div style="flex:1;min-height:0;overflow:hidden;padding:14px 14px 0;opacity:0.4;">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+              <div style="width:24px;height:24px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;">1</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:#EDF1F4;">Great Are You Lord</div><div style="font-size:12px;color:#8A929B;">All Sons &amp; Daughters</div></div>
+              <div style="font-size:14px;font-weight:700;color:#6FB6EA;">G</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+              <div style="width:24px;height:24px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;">2</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:#EDF1F4;">What a Beautiful Name</div><div style="font-size:12px;color:#8A929B;">Hillsong Worship</div></div>
+              <div style="font-size:14px;font-weight:700;color:#6FB6EA;">A</div>
+            </div>
+          </div>
+
+        </div>
+      </x-import>
+      <div class="dv-cap">No modal — the name turns into a focused field right where it lives. Select-all on focus, × clears, keyboard up; Done or return commits, Cancel reverts. Richer metadata (date, notes, tags) lives behind ••• → Set details.</div>
+    </div>
+
+    <!-- =================== 2b — ADD-SONGS SHEET =================== -->
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><b>Add-songs sheet</b> · search over the set</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;background:#14171A;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;">
+
+          <!-- dimmed timeline behind -->
+          <div style="flex:none;padding:50px 12px 8px 8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button style="display:flex;align-items:center;gap:2px;border:0;background:transparent;color:#4EA6E6;cursor:pointer;padding:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg><span style="font-size:16px;font-weight:500;">Setlists</span></button>
+              <div style="display:flex;gap:6px;padding-right:4px;">
+                <button aria-label="Share" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg></button>
+                <button aria-label="More" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+              </div>
+            </div>
+          </div>
+          <div style="flex:none;margin:2px 16px 0;background:linear-gradient(135deg,#213240 0%,#1A232A 70%);border:1px solid #2A3036;border-radius:18px;padding:15px 16px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:#F2F4F6;white-space:nowrap;">Sunday Service</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5l4-1L19 8.5a2.1 2.1 0 0 0-3-3L5 16.5z"></path><path d="M14.5 7l3 3"></path></svg></div>
+            <div style="font-size:13px;color:#AEB6BE;margin-top:6px;">9 songs · 49 min</div>
+          </div>
+          <div style="flex:1;min-height:0;overflow:hidden;padding:12px 14px 0;">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+              <div style="width:24px;height:24px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;">1</div>
+              <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;color:#EDF1F4;">Great Are You Lord</div></div>
+              <div style="font-size:14px;font-weight:700;color:#6FB6EA;">G</div>
+            </div>
+          </div>
+
+          <!-- scrim -->
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:10;"></div>
+
+          <!-- add-songs sheet -->
+          <div style="position:absolute;left:0;right:0;bottom:0;top:132px;z-index:11;background:#1E2227;border-radius:20px 20px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,0.55);display:flex;flex-direction:column;overflow:hidden;">
+            <div style="flex:none;display:flex;justify-content:center;padding:8px 0 6px;"><span style="width:36px;height:5px;border-radius:3px;background:#3A4148;"></span></div>
+            <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:2px 16px 12px;"><span style="font-size:18px;font-weight:700;color:#E8ECF0;">Add songs</span><button style="font-size:15px;font-weight:700;color:#4EA6E6;background:transparent;border:0;cursor:pointer;">Done</button></div>
+            <div style="flex:none;padding:0 16px 10px;">
+              <div style="display:flex;align-items:center;gap:8px;background:#14181B;border:1px solid #2A3036;border-radius:11px;padding:11px 12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C858E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                <span style="flex:1;font-size:15.5px;color:#7C858E;">Search songs, artists, themes…</span>
+              </div>
+              <div style="display:flex;gap:7px;margin-top:10px;overflow:hidden;">
+                <span style="flex:none;font-size:12.5px;font-weight:600;color:#0E1417;background:#4EA6E6;border-radius:9999px;padding:5px 13px;">All</span>
+                <span style="flex:none;font-size:12.5px;font-weight:600;color:#C9D0D6;background:#242A30;border:1px solid #2A3036;border-radius:9999px;padding:5px 13px;">Favorites</span>
+                <span style="flex:none;font-size:12.5px;font-weight:600;color:#C9D0D6;background:#242A30;border:1px solid #2A3036;border-radius:9999px;padding:5px 13px;">Recent</span>
+                <span style="flex:none;font-size:12.5px;font-weight:600;color:#C9D0D6;background:#242A30;border:1px solid #2A3036;border-radius:9999px;padding:5px 13px;">Key</span>
+              </div>
+            </div>
+            <div class="lg" style="flex:1;min-height:0;overflow:auto;padding:2px 16px 20px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Goodness of God</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">C · Bethel Music</div></div>
+                <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Great Are You Lord</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">G · All Sons &amp; Daughters</div></div>
+                <button aria-label="Added" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#4EA6E6;color:#0E1417;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"></path></svg></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Gratitude</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">G · Brandon Lake</div></div>
+                <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Graves Into Gardens</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">B · Elevation Worship</div></div>
+                <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Holy Spirit</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">A · Francesca Battistelli</div></div>
+                <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">King of Kings</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">D · Hillsong Worship</div></div>
+                <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </x-import>
+      <div class="dv-cap">Add opens a search sheet over the set (same Song-Library rows + search you already have). Tap ＋ to add — it flips to ✓ and the set count ticks up behind the sheet; filter chips narrow by favorites / recent / key. Swipe down or Done to return to the set.</div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "build out <a class="dv-oid" href="#1a">1a</a> with <a class="dv-oid" href="#2a">2a</a> + <a class="dv-oid" href="#2b">2b</a> wired up" · "use a rename alert instead of <a class="dv-oid" href="#2a">2a</a>" · "add a Set details sheet (date, notes, tags)"</p>
+</section>
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Setlist Builder — 3 layout directions</span></div>
+  <p class="dv-sub">Same dark app shell, tab bar and Song-Library rows you already have — <b>not</b> the orange web app. Each direction covers everything: search-to-add, drag reorder (SF <b>line.3.horizontal</b> grips), per-song key, name / save / open sets, share &amp; export, and a clear <b>Start set</b> that pushes into the Setlist Viewer with the same Library→Song transition. Three ways to fit it on one phone — pick one and I'll build it out fully (real drag, live search, saved-sets + export sheets).</p>
+  <div class="dv-opts">
+
+    <!-- =================== 1a — TIMELINE =================== -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><b>Timeline</b> · hero card + numbered rail, one scroll</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;background:#14171A;font-family:-apple-system,system-ui,sans-serif;">
+
+          <!-- header -->
+          <div style="flex:none;padding:50px 12px 8px 8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button style="display:flex;align-items:center;gap:2px;border:0;background:transparent;color:#4EA6E6;cursor:pointer;padding:6px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg><span style="font-size:16px;font-weight:500;">Setlists</span></button>
+              <div style="display:flex;gap:6px;padding-right:4px;">
+                <button aria-label="Share" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"></path><path d="M8 6.5l4-3.5 4 3.5"></path><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"></path></svg></button>
+                <button aria-label="More" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- hero set card -->
+          <div style="flex:none;margin:2px 16px 0;background:linear-gradient(135deg,#213240 0%,#1A232A 70%);border:1px solid #2A3036;border-radius:18px;padding:15px 16px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+              <div style="min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:#F2F4F6;white-space:nowrap;">Sunday Service</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5l4-1L19 8.5a2.1 2.1 0 0 0-3-3L5 16.5z"></path><path d="M14.5 7l3 3"></path></svg>
+                </div>
+                <div style="font-size:13px;color:#AEB6BE;margin-top:6px;">8 songs · 45 min</div>
+                <div style="font-size:11.5px;color:#7C858E;margin-top:2px;">Last edited 2d ago</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- timeline list -->
+          <div class="lg" style="flex:1;min-height:0;overflow:auto;padding:12px 12px 6px;">
+            <div style="display:flex;align-items:stretch;gap:2px;">
+              <button style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+              <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;left:50%;transform:translateX(-50%);top:50%;bottom:0;width:2px;background:#242C32;"></div><div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">1</div></div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Great Are You Lord</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;">All Sons &amp; Daughters</div></div>
+                <div style="flex:none;text-align:right;"><div style="font-size:14.5px;font-weight:700;color:#6FB6EA;">G</div><div style="font-size:11px;color:#7C858E;margin-top:1px;">72 BPM</div></div>
+                <button style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:stretch;gap:2px;">
+              <button style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+              <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:#242C32;"></div><div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">2</div></div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">What a Beautiful Name</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;">Hillsong Worship</div></div>
+                <div style="flex:none;text-align:right;"><div style="font-size:14.5px;font-weight:700;color:#6FB6EA;">A</div><div style="font-size:11px;color:#7C858E;margin-top:1px;">68 BPM</div></div>
+                <button style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:stretch;gap:2px;">
+              <button style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+              <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:#242C32;"></div><div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">3</div></div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">How Great Is Our God</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;">Chris Tomlin</div></div>
+                <div style="flex:none;text-align:right;"><div style="font-size:14.5px;font-weight:700;color:#6FB6EA;">D</div><div style="font-size:11px;color:#7C858E;margin-top:1px;">68 BPM</div></div>
+                <button style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:stretch;gap:2px;">
+              <button style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+              <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:#242C32;"></div><div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">4</div></div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Build My Life</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;">Housefires</div></div>
+                <div style="flex:none;text-align:right;"><div style="font-size:14.5px;font-weight:700;color:#6FB6EA;">D</div><div style="font-size:11px;color:#7C858E;margin-top:1px;">72 BPM</div></div>
+                <button style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:stretch;gap:2px;">
+              <button style="width:26px;flex:none;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg></button>
+              <div style="position:relative;width:32px;flex:none;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:50%;width:2px;background:#242C32;"></div><div style="position:relative;z-index:1;width:26px;height:26px;border-radius:9999px;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;">5</div></div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #20262B;">
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Goodness of God</div><div style="font-size:12.5px;color:#8A929B;margin-top:1px;">Bethel Music</div></div>
+                <div style="flex:none;text-align:right;"><div style="font-size:14.5px;font-weight:700;color:#6FB6EA;">C</div><div style="font-size:11px;color:#7C858E;margin-top:1px;">72 BPM</div></div>
+                <button style="flex:none;width:26px;height:26px;border:0;background:transparent;color:#5A626B;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- bottom action bar -->
+          <div style="flex:none;padding:10px 14px 12px;display:flex;gap:10px;background:#14171A;border-top:1px solid #20262B;">
+            <button style="flex:none;display:flex;align-items:center;gap:7px;background:#242A30;border:1px solid #2A3036;border-radius:13px;padding:0 16px;height:48px;color:#DCE3E9;font-size:15px;font-weight:600;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button>
+            <button style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:#4EA6E6;border:0;border-radius:13px;height:48px;color:#0E1417;font-size:16px;font-weight:700;cursor:pointer;">Start set<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+          </div>
+
+          <!-- tab bar -->
+          <div style="flex:none;background:#1E2227;border-top:1px solid #2A3036;padding:8px 6px 22px;display:flex;align-items:flex-end;justify-content:space-around;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg><span style="font-size:10px;font-weight:600;">Home</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Songs</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#4EA6E6;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Setlists</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg><span style="font-size:10px;font-weight:600;">Daily Word</span></div>
+          </div>
+
+        </div>
+      </x-import>
+      <div class="dv-cap">Everything on one scroll. Hero card holds the name (tap ✎), stats &amp; Reorder; numbered rail reads like a run-of-show. Drag grips reorder, ••• per row → change key / duplicate / remove. Add + Start pinned above the tab bar. Header ⇪ / ••• = share &amp; export / save-as / delete.</div>
+    </div>
+
+    <!-- =================== 1b — SEGMENTED WORKSPACE =================== -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><b>Segmented workspace</b> · Set / Add / Saved tabs</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;background:#14171A;font-family:-apple-system,system-ui,sans-serif;">
+
+          <!-- header -->
+          <div style="flex:none;padding:50px 16px 10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:26px;font-weight:700;letter-spacing:-0.4px;color:#F2F4F6;">Setlist Builder</span>
+              <button aria-label="More" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:11px;">
+              <button style="display:flex;align-items:center;gap:6px;background:#242A30;border:1px solid #2A3036;border-radius:10px;padding:7px 11px;color:#E8ECF0;font-size:14.5px;font-weight:600;cursor:pointer;">Sunday Service<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <span style="font-size:12.5px;color:#7C858E;">10 songs · 52 min</span>
+            </div>
+          </div>
+
+          <!-- segmented control -->
+          <div style="flex:none;padding:4px 16px 12px;">
+            <div style="display:flex;background:#1B1F23;border:1px solid #2A3036;border-radius:12px;padding:3px;">
+              <button style="flex:1;border:0;background:transparent;color:#9AA2AA;font-size:13.5px;font-weight:600;padding:9px 0;border-radius:9px;cursor:pointer;">Set · 10</button>
+              <button style="flex:1;border:0;background:#2C343B;color:#E8ECF0;font-size:13.5px;font-weight:600;padding:9px 0;border-radius:9px;cursor:pointer;">Add songs</button>
+              <button style="flex:1;border:0;background:transparent;color:#9AA2AA;font-size:13.5px;font-weight:600;padding:9px 0;border-radius:9px;cursor:pointer;">Saved</button>
+            </div>
+          </div>
+
+          <!-- add songs body -->
+          <div class="lg" style="flex:1;min-height:0;overflow:auto;padding:0 16px 8px;">
+            <div style="display:flex;align-items:center;gap:8px;background:#242A30;border-radius:11px;padding:11px 12px;margin-bottom:12px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C858E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+              <span style="flex:1;font-size:15.5px;color:#7C858E;">Search songs, artists, themes…</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px;">
+              <span style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#7C858E;">SONG LIBRARY</span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#AEB6BE;"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid #3A4148;display:inline-block;"></span>Community songs</span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'Tis So Sweet to Trust in Jesus</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">G · Trust</div></div>
+              <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">10,000 Reasons</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">C · Slow, Praise</div></div>
+              <button aria-label="Added" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#4EA6E6;color:#0E1417;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"></path></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">A Mighty Fortress Is Our God</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">D · Hymn</div></div>
+              <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Abba</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">Am · Worship, Nations</div></div>
+              <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Amazing Grace (My Chains…)</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">C · Hymn</div></div>
+              <button aria-label="Added" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#4EA6E6;color:#0E1417;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"></path></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #20262B;">
+              <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Battle Belongs</div><div style="font-size:12.5px;color:#8A929B;margin-top:2px;">E · Declaration</div></div>
+              <button aria-label="Add" style="flex:none;width:36px;height:36px;border-radius:10px;border:0;background:#243340;color:#6FB6EA;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+            </div>
+          </div>
+
+          <!-- summary bar -->
+          <div style="flex:none;padding:11px 14px 24px;border-top:1px solid #20262B;display:flex;align-items:center;gap:12px;background:#1A1E22;">
+            <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:700;letter-spacing:0.1em;color:#7C858E;">SUNDAY SERVICE</div><div style="font-size:14px;font-weight:600;color:#E8ECF0;margin-top:2px;">10 songs · 52 min</div></div>
+            <button style="flex:none;display:flex;align-items:center;gap:7px;background:#4EA6E6;border:0;border-radius:12px;padding:0 16px;height:46px;color:#0E1417;font-size:15px;font-weight:700;cursor:pointer;">View set<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+          </div>
+
+        </div>
+      </x-import>
+      <div class="dv-cap">Each job gets its own uncluttered screen. <b>Add songs</b> (shown) reuses your Song-Library rows + search; ＋ turns to ✓ as songs join the set. <b>Set</b> tab = drag reorder + per-song key; <b>Saved</b> tab lists sets to open / duplicate / delete. Name ▾ switches sets; ••• = share &amp; export. Bottom bar always shows the running total + View set.</div>
+    </div>
+
+    <!-- =================== 1c — MINIMAL LIST =================== -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a><b>Minimal list</b> · performance-ready, add via sheet</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;background:#14171A;font-family:-apple-system,system-ui,sans-serif;">
+
+          <!-- nav -->
+          <div style="flex:none;padding:50px 12px 10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button aria-label="Back" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+              <button style="display:flex;align-items:center;gap:6px;border:0;background:transparent;color:#F2F4F6;font-size:17px;font-weight:700;cursor:pointer;">Sunday Service<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6FB6EA" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <button aria-label="More" style="width:38px;height:38px;border-radius:9999px;border:0;background:rgba(255,255,255,0.07);color:#C9D0D6;display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:0 4px;">
+              <span style="font-size:13px;color:#8A929B;">8 songs · 56 min</span>
+              <div style="display:flex;gap:8px;">
+                <button style="display:flex;align-items:center;gap:6px;background:#242A30;border:1px solid #2A3036;border-radius:10px;padding:7px 11px;color:#DCE3E9;font-size:13px;font-weight:600;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V5"></path><path d="M4 8l3-3 3 3"></path><path d="M17 4v15"></path><path d="M20 16l-3 3-3-3"></path></svg>Reorder</button>
+                <button style="display:flex;align-items:center;gap:6px;background:#243340;border:0;border-radius:10px;padding:7px 12px;color:#6FB6EA;font-size:13px;font-weight:700;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add Song</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="lg" style="flex:1;min-height:0;overflow:auto;padding:6px 16px 8px;">
+            <div style="background:#1B1F23;border:1px solid #262C31;border-radius:16px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">1</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Great Are You Lord</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">All Sons &amp; Daughters</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">G</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">2</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">What a Beautiful Name</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Hillsong Worship</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">A</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">3</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">How Great Is Our God</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Chris Tomlin</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">D</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">4</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Build My Life</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Housefires</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">D</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">5</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Goodness of God</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Bethel Music</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">C</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;background:#22303C;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#6FB6EA" style="flex:none;"><path d="M7 4.5l13 7.5-13 7.5z"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#6FB6EA;flex:none;">6</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:700;color:#F2F4F6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">O Come to the Altar</div><div style="font-size:12px;color:#9FC6E4;margin-top:1px;">Elevation Worship</div></div>
+                <span style="font-size:15px;font-weight:700;color:#8FCBF0;flex:none;">C</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;border-bottom:1px solid #23292E;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">7</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Way Maker</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Sinach</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">G</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 12px;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5A626B" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+                <span style="width:16px;text-align:center;font-size:13px;font-weight:700;color:#7C858E;flex:none;">8</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:15.5px;font-weight:600;color:#EDF1F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Blessed Be Your Name</div><div style="font-size:12px;color:#8A929B;margin-top:1px;">Matt Redman</div></div>
+                <span style="font-size:15px;font-weight:700;color:#6FB6EA;flex:none;">D</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- start bar -->
+          <div style="flex:none;padding:10px 16px 10px;">
+            <button style="width:100%;height:50px;border-radius:14px;background:#4EA6E6;border:0;color:#0E1417;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">Start set<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button>
+          </div>
+
+          <!-- tab bar -->
+          <div style="flex:none;background:#1E2227;border-top:1px solid #2A3036;padding:8px 6px 22px;display:flex;align-items:flex-end;justify-content:space-around;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg><span style="font-size:10px;font-weight:600;">Home</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Songs</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#4EA6E6;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg><span style="font-size:10px;font-weight:600;">Setlists</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7C858E;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg><span style="font-size:10px;font-weight:600;">Daily Word</span></div>
+          </div>
+
+        </div>
+      </x-import>
+      <div class="dv-cap">Closest to a paper run-sheet — quiet rows, the up-next song highlighted with ▶. Name ▾ opens saved sets (open / duplicate / delete); Reorder toggles drag mode; Add Song opens a slide-up search sheet over the list so the set keeps filling in view. Tap a key to change it; big Start set launches the viewer. ••• = share &amp; export.</div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "build out <a class="dv-oid" href="#1a">1a</a> fully — real drag, live search, saved-sets + export sheets" · "combine <a class="dv-oid" href="#1c">1c</a>'s clean list with <a class="dv-oid" href="#1b">1b</a>'s Add tab" · "show the Saved-sets and Share/Export sheets"</p>
+</section>
+</x-dc>
+</body>
+</html>

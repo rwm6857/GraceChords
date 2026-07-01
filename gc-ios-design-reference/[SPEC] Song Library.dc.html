@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+    .badge { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:#1A1A1A; color:#fff; border-radius:5px; letter-spacing:0.3px; }
+    .badge-soft { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:rgba(0,0,0,.08); color:#1E2227; border-radius:5px; }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 90px;max-width:1320px;margin:0 auto;">
+
+  <!-- Intro -->
+  <div style="max-width:720px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">Song Library</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">Scannable, searchable, and built to scale 50→500 songs with no felt difference. Text-only rows (title · artist, key · time) keep it dense but calm; sticky A–Z headers and a right-edge scrubber make any song two taps away. Search stays out of the way until you want it.</p>
+  </div>
+
+  <!-- States -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:46px 0 6px;">
+    <span class="badge">SL</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Library states</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 26px;max-width:760px;"><a class="badge-soft" href="#SL1" style="text-decoration:none;">SL1</a> is the default — dark (primary mode), a search bar with a funnel beside it. The funnel opens <a class="badge-soft" href="#SL4" style="text-decoration:none;">SL4</a>, a Filter &amp; sort sheet where tags and sort options live — so tags drive filtering without ever cluttering a row.</p>
+
+  <div style="display:flex;gap:42px;flex-wrap:wrap;">
+    <div id="SL1" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Song Library" dark="{{ true }}" searchMode="browse" filter="all" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">SL1</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Dark · default (search + funnel)</span></div>
+    </div>
+    <div id="SL2" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Song Library" dark="{{ false }}" searchMode="browse" filter="all" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">SL2</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Light · same, light mode</span></div>
+    </div>
+    <div id="SL3" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Song Library" dark="{{ true }}" searchMode="active" filter="all" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">SL3</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Search active · typing "great"</span></div>
+    </div>
+    <div id="SL4" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Song Library" dark="{{ true }}" searchMode="sheet" filter="all" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">SL4</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Filter &amp; sort sheet (tags)</span></div>
+    </div>
+    <div id="SL5" style="display:flex;flex-direction:column;align-items:center;gap:12px;scroll-margin-top:16px;">
+      <dc-import name="[UI] Song Library" dark="{{ true }}" searchMode="browse" filter="key" hint-size="402px,874px"></dc-import>
+      <div style="display:flex;align-items:center;gap:8px;"><span class="badge-soft">SL5</span><span style="font-size:12px;font-weight:600;color:#5C656F;">Result: sorted By key (funnel dot on)</span></div>
+    </div>
+  </div>
+
+  <!-- Swipe to add -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:54px 0 6px;">
+    <span class="badge">SW</span>
+    <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Swipe a row → add to setlist</h2>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 18px;max-width:760px;">Tap a row to open the Viewer; swipe left to add it to a setlist without leaving the list. Shown mid-swipe:</p>
+
+  <div style="max-width:420px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);">
+    <div style="display:flex;align-items:stretch;">
+      <div style="flex:1;display:flex;align-items:center;padding:13px 16px;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:16.5px;font-weight:600;letter-spacing:-0.3px;color:#1E2227;">Build My Life</div>
+          <div style="font-size:13.5px;color:#5C656F;margin-top:2px;">Housefires</div>
+        </div>
+        <div style="flex:none;text-align:right;">
+          <div style="font-size:14px;font-weight:600;color:#15619A;">D</div>
+          <div style="font-size:12.5px;color:#8A929B;margin-top:2px;">4/4</div>
+        </div>
+      </div>
+      <div style="flex:none;width:96px;background:#1F84C9;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M4 12h7M4 17h5"></path><path d="M18.5 14v6M15.5 17h6"></path></svg>
+        <span style="font-size:11px;font-weight:600;">Setlist</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:56px 0 16px;">Decisions &amp; notes</h2>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;max-width:1040px;">
+    <sc-for list="{{ notes }}" as="n" hint-placeholder-count="4">
+      <div style="flex:1;min-width:280px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ n.q }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ n.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="font-size:12px;line-height:1.6;color:#8A929B;margin:26px 2px 0;max-width:760px;">Try next: "use <a class="badge-soft" href="#SL2" style="text-decoration:none;">SL2</a>'s search bar everywhere" · "make rows tighter / show more per screen" · "add a recently-played row at top" · "show the By-artist grouping".</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      notes: [
+        {q:'Tags, used not shown', note:'Tags never appear on a row. They live in the Filter & sort sheet (funnel, right of search) as tappable chips — filter by Worship, Communion, etc. The funnel shows a dot when any filter or sort is active (SL5).'},
+        {q:'Search, uncluttered', note:'One search bar with the funnel beside it. Tapping search gives live results + Cancel (SL3); the funnel opens filter & sort (SL4).'},
+        {q:'Scales to 500', note:'Sticky A–Z headers + right-edge scrubber (present letters in accent, others dimmed). The list is the only thing that scrolls; chrome stays put.'},
+        {q:'Filters reshape, not clutter', note:'Sort by Title / Artist / Key / Recently added / Tempo, plus filter by tag — all in one sheet. Choosing Key regroups into “Key of G” etc. (SL5). One control, no segment bar eating space.'},
+        {q:'Rows stay minimal', note:'Title · artist on the left, key · time on the right, nothing else. No cover art. Density and scan-speed over decoration — tune row height later.'},
+        {q:'Add to a set', note:'Swipe-left reveals "Setlist". Tap opens the Viewer. No menu clutter on the row itself.'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

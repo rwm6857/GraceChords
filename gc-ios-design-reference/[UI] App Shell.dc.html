@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+
+    <!-- ===================== APP (Home shell) ===================== -->
+    <sc-if value="{{ showApp }}" hint-placeholder-val="{{ true }}">
+
+      <!-- Atmospheric header: large title left, avatar top-right -->
+      <div style="position:relative;padding:var(--safe-top) var(--safe-x) 26px;background:var(--atmo);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="font-size:34px;font-weight:700;letter-spacing:0.37px;line-height:41px;color:var(--ink);">{{ title }}</div>
+          <button aria-label="Profile and settings" style="flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <span style="width:38px;height:38px;border-radius:9999px;background:var(--accentSoft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.06);">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8.2" r="3.4"></circle>
+                <path d="M5.5 20c0-3.7 2.9-6.2 6.5-6.2s6.5 2.5 6.5 6.2"></path>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content area (other screens not built yet) -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg);">
+        <span style="font-size:13px;color:var(--muted);letter-spacing:-0.1px;">Tab content renders here</span>
+      </div>
+
+      <!-- Tab bar — standard: Home · Songs · Setlists · Daily Reading (SF Symbols) -->
+      <sc-if value="{{ standard }}" hint-placeholder-val="{{ true }}">
+      <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M11.34 3.27 3.4 10.2c-.45.39-.7.95-.7 1.54V19.5A1.5 1.5 0 0 0 4.2 21h3.3a1 1 0 0 0 1-1v-4.6a1 1 0 0 1 1-1h2.9a1 1 0 0 1 1 1V20a1 1 0 0 0 1 1h3.3a1.5 1.5 0 0 0 1.5-1.5v-7.76c0-.59-.25-1.15-.7-1.54l-7.94-6.93a1 1 0 0 0-1.32 0z"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- Tab bar — ARCHIVED "+" FAB: Home · Songs · (+) · Setlists · Daily Reading -->
+      <sc-if value="{{ fab }}" hint-placeholder-val="{{ true }}">
+      <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M11.34 3.27 3.4 10.2c-.45.39-.7.95-.7 1.54V19.5A1.5 1.5 0 0 0 4.2 21h3.3a1 1 0 0 0 1-1v-4.6a1 1 0 0 1 1-1h2.9a1 1 0 0 1 1 1V20a1 1 0 0 0 1 1h3.3a1.5 1.5 0 0 0 1.5-1.5v-7.76c0-.59-.25-1.15-.7-1.54l-7.94-6.93a1 1 0 0 0-1.32 0z"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span>
+        </div>
+        <div style="flex:1;display:flex;justify-content:center;">
+          <div style="width:56px;height:56px;border-radius:28px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-top:-26px;color:var(--onAccent);box-shadow:0 6px 16px rgba(31,132,201,.40);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span>
+        </div>
+      </div>
+      </sc-if>
+
+    </sc-if>
+
+    <!-- ===================== PUSH (Profile & Settings, pushed full screen) ===================== -->
+    <sc-if value="{{ showPush }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:var(--safe-top) 10px 9px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;">
+        <div style="display:flex;align-items:center;height:30px;">
+          <button aria-label="Back" style="display:flex;align-items:center;gap:1px;padding:0 6px;border:0;background:transparent;color:var(--accent);cursor:pointer;">
+            <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 2 10l7 8"></path></svg>
+            <span style="font-size:17px;letter-spacing:-0.2px;">Home</span>
+          </button>
+          <span style="position:absolute;left:0;right:0;text-align:center;font-size:17px;font-weight:600;color:var(--ink);pointer-events:none;">Profile &amp; Settings</span>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;background:var(--bg);">
+        <dc-import name="[UI] Settings Content" dark="{{ dark }}" hint-size="100%,100%"></dc-import>
+      </div>
+    </sc-if>
+
+    <!-- ===================== SHEET overlay (Profile & Settings, modal sheet) ===================== -->
+    <sc-if value="{{ showSheet }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.34);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;top:62px;background:var(--surface);border-radius:var(--r-sheet) var(--r-sheet) 0 0;box-shadow:0 -10px 34px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;justify-content:center;padding-top:8px;">
+          <span style="width:36px;height:5px;border-radius:3px;background:var(--border);"></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 14px;border-bottom:1px solid var(--border);">
+          <span style="font-size:18px;font-weight:700;letter-spacing:-0.2px;color:var(--ink);">Profile &amp; Settings</span>
+          <span style="width:30px;height:30px;border-radius:9999px;background:var(--surfaceAlt);display:flex;align-items:center;justify-content:center;color:var(--muted);">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"></path></svg>
+          </span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;">
+          <dc-import name="[UI] Settings Content" dark="{{ dark }}" hint-size="100%,100%"></dc-import>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;fab&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;overlay&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;sheet&quot;,&quot;push&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const dark = !!this.props.dark;
+    const L = {
+      bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4',
+      ink:'#1E2227', sec:'#5C656F', muted:'#8A929B',
+      accent:'#1F84C9', accentSoft:'#D9EAF6', border:'#E3E8EC', onAccent:'#FFFFFF',
+      atmo:'radial-gradient(150% 95% at 72% 118%, rgba(160,196,222,.60), rgba(160,196,222,0) 55%), linear-gradient(180deg,#D7E5EF 0%,#E8EEF2 58%,#F5F7F9 100%)'
+    };
+    const D = {
+      bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30',
+      ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E',
+      accent:'#4EA6E6', accentSoft:'#243340', border:'#2A3036', onAccent:'#14171A',
+      atmo:'radial-gradient(150% 95% at 72% 118%, rgba(78,166,230,.20), rgba(78,166,230,0) 55%), linear-gradient(180deg,#1C242B 0%,#171C20 58%,#14171A 100%)'
+    };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,
+      '--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--border':t.border,'--onAccent':t.onAccent,
+      '--atmo':t.atmo,
+      // — locked design tokens —
+      '--sp-2':'2px','--sp-4':'4px','--sp-8':'8px','--sp-12':'12px','--sp-16':'16px','--sp-20':'20px','--sp-24':'24px','--sp-32':'32px','--sp-40':'40px',
+      '--r-xs':'6px','--r-sm':'8px','--r-md':'10px','--r-card':'14px','--r-sheet':'20px','--r-pill':'9999px',
+      '--safe-top':'54px','--safe-bottom':'24px','--safe-x':'16px',
+      position:'relative',
+      width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:'var(--bg)', fontFamily:'-apple-system, system-ui, sans-serif'
+    };
+    const fab = !!this.props.fab;
+    const overlay = this.props.overlay || '';
+    const showPush = overlay === 'push';
+    const showSheet = overlay === 'sheet';
+    return {
+      dark, fab, standard: !fab,
+      showApp: !showPush, showPush, showSheet,
+      rootStyle, title: this.props.title || 'Home'
+    };
+  }
+}
+</script>
+</body>
+</html>

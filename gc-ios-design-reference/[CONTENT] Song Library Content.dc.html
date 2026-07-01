@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="{{ rootStyle }}">
+
+    <!-- ===== Header: browse (search bar + funnel) ===== -->
+    <sc-if value="{{ browseChrome }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:var(--safe-top) var(--safe-x) 0;background:var(--bg);position:relative;z-index:3;">
+        <sc-if value="{{ showTitle }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="font-size:27px;font-weight:700;letter-spacing:-0.4px;color:var(--ink);white-space:nowrap;">Song Library</div>
+          <span style="width:38px;height:38px;border-radius:9999px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--onAccent);flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </span>
+        </div>
+        </sc-if>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+          <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surfaceAlt);border-radius:11px;padding:10px 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+            <span style="flex:1;font-size:16px;color:var(--muted);letter-spacing:-0.2px;">Search songs, artists, themes…</span>
+          </div>
+          <button onClick="{{ toggleSheet }}" aria-label="Filter and sort" style="position:relative;flex:none;width:44px;height:44px;border-radius:11px;background:var(--surfaceAlt);border:0;display:flex;align-items:center;justify-content:center;color:var(--accent);cursor:pointer;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M6.5 12h11M9.5 17.5h5"></path></svg>
+            <sc-if value="{{ funnelDot }}" hint-placeholder-val="{{ true }}">
+              <span style="position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:9999px;background:var(--accent);border:2px solid var(--surfaceAlt);"></span>
+            </sc-if>
+          </button>
+        </div>
+        <div style="height:10px;"></div>
+      </div>
+    </sc-if>
+
+    <!-- ===== Header: active search ===== -->
+    <sc-if value="{{ activeSearch }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:var(--safe-top) 14px 10px;background:var(--bg);position:relative;z-index:3;">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surfaceAlt);border-radius:11px;padding:9px 11px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+            <span style="flex:1;font-size:16px;color:var(--ink);letter-spacing:-0.2px;">{{ query }}<span style="display:inline-block;width:2px;height:18px;background:var(--accent);margin-left:1px;vertical-align:-3px;"></span></span>
+            <span style="width:20px;height:20px;border-radius:9999px;background:var(--muted);display:flex;align-items:center;justify-content:center;color:var(--bg);"><svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"></path></svg></span>
+          </div>
+          <span style="font-size:16px;color:var(--textAccent);letter-spacing:-0.2px;">Cancel</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== List (browse) ===== -->
+    <sc-if value="{{ browseChrome }}" hint-placeholder-val="{{ true }}">
+      <div class="lg-scroll" style="flex:1;min-height:0;overflow:auto;">
+        <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="4">
+          <div style="position:sticky;top:0;z-index:2;background:var(--bg);padding:7px 20px 4px;font-size:13px;font-weight:700;letter-spacing:0.2px;color:var(--muted);">{{ sec.letter }}</div>
+          <sc-for list="{{ sec.songs }}" as="song" hint-placeholder-count="3">
+            <div onClick="{{ song.onSelect }}" data-song-t="{{ song.t }}" data-song-a="{{ song.a }}" data-song-k="{{ song.k }}" style="display:flex;align-items:center;padding:{{ rowPad }};gap:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:16.5px;font-weight:600;letter-spacing:-0.3px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ song.t }}</div>
+                <div style="font-size:13.5px;color:var(--sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ song.a }}</div>
+              </div>
+              <div style="flex:none;text-align:right;min-width:30px;">
+                <div style="font-size:14px;font-weight:600;color:var(--textAccent);">{{ song.k }}</div>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">{{ song.ts }}</div>
+              </div>
+              <sc-if value="{{ addMode }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ song.onAdd }}" aria-label="Add to set" style="{{ song.addBtnStyle }}">
+                  <sc-if value="{{ song.added }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"></path></svg></sc-if>
+                  <sc-if value="{{ song.notAdded }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></sc-if>
+                </button>
+              </sc-if>
+            </div>
+          </sc-for>
+        </sc-for>
+        <div style="height:8px;"></div>
+      </div>
+
+      <!-- A–Z scrubber -->
+      <sc-if value="{{ showScrubber }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;z-index:5;padding:0 3px;pointer-events:none;">
+        <sc-for list="{{ alphaList }}" as="ltr" hint-placeholder-count="27">
+          <span style="font-size:11px;font-weight:600;color:{{ ltr.col }};">{{ ltr.L }}</span>
+        </sc-for>
+      </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- ===== Active search results ===== -->
+    <sc-if value="{{ activeSearch }}" hint-placeholder-val="{{ true }}">
+      <div class="lg-scroll" style="flex:1;min-height:0;overflow:auto;background:var(--bg);">
+        <div style="padding:6px 20px 8px;font-size:12px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;color:var(--muted);">{{ resultLabel }}</div>
+        <sc-for list="{{ results }}" as="song" hint-placeholder-count="2">
+          <div onClick="{{ song.onSelect }}" data-song-t="{{ song.t }}" data-song-a="{{ song.a }}" data-song-k="{{ song.k }}" style="display:flex;align-items:center;padding:11px 20px;gap:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:16.5px;font-weight:600;letter-spacing:-0.3px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ song.t }}</div>
+              <div style="font-size:13.5px;color:var(--sec);margin-top:2px;">{{ song.a }}</div>
+            </div>
+            <div style="flex:none;text-align:right;min-width:30px;">
+              <div style="font-size:14px;font-weight:600;color:var(--textAccent);">{{ song.k }}</div>
+              <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">{{ song.ts }}</div>
+            </div>
+            <sc-if value="{{ addMode }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ song.onAdd }}" aria-label="Add to set" style="{{ song.addBtnStyle }}">
+                <sc-if value="{{ song.added }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"></path></svg></sc-if>
+                <sc-if value="{{ song.notAdded }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></sc-if>
+              </button>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ===== Tab bar (Songs active) ===== -->
+    <sc-if value="{{ showTabBar }}" hint-placeholder-val="{{ true }}">
+      <div style="background:var(--surface);border-top:1px solid var(--border);padding:9px 6px var(--safe-bottom);display:flex;align-items:flex-end;justify-content:space-around;position:relative;z-index:6;">
+        <div onClick="{{ onGoHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11.4 12 5l8 6.4V19.4a.9.9 0 0 1-.9.9h-4.3v-5.7H9.2v5.7H4.9a.9.9 0 0 1-.9-.9z"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Home</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h8M4 12h6M4 16.5h4"></path><path d="M14.5 15.5V7l5.5-1.2v8"></path><circle cx="13" cy="15.8" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="18.5" cy="14.3" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Songs</span>
+        </div>
+        <div onClick="{{ onGoSetlists }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Setlists</span>
+        </div>
+        <div onClick="{{ onGoDaily }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);cursor:pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a3.5 3.5 0 0 0-3.5-3.5H4a1 1 0 0 0-1 1v12.5a1 1 0 0 0 1 1h4.5a3.5 3.5 0 0 1 3.5 2"></path><path d="M12 6.5a3.5 3.5 0 0 1 3.5-3.5H20a1 1 0 0 1 1 1v12.5a1 1 0 0 1-1 1h-4.5a3.5 3.5 0 0 0-3.5 2"></path><path d="M12 6.5V20.5"></path></svg>
+          <span style="font-size:10px;font-weight:600;letter-spacing:-0.1px;white-space:nowrap;color:currentColor;">Daily Word</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== Filter & sort sheet ===== -->
+    <sc-if value="{{ showSheet }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(0,0,0,0.34);z-index:10;"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;top:120px;z-index:11;background:var(--surface);border-radius:var(--r-sheet) var(--r-sheet) 0 0;box-shadow:0 -10px 34px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;justify-content:center;padding-top:8px;"><span style="width:36px;height:5px;border-radius:3px;background:var(--border);"></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px 14px;border-bottom:1px solid var(--border);">
+          <span style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Filter &amp; sort</span>
+          <span style="font-size:15px;color:var(--textAccent);">Reset</span>
+        </div>
+
+        <div style="flex:1;min-height:0;overflow:auto;padding:16px 18px 8px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 2px 8px;">Sort by</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:13px;overflow:hidden;">
+            <sc-for list="{{ sortOptions }}" as="opt" hint-placeholder-count="5">
+              <div onClick="{{ opt.onClick }}" style="display:flex;align-items:center;height:48px;padding:0 14px;gap:12px;cursor:pointer;">
+                <span style="flex:1;font-size:16.5px;letter-spacing:-0.3px;color:var(--ink);">{{ opt.label }}</span>
+                <sc-if value="{{ opt.isAsc }}" hint-placeholder-val="{{ true }}">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14l6-6 6 6"></path></svg>
+                </sc-if>
+                <sc-if value="{{ opt.isDesc }}" hint-placeholder-val="{{ true }}">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10l6 6 6-6"></path></svg>
+                </sc-if>
+              </div>
+              <sc-if value="{{ opt.notLast }}" hint-placeholder-val="{{ true }}">
+                <div style="height:0.5px;background:var(--border);margin-left:14px;"></div>
+              </sc-if>
+            </sc-for>
+          </div>
+
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 2px 10px;margin-top:24px;">Filter by tag</div>
+          <div style="display:flex;flex-wrap:wrap;gap:9px;">
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--accent);color:var(--onAccent);">Worship</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--accent);color:var(--onAccent);">Communion</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Praise</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Surrender</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Adoration</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Christmas</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Hymn</span>
+            <span style="font-size:14px;font-weight:600;letter-spacing:-0.2px;padding:8px 14px;border-radius:9999px;background:var(--surfaceAlt);color:var(--ink);border:1px solid var(--border);">Declaration</span>
+          </div>
+        </div>
+
+        <div style="padding:12px var(--safe-x) var(--safe-bottom);border-top:1px solid var(--border);">
+          <button onClick="{{ closeSheet }}" style="width:100%;height:48px;border-radius:13px;background:var(--accent);color:var(--onAccent);font-size:16px;font-weight:600;letter-spacing:-0.2px;border:0;cursor:pointer;">Show 9 songs</button>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:812}}">
+class Component extends DCLogic {
+  state = { sortKey: 'title', sortDir: 'asc', sheetOpen: false };
+  renderVals() {
+    const dark = !!this.props.dark;
+    const chromeless = !!this.props.chromeless;
+    const L = {
+      bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4',
+      ink:'#1E2227', sec:'#5C656F', muted:'#8A929B',
+      accent:'#1F84C9', accentSoft:'#D9EAF6', textAccent:'#15619A', border:'#E3E8EC', onAccent:'#FFFFFF',
+      off:'rgba(138,146,155,0.45)'
+    };
+    const D = {
+      bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30',
+      ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E',
+      accent:'#4EA6E6', accentSoft:'#243340', textAccent:'#6FB6EA', border:'#2A3036', onAccent:'#14171A',
+      off:'rgba(124,133,142,0.5)'
+    };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,
+      '--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--textAccent':t.textAccent,
+      '--border':t.border,'--onAccent':t.onAccent,
+      '--r-sheet':'20px',
+      '--safe-top': chromeless ? '10px' : '54px','--safe-bottom':'24px','--safe-x':'16px',
+      position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:'var(--bg)', fontFamily:'-apple-system, system-ui, sans-serif'
+    };
+
+    const songsRaw = [
+      {t:'Above All', a:'Michael W. Smith', k:'A', ts:'4/4', bpm:68, min:5},
+      {t:'All Creatures of Our God and King', a:'Traditional', k:'G', ts:'4/4', bpm:72, min:4},
+      {t:'Amazing Grace (My Chains Are Gone)', a:'Chris Tomlin', k:'C', ts:'3/4', bpm:72, min:5},
+      {t:'Build My Life', a:'Housefires', k:'D', ts:'4/4', bpm:72, min:6},
+      {t:'Build Your Kingdom Here', a:'Rend Collective', k:'G', ts:'4/4', bpm:140, min:4},
+      {t:'Cornerstone', a:'Hillsong Worship', k:'C', ts:'6/8', bpm:72, min:6},
+      {t:'Counting Every Blessing', a:'Rend Collective', k:'G', ts:'4/4', bpm:120, min:4},
+      {t:'Goodness of God', a:'Bethel Music', k:'C', ts:'4/4', bpm:72, min:6},
+      {t:'Gratitude', a:'Brandon Lake', k:'G', ts:'4/4', bpm:72, min:5},
+      {t:'Graves Into Gardens', a:'Elevation Worship', k:'B', ts:'4/4', bpm:72, min:6},
+      {t:'Great Are You Lord', a:'All Sons & Daughters', k:'G', ts:'4/4', bpm:72, min:6},
+      {t:'Holy Spirit', a:'Francesca Battistelli', k:'A', ts:'4/4', bpm:68, min:5},
+      {t:'How Great Is Our God', a:'Chris Tomlin', k:'C', ts:'4/4', bpm:68, min:5},
+      {t:'King of Kings', a:'Hillsong Worship', k:'D', ts:'4/4', bpm:72, min:6},
+      {t:'What a Beautiful Name', a:'Hillsong Worship', k:'A', ts:'6/8', bpm:68, min:6},
+      {t:'Way Maker', a:'Sinach', k:'E', ts:'4/4', bpm:70, min:6},
+    ];
+    const addMode = !!this.props.addMode;
+    const added = new Set(this.props.addedTitles || []);
+    const toggle = this.props.onToggleAdd;
+    const onSelect = this.props.selectSong;
+    const addBtn = (on) => ({ flex:'none', width:34, height:34, borderRadius:10, border:0, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background: on ? t.accent : t.accentSoft, color: on ? t.onAccent : t.textAccent });
+    const songs = songsRaw.map(s => { const on = added.has(s.t); return Object.assign({}, s, {
+      added: on, notAdded: !on, addBtnStyle: addBtn(on),
+      onAdd: (e) => { if (e && e.stopPropagation) e.stopPropagation(); toggle && toggle(s); },
+      onSelect: () => addMode ? (toggle && toggle(s)) : (onSelect && onSelect(s)),
+    }); });
+
+    const mode = this.props.searchMode || 'browse';
+    const activeSearch = mode === 'active';
+    const showSheet = mode === 'sheet' || this.state.sheetOpen;
+    const browseChrome = !activeSearch;
+    const filter = this.props.filter || 'all';
+    const funnelDot = showSheet || filter !== 'all';
+    const rowPad = addMode ? '11px 16px 11px 20px' : '11px 38px 11px 20px';
+    const showTitle = !chromeless;
+    const showTabBar = browseChrome && !chromeless;
+    const showScrubber = browseChrome && !addMode;
+
+    let sections = [];
+    if (filter === 'key') {
+      const map = {};
+      songs.forEach(s => { (map[s.k] = map[s.k] || []).push(s); });
+      Object.keys(map).sort().forEach(k => sections.push({ letter:'Key of ' + k, songs: map[k] }));
+    } else {
+      const map = {};
+      songs.forEach(s => { const L0 = s.t[0].toUpperCase(); (map[L0] = map[L0] || []).push(s); });
+      Object.keys(map).sort().forEach(L0 => sections.push({ letter:L0, songs: map[L0] }));
+    }
+
+    const present = new Set(songs.map(s => s.t[0].toUpperCase()));
+    const alphabet = ['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    const alphaList = alphabet.map(Lx => ({ L:Lx, col: present.has(Lx) ? t.accent : t.off }));
+
+    const query = 'great';
+    const results = songs.filter(s => s.t.toLowerCase().includes(query) || s.a.toLowerCase().includes(query));
+    const resultLabel = results.length + (results.length === 1 ? ' result' : ' results');
+
+    const sortDefs = [['title','Title'],['artist','Artist'],['key','Key'],['recent','Recently added'],['tempo','Tempo']];
+    const sortOptions = sortDefs.map(([key,label], i) => {
+      const selected = this.state.sortKey === key;
+      return {
+        label, selected,
+        isAsc: selected && this.state.sortDir === 'asc',
+        isDesc: selected && this.state.sortDir === 'desc',
+        notLast: i < sortDefs.length - 1,
+        onClick: () => this.setState(s => s.sortKey === key
+          ? { sortDir: s.sortDir === 'asc' ? 'desc' : 'asc' }
+          : { sortKey: key, sortDir: 'asc' }),
+      };
+    });
+
+    return {
+      rootStyle,
+      browseChrome, activeSearch, showSheet, funnelDot,
+      sections, alphaList, results, query, resultLabel,
+      sortOptions,
+      addMode, rowPad, showTitle, showTabBar, showScrubber,
+      toggleSheet: () => this.setState(s => ({ sheetOpen: !s.sheetOpen })),
+      closeSheet: () => this.setState({ sheetOpen: false }),
+      onGoHome: this.props.onGoHome || (() => {}),
+      onGoSetlists: this.props.onGoSetlists || (() => {}),
+      onGoDaily: this.props.onGoDaily || (() => {}),
+    };
+  }
+}
+</script>
+</body>
+</html>

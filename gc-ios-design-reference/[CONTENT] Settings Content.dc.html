@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="{{ rootStyle }}">
+
+  <!-- Profile card (tap = edit profile) -->
+  <button style="width:100%;text-align:left;display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:14px 14px 14px 16px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+    <span style="flex:none;width:54px;height:54px;border-radius:9999px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;letter-spacing:0.4px;">AB</span>
+    <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;">
+      <span style="font-size:19px;font-weight:700;letter-spacing:-0.3px;color:var(--ink);">Alex Brown</span>
+      <span style="font-size:14px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">alex.brown@gracechords.app</span>
+    </span>
+    <svg width="8" height="14" viewBox="0 0 8 14" style="flex:none;"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  </button>
+
+  <!-- SETTINGS -->
+  <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:26px;">Settings</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+    <!-- Dark mode toggle -->
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Dark mode</span>
+      <sc-if value="{{ darkOn }}" hint-placeholder-val="{{ true }}">
+        <span style="position:relative;width:51px;height:31px;border-radius:9999px;background:var(--accent);flex:none;display:inline-block;"><span style="position:absolute;top:2px;left:22px;width:27px;height:27px;border-radius:9999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);"></span></span>
+      </sc-if>
+      <sc-if value="{{ lightOn }}" hint-placeholder-val="{{ true }}">
+        <span style="position:relative;width:51px;height:31px;border-radius:9999px;background:#E3E6E9;flex:none;display:inline-block;"><span style="position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:9999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);"></span></span>
+      </sc-if>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <!-- Language -->
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.6 2.6 2.6 15.4 0 18M12 3c-2.6 2.6-2.6 15.4 0 18"></path></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Language</span>
+      <span style="font-size:16px;color:var(--muted);margin-right:6px;">English</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <!-- Chord style -->
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17V6l9-1.8v9.1"></path><circle cx="6.5" cy="17" r="2.5"></circle><circle cx="15.5" cy="15.3" r="2.5"></circle></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Chord style</span>
+      <span style="font-size:16px;color:var(--muted);margin-right:6px;">Letters</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <!-- Offline & downloads -->
+    <div onClick="{{ onOpenOffline }}" style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;cursor:pointer;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.8v8.4M8.4 12.4 12 16l3.6-3.6"></path></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Offline &amp; downloads</span>
+      <span style="font-size:16px;color:var(--muted);margin-right:6px;">28.5 MB</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:26px;">Library</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L12 16.88l-5.2 2.73.99-5.79-4.21-4.1 5.82-.85z"></path></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Starred</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><circle cx="4.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="17.5" r="1.3" fill="currentColor" stroke="none"></circle></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">My setlists</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+  </div>
+
+  <!-- SUPPORT -->
+  <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:0 16px 7px;margin-top:26px;">Support</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.6 9.3c.3-1.2 1.3-2 2.5-2 1.5 0 2.6 1 2.6 2.3 0 1.6-1.8 1.9-2.3 3.1"></path><circle cx="12" cy="16.6" r="0.7" fill="currentColor" stroke="none"></circle></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Help center</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9A1.5 1.5 0 0 1 18.5 16H9l-4 4z"></path><path d="M8 9h8M8 12h5"></path></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">Send feedback</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div style="height:0.5px;background:var(--border);margin-left:52px;"></div>
+    <div style="display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;">
+      <span style="color:var(--sec);display:flex;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><circle cx="12" cy="7.8" r="0.7" fill="currentColor" stroke="none"></circle></svg></span>
+      <span style="flex:1;font-size:17px;letter-spacing:-0.3px;color:var(--ink);">About GraceChords</span>
+      <svg width="8" height="14" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6" stroke="var(--muted)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+  </div>
+
+  <!-- Log out -->
+  <div onClick="{{ onLogout }}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);height:52px;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:26px;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer;color:var(--danger);">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"></path><path d="m16 16 4-4-4-4"></path><path d="M20 12H9"></path></svg>
+    <span style="font-size:17px;font-weight:600;letter-spacing:-0.3px;">Log out</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:820},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const dark = !!this.props.dark;
+    const L = { bg:'#F5F7F9', surface:'#FFFFFF', ink:'#1E2227', sec:'#5C656F', muted:'#8A929B', accent:'#1F84C9', onAccent:'#FFFFFF', border:'#E3E8EC', danger:'#E5484D' };
+    const D = { bg:'#14171A', surface:'#1E2227', ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E', accent:'#4EA6E6', onAccent:'#14171A', border:'#2A3036', danger:'#FF6B6B' };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--onAccent':t.onAccent,'--border':t.border,'--danger':t.danger,
+      // — locked design tokens —
+      '--sp-2':'2px','--sp-4':'4px','--sp-8':'8px','--sp-12':'12px','--sp-16':'16px','--sp-20':'20px','--sp-24':'24px','--sp-32':'32px','--sp-40':'40px',
+      '--r-xs':'6px','--r-sm':'8px','--r-md':'10px','--r-card':'14px','--r-sheet':'20px','--r-pill':'9999px',
+      '--safe-x':'16px',
+      boxSizing:'border-box', width:'100%', height:'100%', overflowY:'auto',
+      padding:'var(--safe-x) var(--safe-x) var(--sp-32)', background:'var(--bg)',
+      fontFamily:'-apple-system, system-ui, sans-serif'
+    };
+    return { rootStyle, darkOn: dark, lightOn: !dark, onLogout: this.props.onLogout || (() => {}), onOpenOffline: this.props.onOpenOffline || (() => {}) };
+  }
+}
+</script>
+</body>
+</html>

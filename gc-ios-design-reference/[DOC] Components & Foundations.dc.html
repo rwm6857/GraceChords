@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin:0; background:#E9EDF0; -webkit-font-smoothing:antialiased; }
+    * { box-sizing:border-box; }
+    .badge { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:#1A1A1A; color:#fff; border-radius:5px; letter-spacing:0.3px; }
+    .badge-soft { font:600 10px ui-monospace,Menlo,monospace; padding:2px 7px; background:rgba(0,0,0,.08); color:#1E2227; border-radius:5px; }
+    @keyframes gcshimmer { 0%{ background-position:-220px 0; } 100%{ background-position:220px 0; } }
+    @keyframes gcspin { to { transform:rotate(360deg); } }
+  </style>
+</helmet>
+
+<div style="font-family:-apple-system,system-ui,sans-serif;color:#1E2227;padding:48px 44px 96px;max-width:1320px;margin:0 auto;">
+
+  <!-- Intro -->
+  <div style="max-width:720px;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#1F84C9;">GraceChords · iOS</div>
+    <h1 style="font-size:38px;font-weight:700;letter-spacing:-0.5px;margin:10px 0 14px;line-height:1.1;">What's still missing — foundations &amp; components</h1>
+    <p style="font-size:15.5px;line-height:1.6;color:#5C656F;margin:0;">The palette, type, icons, app shell, and content patterns are decided. To call this a <strong style="color:#1E2227;">complete</strong> system we still need the connective tissue every native iOS app leans on — the parts that don't show up in a single screen but govern all of them. Below: the gap analysis, then mocks of each missing piece in both modes. Nothing here changes your existing pages.</p>
+  </div>
+
+  <!-- GAP OVERVIEW -->
+  <h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:46px 0 16px;">The gaps, at a glance</h2>
+  <div style="display:flex;gap:22px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:300px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#1F84C9;margin-bottom:10px;">Foundations</div>
+      <sc-for list="{{ foundationsGaps }}" as="g" hint-placeholder-count="6">
+        <div style="background:#fff;border:1px solid #E3E8EC;border-radius:12px;padding:13px 15px;margin-bottom:9px;">
+          <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:3px;">{{ g.t }}</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5C656F;">{{ g.d }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#1F84C9;margin-bottom:10px;">Components</div>
+      <sc-for list="{{ componentGaps }}" as="g" hint-placeholder-count="8">
+        <div style="background:#fff;border:1px solid #E3E8EC;border-radius:12px;padding:13px 15px;margin-bottom:9px;">
+          <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:3px;">{{ g.t }}</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5C656F;">{{ g.d }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#1F84C9;margin-bottom:10px;">Native-iOS behaviors</div>
+      <sc-for list="{{ nativeNotes }}" as="g" hint-placeholder-count="6">
+        <div style="background:#fff;border:1px solid #E3E8EC;border-radius:12px;padding:13px 15px;margin-bottom:9px;">
+          <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:3px;">{{ g.t }}</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5C656F;">{{ g.d }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ============================ PART 1 · FOUNDATIONS ============================ -->
+  <div style="margin:64px 0 30px;display:flex;align-items:center;gap:14px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:#1E2227;border-radius:999px;padding:6px 14px;">Part 1 · Foundations</span>
+    <span style="flex:1;height:1px;background:#D2D9DF;"></span>
+  </div>
+
+  <!-- Spacing -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 6px;"><span class="badge">SP</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Spacing — 4&nbsp;pt grid</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">Today every gap is hand-tuned. A 4-pt ramp keeps screens rhythmic and makes the eventual React Native styles trivial. <strong style="color:#1E2227;">16</strong> is the screen margin, <strong style="color:#1E2227;">12</strong> the default row gap, <strong style="color:#1E2227;">20–24</strong> between groups.</p>
+  <div style="background:#fff;border:1px solid #E3E8EC;border-radius:16px;padding:20px 24px;max-width:760px;">
+    <sc-for list="{{ spacing }}" as="s" hint-placeholder-count="9">
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 0;">
+        <span style="width:64px;flex:none;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">{{ s.label }}</span>
+        <span style="height:14px;border-radius:3px;background:#1F84C9;width:{{ s.w }};flex:none;"></span>
+        <span style="font-size:12.5px;color:#5C656F;">{{ s.use }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Radius -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:46px 0 6px;"><span class="badge">RD</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Corner radius</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">Cards already sit at 14; sheets want a softer 20. One small ramp, applied by element role.</p>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;max-width:880px;">
+    <sc-for list="{{ radius }}" as="r" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:9px;">
+        <div style="width:78px;height:78px;background:#D9EAF6;border:1.5px solid #1F84C9;border-radius:{{ r.v }};"></div>
+        <div style="text-align:center;"><div style="font-size:12px;font-weight:700;color:#1E2227;">{{ r.name }}</div><div style="font-size:11px;color:#8A929B;margin-top:1px;">{{ r.use }}</div></div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Elevation -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">EL</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Elevation</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">A 4-step ramp. <strong style="color:#1E2227;">Dark mode rule:</strong> shadows nearly vanish on dark backgrounds, so elevation there is carried by <em>surface steps</em> (bg → surface → surfaceAlt) and a hairline, not by drop shadow.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:330px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:26px 22px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;margin-bottom:18px;">Light — drop shadow</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <sc-for list="{{ elevation }}" as="e" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;">
+            <div style="width:76px;height:60px;background:#fff;border-radius:12px;box-shadow:{{ e.sh }};"></div>
+            <div style="text-align:center;"><div style="font-size:11.5px;font-weight:700;color:#1E2227;">{{ e.name }}</div><div style="font-size:10.5px;color:#8A929B;max-width:90px;line-height:1.35;">{{ e.use }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="flex:1;min-width:330px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:26px 22px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;margin-bottom:18px;">Dark — surface steps</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <sc-for list="{{ elevationDark }}" as="e" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;">
+            <div style="width:76px;height:60px;background:{{ e.bg }};border:1px solid {{ e.bd }};border-radius:12px;"></div>
+            <div style="text-align:center;"><div style="font-size:11.5px;font-weight:700;color:#E8ECF0;">{{ e.name }}</div><div style="font-size:10.5px;color:#7C858E;max-width:90px;line-height:1.35;">{{ e.use }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semantic colors -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">SC</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Semantic state colors</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">Only <code style="font-family:ui-monospace,monospace;">danger</code> exists today. A worship tool that syncs setlists and works offline needs <strong style="color:#1E2227;">success</strong> (saved / added), <strong style="color:#1E2227;">warning</strong> (offline / unsynced), and <strong style="color:#1E2227;">info</strong> (= the accent). One hue each, tuned per mode so it stays legible without shouting.</p>
+  <div style="background:#fff;border:1px solid #E3E8EC;border-radius:16px;overflow:hidden;max-width:880px;">
+    <div style="display:flex;align-items:center;padding:9px 18px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8A929B;border-bottom:1px solid #EEF1F4;">
+      <span style="flex:1;">Role</span><span style="width:150px;">Light</span><span style="width:150px;">Dark</span><span style="flex:1;">Used for</span>
+    </div>
+    <sc-for list="{{ semantic }}" as="c" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #EEF1F4;">
+        <span style="flex:1;font-size:13.5px;font-weight:600;color:#1E2227;">{{ c.role }}</span>
+        <span style="width:150px;display:flex;align-items:center;gap:9px;"><span style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08);background:{{ c.l }};"></span><span style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">{{ c.l }}</span></span>
+        <span style="width:150px;display:flex;align-items:center;gap:9px;"><span style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08);background:{{ c.d }};"></span><span style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8A929B;">{{ c.d }}</span></span>
+        <span style="flex:1;font-size:12.5px;color:#5C656F;">{{ c.use }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Motion -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">MO</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Motion</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">Three durations and matching curves so transitions feel like one app, not many. Always check <strong style="color:#1E2227;">Reduce Motion</strong> — fall back to a cross-fade.</p>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;max-width:1000px;">
+    <sc-for list="{{ motion }}" as="m" hint-placeholder-count="4">
+      <div style="flex:1;min-width:210px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;">{{ m.name }}</div>
+        <div style="font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#1F84C9;margin:6px 0 8px;">{{ m.curve }}</div>
+        <div style="font-size:12.5px;line-height:1.5;color:#5C656F;">{{ m.use }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- Touch & icon -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">TS</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Touch targets &amp; icon sizes</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 20px;max-width:760px;">Every tappable thing gets a <strong style="color:#1E2227;">44&nbsp;pt</strong> minimum target even when the glyph is smaller. The avatar button already does this. Icon glyph ramp below.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:20px 22px;display:flex;align-items:center;gap:22px;">
+      <div style="position:relative;width:44px;height:44px;border:1.5px dashed #1F84C9;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <span style="width:22px;height:22px;background:#D9EAF6;border-radius:5px;"></span>
+      </div>
+      <div><div style="font-size:13.5px;font-weight:700;color:#1E2227;">44&nbsp;pt min target</div><div style="font-size:12.5px;color:#5C656F;max-width:220px;line-height:1.5;">Dashed = hit area, solid = glyph. Pad small icons up to 44.</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:20px 22px;display:flex;align-items:flex-end;gap:20px;">
+      <sc-for list="{{ iconSizes }}" as="i" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <span style="background:#1F84C9;border-radius:5px;width:{{ i.px }};height:{{ i.px }};"></span>
+          <span style="font-size:11px;font-weight:600;color:#1E2227;">{{ i.label }}</span>
+          <span style="font-size:10.5px;color:#8A929B;">{{ i.use }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ============================ PART 2 · COMPONENTS ============================ -->
+  <div style="margin:70px 0 30px;display:flex;align-items:center;gap:14px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:#1E2227;border-radius:999px;padding:6px 14px;">Part 2 · Components</span>
+    <span style="flex:1;height:1px;background:#D2D9DF;"></span>
+  </div>
+
+  <!-- Buttons -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:0 0 6px;"><span class="badge">BT</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Buttons</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Four roles — <strong style="color:#1E2227;">Filled</strong> (primary action), <strong style="color:#1E2227;">Tinted</strong> (secondary), <strong style="color:#1E2227;">Plain</strong> (tertiary / nav), <strong style="color:#1E2227;">Destructive</strong> — each with pressed and disabled states, plus a size ramp. One accent only, text color flips by mode for contrast.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+
+    <!-- Light buttons -->
+    <div style="flex:1;min-width:360px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:24px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;margin-bottom:16px;">Light</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px 12px;align-items:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#1F84C9;color:#fff;cursor:pointer;">Open viewer</button><span style="font-size:10.5px;color:#8A929B;">Filled · default</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#1A6FA8;color:#fff;cursor:pointer;">Open viewer</button><span style="font-size:10.5px;color:#8A929B;">Filled · pressed</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button disabled style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#A9D0EA;color:#fff;">Open viewer</button><span style="font-size:10.5px;color:#8A929B;">Filled · disabled</span></div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#D9EAF6;color:#15619A;cursor:pointer;">Add to set</button><span style="font-size:10.5px;color:#8A929B;">Tinted</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:transparent;color:#1F84C9;cursor:pointer;">Cancel</button><span style="font-size:10.5px;color:#8A929B;">Plain</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#FBE3E4;color:#E5484D;cursor:pointer;">Remove</button><span style="font-size:10.5px;color:#8A929B;">Destructive · tinted</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid #E3E8EC;">
+        <button style="height:50px;padding:0 22px;border:0;border-radius:10px;font-size:16px;font-weight:600;background:#1F84C9;color:#fff;cursor:pointer;">Large · 50</button>
+        <button style="height:40px;padding:0 18px;border:0;border-radius:9px;font-size:15px;font-weight:600;background:#1F84C9;color:#fff;cursor:pointer;">Medium · 40</button>
+        <button style="height:32px;padding:0 14px;border:0;border-radius:8px;font-size:13px;font-weight:600;background:#1F84C9;color:#fff;cursor:pointer;">Small · 32</button>
+      </div>
+    </div>
+
+    <!-- Dark buttons -->
+    <div style="flex:1;min-width:360px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:24px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;margin-bottom:16px;">Dark — primary mode</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px 12px;align-items:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#4EA6E6;color:#14171A;cursor:pointer;">Open viewer</button><span style="font-size:10.5px;color:#7C858E;">Filled · default</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#3E8BC6;color:#14171A;cursor:pointer;">Open viewer</button><span style="font-size:10.5px;color:#7C858E;">Filled · pressed</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button disabled style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#2C3B47;color:#5E7180;">Open viewer</button><span style="font-size:10.5px;color:#7C858E;">Filled · disabled</span></div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#243340;color:#6FB6EA;cursor:pointer;">Add to set</button><span style="font-size:10.5px;color:#7C858E;">Tinted</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:transparent;color:#4EA6E6;cursor:pointer;">Cancel</button><span style="font-size:10.5px;color:#7C858E;">Plain</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;"><button style="width:100%;height:50px;border:0;border-radius:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;background:#3A2426;color:#FF6B6B;cursor:pointer;">Remove</button><span style="font-size:10.5px;color:#7C858E;">Destructive · tinted</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid #2A3036;">
+        <button style="height:50px;padding:0 22px;border:0;border-radius:10px;font-size:16px;font-weight:600;background:#4EA6E6;color:#14171A;cursor:pointer;">Large · 50</button>
+        <button style="height:40px;padding:0 18px;border:0;border-radius:9px;font-size:15px;font-weight:600;background:#4EA6E6;color:#14171A;cursor:pointer;">Medium · 40</button>
+        <button style="height:32px;padding:0 14px;border:0;border-radius:8px;font-size:13px;font-weight:600;background:#4EA6E6;color:#14171A;cursor:pointer;">Small · 32</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">IN</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Text fields</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Search is handled, but naming a setlist, editing a profile, or entering an email needs a general field — default, focused, with a leading icon, and an error state.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:340px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;">Light</div>
+      <div><div style="font-size:12px;font-weight:600;color:#5C656F;margin-bottom:6px;">Setlist name</div><div style="height:48px;border-radius:10px;background:#fff;border:1px solid #E3E8EC;display:flex;align-items:center;padding:0 14px;font-size:16px;color:#8A929B;">Sunday morning…</div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#1F84C9;margin-bottom:6px;">Setlist name · focused</div><div style="height:48px;border-radius:10px;background:#fff;border:2px solid #1F84C9;display:flex;align-items:center;padding:0 13px;font-size:16px;color:#1E2227;">On Sunday<span style="width:2px;height:20px;background:#1F84C9;margin-left:1px;"></span></div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#5C656F;margin-bottom:6px;">Email · with icon</div><div style="height:48px;border-radius:10px;background:#fff;border:1px solid #E3E8EC;display:flex;align-items:center;gap:10px;padding:0 14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A929B" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="M4 7l8 6 8-6"></path></svg><span style="font-size:16px;color:#1E2227;">alex.brown@gracechords.app</span></div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#E5484D;margin-bottom:6px;">Setlist name · error</div><div style="height:48px;border-radius:10px;background:#fff;border:1.5px solid #E5484D;display:flex;align-items:center;padding:0 13px;font-size:16px;color:#1E2227;">On Sunday</div><div style="font-size:12px;color:#E5484D;margin-top:5px;">A setlist with this name already exists.</div></div>
+    </div>
+    <div style="flex:1;min-width:340px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;">Dark</div>
+      <div><div style="font-size:12px;font-weight:600;color:#AEB6BE;margin-bottom:6px;">Setlist name</div><div style="height:48px;border-radius:10px;background:#1E2227;border:1px solid #2A3036;display:flex;align-items:center;padding:0 14px;font-size:16px;color:#7C858E;">Sunday morning…</div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#4EA6E6;margin-bottom:6px;">Setlist name · focused</div><div style="height:48px;border-radius:10px;background:#1E2227;border:2px solid #4EA6E6;display:flex;align-items:center;padding:0 13px;font-size:16px;color:#E8ECF0;">On Sunday<span style="width:2px;height:20px;background:#4EA6E6;margin-left:1px;"></span></div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#AEB6BE;margin-bottom:6px;">Email · with icon</div><div style="height:48px;border-radius:10px;background:#1E2227;border:1px solid #2A3036;display:flex;align-items:center;gap:10px;padding:0 14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C858E" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="M4 7l8 6 8-6"></path></svg><span style="font-size:16px;color:#E8ECF0;">alex.brown@gracechords.app</span></div></div>
+      <div><div style="font-size:12px;font-weight:600;color:#FF6B6B;margin-bottom:6px;">Setlist name · error</div><div style="height:48px;border-radius:10px;background:#1E2227;border:1.5px solid #FF6B6B;display:flex;align-items:center;padding:0 13px;font-size:16px;color:#E8ECF0;">On Sunday</div><div style="font-size:12px;color:#FF6B6B;margin-top:5px;">A setlist with this name already exists.</div></div>
+    </div>
+  </div>
+
+  <!-- Pickers / controls -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">CT</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Pickers &amp; controls</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">A chord app lives or dies on these: a <strong style="color:#1E2227;">segmented control</strong> for chord style, a <strong style="color:#1E2227;">stepper</strong> for transpose, and a <strong style="color:#1E2227;">slider</strong> for chart font size. (The toggle switch already exists in Settings.)</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <!-- Light controls -->
+    <div style="flex:1;min-width:360px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:22px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;">Light</div>
+      <div><div style="font-size:12px;font-weight:600;color:#5C656F;margin-bottom:8px;">Chord style · segmented</div>
+        <div style="display:flex;background:#EAEEF1;border-radius:9px;padding:2px;">
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:600;color:#1E2227;background:#fff;border-radius:7px;padding:7px 0;box-shadow:0 1px 2px rgba(0,0,0,.10);">Letters</div>
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:500;color:#5C656F;padding:7px 0;">Numbers</div>
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:500;color:#5C656F;padding:7px 0;">Nashville</div>
+        </div>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:#5C656F;margin-bottom:8px;">Transpose · stepper</div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="display:flex;align-items:center;background:#fff;border:1px solid #E3E8EC;border-radius:10px;overflow:hidden;">
+            <div style="width:46px;height:44px;display:flex;align-items:center;justify-content:center;color:#1F84C9;border-right:1px solid #E3E8EC;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"></path></svg></div>
+            <div style="width:46px;height:44px;display:flex;align-items:center;justify-content:center;color:#1F84C9;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+          </div>
+          <div style="font-size:16px;font-weight:600;color:#1E2227;">Key of <span style="color:#15619A;">G</span> <span style="font-size:13px;color:#8A929B;font-weight:500;">+2</span></div>
+        </div>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:#5C656F;margin-bottom:10px;">Chart font size · slider</div>
+        <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:13px;color:#8A929B;">A</span>
+          <div style="flex:1;height:4px;border-radius:2px;background:#D7DDE2;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:#1F84C9;border-radius:2px;"></div><div style="position:absolute;left:62%;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);"></div></div>
+          <span style="font-size:21px;color:#8A929B;">A</span>
+        </div>
+      </div>
+    </div>
+    <!-- Dark controls -->
+    <div style="flex:1;min-width:360px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:22px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;">Dark</div>
+      <div><div style="font-size:12px;font-weight:600;color:#AEB6BE;margin-bottom:8px;">Chord style · segmented</div>
+        <div style="display:flex;background:#0F1316;border-radius:9px;padding:2px;">
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:600;color:#E8ECF0;background:#2C343B;border-radius:7px;padding:7px 0;">Letters</div>
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:500;color:#AEB6BE;padding:7px 0;">Numbers</div>
+          <div style="flex:1;text-align:center;font-size:14px;font-weight:500;color:#AEB6BE;padding:7px 0;">Nashville</div>
+        </div>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:#AEB6BE;margin-bottom:8px;">Transpose · stepper</div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="display:flex;align-items:center;background:#1E2227;border:1px solid #2A3036;border-radius:10px;overflow:hidden;">
+            <div style="width:46px;height:44px;display:flex;align-items:center;justify-content:center;color:#4EA6E6;border-right:1px solid #2A3036;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"></path></svg></div>
+            <div style="width:46px;height:44px;display:flex;align-items:center;justify-content:center;color:#4EA6E6;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+          </div>
+          <div style="font-size:16px;font-weight:600;color:#E8ECF0;">Key of <span style="color:#6FB6EA;">G</span> <span style="font-size:13px;color:#7C858E;font-weight:500;">+2</span></div>
+        </div>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:#AEB6BE;margin-bottom:10px;">Chart font size · slider</div>
+        <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:13px;color:#7C858E;">A</span>
+          <div style="flex:1;height:4px;border-radius:2px;background:#2A3036;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:#4EA6E6;border-radius:2px;"></div><div style="position:absolute;left:62%;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:#E8ECF0;box-shadow:0 1px 4px rgba(0,0,0,.5);"></div></div>
+          <span style="font-size:21px;color:#7C858E;">A</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chips & badges -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">CH</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Chips, tags &amp; badges</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">The key badge and tag chips are used on rows and in the filter sheet but never specced. Formalized: filter chips (idle / selected), the <strong style="color:#1E2227;">key badge</strong>, meta badges (time, capo), and status badges driven by the new semantic colors.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:340px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:24px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;margin-bottom:16px;">Light</div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center;">
+        <span style="font-size:13px;font-weight:500;color:#5C656F;background:#fff;border:1px solid #E3E8EC;border-radius:8px;padding:6px 13px;">Worship</span>
+        <span style="font-size:13px;font-weight:600;color:#fff;background:#1F84C9;border-radius:8px;padding:6px 13px;">Communion</span>
+        <span style="font-size:13px;font-weight:500;color:#5C656F;background:#fff;border:1px solid #E3E8EC;border-radius:8px;padding:6px 13px;">Christmas</span>
+        <span style="font-size:14px;font-weight:700;color:#15619A;background:#D9EAF6;border-radius:7px;padding:4px 10px;">G</span>
+        <span style="font-size:12px;font-weight:600;color:#8A929B;background:rgba(0,0,0,.05);border-radius:6px;padding:4px 9px;font-family:ui-monospace,Menlo,monospace;">4/4</span>
+        <span style="font-size:12px;font-weight:600;color:#8A929B;background:rgba(0,0,0,.05);border-radius:6px;padding:4px 9px;">Capo 2</span>
+      </div>
+      <div style="height:1px;background:#E3E8EC;margin:18px 0;"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center;">
+        <span style="font-size:12px;font-weight:600;color:#2E9E5B;background:#E3F3EA;border-radius:7px;padding:5px 11px;">Synced</span>
+        <span style="font-size:12px;font-weight:600;color:#C9831F;background:#FBF0DE;border-radius:7px;padding:5px 11px;">Offline</span>
+        <span style="font-size:12px;font-weight:600;color:#E5484D;background:#FBE3E4;border-radius:7px;padding:5px 11px;">Failed</span>
+        <span style="font-size:12px;font-weight:600;color:#15619A;background:#D9EAF6;border-radius:7px;padding:5px 11px;">New</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:340px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:24px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;margin-bottom:16px;">Dark</div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center;">
+        <span style="font-size:13px;font-weight:500;color:#AEB6BE;background:#1E2227;border:1px solid #2A3036;border-radius:8px;padding:6px 13px;">Worship</span>
+        <span style="font-size:13px;font-weight:600;color:#14171A;background:#4EA6E6;border-radius:8px;padding:6px 13px;">Communion</span>
+        <span style="font-size:13px;font-weight:500;color:#AEB6BE;background:#1E2227;border:1px solid #2A3036;border-radius:8px;padding:6px 13px;">Christmas</span>
+        <span style="font-size:14px;font-weight:700;color:#6FB6EA;background:#243340;border-radius:7px;padding:4px 10px;">G</span>
+        <span style="font-size:12px;font-weight:600;color:#7C858E;background:rgba(255,255,255,.07);border-radius:6px;padding:4px 9px;font-family:ui-monospace,Menlo,monospace;">4/4</span>
+        <span style="font-size:12px;font-weight:600;color:#7C858E;background:rgba(255,255,255,.07);border-radius:6px;padding:4px 9px;">Capo 2</span>
+      </div>
+      <div style="height:1px;background:#2A3036;margin:18px 0;"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center;">
+        <span style="font-size:12px;font-weight:600;color:#46C281;background:#16271E;border-radius:7px;padding:5px 11px;">Synced</span>
+        <span style="font-size:12px;font-weight:600;color:#E0A33C;background:#2C2415;border-radius:7px;padding:5px 11px;">Offline</span>
+        <span style="font-size:12px;font-weight:600;color:#FF6B6B;background:#2E1A1B;border-radius:7px;padding:5px 11px;">Failed</span>
+        <span style="font-size:12px;font-weight:600;color:#6FB6EA;background:#243340;border-radius:7px;padding:5px 11px;">New</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts & action sheets -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">AL</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Alerts &amp; action sheets</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Native dialogs. An <strong style="color:#1E2227;">alert</strong> for destructive confirms (delete a setlist), an <strong style="color:#1E2227;">action sheet</strong> for a row's quick actions. Both shown over a dimmed screen in the stage-primary dark mode; light mirrors the same structure.</p>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+
+    <!-- Alert -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:300px;height:520px;border-radius:30px;background:#14171A;border:1px solid #2A3036;overflow:hidden;position:relative;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.55);"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 28px;">
+          <div style="width:100%;max-width:272px;background:#262B30;border-radius:16px;overflow:hidden;backdrop-filter:blur(20px);">
+            <div style="padding:20px 18px 16px;text-align:center;">
+              <div style="font-size:17px;font-weight:700;color:#E8ECF0;margin-bottom:5px;">Delete "On Sunday"?</div>
+              <div style="font-size:13px;line-height:1.45;color:#AEB6BE;">This setlist and its order will be removed from this device. Songs stay in your library.</div>
+            </div>
+            <div style="height:0.5px;background:#3A4148;"></div>
+            <div style="display:flex;">
+              <div style="flex:1;text-align:center;padding:13px 0;font-size:17px;color:#4EA6E6;border-right:0.5px solid #3A4148;cursor:pointer;">Cancel</div>
+              <div style="flex:1;text-align:center;padding:13px 0;font-size:17px;font-weight:600;color:#FF6B6B;cursor:pointer;">Delete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Alert · destructive confirm</span>
+    </div>
+
+    <!-- Action sheet -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:300px;height:520px;border-radius:30px;background:#14171A;border:1px solid #2A3036;overflow:hidden;position:relative;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.55);"></div>
+        <div style="position:absolute;left:8px;right:8px;bottom:10px;display:flex;flex-direction:column;gap:8px;">
+          <div style="background:#262B30;border-radius:14px;overflow:hidden;">
+            <div style="text-align:center;font-size:12.5px;color:#7C858E;padding:13px 16px 11px;">Build My Life · Housefires</div>
+            <div style="height:0.5px;background:#3A4148;"></div>
+            <div style="text-align:center;font-size:17px;color:#4EA6E6;padding:14px 0;cursor:pointer;">Add to setlist</div>
+            <div style="height:0.5px;background:#3A4148;"></div>
+            <div style="text-align:center;font-size:17px;color:#4EA6E6;padding:14px 0;cursor:pointer;">Transpose</div>
+            <div style="height:0.5px;background:#3A4148;"></div>
+            <div style="text-align:center;font-size:17px;color:#4EA6E6;padding:14px 0;cursor:pointer;">Share chart</div>
+            <div style="height:0.5px;background:#3A4148;"></div>
+            <div style="text-align:center;font-size:17px;color:#FF6B6B;padding:14px 0;cursor:pointer;">Remove from library</div>
+          </div>
+          <div style="background:#262B30;border-radius:14px;text-align:center;font-size:17px;font-weight:600;color:#4EA6E6;padding:15px 0;cursor:pointer;">Cancel</div>
+        </div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Action sheet · row quick actions</span>
+    </div>
+
+    <!-- Context menu -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:300px;height:520px;border-radius:30px;background:#14171A;border:1px solid #2A3036;overflow:hidden;position:relative;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);"></div>
+        <!-- lifted row preview -->
+        <div style="position:absolute;left:16px;right:16px;top:120px;background:#1E2227;border-radius:12px;padding:13px 15px;display:flex;align-items:center;box-shadow:0 12px 30px rgba(0,0,0,.5);">
+          <div style="flex:1;"><div style="font-size:16px;font-weight:600;color:#E8ECF0;">Build My Life</div><div style="font-size:13px;color:#AEB6BE;margin-top:2px;">Housefires</div></div>
+          <div style="text-align:right;"><div style="font-size:14px;font-weight:600;color:#6FB6EA;">D</div><div style="font-size:12px;color:#7C858E;">4/4</div></div>
+        </div>
+        <!-- menu -->
+        <div style="position:absolute;left:16px;top:200px;width:210px;background:#2B3137;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.55);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:16px;color:#E8ECF0;">Open<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AEB6BE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h9v9M18 6 7 17"></path></svg></div>
+          <div style="height:0.5px;background:#3A4148;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:16px;color:#E8ECF0;">Add to setlist<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AEB6BE" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h11M4 12h7M4 17h5"></path><path d="M18.5 14v6M15.5 17h6"></path></svg></div>
+          <div style="height:0.5px;background:#3A4148;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:16px;color:#E8ECF0;">Share<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AEB6BE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14V4M8.5 7 12 3.5 15.5 7"></path><path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg></div>
+          <div style="height:0.5px;background:#3A4148;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:16px;color:#FF6B6B;">Remove<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg></div>
+        </div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Context menu · long-press a row</span>
+    </div>
+  </div>
+
+  <!-- Feedback: toast & banner -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">FB</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Toasts &amp; banners</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Transient confirmation (a <strong style="color:#1E2227;">toast</strong> after "added to setlist") and persistent status (an <strong style="color:#1E2227;">inline banner</strong> when offline). Both use the new semantic colors.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:340px;background:#F5F7F9;border:1px solid #E3E8EC;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-size:13px;font-weight:700;color:#1E2227;">Light</div>
+      <div style="display:flex;align-items:center;gap:11px;background:#1E2227;border-radius:12px;padding:13px 16px;box-shadow:0 6px 18px rgba(0,0,0,.18);">
+        <span style="width:22px;height:22px;border-radius:50%;background:#2E9E5B;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"></path></svg></span>
+        <span style="font-size:14.5px;font-weight:600;color:#fff;flex:1;">Added to "On Sunday"</span>
+        <span style="font-size:14px;font-weight:600;color:#6FB6EA;">Undo</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;background:#FBF0DE;border:1px solid #F0DCB4;border-radius:12px;padding:12px 15px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9831F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+        <span style="font-size:13.5px;color:#7A5410;line-height:1.4;">You're offline — showing your saved songs.</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:340px;background:#14171A;border:1px solid #2A3036;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-size:13px;font-weight:700;color:#E8ECF0;">Dark</div>
+      <div style="display:flex;align-items:center;gap:11px;background:#2B3137;border-radius:12px;padding:13px 16px;box-shadow:0 6px 18px rgba(0,0,0,.4);">
+        <span style="width:22px;height:22px;border-radius:50%;background:#46C281;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#14171A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"></path></svg></span>
+        <span style="font-size:14.5px;font-weight:600;color:#E8ECF0;flex:1;">Added to "On Sunday"</span>
+        <span style="font-size:14px;font-weight:600;color:#6FB6EA;">Undo</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;background:#2C2415;border:1px solid #4A3C1C;border-radius:12px;padding:12px 15px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E0A33C" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+        <span style="font-size:13.5px;color:#E0A33C;line-height:1.4;">You're offline — showing your saved songs.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty & loading -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin:48px 0 6px;"><span class="badge">ST</span><h2 style="font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8A929B;margin:0;">Empty &amp; loading states</h2></div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Every list needs a first-run empty state and a loading state. Shown: empty library (light), skeleton rows + spinner + progress (dark).</p>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;">
+
+    <!-- Empty -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:300px;height:430px;border-radius:24px;background:#F5F7F9;border:1px solid #E3E8EC;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center;">
+        <div style="width:72px;height:72px;border-radius:18px;background:#D9EAF6;display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1F84C9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+        <div style="font-size:19px;font-weight:700;color:#1E2227;margin-bottom:7px;">No songs yet</div>
+        <div style="font-size:14px;line-height:1.5;color:#5C656F;margin-bottom:22px;">Import your library or add your first chord chart to get started.</div>
+        <button style="height:46px;padding:0 22px;border:0;border-radius:10px;background:#1F84C9;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">Import songs</button>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Empty · first run</span>
+    </div>
+
+    <!-- Loading -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:300px;height:430px;border-radius:24px;background:#14171A;border:1px solid #2A3036;overflow:hidden;padding:22px 18px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">
+          <span style="width:22px;height:22px;border:2.5px solid #2A3036;border-top-color:#4EA6E6;border-radius:50%;display:inline-block;animation:gcspin 0.8s linear infinite;"></span>
+          <span style="font-size:13px;color:#7C858E;">Syncing your setlists…</span>
+        </div>
+        <div style="height:5px;border-radius:3px;background:#2A3036;margin:14px 0 22px;overflow:hidden;"><div style="width:58%;height:100%;background:#4EA6E6;border-radius:3px;"></div></div>
+        <sc-for list="{{ skeletons }}" as="k" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #1F252A;">
+            <div style="flex:1;">
+              <div style="height:13px;border-radius:4px;width:{{ k.w1 }};background:linear-gradient(90deg,#222a30 25%,#2c353c 37%,#222a30 63%);background-size:300px 100%;animation:gcshimmer 1.4s linear infinite;"></div>
+              <div style="height:11px;border-radius:4px;width:{{ k.w2 }};margin-top:8px;background:linear-gradient(90deg,#1e2429 25%,#272f35 37%,#1e2429 63%);background-size:300px 100%;animation:gcshimmer 1.4s linear infinite;"></div>
+            </div>
+            <div style="width:24px;height:13px;border-radius:4px;background:linear-gradient(90deg,#222a30 25%,#2c353c 37%,#222a30 63%);background-size:300px 100%;animation:gcshimmer 1.4s linear infinite;"></div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:#5C656F;">Loading · spinner · skeleton · progress</span>
+    </div>
+  </div>
+
+  <!-- ============================ PART 3 · NATIVE BEHAVIORS ============================ -->
+  <div style="margin:70px 0 30px;display:flex;align-items:center;gap:14px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:#1E2227;border-radius:999px;padding:6px 14px;">Part 3 · Native-iOS behaviors</span>
+    <span style="flex:1;height:1px;background:#D2D9DF;"></span>
+  </div>
+  <p style="font-size:13px;line-height:1.55;color:#5C656F;margin:0 2px 22px;max-width:760px;">Not visual components, but the rules that make it feel native rather than ported. These get written into the shell once so screens inherit them.</p>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;max-width:1200px;">
+    <sc-for list="{{ nativeNotes }}" as="n" hint-placeholder-count="6">
+      <div style="flex:1;min-width:300px;background:#fff;border:1px solid #E3E8EC;border-radius:14px;padding:18px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1E2227;margin-bottom:6px;">{{ n.t }}</div>
+        <div style="font-size:13px;line-height:1.55;color:#5C656F;">{{ n.d }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="font-size:12px;line-height:1.6;color:#8A929B;margin:36px 2px 0;max-width:760px;">Try next: "lock these tokens in and write the spacing/radius into the shell" · "build the transpose stepper into the Viewer" · "add the success toast to the swipe-to-add flow" · "show the empty + loading states inside the real Song Library".</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      foundationsGaps: [
+        {t:'Spacing scale', d:'Everything is hand-tuned px today. A 4-pt grid keeps screens rhythmic.'},
+        {t:'Radius scale', d:'14 / 16 / full used by feel — formalize a small ramp by role.'},
+        {t:'Elevation', d:'One card shadow exists. Need a 4-step ramp plus a dark-mode rule.'},
+        {t:'Semantic colors', d:'Only danger is defined. Add success / warning / info for sync, save, offline.'},
+        {t:'Motion', d:'No durations or easing yet — needed for tabs, sheets, presses.'},
+        {t:'Touch & icon sizes', d:'State the 44-pt minimum target and an icon glyph ramp once.'},
+      ],
+      componentGaps: [
+        {t:'Buttons', d:'Filled / tinted / plain / destructive + pressed & disabled. None defined yet.'},
+        {t:'Text fields', d:'Search exists; need a general input (focus, icon, error) for names & profile.'},
+        {t:'Pickers & controls', d:'Segmented, stepper (transpose!), slider (font size) — core to a chord app.'},
+        {t:'Chips & badges', d:'Key badge + tag chips are used but never specced.'},
+        {t:'Alerts & action sheets', d:'Native dialogs for delete, unsaved, and row actions.'},
+        {t:'Toasts & banners', d:'"Added to setlist" + a persistent "offline" banner.'},
+        {t:'Empty & loading', d:'Empty library, no-results, skeletons, spinner, progress.'},
+        {t:'Context menu', d:'Long-press on a song row — the iOS-standard quick-action surface.'},
+      ],
+      nativeNotes: [
+        {t:'Safe areas', d:'Header pads ~56px for the notch; tab bar pads 24px for the home indicator. Bake into the shell, never per screen.'},
+        {t:'Dynamic Type', d:'Respect the OS text-size setting; body 17pt is the anchor. Chord charts opt out (fixed mono) so chord-over-lyric alignment holds.'},
+        {t:'Haptics', d:'Light tap on toggles & add-to-setlist, medium on each transpose step, success on save, warning before a destructive confirm.'},
+        {t:'Reduce Motion / Contrast', d:'Cross-fade instead of slide when Reduce Motion is on; thicken hairlines and deepen text when Increase Contrast is on.'},
+        {t:'VoiceOver', d:'Label every icon-only button (avatar, funnel, back). The key badge reads "Key of G"; rows read title, artist, key.'},
+        {t:'Status bar & keyboard', d:'Status bar style flips with light/dark mode. Content lifts above the keyboard when naming a setlist or searching.'},
+      ],
+      spacing: [
+        {label:'2',  w:'2px',  use:'hairline nudges'},
+        {label:'4',  w:'4px',  use:'icon ↔ label'},
+        {label:'8',  w:'8px',  use:'chip gaps, tight stacks'},
+        {label:'12', w:'12px', use:'default row gap'},
+        {label:'16', w:'16px', use:'screen margin'},
+        {label:'20', w:'20px', use:'between cards'},
+        {label:'24', w:'24px', use:'between groups'},
+        {label:'32', w:'32px', use:'section breaks'},
+        {label:'40', w:'40px', use:'major spacing'},
+      ],
+      radius: [
+        {name:'xs · 6',   v:'6px',    use:'meta badges'},
+        {name:'sm · 8',   v:'8px',    use:'chips, small'},
+        {name:'md · 10',  v:'10px',   use:'buttons, fields'},
+        {name:'card · 14',v:'14px',   use:'cards, groups'},
+        {name:'sheet · 20',v:'20px',  use:'modal sheets'},
+        {name:'pill · full',v:'9999px',use:'avatars, toggles'},
+      ],
+      elevation: [
+        {name:'e0 · flush', sh:'none', use:'rows on a surface'},
+        {name:'e1 · card',  sh:'0 1px 2px rgba(0,0,0,.06)', use:'cards, settings'},
+        {name:'e2 · raised',sh:'0 4px 14px rgba(0,0,0,.12)', use:'popovers, menus'},
+        {name:'e3 · overlay',sh:'0 -10px 34px rgba(0,0,0,.22)', use:'sheets, modals'},
+      ],
+      elevationDark: [
+        {name:'e0 · flush', bg:'#14171A', bd:'#14171A', use:'page background'},
+        {name:'e1 · card',  bg:'#1E2227', bd:'#2A3036', use:'cards, settings'},
+        {name:'e2 · raised',bg:'#262B30', bd:'#363D44', use:'popovers, menus'},
+        {name:'e3 · overlay',bg:'#2B3137', bd:'#3A4148', use:'sheets, modals'},
+      ],
+      semantic: [
+        {role:'Success', l:'#2E9E5B', d:'#46C281', use:'saved · synced · added to a set'},
+        {role:'Warning', l:'#C9831F', d:'#E0A33C', use:'offline · unsynced changes'},
+        {role:'Error / danger', l:'#E5484D', d:'#FF6B6B', use:'delete · failed · log out'},
+        {role:'Info', l:'#1F84C9', d:'#4EA6E6', use:'tips · neutral status (= accent)'},
+      ],
+      motion: [
+        {name:'fast · 150ms', curve:'ease-out', use:'taps, toggles, button press'},
+        {name:'base · 250ms', curve:'cubic-bezier(.2,0,0,1)', use:'tab & screen transitions, fades'},
+        {name:'sheet · 350ms', curve:'spring (gentle damping)', use:'sheets, action sheets, modals'},
+        {name:'reduced', curve:'opacity only', use:'honor Reduce Motion — cross-fade'},
+      ],
+      iconSizes: [
+        {label:'16', px:'16px', use:'inline'},
+        {label:'22', px:'22px', use:'list rows'},
+        {label:'28', px:'28px', use:'tab bar'},
+        {label:'34', px:'34px', use:'empty state'},
+      ],
+      skeletons: [
+        {w1:'70%', w2:'45%'},
+        {w1:'58%', w2:'38%'},
+        {w1:'66%', w2:'42%'},
+        {w1:'52%', w2:'34%'},
+        {w1:'62%', w2:'40%'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

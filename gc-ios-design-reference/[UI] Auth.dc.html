@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ dark }}" hint-size="402px,874px">
+  <div style="{{ rootStyle }}">
+    <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;">
+
+      <!-- ===== Icon picker (optional — account creation, step 2) ===== -->
+      <sc-if value="{{ showIcon }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:var(--safe-top) 8px 6px;display:flex;align-items:center;">
+          <button onClick="{{ backToForm }}" aria-label="Back" style="display:flex;align-items:center;gap:1px;padding:6px;border:0;background:transparent;color:var(--accent);cursor:pointer;">
+            <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 2 10l7 8"></path></svg>
+            <span style="font-size:17px;letter-spacing:-0.2px;">Back</span>
+          </button>
+        </div>
+        <div style="padding:8px var(--safe-x) 2px;">
+          <div style="font-size:26px;font-weight:700;letter-spacing:-0.4px;color:var(--ink);">Choose your icon</div>
+          <div style="font-size:15px;color:var(--sec);margin-top:4px;">You can change this later</div>
+        </div>
+        <div style="padding:20px var(--safe-x) 6px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <sc-for list="{{ sprites }}" as="sp" hint-placeholder-count="15">
+            <button onClick="{{ sp.select }}" aria-label="{{ sp.label }}" style="{{ sp.tileStyle }}">
+              <img src="{{ sp.src }}" alt="{{ sp.label }}" style="width:100%;height:100%;border-radius:9999px;display:block;">
+              <sc-if value="{{ sp.selected }}" hint-placeholder-val="{{ false }}">
+                <span style="position:absolute;right:0;bottom:0;width:27px;height:27px;border-radius:9999px;background:var(--accent);border:2.5px solid var(--bg);display:flex;align-items:center;justify-content:center;color:var(--onAccent);box-shadow:0 2px 6px rgba(0,0,0,.22);">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"></path></svg>
+                </span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <div style="padding:16px var(--safe-x) 8px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <button onClick="{{ onAuthed }}" style="width:100%;height:50px;border-radius:12px;border:0;background:var(--accent);color:var(--onAccent);font-size:17px;font-weight:600;letter-spacing:-0.2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 16px rgba(31,132,201,.28);" style-active="{{ ctaActiveStyle }}">
+            Continue
+            <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+          </button>
+          <button onClick="{{ onAuthed }}" style="height:44px;border:0;background:transparent;cursor:pointer;font-size:15px;font-weight:600;letter-spacing:-0.1px;color:var(--muted);">Skip for now</button>
+        </div>
+        <div style="height:14px;"></div>
+      </sc-if>
+
+      <!-- ===== Sign in / Create account form ===== -->
+      <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
+
+      <!-- ===== Hero / brand ===== -->
+      <div style="background:var(--atmoHero);padding:calc(var(--safe-top) + 44px) var(--safe-x) 18px;text-align:center;">
+        <span style="width:60px;height:60px;border-radius:16px;background:var(--accent);color:var(--onAccent);display:inline-flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;letter-spacing:0.4px;box-shadow:0 8px 22px rgba(31,132,201,.34);" title="Logo placeholder">GC</span>
+        <div style="font-size:26px;font-weight:700;letter-spacing:-0.4px;color:var(--ink);margin-top:16px;">{{ heading }}</div>
+      </div>
+
+      <!-- ===== Form ===== -->
+      <div style="padding:8px var(--safe-x) 8px;display:flex;flex-direction:column;">
+
+        <!-- Name (sign up only) -->
+        <sc-if value="{{ signup }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:12px;">
+            <div style="font-size:13px;font-weight:600;letter-spacing:-0.1px;color:var(--sec);margin:0 4px 7px;">Full name</div>
+            <div style="position:relative;">
+              <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"></path></svg>
+              </span>
+              <input type="text" placeholder="Alex Brown" style="{{ inputStyle }}" style-focus="{{ inputFocusStyle }}">
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Email -->
+        <div style="margin-top:16px;">
+          <div style="font-size:13px;font-weight:600;letter-spacing:-0.1px;color:var(--sec);margin:0 4px 7px;">Email</div>
+          <div style="position:relative;">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="m4 7 8 5.5L20 7"></path></svg>
+            </span>
+            <input type="email" placeholder="you@example.com" autocomplete="email" style="{{ inputStyle }}" style-focus="{{ inputFocusStyle }}">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div style="margin-top:16px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 4px 7px;">
+            <span style="font-size:13px;font-weight:600;letter-spacing:-0.1px;color:var(--sec);">Password</span>
+            <sc-if value="{{ signin }}" hint-placeholder-val="{{ true }}">
+              <button style="border:0;background:transparent;padding:0;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:-0.1px;color:var(--textAccent);">Forgot?</button>
+            </sc-if>
+          </div>
+          <div style="position:relative;">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>
+            </span>
+            <input type="{{ pwType }}" placeholder="{{ pwPlaceholder }}" autocomplete="{{ pwAutocomplete }}" style="{{ inputStyleWithTrail }}" style-focus="{{ inputFocusStyle }}">
+            <button onClick="{{ togglePw }}" aria-label="Show or hide password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;">
+              <sc-if value="{{ pwHidden }}" hint-placeholder-val="{{ true }}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </sc-if>
+              <sc-if value="{{ pwShown }}" hint-placeholder-val="{{ false }}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 20 20"></path><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.4 3.1"></path><path d="M6.4 7.9A16 16 0 0 0 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 3.1-.5"></path><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg>
+              </sc-if>
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary CTA -->
+        <button onClick="{{ primaryAction }}" style="margin-top:22px;height:50px;border-radius:12px;border:0;background:var(--accent);color:var(--onAccent);font-size:17px;font-weight:600;letter-spacing:-0.2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 16px rgba(31,132,201,.28);" style-active="{{ ctaActiveStyle }}">
+          {{ primaryLabel }}
+          <svg width="9" height="16" viewBox="0 0 9 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 7 8l-5.5 6.5"></path></svg>
+        </button>
+
+        <!-- Divider -->
+        <div style="display:flex;align-items:center;gap:12px;margin:22px 2px;">
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+          <span style="font-size:12.5px;font-weight:600;letter-spacing:0.2px;color:var(--muted);">or continue with</span>
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+        </div>
+
+        <!-- Social -->
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <button onClick="{{ onAuthed }}" style="height:50px;border-radius:12px;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:11px;font-size:16px;font-weight:600;letter-spacing:-0.2px;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.04);" style-active="{{ socialActiveStyle }}">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.7-.2-2.5H12v4.7h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9z"></path><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z"></path><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1z"></path><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 12 0 12 12 0 0 0 1.3 6.6l4 3.1C6.2 6.9 8.9 4.8 12 4.8z"></path></svg>
+            Continue with Google
+          </button>
+          <button onClick="{{ onAuthed }}" style="height:50px;border-radius:12px;background:var(--appleBg);border:1px solid var(--appleBorder);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:600;letter-spacing:-0.2px;color:var(--appleFg);" style-active="{{ socialActiveStyle }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.65c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.1-2.02-3.77-2.05-1.6-.16-3.13.94-3.94.94-.81 0-2.07-.92-3.4-.9-1.75.03-3.36 1.02-4.26 2.58-1.82 3.15-.47 7.82 1.3 10.38.86 1.25 1.89 2.66 3.24 2.61 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.29-1.28 3.15-2.54.99-1.46 1.4-2.87 1.42-2.94-.03-.01-2.72-1.05-2.75-4.15zM14.6 4.98c.72-.87 1.2-2.08 1.07-3.28-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 2-1.09 3.17 1.15.09 2.32-.58 3.04-1.44z"></path></svg>
+            Continue with Apple
+          </button>
+        </div>
+
+        <!-- Terms (sign up only) -->
+        <sc-if value="{{ signup }}" hint-placeholder-val="{{ false }}">
+          <p style="font-size:12px;line-height:1.5;color:var(--muted);text-align:center;white-space:nowrap;margin:18px 0 0;">By continuing you agree to our <span style="color:var(--textAccent);font-weight:600;">Terms</span> &amp; <span style="color:var(--textAccent);font-weight:600;">Privacy Policy</span>.</p>
+        </sc-if>
+
+        <!-- Footer switch -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin:20px 0 8px;">
+          <span style="font-size:14.5px;color:var(--sec);letter-spacing:-0.1px;">{{ footerPrompt }}</span>
+          <button onClick="{{ toggleMode }}" style="border:0;background:transparent;padding:0;cursor:pointer;font-size:14.5px;font-weight:700;letter-spacing:-0.1px;color:var(--textAccent);">{{ footerAction }}</button>
+        </div>
+
+        <div style="height:16px;"></div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signin&quot;,&quot;signup&quot;],&quot;default&quot;:&quot;signin&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;step&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;form&quot;,&quot;icon&quot;],&quot;default&quot;:&quot;form&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;selected&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onAuthed&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = {
+    mode: this.props.mode || 'signin',
+    pwHidden: true,
+    step: this.props.step || 'form',
+    icon: this.props.selected || '',
+  };
+
+  ICONS = [
+    {id:'acoustic-guitar', label:'Acoustic guitar'},
+    {id:'bible', label:'Bible'},
+    {id:'boba', label:'Boba tea'},
+    {id:'dog', label:'Dog'},
+    {id:'drums', label:'Drums'},
+    {id:'electric-guitar', label:'Electric guitar'},
+    {id:'heart', label:'Heart'},
+    {id:'keyboard', label:'Keyboard'},
+    {id:'lamb', label:'Lamb'},
+    {id:'lion', label:'Lion'},
+    {id:'microphone', label:'Microphone'},
+    {id:'music-notes', label:'Music notes'},
+    {id:'staff', label:'Shepherd staff'},
+    {id:'star', label:'Star'},
+    {id:'puppy', label:'Puppy'},
+  ];
+
+  renderVals() {
+    const dark = !!this.props.dark;
+    const L = {
+      bg:'#F5F7F9', surface:'#FFFFFF', surfaceAlt:'#EEF1F4',
+      ink:'#1E2227', sec:'#5C656F', muted:'#8A929B',
+      accent:'#1F84C9', accentSoft:'#D9EAF6', textAccent:'#15619A', border:'#E3E8EC', onAccent:'#FFFFFF',
+      appleBg:'#000000', appleFg:'#FFFFFF', appleBorder:'#000000',
+      atmoHero:'radial-gradient(120% 78% at 50% 12%, rgba(255,255,255,.55), rgba(255,255,255,0) 52%), linear-gradient(180deg,#BFD3E3 0%,#CFE0EA 40%,#E3EDF2 78%,#F5F7F9 100%)'
+    };
+    const D = {
+      bg:'#14171A', surface:'#1E2227', surfaceAlt:'#242A30',
+      ink:'#E8ECF0', sec:'#AEB6BE', muted:'#7C858E',
+      accent:'#4EA6E6', accentSoft:'#243340', textAccent:'#6FB6EA', border:'#2A3036', onAccent:'#14171A',
+      appleBg:'#FFFFFF', appleFg:'#14171A', appleBorder:'#FFFFFF',
+      atmoHero:'radial-gradient(120% 78% at 50% 10%, rgba(78,166,230,.18), rgba(78,166,230,0) 55%), linear-gradient(180deg,#1C2A36 0%,#18222A 40%,#15191D 78%,#14171A 100%)'
+    };
+    const t = dark ? D : L;
+    const rootStyle = {
+      '--bg':t.bg,'--surface':t.surface,'--surfaceAlt':t.surfaceAlt,
+      '--ink':t.ink,'--sec':t.sec,'--muted':t.muted,
+      '--accent':t.accent,'--accentSoft':t.accentSoft,'--textAccent':t.textAccent,
+      '--border':t.border,'--onAccent':t.onAccent,
+      '--appleBg':t.appleBg,'--appleFg':t.appleFg,'--appleBorder':t.appleBorder,
+      '--atmoHero':t.atmoHero,
+      '--r-card':'14px','--safe-top':'58px','--safe-x':'22px',
+      position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column',
+      background:'var(--bg)', fontFamily:'-apple-system, system-ui, sans-serif'
+    };
+
+    const inputBase = {
+      width:'100%', height:'52px', boxSizing:'border-box',
+      borderRadius:'12px', border:'1px solid var(--border)', background:'var(--surface)',
+      color:'var(--ink)', fontSize:'17px', letterSpacing:'-0.2px',
+      fontFamily:'-apple-system, system-ui, sans-serif', outline:'none',
+      padding:'0 14px 0 44px'
+    };
+    const inputStyle = inputBase;
+    const inputStyleWithTrail = { ...inputBase, paddingRight:'48px' };
+    const inputFocusStyle = { border:'1px solid var(--accent)', boxShadow:'0 0 0 3px var(--accentSoft)' };
+
+    const mode = this.state.mode;
+    const signup = mode === 'signup';
+    const pwHidden = this.state.pwHidden;
+    const step = this.state.step;
+    const showIcon = signup && step === 'icon';
+    const selId = this.state.icon;
+
+    const tileBase = {
+      position:'relative', width:'100%', aspectRatio:'1 / 1', borderRadius:'9999px',
+      border:'0', padding:0, background:'transparent', cursor:'pointer',
+      transition:'box-shadow .15s ease, transform .12s ease', WebkitTapHighlightColor:'transparent'
+    };
+    const sprites = this.ICONS.map(ic => {
+      const selected = selId === ic.id;
+      return {
+        label: ic.label,
+        src: 'assets/sprites/' + ic.id + '.png',
+        selected,
+        tileStyle: selected
+          ? { ...tileBase, boxShadow:'0 0 0 3px var(--accent)', transform:'scale(1.02)' }
+          : tileBase,
+        select: () => this.setState({ icon: ic.id }),
+      };
+    });
+
+    return {
+      dark, signup, signin: !signup,
+      showIcon, showForm: !showIcon, sprites,
+      onAuthed: this.props.onAuthed || (() => {}),
+      primaryAction: signup
+        ? () => this.setState({ step: 'icon' })
+        : (this.props.onAuthed || (() => {})),
+      backToForm: () => this.setState({ step: 'form' }),
+      rootStyle, inputStyle, inputStyleWithTrail, inputFocusStyle,
+      heading: signup ? 'Create your account' : 'Welcome back',
+      subheading: signup ? 'Start building setlists and leading worship anywhere.' : 'Sign in to sync your songs, setlists and readings.',
+      primaryLabel: signup ? 'Create account' : 'Sign in',
+      footerPrompt: signup ? 'Already have an account?' : "Don't have an account?",
+      footerAction: signup ? 'Sign in' : 'Create one',
+      pwType: pwHidden ? 'password' : 'text',
+      pwHidden, pwShown: !pwHidden,
+      pwPlaceholder: signup ? 'At least 8 characters' : 'Enter your password',
+      pwAutocomplete: signup ? 'new-password' : 'current-password',
+      ctaActiveStyle: { transform:'scale(0.985)', background:'var(--textAccent)' },
+      socialActiveStyle: { transform:'scale(0.985)', filter:'brightness(0.97)' },
+      toggleMode: () => this.setState(s => ({ mode: s.mode === 'signup' ? 'signin' : 'signup', step: 'form' })),
+      togglePw: () => this.setState(s => ({ pwHidden: !s.pwHidden })),
+    };
+  }
+}
+</script>
+</body>
+</html>
