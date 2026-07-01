@@ -33,7 +33,7 @@ Solve common issues when running or using GraceChords.
 ## PDF & Fonts
 
 **Fonts missing in PDF**
-- Confirm PDF font files exist under `src/assets/fonts/` (UI fonts live under `public/fonts/` — these are different).
+- Confirm PDF font files exist under `apps/web/src/assets/fonts/` (UI fonts live under `apps/web/public/fonts/` — these are different).
 - Required: `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`, and Mono variants.
 
 **PDF sections split across pages**

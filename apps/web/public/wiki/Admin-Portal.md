@@ -46,4 +46,4 @@ The portal includes a full role matrix showing which actions each role level can
 
 The `/admin` route is wrapped in `<RoleGuard minRole="admin">`. Users without admin or owner role are redirected to `/` with a toast.
 
-[[Roles-and-Access]] [[Editor-Guide]]
+[[Roles-and-Access]] [[Admin-Resources]]

@@ -82,8 +82,7 @@ Directive examples
 
 ### Tips
 - Keep lines as concise as practical to improve PDF fit
-- Prefer underscores in filenames (use `npm run normalize`)
-- After editing/adding songs, run `npm run build-index`
+- Save from the Editor Portal (`/editor`) to write directly to Supabase — there is no separate index build step
 - Use UTF-8 text in song files; Turkish characters (`ıüşiçöğ` and `IÜŞİÇÖĞ`) are supported in app rendering and PDF/JPG exports
 
-[[Admin-Tool]] [[Index-Building]]
+[[Adding-and-Editing-Songs]] [[Index-Building]]

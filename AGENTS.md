@@ -1,416 +1,86 @@
 # Repository Guidelines
 
-## Monorepo & Shared Core
-This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`**
-(its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`,
-and `eslint.config.js` all moved there — paths elsewhere in this doc that say
-`src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
-The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`) — an Expo SDK 55
-+ Expo Router v7 native client that consumes `@gracechords/core` and Supabase
-auth. It now carries real UI (theme + primitives, a four-tab shell, the Song
-Library and Home screens, and an authenticated-only route gate), not just a
-scaffold. **See [`apps/mobile/AGENTS.md`](./apps/mobile/AGENTS.md) for all
-mobile-specific conventions** (theme/primitives, SF Symbols, auth gating, Metro
-monorepo resolution, CNG, env, Supabase wiring); it is the single mobile sub-doc
-— do not add competing instruction files under `apps/mobile/`. The repo root holds
-only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
-`supabase/`, and docs.
-- Run web tasks from the repo root via the delegating scripts (`npm run dev`,
-  `npm run build`, `npm run test:run`, `npm run lint` → `-w @gracechords/web`), or
-  from inside `apps/web/` directly.
-- Cloudflare Pages root directory is `apps/web` (so `functions/` and the build
-  output are where CF expects). See `MONOREPO_MIGRATION.md` for the exact CF
-  settings.
-- `packages/core/` (`@gracechords/core`): pure, DOM-free, bundler-free TypeScript/JS
-  shared across web and mobile — ChordPro **parser** (not the renderer),
-  transposition, chord placement, verse refs, song metadata/sort, the setlist
-  codec, role hierarchy, and the Supabase **factory** (`supabase/client.js`,
-  `createGcSupabase({ url, anonKey, storage })`). Consumed as **source, no build
-  step** via the `@gracechords/core` alias (`vite.config.js`) and the workspace
-  symlink.
-- `packages/tokens/` (`@gracechords/tokens`): canonical design tokens — the single
-  home for both platforms' tokens. The web imports `tokens.css` (via
-  `src/styles/index.css`; the warm-brown `--gc-*` palette). React Native imports the
-  typed token map from `@gracechords/tokens/native` (`native.ts`; the iOS
-  Signal-blue light/dark palette). The two palettes are **deliberately different**;
-  don't hardcode token values in either app.
-- **Compatibility shims:** every module moved into `packages/core` left a thin
-  re-export shim at its original `src/...` path (e.g. `src/utils/chordpro/parser.ts`,
-  `src/lib/roles.js`), so existing web imports are unchanged. **Edit the real
-  implementation under `packages/core/src/`, not the shim.** The ChordPro
-  **renderer** (PDF/JPG/Canvas — `src/utils/pdf_mvp/`, `src/utils/media/`) stays
-  web-side and is not shared.
+This is the **root** agent guide for the GraceChords monorepo. It covers
+conventions that span the whole repo. Platform-specific rules live in per-app
+sub-docs — **read the matching one before touching that app.**
 
-## Project Structure & Module Organization
-- `src/`: React app (components, pages, utils, styles, tests).
-  - `src/pages/AdminPage.jsx` — Admin Portal (user/role management); requires `admin` role via `RoleGuard`
-  - `src/pages/EditorPage.jsx` — Editor Portal landing page; requires `editor` role
-  - `src/components/auth/RoleGuard.jsx` — redirects users lacking the required minimum role
-  - `src/components/CollaboratorRequest.jsx` — collaborator access request UI for `user`-role accounts
-  - `src/hooks/useAuth.jsx` — auth context: `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`, `isCollaborator`
-  - `src/lib/supabase.js` — web Supabase client (thin wrapper over `@gracechords/core`'s `createGcSupabase`, injecting Vite env + `cookieStorage`)
-  - `src/utils/setlists/supabaseSets.js` — Supabase-backed saved set CRUD
-  - `src/utils/pdf_mvp/` — PDF engine (single-song, setlist, songbook) with tests and font registrar
-  - `src/utils/media/jpgPlanner.js` + `src/utils/media/canvasFonts.js` — JPG-only Canvas2D planner and font registration (used by `src/utils/media/image.js`)
-  - `src/utils/chordpro/` — re-export shims; real parser/serializer/normalization/helpers live in `packages/core/src/chordpro/`. `disclaimer.ts` stays here (depends on web config).
-  - `src/data/index.json` — generated song index (legacy static fallback); do not hand-edit
-  - `packages/tokens/tokens.css` — `--gc-*` design tokens (light/dark, spacing, type scale); imported via `src/styles/index.css`
-  - `src/styles/admin-portal.css` — Admin/Editor portal styles
-  - `src/components/ui/layout-kit/` — reusable UI primitives (Card, Toolbar, Chip, etc.)
-- `public/`: static assets — `resources/` for blog posts, `wiki/` as wiki source, `bible/` for translation manifest + chapter JSON, `fonts/` for UI fonts. **Songs are in Supabase, not `public/songs/`.**
-- `supabase/migrations/`: SQL migrations — apply in order for `users`, `songs`, `user_starred_songs`, `saved_sets`, `collaborator_requests` tables.
-- `scripts/`: maintenance tasks (index build, filename normalization, wiki sync, ingest CLI).
-- `docs/`: Vite build output for GitHub Pages. Do not edit by hand.
+## Which doc applies to your change
 
-## Supabase & Auth
-- Supabase is used for auth, song storage, starred songs, saved sets, and collaborator requests.
-- Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
-- Role system: `user → collaborator → editor → admin → owner` (stored in `public.users.role`).
-- **Single source of truth**: `packages/core/src/rbac/roles.js` exports `ROLE_ORDER`,
-  `ROLES_BY_RANK_DESC`, and `hasMinRole()` (re-exported via the `src/lib/roles.js`
-  shim, which frontend code may still import). The `workers/pptx-upload/` worker
-  keeps its own copy because it's bundled separately — keep the two in sync if the
-  hierarchy changes.
-- Use `hasMinRole(minRole)` from `useAuth` (or `useRole().isAtLeast`) for role
-  checks; never hardcode role strings in conditionals unless adding a new role.
-- RLS policies on all tables — test with a non-owner account before shipping.
+| You're working on… | Read |
+|--------------------|------|
+| The web app (`apps/web/**`) | [`apps/web/AGENTS.md`](apps/web/AGENTS.md) — structure, design tokens, PDF engine, service worker, i18n, Cloudflare wiring, env vars, testing baselines |
+| The iOS app (`apps/mobile/**`) | [`apps/mobile/AGENTS.md`](apps/mobile/AGENTS.md) — theme/primitives, SF Symbols, auth gating, Metro resolution, CNG, Supabase |
+| Shared logic (`packages/**`) | this file (below) |
+| Workers (`workers/**`) | the `README.md` / `ARCHITECTURE.md` in that worker's directory |
 
-## Build, Test, and Development Commands
-- `npm ci`: install exact dependencies.
-- `npm run dev`: start Vite dev server (http://localhost:5173).
-- `npm run build`: produce static site into `docs/`.
-- `npm run preview`: preview the production build locally.
-- `npm run build-index`: generate `src/data/index.json` (legacy; songs now live in Supabase).
-- `npm run build:esv`: generate `public/esv/<Book>/<Chapter>.json` from `ESV.xml` at repo root.
-- `npm run normalize`: normalize song/PPTX filenames into canonical forms.
-- `npm test` / `npm run test:watch`: run Vitest (happy-dom + Testing Library).
-- `npm run test:mvp`: run PDF MVP engine safeguards.
-- `npm run lint`: ESLint flat config (`eslint.config.js`), focused on
-  `react-hooks/rules-of-hooks` (error) and `react-hooks/exhaustive-deps` (warn).
+`CLAUDE.md` and `CODEX.md` are thin pointers to this file — keep all agent rules
+here (or in a sub-doc) so nothing drifts across duplicated instruction files. Do
+not add competing instruction files inside `apps/*/` beyond the single `AGENTS.md`
+each already has.
 
-### Known baselines
-- **Tests**: clean — **157 passed (157)**, Test Files **44 passed (44)**. The
-  suite is fully green: `npm test` should report zero failures. Any failure is a
-  real regression — investigate it, do not wave it through.
-  - History: an older baseline noted "2 setcode + 11 supabase-load failures."
-    The 11 load failures came from `src/lib/supabase.js` calling `createClient()`
-    at import time without a test env; the vitest config now injects
-    `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` (`vite.config.js` `test.env`) and
-    the Supabase client moved behind an injected factory
-    (`@gracechords/core`'s `createGcSupabase`), so those no longer occur. The
-    setcode failures are also resolved. Do not reintroduce a "failures expected"
-    baseline.
-- **Lint**: clean — **0 warnings, 0 errors** (`npm run lint`). Keep it at zero;
-  fix new `react-hooks/exhaustive-deps` warnings as you introduce them.
+## Monorepo & shared core
 
-## Coding Style & Naming Conventions
-- Indentation: 2 spaces; single quotes; prefer no semicolons (match existing files).
-- React components: `PascalCase.jsx` (e.g., `SongView.jsx`). Utilities: `camelCase.js/ts`.
-- Tests: place under `__tests__/` next to code; name `*.test.(js|jsx|ts)` or `*.spec.*`.
-- Paths and assets: keep song files lowercase with underscores (see `normalize` script).
-- ESLint flat config lives at `eslint.config.js`; `js.configs.recommended` is
-  intentionally not enabled. Add new rules sparingly so the hook signal stays loud.
+This repo is an npm-workspaces monorepo. Platform-agnostic logic lives in
+`packages/`; the two apps consume it.
 
-## UI Styling (UIKit Tokens + Layout Kit)
-- Tokens live in `packages/tokens/tokens.css` (imported via `src/styles/index.css`). Always use the `--gc-*` tokens for colors, spacing, radii, and type scale.
-- Legacy aliases in `src/styles.css` map older variables (e.g., `--primary`, `--card`) to tokens. Do not introduce new hardcoded hex values.
-- Reusable UI primitives live in `src/components/ui/layout-kit/` with `gc-*` classnames and `layout-kit.css`.
-- Prefer the layout kit components (Card, InsetCard, Toolbar, SegmentedControl, Chip, Field, IconButton, PageHeader) for new UI.
-- Back-compat classes (`.btn`, `.card`, `.iconbtn`, `.container`) must remain stable and match the kit styling.
+```
+apps/web/       @gracechords/web     — React + Vite SPA (production site)
+apps/mobile/    @gracechords/mobile  — Expo / React Native iOS app
+packages/core/  @gracechords/core    — shared, DOM-free TS/JS
+packages/tokens/@gracechords/tokens  — design tokens (web CSS + native TS map)
+workers/        Cloudflare Workers (deployed independently)
+supabase/       SQL migrations
+```
 
-## Testing Guidelines
-- Frameworks: Vitest + @testing-library/react, environment `happy-dom` (`src/setupTests.js`).
-- Write unit tests for utilities and component behavior; prefer accessible queries over `data-testid`.
-- Run full suite with `npm test`; target PDF layout with `npm run test:mvp`.
-- Keep tests deterministic; avoid timers and real network.
+- The web app lives in `apps/web/` (its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`, `eslint.config.js`). Cloudflare Pages' root directory is `apps/web`. See [`MONOREPO_MIGRATION.md`](MONOREPO_MIGRATION.md) for the exact CF settings.
+- The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`). It's a real native client (themed four-tab shell, Song Library + Home screens, an authenticated-only route gate), not just a scaffold.
+- Run web tasks from the repo root via the delegating scripts (`npm run dev`, `npm run build`, `npm run test`, `npm run lint` → `-w @gracechords/web`), or from inside `apps/web/`.
+- The repo root holds only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`, `supabase/`, and docs.
 
-## Commit & Pull Request Guidelines
-- Commit style: conventional preferred — `type(scope): summary`.
-  - Examples: `feat(admin): collaborator request queue`, `fix(pdf): prevent orphan lines`, `chore(index): rebuild`.
-- PRs: include a clear description, linked issues, and screenshots/GIFs for UI changes. Note any data/index or Supabase migration impacts.
-- Before opening: run `npm test`, `npm run build`, and (if schema changed) note which migrations to apply.
-- Do not commit secrets or `.env`; do not hand-edit `docs/`.
+### `packages/core` (`@gracechords/core`)
+Pure, DOM-free, bundler-free TypeScript/JS shared across web and mobile — the
+ChordPro **parser** (not the renderer), transposition, chord placement, verse
+refs, song metadata/sort, the setlist codec, the role hierarchy, and the Supabase
+**factory** (`supabase/client.js`, `createGcSupabase({ url, anonKey, storage })`).
+Consumed as **source, no build step** via the `@gracechords/core` alias
+(`apps/web/vite.config.js`) plus the workspace symlink; Metro transpiles it for
+mobile.
 
-## Environment Variables & Configuration
-- **Production values are configured in Cloudflare Pages** (Settings → Variables and Secrets). Do not add, change, or remove production secrets — they are already set. The full list is documented in `.env.example`.
-- Local dev: copy `.env.example` to `.env` and fill in your own values. Never commit `.env`.
-- **Rule for agents/contributors:** any time a new environment variable is introduced anywhere in the codebase, `.env.example` must be updated in the same PR/commit with a placeholder value and a one-line description of what it does and where to find it.
-- `VITE_COMMIT_SHA=$(git rev-parse HEAD)` during builds to bust service worker caches.
-- Fonts for PDF export must exist in `src/assets/fonts/` (see README for list).
-- New Supabase tables must have RLS enabled and appropriate policies before merging.
+- **Compatibility shims:** every module moved into `packages/core` left a thin re-export shim at its original `apps/web/src/...` path (e.g. `src/utils/chordpro/parser.ts`, `src/lib/roles.js`), so existing web imports are unchanged. **Edit the real implementation under `packages/core/src/`, not the shim.**
+- The ChordPro **renderer** (PDF/JPG/Canvas) stays web-side and is not shared.
+- Mobile consumes core's exports only. If a query/util is missing, add an **additive** export to core — never duplicate logic in an app, and never edit core internals to suit one platform.
 
----
+### `packages/tokens` (`@gracechords/tokens`)
+The single home for both platforms' design tokens. Web imports `tokens.css`
+(the warm-brown `--gc-*` palette, via `apps/web/src/styles/index.css`); React
+Native imports the typed map from `@gracechords/tokens/native` (`native.ts`, the
+iOS Signal-blue palette). The two palettes are **deliberately different** — don't
+hardcode token values in either app.
 
-## Design System & Properties
+## Roles & auth (shared model)
+- Supabase provides auth and data for both apps. The role system is `user → collaborator → editor → admin → owner`, stored in `public.users.role`.
+- **Single source of truth:** `packages/core/src/rbac/roles.js` exports `ROLE_ORDER`, `ROLES_BY_RANK_DESC`, and `hasMinRole()`. Always use `hasMinRole()` for gate checks; never hardcode role strings in conditionals unless adding a new role. The `workers/pptx-upload/` worker keeps its own copy because it's bundled separately — keep the two in sync if the hierarchy changes.
+- All Supabase tables have row-level security. Test query changes with a non-owner account before shipping.
+- The **anon** key is safe in both clients; the **service-role** key is server-side only (Node build scripts, Workers, Pages Functions) and must never reach bundled app code.
 
-### Token System
-- All colours, spacing, radii, type scale, and motion values live in `packages/tokens/tokens.css`
-  as `--gc-*` CSS custom properties. This file is the **single source of truth**.
-- Never introduce hardcoded hex values, `px` sizes, or timing literals anywhere in
-  component or page CSS. Always reference a token.
-- Light/dark theming is handled by scoping token overrides under `[data-theme="dark"]` in
-  `tokens.css`. The `applyTheme()` / `toggleTheme()` helpers in `src/utils/app/theme.js`
-  set the `data-theme` attribute on `<html>` and persist the choice to `localStorage`.
+## General AI principles
+- **Minimal diffs.** Fix what was asked; don't refactor surrounding code, add unrelated features, or introduce abstractions beyond what the task requires. Three similar lines beat a premature abstraction.
+- **No speculative features.** Don't design for hypothetical future requirements.
+- **No unnecessary comments.** Only comment when the *why* is non-obvious (a hidden constraint, subtle invariant, or framework workaround). Never restate the code.
+- **Security first.** Never introduce command injection, XSS, SQL injection, or other OWASP Top 10 issues. Fix insecure code when you spot it.
+- **No half-finished implementations.** If a feature can't be completed safely in the current change, leave existing code intact and raise the gap explicitly.
+- **Prefer editing existing files over creating new ones.** Never commit `.env` or secrets.
 
-### Layout Kit
-- Reusable UI primitives live in `src/components/ui/layout-kit/`:
-  `Button`, `Card`, `InsetCard`, `Chip`, `Field`, `IconButton`, `PageHeader`, `Panel`,
-  `SegmentedControl`, `Toolbar`, `Input`, `SongCard`.
-- Prefer these components for all new UI. Do not introduce new one-off styled wrappers
-  unless the layout kit genuinely cannot express what is needed.
-- Class names follow the `gc-*` prefix convention (`gc-card`, `gc-btn`, `gc-chip`, …).
-- Legacy back-compat classes (`.btn`, `.card`, `.iconbtn`, `.container`) remain stable and
-  map to kit styles via aliases in `src/styles.css`. Do not remove them.
+## Branching, commits & PRs
+- Development branches follow `claude/<short-description>-<id>`.
+- Commit style: Conventional Commits — `type(scope): summary`. Examples: `feat(setlist): team sharing`, `fix(pdf): orphan lines`, `chore: rebuild index`.
+- Push to the feature branch; **do not open the PR** unless asked — the user creates it. Never push directly to `main`.
+- PRs: clear description, linked issues, and screenshots/GIFs for UI changes. Note any Supabase migration impact and which migrations to apply.
+- Before pushing web changes: run `npm test` and `npm run build`; both must pass at the baselines in [`apps/web/AGENTS.md`](apps/web/AGENTS.md).
 
-### Mobile & Responsive
-- Mobile-specific primitives: `MobileActionSheet`, `MobileDock`, `MobilePaneTabs`,
-  `MobileSheet` in `src/components/ui/mobile/`.
-- Use `useIsMobile()` (from `src/hooks/useIsMobile.js`) to branch layout logic; do not
-  rely on CSS-only breakpoints for component-level behavioural differences.
-- Action sheets (`MobileActionSheet`) replace dropdown menus and inline button rows on
-  mobile. Consolidate download/export options there rather than adding individual buttons.
+## Environment variables
+- New env vars must be documented in [`.env.example`](.env.example) (web) or `apps/mobile/.env.example` (mobile) in the **same commit** they're introduced, with a placeholder and one-line description.
+- Production web values are configured in Cloudflare Pages → Settings → Variables. Don't add, change, or remove production secrets from code.
 
-### Typography & PDF
-- UI fonts: Inter Variable (loaded from `public/fonts/`).
-- PDF fonts: NotoSans Regular/Bold/Italic/BoldItalic + NotoSansMono Regular/Bold
-  (stored in `src/assets/fonts/`). These must exist locally for PDF generation.
-- PDF type scale: Title 26 pt bold; section headers 16 pt; lyrics/chords 12–16 pt;
-  line-height ~1.2×. See `src/utils/pdf_mvp/README.md` for full constants.
-
-### Icons
-- All SVG icons are centralised in `src/components/Icons.jsx`. Add new icons there;
-  never inline `<svg>` directly in page or component files.
-
----
-
-## Current Systems & Tools
-
-### Supabase
-- **Client:** `src/lib/supabase.js` — import this singleton everywhere; never create a
-  second client.
-- **Auth context:** `src/hooks/useAuth.jsx` — exposes `session`, `user`, `profile`,
-  `role`, `hasMinRole(minRole)`, `isAdmin`, `isOwner`, `isEditorRole`, `isCollaborator`.
-- **Role hierarchy:** `user → collaborator → editor → admin → owner`. Always use
-  `hasMinRole()` for gate checks.
-- **RLS:** all tables have row-level security. Test with a `user`-role account before
-  shipping any query change.
-- **Migrations:** `supabase/migrations/` — apply in order. Document migration impact in
-  the PR description.
-- **Service role:** `SUPABASE_SERVICE_ROLE_KEY` is used only by Node build scripts
-  (`generate-seo-pages.mjs`, `generate-sitemap.mjs`). Never bundle it into the frontend.
-
-### Cloudflare Pages
-- SPA is hosted on Cloudflare Pages via CF's Git integration.
-- **Monorepo deploy settings (CF dashboard):** root directory `apps/web`, build
-  command installs from the repo root then builds the web workspace, output
-  directory `dist` (→ `apps/web/dist`). Full settings + rationale in
-  `MONOREPO_MIGRATION.md`.
-- All `VITE_*` production env vars are set in Pages → Settings → Variables — do not
-  change them without coordinating a deploy.
-- `apps/web/functions/` contains Pages Functions (run server-side, no separate Worker
-  deployment required): `bible/[[path]].js` and `pptx/[[path]].js` proxy R2 assets to
-  avoid CORS, plus `api/*`. They sit at the CF root directory (`apps/web`), which is
-  why `functions/` moved with the app.
-- `apps/web/404.html` + `BrowserRouter` together handle SPA deep-link routing.
-
-### Cloudflare R2
-- Bucket: `gracechords-bible`. Public base URL: `VITE_R2_PUBLIC_URL`.
-- Paths: `pptx/<slug>.pptx` for slide decks; `bible/<lang>/<id>/` for chapter JSON.
-- In local dev, Vite proxies `/bible` and `/pptx` to `VITE_R2_PUBLIC_URL`.
-- Direct R2 access (upload/delete) goes through the `gracechords-pptx-upload` Worker —
-  never call R2 directly from the browser.
-
-### Cloudflare Workers
-- **`gracechords-pptx-upload`** (`workers/pptx-upload/`) — handles authenticated PPTX
-  upload/delete. Verifies Supabase JWT, checks role, writes/deletes from R2.
-  Secrets: `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`,
-  `ALLOWED_ORIGINS`. Set via `wrangler secret put`.
-- **`gracechords-sitemap-rebuild`** (`workers/sitemap-rebuild/`) — cron
-  `0 0 * * 0` (Sunday 00:00 UTC) rebuilds `public/sitemap.xml`.
-- **`gracechords-telegram-bot`** (`workers/telegram-bot/`) — powers
-  `@gracechords_bot`. Webhook DMs + group/supergroup `@`-mentions +
-  Guest Chat Mode (`update.guest_message`) + `/internal/feature` from
-  a GitHub Action + Mon/Fri digest cron. Renders chord charts as
-  inline JPG photos (pdfium WASM bundled at deploy time) with PDF
-  fallback. Feature-post body is rewritten via Workers AI
-  (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`, bound as `AI` in
-  `wrangler.toml`); guest replies stage the JPG to a private
-  `MEDIA_STAGING_CHAT_ID` chat to capture a `file_id` for
-  `answerGuestQuery`. Architecture doc:
-  `workers/telegram-bot/ARCHITECTURE.md` — read before structural
-  changes; provisioning in the same dir's `README.md`.
-- Worker configs: `workers/*/wrangler.toml`. Deploy individually with `wrangler deploy`.
-
-### Cloudinary
-- Unsigned browser uploads via `VITE_CLOUDINARY_CLOUD_NAME` + `VITE_CLOUDINARY_UPLOAD_PRESET`.
-- No server-side Cloudinary SDK. All uploads are direct from the browser.
-- Returned URLs are stored in `songs.featured_image_url` and `posts.featured_image_url`.
-- To add Cloudinary upload to a new feature, follow the pattern in the existing song/post
-  editor components.
-
-### Resend
-- Used for transactional/notification emails.
-- `RESEND_API_KEY` is **server-side only** — never expose it to the Vite bundle.
-- Integration point: Cloudflare Worker or Supabase Edge Function. Check `workers/` for
-  active send points.
-- When adding a new email trigger, create or extend a Worker/Edge Function; do not add
-  Resend calls to frontend code.
-
-### PDF Engine
-- Engine: `src/utils/pdf_mvp/` — jsPDF-based MVP, the **only** PDF stack. Call
-  `downloadSingleSongPdf()`, `downloadMultiSongPdf()`, `downloadSongbookPdf()`
-  from UI code. Decision ladder: 1-col single page (sizes 16→12 pt) → 2-col
-  single page (16→12 pt) → 1-col multipage (15 pt).
-- Tests: `npm run test:mvp`. Never modify the engine without running these tests.
-
-### JPG/Image Exporter
-- Renderer: `src/utils/media/image.js` (Canvas2D).
-- Planner: `src/utils/media/jpgPlanner.js` — Canvas2D-driven layout planner
-  used **only** by the JPG exporter. It is not a PDF engine; it survived the
-  legacy PDF stack removal because the canvas renderer needs Canvas2D
-  measurements rather than jsPDF measurements.
-- Fonts: `src/utils/media/canvasFonts.js`.
-
-### Service Worker
-- `src/sw.js` — registered in `src/main.jsx`.
-- Strategy: network-first for navigations + the legacy `/src/data/index.json`
-  fallback; stale-while-revalidate for other static assets. Songs themselves
-  live in Supabase (not `public/songs/`) so the SW never touches them.
-- Cache name includes `VITE_COMMIT_SHA` so every deploy invalidates old caches.
-- Always pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` when building for production.
-
-### GraceTracks Integration
-- Songs optionally link to practice stem tracks via `has_stems` (boolean),
-  `stem_slug` (text), and `gracetracks_url` (text) columns in `public.songs`.
-- UI should check `has_stems` before showing any GraceTracks affordance.
-
----
-
-## Internationalization (i18n)
-
-UI translations live as JSON files under `src/i18n/locales/{lang}/` across ten
-namespaces: `admin`, `auth`, `common`, `editor`, `errors`, `home`, `nav`,
-`profile`, `setlist`, `song`. The English files at `src/i18n/locales/en/`
-are the **source of truth**; every other locale must mirror their key shape.
-Runtime wiring lives in `src/i18n/index.js` and `src/hooks/useLocale.jsx`;
-the supported list is in `src/i18n/config.js`.
-
-Translation tooling lives at `gracechords-i18n/`:
-- `SKILL.md` — translation and revision skill used to author/refresh copy.
-- `scripts/validate.py` — key parity, placeholder, and HTML tag validator.
-- `glossaries/{lang}.md` — per-locale terminology, register, and convention
-  decisions. Reference these for any word-choice question; do **not**
-  duplicate their contents here.
-
-### Workflow when English UI strings change
-
-When you add, modify, or remove a key under `src/i18n/locales/en/`:
-
-1. Apply the same key change to every other locale folder under
-   `src/i18n/locales/`.
-2. For each non-English file modified, set `_meta.needsReview` to `true` and
-   clear `_meta.reviewer` and `_meta.reviewedAt` to empty strings.
-3. For translation guidance, follow `gracechords-i18n/SKILL.md`.
-4. For terminology and word-choice decisions, consult
-   `gracechords-i18n/glossaries/{lang}.md` for the target locale. If the
-   change introduces new terminology not already in the glossary, append it
-   to the appropriate section there so future updates stay consistent.
-5. Run the validator before committing — once per non-English locale:
-   ```bash
-   python gracechords-i18n/scripts/validate.py \
-     src/i18n/locales/en src/i18n/locales/{lang}
-   ```
-   Exit code `0` is clean. The in-repo parity smoke check
-   (`npm run i18n:check`) is a faster sanity pass and should also be green.
-
-### Hard rules
-
-- **Never modify a file where `_meta.needsReview` is `false`** without
-  explicit user instruction. That value is a human reviewer's signoff;
-  touching it invalidates trust.
-- **Never change JSON keys, HTML tags, or `{{variables}}`** — these must be
-  byte-identical across all locales.
-- **Never translate the brand name "GraceChords."**
-- **Never populate `_meta.reviewer` or `_meta.reviewedAt`.** Those fields are
-  filled by human reviewers after QA, not by agents.
-- **Always run the validator** before committing locale changes.
-
-### Schema notes
-
-- Each file begins with an inline `_meta` block:
-  `{ "reviewer": string, "reviewedAt": string, "needsReview": boolean }`. The
-  inline single-line format is deliberate; preserve it when editing.
-- Files use 2-space indentation with a trailing newline. Match the source
-  key order to keep diffs reviewable.
-
----
-
-## Claude Code — Agent Instructions
-
-These are the conventions and patterns used by Claude Code (AI-assisted development) in
-this repository. Follow them for all AI-generated changes.
-
-### General Principles
-- **Minimal diffs.** Fix what was asked; do not refactor surrounding code, add unrelated
-  features, or introduce abstractions beyond what the task requires.
-- **No speculative features.** Do not design for hypothetical future requirements.
-  Three similar lines is better than a premature abstraction.
-- **No unnecessary comments.** Only add a comment when the WHY is non-obvious: a hidden
-  constraint, a subtle invariant, or a framework workaround. Never restate what the code
-  already says.
-- **Security first.** Never introduce command injection, XSS, SQL injection, or other
-  OWASP Top 10 vulnerabilities. If insecure code is spotted, fix it immediately.
-- **No half-finished implementations.** If a feature cannot be completed safely in the
-  current change, leave the existing code intact and raise the gap explicitly.
-
-### File & Scope Rules
-- Prefer editing existing files over creating new ones.
-- Never hand-edit `dist/`, `docs/`, or `src/data/index.json` (generated files).
-- Never commit `.env` or any file containing secrets.
-- When adding a new route, register it in `src/App.jsx` and add a corresponding page file
-  under `src/pages/`. Protect it with `RoleGuard` if it requires a minimum role.
-- When adding a new Supabase table, provide the migration SQL in `supabase/migrations/`
-  with RLS policies, and update `.env.example` if new env vars are needed.
-
-### UI Changes
-- Use `--gc-*` tokens. Never hardcode colours, sizes, or timing.
-- Use layout-kit primitives (`Card`, `Button`, `Chip`, etc.). Do not introduce new
-  one-off styled wrappers without a strong reason.
-- On mobile, consolidate actions into `MobileActionSheet`. Do not add individual buttons
-  where an action sheet is already in use.
-- After making UI changes: start the dev server, exercise the golden path, and check for
-  regressions in adjacent features before marking the task complete.
-
-### Branching & Commits
-- Development branches follow the pattern `claude/<short-description>-<id>`.
-- Commit style: Conventional Commits — `type(scope): summary`.
-  Examples: `feat(setlist): team sharing`, `fix(pdf): orphan lines`, `chore: rebuild index`.
-- Push to the feature branch; **do not open the PR** — the user creates it.
-  Never push directly to `main`.
-- Include screenshots or GIFs in the PR description for any UI change.
-- Run `npm test` and `npm run build` before pushing. Both must pass at the
-  documented baselines (see "Known baselines" above).
-
-### Repo gotchas (operational, important)
-- **esbuild platform-binary drift**: a fresh `npm install` may leave
-  `node_modules/esbuild` and `node_modules/@esbuild/linux-x64` at mismatched
-  versions, surfacing as
-  `Host version "0.27.2" does not match binary version "0.27.7"` on
-  `npm run test:run` or `vite build`. Recover with:
-  `rm -rf node_modules/@esbuild/linux-x64 && npm install --no-save`.
-- **CI workflow `.github/workflows/pr-checks.yml`** runs lint/test/build on
-  every PR with `continue-on-error: true` — it's signal, not a gate. Don't
-  expect CI to block on warnings.
-
-### Testing
-- Write Vitest unit tests for new utilities under `__tests__/` next to the code.
-- Use accessible queries (`getByRole`, `getByLabelText`) over `data-testid`.
-- Keep tests deterministic — no real network calls, no timers.
-- PDF layout changes must be verified with `npm run test:mvp`.
-
-### Environment Variables
-- Any new `VITE_*` var must be added to `.env.example` with a placeholder and description
-  in the same commit it is introduced.
-- Server-side vars (`RESEND_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, Worker secrets) must
-  never appear in Vite-bundled code. Enforce this by checking for `import.meta.env` usage
-  in non-`src/` files.
+## Docs & wiki
+- User-facing and infrastructure documentation lives in the GitHub Wiki. Its source is `apps/web/public/wiki/**`; pushing changes there triggers the wiki sync workflow (`.github/workflows/wiki-sync.yml`). Keep wiki edits in the source files, not the live wiki, so they survive.

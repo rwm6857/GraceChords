@@ -30,7 +30,7 @@ Developer notes for the minimal, reliable single‑song PDF exporter.
 
 ## Fonts
 - Preferred: Noto Sans (Regular/Italic/Bold) and Noto Sans Mono (Regular/Bold)
-- Place font files under `src/assets/fonts/` (imported with `?url` and registered at runtime)
+- Place font files under `apps/web/src/assets/fonts/` (imported with `?url` and registered at runtime)
 - Falls back to jsPDF built‑ins (`helvetica`/`courier`) if Noto is unavailable
 
 ## Tests

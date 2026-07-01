@@ -19,8 +19,7 @@ Selections are saved per calendar date in local storage and persist across passa
 
 ## Data & Build
 Daily Word uses local chapter JSON generated from XML files in `BIBLE_XML/`.
-- Import all translations with `npm run build:bibles`
-- Import a single translation with `npm run build:bible -- --xml ./BIBLE_XML/FILE.xml`
+- Import a translation with `npm run build:bible -- --xml ./BIBLE_XML/FILE.xml` (run once per XML file)
 - `npm run build` does not run Bible ingestion automatically
 
 Related:

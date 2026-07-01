@@ -4,7 +4,7 @@ GraceChords caches key assets for offline use via a service worker (`src/sw.js`)
 - JS, CSS, fonts, and previously opened songs are cached by the service worker
 - Cached files update when you revisit and a new version is available
 - Offline mode excludes features that require live network requests
-- Song files (`/songs/**`) and the index (`/src/data/index.json`) use a network‑first strategy so edits appear promptly after deploy
+- Navigations use a network‑first strategy so new deploys and edits appear promptly (songs themselves come from Supabase, not the cache)
 
 ## Tips & Troubleshooting
 - Stale assets: hard refresh (Ctrl+Shift+R) to fetch the latest bundle

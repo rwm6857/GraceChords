@@ -59,6 +59,6 @@ See [[Slides-(PPTX)]] for details.
 ## Troubleshooting
 - Song not found in search: check that the row exists in Supabase and `is_deleted = false`.
 - Chords misaligned: ensure chord brackets precede the exact lyric characters and lines are not excessively long.
-- Fonts in PDF look off: ensure Noto font files exist under `src/assets/fonts/`.
+- Fonts in PDF look off: ensure Noto font files exist under `apps/web/src/assets/fonts/`.
 
-See also: [[ChordPro-Guide]] [[Slides-(PPTX)]] [[Admin-Tool]]
+See also: [[ChordPro-Guide]] [[Slides-(PPTX)]] [[Admin-Portal]]
