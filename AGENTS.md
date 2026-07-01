@@ -6,11 +6,13 @@ This repo is an npm-workspaces monorepo. **The web app now lives in `apps/web/`*
 and `eslint.config.js` all moved there — paths elsewhere in this doc that say
 `src/...` mean `apps/web/src/...`). Platform-agnostic logic lives in `packages/`.
 The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`) — an Expo SDK 55
-+ Expo Router v7 vertical slice that consumes `@gracechords/core` and Supabase
-auth natively. **See [`apps/mobile/AGENTS.md`](./apps/mobile/AGENTS.md) for all
-mobile-specific conventions** (Metro monorepo resolution, CNG, env, Supabase
-wiring); it is the single mobile sub-doc — do not add competing instruction files
-under `apps/mobile/`. The repo root holds
++ Expo Router v7 native client that consumes `@gracechords/core` and Supabase
+auth. It now carries real UI (theme + primitives, a four-tab shell, the Song
+Library and Home screens, and an authenticated-only route gate), not just a
+scaffold. **See [`apps/mobile/AGENTS.md`](./apps/mobile/AGENTS.md) for all
+mobile-specific conventions** (theme/primitives, SF Symbols, auth gating, Metro
+monorepo resolution, CNG, env, Supabase wiring); it is the single mobile sub-doc
+— do not add competing instruction files under `apps/mobile/`. The repo root holds
 only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
 `supabase/`, and docs.
 - Run web tasks from the repo root via the delegating scripts (`npm run dev`,
@@ -26,8 +28,12 @@ only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`,
   `createGcSupabase({ url, anonKey, storage })`). Consumed as **source, no build
   step** via the `@gracechords/core` alias (`vite.config.js`) and the workspace
   symlink.
-- `packages/tokens/` (`@gracechords/tokens`): canonical design tokens
-  (`tokens.css`). The web imports it from `src/styles/index.css`.
+- `packages/tokens/` (`@gracechords/tokens`): canonical design tokens — the single
+  home for both platforms' tokens. The web imports `tokens.css` (via
+  `src/styles/index.css`; the warm-brown `--gc-*` palette). React Native imports the
+  typed token map from `@gracechords/tokens/native` (`native.ts`; the iOS
+  Signal-blue light/dark palette). The two palettes are **deliberately different**;
+  don't hardcode token values in either app.
 - **Compatibility shims:** every module moved into `packages/core` left a thin
   re-export shim at its original `src/...` path (e.g. `src/utils/chordpro/parser.ts`,
   `src/lib/roles.js`), so existing web imports are unchanged. **Edit the real
