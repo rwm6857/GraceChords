@@ -21,6 +21,7 @@
     "expo-linear-gradient": "~55.0.15",
     "expo-linking": "~55.0.16",
     "expo-router": "~55.0.16",
+    "expo-splash-screen": "~55.0.22",
     "expo-status-bar": "~55.0.6",
     "expo-symbols": "~55.0.9",
     "react": "19.2.0",
