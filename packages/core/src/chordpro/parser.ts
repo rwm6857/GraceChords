@@ -139,10 +139,13 @@ export function parseChordProOrLegacy(input: string): SongDoc {
   const doc: SongDoc = { meta: {}, sections: [], layoutHints: { columnBreakAfter: [] }, chordDefs: [] };
   let cur: SongSection | null = null;
 
-  const openSection = (kind: string, label?: string) => {
+  // Returns the newly opened section (pushing the previous one first). Callers
+  // assign the result to `cur` so TypeScript can see `cur` becomes non-null —
+  // the parser relies on that narrowing across the loop below.
+  const openSection = (kind: string, label?: string): SongSection => {
     if (cur) doc.sections.push(cur);
     const lbl = label || capitalize(kind);
-    cur = { kind, label: lbl, lines: [] };
+    return { kind, label: lbl, lines: [] };
   };
   const closeSection = () => {
     if (cur) { doc.sections.push(cur); cur = null; }
@@ -231,16 +234,16 @@ export function parseChordProOrLegacy(input: string): SongDoc {
 
     if (hasEnv) {
       const dir = parseDirective(t);
-      if (dir) { dir.start ? openSection(dir.kind, dir.label) : closeSection(); continue; }
+      if (dir) { dir.start ? (cur = openSection(dir.kind, dir.label)) : closeSection(); continue; }
       if (t.startsWith('{') && t.endsWith('}')) continue; // unknown directive
-      if (!cur) openSection('verse', 'Verse');
+      if (!cur) cur = openSection('verse', 'Verse');
       cur.lines.push(parseInline(raw));
       continue;
     }
 
     if (isPlainHeader(raw)) {
       const { kind, label } = normalizePlainHeader(raw);
-      openSection(kind, label);
+      cur = openSection(kind, label);
       continue;
     }
 
@@ -249,7 +252,7 @@ export function parseChordProOrLegacy(input: string): SongDoc {
       continue;
     }
 
-    if (!cur) openSection('verse', 'Verse');
+    if (!cur) cur = openSection('verse', 'Verse');
     cur.lines.push(parseInline(raw));
   }
 
