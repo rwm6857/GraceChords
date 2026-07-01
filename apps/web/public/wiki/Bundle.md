@@ -11,4 +11,4 @@ Build a quick PDF bundle from selected songs.
 3. Click **Download PDF** to create a combined chart.
 4. Press **Clear** to delete the bundle selection (clears `localStorage`).
 
-[[Home-Search-and-Filters]] [[PDF-and-Printing]]
+[[Song-Library]] [[PDF-and-Printing]]

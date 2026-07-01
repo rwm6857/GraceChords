@@ -4,7 +4,7 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 - Source is built by Vite into `dist/` (gitignored)
 - **Cloudflare Pages** deploys automatically on every push to `main` — no committed build output required
 - SEO build scripts (`generate-seo-pages.mjs`, `generate-sitemap.mjs`) query Supabase and write static HTML/sitemap at build time
-- Wiki content lives in this repo under `public/wiki/` and syncs to the GitHub Wiki
+- Wiki content lives in this repo under `apps/web/public/wiki/` and syncs to the GitHub Wiki (see `wiki-sync.yml` below)
 - `public/sitemap.xml` and `public/robots.txt` are committed and served from the site root
 
 ## Build output
@@ -16,16 +16,17 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 Steps 2 and 3 require `SUPABASE_SERVICE_ROLE_KEY` to be set (they query songs and posts from Supabase).
 
 ## Deployment
-Cloudflare Pages is connected to this repository and triggers a build on every push to `main`. The build command is `npm run build` and the output directory is `dist/`. No GitHub Actions workflow is needed for deployment.
+Cloudflare Pages is connected to this repository and triggers a build on every push to `main`. This is a monorepo, so the Pages **root directory** is `apps/web`, the build command installs from the repo root and builds the web workspace, and the output directory is `dist/` (→ `apps/web/dist`). The exact CF settings and rationale are in [`MONOREPO_MIGRATION.md`](https://github.com/rwm6857/GraceChords/blob/main/MONOREPO_MIGRATION.md). No GitHub Actions workflow is needed for deployment.
 
-Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc.) are configured in the Cloudflare Pages dashboard under **Settings → Environment variables**.
+Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc.) are configured in the Cloudflare Pages dashboard under **Settings → Variables and Secrets**.
 
 ## GitHub Actions workflows
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `notify_telegram.yml` | Push to `main` | Sends a Telegram message when commit contains `#post` or `#announce` |
-| `force-update.yml` | Manual dispatch | Syncs wiki, regenerates sitemap, runs `npm run build`, commits changed assets |
+| `pr-checks.yml` | Pull request to `main` | Lint + test + Vite build. Non-blocking (`continue-on-error`) — signal, not a gate |
+| `wiki-sync.yml` | Push to `main` touching `apps/web/public/wiki/**` | Publishes the wiki source to the GitHub Wiki (needs `WIKI_PUSH_TOKEN`) |
+| `feature-post.yml` | PR merged | Announces `feat(` PRs (or ones labelled `post` / containing `#post`) to the Telegram dev channel |
 | `codeqL.yml` | Schedule / push | CodeQL security scanning |
 | `pages-deploy.yml` | Branch `archive/gh-pages-static` | **Archived** — legacy GitHub Pages deploy; not used on `main` |
 

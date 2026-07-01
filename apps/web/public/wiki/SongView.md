@@ -9,7 +9,7 @@ Open a song to transpose chords, hide them, or export the chart.
 - Watch an embedded reference video
 - PPTX button appears when `public/pptx/<slug>.pptx` exists
 
-1. Select a song from [[Home-Search-and-Filters]].
+1. Select a song from the [[Song-Library]].
 2. If translation chips are shown, click `EN/TR/AR/SP` to switch variants in-place.
 3. Use the transpose buttons or hide chords. Press `[` / `]` to step by semitone, `c` to toggle chords.
 4. Enable the “View: 2 columns” toggle for a two‑column reading view; sections stay together.

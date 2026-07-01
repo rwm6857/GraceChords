@@ -1,40 +1,39 @@
 - [[Home]]
 
 - **User Guide**
-  - [[Home-Search-and-Filters]]
   - [[Song-Library]]
   - [[SongView]]
   - [[Worship-Mode]]
-  - [[Slides-(PPTX)]]
-  - [[Adding-and-Editing-Songs]]
   - [[Setlists]]
   - [[Songbook-Builder]]
   - [[Bundle]]
+  - [[Slides-(PPTX)]]
   - [[Daily-Word]]
-  - [[Resources]]
   - [[Resources-Library]]
   - [[ChordPro-Guide]]
   - [[PDF-and-Printing]]
   - [[Offline-Support]]
   - [[Troubleshooting]]
 
-- **Roles & Admin**
+- **Editing & Admin**
   - [[Roles-and-Access]]
-  - [[Admin-Tool]]
-  - [[Admin-Portal]]
+  - [[Adding-and-Editing-Songs]]
   - [[Admin-Resources]]
-  - [[Admin-Tips]]
+  - [[Admin-Portal]]
 
 - **Developer Guide**
   - [[Getting-Started]]
   - [[Project-Structure]]
-  - [[Editor-Guide]]
   - [[Development-Commands]]
   - [[UI-Design-System]]
-  - [[Repository-Stats]]
-  - [[Build-and-Deploy]]
-  - [[Cloudflare-Infrastructure]]
   - [[Index-Building]]
   - [[PDF-Engine-(MVP)]]
   - [[Contributing]]
+
+- **Infrastructure**
+  - [[Build-and-Deploy]]
+  - [[Cloudflare-Infrastructure]]
   - [[Release-Checklist]]
+
+- **Mobile**
+  - [[Mobile-App]]

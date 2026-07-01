@@ -40,4 +40,4 @@ Worship Mode is a full‑screen, touch‑friendly view for live performance. It 
 ### Troubleshooting
 - “Text looks too small”: tap A+ to increase size; auto‑fit chooses the largest size that fits the full song.
 - “Chords wrap oddly”: ensure your song’s chord positions are correct in ChordPro; collisions are resolved and chords align over matching lyric characters.
-- “Song not found”: confirm the song ID exists in `src/data/index.json` and that `public/songs/<file>.chordpro` is present. Rebuild the index if needed.
+- “Song not found”: confirm the song exists in the Supabase `songs` table and that `is_deleted = false` for that row.

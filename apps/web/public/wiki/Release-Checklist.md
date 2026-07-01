@@ -4,7 +4,7 @@ Use this checklist to ship changes to GraceChords confidently and avoid stale as
 
 ## Before You Start
 - Node.js 20 LTS installed
-- PDF fonts present under `src/assets/fonts/` (Noto Sans + Noto Mono)
+- PDF fonts present under `apps/web/src/assets/fonts/` (Noto Sans + Noto Mono)
 - `.env` file configured with Supabase credentials and service role key
 
 ## 1) Song & Post Changes
@@ -38,11 +38,14 @@ No manual deploy step is required. Watch the build status in the Cloudflare Page
 - Confirm any new PPTX downloads work
 
 ## 6) Wiki Updates
-If `public/wiki/**` changed, sync to GitHub Wiki:
+Pushing changes under `apps/web/public/wiki/**` to `main` automatically triggers
+the `wiki-sync.yml` workflow, which publishes to the GitHub Wiki (requires the
+`WIKI_PUSH_TOKEN` secret). To sync manually, run the workflow from the Actions
+tab, or locally from the web workspace:
 ```bash
+cd apps/web
 WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
 ```
-Or trigger the `force-update.yml` workflow manually from GitHub Actions.
 
 ## Optional: Service Worker Reset
 If a client appears stale:

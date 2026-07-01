@@ -4,8 +4,8 @@ Guidelines for contributing code or docs to GraceChords.
 - Run tests with `npm test` (or `npm run test:mvp` for PDF export guards).
 - Code style: 2-space indent, single quotes, prefer no semicolons; components `PascalCase.jsx`; utils `camelCase.(js|ts)`.
 - Keep pull requests small and focused; include screenshots for UI changes.
-- Docs live under `public/wiki/`. Repository guidelines live in AGENTS.md at the repo root.
-- UI: use token-driven styles from `src/styles/tokens.css` and layout kit components in `src/components/ui/layout-kit/` (see [[UI-Design-System]]).
+- Wiki docs live under `apps/web/public/wiki/`. Agent/contributor guidelines live in `AGENTS.md` at the repo root (which routes to `apps/web/AGENTS.md` and `apps/mobile/AGENTS.md`).
+- UI: use token-driven styles from `packages/tokens/tokens.css` and layout kit components in `apps/web/src/components/ui/layout-kit/` (see [[UI-Design-System]]).
 
 ### Tests
 ```bash

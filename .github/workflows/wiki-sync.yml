@@ -1,0 +1,50 @@
+name: Sync Wiki
+
+# Publishes the wiki source (apps/web/public/wiki/**) to the GitHub Wiki
+# (GraceChords.wiki) whenever it changes on main. Also runnable on demand.
+#
+# The sync script (apps/web/scripts/syncWiki.mjs) resolves the source as
+# `<cwd>/public/wiki`, so it must run with the working directory set to
+# apps/web — that path assumption is what the monorepo move broke.
+#
+# Requires the repo secret WIKI_PUSH_TOKEN (a classic PAT with `repo` scope).
+# Without it the script dry-runs and exits 0.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/public/wiki/**"
+      - "apps/web/scripts/syncWiki.mjs"
+      - ".github/workflows/wiki-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Sync wiki
+        working-directory: apps/web
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WIKI_PUSH_TOKEN: ${{ secrets.WIKI_PUSH_TOKEN }}
+        run: |
+          if [ -z "${WIKI_PUSH_TOKEN:-}" ]; then
+            echo "WIKI_PUSH_TOKEN missing; skipping wiki sync."
+            exit 0
+          fi
+          node scripts/syncWiki.mjs
