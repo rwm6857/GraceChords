@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -54,10 +54,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     error,
     setName,
     toggleSong,
-    removeAt,
-    duplicateAt,
-    moveItem,
-    setKeyAt,
+    removeEntry,
+    duplicateEntry,
+    moveEntry,
+    setKeyFor,
     deleteSet,
     updatedAt,
   } = useSetlistBuilder(setlistId)
@@ -73,23 +73,30 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  // "Change key" from the row sheet opens the key sheet only after the row
+  // sheet has fully dismissed (iOS refuses to present a modal while another
+  // is dismissing) — BottomSheet's onDismissed reports that moment.
+  const pendingKeyIndex = useRef<number | null>(null)
 
   // Toast pill (bottom-center, auto-dismiss).
   const [toast, setToast] = useState<string | null>(null)
   const toastOpacity = useRef(new Animated.Value(0)).current
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  function showToast(message: string) {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setToast(message)
-    Animated.timing(toastOpacity, { toValue: 1, duration: 160, useNativeDriver: true }).start()
-    toastTimer.current = setTimeout(() => {
-      Animated.timing(toastOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start(
-        ({ finished }) => {
-          if (finished) setToast(null)
-        },
-      )
-    }, TOAST_MS)
-  }
+  const showToast = useCallback(
+    (message: string) => {
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+      setToast(message)
+      Animated.timing(toastOpacity, { toValue: 1, duration: 160, useNativeDriver: true }).start()
+      toastTimer.current = setTimeout(() => {
+        Animated.timing(toastOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start(
+          ({ finished }) => {
+            if (finished) setToast(null)
+          },
+        )
+      }, TOAST_MS)
+    },
+    [toastOpacity],
+  )
   useEffect(
     () => () => {
       if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -125,21 +132,24 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     setEditing(false)
   }
 
-  function openSong(index: number) {
-    const item = items[index]
-    if (!item) return
-    const key = effectiveKeys[index]
-    router.push({
-      pathname: '/viewer/[slug]',
-      params: {
-        slug: item.song.slug,
-        title: item.song.title,
-        artist: item.song.artist ?? '',
-        songKey: item.song.default_key ?? '',
-        ...(key ? { initialKey: key } : {}),
-      },
-    })
-  }
+  const openSong = useCallback(
+    (index: number) => {
+      const item = items[index]
+      if (!item) return
+      const key = effectiveKeys[index]
+      router.push({
+        pathname: '/viewer/[slug]',
+        params: {
+          slug: item.song.slug,
+          title: item.song.title,
+          artist: item.song.artist ?? '',
+          songKey: item.song.default_key ?? '',
+          ...(key ? { initialKey: key } : {}),
+        },
+      })
+    },
+    [items, effectiveKeys, router],
+  )
 
   function confirmDelete() {
     Alert.alert('Delete set?', `“${name}” and its songs will be removed.`, [
@@ -173,8 +183,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       showToast('Add songs first')
       return
     }
-    // Same param-style share URL the web builder copies.
-    const ids = items.map((item) => encodeURIComponent(item.songId)).join(',')
+    // Same param-style share URL the web builder copies. The web catalog is
+    // keyed by SLUG (its normaliseSong maps id -> slug), so the link must
+    // carry slugs, not the Supabase uuids.
+    const ids = items.map((item) => encodeURIComponent(item.song.slug)).join(',')
     const keys = items.map((item) => encodeURIComponent(item.toKey || '')).join(',')
     try {
       await Clipboard.setStringAsync(`${apiBase()}/setlist/${ids}?toKeys=${keys}`)
@@ -203,16 +215,30 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     }
   }
 
-  const callbacks: TimelineCallbacks = {
-    onPressRow: openSong,
-    onKeyTap: setKeyIndex,
-    onRowMenu: setMenuIndex,
-    onMove: moveItem,
-    onRemove: (index) => {
-      removeAt(index)
-      showToast('Removed from set')
-    },
-  }
+  // Stable identity so the memoized timeline rows don't re-render (and
+  // rebuild their gesture chains) on unrelated screen state changes. Actions
+  // resolve the rendered index to the entry's stable key before mutating —
+  // entries the catalog can't resolve stay in state but aren't rendered, so
+  // rendered indexes are not entry indexes.
+  const callbacks: TimelineCallbacks = useMemo(
+    () => ({
+      onPressRow: openSong,
+      onKeyTap: setKeyIndex,
+      onRowMenu: setMenuIndex,
+      onMove: (from, to) => {
+        const fromKey = items[from]?.entryKey
+        const toKey = items[to]?.entryKey
+        if (fromKey && toKey) moveEntry(fromKey, toKey)
+      },
+      onRemove: (index) => {
+        const entryKey = items[index]?.entryKey
+        if (!entryKey) return
+        removeEntry(entryKey)
+        showToast('Removed from set')
+      },
+    }),
+    [openSong, items, moveEntry, removeEntry, showToast],
+  )
 
   const iconButton = (label: string, icon: SymbolIconProps['name'], onPress: () => void) => (
     <Pressable
@@ -452,26 +478,34 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         onClose={() => setKeyIndex(null)}
         songTitle={keyIndex != null ? items[keyIndex]?.song.title ?? null : null}
         currentKey={keyIndex != null ? effectiveKeys[keyIndex] ?? null : null}
+        nativeKey={keyIndex != null ? items[keyIndex]?.song.default_key ?? null : null}
+        hasOverride={keyIndex != null ? items[keyIndex]?.toKey != null : false}
         onPick={(key) => {
-          if (keyIndex != null) setKeyAt(keyIndex, key)
+          const entryKey = keyIndex != null ? items[keyIndex]?.entryKey : undefined
+          if (entryKey) setKeyFor(entryKey, key)
         }}
       />
       <RowActionsSheet
         visible={menuIndex != null}
         onClose={() => setMenuIndex(null)}
+        onDismissed={() => {
+          if (pendingKeyIndex.current != null) {
+            setKeyIndex(pendingKeyIndex.current)
+            pendingKeyIndex.current = null
+          }
+        }}
         songTitle={menuIndex != null ? items[menuIndex]?.song.title ?? '' : ''}
         onChangeKey={() => {
-          // Wait out the row sheet's exit animation — iOS won't present a new
-          // modal while another is still dismissing.
-          const index = menuIndex
-          if (index != null) setTimeout(() => setKeyIndex(index), 260)
+          pendingKeyIndex.current = menuIndex
         }}
         onDuplicate={() => {
-          if (menuIndex != null) duplicateAt(menuIndex)
+          const entryKey = menuIndex != null ? items[menuIndex]?.entryKey : undefined
+          if (entryKey) duplicateEntry(entryKey)
         }}
         onRemove={() => {
-          if (menuIndex != null) {
-            removeAt(menuIndex)
+          const entryKey = menuIndex != null ? items[menuIndex]?.entryKey : undefined
+          if (entryKey) {
+            removeEntry(entryKey)
             showToast('Removed from set')
           }
         }}
@@ -480,7 +514,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         visible={optionsOpen}
         onClose={() => setOptionsOpen(false)}
         onRename={startRename}
-        onSavedSets={() => router.back()}
+        onSavedSets={() => router.navigate('/setlists')}
         onNewSet={newSet}
         onDeleteSet={confirmDelete}
       />

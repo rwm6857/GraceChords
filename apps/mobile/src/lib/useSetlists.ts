@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { createSetlist, deleteSetlist, fetchPersonalSetlists } from '@gracechords/core'
 import { supabase } from './supabase'
 import { errMessage } from './errors'
@@ -48,9 +48,8 @@ export function useSetlists() {
     }
   }, [])
 
-  useEffect(() => {
-    refresh()
-  }, [refresh])
+  // No mount fetch here: the owning screen's useFocusEffect fires on initial
+  // focus too, so fetching here would double the first load.
 
   const create = useCallback(async (name?: string) => {
     const row = (await createSetlist(supabase, { name })) as {

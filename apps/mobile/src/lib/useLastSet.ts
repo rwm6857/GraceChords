@@ -40,8 +40,7 @@ export function useLastSet() {
             name: data.name,
             songCount: summary.songCount,
             durationMin: summary.durationMin,
-            // The card renders "Keys {keys}", so strip the label prefix.
-            keys: summary.keyRange?.replace(/^Keys? /, '') ?? undefined,
+            keys: summary.keys ?? undefined,
             updatedAt: data.updated_at,
           })
           setError(null)

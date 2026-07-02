@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { memo, useCallback } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
@@ -38,7 +38,10 @@ function clampWorklet(value: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, value))
 }
 
-function Row({
+// Memoized so screen-level state churn (rename keystrokes, toasts) doesn't
+// re-render every row and rebuild its gesture/worklet chain — callers must
+// pass a stable `callbacks` object.
+const Row = memo(function Row({
   item,
   index,
   count,
@@ -276,7 +279,7 @@ function Row({
       </Animated.View>
     </Animated.View>
   )
-}
+})
 
 export default function SetlistTimeline({
   items,

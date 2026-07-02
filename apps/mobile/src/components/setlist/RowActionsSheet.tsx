@@ -8,6 +8,7 @@ import { useTheme } from '../../theme/ThemeProvider'
 export default function RowActionsSheet({
   visible,
   onClose,
+  onDismissed,
   songTitle,
   onChangeKey,
   onDuplicate,
@@ -15,6 +16,8 @@ export default function RowActionsSheet({
 }: {
   visible: boolean
   onClose: () => void
+  /** Fires once fully dismissed — safe to present a follow-up sheet. */
+  onDismissed?: () => void
   songTitle: string
   onChangeKey: () => void
   onDuplicate: () => void
@@ -32,6 +35,7 @@ export default function RowActionsSheet({
     <BottomSheet
       visible={visible}
       onClose={onClose}
+      onDismissed={onDismissed}
       title={songTitle}
       closeAccessibilityLabel="Close song options"
     >

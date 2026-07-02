@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 import type { Song } from '../../lib/useSongList'
@@ -105,71 +106,32 @@ export default function AddSongsModal({
           renderItem={({ item }) => {
             const added = addedSongIds.has(item.id)
             return (
-              <Pressable
-                onPress={() => onToggle(item)}
-                accessibilityRole="button"
+              <ListRow
+                title={item.title}
+                subtitle={item.artist}
+                trailingTop={item.default_key}
                 accessibilityLabel={added ? `Remove ${item.title} from set` : `Add ${item.title} to set`}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: t.spacing.md,
-                  paddingVertical: 11,
-                  paddingHorizontal: t.spacing.xl,
-                  borderBottomWidth: 0.5,
-                  borderBottomColor: t.colors.border,
-                  backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
-                })}
-              >
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    numberOfLines={1}
+                onPress={() => onToggle(item)}
+                trailing={
+                  <View
                     style={{
-                      fontSize: t.typography.rowTitle.fontSize,
-                      fontWeight: t.typography.rowTitle.fontWeight,
-                      letterSpacing: t.typography.rowTitle.letterSpacing,
-                      color: t.colors.ink,
+                      width: 30,
+                      height: 30,
+                      borderRadius: t.radii.pill,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: added ? t.colors.accent : t.colors.accentSoft,
                     }}
                   >
-                    {item.title}
-                  </Text>
-                  {item.artist ? (
-                    <Text
-                      numberOfLines={1}
-                      style={{ marginTop: 2, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
-                    >
-                      {item.artist}
-                    </Text>
-                  ) : null}
-                </View>
-                {item.default_key ? (
-                  <Text
-                    style={{
-                      fontSize: t.typography.rowKey.fontSize,
-                      fontWeight: t.typography.rowKey.fontWeight,
-                      color: t.colors.textAccent,
-                    }}
-                  >
-                    {item.default_key}
-                  </Text>
-                ) : null}
-                <View
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: t.radii.pill,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: added ? t.colors.accent : t.colors.accentSoft,
-                  }}
-                >
-                  <SymbolIcon
-                    name={added ? 'checkmark' : 'plus'}
-                    size={15}
-                    weight="semibold"
-                    color={added ? t.colors.onAccent : t.colors.textAccent}
-                  />
-                </View>
-              </Pressable>
+                    <SymbolIcon
+                      name={added ? 'checkmark' : 'plus'}
+                      size={15}
+                      weight="semibold"
+                      color={added ? t.colors.onAccent : t.colors.textAccent}
+                    />
+                  </View>
+                }
+              />
             )
           }}
           contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.lg, flexGrow: 1 }}

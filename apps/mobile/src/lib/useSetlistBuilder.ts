@@ -37,7 +37,6 @@ export function useSetlistBuilder(setlistId: string) {
   const [serviceDate, setServiceDate] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
 
@@ -57,13 +56,23 @@ export function useSetlistBuilder(setlistId: string) {
   const hydrated = useRef(false)
 
   const runSave = useCallback(async () => {
-    if (deleted.current || !hydrated.current) return
+    if (deleted.current) return
+    if (!hydrated.current) {
+      // An edit landed before the initial load resolved — defer rather than
+      // drop it, so nothing written could clobber entries not yet fetched.
+      if (!timer.current) {
+        timer.current = setTimeout(() => {
+          timer.current = null
+          runSave()
+        }, SAVE_DEBOUNCE_MS)
+      }
+      return
+    }
     if (inFlight.current) {
       trailing.current = true
       return
     }
     inFlight.current = true
-    setSaving(true)
     try {
       const { name: n, serviceDate: d, entries: e } = latest.current
       await updateSetlist(supabase, setlistId, {
@@ -76,7 +85,6 @@ export function useSetlistBuilder(setlistId: string) {
       setError(errMessage(err))
     } finally {
       inFlight.current = false
-      setSaving(false)
       if (trailing.current) {
         trailing.current = false
         runSave()
@@ -149,17 +157,11 @@ export function useSetlistBuilder(setlistId: string) {
     }
   }, [flushSave])
 
-  // Entries hydrated against the song catalog. Entries whose song no longer
-  // exists (deleted since) are dropped from the working state once, at
-  // hydration, so list indexes always match what's rendered.
-  useEffect(() => {
-    if (songsLoading || songs.length === 0) return
-    setEntries((prev) => {
-      const kept = prev.filter((e) => songsById.has(e.songId))
-      return kept.length === prev.length ? prev : kept
-    })
-  }, [songsLoading, songs.length, songsById])
-
+  // Entries hydrated against the song catalog. Entries whose song isn't in
+  // the catalog (e.g. soft-deleted) are hidden from the UI but KEPT in the
+  // working state, so wipe-and-replace saves never silently erase them —
+  // which is also why every mutation below is keyed by entryKey, not index:
+  // rendered indexes and entry indexes can diverge.
   const items: SetlistItem[] = useMemo(
     () =>
       entries
@@ -182,8 +184,10 @@ export function useSetlistBuilder(setlistId: string) {
   const toggleSong = useCallback(
     (song: Song) => {
       setEntries((prev) => {
-        const has = prev.some((e) => e.songId === song.id)
-        if (has) return prev.filter((e) => e.songId !== song.id)
+        // Untoggling removes only the LAST entry for that song, so duplicates
+        // created on purpose (a reprise) aren't wiped in one tap.
+        const last = prev.map((e) => e.songId).lastIndexOf(song.id)
+        if (last >= 0) return prev.filter((_, i) => i !== last)
         return [...prev, { entryKey: makeEntryKey(song.id), songId: song.id, toKey: null }]
       })
       scheduleSave()
@@ -191,20 +195,20 @@ export function useSetlistBuilder(setlistId: string) {
     [makeEntryKey, scheduleSave],
   )
 
-  const removeAt = useCallback(
-    (index: number) => {
-      setEntries((prev) => prev.filter((_, i) => i !== index))
+  const removeEntry = useCallback(
+    (entryKey: string) => {
+      setEntries((prev) => prev.filter((e) => e.entryKey !== entryKey))
       scheduleSave()
     },
     [scheduleSave],
   )
 
-  const duplicateAt = useCallback(
-    (index: number) => {
+  const duplicateEntry = useCallback(
+    (entryKey: string) => {
       setEntries((prev) => {
-        const src = prev[index]
-        if (!src) return prev
-        const copy = { ...src, entryKey: makeEntryKey(src.songId) }
+        const index = prev.findIndex((e) => e.entryKey === entryKey)
+        if (index < 0) return prev
+        const copy = { ...prev[index], entryKey: makeEntryKey(prev[index].songId) }
         const next = prev.slice()
         next.splice(index + 1, 0, copy)
         return next
@@ -214,14 +218,15 @@ export function useSetlistBuilder(setlistId: string) {
     [makeEntryKey, scheduleSave],
   )
 
-  const moveItem = useCallback(
-    (from: number, to: number) => {
+  const moveEntry = useCallback(
+    (fromKey: string, toKey: string) => {
       setEntries((prev) => {
-        if (from === to || from < 0 || from >= prev.length) return prev
-        const bounded = Math.max(0, Math.min(prev.length - 1, to))
+        const from = prev.findIndex((e) => e.entryKey === fromKey)
+        const to = prev.findIndex((e) => e.entryKey === toKey)
+        if (from < 0 || to < 0 || from === to) return prev
         const next = prev.slice()
         const [moved] = next.splice(from, 1)
-        next.splice(bounded, 0, moved)
+        next.splice(to, 0, moved)
         return next
       })
       scheduleSave()
@@ -229,9 +234,9 @@ export function useSetlistBuilder(setlistId: string) {
     [scheduleSave],
   )
 
-  const setKeyAt = useCallback(
-    (index: number, key: string | null) => {
-      setEntries((prev) => prev.map((e, i) => (i === index ? { ...e, toKey: key } : e)))
+  const setKeyFor = useCallback(
+    (entryKey: string, key: string | null) => {
+      setEntries((prev) => prev.map((e) => (e.entryKey === entryKey ? { ...e, toKey: key } : e)))
       scheduleSave()
     },
     [scheduleSave],
@@ -253,14 +258,13 @@ export function useSetlistBuilder(setlistId: string) {
     updatedAt,
     loading: loading || songsLoading,
     notFound,
-    saving,
     error: error ?? songsError,
     setName,
     toggleSong,
-    removeAt,
-    duplicateAt,
-    moveItem,
-    setKeyAt,
+    removeEntry,
+    duplicateEntry,
+    moveEntry,
+    setKeyFor,
     deleteSet,
   }
 }

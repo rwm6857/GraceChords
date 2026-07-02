@@ -118,15 +118,21 @@ duplicate logic here and never edit core internals to suit mobile.
   via an inline joined query (read-only for now; starring/unstarring is later). This
   inline query is the **one sanctioned exception** to "queries live in core" — kept
   in mobile to avoid a core change; promote it to core when stars grow.
-- **Local history is stubbed.** `src/lib/recents.ts` (`getRecentlyOpened`,
-  `getLastSet`) returns empty and will be backed by the on-device history / setlist
-  layer shipping with the Setlist Builder — consume the stubs, don't mock data.
+- **Setlists are per-user Supabase data** — tables `setlists` / `setlist_songs`
+  (per-entry key override in `setlist_songs.key_override`, exposed app-side as
+  `toKey`). Queries live in core's `setlistsRepo` (injected client); mobile hooks
+  are `useSetlists`, `useSetlistBuilder` (debounced wipe-and-replace autosave),
+  and `useLastSet` (Home's "Last set" card).
+- **Local history is stubbed.** `src/lib/recents.ts` (`getRecentlyOpened`) returns
+  empty and will be backed by an on-device history of opened songs — the Viewer
+  should record opens when that layer ships; consume the stub, don't mock data.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
 
 ## Out of scope (for now)
 
-The real Song Viewer (chord chart), the Setlists & Daily Word/Reader screens
-(placeholders today), the on-device history/setlist storage layer + star writes,
+The Setlist Viewer / performer mode ("Start set"), the setlist share-sheet
+export backends (set PDF / Charts ZIP / ChordPro), the Daily Word/Reader screen
+(placeholder today), the on-device history layer + star writes,
 the full Auth screen redesign / Google OAuth (see the `TODO: OAuth` in
 `src/screens/LoginScreen.tsx`), tablet master-detail, EAS Build / TestFlight,
 Android, GraceTracks.

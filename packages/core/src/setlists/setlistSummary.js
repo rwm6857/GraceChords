@@ -3,18 +3,14 @@
 // estimate at a flat minutes-per-song rate (the design demo's default), and
 // callers should render it with a tilde ("~25 min").
 
-import { KEYS } from '../chordpro'
+import { KEYS, normKey } from '../chordpro'
 
 /** Flat minutes-per-song used for the estimated set duration. */
 export const EST_MINUTES_PER_SONG = 5
 
-const FLATS = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' }
-
 function keyIndex(k) {
   if (!k) return -1
-  const i = KEYS.indexOf(k)
-  if (i >= 0) return i
-  return KEYS.indexOf(FLATS[k] ?? '')
+  return KEYS.indexOf(normKey(k))
 }
 
 /**
@@ -37,7 +33,7 @@ export function effectiveKey(entry, song) {
  *
  * @param {Array<{ toKey?: string|null, song_id?: string, default_key?: string|null, tempo?: number|null }>} entries
  * @param {Map<string, { default_key?: string|null, tempo?: number|null }>} [songsById]
- * @returns {{ songCount: number, durationMin: number, keyRange: string|null, bpmRange: string|null }}
+ * @returns {{ songCount: number, durationMin: number, keys: string|null, keyRange: string|null, bpmRange: string|null }}
  */
 export function summarizeSet(entries, songsById) {
   const list = entries || []
@@ -52,10 +48,14 @@ export function summarizeSet(entries, songsById) {
     if (typeof tempo === 'number' && tempo > 0) bpms.push(tempo)
   }
 
+  // `keys` is the raw range ("G–D" / "G") for badges; `keyRange` the labeled
+  // footer segment ("Keys G–D" / "Key G").
+  let keysRaw = null
   let keyRange = null
   if (keys.length > 0) {
     const lo = KEYS[Math.min(...keys)]
     const hi = KEYS[Math.max(...keys)]
+    keysRaw = lo === hi ? lo : `${lo}–${hi}`
     keyRange = lo === hi ? `Key ${lo}` : `Keys ${lo}–${hi}`
   }
 
@@ -69,6 +69,7 @@ export function summarizeSet(entries, songsById) {
   return {
     songCount: list.length,
     durationMin: list.length * EST_MINUTES_PER_SONG,
+    keys: keysRaw,
     keyRange,
     bpmRange,
   }
