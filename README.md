@@ -37,7 +37,7 @@ GraceChords/
 | Workspace | Package | What it is |
 |-----------|---------|------------|
 | `apps/web` | `@gracechords/web` | The production single-page app: full song catalog, setlists, worship mode, admin/editor portals, Daily Word, resources. Deployed to Cloudflare Pages. |
-| `apps/mobile` | `@gracechords/mobile` | Native iOS client (Expo SDK 55, Expo Router v7). A themed four-tab shell with the Song Library and Home screens live; more screens in progress. |
+| `apps/mobile` | `@gracechords/mobile` | Native iOS client (Expo SDK 55, Expo Router v7). A themed four-tab shell (Home · Songs · Setlists · Daily Word) with a real chord-chart Song Viewer, Performer mode, the setlist builder, the Daily Word reader, and native Google/Apple auth. |
 | `packages/core` | `@gracechords/core` | Pure TypeScript/JS shared by both apps — ChordPro **parser** (not the renderer), transposition, chord placement, song metadata/sort, the setlist codec, the role hierarchy, and the Supabase client **factory**. Consumed as source, no build step. |
 | `packages/tokens` | `@gracechords/tokens` | The single home for design tokens. Web imports `tokens.css`; native imports the typed map from `@gracechords/tokens/native`. |
 | `workers/*` | — | Cloudflare Workers deployed independently: authenticated PPTX upload/delete, weekly sitemap rebuild, and the `@gracechords_bot` Telegram bot. |
@@ -90,8 +90,8 @@ permission matrix and the admin/editor portals.
 Current focus and planned work:
 
 - **Tablet-responsive web layout** — a proper master-detail experience on larger screens.
-- **Mobile app build-out** — flesh out the iOS client (Song Viewer with chord charts, Setlists, Daily Word/Reader, on-device history), then EAS Build / TestFlight.
-- **Android** — extend the Expo app to Android once the iOS surface stabilizes.
+- **Mobile app polish** — the iOS client's core flows ship (Song Viewer, Performer, Setlists, Daily Word, auth); next up are offline downloads, on-device history, and EAS Build / TestFlight.
+- **Android** — extend the Expo app to Android once the iOS surface stabilizes (Android OAuth config still to set up).
 - **GraceTracks integration** — surface practice stem tracks (`has_stems` / `stem_slug` / `gracetracks_url`) across web and mobile.
 - **Shared-core growth** — migrate more query/util logic into `@gracechords/core` as the mobile app needs it, keeping web and native in lockstep.
 

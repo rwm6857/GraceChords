@@ -7,9 +7,14 @@ doc first.
 
 ## What this is
 
-A native (Expo / React Native) client for GraceChords. It carries real UI built
-from the design reference: a themed four-tab shell, the **Song Library** and
-**Home** screens, a placeholder **Song Viewer** route, and an
+A native (Expo / React Native) client for GraceChords, built from the design
+reference. The core worship-team flows all ship: a themed four-tab shell (Home ·
+Songs · Setlists · Daily Word), a full **Song Viewer** (real chord chart —
+transpose, key change, accidentals, view options, star, export/share), a
+**Performer** setlist play-through, the **Setlist Builder** (autosave, key
+overrides, sharing, whole-set PDF), the **Daily Word / Reader** (M'Cheyne plan,
+translations, highlights), native **Google/Apple auth** with a sprite avatar
+picker, and a grouped **Settings** screen — all behind an
 **authenticated-only** route gate. Build new screens on the shared theme +
 primitives below — don't add one-off styles or hardcoded colors where a
 primitive/token fits.
@@ -27,8 +32,13 @@ the visual rather than porting the HTML/CSS.
 - **Continuous Native Generation (CNG).** `ios/` and `android/` are **gitignored
   and never committed** — regenerate them with `npx expo prebuild`. Treat
   `app.json` (+ config plugins) as the source of truth for native config.
-- **UI deps:** `expo-symbols` (SF Symbols), `expo-linear-gradient` (the Home
-  hero), `expo-splash-screen` (auth-gate hold). Add Expo deps with
+- **UI/native deps:** `expo-symbols` (SF Symbols), `expo-linear-gradient` (the
+  Home hero), `expo-splash-screen` (auth-gate hold), `expo-haptics`,
+  `react-native-gesture-handler` + `react-native-reanimated` (swipe-to-delete,
+  transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
+  (export + share sheet), `@react-native-google-signin/google-signin` +
+  `expo-apple-authentication` (native auth), and `expo-build-properties`
+  (`useFrameworks: static`, required by google-signin). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
   version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
 
@@ -104,10 +114,13 @@ duplicate logic here and never edit core internals to suit mobile.
 
 - `app/(tabs)/_layout.tsx` — the four-tab shell (Home · Songs · Setlists · Daily
   Word), `headerShown:false` (screens draw their own large-title headers).
-- `app/viewer/[slug].tsx` — Song Viewer, **outside** the tab group (pushes over the
-  shell); currently a placeholder. `app/login.tsx` — the auth screen (sign in +
-  sign up modes in `src/screens/AuthScreen.tsx`); `app/choose-icon.tsx` — the
-  post-signup sprite avatar picker.
+- Routes **outside** the tab group push over the shell: `app/viewer/[slug].tsx`
+  (Song Viewer — real chord chart), `app/perform/[id].tsx` (Performer / setlist
+  play-through → `PerformerScreen`), `app/setlist/[id].tsx` (Setlist Builder),
+  `app/settings.tsx`, `app/about.tsx`, and `app/offline.tsx` (Offline &
+  downloads — scaffolded, no download logic yet). `app/login.tsx` — the auth
+  screen (sign in + sign up modes in `src/screens/AuthScreen.tsx`);
+  `app/choose-icon.tsx` — the post-signup sprite avatar picker.
 - **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
   session (redirect to `/login` when signed out, into the tabs when signed in) and
   holds the native splash (`expo-splash-screen`) until the session resolves *and*
@@ -128,15 +141,58 @@ duplicate logic here and never edit core internals to suit mobile.
   (`src/lib/profile.ts`) — the same JSONB shape the web Profile page writes; ids in
   `src/lib/sprites.ts` must stay in sync with web's `SpritePicker.jsx`.
 
+## Song Viewer, Performer & export
+
+- **Song Viewer** (`app/viewer/[slug].tsx` + `src/components/ChordChart.tsx`)
+  renders a parsed `SongDoc` (core `parseChordProOrLegacy`): word-anchored chords
+  over lyrics, per-symbol transpose + chord style at render, `RawFallback` when a
+  parse yields nothing. Controls: floating `TransposeBar` (±1 semitone, haptic),
+  `ViewOptionsSheet` (chords/lyrics · section labels · font scale 80–160% · chord
+  style Letters/Solfège · sharp/flat accidentals · "Hide controls when idle"),
+  `StarButton`, and `ExportSheet`. Transpose/accidentals/chord-style are
+  **ephemeral** per open; only "Hide controls when idle" persists (separately, in
+  `src/lib/autoHideChrome.ts`). Opening from a setlist seeds transpose via the
+  `initialKey` route param.
+- **Performer** (`app/perform/[id].tsx` → `PerformerScreen`) runs a set one song
+  at a time (Prev/Next, swipe, tappable progress rail), prefetches every song
+  body, and reuses the same chart/transpose/view-options. Its
+  `PerformerShareSheet` has a This-song / Whole-set scope toggle — whole-set PDF
+  works here (not in the builder's `ShareSetSheet`).
+- **Export/share** is server-side via the web app's Pages Functions (base
+  `EXPO_PUBLIC_API_BASE_URL`, `src/lib/api.ts`): `src/lib/exportSong.ts` calls
+  `POST /api/export/song` (PDF, or a page-1 PNG for `jpg`) and
+  `POST /api/export/setlist` (whole-set PDF); bytes are cached with
+  `expo-file-system` and handed to the system share sheet via `expo-sharing`.
+  `src/lib/telegramPush.ts` posts to `/api/telegram/push` (song + setlist,
+  batched at 25; 409 → "link your Telegram" alert). **Charts ZIP / ChordPro
+  export backends don't exist anywhere** — those tiles render disabled.
+
+## Settings & defaults
+
+- **Settings** (`app/settings.tsx` → `SettingsScreen`) is a grouped screen:
+  profile card (→ sprite picker), theme, chord style, Offline & downloads (stub),
+  library shortcuts, Help/Feedback, About, sign-out, and **Delete account**
+  (`supabase.rpc('delete_user')`). The Language row is a static "English".
+- **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
+  (`system`/`light`/`dark`) and `chordStyle` (`letters`/`solfege`), **device-local
+  in AsyncStorage, not Supabase-synced**. Storage is injected (KVStorage, like
+  `profile.ts`) so the module is RN-free and unit-tested. Hydrated once at the
+  splash hold; `getDefaultsSnapshot()` is then synchronous and `useAppDefaults()`
+  (a `useSyncExternalStore` hook) re-renders the ThemeProvider and Settings.
+  Viewer/Performer seed their chord style read-on-open; in-session changes don't
+  write back.
+
 ## Data & stubs
 
 - Song data uses core's `fetchSongList` (widen columns via its `opts.columns`);
   screen data hooks live in `src/lib/` (`useSongList`, `useStarredSongs`).
 - **Stars** are per-user Supabase data — table `user_starred_songs` (`song_id` is a
-  uuid FK to `songs.id`, RLS-scoped to `auth.uid()`). `useStarredSongs` reads them
-  via an inline joined query (read-only for now; starring/unstarring is later). This
-  inline query is the **one sanctioned exception** to "queries live in core" — kept
-  in mobile to avoid a core change; promote it to core when stars grow.
+  uuid FK to `songs.id`, RLS-scoped to `auth.uid()`). `useStarredSongs` reads the
+  list via an inline joined query; `useSongStar` reads/writes a single song's star
+  optimistically (upsert/delete, revert on failure) behind the Viewer's
+  `StarButton`. These inline queries are the **one sanctioned exception** to
+  "queries live in core" — kept in mobile to avoid a core change; promote them to
+  core when stars grow.
 - **Setlists are per-user Supabase data** — tables `setlists` / `setlist_songs`
   (per-entry key override in `setlist_songs.key_override`, exposed app-side as
   `toKey`). Queries live in core's `setlistsRepo` (injected client); mobile hooks
@@ -161,11 +217,14 @@ duplicate logic here and never edit core internals to suit mobile.
 
 ## Out of scope (for now)
 
-The whole-set Charts ZIP / ChordPro export backends (whole-set PDF ships via
-`/api/export/setlist`), the Daily Word **landing page** and **offline
-translation download / file management** (the Reader itself ships; downloads are
-a later stage), the on-device history layer + star writes,
-password reset / email-confirmation screens (the login "Forgot?" link is an
-informational alert only), tablet master-detail, EAS Build / TestFlight,
-Android (auth code is cross-platform-safe, but Android OAuth config — SHA-1,
-google-services — is not set up), GraceTracks.
+The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
+`/api/export/setlist`; the ZIP/ChordPro tiles render disabled), **offline
+downloads / file management** (`OfflineDownloadsScreen` is a stub EmptyState and
+`bibleSource.ts`'s offline branch is commented out — the Reader needs network),
+the **on-device history** layer (`recents.ts` returns empty, so Home's "Continue"
+card never shows), the Song Library **"Add song"** button (a no-op) and Settings
+**Language** picker (static "English"), **password reset / email-confirmation**
+screens (the login "Forgot?" link is an informational alert only), tablet
+master-detail, EAS Build / TestFlight, Android (auth code is cross-platform-safe,
+but Android OAuth config — SHA-1, google-services — is not set up), GraceTracks,
+and migrating web's `features/readings` onto core's `bible` module.

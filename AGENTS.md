@@ -33,7 +33,7 @@ supabase/       SQL migrations
 ```
 
 - The web app lives in `apps/web/` (its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`, `eslint.config.js`). Cloudflare Pages' root directory is `apps/web`. See [`MONOREPO_MIGRATION.md`](MONOREPO_MIGRATION.md) for the exact CF settings.
-- The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`). It's a real native client (themed four-tab shell, Song Library + Home screens, an authenticated-only route gate), not just a scaffold.
+- The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`). It's a real native client (themed four-tab shell, chord-chart Song Viewer, Performer mode, setlist builder, Daily Word reader, native Google/Apple auth, all behind an authenticated-only route gate), not just a scaffold.
 - Run web tasks from the repo root via the delegating scripts (`npm run dev`, `npm run build`, `npm run test`, `npm run lint` → `-w @gracechords/web`), or from inside `apps/web/`.
 - The repo root holds only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`, `supabase/`, and docs.
 

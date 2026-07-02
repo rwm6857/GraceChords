@@ -46,8 +46,10 @@ The production single-page app.
 tokens from `packages/tokens/tokens.css` (imported via `src/styles/index.css`).
 
 ## `apps/mobile/`
-The native iOS client — a themed four-tab shell with the Song Library and Home
-screens, built on the shared core. See [[Mobile-App]] for details.
+The native iOS client — a themed four-tab shell (Home · Songs · Setlists · Daily
+Word) with a chord-chart Song Viewer, Performer mode, the setlist builder, the
+Daily Word reader, and native Google/Apple auth, built on the shared core. See
+[[Mobile-App]] for details.
 
 ## `packages/core/` (`@gracechords/core`)
 Pure TypeScript/JS shared by both apps, consumed as source with no build step:
