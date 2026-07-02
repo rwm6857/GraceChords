@@ -102,7 +102,13 @@ export default function SetlistsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
         }
         renderItem={({ item }) => (
-          <SwipeToDelete onDelete={() => onDeleteSetlist(item)}>
+          <SwipeToDelete
+            onDelete={() => onDeleteSetlist(item)}
+            confirm={{
+              title: `Delete “${item.name}”?`,
+              message: 'You cannot undo this action.',
+            }}
+          >
             <ListRow
               title={item.name}
               subtitle={subtitle(item)}

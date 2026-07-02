@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react'
-import { Pressable, Text, useWindowDimensions, View } from 'react-native'
+import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   runOnJS,
@@ -14,21 +14,24 @@ import { useTheme } from '../theme/ThemeProvider'
 // iOS-26-style swipe-to-delete, reusable across lists (setlist rows in the
 // builder, setlists in the library, …). Behavior:
 //  • Partial swipe left → the row opens to reveal a red Delete button and
-//    rests there. Tap the button to delete; swipe back (or open another row)
-//    to close.
+//    rests there. Tap the button to delete; swipe back to close.
 //  • Full swipe left (past ~half the row width) → the row slides off and
-//    deletes automatically.
-// The moving layer carries an opaque background so the red action only shows
-// as it's revealed. Content taps work normally while closed.
+//    deletes.
+// Pass `confirm` for destructive targets (e.g. a whole setlist): the delete is
+// gated behind a native alert; Cancel snaps the row closed. The moving layer
+// carries an opaque background so the red action only shows as it's revealed.
 
 const BUTTON_W = 88
 const FULL_SWIPE_FRACTION = 0.5
+
+export type ConfirmDelete = { title: string; message?: string; confirmLabel?: string }
 
 export default function SwipeToDelete({
   children,
   onDelete,
   label = 'Delete',
   background,
+  confirm,
 }: {
   children: ReactNode
   onDelete: () => void
@@ -36,16 +39,38 @@ export default function SwipeToDelete({
   label?: string
   /** Opaque background for the moving row layer; defaults to the page bg. */
   background?: string
+  /** When set, gate the delete behind a native confirm alert. */
+  confirm?: ConfirmDelete
 }) {
   const t = useTheme()
   const { width } = useWindowDimensions()
   const tx = useSharedValue(0)
   const startX = useSharedValue(0)
+  const hasConfirm = !!confirm
 
-  const fire = useCallback(() => {
+  const snapClosed = useCallback(() => {
+    tx.value = withTiming(0, { duration: 160 })
+  }, [tx])
+
+  // Slide the row off, then remove it.
+  const commit = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
-    onDelete()
-  }, [onDelete])
+    tx.value = withTiming(-width, { duration: 160 }, (finished) => {
+      if (finished) runOnJS(onDelete)()
+    })
+  }, [onDelete, tx, width])
+
+  // Confirm-gated entry point (used when `confirm` is set); otherwise commit.
+  const requestDelete = useCallback(() => {
+    if (confirm) {
+      Alert.alert(confirm.title, confirm.message, [
+        { text: 'Cancel', style: 'cancel', onPress: snapClosed },
+        { text: confirm.confirmLabel ?? 'Delete', style: 'destructive', onPress: commit },
+      ])
+    } else {
+      commit()
+    }
+  }, [confirm, snapClosed, commit])
 
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
@@ -60,9 +85,15 @@ export default function SwipeToDelete({
     .onEnd(() => {
       const full = width * FULL_SWIPE_FRACTION
       if (-tx.value >= full) {
-        tx.value = withTiming(-width, { duration: 180 }, (finished) => {
-          if (finished) runOnJS(fire)()
-        })
+        if (hasConfirm) {
+          // Rest open under the confirm dialog; commit/cancel resolves it.
+          tx.value = withTiming(-BUTTON_W, { duration: 140 })
+          runOnJS(requestDelete)()
+        } else {
+          tx.value = withTiming(-width, { duration: 180 }, (finished) => {
+            if (finished) runOnJS(onDelete)()
+          })
+        }
       } else if (-tx.value > BUTTON_W / 2) {
         tx.value = withTiming(-BUTTON_W, { duration: 140 })
       } else {
@@ -74,12 +105,6 @@ export default function SwipeToDelete({
   // The red action fills from the right, growing as the row is pulled further
   // so a full swipe reads as an edge-to-edge delete.
   const actionStyle = useAnimatedStyle(() => ({ width: Math.max(BUTTON_W, -tx.value) }))
-
-  const tapDelete = () => {
-    tx.value = withTiming(-width, { duration: 160 }, (finished) => {
-      if (finished) runOnJS(fire)()
-    })
-  }
 
   return (
     <View style={{ overflow: 'hidden' }}>
@@ -98,7 +123,7 @@ export default function SwipeToDelete({
         ]}
       >
         <Pressable
-          onPress={tapDelete}
+          onPress={requestDelete}
           accessibilityRole="button"
           accessibilityLabel={label}
           style={{ width: BUTTON_W, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 3 }}
