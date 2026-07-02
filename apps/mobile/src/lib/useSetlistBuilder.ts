@@ -35,6 +35,7 @@ export function useSetlistBuilder(setlistId: string) {
   const [name, setNameState] = useState('')
   const [entries, setEntries] = useState<Array<{ entryKey: string; songId: string; toKey: string | null }>>([])
   const [serviceDate, setServiceDate] = useState<string | null>(null)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -111,6 +112,7 @@ export function useSetlistBuilder(setlistId: string) {
         }
         setNameState(data.name)
         setServiceDate(data.service_date)
+        setUpdatedAt(data.updated_at)
         setEntries(
           data.entries.map((entry: RawEntry) => ({
             entryKey: makeEntryKey(entry.song_id),
@@ -248,6 +250,7 @@ export function useSetlistBuilder(setlistId: string) {
     name,
     items,
     songs,
+    updatedAt,
     loading: loading || songsLoading,
     notFound,
     saving,

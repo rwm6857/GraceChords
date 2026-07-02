@@ -1,5 +1,5 @@
-import Placeholder from '../../src/components/Placeholder'
+import SetlistsScreen from '../../src/screens/SetlistsScreen'
 
 export default function SetlistsTab() {
-  return <Placeholder title="Setlists" />
+  return <SetlistsScreen />
 }

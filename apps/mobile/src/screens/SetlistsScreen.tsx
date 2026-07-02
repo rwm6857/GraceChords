@@ -1,0 +1,155 @@
+import { useCallback, useState } from 'react'
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { useFocusEffect, useRouter } from 'expo-router'
+import Screen from '../components/Screen'
+import ListRow from '../components/ListRow'
+import Button from '../components/Button'
+import SymbolIcon from '../components/SymbolIcon'
+import { useTheme } from '../theme/ThemeProvider'
+import { useSetlists, type SetlistRow } from '../lib/useSetlists'
+import { timeAgo } from '../lib/relativeTime'
+import { errMessage } from '../lib/errors'
+
+// The Setlists tab: every personal setlist (newest-edited first), a New set
+// action, and tap-to-open into the builder.
+export default function SetlistsScreen() {
+  const t = useTheme()
+  const router = useRouter()
+  const { setlists, loading, error, refresh, create } = useSetlists()
+  const [refreshing, setRefreshing] = useState(false)
+  const [creating, setCreating] = useState(false)
+
+  // Refresh whenever the tab regains focus so edits made in the builder
+  // (name, songs, deletes) are reflected without a manual pull.
+  useFocusEffect(
+    useCallback(() => {
+      refresh()
+    }, [refresh]),
+  )
+
+  async function onRefresh() {
+    setRefreshing(true)
+    await refresh()
+    setRefreshing(false)
+  }
+
+  async function onCreate() {
+    if (creating) return
+    setCreating(true)
+    try {
+      const row = await create()
+      router.push(`/setlist/${row.id}`)
+    } catch (err: unknown) {
+      Alert.alert('Could not create set', errMessage(err))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  function subtitle(item: SetlistRow) {
+    const n = item.songCount
+    const edited = timeAgo(item.updated_at)
+    return [`${n} ${n === 1 ? 'song' : 'songs'}`, edited ? `edited ${edited}` : null]
+      .filter(Boolean)
+      .join(' · ')
+  }
+
+  function renderBody() {
+    if (loading) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={t.colors.accent} />
+        </View>
+      )
+    }
+    if (error) {
+      return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, textAlign: 'center' }}>
+            {error}
+          </Text>
+        </View>
+      )
+    }
+    if (setlists.length === 0) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: t.spacing.xl,
+            gap: t.spacing.lg,
+          }}
+        >
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, textAlign: 'center' }}>
+            No setlists yet.{'\n'}Create one to start planning a service.
+          </Text>
+          <Button title="New set" onPress={onCreate} disabled={creating} fullWidth={false} />
+        </View>
+      )
+    }
+    return (
+      <FlatList
+        data={setlists}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
+        }
+        renderItem={({ item }) => (
+          <ListRow
+            title={item.name}
+            subtitle={subtitle(item)}
+            onPress={() => router.push(`/setlist/${item.id}`)}
+          />
+        )}
+        contentContainerStyle={{ paddingBottom: t.spacing.sm }}
+      />
+    )
+  }
+
+  return (
+    <Screen edges={['top', 'left', 'right']}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: t.spacing.lg,
+          paddingTop: t.spacing.sm,
+          paddingBottom: t.spacing.sm,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: t.typography.largeTitle.fontSize,
+            fontWeight: t.typography.largeTitle.fontWeight,
+            letterSpacing: t.typography.largeTitle.letterSpacing,
+            color: t.colors.ink,
+          }}
+        >
+          Setlists
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="New set"
+          hitSlop={8}
+          onPress={onCreate}
+          disabled={creating}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: t.radii.pill,
+            backgroundColor: t.colors.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: creating ? 0.5 : 1,
+          }}
+        >
+          <SymbolIcon name="plus" size={20} color={t.colors.onAccent} weight="semibold" />
+        </Pressable>
+      </View>
+      {renderBody()}
+    </Screen>
+  )
+}

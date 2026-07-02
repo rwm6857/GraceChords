@@ -20,3 +20,18 @@ export async function pushSongToTelegram(opts: {
   if (!res.ok) throw await apiError(res, 'telegram_failed')
   return 'sent'
 }
+
+// Same endpoint, multi-item: send a whole setlist (the API accepts
+// items[] with context 'setlist' and the bot delivers each chart).
+export async function pushSetToTelegram(
+  items: Array<{ songId: string; key?: string | null }>,
+): Promise<'sent' | 'not_linked'> {
+  const res = await apiPost('/api/telegram/push', {
+    items: items.map((item) => ({ song_id: item.songId, key: item.key || '' })),
+    context: 'setlist',
+  })
+
+  if (res.status === 409) return 'not_linked'
+  if (!res.ok) throw await apiError(res, 'telegram_failed')
+  return 'sent'
+}
