@@ -97,16 +97,21 @@ export default function DailyWordScreen() {
   useEffect(() => {
     setPassageIndex(0)
     setSelection(new Set())
-    fade.setValue(1)
-  }, [date, fade])
+  }, [date])
+
+  // Fade the reading region in whenever new chapter content arrives (chapter
+  // switch, translation switch, or first load). The Animated.View is persistent
+  // (wraps every state), so the animation never targets an unmounted node.
+  useEffect(() => {
+    if (!chapter) return
+    fade.setValue(0)
+    Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: true }).start()
+  }, [chapter, fade])
 
   function changePassage(next: number) {
     if (next < 0 || next >= passages.length || next === passageIndex) return
-    Animated.timing(fade, { toValue: 0, duration: 130, useNativeDriver: true }).start(() => {
-      setPassageIndex(next)
-      setSelection(new Set())
-      Animated.timing(fade, { toValue: 1, duration: 130, useNativeDriver: true }).start()
-    })
+    setPassageIndex(next)
+    setSelection(new Set())
   }
 
   const pan = useRef(
@@ -259,8 +264,9 @@ export default function DailyWordScreen() {
         </ScrollView>
       </View>
 
-      {/* Reading area */}
-      <View style={{ flex: 1 }} {...pan.panHandlers}>
+      {/* Reading area — one persistent Animated.View wraps every state so the
+          fade never targets an unmounted node. */}
+      <Animated.View style={{ flex: 1, opacity: fade }} {...pan.panHandlers}>
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={t.colors.accent} />
@@ -268,22 +274,21 @@ export default function DailyWordScreen() {
         ) : error ? (
           <EmptyState
             icon="wifi.slash"
-            title="Can't load this passage"
-            subtitle="You're offline, or this translation isn't downloaded yet. Connect to read it."
-            actionLabel="Try again"
+            title="Can't load today's reading"
+            subtitle="Connect to the internet and try again. Downloaded translations will read offline in a later update."
+            actionLabel="Retry"
             onAction={() => setReloadToken((n) => n + 1)}
           />
         ) : versesInScope.length === 0 ? (
           <EmptyState icon="book.closed" title="No reading for this day" subtitle="Pick another date to keep reading." />
         ) : (
-          <Animated.View style={{ flex: 1, opacity: fade }}>
-            <ScrollView
-              contentContainerStyle={{
-                paddingHorizontal: t.spacing.xl,
-                paddingTop: t.spacing.xs,
-                paddingBottom: t.spacing.xxl,
-              }}
-            >
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: t.spacing.xl,
+              paddingTop: t.spacing.xs,
+              paddingBottom: t.spacing.xxl,
+            }}
+          >
               {settings.layout === 'prose' ? (
                 <Text style={readingBase}>
                   {versesInScope.map(({ num, text }) => {
@@ -338,8 +343,7 @@ export default function DailyWordScreen() {
                   )
                 })
               )}
-            </ScrollView>
-          </Animated.View>
+          </ScrollView>
         )}
 
         {/* Copy FAB — appears while a selection exists (no count badge). */}
@@ -368,7 +372,7 @@ export default function DailyWordScreen() {
             <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
           </Pressable>
         ) : null}
-      </View>
+      </Animated.View>
 
       <TranslationPickerSheet
         visible={sheet === 'translations'}
