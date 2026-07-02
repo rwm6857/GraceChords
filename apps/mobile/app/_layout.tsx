@@ -5,8 +5,10 @@ import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider } from '../src/theme/ThemeProvider'
 import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
+import { flushPendingSprite } from '../src/lib/profile'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -24,10 +26,14 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
 
   useEffect(() => {
     if (!ready) return
-    const inAuthGroup = segments[0] === 'login'
-    if (!session && !inAuthGroup) {
+    const seg = segments[0] as string | undefined
+    // choose-icon is the post-signup avatar step: it must stay visible both
+    // WITH a session (confirm-email off signs in immediately — don't bounce to
+    // Home before the pick) and WITHOUT one (confirmation pending).
+    const inAuthFlow = seg === 'login' || seg === 'choose-icon'
+    if (!session && !inAuthFlow) {
       router.replace('/login')
-    } else if (session && inAuthGroup) {
+    } else if (session && seg === 'login') {
       router.replace('/')
     }
   }, [session, ready, segments, router])
@@ -38,8 +44,9 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
   // never leave the splash up forever.
   useEffect(() => {
     if (!ready) return
-    const inAuthGroup = segments[0] === 'login'
-    const settled = session ? !inAuthGroup : inAuthGroup
+    const seg = segments[0] as string | undefined
+    const inAuthFlow = seg === 'login' || seg === 'choose-icon'
+    const settled = session ? seg !== 'login' : inAuthFlow
     if (settled) SplashScreen.hideAsync().catch(() => {})
   }, [session, ready, segments])
 
@@ -63,8 +70,14 @@ export default function RootLayout() {
       setSession(data.session)
       setReady(true)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next)
+      // A sprite picked before the session existed (email-confirmation flow,
+      // or a transient write failure) is flushed on sign-in. Fire-and-forget:
+      // a preference must never block auth.
+      if (event === 'SIGNED_IN' && next?.user) {
+        void flushPendingSprite(supabase, AsyncStorage, next.user.id)
+      }
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -79,6 +92,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="login" />
+            <Stack.Screen name="choose-icon" />
             <Stack.Screen name="viewer/[slug]" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />

@@ -9,16 +9,21 @@
     "android": "expo run:android",
     "prebuild": "expo prebuild",
     "export:ios": "expo export --platform ios",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "@gracechords/core": "*",
     "@gracechords/tokens": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-google-signin/google-signin": "^16.1.2",
     "@supabase/supabase-js": "^2.98.0",
     "expo": "~55.0.27",
+    "expo-apple-authentication": "~55.0.14",
     "expo-clipboard": "~55.0.14",
     "expo-constants": "~55.0.16",
+    "expo-crypto": "~55.0.16",
     "expo-file-system": "~55.0.23",
     "expo-haptics": "~55.0.15",
     "expo-linear-gradient": "~55.0.15",
@@ -40,6 +45,7 @@
   "devDependencies": {
     "@types/react": "~19.2.0",
     "babel-preset-expo": "~55.0.23",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.9"
   }
 }

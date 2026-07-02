@@ -1,16 +1,16 @@
 import { Stack } from 'expo-router'
 import Screen from '../src/components/Screen'
-import LoginScreen from '../src/screens/LoginScreen'
+import AuthScreen from '../src/screens/AuthScreen'
 
 // Auth route. The root layout redirects here whenever there is no session, and
-// back to the tabs once signed in. Wraps the existing LoginScreen (unchanged
-// behavior) in the themed, safe-area Screen surface.
+// back to the tabs once signed in. AuthScreen holds both the sign-in and
+// sign-up modes; sign-up continues to /choose-icon.
 
 export default function Login() {
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
-      <LoginScreen />
+      <AuthScreen />
     </Screen>
   )
 }
