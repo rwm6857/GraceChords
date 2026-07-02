@@ -35,9 +35,17 @@ export type DownloadDeps = {
   nowIso?: () => string
   /** Injectable chapter list (tests). Defaults to the full canonical Bible. */
   chapters?: ChapterRef[]
+  /** Retry attempts per chapter after the first try (default 2 → 3 tries total). */
+  retries?: number
+  /** Injectable delay (tests inject a no-op). Defaults to a real timer. */
+  sleep?: (ms: number) => Promise<void>
 }
 
 const DEFAULT_CONCURRENCY = 8
+const DEFAULT_RETRIES = 2
+const RETRY_BASE_MS = 300
+
+const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 export async function downloadBibleTranslation(
   translation: BibleTranslation,
@@ -51,6 +59,8 @@ export async function downloadBibleTranslation(
   const id = translation.id
   const tmp = tmpDirRel(id)
   const concurrency = Math.max(1, Math.min(deps.concurrency ?? DEFAULT_CONCURRENCY, total || 1))
+  const retries = Math.max(0, deps.retries ?? DEFAULT_RETRIES)
+  const sleep = deps.sleep ?? realSleep
 
   // Start from a clean staging dir (a prior aborted attempt may have left one).
   await blobStore.deleteDir(tmp)
@@ -63,6 +73,27 @@ export async function downloadBibleTranslation(
     if (deps.signal?.aborted) throw new DownloadCancelledError()
   }
 
+  // Fetch one chapter, retrying transient failures (thrown network errors or a
+  // non-ok, non-404 response) with exponential backoff. A 404 is returned as-is
+  // (the caller skips it). Cancel is honored before each retry. Resolves only to
+  // an ok or 404 response; otherwise throws after the retry budget is spent.
+  async function fetchChapter(url: string) {
+    let lastError: unknown = new Error('Failed to download chapter')
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      if (attempt > 0) await sleep(RETRY_BASE_MS * 2 ** (attempt - 1))
+      checkCancel()
+      try {
+        const res = await fetchImpl(url)
+        if (res.status === 404 || res.ok) return res
+        lastError = new Error(`Failed to download chapter (${res.status})`)
+      } catch (err) {
+        if (err instanceof DownloadCancelledError) throw err
+        lastError = err
+      }
+    }
+    throw lastError
+  }
+
   async function worker(): Promise<void> {
     while (true) {
       const i = cursor++
@@ -70,9 +101,8 @@ export async function downloadBibleTranslation(
       checkCancel()
       const { bookNumber, chapter } = chapters[i]
       const url = joinUrl(baseUrl, chapterRelPath(translation.dataRoot, bookNumber, chapter))
-      const res = await fetchImpl(url)
+      const res = await fetchChapter(url)
       if (res.status !== 404) {
-        if (!res.ok) throw new Error(`Failed to download chapter (${res.status})`)
         const text = await res.text()
         await blobStore.writeText(tmpChapterRelPath(id, bookNumber, chapter), text)
         written++

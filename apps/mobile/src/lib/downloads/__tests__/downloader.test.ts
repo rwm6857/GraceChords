@@ -67,6 +67,8 @@ describe('downloadBibleTranslation', () => {
         fetchImpl: failOnSecond,
         chapters: CHAPTERS,
         concurrency: 1, // deterministic: ch1 writes, ch2 fails, ch3 never starts
+        retries: 0,
+        sleep: async () => {},
       })
     ).rejects.toThrow()
 
@@ -132,6 +134,8 @@ describe('downloadBibleTranslation', () => {
         fetchImpl: err500,
         chapters: CHAPTERS,
         concurrency: 1,
+        retries: 0,
+        sleep: async () => {},
       })
     ).rejects.toThrow()
   })
@@ -147,5 +151,78 @@ describe('downloadBibleTranslation', () => {
       })
     ).rejects.toBeInstanceOf(DownloadCancelledError)
     expect(blobStore.keys().length).toBe(0)
+  })
+
+  it('retries a transient failure and then succeeds', async () => {
+    const blobStore = createMemoryBlobStore()
+    let calls = 0
+    const flaky: FetchLike = async () => {
+      calls++
+      if (calls <= 2) throw new Error('transient blip')
+      return { ok: true, status: 200, text: async () => chapterJson(1, 1) }
+    }
+    let sleeps = 0
+    const rec = await downloadBibleTranslation(TEST_TRANSLATION, 'v1', BASE, {
+      blobStore,
+      fetchImpl: flaky,
+      chapters: [{ bookNumber: 1, chapter: 1 }],
+      sleep: async () => void sleeps++,
+    })
+    expect(rec.chapterCount).toBe(1)
+    expect(calls).toBe(3) // 1 initial + 2 retries
+    expect(sleeps).toBe(2)
+    expect(await blobStore.exists(chapterRelPath(TEST_TRANSLATION.dataRoot, 1, 1))).toBe(true)
+  })
+
+  it('gives up after the retry budget is exhausted', async () => {
+    let sleeps = 0
+    await expect(
+      downloadBibleTranslation(TEST_TRANSLATION, 'v1', BASE, {
+        blobStore: createMemoryBlobStore(),
+        fetchImpl: async () => {
+          throw new Error('server down')
+        },
+        chapters: [{ bookNumber: 1, chapter: 1 }],
+        retries: 2,
+        sleep: async () => void sleeps++,
+      })
+    ).rejects.toThrow('server down')
+    expect(sleeps).toBe(2) // retried twice before giving up
+  })
+
+  it('does not retry a 404 (missing chapter is skipped, not an error)', async () => {
+    let sleeps = 0
+    const with404: FetchLike = async (url) =>
+      url.endsWith('/2.json')
+        ? { ok: false, status: 404, text: async () => '' }
+        : { ok: true, status: 200, text: async () => chapterJson(1, 1) }
+    const rec = await downloadBibleTranslation(TEST_TRANSLATION, 'v1', BASE, {
+      blobStore: createMemoryBlobStore(),
+      fetchImpl: with404,
+      chapters: CHAPTERS,
+      sleep: async () => void sleeps++,
+    })
+    expect(rec.chapterCount).toBe(2)
+    expect(sleeps).toBe(0)
+  })
+
+  it('honors cancel during backoff', async () => {
+    const token = { aborted: false }
+    // The first attempt fails; the backoff sleep flips the cancel token so the
+    // next attempt aborts instead of retrying.
+    const sleep = async () => {
+      token.aborted = true
+    }
+    await expect(
+      downloadBibleTranslation(TEST_TRANSLATION, 'v1', BASE, {
+        blobStore: createMemoryBlobStore(),
+        fetchImpl: async () => {
+          throw new Error('transient blip')
+        },
+        chapters: [{ bookNumber: 1, chapter: 1 }],
+        signal: token,
+        sleep,
+      })
+    ).rejects.toBeInstanceOf(DownloadCancelledError)
   })
 })
