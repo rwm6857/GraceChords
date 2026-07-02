@@ -16,6 +16,7 @@
 import { renderSingleSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'
 import { rasterizePdfToPng } from '../../../src/utils/pdf_mvp/pngRaster.js'
+import { makeFontRegistrar } from '../../../src/utils/pdf_mvp/fontsR2.js'
 // Bundle the pdfium WASM at deploy time. Workers/Pages only allow
 // pre-compiled WebAssembly.Module instances, which is what wrangler's
 // bundler produces from a .wasm import.
@@ -122,7 +123,9 @@ export async function onRequest(context) {
   let pdf
   try {
     const renderable = toRenderableSong(found.song, key)
-    pdf = await renderSingleSongPdfBuffer(renderable, {})
+    // Register Noto from R2 so output matches the browser + Telegram bot; the
+    // registrar falls back to Helvetica/Courier if the R2 binding is absent.
+    pdf = await renderSingleSongPdfBuffer(renderable, { registerFonts: makeFontRegistrar(env) })
   } catch (err) {
     return jsonError(`Render failed: ${err?.message || err}`, 500)
   }
