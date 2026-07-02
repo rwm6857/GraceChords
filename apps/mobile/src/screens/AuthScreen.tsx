@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { useRouter } from 'expo-router'
 import { useTheme } from '../theme/ThemeProvider'
@@ -30,6 +31,7 @@ type Mode = 'signin' | 'signup'
 
 export default function AuthScreen() {
   const t = useTheme()
+  const insets = useSafeAreaInsets()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('signin')
   const [fullName, setFullName] = useState('')
@@ -99,7 +101,7 @@ export default function AuthScreen() {
           locations={t.colors.heroGradient.locations}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ alignItems: 'center', paddingTop: t.spacing.xxl, paddingBottom: t.spacing.xl }}
+          style={{ alignItems: 'center', paddingTop: insets.top + t.spacing.xxl, paddingBottom: t.spacing.xl }}
         >
           <View
             style={{

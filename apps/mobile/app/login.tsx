@@ -8,7 +8,7 @@ import AuthScreen from '../src/screens/AuthScreen'
 
 export default function Login() {
   return (
-    <Screen>
+    <Screen edges={['bottom', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
       <AuthScreen />
     </Screen>
