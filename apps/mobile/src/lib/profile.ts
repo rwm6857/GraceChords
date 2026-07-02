@@ -41,6 +41,23 @@ export async function saveSpritePreference(
   return { error: null }
 }
 
+// Read the saved sprite id back from public.users.preferences.sprite. Returns
+// null when unset, on error, or if RLS/absent row denies the read — callers
+// fall back to a default avatar.
+export async function fetchSpritePreference(
+  client: SupabaseClient,
+  userId: string,
+): Promise<string | null> {
+  const { data, error } = await client
+    .from('users')
+    .select('preferences')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error || !data) return null
+  const sprite = (data.preferences as Record<string, unknown> | null)?.sprite
+  return typeof sprite === 'string' ? sprite : null
+}
+
 export async function stashPendingSprite(storage: KVStorage, sprite: string): Promise<void> {
   await storage.setItem(PENDING_SPRITE_KEY, sprite)
 }

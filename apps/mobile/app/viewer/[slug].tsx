@@ -33,6 +33,7 @@ import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
+import { getDefaultsSnapshot } from '../../src/lib/defaults'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
@@ -77,7 +78,9 @@ export default function ViewerScreen() {
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
-  const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
+  // Chord style initializes from the app-wide default (read-on-open); in-viewer
+  // changes stay session-local — no write-back to the global default.
+  const [chordStyle, setChordStyle] = useState<ChordStyle>(() => getDefaultsSnapshot().chordStyle)
   const [accidental, setAccidental] = useState<Accidental>('sharp')
   // Seed the accidental from the key until the user flips it themselves.
   const accidentalTouched = useRef(false)

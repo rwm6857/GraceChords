@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider } from '../src/theme/ThemeProvider'
 import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
 import { flushPendingSprite } from '../src/lib/profile'
+import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
 
 // Keep the native splash up past first render so we can resolve the persisted
@@ -67,7 +68,10 @@ export default function RootLayout() {
   useEffect(() => registerAuthAutoRefresh(), [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    // Load app-wide defaults (theme/chord style) before the splash lifts so the
+    // resolved theme is applied on first paint — no light→dark flash. Runs in
+    // parallel with the session read; both must resolve before `ready`.
+    Promise.all([supabase.auth.getSession(), hydrateDefaults(AsyncStorage)]).then(([{ data }]) => {
       setSession(data.session)
       setReady(true)
     })
@@ -104,6 +108,9 @@ export default function RootLayout() {
             <Stack.Screen name="viewer/[slug]" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="about" />
+            <Stack.Screen name="offline" />
           </Stack>
         </SafeAreaProvider>
       </ThemeProvider>

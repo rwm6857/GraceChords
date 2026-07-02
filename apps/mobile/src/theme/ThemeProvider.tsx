@@ -1,17 +1,21 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useColorScheme } from 'react-native'
 import { getTokens, lightTokens, type Tokens } from '@gracechords/tokens/native'
+import { resolveThemeMode, useAppDefaults } from '../lib/defaults'
 
-// The app follows the system appearance (app.json userInterfaceStyle:
-// "automatic"). ThemeProvider resolves the current scheme to the canonical
-// token set from @gracechords/tokens and hands it down; components read it with
-// useTheme(). Dark is the primary mode for stage use, but both are correct.
+// ThemeProvider is the single source of truth for the app's color scheme. It
+// resolves the user's theme preference (Settings → Appearance, stored in the
+// defaults store) against the OS scheme: 'system' follows the device (the
+// original app.json userInterfaceStyle: "automatic" behavior), while
+// 'light'/'dark' force a mode. Changing the setting re-renders the whole app
+// immediately. Components read the resolved tokens with useTheme().
 
 const ThemeContext = createContext<Tokens>(lightTokens)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme()
-  const tokens = useMemo(() => getTokens(scheme === 'dark' ? 'dark' : 'light'), [scheme])
+  const { theme } = useAppDefaults()
+  const tokens = useMemo(() => getTokens(resolveThemeMode(theme, scheme)), [theme, scheme])
   return <ThemeContext.Provider value={tokens}>{children}</ThemeContext.Provider>
 }
 
