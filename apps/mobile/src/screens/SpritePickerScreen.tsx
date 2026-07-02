@@ -7,7 +7,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
 import { SPRITE_IDS, SPRITE_SOURCES, type SpriteId } from '../lib/sprites'
 import { saveSpritePreference, stashPendingSprite } from '../lib/profile'
-import { useProfileSprite } from '../lib/useProfileSprite'
+import { setLocalSprite, useProfileSprite } from '../lib/useProfileSprite'
 
 // Avatar picker. Two modes:
 //  - onboarding (default): post-signup "Choose your icon" step. The pick is
@@ -44,6 +44,7 @@ export default function SpritePickerScreen() {
       if (sprite) {
         const { error } = await saveSpritePreference(supabase, data.session.user.id, sprite)
         if (error) await stashPendingSprite(AsyncStorage, sprite)
+        else setLocalSprite(sprite) // reflect the new avatar everywhere at once
       }
       // Edit came from Settings — return there; onboarding enters the app.
       if (isEdit) router.back()
