@@ -45,6 +45,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { prefetchSong, useSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
+import { getDefaultsSnapshot } from '../lib/defaults'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import {
@@ -107,7 +108,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
-  const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
+  // Chord style initializes from the app-wide default (read-on-open); in-session
+  // changes stay local — no write-back to the global default.
+  const [chordStyle, setChordStyle] = useState<ChordStyle>(() => getDefaultsSnapshot().chordStyle)
   const [accidental, setAccidental] = useState<Accidental>('sharp')
   // Seed from each song's key until the user flips it.
   const accidentalTouched = useRef(false)

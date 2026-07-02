@@ -1,6 +1,6 @@
 import {
   ActivityIndicator,
-  Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,13 +15,13 @@ import ListRow from '../components/ListRow'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@gracechords/tokens/native'
-import { supabase } from '../lib/supabase'
 import {
   getDisplayName,
   pickSubGreeting,
   timeGreeting,
   useCurrentUser,
 } from '../lib/greetings'
+import { useProfileSprite } from '../lib/useProfileSprite'
 import { getRecentlyOpened } from '../lib/recents'
 import { useLastSet } from '../lib/useLastSet'
 import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
@@ -60,6 +60,7 @@ export default function HomeScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useCurrentUser()
+  const { source: spriteSource } = useProfileSprite()
   const { songs: starred, loading: starredLoading, error: starredError } = useStarredSongs()
 
   const greeting = `${timeGreeting()}, ${getDisplayName(user)}`
@@ -71,12 +72,7 @@ export default function HomeScreen() {
   const { lastSet } = useLastSet()
 
   function onAvatar() {
-    // The avatar opens Profile/Settings in a later stage; for now it exposes the
-    // existing sign-out affordance.
-    Alert.alert('Account', undefined, [
-      { text: 'Sign out', style: 'destructive', onPress: () => supabase.auth.signOut() },
-      { text: 'Cancel', style: 'cancel' },
-    ])
+    router.push('/settings')
   }
 
   function openSong(s: { slug: string; title: string; artist: string | null; default_key: string | null }) {
@@ -162,9 +158,14 @@ export default function HomeScreen() {
                     borderColor: t.colors.border,
                     alignItems: 'center',
                     justifyContent: 'center',
+                    overflow: 'hidden',
                   }}
                 >
-                  <SymbolIcon name="person" size={20} color={t.colors.accent} />
+                  {spriteSource ? (
+                    <Image source={spriteSource} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                  ) : (
+                    <SymbolIcon name="person" size={20} color={t.colors.accent} />
+                  )}
                 </View>
               </Pressable>
             </View>
