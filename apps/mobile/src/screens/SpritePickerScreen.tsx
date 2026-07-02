@@ -1,25 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme } from '../theme/ThemeProvider'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
 import { SPRITE_IDS, SPRITE_SOURCES, type SpriteId } from '../lib/sprites'
 import { saveSpritePreference, stashPendingSprite } from '../lib/profile'
+import { useProfileSprite } from '../lib/useProfileSprite'
 
-// Post-signup avatar picker ("Choose your icon"). The pick is written to
-// users.preferences.sprite (shared with the web Profile page). With email
-// confirmation pending there is no session yet, so the pick is stashed in
-// AsyncStorage and flushed by the root layout on the first SIGNED_IN event.
-// The step is optional — never block entry to the app on a preference write.
+// Avatar picker. Two modes:
+//  - onboarding (default): post-signup "Choose your icon" step. The pick is
+//    written to users.preferences.sprite; with email confirmation pending there
+//    is no session yet, so the pick is stashed in AsyncStorage and flushed by
+//    the root layout on the first SIGNED_IN event. The step is optional.
+//  - edit (mode=edit, from Settings → Profile for an existing account):
+//    "Change your icon", preselects the current sprite, Save-and-return, no skip.
 
 export default function SpritePickerScreen() {
   const t = useTheme()
   const router = useRouter()
+  const { mode } = useLocalSearchParams<{ mode?: string }>()
+  const isEdit = mode === 'edit'
   const { width } = useWindowDimensions()
+  const { spriteId: currentSprite } = useProfileSprite()
   const [selected, setSelected] = useState<SpriteId | null>(null)
+  const [touched, setTouched] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  // In edit mode, preselect the account's current sprite until the user taps a
+  // different tile — so the grid shows what's set and Save is meaningful.
+  useEffect(() => {
+    if (isEdit && !touched && currentSprite) setSelected(currentSprite)
+  }, [isEdit, touched, currentSprite])
 
   const gridGap = t.spacing.lg
   const tileSize = (width - t.spacing.lg * 2 - gridGap * 2) / 3
@@ -32,7 +45,9 @@ export default function SpritePickerScreen() {
         const { error } = await saveSpritePreference(supabase, data.session.user.id, sprite)
         if (error) await stashPendingSprite(AsyncStorage, sprite)
       }
-      router.replace('/')
+      // Edit came from Settings — return there; onboarding enters the app.
+      if (isEdit) router.back()
+      else router.replace('/')
     } else {
       if (sprite) await stashPendingSprite(AsyncStorage, sprite)
       Alert.alert('Check your email', 'Confirm your account, then sign in.')
@@ -74,11 +89,13 @@ export default function SpritePickerScreen() {
             marginTop: t.spacing.md,
           }}
         >
-          Choose your icon
+          {isEdit ? 'Change your icon' : 'Choose your icon'}
         </Text>
-        <Text style={{ fontSize: 15, color: t.colors.sec, marginTop: t.spacing.xs }}>
-          You can change this later
-        </Text>
+        {isEdit ? null : (
+          <Text style={{ fontSize: 15, color: t.colors.sec, marginTop: t.spacing.xs }}>
+            You can change this later
+          </Text>
+        )}
 
         <View
           style={{
@@ -93,7 +110,10 @@ export default function SpritePickerScreen() {
             return (
               <Pressable
                 key={id}
-                onPress={() => setSelected(id)}
+                onPress={() => {
+                  setSelected(id)
+                  setTouched(true)
+                }}
                 accessibilityRole="button"
                 accessibilityLabel={id}
                 accessibilityState={{ selected: isSelected }}
@@ -156,21 +176,25 @@ export default function SpritePickerScreen() {
           })}
         >
           <Text style={{ fontSize: 16.5, fontWeight: '700', color: t.colors.onAccent }}>
-            Continue
+            {isEdit ? 'Save' : 'Continue'}
           </Text>
-          <SymbolIcon name="chevron.right" size={13} color={t.colors.onAccent} weight="semibold" />
+          {isEdit ? null : (
+            <SymbolIcon name="chevron.right" size={13} color={t.colors.onAccent} weight="semibold" />
+          )}
         </Pressable>
-        <Pressable
-          onPress={() => finish(null)}
-          disabled={busy}
-          accessibilityRole="button"
-          hitSlop={4}
-          style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.muted }}>
-            Skip for now
-          </Text>
-        </Pressable>
+        {isEdit ? null : (
+          <Pressable
+            onPress={() => finish(null)}
+            disabled={busy}
+            accessibilityRole="button"
+            hitSlop={4}
+            style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.muted }}>
+              Skip for now
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   )
