@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider } from '../src/theme/ThemeProvider'
 import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
 import { flushPendingSprite } from '../src/lib/profile'
+import { prefetchToday } from '../src/lib/bibleSource'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -81,6 +82,13 @@ export default function RootLayout() {
     })
     return () => sub.subscription.unsubscribe()
   }, [])
+
+  // Warm today's Daily Word passages on open so the reader is instant even if
+  // it isn't visited. Best-effort; clears + repulls on the first open of a new
+  // day. Other dates load on demand via the date picker.
+  useEffect(() => {
+    if (session) prefetchToday()
+  }, [session])
 
   useProtectedRoute(session, ready)
 

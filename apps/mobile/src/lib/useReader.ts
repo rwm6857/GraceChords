@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getPassage, type BibleTranslation, type ChapterData, type Passage } from './bibleSource'
+import { getCachedPassage, getPassage, type BibleTranslation, type ChapterData, type Passage } from './bibleSource'
 import { errMessage } from './errors'
 
 // Session-ephemeral reader typography preferences. Per the Daily Word spec these
@@ -65,17 +65,27 @@ export function usePassageChapter(
       setState({ chapter: null, loading: false, error: null })
       return
     }
-    const controller = new AbortController()
+    // Prefetched / previously-read chapters render immediately, no spinner.
+    const cached = getCachedPassage(translation.id, passage.bookNumber, passage.chapter)
+    if (cached) {
+      setState({ chapter: cached, loading: false, error: null })
+      return
+    }
+
+    let alive = true
     setState({ chapter: null, loading: true, error: null })
 
-    getPassage({ passage, translation, signal: controller.signal })
-      .then((chapter) => setState({ chapter, loading: false, error: null }))
+    getPassage({ passage, translation })
+      .then((chapter) => {
+        if (alive) setState({ chapter, loading: false, error: null })
+      })
       .catch((err: unknown) => {
-        if (err instanceof Error && err.name === 'AbortError') return
-        setState({ chapter: null, loading: false, error: errMessage(err) })
+        if (alive) setState({ chapter: null, loading: false, error: errMessage(err) })
       })
 
-    return () => controller.abort()
+    return () => {
+      alive = false
+    }
   }, [passage, translation, reloadToken])
 
   return state

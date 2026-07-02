@@ -14,9 +14,9 @@ import {
   isRtlBibleLanguage,
   resolveBibleTranslationSelection,
   sortedVerses,
-  toggleSelection,
   buildCopyText,
   isVerseInRange,
+  passageId,
   type BibleTranslation,
   type Passage,
 } from '@gracechords/core'
@@ -29,6 +29,7 @@ import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
+import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
   defaultReaderSettings,
   readerFontSize,
@@ -38,6 +39,9 @@ import {
 } from '../lib/useReader'
 
 type Sheet = 'none' | 'translations' | 'settings' | 'date'
+
+// Stable empty set for passages with no selection (never mutated).
+const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
 
 function formatDateLabel(d: Date) {
   const now = new Date()
@@ -61,7 +65,10 @@ export default function DailyWordScreen() {
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectedId, setSelectedId] = useState('')
-  const [selection, setSelection] = useState<Set<number>>(() => new Set())
+  // Highlights persist per passage (keyed by passageId), stored to disk and
+  // day-scoped, so switching chapters, copying, or a cold restart never clears
+  // them — but a new day starts clean.
+  const { selections: selectionsByPassage, toggleVerse } = useDailyHighlights()
   const [settings, setSettings] = useState<ReaderSettings>(defaultReaderSettings)
   const [sheet, setSheet] = useState<Sheet>('none')
   const [reloadToken, setReloadToken] = useState(0)
@@ -83,6 +90,9 @@ export default function DailyWordScreen() {
 
   const { chapter, loading, error } = usePassageChapter(currentPassage, selectedTranslation, reloadToken)
 
+  const passageKey = currentPassage ? passageId(currentPassage) : ''
+  const selection = (passageKey ? selectionsByPassage[passageKey] : undefined) || EMPTY_SELECTION
+
   const versesInScope = useMemo(() => {
     if (!chapter || !currentPassage) return []
     return Object.keys(chapter.verses)
@@ -93,20 +103,24 @@ export default function DailyWordScreen() {
       .map((n) => ({ num: n, text: chapter.verses[String(n)] }))
   }, [chapter, currentPassage])
 
-  // A new day starts on its first passage with nothing selected.
+  // A new day starts on its first passage. Highlights are keyed by passage, so
+  // they survive date/chapter switches without being cleared here.
   useEffect(() => {
     setPassageIndex(0)
-    setSelection(new Set())
-    fade.setValue(1)
-  }, [date, fade])
+  }, [date])
+
+  // Fade the reading region in whenever new chapter content arrives (chapter
+  // switch, translation switch, or first load). The Animated.View is persistent
+  // (wraps every state), so the animation never targets an unmounted node.
+  useEffect(() => {
+    if (!chapter) return
+    fade.setValue(0)
+    Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: true }).start()
+  }, [chapter, fade])
 
   function changePassage(next: number) {
     if (next < 0 || next >= passages.length || next === passageIndex) return
-    Animated.timing(fade, { toValue: 0, duration: 130, useNativeDriver: true }).start(() => {
-      setPassageIndex(next)
-      setSelection(new Set())
-      Animated.timing(fade, { toValue: 1, duration: 130, useNativeDriver: true }).start()
-    })
+    setPassageIndex(next)
   }
 
   const pan = useRef(
@@ -128,13 +142,14 @@ export default function DailyWordScreen() {
   const changePassageRef = useRef(changePassage)
   changePassageRef.current = changePassage
 
+  // Copy only the current chapter's selected verses; leave the highlights in
+  // place so they persist through the day.
   async function onCopy() {
     if (!chapter || !currentPassage || selection.size === 0) return
     const text = buildCopyText(currentPassage, sortedVerses(selection), chapter.verses, translationLabel)
     if (!text) return
     await Clipboard.setStringAsync(text)
     Haptics.selectionAsync().catch(() => {})
-    setSelection(new Set())
   }
 
   const fontSize = readerFontSize(settings.pt)
@@ -151,7 +166,7 @@ export default function DailyWordScreen() {
   }
 
   function toggle(num: number) {
-    setSelection((prev) => toggleSelection(prev, num))
+    toggleVerse(passageKey, num)
   }
 
   const controlButton = {
@@ -259,8 +274,9 @@ export default function DailyWordScreen() {
         </ScrollView>
       </View>
 
-      {/* Reading area */}
-      <View style={{ flex: 1 }} {...pan.panHandlers}>
+      {/* Reading area — one persistent Animated.View wraps every state so the
+          fade never targets an unmounted node. */}
+      <Animated.View style={{ flex: 1, opacity: fade }} {...pan.panHandlers}>
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={t.colors.accent} />
@@ -268,22 +284,21 @@ export default function DailyWordScreen() {
         ) : error ? (
           <EmptyState
             icon="wifi.slash"
-            title="Can't load this passage"
-            subtitle="You're offline, or this translation isn't downloaded yet. Connect to read it."
-            actionLabel="Try again"
+            title="Can't load today's reading"
+            subtitle="Connect to the internet and try again. Downloaded translations will read offline in a later update."
+            actionLabel="Retry"
             onAction={() => setReloadToken((n) => n + 1)}
           />
         ) : versesInScope.length === 0 ? (
           <EmptyState icon="book.closed" title="No reading for this day" subtitle="Pick another date to keep reading." />
         ) : (
-          <Animated.View style={{ flex: 1, opacity: fade }}>
-            <ScrollView
-              contentContainerStyle={{
-                paddingHorizontal: t.spacing.xl,
-                paddingTop: t.spacing.xs,
-                paddingBottom: t.spacing.xxl,
-              }}
-            >
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: t.spacing.xl,
+              paddingTop: t.spacing.xs,
+              paddingBottom: t.spacing.xxl,
+            }}
+          >
               {settings.layout === 'prose' ? (
                 <Text style={readingBase}>
                   {versesInScope.map(({ num, text }) => {
@@ -338,8 +353,7 @@ export default function DailyWordScreen() {
                   )
                 })
               )}
-            </ScrollView>
-          </Animated.View>
+          </ScrollView>
         )}
 
         {/* Copy FAB — appears while a selection exists (no count badge). */}
@@ -368,7 +382,7 @@ export default function DailyWordScreen() {
             <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
           </Pressable>
         ) : null}
-      </View>
+      </Animated.View>
 
       <TranslationPickerSheet
         visible={sheet === 'translations'}
@@ -377,7 +391,6 @@ export default function DailyWordScreen() {
         selectedId={effectiveId}
         onSelect={(item) => {
           setSelectedId(item.id)
-          setSelection(new Set())
           setSheet('none')
         }}
       />

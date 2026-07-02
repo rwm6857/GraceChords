@@ -42,11 +42,20 @@ export function buildCopyText(
   verseMap: Record<string, string>,
   translationLabel = 'ESV'
 ){
-  if (!verses.length) return ''
-  const ordered = verses.filter((v) => verseMap[String(v)] != null)
-  const lines = ordered.map((v) => `"${verseMap[String(v)]}"`)
-  const reference = formatReference(passage, verses)
-  return [...lines, '', `${reference} (${translationLabel}).`].join('\n')
+  const present = verses.filter((v) => verseMap[String(v)] != null).sort((a, b) => a - b)
+  if (!present.length) return ''
+  // Each contiguous run of verses becomes one quoted, prose-joined block; gaps
+  // start a new block. The reference lists all runs, e.g. "Isaiah 64:1-2, 5, 7-8".
+  const blocks = compressRuns(present).map(({ start, end }) => {
+    const texts: string[] = []
+    for (let v = start; v <= end; v++) {
+      const text = verseMap[String(v)]
+      if (text != null) texts.push(text)
+    }
+    return `"${texts.join(' ')}"`
+  })
+  const reference = formatReference(passage, present)
+  return [...blocks, '', `${reference} (${translationLabel})`].join('\n')
 }
 
 function compressRuns(verses: number[]){
