@@ -1,0 +1,401 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Animated,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native'
+import * as Clipboard from 'expo-clipboard'
+import * as Haptics from 'expo-haptics'
+import {
+  isRtlBibleLanguage,
+  resolveBibleTranslationSelection,
+  sortedVerses,
+  toggleSelection,
+  buildCopyText,
+  isVerseInRange,
+  type BibleTranslation,
+  type Passage,
+} from '@gracechords/core'
+import Screen from '../components/Screen'
+import SymbolIcon from '../components/SymbolIcon'
+import EmptyState from '../components/EmptyState'
+import ReaderSettingsSheet from '../components/reader/ReaderSettingsSheet'
+import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
+import DatePickerSheet from '../components/reader/DatePickerSheet'
+import { useTheme } from '../theme/ThemeProvider'
+import { expandReadings, getPlanForDate } from '../lib/bibleSource'
+import { useBibleTranslations } from '../lib/useBibleTranslations'
+import {
+  defaultReaderSettings,
+  readerFontSize,
+  readerLineHeight,
+  usePassageChapter,
+  type ReaderSettings,
+} from '../lib/useReader'
+
+type Sheet = 'none' | 'translations' | 'settings' | 'date'
+
+function formatDateLabel(d: Date) {
+  const now = new Date()
+  const base = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+  return d.getFullYear() === now.getFullYear() ? base : `${base}, ${d.getFullYear()}`
+}
+
+function chipLabel(passage: Passage) {
+  const head = `${passage.book} ${passage.chapter}`
+  if (!passage.range) return head
+  const { start, end } = passage.range
+  if (end === null) return `${head}:${start}-`
+  if (start === end) return `${head}:${start}`
+  return `${head}:${start}-${end}`
+}
+
+export default function DailyWordScreen() {
+  const t = useTheme()
+  const { translations, groups, defaultTranslationId } = useBibleTranslations()
+
+  const [date, setDate] = useState(() => new Date())
+  const [passageIndex, setPassageIndex] = useState(0)
+  const [selectedId, setSelectedId] = useState('')
+  const [selection, setSelection] = useState<Set<number>>(() => new Set())
+  const [settings, setSettings] = useState<ReaderSettings>(defaultReaderSettings)
+  const [sheet, setSheet] = useState<Sheet>('none')
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const fade = useRef(new Animated.Value(1)).current
+
+  const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
+  const currentPassage: Passage | null = passages[passageIndex] || passages[0] || null
+
+  // Resolve a valid translation even before the user picks one.
+  const effectiveId = useMemo(
+    () => resolveBibleTranslationSelection(selectedId, translations, defaultTranslationId),
+    [selectedId, translations, defaultTranslationId]
+  )
+  const selectedTranslation: BibleTranslation | null =
+    translations.find((x) => x.id === effectiveId) || translations[0] || null
+  const translationLabel = selectedTranslation?.label || 'ESV'
+  const rtl = isRtlBibleLanguage(selectedTranslation?.language)
+
+  const { chapter, loading, error } = usePassageChapter(currentPassage, selectedTranslation, reloadToken)
+
+  const versesInScope = useMemo(() => {
+    if (!chapter || !currentPassage) return []
+    return Object.keys(chapter.verses)
+      .map((n) => Number(n))
+      .filter((n) => !Number.isNaN(n))
+      .sort((a, b) => a - b)
+      .filter((n) => isVerseInRange(n, currentPassage))
+      .map((n) => ({ num: n, text: chapter.verses[String(n)] }))
+  }, [chapter, currentPassage])
+
+  // A new day starts on its first passage with nothing selected.
+  useEffect(() => {
+    setPassageIndex(0)
+    setSelection(new Set())
+    fade.setValue(1)
+  }, [date, fade])
+
+  function changePassage(next: number) {
+    if (next < 0 || next >= passages.length || next === passageIndex) return
+    Animated.timing(fade, { toValue: 0, duration: 130, useNativeDriver: true }).start(() => {
+      setPassageIndex(next)
+      setSelection(new Set())
+      Animated.timing(fade, { toValue: 1, duration: 130, useNativeDriver: true }).start()
+    })
+  }
+
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
+      onPanResponderRelease: (_e, g) => {
+        if (Math.abs(g.dx) < 50) return
+        const forward = g.dx < 0 ? 1 : -1
+        const dir = rtlRef.current ? -forward : forward
+        changePassageRef.current(indexRef.current + dir)
+      },
+    })
+  ).current
+  // Keep the PanResponder (created once) reading current values.
+  const rtlRef = useRef(rtl)
+  rtlRef.current = rtl
+  const indexRef = useRef(passageIndex)
+  indexRef.current = passageIndex
+  const changePassageRef = useRef(changePassage)
+  changePassageRef.current = changePassage
+
+  async function onCopy() {
+    if (!chapter || !currentPassage || selection.size === 0) return
+    const text = buildCopyText(currentPassage, sortedVerses(selection), chapter.verses, translationLabel)
+    if (!text) return
+    await Clipboard.setStringAsync(text)
+    Haptics.selectionAsync().catch(() => {})
+    setSelection(new Set())
+  }
+
+  const fontSize = readerFontSize(settings.pt)
+  const lineHeight = readerLineHeight(settings.pt, settings.lineSpacing)
+  const fontFamily = settings.typeface === 'serif' ? 'Georgia' : undefined
+  const numStyle = { fontSize: Math.round(fontSize * 0.72), fontWeight: '700' as const, color: t.colors.accent }
+  const readingBase = {
+    fontSize,
+    lineHeight,
+    fontFamily,
+    color: t.colors.ink,
+    textAlign: (rtl ? 'right' : 'left') as 'right' | 'left',
+    writingDirection: (rtl ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
+  }
+
+  function toggle(num: number) {
+    setSelection((prev) => toggleSelection(prev, num))
+  }
+
+  const controlButton = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: t.colors.surfaceAlt,
+    borderRadius: t.radii.sm,
+    paddingVertical: 8,
+    paddingHorizontal: 11,
+  }
+
+  return (
+    <Screen edges={['top', 'left', 'right']}>
+      {/* Control bar: translation · date · Aa */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: t.spacing.sm,
+          paddingHorizontal: t.spacing.lg,
+          paddingBottom: t.spacing.sm,
+        }}
+      >
+        <View style={{ flex: 1, alignItems: 'flex-start' }}>
+          <Pressable
+            onPress={() => setSheet('translations')}
+            accessibilityRole="button"
+            accessibilityLabel="Choose translation"
+            style={controlButton}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
+              {translationLabel}
+            </Text>
+            <SymbolIcon name="chevron.down" size={11} color={t.colors.muted} weight="semibold" />
+          </Pressable>
+        </View>
+
+        <Pressable
+          onPress={() => setSheet('date')}
+          accessibilityRole="button"
+          accessibilityLabel="Choose date"
+          style={controlButton}
+        >
+          <SymbolIcon name="calendar" size={15} color={t.colors.muted} />
+          <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
+            {formatDateLabel(date)}
+          </Text>
+        </Pressable>
+
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <Pressable
+            onPress={() => setSheet('settings')}
+            accessibilityRole="button"
+            accessibilityLabel="Reader settings"
+            style={[controlButton, { paddingHorizontal: 12 }]}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.accent }}>A</Text>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: t.colors.accent, marginLeft: -3 }}>a</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Chapter chips */}
+      <View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            gap: t.spacing.sm,
+            paddingHorizontal: t.spacing.lg,
+            paddingBottom: t.spacing.md,
+          }}
+        >
+          {passages.map((p, i) => {
+            const active = i === passageIndex
+            return (
+              <Pressable
+                key={`${p.bookNumber}-${p.chapter}-${i}`}
+                onPress={() => changePassage(i)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                style={{
+                  paddingVertical: 7,
+                  paddingHorizontal: 14,
+                  borderRadius: t.radii.pill,
+                  backgroundColor: active ? t.colors.accentSoft : t.colors.surfaceAlt,
+                  borderWidth: 1,
+                  borderColor: active ? t.colors.accent : 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    letterSpacing: -0.2,
+                    color: active ? t.colors.textAccent : t.colors.sec,
+                  }}
+                >
+                  {chipLabel(p)}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Reading area */}
+      <View style={{ flex: 1 }} {...pan.panHandlers}>
+        {loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={t.colors.accent} />
+          </View>
+        ) : error ? (
+          <EmptyState
+            icon="wifi.slash"
+            title="Can't load this passage"
+            subtitle="You're offline, or this translation isn't downloaded yet. Connect to read it."
+            actionLabel="Try again"
+            onAction={() => setReloadToken((n) => n + 1)}
+          />
+        ) : versesInScope.length === 0 ? (
+          <EmptyState icon="book.closed" title="No reading for this day" subtitle="Pick another date to keep reading." />
+        ) : (
+          <Animated.View style={{ flex: 1, opacity: fade }}>
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: t.spacing.xl,
+                paddingTop: t.spacing.xs,
+                paddingBottom: t.spacing.xxl,
+              }}
+            >
+              {settings.layout === 'prose' ? (
+                <Text style={readingBase}>
+                  {versesInScope.map(({ num, text }) => {
+                    const isSel = selection.has(num)
+                    return (
+                      <Text
+                        key={num}
+                        onPress={() => toggle(num)}
+                        style={{ backgroundColor: isSel ? t.colors.accentSoft : 'transparent' }}
+                      >
+                        <Text style={numStyle}>{num} </Text>
+                        <Text
+                          style={{
+                            textDecorationLine: isSel ? 'underline' : 'none',
+                            textDecorationColor: t.colors.accent,
+                          }}
+                        >
+                          {text}{' '}
+                        </Text>
+                      </Text>
+                    )
+                  })}
+                </Text>
+              ) : (
+                versesInScope.map(({ num, text }) => {
+                  const isSel = selection.has(num)
+                  return (
+                    <Pressable
+                      key={num}
+                      onPress={() => toggle(num)}
+                      style={{
+                        paddingVertical: 3,
+                        paddingHorizontal: 10,
+                        marginHorizontal: -10,
+                        marginBottom: 2,
+                        borderRadius: 8,
+                        backgroundColor: isSel ? t.colors.accentSoft : 'transparent',
+                      }}
+                    >
+                      <Text style={readingBase}>
+                        <Text style={numStyle}>{num} </Text>
+                        <Text
+                          style={{
+                            textDecorationLine: isSel ? 'underline' : 'none',
+                            textDecorationColor: t.colors.accent,
+                          }}
+                        >
+                          {text}
+                        </Text>
+                      </Text>
+                    </Pressable>
+                  )
+                })
+              )}
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        {/* Copy FAB — appears while a selection exists (no count badge). */}
+        {selection.size > 0 ? (
+          <Pressable
+            onPress={onCopy}
+            accessibilityRole="button"
+            accessibilityLabel={`Copy ${selection.size} verse${selection.size === 1 ? '' : 's'}`}
+            style={{
+              position: 'absolute',
+              bottom: t.spacing.xl,
+              [rtl ? 'left' : 'right']: t.spacing.lg,
+              width: 56,
+              height: 56,
+              borderRadius: t.radii.pill,
+              backgroundColor: t.colors.accent,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: t.colors.accent,
+              shadowOpacity: 0.45,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+            }}
+          >
+            <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      <TranslationPickerSheet
+        visible={sheet === 'translations'}
+        onClose={() => setSheet('none')}
+        groups={groups}
+        selectedId={effectiveId}
+        onSelect={(item) => {
+          setSelectedId(item.id)
+          setSelection(new Set())
+          setSheet('none')
+        }}
+      />
+      <ReaderSettingsSheet
+        visible={sheet === 'settings'}
+        onClose={() => setSheet('none')}
+        settings={settings}
+        onChange={setSettings}
+      />
+      <DatePickerSheet
+        visible={sheet === 'date'}
+        onClose={() => setSheet('none')}
+        value={date}
+        onSelect={(next) => {
+          setDate(next)
+          setSheet('none')
+        }}
+      />
+    </Screen>
+  )
+}

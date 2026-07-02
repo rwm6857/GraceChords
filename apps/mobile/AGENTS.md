@@ -127,12 +127,25 @@ duplicate logic here and never edit core internals to suit mobile.
   empty and will be backed by an on-device history of opened songs — the Viewer
   should record opens when that layer ships; consume the stub, don't mock data.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
+- **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
+  Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
+  RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),
+  base-URL injected. `src/lib/bibleSource.ts` is the **single source seam**
+  (`getPassage`/`getTranslations`) that reads R2 now via `EXPO_PUBLIC_R2_PUBLIC_URL`
+  (default `https://assets.gracechords.com`); a local offline-download source is
+  meant to slot in behind it later (branch stubbed, not wired). Hooks:
+  `useBibleTranslations`, `usePassageChapter` (`src/lib/useReader.ts`). Reader
+  settings (size/typeface/layout/spacing) are **session-ephemeral** — not tied to
+  Settings, so they reset on relaunch. **Follow-up:** `apps/web`'s
+  `features/readings` + `utils/bible` still hold their own copy of this logic;
+  migrate web onto core's `bible` module to remove the duplication.
 
 ## Out of scope (for now)
 
 The whole-set Charts ZIP / ChordPro export backends (whole-set PDF ships via
-`/api/export/setlist`), the Daily Word/Reader screen
-(placeholder today), the on-device history layer + star writes,
+`/api/export/setlist`), the Daily Word **landing page** and **offline
+translation download / file management** (the Reader itself ships; downloads are
+a later stage), the on-device history layer + star writes,
 the full Auth screen redesign / Google OAuth (see the `TODO: OAuth` in
 `src/screens/LoginScreen.tsx`), tablet master-detail, EAS Build / TestFlight,
 Android, GraceTracks.
