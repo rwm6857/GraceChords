@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -42,7 +42,7 @@ import PerformerShareSheet, {
 } from '../components/setlist/PerformerShareSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
-import { useSong } from '../lib/useSong'
+import { prefetchSong, useSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
@@ -92,6 +92,12 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     () => items.map((it) => computeEffectiveKey(it, it.song)),
     [items],
   )
+
+  // Prefetch every song's chart body in the background so Prev/Next/rail jumps
+  // render instantly (the current song is fetched on demand by useSong below).
+  useEffect(() => {
+    for (const it of items) prefetchSong(it.song.slug)
+  }, [items])
 
   // Transpose — ephemeral, reset on song change. nativeKey comes from the
   // entry's own catalog metadata (always current, unlike the loading `song`).

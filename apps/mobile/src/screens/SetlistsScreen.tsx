@@ -9,6 +9,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { timeAgo } from '../lib/relativeTime'
+import { uuidv4 } from '../lib/uuid'
 import { errMessage } from '../lib/errors'
 
 // The Setlists tab: every personal setlist (newest-edited first), a New set
@@ -37,9 +38,13 @@ export default function SetlistsScreen() {
   async function onCreate() {
     if (creating) return
     setCreating(true)
+    // Optimistic: mint the id, open the builder instantly, insert in the
+    // background. The builder retries its initial fetch a few times to cover
+    // the in-flight INSERT.
+    const id = uuidv4()
+    router.push(`/setlist/${id}`)
     try {
-      const row = await create()
-      router.push(`/setlist/${row.id}`)
+      await create({ id })
     } catch (err: unknown) {
       Alert.alert('Could not create set', errMessage(err))
     } finally {

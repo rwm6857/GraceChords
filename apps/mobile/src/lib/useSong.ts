@@ -16,12 +16,34 @@ export type SongDetail = {
   chordpro_content: string | null
 }
 
-// Fetch one song by slug via the shared core query layer. Mirrors the simple
-// loading/error/data pattern of useSongList (no React Query). A missing row
+// Process-lifetime cache of fetched song bodies, keyed by slug. Lets the
+// performer prefetch the whole set so page turns are instant. Cleared only on
+// reload — song bodies are effectively immutable within a session.
+const songCache = new Map<string, SongDetail | null>()
+
+// Fetch (and cache) one song by slug. Safe to call ahead of need; concurrent
+// prefetches for the same slug dedupe on the in-flight promise.
+const inFlight = new Map<string, Promise<SongDetail | null>>()
+export function prefetchSong(slug: string | undefined): void {
+  if (!slug || songCache.has(slug) || inFlight.has(slug)) return
+  const p = fetchSongBySlug(supabase, slug)
+    .then((row: unknown) => {
+      const detail = (row as SongDetail | null) ?? null
+      songCache.set(slug, detail)
+      return detail
+    })
+    .catch(() => null)
+    .finally(() => inFlight.delete(slug))
+  inFlight.set(slug, p)
+}
+
+// Fetch one song by slug via the shared core query layer. Cache-first: a
+// prefetched (or previously viewed) song renders instantly. A missing row
 // resolves to song === null with no error — the screen treats that as not found.
 export function useSong(slug: string | undefined) {
-  const [song, setSong] = useState<SongDetail | null>(null)
-  const [loading, setLoading] = useState(true)
+  const cached = slug ? songCache.get(slug) : undefined
+  const [song, setSong] = useState<SongDetail | null>(cached ?? null)
+  const [loading, setLoading] = useState(cached === undefined)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -29,12 +51,21 @@ export function useSong(slug: string | undefined) {
       setLoading(false)
       return
     }
+    // Cache hit → render immediately, no fetch.
+    if (songCache.has(slug)) {
+      setSong(songCache.get(slug) ?? null)
+      setError(null)
+      setLoading(false)
+      return
+    }
     let alive = true
     setLoading(true)
     fetchSongBySlug(supabase, slug)
       .then((row: unknown) => {
+        const detail = (row as SongDetail | null) ?? null
+        songCache.set(slug, detail)
         if (alive) {
-          setSong(row as SongDetail | null)
+          setSong(detail)
           setError(null)
         }
       })

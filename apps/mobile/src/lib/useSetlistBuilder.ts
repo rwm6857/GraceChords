@@ -9,6 +9,14 @@ import { supabase } from './supabase'
 import { errMessage } from './errors'
 import { useSongList, type Song } from './useSongList'
 
+// The song metadata a row needs to render (no chart body / tags). Comes from
+// the setlist fetch's embedded song, or from the catalog for songs added this
+// session — so rows render without waiting on the whole catalog to load.
+export type EntrySong = Pick<
+  Song,
+  'id' | 'slug' | 'title' | 'artist' | 'default_key' | 'tempo' | 'time_signature'
+>
+
 // One working entry in the builder. `entryKey` is a local list key that stays
 // stable across reorders (the DB row ids are wiped on every save, so they
 // can't key the list). `toKey` is the setlist-scoped key override
@@ -17,12 +25,26 @@ export type SetlistItem = {
   entryKey: string
   songId: string
   toKey: string | null
-  song: Song
+  song: EntrySong
 }
 
-const SAVE_DEBOUNCE_MS = 800
+type WorkingEntry = { entryKey: string; songId: string; toKey: string | null; song: EntrySong | null }
 
-type RawEntry = { song_id: string; toKey: string | null }
+const SAVE_DEBOUNCE_MS = 800
+const LOAD_RETRY_MS = 400
+const LOAD_MAX_RETRIES = 4 // ~1.6s — covers an optimistic create still inserting
+
+function toEntrySong(song: Song): EntrySong {
+  return {
+    id: song.id,
+    slug: song.slug,
+    title: song.title,
+    artist: song.artist,
+    default_key: song.default_key,
+    tempo: song.tempo,
+    time_signature: song.time_signature,
+  }
+}
 
 // Working state + persistence for one setlist. Every mutation updates local
 // state immediately and schedules a debounced wipe-and-replace save (the web
@@ -31,9 +53,12 @@ type RawEntry = { song_id: string; toKey: string | null }
 // serialized: while one is in flight at most one trailing save is queued, and
 // pending work is flushed when the app backgrounds or the screen unmounts.
 export function useSetlistBuilder(setlistId: string) {
-  const { songs, loading: songsLoading, error: songsError } = useSongList()
+  // The catalog is only needed for the Add-songs search; existing rows render
+  // from the setlist fetch's embedded song data, so we do NOT gate the screen
+  // on `songsLoading`.
+  const { songs, error: songsError } = useSongList()
   const [name, setNameState] = useState('')
-  const [entries, setEntries] = useState<Array<{ entryKey: string; songId: string; toKey: string | null }>>([])
+  const [entries, setEntries] = useState<WorkingEntry[]>([])
   const [serviceDate, setServiceDate] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -108,33 +133,47 @@ export function useSetlistBuilder(setlistId: string) {
     }
   }, [runSave])
 
-  // Load the setlist once.
+  // Load the setlist once. A brand-new set opened optimistically (its INSERT
+  // still in flight) can 404 for a moment, so retry a few times before
+  // declaring it missing.
   useEffect(() => {
     let alive = true
-    fetchSetlist(supabase, setlistId)
-      .then((data: Awaited<ReturnType<typeof fetchSetlist>>) => {
-        if (!alive) return
-        if (!data) {
-          setNotFound(true)
-          return
-        }
-        setNameState(data.name)
-        setServiceDate(data.service_date)
-        setUpdatedAt(data.updated_at)
-        setEntries(
-          data.entries.map((entry: RawEntry) => ({
-            entryKey: makeEntryKey(entry.song_id),
-            songId: entry.song_id,
-            toKey: entry.toKey,
-          })),
-        )
-      })
-      .catch((err: unknown) => {
-        if (alive) setError(errMessage(err))
-      })
-      .finally(() => {
-        if (alive) setLoading(false)
-      })
+    let attempt = 0
+    const load = () => {
+      fetchSetlist(supabase, setlistId)
+        .then((data: Awaited<ReturnType<typeof fetchSetlist>>) => {
+          if (!alive) return
+          if (!data) {
+            if (attempt < LOAD_MAX_RETRIES) {
+              attempt += 1
+              setTimeout(load, LOAD_RETRY_MS)
+              return
+            }
+            setNotFound(true)
+            setLoading(false)
+            return
+          }
+          setNameState(data.name)
+          setServiceDate(data.service_date)
+          setUpdatedAt(data.updated_at)
+          setEntries(
+            data.entries.map((entry) => ({
+              entryKey: makeEntryKey(entry.song_id),
+              songId: entry.song_id,
+              toKey: entry.toKey,
+              song: entry.song ? { id: entry.song_id, ...entry.song } : null,
+            })),
+          )
+          setLoading(false)
+        })
+        .catch((err: unknown) => {
+          if (alive) {
+            setError(errMessage(err))
+            setLoading(false)
+          }
+        })
+    }
+    load()
     return () => {
       alive = false
     }
@@ -166,8 +205,11 @@ export function useSetlistBuilder(setlistId: string) {
     () =>
       entries
         .map((entry) => {
-          const song = songsById.get(entry.songId)
-          return song ? { ...entry, song } : null
+          // Prefer the entry's embedded song; fall back to the catalog (e.g.
+          // an entry that arrived before its embed, or edge cases).
+          const catalog = songsById.get(entry.songId)
+          const song = entry.song ?? (catalog ? toEntrySong(catalog) : null)
+          return song ? { entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, song } : null
         })
         .filter((item): item is SetlistItem => item != null),
     [entries, songsById],
@@ -188,7 +230,7 @@ export function useSetlistBuilder(setlistId: string) {
         // created on purpose (a reprise) aren't wiped in one tap.
         const last = prev.map((e) => e.songId).lastIndexOf(song.id)
         if (last >= 0) return prev.filter((_, i) => i !== last)
-        return [...prev, { entryKey: makeEntryKey(song.id), songId: song.id, toKey: null }]
+        return [...prev, { entryKey: makeEntryKey(song.id), songId: song.id, toKey: null, song: toEntrySong(song) }]
       })
       scheduleSave()
     },
@@ -256,7 +298,9 @@ export function useSetlistBuilder(setlistId: string) {
     items,
     songs,
     updatedAt,
-    loading: loading || songsLoading,
+    // Gated on the setlist fetch only — rows render from embedded song data,
+    // so the whole-catalog load never blocks the screen.
+    loading,
     notFound,
     error: error ?? songsError,
     setName,

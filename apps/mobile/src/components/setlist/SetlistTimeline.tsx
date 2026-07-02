@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import Animated, {
+  LinearTransition,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -66,11 +67,18 @@ const Row = memo(function Row({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
   }, [])
 
+  // Commit + clear the drag state in ONE JS tick so the reorder and the
+  // transform reset land on the same render — no intermediate frame where the
+  // old order shows with reset transforms (the source of the drop "flash").
+  // The row's `layout` animation then smoothly carries any residual delta.
   const commitMove = useCallback(
     (from: number, to: number) => {
       if (from !== to) callbacks.onMove(from, to)
+      activeIndex.value = -1
+      proposedIndex.value = -1
+      dragY.value = 0
     },
-    [callbacks],
+    [callbacks, activeIndex, proposedIndex, dragY],
   )
 
   const pan = Gesture.Pan()
@@ -93,24 +101,33 @@ const Row = memo(function Row({
       runOnJS(commitMove)(index, proposedIndex.value)
     })
     .onFinalize(() => {
-      activeIndex.value = -1
-      dragY.value = 0
+      // Safety reset only if onEnd didn't already commit (e.g. cancellation).
+      if (activeIndex.value === index) {
+        activeIndex.value = -1
+        proposedIndex.value = -1
+        dragY.value = 0
+      }
     })
 
   const animatedStyle = useAnimatedStyle(() => {
     if (activeIndex.value === index) {
       return {
         zIndex: 10,
-        transform: [{ translateY: dragY.value }, { scale: 1.02 }],
+        transform: [{ translateY: dragY.value }, { scale: 1.03 }],
       }
     }
-    let offset = 0
-    if (activeIndex.value >= 0) {
-      const from = activeIndex.value
-      const to = proposedIndex.value
-      if (from < index && index <= to) offset = -ROW_HEIGHT
-      else if (to <= index && index < from) offset = ROW_HEIGHT
+    // Idle: sit at rest with NO timing — the reorder's position change is
+    // animated by `layout` (LinearTransition), so animating the transform back
+    // to 0 here too would double up and flip.
+    if (activeIndex.value < 0) {
+      return { zIndex: 0, transform: [{ translateY: 0 }, { scale: 1 }] }
     }
+    // While a drag is active, open a gap the dragged row can drop into.
+    let offset = 0
+    const from = activeIndex.value
+    const to = proposedIndex.value
+    if (from < index && index <= to) offset = -ROW_HEIGHT
+    else if (to <= index && index < from) offset = ROW_HEIGHT
     return {
       zIndex: 0,
       transform: [{ translateY: withTiming(offset, { duration: 140 }) }, { scale: 1 }],
@@ -139,7 +156,7 @@ const Row = memo(function Row({
   )
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={animatedStyle} layout={LinearTransition.duration(200)}>
       <Animated.View
         style={[
           {
