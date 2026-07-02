@@ -1,23 +1,43 @@
-import { useMemo, useState } from 'react'
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
+import { useMemo, useRef, useState } from 'react'
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import * as Haptics from 'expo-haptics'
+import * as Sharing from 'expo-sharing'
 import type { SongDoc } from '@gracechords/core'
-import { parseChordProOrLegacy, stepsBetween, transposeSymPrefer } from '@gracechords/core'
+import {
+  formatKeyDisplay,
+  parseChordProOrLegacy,
+  stepsBetween,
+  transposeSymPrefer,
+} from '@gracechords/core'
 import ChordChart, {
   CHART_FONT_SIZE,
   CHART_LINE_HEIGHT,
   CHART_MONO,
+  type ChordStyle,
+  visibleSections,
 } from '../../src/components/ChordChart'
+import ExportSheet from '../../src/components/ExportSheet'
 import Screen from '../../src/components/Screen'
+import SectionChips from '../../src/components/SectionChips'
 import SymbolIcon from '../../src/components/SymbolIcon'
+import TransposeBar from '../../src/components/TransposeBar'
+import ViewOptionsSheet from '../../src/components/ViewOptionsSheet'
+import { exportSong } from '../../src/lib/exportSong'
+import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
-// Song Viewer, pass 1: static chord chart. Fetches the ChordPro body by slug,
-// parses it with core, and renders a monospaced chart (ChordChart). The
-// optional `initialKey` param transposes the whole chart at open — ephemeral
-// local state only, discarded on unmount — so a setlist can later open the
-// Viewer at its own key with no refactor. Interactive controls are pass 2.
+// Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
+// view controls (floating transpose bar, View-options sheet, section-jump
+// chips) and the Export & share sheet (server-rendered PDF/JPG via the web
+// app's /api/export/song Pages Function, system share, Telegram push). ALL
+// view state here is session-ephemeral useState — discarded on unmount, never
+// persisted. The optional `initialKey` param seeds the transpose so a setlist
+// can open the Viewer at its own key with no refactor.
+
+// Extra scroll room so the last lines clear the floating transpose bar.
+const TRANSPOSE_BAR_CLEARANCE = 96
 
 export default function ViewerScreen() {
   const t = useTheme()
@@ -41,30 +61,135 @@ export default function ViewerScreen() {
     }
   }, [song])
 
-  // Transpose target: ephemeral, never persisted. steps stays 0 when no
-  // initialKey was passed or either key is unknown (stepsBetween degrades to 0).
-  const [targetKey] = useState(() => initialKey || '')
+  // Transpose: `delta` is the user's ±1 taps; the initialKey seed is a pure
+  // per-render derivation so it needs no effect and survives the doc-load
+  // race (stepsBetween degrades to 0 while keys are unknown). Ephemeral —
+  // discarded on unmount, never persisted.
+  const [delta, setDelta] = useState(0)
   const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
-  const steps = targetKey ? stepsBetween(nativeKey, targetKey) : 0
+  const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
+  const steps = (((seedSteps + delta) % 12) + 12) % 12
   const preferFlat = /^[A-G]b/.test(nativeKey)
   const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
 
+  // View options — all session-ephemeral.
+  const [showChords, setShowChords] = useState(true)
+  const [showSections, setShowSections] = useState(true)
+  const [fontScale, setFontScale] = useState(1)
+  const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
+  const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
+
+  const scrollRef = useRef<ScrollView>(null)
+  const sectionOffsets = useRef<Record<number, number>>({})
+
+  const transposeBy = (dir: 1 | -1) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
+    setDelta((d) => d + dir)
+  }
+
+  const jumpToSection = (index: number) => {
+    const y = sectionOffsets.current[index]
+    if (y == null) return
+    scrollRef.current?.scrollTo({ y: Math.max(0, y + t.spacing.lg - 8), animated: true })
+  }
+
   const displayTitle = song?.title || title || slug
   const displayArtist = song?.artist ?? artist ?? ''
+  const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
+
+  // --- Export handlers (screen owns errors; the sheet owns busy state) -----
+  const exportKey = steps ? effectiveKey : ''
+
+  const shareFile = async (format: 'pdf' | 'jpg') => {
+    if (!song) return
+    const uri = await exportSong({ songId: song.id, key: exportKey, format })
+    await Sharing.shareAsync(uri)
+  }
+
+  const handleExport = async (format: 'pdf' | 'jpg') => {
+    try {
+      await shareFile(format)
+      setSheet(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg === 'image_unavailable') {
+        Alert.alert('Image unavailable', 'The server could not render an image for this song. Try PDF instead.')
+      } else if (msg === 'not_signed_in') {
+        Alert.alert('Sign in required', 'Sign in to export songs.')
+      } else {
+        Alert.alert('Export failed', msg)
+      }
+    }
+  }
+
+  const handleTelegram = async () => {
+    if (!song) return
+    try {
+      const result = await pushSongToTelegram({ songId: song.id, key: exportKey })
+      if (result === 'not_linked') {
+        Alert.alert(
+          'Link your Telegram',
+          'Send /link to the GraceChords bot on Telegram, then connect it from your profile on the website.',
+          [
+            { text: 'Open Telegram', onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
+            { text: 'Not now', style: 'cancel' },
+          ],
+        )
+        return
+      }
+      setSheet(null)
+      Alert.alert('Sent', 'The chart is on its way to your Telegram chat.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      Alert.alert(
+        msg === 'not_signed_in' ? 'Sign in required' : 'Telegram failed',
+        msg === 'not_signed_in' ? 'Sign in to send songs to Telegram.' : msg,
+      )
+    }
+  }
+
+  const headerButtonStyle = {
+    width: 40,
+    height: 40,
+    borderRadius: t.radii.pill,
+    backgroundColor: t.colors.surfaceAlt,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  }
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start' }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Songs</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+          >
+            <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Songs</Text>
+          </Pressable>
+          <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+            <Pressable
+              onPress={() => setSheet('options')}
+              accessibilityRole="button"
+              accessibilityLabel="View options"
+              style={headerButtonStyle}
+            >
+              <SymbolIcon name="ellipsis" size={17} color={t.colors.ink} />
+            </Pressable>
+            <Pressable
+              onPress={() => setSheet('export')}
+              accessibilityRole="button"
+              accessibilityLabel="Export and share"
+              style={headerButtonStyle}
+            >
+              <SymbolIcon name="square.and.arrow.up" size={17} color={t.colors.ink} />
+            </Pressable>
+          </View>
+        </View>
 
         <Text
           style={{
@@ -88,7 +213,7 @@ export default function ViewerScreen() {
             gap: t.spacing.sm,
           }}
         >
-          {effectiveKey ? (
+          {keyLabel ? (
             <View
               style={{
                 backgroundColor: t.colors.accentSoft,
@@ -98,7 +223,7 @@ export default function ViewerScreen() {
               }}
             >
               <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.textAccent }}>
-                Key of {effectiveKey}
+                Key of {keyLabel}
               </Text>
             </View>
           ) : null}
@@ -125,17 +250,73 @@ export default function ViewerScreen() {
           </Text>
         </View>
       ) : doc ? (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl * 2 }}
-        >
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <ChordChart doc={doc} steps={steps} preferFlat={preferFlat} />
+        <View style={{ flex: 1 }}>
+          <SectionChips sections={visibleSections(doc)} onJump={jumpToSection} />
+          <ScrollView
+            ref={scrollRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              padding: t.spacing.lg,
+              paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
+            }}
+          >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ChordChart
+                doc={doc}
+                steps={steps}
+                preferFlat={preferFlat}
+                showChords={showChords}
+                showSections={showSections}
+                fontScale={fontScale}
+                chordStyle={chordStyle}
+                onSectionLayout={(index, y) => {
+                  sectionOffsets.current[index] = y
+                }}
+              />
+            </ScrollView>
           </ScrollView>
-        </ScrollView>
+          {keyLabel ? (
+            <View
+              pointerEvents="box-none"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 26,
+                alignItems: 'center',
+              }}
+            >
+              <TransposeBar keyLabel={keyLabel} onDown={() => transposeBy(-1)} onUp={() => transposeBy(1)} />
+            </View>
+          ) : null}
+        </View>
       ) : (
         <RawFallback content={song.chordpro_content || ''} parseError={parseError} />
       )}
+
+      <ViewOptionsSheet
+        visible={sheet === 'options'}
+        onClose={() => setSheet(null)}
+        showChords={showChords}
+        onShowChords={setShowChords}
+        showSections={showSections}
+        onShowSections={setShowSections}
+        fontScale={fontScale}
+        onFontScale={setFontScale}
+        chordStyle={chordStyle}
+        onChordStyle={setChordStyle}
+      />
+      <ExportSheet
+        visible={sheet === 'export'}
+        onClose={() => setSheet(null)}
+        onShare={() => shareFile('pdf').then(() => setSheet(null)).catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err)
+          Alert.alert(msg === 'not_signed_in' ? 'Sign in required' : 'Share failed',
+            msg === 'not_signed_in' ? 'Sign in to share songs.' : msg)
+        })}
+        onExport={handleExport}
+        onTelegram={handleTelegram}
+      />
     </Screen>
   )
 }
