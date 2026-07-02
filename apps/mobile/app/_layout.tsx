@@ -81,6 +81,7 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="viewer/[slug]" />
             <Stack.Screen name="setlist/[id]" />
+            <Stack.Screen name="perform/[id]" />
           </Stack>
         </SafeAreaProvider>
       </ThemeProvider>

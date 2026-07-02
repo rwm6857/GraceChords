@@ -37,3 +37,26 @@ export async function exportSong(opts: {
   file.write(new Uint8Array(await res.arrayBuffer()))
   return file.uri
 }
+
+// Whole-set export: renders the ordered setlist to one combined PDF via the
+// web app's POST /api/export/setlist (the multi-song counterpart of
+// /api/export/song), writes the bytes to the app cache, and returns the local
+// URI for expo-sharing. PDF only — sets have no image scope.
+export async function exportSetlist(
+  items: Array<{ songId: string; key?: string | null }>,
+): Promise<string> {
+  const res = await apiPost('/api/export/setlist', {
+    items: items.map((it) => ({ song_id: it.songId, key: it.key || '' })),
+  })
+
+  if (!res.ok) throw await apiError(res, 'export_failed')
+
+  const disposition = res.headers.get('content-disposition') || ''
+  const nameMatch = disposition.match(/filename="([^"]+)"/)
+  const filename = nameMatch?.[1] || 'setlist.pdf'
+
+  const file = new File(Paths.cache, filename)
+  if (file.exists) file.delete()
+  file.write(new Uint8Array(await res.arrayBuffer()))
+  return file.uri
+}

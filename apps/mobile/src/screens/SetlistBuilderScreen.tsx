@@ -449,8 +449,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
             Add
           </Text>
         </Pressable>
-        {/* Performer mode ships in a later stage. */}
-        <Button title="Start set" disabled style={{ flex: 1 }} fullWidth={false} />
+        <Button
+          title="Start set"
+          onPress={() => router.push(`/perform/${setlistId}`)}
+          disabled={items.length === 0}
+          style={{ flex: 1 }}
+          fullWidth={false}
+        />
       </View>
 
       {/* Toast */}
