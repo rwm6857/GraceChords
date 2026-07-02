@@ -15,10 +15,10 @@ import {
 import ChordChart, {
   CHART_FONT_SIZE,
   CHART_LINE_HEIGHT,
-  CHART_SERIF,
+  CHART_LYRIC_FONT,
   type ChordStyle,
 } from '../../src/components/ChordChart'
-// CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_SERIF drive the raw-text fallback.
+// CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_LYRIC_FONT drive the raw-text fallback.
 import ExportSheet from '../../src/components/ExportSheet'
 import Screen from '../../src/components/Screen'
 import StarButton from '../../src/components/StarButton'
@@ -418,7 +418,7 @@ function RawFallback({ content, parseError }: { content: string; parseError: boo
         <Text
           key={i}
           style={{
-            fontFamily: CHART_SERIF,
+            fontFamily: CHART_LYRIC_FONT,
             fontSize: CHART_FONT_SIZE,
             lineHeight: CHART_LINE_HEIGHT,
             color: t.colors.ink,
