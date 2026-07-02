@@ -14,7 +14,6 @@ import {
   isRtlBibleLanguage,
   resolveBibleTranslationSelection,
   sortedVerses,
-  toggleSelection,
   buildCopyText,
   isVerseInRange,
   passageId,
@@ -30,6 +29,7 @@ import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
+import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
   defaultReaderSettings,
   readerFontSize,
@@ -65,9 +65,10 @@ export default function DailyWordScreen() {
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectedId, setSelectedId] = useState('')
-  // Highlights persist per passage (keyed by passageId) for the session, so
-  // switching chapters — or copying — never clears them.
-  const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>({})
+  // Highlights persist per passage (keyed by passageId), stored to disk and
+  // day-scoped, so switching chapters, copying, or a cold restart never clears
+  // them — but a new day starts clean.
+  const { selections: selectionsByPassage, toggleVerse } = useDailyHighlights()
   const [settings, setSettings] = useState<ReaderSettings>(defaultReaderSettings)
   const [sheet, setSheet] = useState<Sheet>('none')
   const [reloadToken, setReloadToken] = useState(0)
@@ -165,11 +166,7 @@ export default function DailyWordScreen() {
   }
 
   function toggle(num: number) {
-    if (!passageKey) return
-    setSelectionsByPassage((prev) => {
-      const current = prev[passageKey] ?? new Set<number>()
-      return { ...prev, [passageKey]: toggleSelection(current, num) }
-    })
+    toggleVerse(passageKey, num)
   }
 
   const controlButton = {
