@@ -40,6 +40,9 @@ the visual rather than porting the HTML/CSS.
 - `npm run export:ios` — `expo export --platform ios`; a Metro-only bundle that
   works on any OS. Use it to verify resolution/transpile without a simulator.
 - `npm run typecheck` — `tsc --noEmit`.
+- `npm run test` — vitest (node env) over the RN-free logic in `src/lib`
+  (auth flows, validation, sprite persistence). Native modules are injected
+  deps, never `vi.mock`ed.
 
 ## Metro monorepo resolution (load-bearing)
 
@@ -102,12 +105,28 @@ duplicate logic here and never edit core internals to suit mobile.
 - `app/(tabs)/_layout.tsx` — the four-tab shell (Home · Songs · Setlists · Daily
   Word), `headerShown:false` (screens draw their own large-title headers).
 - `app/viewer/[slug].tsx` — Song Viewer, **outside** the tab group (pushes over the
-  shell); currently a placeholder. `app/login.tsx` — the auth screen.
+  shell); currently a placeholder. `app/login.tsx` — the auth screen (sign in +
+  sign up modes in `src/screens/AuthScreen.tsx`); `app/choose-icon.tsx` — the
+  post-signup sprite avatar picker.
 - **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
   session (redirect to `/login` when signed out, into the tabs when signed in) and
   holds the native splash (`expo-splash-screen`) until the session resolves *and*
   the correct screen is mounted, so nothing flashes on first open. Session persists
-  via AsyncStorage until uninstall — don't add proactive sign-outs.
+  via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
+  `choose-icon` is reachable both with and without a session (post-signup step —
+  email confirmation may still be pending).
+- **Auth flows.** Email/password plus native Google
+  (`@react-native-google-signin/google-signin`) and Apple
+  (`expo-apple-authentication`, iOS-only button) via
+  `supabase.auth.signInWithIdToken`. The orchestration lives in
+  `src/lib/authFlows.ts` as dependency-injected, RN-free functions (tested with
+  vitest — `npm run test`); the only native-importing glue is
+  `src/lib/authDeps.ts`. Google client ids come from
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, and the
+  reversed iOS client id must be set in `app.json` → google-signin plugin
+  `iosUrlScheme`. The sprite pick is written to `users.preferences.sprite`
+  (`src/lib/profile.ts`) — the same JSONB shape the web Profile page writes; ids in
+  `src/lib/sprites.ts` must stay in sync with web's `SpritePicker.jsx`.
 
 ## Data & stubs
 
@@ -146,6 +165,7 @@ The whole-set Charts ZIP / ChordPro export backends (whole-set PDF ships via
 `/api/export/setlist`), the Daily Word **landing page** and **offline
 translation download / file management** (the Reader itself ships; downloads are
 a later stage), the on-device history layer + star writes,
-the full Auth screen redesign / Google OAuth (see the `TODO: OAuth` in
-`src/screens/LoginScreen.tsx`), tablet master-detail, EAS Build / TestFlight,
-Android, GraceTracks.
+password reset / email-confirmation screens (the login "Forgot?" link is an
+informational alert only), tablet master-detail, EAS Build / TestFlight,
+Android (auth code is cross-platform-safe, but Android OAuth config — SHA-1,
+google-services — is not set up), GraceTracks.
