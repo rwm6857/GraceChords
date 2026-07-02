@@ -66,13 +66,16 @@ binding = "AI"
 # `npm clean-install` only installs this package.json's deps, so the
 # workspace symlink that would normally resolve `@gracechords/core/*` is
 # absent and esbuild fails with "Could not resolve '@gracechords/core/...'".
-# Point the package and its subpaths straight at the source — esbuild
-# resolves the .js/.ts extensions. Wrangler's alias matches specifiers
-# exactly (no subpath/directory aliasing), so each subpath the worker pulls
-# in via the src/utils compatibility shims is listed explicitly.
+# Point the package and its subpaths straight at the source. Wrangler's alias
+# matches specifiers exactly (no subpath/directory aliasing), so each subpath
+# the worker pulls in via the src/utils compatibility shims is listed
+# explicitly. The keys carry the .js/.ts extension because the shims import
+# the extension-qualified specifier — required so the Cloudflare Pages
+# Functions bundler (which resolves core's "./*": "./src/*" exports map
+# literally) can resolve the same shims for /api/export/song.
 "@gracechords/core/chordpro/index.js" = "../../packages/core/src/chordpro/index.js"
-"@gracechords/core/chordpro/parser" = "../../packages/core/src/chordpro/parser.ts"
-"@gracechords/core/songs/instrumental" = "../../packages/core/src/songs/instrumental.js"
+"@gracechords/core/chordpro/parser.ts" = "../../packages/core/src/chordpro/parser.ts"
+"@gracechords/core/songs/instrumental.js" = "../../packages/core/src/songs/instrumental.js"
 
 [observability]
 enabled = true
