@@ -1,7 +1,6 @@
 import { memo, useCallback } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import Animated, {
   LinearTransition,
   runOnJS,
@@ -11,25 +10,26 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
+import SwipeToDelete from '../SwipeToDelete'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 import type { SetlistItem } from '../../lib/useSetlistBuilder'
 
 // The builder's numbered timeline: drag grip + numbered badge on a vertical
-// rail + title/artist + key chip + per-row menu. Reordering is a hand-rolled
-// long-press pan on the grip (react-native-draggable-flatlist is not
-// maintained against reanimated v4 / the New Architecture): the active row
-// follows the finger while the others animate out of the way by whole row
-// heights, and the move commits on release. Rows are fixed-height so the
-// drag math is pure arithmetic. Swiping the row body left past the threshold
-// removes the entry — horizontal, so it never fights the vertical grip drag.
+// rail + title/artist + key chip. Reordering is a hand-rolled long-press pan
+// on the grip (react-native-draggable-flatlist is not maintained against
+// reanimated v4 / the New Architecture): the active row follows the finger
+// while the others animate out of the way by whole row heights, and the move
+// commits on release. Rows are fixed-height so the drag math is pure
+// arithmetic. Removal is a horizontal SwipeToDelete on the row body (partial
+// swipe reveals Delete, full swipe removes) — orthogonal to the vertical grip
+// drag. The key chip opens the key sheet (Change key).
 
 export const ROW_HEIGHT = 64
 
 export type TimelineCallbacks = {
   onPressRow: (index: number) => void
   onKeyTap: (index: number) => void
-  onRowMenu: (index: number) => void
   onMove: (from: number, to: number) => void
   onRemove: (index: number) => void
 }
@@ -134,57 +134,35 @@ const Row = memo(function Row({
     }
   })
 
-  const liftedStyle = useAnimatedStyle(() => ({
-    backgroundColor: activeIndex.value === index ? t.colors.surface : t.colors.bg,
-    shadowOpacity: withTiming(activeIndex.value === index ? 0.25 : 0, { duration: 120 }),
+  // Elevate the row while it's being dragged (shadow + on the reorder layer).
+  const liftStyle = useAnimatedStyle(() => ({
+    shadowOpacity: withTiming(activeIndex.value === index ? 0.22 : 0, { duration: 120 }),
   }))
 
-  const renderRightActions = () => (
-    <View
-      style={{
-        width: 88,
-        height: '100%',
-        backgroundColor: t.colors.danger,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 4,
-      }}
-    >
-      <SymbolIcon name="trash" size={20} color={t.colors.onDanger} />
-      <Text style={{ fontSize: 12, fontWeight: '600', color: t.colors.onDanger }}>Remove</Text>
-    </View>
-  )
-
   return (
-    <Animated.View style={animatedStyle} layout={LinearTransition.duration(200)}>
-      <Animated.View
-        style={[
-          {
-            borderRadius: t.radii.md,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowRadius: 12,
-            elevation: 4,
-          },
-          liftedStyle,
-        ]}
-      >
-        <ReanimatedSwipeable
-          friction={2}
-          rightThreshold={64}
-          overshootRight={false}
-          renderRightActions={renderRightActions}
-          onSwipeableWillOpen={() => callbacks.onRemove(index)}
+    <Animated.View
+      style={[
+        animatedStyle,
+        liftStyle,
+        {
+          borderRadius: t.radii.md,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 6 },
+          shadowRadius: 12,
+        },
+      ]}
+      layout={LinearTransition.duration(200)}
+    >
+      <SwipeToDelete onDelete={() => callbacks.onRemove(index)} label="Remove">
+        <View
+          style={{
+            height: ROW_HEIGHT,
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: t.colors.bg,
+          }}
         >
-          <View
-            style={{
-              height: ROW_HEIGHT,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: 'transparent',
-            }}
-          >
-            {/* Drag grip */}
+          {/* Drag grip */}
             <GestureDetector gesture={pan}>
               <View
                 accessibilityLabel={`Reorder ${item.song.title}`}
@@ -281,19 +259,11 @@ const Row = memo(function Row({
               <SymbolIcon name="chevron.up.chevron.down" size={10} color={t.colors.textAccent} />
             </Pressable>
 
-            {/* Row menu */}
-            <Pressable
-              onPress={() => callbacks.onRowMenu(index)}
-              accessibilityRole="button"
-              accessibilityLabel={`More options for ${item.song.title}`}
-              hitSlop={8}
-              style={{ width: 40, height: '100%', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <SymbolIcon name="ellipsis" size={17} color={t.colors.muted} />
-            </Pressable>
+            {/* Trailing spacer so the key chip clears the row edge (the old
+                ••• menu is replaced by swipe-to-delete). */}
+            <View style={{ width: t.spacing.lg }} />
           </View>
-        </ReanimatedSwipeable>
-      </Animated.View>
+      </SwipeToDelete>
     </Animated.View>
   )
 })

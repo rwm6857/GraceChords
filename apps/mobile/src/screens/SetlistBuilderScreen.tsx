@@ -23,7 +23,6 @@ import Button from '../components/Button'
 import SymbolIcon, { type SymbolIconProps } from '../components/SymbolIcon'
 import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
 import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
-import RowActionsSheet from '../components/setlist/RowActionsSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
 import ShareSetSheet from '../components/setlist/ShareSetSheet'
 import AddSongsModal from '../components/setlist/AddSongsModal'
@@ -56,7 +55,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     setName,
     toggleSong,
     removeEntry,
-    duplicateEntry,
     moveEntry,
     setKeyFor,
     deleteSet,
@@ -70,14 +68,9 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const nameInput = useRef<TextInput>(null)
 
   const [keyIndex, setKeyIndex] = useState<number | null>(null)
-  const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
-  // "Change key" from the row sheet opens the key sheet only after the row
-  // sheet has fully dismissed (iOS refuses to present a modal while another
-  // is dismissing) — BottomSheet's onDismissed reports that moment.
-  const pendingKeyIndex = useRef<number | null>(null)
 
   // Toast pill (bottom-center, auto-dismiss).
   const [toast, setToast] = useState<string | null>(null)
@@ -221,7 +214,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     () => ({
       onPressRow: openSong,
       onKeyTap: setKeyIndex,
-      onRowMenu: setMenuIndex,
       onMove: (from, to) => {
         const fromKey = items[from]?.entryKey
         const toKey = items[to]?.entryKey
@@ -485,31 +477,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         onPick={(key) => {
           const entryKey = keyIndex != null ? items[keyIndex]?.entryKey : undefined
           if (entryKey) setKeyFor(entryKey, key)
-        }}
-      />
-      <RowActionsSheet
-        visible={menuIndex != null}
-        onClose={() => setMenuIndex(null)}
-        onDismissed={() => {
-          if (pendingKeyIndex.current != null) {
-            setKeyIndex(pendingKeyIndex.current)
-            pendingKeyIndex.current = null
-          }
-        }}
-        songTitle={menuIndex != null ? items[menuIndex]?.song.title ?? '' : ''}
-        onChangeKey={() => {
-          pendingKeyIndex.current = menuIndex
-        }}
-        onDuplicate={() => {
-          const entryKey = menuIndex != null ? items[menuIndex]?.entryKey : undefined
-          if (entryKey) duplicateEntry(entryKey)
-        }}
-        onRemove={() => {
-          const entryKey = menuIndex != null ? items[menuIndex]?.entryKey : undefined
-          if (entryKey) {
-            removeEntry(entryKey)
-            showToast('Removed from set')
-          }
         }}
       />
       <SetOptionsSheet
