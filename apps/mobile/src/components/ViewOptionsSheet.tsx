@@ -94,6 +94,8 @@ export default function ViewOptionsSheet({
   onFontScale,
   chordStyle,
   onChordStyle,
+  autoHide,
+  onAutoHide,
 }: {
   visible: boolean
   onClose: () => void
@@ -105,6 +107,10 @@ export default function ViewOptionsSheet({
   onFontScale: (v: number) => void
   chordStyle: ChordStyle
   onChordStyle: (v: ChordStyle) => void
+  // Optional "hide controls when idle" toggle — rendered only when the screen
+  // wires it (Song Viewer + Setlist Performer).
+  autoHide?: boolean
+  onAutoHide?: (v: boolean) => void
 }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
@@ -221,6 +227,30 @@ export default function ViewOptionsSheet({
           value={chordStyle}
           onChange={onChordStyle}
         />
+
+        {/* Hide controls when idle — persists across launches (unlike the
+            options above). Rendered only when the screen wires it. */}
+        {onAutoHide ? (
+          <>
+            <OverlineLabel>Screen</OverlineLabel>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <View style={{ flex: 1, paddingRight: t.spacing.md }}>
+                <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
+                <Text style={{ marginTop: 2, fontSize: 12.5, color: t.colors.muted }}>
+                  Full-page view after a few seconds. Tap to bring them back.
+                </Text>
+              </View>
+              <Switch
+                value={!!autoHide}
+                onValueChange={onAutoHide}
+                trackColor={{ true: t.colors.accent }}
+                accessibilityLabel="Hide controls when idle"
+              />
+            </View>
+          </>
+        ) : null}
       </View>
     </BottomSheet>
   )

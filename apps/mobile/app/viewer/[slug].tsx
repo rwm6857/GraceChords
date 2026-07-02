@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Animated, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { runOnJS } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import * as Sharing from 'expo-sharing'
 import type { SongDoc } from '@gracechords/core'
@@ -24,6 +26,7 @@ import ViewOptionsSheet from '../../src/components/ViewOptionsSheet'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
+import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
@@ -77,8 +80,22 @@ export default function ViewerScreen() {
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
   const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
 
+  // Chrome auto-hide (persisted preference). Pinned visible while a sheet is
+  // open so it can't hide behind one. Tap the chart to bring it back.
+  const [autoHide, setAutoHide] = useAutoHidePref()
+  // Only arm auto-hide when there's a chart to tap (tap-to-reveal lives on the
+  // chart); otherwise the header could hide with no way to bring it back.
+  const { visible: chromeVisible, opacity: chromeOpacity, reveal } = useAutoHideChrome(
+    autoHide && sheet === null && !!doc,
+  )
+  const tapReveal = useMemo(
+    () => Gesture.Tap().onEnd(() => runOnJS(reveal)()),
+    [reveal],
+  )
+
   const transposeBy = (dir: 1 | -1) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
+    reveal()
     setDelta((d) => d + dir)
   }
 
@@ -149,7 +166,10 @@ export default function ViewerScreen() {
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}>
+      <Animated.View
+        pointerEvents={chromeVisible ? 'auto' : 'none'}
+        style={{ opacity: chromeOpacity, paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pressable
             onPress={() => router.back()}
@@ -229,7 +249,7 @@ export default function ViewerScreen() {
             <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{song.tempo} BPM</Text>
           ) : null}
         </View>
-      </View>
+      </Animated.View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -246,29 +266,32 @@ export default function ViewerScreen() {
         </View>
       ) : doc ? (
         <View style={{ flex: 1 }}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              padding: t.spacing.lg,
-              paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
-            }}
-          >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <ChordChart
-                doc={doc}
-                steps={steps}
-                preferFlat={preferFlat}
-                showChords={showChords}
-                showSections={showSections}
-                fontScale={fontScale}
-                chordStyle={chordStyle}
-              />
+          <GestureDetector gesture={tapReveal}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                padding: t.spacing.lg,
+                paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
+              }}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ChordChart
+                  doc={doc}
+                  steps={steps}
+                  preferFlat={preferFlat}
+                  showChords={showChords}
+                  showSections={showSections}
+                  fontScale={fontScale}
+                  chordStyle={chordStyle}
+                />
+              </ScrollView>
             </ScrollView>
-          </ScrollView>
+          </GestureDetector>
           {keyLabel ? (
-            <View
-              pointerEvents="box-none"
+            <Animated.View
+              pointerEvents={chromeVisible ? 'box-none' : 'none'}
               style={{
+                opacity: chromeOpacity,
                 position: 'absolute',
                 left: 0,
                 right: 0,
@@ -277,7 +300,7 @@ export default function ViewerScreen() {
               }}
             >
               <TransposeBar keyLabel={keyLabel} onDown={() => transposeBy(-1)} onUp={() => transposeBy(1)} />
-            </View>
+            </Animated.View>
           ) : null}
         </View>
       ) : (
@@ -295,6 +318,8 @@ export default function ViewerScreen() {
         onFontScale={setFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
+        autoHide={autoHide}
+        onAutoHide={setAutoHide}
       />
       <ExportSheet
         visible={sheet === 'export'}

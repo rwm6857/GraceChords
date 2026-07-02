@@ -1,5 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { useMemo, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Animated as RNAnimated,
+  Linking,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native'
 import { useRouter } from 'expo-router'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
@@ -30,6 +39,7 @@ import PerformerShareSheet, {
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { useSong } from '../lib/useSong'
+import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import {
@@ -96,6 +106,15 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
   const [sheet, setSheet] = useState<null | 'options' | 'share'>(null)
 
+  // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
+  // chart, change songs, or use the transpose bar to bring it back.
+  const [autoHide, setAutoHide] = useAutoHidePref()
+  // Arm only when a chart is on screen (tap-to-reveal lives on the chart) and
+  // no sheet is open, so chrome can't hide behind a spinner or a sheet.
+  const { visible: chromeVisible, opacity: chromeOpacity, reveal } = useAutoHideChrome(
+    autoHide && sheet === null && songReady,
+  )
+
   // Slide transition between songs (reanimated).
   const slideX = useSharedValue(0)
   const slideOpacity = useSharedValue(1)
@@ -110,6 +129,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     if (next < 0 || next >= count || next === index) return
     setSheet(null)
     setDelta(0)
+    reveal()
     slideX.value = dir === 'next' ? 26 : -26
     slideOpacity.value = 0.15
     setIndex(next)
@@ -123,6 +143,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   const transposeBy = (dir: 1 | -1) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
+    reveal()
     setDelta((d) => d + dir)
   }
 
@@ -140,6 +161,11 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         else runOnJS(goPrev)()
       }
     })
+
+  // A quick tap on the chart reveals hidden chrome (and resets the idle
+  // timer); it races the swipe so a drag still changes songs.
+  const tapReveal = Gesture.Tap().onEnd(() => runOnJS(reveal)())
+  const chartGesture = Gesture.Race(swipe, tapReveal)
 
   // Use the entry's catalog metadata for the header so it tracks the current
   // song immediately, not the still-loading `song`.
@@ -274,8 +300,11 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header */}
-      <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}>
+      {/* Header (auto-hides with the rest of the chrome) */}
+      <RNAnimated.View
+        pointerEvents={chromeVisible ? 'auto' : 'none'}
+        style={{ opacity: chromeOpacity, paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pressable
             onPress={() => router.back()}
@@ -381,7 +410,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
             </Text>
           ) : null}
         </View>
-      </View>
+      </RNAnimated.View>
 
       {/* Chart area */}
       {setLoading || songLoading || (entry && !songReady && !songError) ? (
@@ -400,7 +429,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           ) : null}
         </View>
       ) : (
-        <GestureDetector gesture={swipe}>
+        <GestureDetector gesture={chartGesture}>
           <Animated.View style={[{ flex: 1 }, chartAnim]}>
             {doc ? (
               <ScrollView
@@ -433,10 +462,11 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         </GestureDetector>
       )}
 
-      {/* Bottom controls: Prev · transpose island · Next */}
-      <View
-        pointerEvents="box-none"
+      {/* Bottom controls: Prev · transpose island · Next (auto-hides too) */}
+      <RNAnimated.View
+        pointerEvents={chromeVisible ? 'box-none' : 'none'}
         style={{
+          opacity: chromeOpacity,
           position: 'absolute',
           left: 0,
           right: 0,
@@ -480,7 +510,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         ) : (
           <View style={{ width: 50 }} />
         )}
-      </View>
+      </RNAnimated.View>
 
       <ViewOptionsSheet
         visible={sheet === 'options'}
@@ -493,6 +523,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         onFontScale={setFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
+        autoHide={autoHide}
+        onAutoHide={setAutoHide}
       />
       <PerformerShareSheet
         visible={sheet === 'share'}
