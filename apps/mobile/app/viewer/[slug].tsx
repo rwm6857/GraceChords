@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
@@ -15,11 +15,9 @@ import ChordChart, {
   CHART_LINE_HEIGHT,
   CHART_MONO,
   type ChordStyle,
-  visibleSections,
 } from '../../src/components/ChordChart'
 import ExportSheet from '../../src/components/ExportSheet'
 import Screen from '../../src/components/Screen'
-import SectionChips from '../../src/components/SectionChips'
 import SymbolIcon from '../../src/components/SymbolIcon'
 import TransposeBar from '../../src/components/TransposeBar'
 import ViewOptionsSheet from '../../src/components/ViewOptionsSheet'
@@ -29,9 +27,9 @@ import { useSong } from '../../src/lib/useSong'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
-// view controls (floating transpose bar, View-options sheet, section-jump
-// chips) and the Export & share sheet (server-rendered PDF/JPG via the web
-// app's /api/export/song Pages Function, system share, Telegram push). ALL
+// view controls (floating transpose bar, View-options sheet) and the Export &
+// share sheet (server-rendered PDF/JPG via the web app's /api/export/song
+// Pages Function, system share, Telegram push). ALL
 // view state here is session-ephemeral useState — discarded on unmount, never
 // persisted. The optional `initialKey` param seeds the transpose so a setlist
 // can open the Viewer at its own key with no refactor.
@@ -79,18 +77,9 @@ export default function ViewerScreen() {
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
   const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
 
-  const scrollRef = useRef<ScrollView>(null)
-  const sectionOffsets = useRef<Record<number, number>>({})
-
   const transposeBy = (dir: 1 | -1) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
     setDelta((d) => d + dir)
-  }
-
-  const jumpToSection = (index: number) => {
-    const y = sectionOffsets.current[index]
-    if (y == null) return
-    scrollRef.current?.scrollTo({ y: Math.max(0, y + t.spacing.lg - 8), animated: true })
   }
 
   const displayTitle = song?.title || title || slug
@@ -202,17 +191,23 @@ export default function ViewerScreen() {
         >
           {displayTitle}
         </Text>
-        {displayArtist ? (
-          <Text style={{ marginTop: 4, fontSize: 13.5, color: t.colors.sec }}>{displayArtist}</Text>
-        ) : null}
+        {/* Subtitle row per the reference: artist · Key pill (+ time sig / BPM) */}
         <View
           style={{
-            marginTop: t.spacing.sm,
+            marginTop: 6,
             flexDirection: 'row',
             alignItems: 'center',
             gap: t.spacing.sm,
           }}
         >
+          {displayArtist ? (
+            <Text style={{ fontSize: 13.5, color: t.colors.sec }}>{displayArtist}</Text>
+          ) : null}
+          {displayArtist && keyLabel ? (
+            <View
+              style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: t.colors.muted }}
+            />
+          ) : null}
           {keyLabel ? (
             <View
               style={{
@@ -251,9 +246,7 @@ export default function ViewerScreen() {
         </View>
       ) : doc ? (
         <View style={{ flex: 1 }}>
-          <SectionChips sections={visibleSections(doc)} onJump={jumpToSection} />
           <ScrollView
-            ref={scrollRef}
             style={{ flex: 1 }}
             contentContainerStyle={{
               padding: t.spacing.lg,
@@ -269,9 +262,6 @@ export default function ViewerScreen() {
                 showSections={showSections}
                 fontScale={fontScale}
                 chordStyle={chordStyle}
-                onSectionLayout={(index, y) => {
-                  sectionOffsets.current[index] = y
-                }}
               />
             </ScrollView>
           </ScrollView>
