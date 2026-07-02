@@ -13,7 +13,8 @@ core worship-team flows end to end:
 - **Setlists** — a builder with debounced autosave, drag reorder,
   swipe-to-delete, per-song key overrides, sharing, and whole-set PDF export,
 - a **Daily Word / Reader** — the M'Cheyne daily plan with a translation picker,
-  reader settings, and highlights that persist for the day,
+  reader settings, highlights that persist for the day, and **offline downloads**
+  (save a whole Bible translation to the device; the reader reads it offline-first),
 - **auth** with email/password plus native **Google** and **Apple** sign-in, a
   post-signup **sprite avatar** picker, and an **authenticated-only** route gate,
 - a grouped **Settings** screen with app-wide theme and chord-style defaults, an
@@ -38,8 +39,7 @@ Without a Mac, verify the JS bundle and RN-free logic on any OS with
 `npm run export:ios`, `npm run typecheck`, and `npm run test`.
 
 ## Roadmap
-- **Offline downloads** — on-device song/reading persistence and file management (the screen is scaffolded; the Reader currently needs network).
-- On-device **history** — Home's "Continue where you left off" card.
+- **Offline downloads for songs/setlists** — on-device persistence beyond Bible translations (Daily Word translation downloads already ship).
 - **Password reset / email-confirmation** screens.
 - **Tablet** master-detail layout.
 - **EAS Build / TestFlight** distribution, then **Android** (Android OAuth config is not set up yet).

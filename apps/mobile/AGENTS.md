@@ -37,8 +37,9 @@ the visual rather than porting the HTML/CSS.
   `react-native-gesture-handler` + `react-native-reanimated` (swipe-to-delete,
   transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
   (export + share sheet), `@react-native-google-signin/google-signin` +
-  `expo-apple-authentication` (native auth), and `expo-build-properties`
-  (`useFrameworks: static`, required by google-signin). Add Expo deps with
+  `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
+  offline downloads), and `expo-build-properties` (`useFrameworks: static`,
+  required by google-signin). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
   version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
 
@@ -170,7 +171,7 @@ duplicate logic here and never edit core internals to suit mobile.
 ## Settings & defaults
 
 - **Settings** (`app/settings.tsx` → `SettingsScreen`) is a grouped screen:
-  profile card (→ sprite picker), theme, chord style, Offline & downloads (stub),
+  profile card (→ sprite picker), theme, chord style, Offline & downloads,
   library shortcuts, Help/Feedback, About, sign-out, and **Delete account**
   (`supabase.rpc('delete_user')`). The Language row is a static "English".
 - **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
@@ -198,33 +199,51 @@ duplicate logic here and never edit core internals to suit mobile.
   `toKey`). Queries live in core's `setlistsRepo` (injected client); mobile hooks
   are `useSetlists`, `useSetlistBuilder` (debounced wipe-and-replace autosave),
   and `useLastSet` (Home's "Last set" card).
-- **Local history is stubbed.** `src/lib/recents.ts` (`getRecentlyOpened`) returns
-  empty and will be backed by an on-device history of opened songs — the Viewer
-  should record opens when that layer ships; consume the stub, don't mock data.
+- **Recently-opened history** is real and device-local. `src/lib/recents.ts`
+  follows the `defaults.ts` pattern: storage is injected (`KVStorage`), hydrated
+  once at splash, then `getRecentlyOpened()` is **synchronous** (Home reads it in
+  render, no flash). The Viewer calls `recordSongOpened()` on load — it dedupes by
+  slug, moves the entry to the front, and caps at 20 (`gc.recents.songs.v1` in
+  AsyncStorage, NOT Supabase-synced). Feeds Home's "Continue where you left off".
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),
   base-URL injected. `src/lib/bibleSource.ts` is the **single source seam**
-  (`getPassage`/`getTranslations`) that reads R2 now via `EXPO_PUBLIC_R2_PUBLIC_URL`
-  (default `https://assets.gracechords.com`); a local offline-download source is
-  meant to slot in behind it later (branch stubbed, not wired). Hooks:
+  (`getPassage`/`getTranslations`) via `EXPO_PUBLIC_R2_PUBLIC_URL`
+  (default `https://assets.gracechords.com`); it now reads **offline-first** —
+  `getPassage` returns a downloaded chapter blob when one exists (see the
+  downloads module below) and falls back to R2 otherwise. Hooks:
   `useBibleTranslations`, `usePassageChapter` (`src/lib/useReader.ts`). Reader
   settings (size/typeface/layout/spacing) are **session-ephemeral** — not tied to
   Settings, so they reset on relaunch. **Follow-up:** `apps/web`'s
   `features/readings` + `utils/bible` still hold their own copy of this logic;
   migrate web onto core's `bible` module to remove the duplication.
+- **Offline downloads** (`src/lib/downloads/`, reached from Settings →
+  `OfflineDownloadsScreen`) let users save a **whole Bible translation** for
+  offline reading — every chapter is enumerated up front from core's
+  `BOOK_CHAPTER_COUNTS` (`packages/core/src/bible/chapterCounts.ts`), fetched from
+  R2, and written as on-device blobs (`expo-file-system`). The pure logic
+  (`downloader`, `manifest`, `resolver`, `staleness`) is **dependency-injected**
+  so it unit-tests headless with `memoryBlobStore`; `service.ts` wires the real
+  `expoBlobStore` + `fetch` + `expo-network`. State lives in a manifest
+  (`gc.downloads.v1`, same injected-storage/`useSyncExternalStore` pattern as
+  `defaults.ts`): completed downloads keyed by translation id + a **"Wi-Fi only"**
+  preference (enforced via `expo-network`, raising `WifiRequiredError`). Downloads
+  report progress, can be cancelled (`AbortToken`), retry transient failures with
+  backoff, and are **local-only** to delete (never touches Supabase). `getPassage`
+  in `bibleSource.ts` reads a downloaded chapter before falling back to R2.
+  Staleness compares the stored translations `version` against the live manifest.
 
 ## Out of scope (for now)
 
 The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 `/api/export/setlist`; the ZIP/ChordPro tiles render disabled), **offline
-downloads / file management** (`OfflineDownloadsScreen` is a stub EmptyState and
-`bibleSource.ts`'s offline branch is commented out — the Reader needs network),
-the **on-device history** layer (`recents.ts` returns empty, so Home's "Continue"
-card never shows), the Song Library **"Add song"** button (a no-op) and Settings
-**Language** picker (static "English"), **password reset / email-confirmation**
-screens (the login "Forgot?" link is an informational alert only), tablet
-master-detail, EAS Build / TestFlight, Android (auth code is cross-platform-safe,
-but Android OAuth config — SHA-1, google-services — is not set up), GraceTracks,
-and migrating web's `features/readings` onto core's `bible` module.
+downloads for songs** (Bible-translation downloads ship — see the downloads
+module above — but on-device song/setlist persistence does not), the Song Library
+**"Add song"** button (a no-op) and Settings **Language** picker (static
+"English"), **password reset / email-confirmation** screens (the login "Forgot?"
+link is an informational alert only), tablet master-detail, EAS Build /
+TestFlight, Android (auth code is cross-platform-safe, but Android OAuth config —
+SHA-1, google-services — is not set up), GraceTracks, and migrating web's
+`features/readings` onto core's `bible` module.

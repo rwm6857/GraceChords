@@ -90,7 +90,7 @@ permission matrix and the admin/editor portals.
 Current focus and planned work:
 
 - **Tablet-responsive web layout** — a proper master-detail experience on larger screens.
-- **Mobile app polish** — the iOS client's core flows ship (Song Viewer, Performer, Setlists, Daily Word, auth); next up are offline downloads, on-device history, and EAS Build / TestFlight.
+- **Mobile app polish** — the iOS client's core flows ship (Song Viewer, Performer, Setlists, Daily Word with offline Bible downloads, recent-song history, auth); next up are password reset, offline song persistence, and EAS Build / TestFlight.
 - **Android** — extend the Expo app to Android once the iOS surface stabilizes (Android OAuth config still to set up).
 - **GraceTracks integration** — surface practice stem tracks (`has_stems` / `stem_slug` / `gracetracks_url`) across web and mobile.
 - **Shared-core growth** — migrate more query/util logic into `@gracechords/core` as the mobile app needs it, keeping web and native in lockstep.
