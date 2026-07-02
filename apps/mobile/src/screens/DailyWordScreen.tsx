@@ -17,6 +17,7 @@ import {
   toggleSelection,
   buildCopyText,
   isVerseInRange,
+  passageId,
   type BibleTranslation,
   type Passage,
 } from '@gracechords/core'
@@ -38,6 +39,9 @@ import {
 } from '../lib/useReader'
 
 type Sheet = 'none' | 'translations' | 'settings' | 'date'
+
+// Stable empty set for passages with no selection (never mutated).
+const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
 
 function formatDateLabel(d: Date) {
   const now = new Date()
@@ -61,7 +65,9 @@ export default function DailyWordScreen() {
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectedId, setSelectedId] = useState('')
-  const [selection, setSelection] = useState<Set<number>>(() => new Set())
+  // Highlights persist per passage (keyed by passageId) for the session, so
+  // switching chapters — or copying — never clears them.
+  const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>({})
   const [settings, setSettings] = useState<ReaderSettings>(defaultReaderSettings)
   const [sheet, setSheet] = useState<Sheet>('none')
   const [reloadToken, setReloadToken] = useState(0)
@@ -83,6 +89,9 @@ export default function DailyWordScreen() {
 
   const { chapter, loading, error } = usePassageChapter(currentPassage, selectedTranslation, reloadToken)
 
+  const passageKey = currentPassage ? passageId(currentPassage) : ''
+  const selection = (passageKey ? selectionsByPassage[passageKey] : undefined) || EMPTY_SELECTION
+
   const versesInScope = useMemo(() => {
     if (!chapter || !currentPassage) return []
     return Object.keys(chapter.verses)
@@ -93,10 +102,10 @@ export default function DailyWordScreen() {
       .map((n) => ({ num: n, text: chapter.verses[String(n)] }))
   }, [chapter, currentPassage])
 
-  // A new day starts on its first passage with nothing selected.
+  // A new day starts on its first passage. Highlights are keyed by passage, so
+  // they survive date/chapter switches without being cleared here.
   useEffect(() => {
     setPassageIndex(0)
-    setSelection(new Set())
   }, [date])
 
   // Fade the reading region in whenever new chapter content arrives (chapter
@@ -111,7 +120,6 @@ export default function DailyWordScreen() {
   function changePassage(next: number) {
     if (next < 0 || next >= passages.length || next === passageIndex) return
     setPassageIndex(next)
-    setSelection(new Set())
   }
 
   const pan = useRef(
@@ -133,13 +141,14 @@ export default function DailyWordScreen() {
   const changePassageRef = useRef(changePassage)
   changePassageRef.current = changePassage
 
+  // Copy only the current chapter's selected verses; leave the highlights in
+  // place so they persist through the day.
   async function onCopy() {
     if (!chapter || !currentPassage || selection.size === 0) return
     const text = buildCopyText(currentPassage, sortedVerses(selection), chapter.verses, translationLabel)
     if (!text) return
     await Clipboard.setStringAsync(text)
     Haptics.selectionAsync().catch(() => {})
-    setSelection(new Set())
   }
 
   const fontSize = readerFontSize(settings.pt)
@@ -156,7 +165,11 @@ export default function DailyWordScreen() {
   }
 
   function toggle(num: number) {
-    setSelection((prev) => toggleSelection(prev, num))
+    if (!passageKey) return
+    setSelectionsByPassage((prev) => {
+      const current = prev[passageKey] ?? new Set<number>()
+      return { ...prev, [passageKey]: toggleSelection(current, num) }
+    })
   }
 
   const controlButton = {
@@ -381,7 +394,6 @@ export default function DailyWordScreen() {
         selectedId={effectiveId}
         onSelect={(item) => {
           setSelectedId(item.id)
-          setSelection(new Set())
           setSheet('none')
         }}
       />
