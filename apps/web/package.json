@@ -20,6 +20,7 @@
   "dependencies": {
     "@gracechords/core": "*",
     "@gracechords/tokens": "*",
+    "@hyzyla/pdfium": "2.1.13",
     "@mdxeditor/editor": "^3.52.1",
     "@supabase/supabase-js": "^2.98.0",
     "@tiptap/extension-image": "^3.20.1",
