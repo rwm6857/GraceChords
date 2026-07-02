@@ -1,11 +1,11 @@
 import {
-  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import BottomSheet from './BottomSheet'
 import Button from './Button'
 import Card from './Card'
 import Chip from './Chip'
@@ -55,62 +55,68 @@ export default function FilterSortSheet({
   const insets = useSafeAreaInsets()
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable
-          onPress={onClose}
-          accessibilityLabel="Close filter and sort"
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      title="Filter & sort"
+      actionLabel="Reset"
+      onAction={onReset}
+      closeAccessibilityLabel="Close filter and sort"
+    >
+      <ScrollView
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ padding: t.spacing.lg }}
+      >
+        {/* Sort by */}
+        <Text
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.34)',
-          }}
-        />
-        <View
-          style={{
-            maxHeight: '82%',
-            backgroundColor: t.colors.surface,
-            borderTopLeftRadius: t.radii.sheet,
-            borderTopRightRadius: t.radii.sheet,
-            overflow: 'hidden',
+            fontSize: t.typography.overline.fontSize,
+            fontWeight: t.typography.overline.fontWeight,
+            letterSpacing: t.typography.overline.letterSpacing,
+            textTransform: 'uppercase',
+            color: t.colors.muted,
+            paddingBottom: t.spacing.sm,
           }}
         >
-          {/* Grabber */}
-          <View style={{ alignItems: 'center', paddingTop: t.spacing.sm }}>
-            <View
-              style={{ width: 36, height: 5, borderRadius: 3, backgroundColor: t.colors.border }}
-            />
-          </View>
+          Sort by
+        </Text>
+        <Card>
+          {SORT_OPTIONS.map((opt, i) => {
+            const selected = sortKey === opt.key
+            return (
+              <Pressable
+                key={opt.key}
+                onPress={() => onToggleSort(opt.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  height: 48,
+                  paddingHorizontal: 14,
+                  borderTopWidth: i === 0 ? 0 : 0.5,
+                  borderTopColor: t.colors.border,
+                  backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
+                })}
+              >
+                <Text style={{ flex: 1, fontSize: 16.5, letterSpacing: -0.3, color: t.colors.ink }}>
+                  {opt.label}
+                </Text>
+                {selected ? (
+                  <SymbolIcon
+                    name={sortDir === 'asc' ? 'chevron.up' : 'chevron.down'}
+                    size={17}
+                    color={t.colors.accent}
+                  />
+                ) : null}
+              </Pressable>
+            )
+          })}
+        </Card>
 
-          {/* Title row */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: t.spacing.lg,
-              paddingTop: t.spacing.sm,
-              paddingBottom: t.spacing.md,
-              borderBottomWidth: 1,
-              borderBottomColor: t.colors.border,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-              Filter &amp; sort
-            </Text>
-            <Pressable onPress={onReset} accessibilityRole="button" hitSlop={8}>
-              <Text style={{ fontSize: 15, color: t.colors.textAccent }}>Reset</Text>
-            </Pressable>
-          </View>
-
-          <ScrollView
-            style={{ flexGrow: 0 }}
-            contentContainerStyle={{ padding: t.spacing.lg }}
-          >
-            {/* Sort by */}
+        {/* Filter by tag */}
+        {availableTags.length > 0 ? (
+          <>
             <Text
               style={{
                 fontSize: t.typography.overline.fontSize,
@@ -118,91 +124,40 @@ export default function FilterSortSheet({
                 letterSpacing: t.typography.overline.letterSpacing,
                 textTransform: 'uppercase',
                 color: t.colors.muted,
-                paddingBottom: t.spacing.sm,
+                paddingBottom: t.spacing.md,
+                marginTop: t.spacing.xl,
               }}
             >
-              Sort by
+              Filter by tag
             </Text>
-            <Card>
-              {SORT_OPTIONS.map((opt, i) => {
-                const selected = sortKey === opt.key
-                return (
-                  <Pressable
-                    key={opt.key}
-                    onPress={() => onToggleSort(opt.key)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    style={({ pressed }) => ({
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      height: 48,
-                      paddingHorizontal: 14,
-                      borderTopWidth: i === 0 ? 0 : 0.5,
-                      borderTopColor: t.colors.border,
-                      backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
-                    })}
-                  >
-                    <Text style={{ flex: 1, fontSize: 16.5, letterSpacing: -0.3, color: t.colors.ink }}>
-                      {opt.label}
-                    </Text>
-                    {selected ? (
-                      <SymbolIcon
-                        name={sortDir === 'asc' ? 'chevron.up' : 'chevron.down'}
-                        size={17}
-                        color={t.colors.accent}
-                      />
-                    ) : null}
-                  </Pressable>
-                )
-              })}
-            </Card>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9 }}>
+              {availableTags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  selected={selectedTags.has(tag)}
+                  onPress={() => onToggleTag(tag)}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
+      </ScrollView>
 
-            {/* Filter by tag */}
-            {availableTags.length > 0 ? (
-              <>
-                <Text
-                  style={{
-                    fontSize: t.typography.overline.fontSize,
-                    fontWeight: t.typography.overline.fontWeight,
-                    letterSpacing: t.typography.overline.letterSpacing,
-                    textTransform: 'uppercase',
-                    color: t.colors.muted,
-                    paddingBottom: t.spacing.md,
-                    marginTop: t.spacing.xl,
-                  }}
-                >
-                  Filter by tag
-                </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9 }}>
-                  {availableTags.map((tag) => (
-                    <Chip
-                      key={tag}
-                      label={tag}
-                      selected={selectedTags.has(tag)}
-                      onPress={() => onToggleTag(tag)}
-                    />
-                  ))}
-                </View>
-              </>
-            ) : null}
-          </ScrollView>
-
-          {/* Footer */}
-          <View
-            style={{
-              padding: t.spacing.md,
-              paddingBottom: t.spacing.md + insets.bottom,
-              borderTopWidth: 1,
-              borderTopColor: t.colors.border,
-            }}
-          >
-            <Button
-              title={`Show ${resultCount} ${resultCount === 1 ? 'song' : 'songs'}`}
-              onPress={onClose}
-            />
-          </View>
-        </View>
+      {/* Footer */}
+      <View
+        style={{
+          padding: t.spacing.md,
+          paddingBottom: t.spacing.md + insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: t.colors.border,
+        }}
+      >
+        <Button
+          title={`Show ${resultCount} ${resultCount === 1 ? 'song' : 'songs'}`}
+          onPress={onClose}
+        />
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }
