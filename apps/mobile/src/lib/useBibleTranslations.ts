@@ -20,13 +20,6 @@ type State = {
   loading: boolean
 }
 
-// Process-lifetime cache — the manifest is static within a session.
-let cached: Promise<{ translations: BibleTranslation[]; defaultTranslationId: string }> | null = null
-function loadOnce() {
-  if (!cached) cached = getTranslations()
-  return cached
-}
-
 export function useBibleTranslations(): State {
   const fallback = getFallbackBibleTranslations()
   const [state, setState] = useState<State>({
@@ -38,7 +31,9 @@ export function useBibleTranslations(): State {
 
   useEffect(() => {
     let alive = true
-    loadOnce().then((result) => {
+    // getTranslations is memoized in bibleSource, so this shares the manifest
+    // fetch with the app-open prefetch.
+    getTranslations().then((result) => {
       if (!alive) return
       setState({
         translations: result.translations,
