@@ -1,7 +1,6 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
-  isRtlBibleLanguage,
   translationOptionLabel,
   type BibleTranslation,
   type BibleTranslationGroup,
@@ -11,8 +10,10 @@ import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // Translation picker (Daily Word). Grouped by language; the active translation
-// carries a checkmark and accent text. RTL languages (e.g. Arabic) right-align
-// their rows. Offline download state is out of scope this pass — selection only.
+// carries a checkmark and accent text. Rows always read left-to-right: the
+// option labels are English names/abbreviations (e.g. "Ketab El Hayat (KEH)")
+// even for RTL-script Bibles, so aligning them right would look wrong. Offline
+// download state is out of scope this pass — selection only.
 
 export default function TranslationPickerSheet({
   visible,
@@ -54,7 +55,6 @@ export default function TranslationPickerSheet({
             </Text>
             {group.translations.map((item) => {
               const selected = item.id === selectedId
-              const rtl = isRtlBibleLanguage(item.language)
               return (
                 <Pressable
                   key={item.id}
@@ -62,7 +62,7 @@ export default function TranslationPickerSheet({
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   style={({ pressed }) => ({
-                    flexDirection: rtl ? 'row-reverse' : 'row',
+                    flexDirection: 'row',
                     alignItems: 'center',
                     gap: t.spacing.md,
                     paddingHorizontal: t.spacing.lg,
@@ -75,8 +75,8 @@ export default function TranslationPickerSheet({
                       flex: 1,
                       fontSize: 16,
                       letterSpacing: -0.2,
-                      textAlign: rtl ? 'right' : 'left',
-                      writingDirection: rtl ? 'rtl' : 'ltr',
+                      textAlign: 'left',
+                      writingDirection: 'ltr',
                       color: selected ? t.colors.textAccent : t.colors.ink,
                       fontWeight: selected ? '700' : '400',
                     }}

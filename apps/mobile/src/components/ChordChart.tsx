@@ -8,16 +8,19 @@ import {
 } from '@gracechords/core'
 import { useTheme } from '../theme/ThemeProvider'
 
-// Chord chart: lyrics render in a proportional SERIF face and wrap to the
-// screen width; chords stay MONOSPACE in the accent color, stacked above the
-// word they sit on (word-anchored, so no monospace-padding math and no
-// horizontal scroll). Chord positions come from the parser as character
-// indices into the lyric line; each is attached to the word it falls within.
-// Transposition + chord style are applied per symbol at render time.
+// Chord chart: lyrics render in the system SANS-SERIF face (SF Pro on iOS,
+// Roboto on Android) to match the rest of the app, and wrap to the screen
+// width; chords stay MONOSPACE in the accent color, stacked above the word
+// they sit on (word-anchored, so no monospace-padding math and no horizontal
+// scroll). Chord positions come from the parser as character indices into the
+// lyric line; each is attached to the word it falls within. Transposition +
+// chord style are applied per symbol at render time.
 
 export const CHART_MONO = Platform.select({ ios: 'Menlo', default: 'monospace' })
-// System serif on iOS (Georgia is always present); "serif" elsewhere.
-export const CHART_SERIF = Platform.select({ ios: 'Georgia', default: 'serif' })
+// System sans-serif: RN falls back to the platform system font when fontFamily
+// is unset, so `undefined` gives SF Pro on iOS / Roboto on Android — the same
+// face the app chrome uses.
+export const CHART_LYRIC_FONT = undefined
 export const CHART_FONT_SIZE = 17
 export const CHART_LINE_HEIGHT = 24
 
@@ -136,7 +139,7 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
   const chordSize = 14 * fontScale
   const chordLineHeight = Math.round(20 * fontScale)
 
-  const serif = { fontFamily: CHART_SERIF, fontSize: lyricSize, lineHeight, color: t.colors.ink }
+  const lyric = { fontFamily: CHART_LYRIC_FONT, fontSize: lyricSize, lineHeight, color: t.colors.ink }
   const chordStyleObj = {
     fontFamily: CHART_MONO,
     fontSize: chordSize,
@@ -164,7 +167,7 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
 
   if (line.comment) {
     return (
-      <Text style={{ fontFamily: CHART_SERIF, fontSize: 14.5 * fontScale, lineHeight, fontStyle: 'italic', color: t.colors.sec }}>
+      <Text style={{ fontFamily: CHART_LYRIC_FONT, fontSize: 14.5 * fontScale, lineHeight, fontStyle: 'italic', color: t.colors.sec }}>
         {line.comment}
       </Text>
     )
@@ -179,9 +182,9 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
     return <View style={{ height: lineHeight }} />
   }
 
-  // Lyrics with no chords (or chords hidden): plain wrapping serif line.
+  // Lyrics with no chords (or chords hidden): plain wrapping line.
   if (!hasChords) {
-    return <Text style={serif}>{line.lyrics || ' '}</Text>
+    return <Text style={lyric}>{line.lyrics || ' '}</Text>
   }
 
   const cells = buildWordCells(
@@ -200,7 +203,7 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
           <Text style={[chordStyleObj, { minHeight: chordLineHeight }]}>
             {cell.chords.join(' ') || ' '}
           </Text>
-          {cell.text ? <Text style={serif}>{cell.text}</Text> : <Text style={serif}> </Text>}
+          {cell.text ? <Text style={lyric}>{cell.text}</Text> : <Text style={lyric}> </Text>}
         </View>
       ))}
     </View>
