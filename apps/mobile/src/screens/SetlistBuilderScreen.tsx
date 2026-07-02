@@ -169,6 +169,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   }
 
   async function copyLink() {
+    if (items.length === 0) {
+      showToast('Add songs first')
+      return
+    }
     // Same param-style share URL the web builder copies.
     const ids = items.map((item) => encodeURIComponent(item.songId)).join(',')
     const keys = items.map((item) => encodeURIComponent(item.toKey || '')).join(',')
@@ -181,6 +185,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   }
 
   async function sendTelegram() {
+    if (items.length === 0) {
+      showToast('Add songs first')
+      return
+    }
     try {
       const result = await pushSetToTelegram(
         items.map((item, i) => ({ songId: item.songId, key: effectiveKeys[i] })),
@@ -453,7 +461,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         onClose={() => setMenuIndex(null)}
         songTitle={menuIndex != null ? items[menuIndex]?.song.title ?? '' : ''}
         onChangeKey={() => {
-          if (menuIndex != null) setKeyIndex(menuIndex)
+          // Wait out the row sheet's exit animation — iOS won't present a new
+          // modal while another is still dismissing.
+          const index = menuIndex
+          if (index != null) setTimeout(() => setKeyIndex(index), 260)
         }}
         onDuplicate={() => {
           if (menuIndex != null) duplicateAt(menuIndex)
