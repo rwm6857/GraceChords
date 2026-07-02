@@ -14,6 +14,9 @@ export * from './chordpro/diatonicChords'
 // Transposition + KEYS (chordpro/index.js)
 export * from './chordpro/index.js'
 
+// Bible + M'Cheyne reading domain (shared with the mobile Daily Word Reader)
+export * from './bible'
+
 // Song-domain pure helpers
 export * from './songs/chords'
 export * from './songs/instrumental'
