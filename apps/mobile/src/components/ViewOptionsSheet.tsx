@@ -4,6 +4,18 @@ import BottomSheet from './BottomSheet'
 import type { ChordStyle } from './ChordChart'
 import { useTheme } from '../theme/ThemeProvider'
 
+// Accidental spelling preference: Auto derives from the key; ♯/♭ force it.
+export type Accidental = 'auto' | 'sharp' | 'flat'
+
+// Resolve the boolean `preferFlat` the chart/transpose helpers expect from the
+// user's accidental choice; Auto keeps the prior behavior (flat if the key is
+// spelled with a flat, e.g. Bb/Eb).
+export function resolvePreferFlat(accidental: Accidental, nativeKey: string): boolean {
+  if (accidental === 'flat') return true
+  if (accidental === 'sharp') return false
+  return /^[A-G]b/.test(nativeKey)
+}
+
 // The viewer's "View options" bottom sheet (••• button). Everything is
 // controlled/ephemeral — the screen owns the state, nothing persists.
 // CHORD STYLE has no Numbers segment: no Nashville conversion exists in core
@@ -94,6 +106,8 @@ export default function ViewOptionsSheet({
   onFontScale,
   chordStyle,
   onChordStyle,
+  accidental,
+  onAccidental,
   autoHide,
   onAutoHide,
 }: {
@@ -107,6 +121,9 @@ export default function ViewOptionsSheet({
   onFontScale: (v: number) => void
   chordStyle: ChordStyle
   onChordStyle: (v: ChordStyle) => void
+  // Accidental spelling (session-scoped). Optional — rendered only when wired.
+  accidental?: Accidental
+  onAccidental?: (v: Accidental) => void
   // Optional "hide controls when idle" toggle — rendered only when the screen
   // wires it (Song Viewer + Setlist Performer).
   autoHide?: boolean
@@ -228,6 +245,23 @@ export default function ViewOptionsSheet({
           onChange={onChordStyle}
         />
 
+        {/* Accidentals — Auto derives from the key; ♯/♭ force the spelling
+            (session-scoped). Rendered only when the screen wires it. */}
+        {onAccidental ? (
+          <>
+            <OverlineLabel>Accidentals</OverlineLabel>
+            <Segmented
+              options={[
+                { value: 'auto', label: 'Auto' },
+                { value: 'sharp', label: '♯ Sharps' },
+                { value: 'flat', label: '♭ Flats' },
+              ]}
+              value={accidental ?? 'auto'}
+              onChange={onAccidental}
+            />
+          </>
+        ) : null}
+
         {/* Hide controls when idle — persists across launches (unlike the
             options above). Rendered only when the screen wires it. */}
         {onAutoHide ? (
@@ -236,12 +270,7 @@ export default function ViewOptionsSheet({
             <View
               style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
             >
-              <View style={{ flex: 1, paddingRight: t.spacing.md }}>
-                <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
-                <Text style={{ marginTop: 2, fontSize: 12.5, color: t.colors.muted }}>
-                  Full-page view after a few seconds. Tap to bring them back.
-                </Text>
-              </View>
+              <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
               <Switch
                 value={!!autoHide}
                 onValueChange={onAutoHide}

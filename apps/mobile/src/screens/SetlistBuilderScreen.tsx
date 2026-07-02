@@ -33,6 +33,7 @@ import { supabase } from '../lib/supabase'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
+import { uuidv4 } from '../lib/uuid'
 import { errMessage } from '../lib/errors'
 
 const TOAST_MS = 1900
@@ -170,12 +171,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   }
 
   async function newSet() {
-    try {
-      const row = (await createSetlist(supabase)) as { id: string }
-      router.replace(`/setlist/${row.id}`)
-    } catch (err: unknown) {
+    // Optimistic: open the new (empty) set immediately; insert in the
+    // background (the builder retries its initial fetch to cover the race).
+    const id = uuidv4()
+    router.replace(`/setlist/${id}`)
+    createSetlist(supabase, { id }).catch((err: unknown) => {
       Alert.alert('Could not create set', errMessage(err))
-    }
+    })
   }
 
   async function copyLink() {

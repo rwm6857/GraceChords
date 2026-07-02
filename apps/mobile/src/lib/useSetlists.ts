@@ -51,8 +51,10 @@ export function useSetlists() {
   // No mount fetch here: the owning screen's useFocusEffect fires on initial
   // focus too, so fetching here would double the first load.
 
-  const create = useCallback(async (name?: string) => {
-    const row = (await createSetlist(supabase, { name })) as {
+  // Pass `id` to create with a client-minted UUID (optimistic: navigate first,
+  // let this INSERT land in the background).
+  const create = useCallback(async (opts?: { name?: string; id?: string }) => {
+    const row = (await createSetlist(supabase, opts ?? {})) as {
       id: string
       name: string
     }

@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react'
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import Screen from '../components/Screen'
 import ListRow from '../components/ListRow'
-import Button from '../components/Button'
+import EmptyState from '../components/EmptyState'
+import LoadingSkeleton from '../components/LoadingSkeleton'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { timeAgo } from '../lib/relativeTime'
+import { uuidv4 } from '../lib/uuid'
 import { errMessage } from '../lib/errors'
 
 // The Setlists tab: every personal setlist (newest-edited first), a New set
@@ -36,9 +38,13 @@ export default function SetlistsScreen() {
   async function onCreate() {
     if (creating) return
     setCreating(true)
+    // Optimistic: mint the id, open the builder instantly, insert in the
+    // background. The builder retries its initial fetch a few times to cover
+    // the in-flight INSERT.
+    const id = uuidv4()
+    router.push(`/setlist/${id}`)
     try {
-      const row = await create()
-      router.push(`/setlist/${row.id}`)
+      await create({ id })
     } catch (err: unknown) {
       Alert.alert('Could not create set', errMessage(err))
     } finally {
@@ -56,11 +62,7 @@ export default function SetlistsScreen() {
 
   function renderBody() {
     if (loading) {
-      return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={t.colors.accent} />
-        </View>
-      )
+      return <LoadingSkeleton label="Syncing your setlists…" />
     }
     if (error) {
       return (
@@ -73,20 +75,13 @@ export default function SetlistsScreen() {
     }
     if (setlists.length === 0) {
       return (
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: t.spacing.xl,
-            gap: t.spacing.lg,
-          }}
-        >
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, textAlign: 'center' }}>
-            No setlists yet.{'\n'}Create one to start planning a service.
-          </Text>
-          <Button title="New set" onPress={onCreate} disabled={creating} fullWidth={false} />
-        </View>
+        <EmptyState
+          icon="list.bullet"
+          title="No setlists yet"
+          subtitle="Create one to start planning a service."
+          actionLabel="New set"
+          onAction={onCreate}
+        />
       )
     }
     return (

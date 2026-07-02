@@ -15,14 +15,19 @@ import {
 import ChordChart, {
   CHART_FONT_SIZE,
   CHART_LINE_HEIGHT,
-  CHART_MONO,
+  CHART_SERIF,
   type ChordStyle,
 } from '../../src/components/ChordChart'
+// CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_SERIF drive the raw-text fallback.
 import ExportSheet from '../../src/components/ExportSheet'
 import Screen from '../../src/components/Screen'
+import StarButton from '../../src/components/StarButton'
 import SymbolIcon from '../../src/components/SymbolIcon'
 import TransposeBar from '../../src/components/TransposeBar'
-import ViewOptionsSheet from '../../src/components/ViewOptionsSheet'
+import ViewOptionsSheet, {
+  type Accidental,
+  resolvePreferFlat,
+} from '../../src/components/ViewOptionsSheet'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
@@ -67,18 +72,23 @@ export default function ViewerScreen() {
   // race (stepsBetween degrades to 0 while keys are unknown). Ephemeral —
   // discarded on unmount, never persisted.
   const [delta, setDelta] = useState(0)
-  const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
-  const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
-  const steps = (((seedSteps + delta) % 12) + 12) % 12
-  const preferFlat = /^[A-G]b/.test(nativeKey)
-  const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
-
   // View options — all session-ephemeral.
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
+  const [accidental, setAccidental] = useState<Accidental>('auto')
   const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
+  // Header is a floating overlay so the chart runs edge-to-edge; its measured
+  // height seeds the chart's top inset, so the first line starts where the
+  // header sits and the user can scroll up into that space.
+  const [headerH, setHeaderH] = useState(0)
+
+  const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
+  const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
+  const steps = (((seedSteps + delta) % 12) + 12) % 12
+  const preferFlat = resolvePreferFlat(accidental, nativeKey)
+  const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
 
   // Chrome auto-hide (persisted preference). Pinned visible while a sheet is
   // open so it can't hide behind one. Tap the chart to bring it back.
@@ -167,8 +177,20 @@ export default function ViewerScreen() {
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View
+        onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
         pointerEvents={chromeVisible ? 'auto' : 'none'}
-        style={{ opacity: chromeOpacity, paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          opacity: chromeOpacity,
+          backgroundColor: t.colors.bg,
+          paddingHorizontal: t.spacing.lg,
+          paddingTop: t.spacing.sm,
+          paddingBottom: t.spacing.sm,
+        }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pressable
@@ -200,17 +222,21 @@ export default function ViewerScreen() {
           </View>
         </View>
 
-        <Text
-          style={{
-            marginTop: t.spacing.md,
-            fontSize: t.typography.largeTitle.fontSize,
-            fontWeight: t.typography.largeTitle.fontWeight,
-            letterSpacing: t.typography.largeTitle.letterSpacing,
-            color: t.colors.ink,
-          }}
-        >
-          {displayTitle}
-        </Text>
+        <View style={{ marginTop: t.spacing.md, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
+          <Text
+            numberOfLines={2}
+            style={{
+              flexShrink: 1,
+              fontSize: t.typography.largeTitle.fontSize,
+              fontWeight: t.typography.largeTitle.fontWeight,
+              letterSpacing: t.typography.largeTitle.letterSpacing,
+              color: t.colors.ink,
+            }}
+          >
+            {displayTitle}
+          </Text>
+          <StarButton songId={song?.id} />
+        </View>
         {/* Subtitle row per the reference: artist · Key pill (+ time sig / BPM) */}
         <View
           style={{
@@ -270,21 +296,20 @@ export default function ViewerScreen() {
             <ScrollView
               style={{ flex: 1 }}
               contentContainerStyle={{
-                padding: t.spacing.lg,
+                paddingHorizontal: t.spacing.lg,
+                paddingTop: headerH + t.spacing.sm,
                 paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
               }}
             >
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <ChordChart
-                  doc={doc}
-                  steps={steps}
-                  preferFlat={preferFlat}
-                  showChords={showChords}
-                  showSections={showSections}
-                  fontScale={fontScale}
-                  chordStyle={chordStyle}
-                />
-              </ScrollView>
+              <ChordChart
+                doc={doc}
+                steps={steps}
+                preferFlat={preferFlat}
+                showChords={showChords}
+                showSections={showSections}
+                fontScale={fontScale}
+                chordStyle={chordStyle}
+              />
             </ScrollView>
           </GestureDetector>
           {keyLabel ? (
@@ -318,6 +343,8 @@ export default function ViewerScreen() {
         onFontScale={setFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
+        accidental={accidental}
+        onAccidental={setAccidental}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
       />
@@ -377,7 +404,7 @@ function RawFallback({ content, parseError }: { content: string; parseError: boo
         <Text
           key={i}
           style={{
-            fontFamily: CHART_MONO,
+            fontFamily: CHART_SERIF,
             fontSize: CHART_FONT_SIZE,
             lineHeight: CHART_LINE_HEIGHT,
             color: t.colors.ink,

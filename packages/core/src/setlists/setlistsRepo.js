@@ -29,12 +29,20 @@ export async function fetchPersonalSetlists(client) {
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {string} setlistId
- * @returns {Promise<{ id: string, name: string, service_date: string|null, updated_at: string, entries: Array<{ id: string, song_id: string, position: number, toKey: string|null, notes: string|null }> }|null>}
+ * @returns {Promise<{ id: string, name: string, service_date: string|null, updated_at: string, entries: Array<{ id: string, song_id: string, position: number, toKey: string|null, notes: string|null, song: { slug: string, title: string, artist: string|null, default_key: string|null, tempo: number|null, time_signature: string|null }|null }> }|null>}
  */
 export async function fetchSetlist(client, setlistId) {
+  // Embed each entry's song metadata so the builder/performer can render rows
+  // immediately without waiting on the full song catalog to load. The chart
+  // body (chordpro_content) is intentionally NOT embedded — it's fetched
+  // per-song when a chart is actually shown.
   const { data, error } = await client
     .from('setlists')
-    .select('id, name, service_date, updated_at, setlist_songs(id, song_id, position, key_override, notes)')
+    .select(
+      'id, name, service_date, updated_at, ' +
+        'setlist_songs(id, song_id, position, key_override, notes, ' +
+        'songs(slug, title, artist, default_key, tempo, time_signature))',
+    )
     .eq('id', setlistId)
     .maybeSingle()
   if (error) throw error
@@ -48,6 +56,7 @@ export async function fetchSetlist(client, setlistId) {
       position: row.position,
       toKey: row.key_override || null,
       notes: row.notes || null,
+      song: row.songs || null,
     }))
   return {
     id: data.id,
@@ -62,7 +71,9 @@ export async function fetchSetlist(client, setlistId) {
  * Create a new personal setlist (no songs yet) owned by the current user.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @param {{ name?: string, serviceDate?: string|null }} [opts]
+ * @param {{ name?: string, serviceDate?: string|null, id?: string }} [opts]
+ *   Pass `id` to use a client-generated UUID (optimistic create): the caller
+ *   can navigate to the setlist immediately while this insert is in flight.
  * @returns {Promise<{ id: string, name: string, service_date: string|null, created_at: string, updated_at: string }>}
  */
 export async function createSetlist(client, opts = {}) {
@@ -70,15 +81,18 @@ export async function createSetlist(client, opts = {}) {
   const user = userData && userData.user
   if (authError || !user) throw authError || new Error('Not authenticated')
 
+  const row = {
+    owner_id: user.id,
+    name: (opts.name || '').trim() || 'New Setlist',
+    service_date: opts.serviceDate || null,
+    team_id: null,
+    edit_mode: 'suggest',
+  }
+  if (opts.id) row.id = opts.id
+
   const { data, error } = await client
     .from('setlists')
-    .insert({
-      owner_id: user.id,
-      name: (opts.name || '').trim() || 'New Setlist',
-      service_date: opts.serviceDate || null,
-      team_id: null,
-      edit_mode: 'suggest',
-    })
+    .insert(row)
     .select('id, name, service_date, created_at, updated_at')
     .single()
   if (error) throw error

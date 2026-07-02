@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -30,15 +30,19 @@ import {
 } from '@gracechords/core'
 import ChordChart, { type ChordStyle } from '../components/ChordChart'
 import Screen from '../components/Screen'
+import StarButton from '../components/StarButton'
 import SymbolIcon from '../components/SymbolIcon'
 import TransposeBar from '../components/TransposeBar'
-import ViewOptionsSheet from '../components/ViewOptionsSheet'
+import ViewOptionsSheet, {
+  type Accidental,
+  resolvePreferFlat,
+} from '../components/ViewOptionsSheet'
 import PerformerShareSheet, {
   type PerformerShareHandlers,
 } from '../components/setlist/PerformerShareSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
-import { useSong } from '../lib/useSong'
+import { prefetchSong, useSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
@@ -89,22 +93,31 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     [items],
   )
 
+  // Prefetch every song's chart body in the background so Prev/Next/rail jumps
+  // render instantly (the current song is fetched on demand by useSong below).
+  useEffect(() => {
+    for (const it of items) prefetchSong(it.song.slug)
+  }, [items])
+
   // Transpose — ephemeral, reset on song change. nativeKey comes from the
   // entry's own catalog metadata (always current, unlike the loading `song`).
   const [delta, setDelta] = useState(0)
-  const nativeKey = doc?.meta?.key || entry?.song.default_key || ''
-  const targetKey = entryKeys[index] || nativeKey
-  const seedSteps = targetKey ? stepsBetween(nativeKey, targetKey) : 0
-  const steps = (((seedSteps + delta) % 12) + 12) % 12
-  const preferFlat = /^[A-G]b/.test(nativeKey)
-  const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
-
   // View options — session-ephemeral.
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
+  const [accidental, setAccidental] = useState<Accidental>('auto')
   const [sheet, setSheet] = useState<null | 'options' | 'share'>(null)
+  // Floating-overlay header height → chart top inset (edge-to-edge).
+  const [headerH, setHeaderH] = useState(0)
+
+  const nativeKey = doc?.meta?.key || entry?.song.default_key || ''
+  const targetKey = entryKeys[index] || nativeKey
+  const seedSteps = targetKey ? stepsBetween(nativeKey, targetKey) : 0
+  const steps = (((seedSteps + delta) % 12) + 12) % 12
+  const preferFlat = resolvePreferFlat(accidental, nativeKey)
+  const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
@@ -300,10 +313,23 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header (auto-hides with the rest of the chrome) */}
+      {/* Header — floating overlay so the chart runs edge-to-edge; auto-hides
+          with the rest of the chrome. */}
       <RNAnimated.View
+        onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
         pointerEvents={chromeVisible ? 'auto' : 'none'}
-        style={{ opacity: chromeOpacity, paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          opacity: chromeOpacity,
+          backgroundColor: t.colors.bg,
+          paddingHorizontal: t.spacing.lg,
+          paddingTop: t.spacing.sm,
+          paddingBottom: t.spacing.sm,
+        }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pressable
@@ -357,10 +383,11 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                     style={{
                       height: 4,
                       borderRadius: 2,
+                      // Done = faded accent, current = lit accent, upcoming = empty.
                       backgroundColor: isCurrent
                         ? t.colors.accent
                         : isPast
-                          ? t.colors.textAccent
+                          ? t.colors.accentSoft
                           : t.colors.surfaceAlt,
                     }}
                   />
@@ -370,19 +397,22 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           </View>
         ) : null}
 
-        {/* Title + artist + key */}
-        <Text
-          numberOfLines={1}
-          style={{
-            marginTop: t.spacing.md,
-            fontSize: t.typography.largeTitle.fontSize,
-            fontWeight: t.typography.largeTitle.fontWeight,
-            letterSpacing: t.typography.largeTitle.letterSpacing,
-            color: t.colors.ink,
-          }}
-        >
-          {displayTitle}
-        </Text>
+        {/* Title (+ favorite) + artist + key */}
+        <View style={{ marginTop: t.spacing.md, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              flexShrink: 1,
+              fontSize: t.typography.largeTitle.fontSize,
+              fontWeight: t.typography.largeTitle.fontWeight,
+              letterSpacing: t.typography.largeTitle.letterSpacing,
+              color: t.colors.ink,
+            }}
+          >
+            {displayTitle}
+          </Text>
+          <StarButton songId={entry?.song.id} />
+        </View>
         <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
           {displayArtist ? (
             <Text style={{ fontSize: 13.5, color: t.colors.sec }}>{displayArtist}</Text>
@@ -403,11 +433,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                 Key of {keyLabel}
               </Text>
             </View>
-          ) : null}
-          {count > 1 ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>
-              {index + 1} / {count}
-            </Text>
           ) : null}
         </View>
       </RNAnimated.View>
@@ -434,22 +459,24 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
             {doc ? (
               <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE }}
+                contentContainerStyle={{
+                  paddingHorizontal: t.spacing.lg,
+                  paddingTop: headerH + t.spacing.sm,
+                  paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
+                }}
               >
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <ChordChart
-                    doc={doc}
-                    steps={steps}
-                    preferFlat={preferFlat}
-                    showChords={showChords}
-                    showSections={showSections}
-                    fontScale={fontScale}
-                    chordStyle={chordStyle}
-                  />
-                </ScrollView>
+                <ChordChart
+                  doc={doc}
+                  steps={steps}
+                  preferFlat={preferFlat}
+                  showChords={showChords}
+                  showSections={showSections}
+                  fontScale={fontScale}
+                  chordStyle={chordStyle}
+                />
               </ScrollView>
             ) : (
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl, paddingTop: headerH }}>
                 <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
                   {parseError ? 'Chords unavailable' : 'No chart available'}
                 </Text>
@@ -462,7 +489,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         </GestureDetector>
       )}
 
-      {/* Bottom controls: Prev · transpose island · Next (auto-hides too) */}
+      {/* Bottom controls: equal gutters hold Prev/Next so the transpose island
+          stays dead-center regardless of nav presence (auto-hides too). */}
       <RNAnimated.View
         pointerEvents={chromeVisible ? 'box-none' : 'none'}
         style={{
@@ -473,43 +501,42 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           bottom: 26,
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
           paddingHorizontal: t.spacing.lg,
         }}
       >
-        {count > 1 ? (
-          <Pressable
-            onPress={goPrev}
-            disabled={index === 0}
-            accessibilityRole="button"
-            accessibilityLabel="Previous song"
-            style={navButtonStyle(index === 0)}
-          >
-            <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} weight="semibold" />
-          </Pressable>
-        ) : (
-          <View style={{ width: 50 }} />
-        )}
+        <View style={{ width: 50, alignItems: 'flex-start' }}>
+          {count > 1 ? (
+            <Pressable
+              onPress={goPrev}
+              disabled={index === 0}
+              accessibilityRole="button"
+              accessibilityLabel="Previous song"
+              style={navButtonStyle(index === 0)}
+            >
+              <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} weight="semibold" />
+            </Pressable>
+          ) : null}
+        </View>
 
-        {keyLabel ? (
-          <TransposeBar keyLabel={keyLabel} onDown={() => transposeBy(-1)} onUp={() => transposeBy(1)} />
-        ) : (
-          <View />
-        )}
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          {keyLabel ? (
+            <TransposeBar keyLabel={keyLabel} onDown={() => transposeBy(-1)} onUp={() => transposeBy(1)} />
+          ) : null}
+        </View>
 
-        {count > 1 ? (
-          <Pressable
-            onPress={goNext}
-            disabled={index === count - 1}
-            accessibilityRole="button"
-            accessibilityLabel="Next song"
-            style={navButtonStyle(index === count - 1)}
-          >
-            <SymbolIcon name="chevron.right" size={22} color={t.colors.accent} weight="semibold" />
-          </Pressable>
-        ) : (
-          <View style={{ width: 50 }} />
-        )}
+        <View style={{ width: 50, alignItems: 'flex-end' }}>
+          {count > 1 ? (
+            <Pressable
+              onPress={goNext}
+              disabled={index === count - 1}
+              accessibilityRole="button"
+              accessibilityLabel="Next song"
+              style={navButtonStyle(index === count - 1)}
+            >
+              <SymbolIcon name="chevron.right" size={22} color={t.colors.accent} weight="semibold" />
+            </Pressable>
+          ) : null}
+        </View>
       </RNAnimated.View>
 
       <ViewOptionsSheet
@@ -523,6 +550,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         onFontScale={setFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
+        accidental={accidental}
+        onAccidental={setAccidental}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
       />
