@@ -31,13 +31,12 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { useSong } from '../lib/useSong'
 import { exportSetlist, exportSong } from '../lib/exportSong'
-import { apiBase } from '../lib/api'
+import { buildSetlistShareUrl } from '../lib/setlistShare'
 import {
   pushSetToTelegram,
   pushSongToTelegram,
   TELEGRAM_BOT_URL,
 } from '../lib/telegramPush'
-import { errMessage } from '../lib/errors'
 
 const TRANSPOSE_BAR_CLEARANCE = 120
 const SWIPE_THRESHOLD = 50
@@ -59,25 +58,31 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const entry = items[index]
   const { song, loading: songLoading, error: songError } = useSong(entry?.song.slug)
 
+  // useSong keeps the previous song while the next slug loads, so guard every
+  // render on the loaded song actually being this entry's song. Until it
+  // matches, treat the chart as still loading (no stale flash / mistranspose).
+  const songReady = !!(song && entry && song.slug === entry.song.slug)
+
   const { doc, parseError } = useMemo<{ doc: SongDoc | null; parseError: boolean }>(() => {
-    if (!song?.chordpro_content) return { doc: null, parseError: false }
+    if (!songReady || !song?.chordpro_content) return { doc: null, parseError: false }
     try {
       return { doc: parseChordProOrLegacy(song.chordpro_content), parseError: false }
     } catch {
       return { doc: null, parseError: true }
     }
-  }, [song])
+  }, [songReady, song])
 
   // Each entry's setlist key (override ?? native). Used to seed transpose and
-  // to key the export/share payloads.
+  // to key the whole-set export/share payloads.
   const entryKeys = useMemo(
     () => items.map((it) => computeEffectiveKey(it, it.song)),
     [items],
   )
 
-  // Transpose — ephemeral, reset on song change.
+  // Transpose — ephemeral, reset on song change. nativeKey comes from the
+  // entry's own catalog metadata (always current, unlike the loading `song`).
   const [delta, setDelta] = useState(0)
-  const nativeKey = doc?.meta?.key || song?.default_key || entry?.song.default_key || ''
+  const nativeKey = doc?.meta?.key || entry?.song.default_key || ''
   const targetKey = entryKeys[index] || nativeKey
   const seedSteps = targetKey ? stepsBetween(nativeKey, targetKey) : 0
   const steps = (((seedSteps + delta) % 12) + 12) % 12
@@ -136,10 +141,15 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       }
     })
 
-  const displayTitle = song?.title || entry?.song.title || ''
-  const displayArtist = song?.artist ?? entry?.song.artist ?? ''
+  // Use the entry's catalog metadata for the header so it tracks the current
+  // song immediately, not the still-loading `song`.
+  const displayTitle = entry?.song.title || ''
+  const displayArtist = entry?.song.artist ?? ''
   const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
-  const exportKey = steps ? effectiveKey : entryKeys[index] || ''
+  // The song-scope export key is whatever the performer is currently viewing:
+  // '' (native) when not transposed away from native, else the displayed key.
+  // This matches the on-screen chart even after transposing back to native.
+  const exportKey = effectiveKey && effectiveKey !== nativeKey ? effectiveKey : ''
 
   // --- Export / share handlers (screen owns errors) ------------------------
   function reportError(title: string, err: unknown) {
@@ -151,8 +161,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   }
 
   const shareSongFile = async (format: 'pdf' | 'jpg') => {
-    if (!song) return
-    const uri = await exportSong({ songId: song.id, key: exportKey, format })
+    if (!entry) return
+    const uri = await exportSong({ songId: entry.songId, key: exportKey, format })
     await Sharing.shareAsync(uri)
   }
 
@@ -185,9 +195,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       }
     },
     onTelegramSong: async () => {
-      if (!song) return
+      if (!entry) return
       try {
-        const result = await pushSongToTelegram({ songId: song.id, key: exportKey })
+        const result = await pushSongToTelegram({ songId: entry.songId, key: exportKey })
         if (result === 'not_linked') return notLinkedAlert()
         setSheet(null)
         Alert.alert('Sent', 'The chart is on its way to your Telegram chat.')
@@ -207,11 +217,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       }
     },
     onCopyLink: async () => {
-      // Same slug-based web URL the Builder copies.
-      const ids = items.map((it) => encodeURIComponent(it.song.slug)).join(',')
-      const keys = items.map((it) => encodeURIComponent(it.toKey || '')).join(',')
       try {
-        await Clipboard.setStringAsync(`${apiBase()}/setlist/${ids}?toKeys=${keys}`)
+        await Clipboard.setStringAsync(buildSetlistShareUrl(items))
         setSheet(null)
         Alert.alert('Copied', 'Set link copied to the clipboard.')
       } catch (err) {
@@ -377,7 +384,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       </View>
 
       {/* Chart area */}
-      {setLoading || songLoading ? (
+      {setLoading || songLoading || (entry && !songReady && !songError) ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.accent} />
         </View>

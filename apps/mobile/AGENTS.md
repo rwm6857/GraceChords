@@ -130,8 +130,8 @@ duplicate logic here and never edit core internals to suit mobile.
 
 ## Out of scope (for now)
 
-The Setlist Viewer / performer mode ("Start set"), the setlist share-sheet
-export backends (set PDF / Charts ZIP / ChordPro), the Daily Word/Reader screen
+The whole-set Charts ZIP / ChordPro export backends (whole-set PDF ships via
+`/api/export/setlist`), the Daily Word/Reader screen
 (placeholder today), the on-device history layer + star writes,
 the full Auth screen redesign / Google OAuth (see the `TODO: OAuth` in
 `src/screens/LoginScreen.tsx`), tablet master-detail, EAS Build / TestFlight,

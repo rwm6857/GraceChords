@@ -13,79 +13,24 @@
 import { renderMultiSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'
 import { makeFontRegistrar } from '../../../src/utils/pdf_mvp/fontsR2.js'
+import {
+  UUID_RE,
+  corsPreflight,
+  ensureWindowShim,
+  fetchSongsByFilter,
+  jsonError,
+  verifySupabaseJwt,
+} from './_shared.js'
 
-// jsPDF references `window` in a couple of optional code paths. Provide a
-// minimal shim before any pdf_mvp call. Safe in browsers (already exists).
-if (typeof globalThis.window === 'undefined') {
-  globalThis.window = globalThis
-}
+ensureWindowShim()
 
 const MAX_ITEMS = 25
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-function json(body, init = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(init.headers || {}) }
-  return new Response(JSON.stringify(body), { ...init, headers })
-}
-function jsonError(msg, status, extra) {
-  return json({ error: msg, ...(extra || {}) }, { status })
-}
-
-async function verifySupabaseJwt(request, env) {
-  const auth = request.headers.get('Authorization') || ''
-  if (!auth.startsWith('Bearer ')) {
-    return { error: 'Missing bearer token', status: 401 }
-  }
-  const token = auth.slice(7).trim()
-
-  const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  if (resp.status === 401) return { error: 'Invalid or expired token', status: 401 }
-  if (!resp.ok) return { error: `Auth check failed: ${resp.status}`, status: 502 }
-  const user = await resp.json().catch(() => null)
-  if (!user?.id) return { error: 'Auth response missing user id', status: 502 }
-  return { userId: user.id }
-}
-
-async function fetchSongRows(env, ids) {
-  const inList = ids.map((id) => encodeURIComponent(id)).join(',')
-  const select = 'id,slug,title,artist,default_key,chordpro_content'
-  const resp = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/songs?select=${select}&id=in.(${inList})&is_deleted=eq.false`,
-    {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      },
-    },
-  )
-  if (!resp.ok) return { error: `Supabase query failed: ${resp.status}`, status: 502 }
-  const rows = await resp.json().catch(() => null)
-  if (!Array.isArray(rows)) return { error: 'Supabase returned no rows', status: 502 }
-  return { rows }
-}
 
 export async function onRequest(context) {
   const { request, env } = context
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': new URL(request.url).origin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      },
-    })
-  }
-
-  if (request.method !== 'POST') {
-    return jsonError('Method not allowed', 405)
-  }
+  if (request.method === 'OPTIONS') return corsPreflight(request)
+  if (request.method !== 'POST') return jsonError('Method not allowed', 405)
 
   const auth = await verifySupabaseJwt(request, env)
   if (auth.error) return jsonError(auth.error, auth.status)
@@ -112,7 +57,8 @@ export async function onRequest(context) {
   // One query for all unique ids, then reorder to match the request (dropping
   // any id the query didn't return, e.g. soft-deleted since).
   const uniqueIds = [...new Set(normalized.map((n) => n.song_id))]
-  const found = await fetchSongRows(env, uniqueIds)
+  const inList = uniqueIds.map((id) => encodeURIComponent(id)).join(',')
+  const found = await fetchSongsByFilter(env, `id=in.(${inList})`)
   if (found.error) return jsonError(found.error, found.status)
   const rowById = new Map(found.rows.map((r) => [r.id, r]))
 

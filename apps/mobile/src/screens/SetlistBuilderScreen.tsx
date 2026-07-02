@@ -30,7 +30,7 @@ import AddSongsModal from '../components/setlist/AddSongsModal'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { supabase } from '../lib/supabase'
-import { apiBase } from '../lib/api'
+import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
 import { errMessage } from '../lib/errors'
@@ -183,13 +183,8 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       showToast('Add songs first')
       return
     }
-    // Same param-style share URL the web builder copies. The web catalog is
-    // keyed by SLUG (its normaliseSong maps id -> slug), so the link must
-    // carry slugs, not the Supabase uuids.
-    const ids = items.map((item) => encodeURIComponent(item.song.slug)).join(',')
-    const keys = items.map((item) => encodeURIComponent(item.toKey || '')).join(',')
     try {
-      await Clipboard.setStringAsync(`${apiBase()}/setlist/${ids}?toKeys=${keys}`)
+      await Clipboard.setStringAsync(buildSetlistShareUrl(items))
       showToast('Set link copied')
     } catch (err: unknown) {
       Alert.alert('Could not copy link', errMessage(err))
