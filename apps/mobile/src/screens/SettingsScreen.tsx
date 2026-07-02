@@ -227,9 +227,9 @@ export default function SettingsScreen() {
         {/* Profile card */}
         <Card>
           <Pressable
-            onPress={() => router.push('/choose-icon')}
+            onPress={() => router.push({ pathname: '/choose-icon', params: { mode: 'edit' } })}
             accessibilityRole="button"
-            accessibilityLabel="Edit profile"
+            accessibilityLabel="Change your icon"
             style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
