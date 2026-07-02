@@ -9,6 +9,7 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.gracechords.app",
+      "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true
     },
