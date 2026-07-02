@@ -5,6 +5,7 @@ import Screen from '../components/Screen'
 import ListRow from '../components/ListRow'
 import EmptyState from '../components/EmptyState'
 import LoadingSkeleton from '../components/LoadingSkeleton'
+import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
@@ -17,7 +18,7 @@ import { errMessage } from '../lib/errors'
 export default function SetlistsScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { setlists, loading, error, refresh, create } = useSetlists()
+  const { setlists, loading, error, refresh, create, remove } = useSetlists()
   const [refreshing, setRefreshing] = useState(false)
   const [creating, setCreating] = useState(false)
 
@@ -49,6 +50,15 @@ export default function SetlistsScreen() {
       Alert.alert('Could not create set', errMessage(err))
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function onDeleteSetlist(item: SetlistRow) {
+    try {
+      await remove(item.id)
+    } catch (err: unknown) {
+      Alert.alert('Could not delete set', errMessage(err))
+      refresh()
     }
   }
 
@@ -92,11 +102,13 @@ export default function SetlistsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
         }
         renderItem={({ item }) => (
-          <ListRow
-            title={item.name}
-            subtitle={subtitle(item)}
-            onPress={() => router.push(`/setlist/${item.id}`)}
-          />
+          <SwipeToDelete onDelete={() => onDeleteSetlist(item)}>
+            <ListRow
+              title={item.name}
+              subtitle={subtitle(item)}
+              onPress={() => router.push(`/setlist/${item.id}`)}
+            />
+          </SwipeToDelete>
         )}
         contentContainerStyle={{ paddingBottom: t.spacing.sm }}
       />
