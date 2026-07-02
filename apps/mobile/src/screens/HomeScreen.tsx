@@ -66,7 +66,7 @@ export default function HomeScreen() {
   const greeting = `${timeGreeting()}, ${getDisplayName(user)}`
   const subGreeting = pickSubGreeting()
 
-  // Recently-opened is still a stub (the Viewer's local history ships later);
+  // Recently-opened comes from on-device history (recorded by the Viewer);
   // the Last set card reads the real most-recently-edited setlist.
   const continueSong = getRecentlyOpened()[0] ?? null
   const { lastSet } = useLastSet()
