@@ -22,7 +22,8 @@ import {
   timeGreeting,
   useCurrentUser,
 } from '../lib/greetings'
-import { getLastSet, getRecentlyOpened } from '../lib/recents'
+import { getRecentlyOpened } from '../lib/recents'
+import { useLastSet } from '../lib/useLastSet'
 import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
 import type { Song } from '../lib/useSongList'
 
@@ -64,10 +65,10 @@ export default function HomeScreen() {
   const greeting = `${timeGreeting()}, ${getDisplayName(user)}`
   const subGreeting = pickSubGreeting()
 
-  // Stubs today (empty). See src/lib/recents.ts — these fill in with the local
-  // history / setlist layer, no screen changes needed.
+  // Recently-opened is still a stub (the Viewer's local history ships later);
+  // the Last set card reads the real most-recently-edited setlist.
   const continueSong = getRecentlyOpened()[0] ?? null
-  const lastSet = getLastSet()
+  const { lastSet } = useLastSet()
 
   function onAvatar() {
     // The avatar opens Profile/Settings in a later stage; for now it exposes the
@@ -262,7 +263,7 @@ export default function HomeScreen() {
                     {lastSet.name}
                   </Text>
                   <Text style={{ fontSize: 13, color: t.colors.sec, marginTop: 4 }}>
-                    {lastSet.songCount} songs · {lastSet.durationMin} min
+                    {lastSet.songCount} {lastSet.songCount === 1 ? 'song' : 'songs'} · ~{lastSet.durationMin} min
                   </Text>
                 </View>
                 {lastSet.keys ? (
@@ -284,7 +285,7 @@ export default function HomeScreen() {
               </View>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
                 <Pressable
-                  onPress={() => router.push('/setlists')}
+                  onPress={() => router.push(`/setlist/${lastSet.id}`)}
                   accessibilityRole="button"
                   style={{
                     flex: 1,
@@ -303,7 +304,7 @@ export default function HomeScreen() {
                   <SymbolIcon name="chevron.right" size={14} color={t.colors.onAccent} weight="semibold" />
                 </Pressable>
                 <Pressable
-                  onPress={() => router.push('/setlists')}
+                  onPress={() => router.push(`/setlist/${lastSet.id}`)}
                   accessibilityRole="button"
                   accessibilityLabel="Edit set"
                   style={{

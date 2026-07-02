@@ -17,80 +17,35 @@ import { renderSingleSongPdfBuffer } from '../../../src/utils/pdf_mvp/pure.js'
 import { toRenderableSong } from '../../../src/utils/pdf_mvp/serverSong.js'
 import { rasterizePdfToPng } from '../../../src/utils/pdf_mvp/pngRaster.js'
 import { makeFontRegistrar } from '../../../src/utils/pdf_mvp/fontsR2.js'
+import {
+  UUID_RE,
+  corsPreflight,
+  ensureWindowShim,
+  fetchSongsByFilter,
+  jsonError,
+  verifySupabaseJwt,
+} from './_shared.js'
 // Bundle the pdfium WASM at deploy time. Workers/Pages only allow
 // pre-compiled WebAssembly.Module instances, which is what wrangler's
 // bundler produces from a .wasm import.
 import pdfiumWasmModule from '@hyzyla/pdfium/pdfium.wasm'
 
-// jsPDF references `window` in a couple of optional code paths. Provide a
-// minimal shim before any pdf_mvp call. Safe in browsers (already exists).
-if (typeof globalThis.window === 'undefined') {
-  globalThis.window = globalThis
-}
-
-function json(body, init = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(init.headers || {}) }
-  return new Response(JSON.stringify(body), { ...init, headers })
-}
-function jsonError(msg, status, extra) {
-  return json({ error: msg, ...(extra || {}) }, { status })
-}
-
-async function verifySupabaseJwt(request, env) {
-  const auth = request.headers.get('Authorization') || ''
-  if (!auth.startsWith('Bearer ')) {
-    return { error: 'Missing bearer token', status: 401 }
-  }
-  const token = auth.slice(7).trim()
-
-  const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  if (resp.status === 401) return { error: 'Invalid or expired token', status: 401 }
-  if (!resp.ok) return { error: `Auth check failed: ${resp.status}`, status: 502 }
-  const user = await resp.json().catch(() => null)
-  if (!user?.id) return { error: 'Auth response missing user id', status: 502 }
-  return { userId: user.id }
-}
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+ensureWindowShim()
 
 async function fetchSongRow(env, { song_id, slug }) {
   const filter = song_id
-    ? `id=eq.${encodeURIComponent(song_id)}`
-    : `slug=eq.${encodeURIComponent(slug)}`
-  const select = 'id,slug,title,artist,default_key,chordpro_content'
-  const resp = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/songs?select=${select}&${filter}&is_deleted=eq.false&limit=1`,
-    {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      },
-    },
-  )
-  if (!resp.ok) return { error: `Supabase query failed: ${resp.status}`, status: 502 }
-  const rows = await resp.json().catch(() => null)
-  if (!Array.isArray(rows) || rows.length === 0) return { error: 'Song not found', status: 404 }
-  return { song: rows[0] }
+    ? `id=eq.${encodeURIComponent(song_id)}&limit=1`
+    : `slug=eq.${encodeURIComponent(slug)}&limit=1`
+  const found = await fetchSongsByFilter(env, filter)
+  if (found.error) return found
+  if (found.rows.length === 0) return { error: 'Song not found', status: 404 }
+  return { song: found.rows[0] }
 }
 
 export async function onRequest(context) {
   const { request, env } = context
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': new URL(request.url).origin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      },
-    })
-  }
+  if (request.method === 'OPTIONS') return corsPreflight(request)
 
   if (request.method !== 'POST') {
     return jsonError('Method not allowed', 405)

@@ -1,15 +1,20 @@
+import type { ReactNode } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
 
 // The dense, text-only list row from the design: a title + optional subtitle on
 // the left, and an optional two-line trailing block on the right (used for
-// key / time signature). Nothing else — density and scan-speed over decoration.
+// key / time signature). `trailing` renders a custom accessory after that
+// block (e.g. the add-songs +/✓ badge). Density and scan-speed over decoration.
 
 export type ListRowProps = {
   title: string
   subtitle?: string | null
   trailingTop?: string | null
   trailingBottom?: string | null
+  /** Custom accessory rendered at the far right. */
+  trailing?: ReactNode
+  accessibilityLabel?: string
   onPress?: () => void
 }
 
@@ -18,6 +23,8 @@ export default function ListRow({
   subtitle,
   trailingTop,
   trailingBottom,
+  trailing,
+  accessibilityLabel,
   onPress,
 }: ListRowProps) {
   const t = useTheme()
@@ -25,6 +32,7 @@ export default function ListRow({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
@@ -88,6 +96,8 @@ export default function ListRow({
           ) : null}
         </View>
       ) : null}
+
+      {trailing}
     </Pressable>
   )
 }

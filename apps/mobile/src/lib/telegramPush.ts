@@ -20,3 +20,23 @@ export async function pushSongToTelegram(opts: {
   if (!res.ok) throw await apiError(res, 'telegram_failed')
   return 'sent'
 }
+
+// Same endpoint, multi-item: send a whole setlist (the API accepts items[]
+// with context 'setlist'). The endpoint caps a request at 25 items, so
+// longer sets go out in order as multiple requests.
+const TELEGRAM_MAX_ITEMS = 25
+
+export async function pushSetToTelegram(
+  items: Array<{ songId: string; key?: string | null }>,
+): Promise<'sent' | 'not_linked'> {
+  const payload = items.map((item) => ({ song_id: item.songId, key: item.key || '' }))
+  for (let i = 0; i < payload.length; i += TELEGRAM_MAX_ITEMS) {
+    const res = await apiPost('/api/telegram/push', {
+      items: payload.slice(i, i + TELEGRAM_MAX_ITEMS),
+      context: 'setlist',
+    })
+    if (res.status === 409) return 'not_linked'
+    if (!res.ok) throw await apiError(res, 'telegram_failed')
+  }
+  return 'sent'
+}

@@ -14,6 +14,7 @@ export default function BottomSheet({
   title,
   actionLabel = 'Done',
   onAction,
+  onDismissed,
   closeAccessibilityLabel,
   children,
 }: {
@@ -23,6 +24,11 @@ export default function BottomSheet({
   actionLabel?: string
   /** Header action; defaults to closing the sheet. */
   onAction?: () => void
+  /**
+   * Fires once the exit animation finishes and the Modal unmounts — the safe
+   * moment to present another modal (iOS refuses while one is dismissing).
+   */
+  onDismissed?: () => void
   closeAccessibilityLabel?: string
   children: ReactNode
 }) {
@@ -30,6 +36,10 @@ export default function BottomSheet({
   const { height } = useWindowDimensions()
   const [mounted, setMounted] = useState(visible)
   const progress = useRef(new Animated.Value(0)).current
+  // Ref so the exit animation's completion callback always sees the latest
+  // handler without retriggering the effect.
+  const onDismissedRef = useRef(onDismissed)
+  onDismissedRef.current = onDismissed
 
   useEffect(() => {
     if (visible) {
@@ -47,7 +57,10 @@ export default function BottomSheet({
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start(({ finished }) => {
-        if (finished) setMounted(false)
+        if (finished) {
+          setMounted(false)
+          onDismissedRef.current?.()
+        }
       })
     }
   }, [visible, progress])

@@ -21,6 +21,9 @@ export function parseChordPro(text){
 export function extractChords(line){ let plain=''; const chords=[]; let i=0; while(i<line.length){ if(line[i]==='['){ const j=line.indexOf(']', i+1); if(j!==-1){ const sym=line.slice(i+1,j).trim(); chords.push({ sym, index: plain.length }); i=j+1; continue } } plain+=line[i]; i++ } return { plain, chords } }
 export function makeMonospaceChordLine(plain, chordPositions){ if(!chordPositions?.length) return ''; let out=''; let cursor=0; for(const c of chordPositions){ const pad=Math.max(0, c.index - cursor); out += ' '.repeat(pad) + c.sym; cursor = c.index + c.sym.length } return out }
 export const KEYS=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const FLAT={'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'}; function norm(n){ return FLAT[n] || n }
+// Normalize a key name to its sharp spelling in KEYS ('Bb' -> 'A#'); unknown
+// input passes through. Shared so key comparisons agree across modules.
+export function normKey(k){ return norm(k) }
 
 // Extract normalized root (sharp-preference) from a key/chord string.
 // Examples: 'Em' -> 'E', 'C#m' -> 'C#', 'Bb' -> 'A#'

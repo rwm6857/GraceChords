@@ -44,6 +44,10 @@ export type ThemeColors = {
   border: string
   /** Text/icon color on top of the accent. */
   onAccent: string
+  /** Destructive actions (delete/remove) — text on surfaces and fills. */
+  danger: string
+  /** Text/icon color on top of the danger fill. */
+  onDanger: string
   /** Dimmed color for inactive scrubber letters. */
   off: string
   /**
@@ -67,6 +71,8 @@ export const lightColors: ThemeColors = {
   textAccent: '#15619A',
   border: '#E3E8EC',
   onAccent: '#FFFFFF',
+  danger: '#C43D38',
+  onDanger: '#FFFFFF',
   off: 'rgba(138,146,155,0.45)',
   heroGradient: {
     colors: ['#BFD3E3', '#CFE0EA', '#E3EDF2', '#F5F7F9'],
@@ -87,6 +93,8 @@ export const darkColors: ThemeColors = {
   textAccent: '#6FB6EA',
   border: '#2A3036',
   onAccent: '#14171A',
+  danger: '#F0736A',
+  onDanger: '#14171A',
   off: 'rgba(124,133,142,0.5)',
   heroGradient: {
     colors: ['#1C2A36', '#18222A', '#15191D', '#14171A'],

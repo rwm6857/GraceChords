@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
 import { ThemeProvider } from '../src/theme/ThemeProvider'
@@ -71,15 +72,19 @@ export default function RootLayout() {
   useProtectedRoute(session, ready)
 
   return (
-    <ThemeProvider>
-      <SafeAreaProvider>
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="viewer/[slug]" />
-        </Stack>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="viewer/[slug]" />
+            <Stack.Screen name="setlist/[id]" />
+            <Stack.Screen name="perform/[id]" />
+          </Stack>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   )
 }

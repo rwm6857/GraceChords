@@ -22,8 +22,10 @@ export * from './songs/songMetadata'
 export * from './songs/sort'
 export * from './songs/songsRepo'
 
-// Setlist codec
+// Setlist codec + queries + summary math
 export * from './setlists/setcode'
+export * from './setlists/setlistsRepo'
+export * from './setlists/setlistSummary'
 
 // Role hierarchy
 export * from './rbac/roles'
