@@ -10,6 +10,11 @@ import {
   type Passage,
   type TranslationsResult,
 } from '@gracechords/core'
+// Import the offline read helpers from their specific submodules (not the
+// downloads barrel, which re-exports service.ts → which imports THIS file) to
+// avoid an import cycle.
+import { readLocalChapter } from './downloads/resolver'
+import { getDownloadsSnapshot } from './downloads/manifest'
 
 // Source seam for Daily Word passage content. Today it reads from the
 // Cloudflare R2 bucket that also serves the web app's Bible JSON; the accessor
@@ -40,8 +45,26 @@ let translationsPromise: Promise<TranslationsResult> | null = null
 
 /** Load and normalize the translation manifest from the active source (once). */
 export function getTranslations(): Promise<TranslationsResult> {
-  if (!translationsPromise) translationsPromise = fetchBibleTranslations(r2Base())
+  if (!translationsPromise) {
+    translationsPromise = fetchBibleTranslations(r2Base()).then(withDownloadedTranslations)
+  }
   return translationsPromise
+}
+
+/**
+ * Union any downloaded translations into the manifest result so a downloaded
+ * translation still lists in the picker when the network manifest is
+ * unreachable (offline → fetchBibleTranslations falls back to ESV-only).
+ */
+function withDownloadedTranslations(result: TranslationsResult): TranslationsResult {
+  const records = Object.values(getDownloadsSnapshot().records)
+  if (!records.length) return result
+  const present = new Set(result.translations.map((t) => t.id))
+  const extra: BibleTranslation[] = records
+    .filter((r) => !present.has(r.id))
+    .map((r) => ({ id: r.id, label: r.label, name: r.name, language: r.language, dataRoot: r.dataRoot }))
+  if (!extra.length) return result
+  return { ...result, translations: [...result.translations, ...extra] }
 }
 
 // ── Chapter cache ───────────────────────────────────────────────────────────
@@ -71,11 +94,49 @@ export type PassageQuery = {
   translation: BibleTranslation
 }
 
+export type ResolvePassageDeps = {
+  /** Return a downloaded local copy, or null to fall through to the network. */
+  readLocal: (
+    translationId: string,
+    dataRoot: string,
+    bookNumber: number,
+    chapter: number
+  ) => Promise<ChapterData | null>
+  fetchRemote: (query: PassageQuery) => Promise<ChapterData>
+}
+
+/**
+ * Offline-first resolution for one passage's chapter: local downloaded copy when
+ * present, else the network source. Pure over injected deps so the branch tests
+ * headless (and proves the remote fetch is skipped on a local hit).
+ */
+export async function resolvePassageChapter(
+  { passage, translation }: PassageQuery,
+  deps: ResolvePassageDeps
+): Promise<ChapterData> {
+  const local = await deps.readLocal(
+    translation.id,
+    translation.dataRoot,
+    passage.bookNumber,
+    passage.chapter
+  )
+  if (local) return local
+  return deps.fetchRemote({ passage, translation })
+}
+
+const fetchRemoteChapter = ({ passage, translation }: PassageQuery): Promise<ChapterData> =>
+  fetchBibleChapter({
+    baseUrl: r2Base(),
+    dataRoot: translation.dataRoot,
+    bookNumber: passage.bookNumber,
+    chapter: passage.chapter,
+  })
+
 /**
  * Fetch the chapter backing a passage. Cache-first, with in-flight de-duping so
  * a prefetch and the reader can't double-fetch the same chapter. This is the
- * single seam every reader path goes through: swap the body for a local-file
- * read to add offline support later.
+ * single seam every reader path goes through: it resolves a downloaded local
+ * copy first, then falls back to the R2 network source.
  */
 export function getPassage({ passage, translation }: PassageQuery): Promise<ChapterData> {
   const key = chapterKey(translation.id, passage.bookNumber, passage.chapter)
@@ -84,16 +145,10 @@ export function getPassage({ passage, translation }: PassageQuery): Promise<Chap
   const existing = inFlight.get(key)
   if (existing) return existing
 
-  // offline: a downloaded-translation source will branch here first, e.g.
-  //   if (await hasLocalCopy(translation.id, passage.bookNumber, passage.chapter))
-  //     return readLocalChapter(...)
-  // Download + file management ships in a later stage; for now always fetch R2.
-  const request = fetchBibleChapter({
-    baseUrl: r2Base(),
-    dataRoot: translation.dataRoot,
-    bookNumber: passage.bookNumber,
-    chapter: passage.chapter,
-  })
+  const request = resolvePassageChapter(
+    { passage, translation },
+    { readLocal: readLocalChapter, fetchRemote: fetchRemoteChapter }
+  )
     .then((data) => {
       chapterCache.set(key, data)
       inFlight.delete(key)

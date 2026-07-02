@@ -34,7 +34,11 @@ export async function fetchBibleChapter({
   return normalizeChapterPayload(payload, { book: String(bookNumber), chapter })
 }
 
-function normalizeChapterPayload(
+/**
+ * Normalize a raw chapter JSON payload into `ChapterData`. Exported so a local
+ * (offline) chapter read produces byte-identical output to a network fetch.
+ */
+export function normalizeChapterPayload(
   payload: unknown,
   fallback: { book: string, chapter: number }
 ): ChapterData {

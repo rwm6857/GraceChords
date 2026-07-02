@@ -11,6 +11,8 @@ import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
 import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
+import { hydrateDownloads } from '../src/lib/downloads/manifest'
+import { hydrateRecents } from '../src/lib/recents'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -71,7 +73,16 @@ export default function RootLayout() {
     // Load app-wide defaults (theme/chord style) before the splash lifts so the
     // resolved theme is applied on first paint — no light→dark flash. Runs in
     // parallel with the session read; both must resolve before `ready`.
-    Promise.all([supabase.auth.getSession(), hydrateDefaults(AsyncStorage)]).then(([{ data }]) => {
+    // Hydrate device-local stores (defaults, download manifest, recent-song
+    // history) alongside the session read. They must resolve before `ready` so
+    // the first paint has the resolved theme, offline reads know what's
+    // downloaded, and Home's "Continue" card can render synchronously.
+    Promise.all([
+      supabase.auth.getSession(),
+      hydrateDefaults(AsyncStorage),
+      hydrateDownloads(AsyncStorage),
+      hydrateRecents(AsyncStorage),
+    ]).then(([{ data }]) => {
       setSession(data.session)
       setReady(true)
     })

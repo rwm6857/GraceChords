@@ -32,6 +32,7 @@ import ViewOptionsSheet, {
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
+import { recordSongOpened } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot } from '../../src/lib/defaults'
 import { useTheme } from '../../src/theme/ThemeProvider'
@@ -59,6 +60,21 @@ export default function ViewerScreen() {
   }>()
 
   const { song, loading, error } = useSong(slug)
+
+  // Record the open for Home's "Continue where you left off" card once the song
+  // (with its real title/artist/key) has loaded. Device-local history only.
+  useEffect(() => {
+    if (!song) return
+    recordSongOpened({
+      id: song.id,
+      slug: song.slug,
+      title: song.title,
+      artist: song.artist,
+      default_key: song.default_key,
+      time_signature: song.time_signature,
+      tempo: song.tempo,
+    })
+  }, [song])
 
   const { doc, parseError } = useMemo<{ doc: SongDoc | null; parseError: boolean }>(() => {
     if (!song?.chordpro_content) return { doc: null, parseError: false }

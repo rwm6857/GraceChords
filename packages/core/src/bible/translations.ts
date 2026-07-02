@@ -7,6 +7,7 @@
 import type { BibleTranslation } from './types'
 
 type TranslationManifest = {
+  version?: unknown
   defaultTranslation?: string
   translations?: unknown
 }
@@ -80,6 +81,12 @@ export function resolveBibleTranslationSelection(
 export type TranslationsResult = {
   translations: BibleTranslation[]
   defaultTranslationId: string
+  /**
+   * Manifest-wide version string, when present. Captured at download time so the
+   * offline layer can detect a stale local copy. Empty when the manifest omits
+   * it or could not be loaded.
+   */
+  version: string
 }
 
 /**
@@ -100,11 +107,13 @@ export async function fetchBibleTranslations(
     const defaultTranslationId = normalizeBibleTranslationId(
       resolveManifestDefault(manifest.defaultTranslation, translations)
     )
-    return { translations, defaultTranslationId }
+    const version = manifest.version == null ? '' : String(manifest.version)
+    return { translations, defaultTranslationId, version }
   } catch {
     return {
       translations: [...FALLBACK_TRANSLATIONS],
       defaultTranslationId: DEFAULT_BIBLE_TRANSLATION_ID,
+      version: '',
     }
   }
 }

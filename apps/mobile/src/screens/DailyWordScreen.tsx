@@ -285,7 +285,7 @@ export default function DailyWordScreen() {
           <EmptyState
             icon="wifi.slash"
             title="Can't load today's reading"
-            subtitle="Connect to the internet and try again. Downloaded translations will read offline in a later update."
+            subtitle="Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline."
             actionLabel="Retry"
             onAction={() => setReloadToken((n) => n + 1)}
           />
