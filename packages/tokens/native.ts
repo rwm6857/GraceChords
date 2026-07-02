@@ -48,6 +48,8 @@ export type ThemeColors = {
   danger: string
   /** Text/icon color on top of the danger fill. */
   onDanger: string
+  /** Favorite/star fill (gold). */
+  star: string
   /** Dimmed color for inactive scrubber letters. */
   off: string
   /**
@@ -73,6 +75,7 @@ export const lightColors: ThemeColors = {
   onAccent: '#FFFFFF',
   danger: '#C43D38',
   onDanger: '#FFFFFF',
+  star: '#F0B000',
   off: 'rgba(138,146,155,0.45)',
   heroGradient: {
     colors: ['#BFD3E3', '#CFE0EA', '#E3EDF2', '#F5F7F9'],
@@ -95,6 +98,7 @@ export const darkColors: ThemeColors = {
   onAccent: '#14171A',
   danger: '#F0736A',
   onDanger: '#14171A',
+  star: '#FFCC00',
   off: 'rgba(124,133,142,0.5)',
   heroGradient: {
     colors: ['#1C2A36', '#18222A', '#15191D', '#14171A'],
