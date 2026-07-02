@@ -1,20 +1,12 @@
 import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BottomSheet from './BottomSheet'
+import AccidentalToggle, { type Accidental } from './AccidentalToggle'
 import type { ChordStyle } from './ChordChart'
 import { useTheme } from '../theme/ThemeProvider'
 
-// Accidental spelling preference: Auto derives from the key; ♯/♭ force it.
-export type Accidental = 'auto' | 'sharp' | 'flat'
-
-// Resolve the boolean `preferFlat` the chart/transpose helpers expect from the
-// user's accidental choice; Auto keeps the prior behavior (flat if the key is
-// spelled with a flat, e.g. Bb/Eb).
-export function resolvePreferFlat(accidental: Accidental, nativeKey: string): boolean {
-  if (accidental === 'flat') return true
-  if (accidental === 'sharp') return false
-  return /^[A-G]b/.test(nativeKey)
-}
+// Re-export so existing screen imports (`from './ViewOptionsSheet'`) keep working.
+export { type Accidental, defaultAccidental, resolvePreferFlat } from './AccidentalToggle'
 
 // The viewer's "View options" bottom sheet (••• button). Everything is
 // controlled/ephemeral — the screen owns the state, nothing persists.
@@ -245,20 +237,15 @@ export default function ViewOptionsSheet({
           onChange={onChordStyle}
         />
 
-        {/* Accidentals — Auto derives from the key; ♯/♭ force the spelling
-            (session-scoped). Rendered only when the screen wires it. */}
-        {onAccidental ? (
+        {/* Accidentals — ♯/♭ spelling (session-scoped). Rendered only when the
+            screen wires it. */}
+        {onAccidental && accidental ? (
           <>
             <OverlineLabel>Accidentals</OverlineLabel>
-            <Segmented
-              options={[
-                { value: 'auto', label: 'Auto' },
-                { value: 'sharp', label: '♯ Sharps' },
-                { value: 'flat', label: '♭ Flats' },
-              ]}
-              value={accidental ?? 'auto'}
-              onChange={onAccidental}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 16, color: t.colors.ink }}>Spelling</Text>
+              <AccidentalToggle value={accidental} onChange={onAccidental} />
+            </View>
           </>
         ) : null}
 

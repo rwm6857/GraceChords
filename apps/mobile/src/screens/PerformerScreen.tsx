@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -35,6 +35,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import TransposeBar from '../components/TransposeBar'
 import ViewOptionsSheet, {
   type Accidental,
+  defaultAccidental,
   resolvePreferFlat,
 } from '../components/ViewOptionsSheet'
 import PerformerShareSheet, {
@@ -107,7 +108,13 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
-  const [accidental, setAccidental] = useState<Accidental>('auto')
+  const [accidental, setAccidental] = useState<Accidental>('sharp')
+  // Seed from each song's key until the user flips it.
+  const accidentalTouched = useRef(false)
+  const setAccidentalManual = (v: Accidental) => {
+    accidentalTouched.current = true
+    setAccidental(v)
+  }
   const [sheet, setSheet] = useState<null | 'options' | 'share'>(null)
   // Floating-overlay header height → chart top inset (edge-to-edge).
   const [headerH, setHeaderH] = useState(0)
@@ -116,8 +123,12 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const targetKey = entryKeys[index] || nativeKey
   const seedSteps = targetKey ? stepsBetween(nativeKey, targetKey) : 0
   const steps = (((seedSteps + delta) % 12) + 12) % 12
-  const preferFlat = resolvePreferFlat(accidental, nativeKey)
+  const preferFlat = resolvePreferFlat(accidental)
   const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
+
+  useEffect(() => {
+    if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))
+  }, [nativeKey])
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
@@ -551,7 +562,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
         accidental={accidental}
-        onAccidental={setAccidental}
+        onAccidental={setAccidentalManual}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
       />

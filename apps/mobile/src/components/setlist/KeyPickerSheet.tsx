@@ -1,13 +1,20 @@
+import { useEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { KEYS, normKey } from '@gracechords/core'
 import BottomSheet from '../BottomSheet'
+import AccidentalToggle, { type Accidental, defaultAccidental } from '../AccidentalToggle'
 import { useTheme } from '../../theme/ThemeProvider'
 
-// "Play this song in…" — a 4-column grid of the 12 keys, current highlighted
-// (flat spellings like "Bb" normalize to their sharp cell). Picking a key sets
-// the entry's setlist-scoped override and closes; "Use native key" clears the
-// override so the entry follows the song's default key again.
+// Flat spellings aligned to KEYS index (C, C#/Db, D, …). Used to relabel the
+// grid when the ♯/♭ toggle is set to flats.
+const FLAT_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
+// "Play this song in…" — a 4-column grid of the 12 keys with a ♯/♭ toggle
+// (inline, right of the prompt) that relabels the grid between sharp and flat
+// spellings; the picked spelling is what's stored as the override. The current
+// key is highlighted by enharmonic equivalence. "Reset to {key}" clears the
+// override so the entry follows the song's own key again.
 export default function KeyPickerSheet({
   visible,
   onClose,
@@ -29,29 +36,44 @@ export default function KeyPickerSheet({
 }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
-  const keys = KEYS as readonly string[]
   const current = currentKey ? (normKey(currentKey) as string) : null
+
+  // Default the spelling from the current/native key; re-seed each open.
+  const [accidental, setAccidental] = useState<Accidental>(() =>
+    defaultAccidental(currentKey ?? nativeKey),
+  )
+  useEffect(() => {
+    if (visible) setAccidental(defaultAccidental(currentKey ?? nativeKey))
+  }, [visible, currentKey, nativeKey])
+
+  const labels = accidental === 'flat' ? FLAT_KEYS : (KEYS as readonly string[])
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title="Key" closeAccessibilityLabel="Close key picker">
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
-        {songTitle ? (
-          <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
-            Play {songTitle} in…
-          </Text>
-        ) : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {songTitle ? (
+            <Text style={{ flexShrink: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
+              Play {songTitle} in…
+            </Text>
+          ) : (
+            <View />
+          )}
+          <AccidentalToggle value={accidental} onChange={setAccidental} />
+        </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
-          {keys.map((key) => {
-            const selected = key === current
+          {(KEYS as readonly string[]).map((sharpKey, i) => {
+            const label = labels[i]
+            const selected = sharpKey === current
             return (
               <Pressable
-                key={key}
+                key={sharpKey}
                 onPress={() => {
-                  onPick(key)
+                  onPick(label)
                   onClose()
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={`Key of ${key}`}
+                accessibilityLabel={`Key of ${label}`}
                 accessibilityState={{ selected }}
                 style={{
                   // 4 columns with the wrap gap accounted for.
@@ -73,7 +95,7 @@ export default function KeyPickerSheet({
                     color: selected ? t.colors.onAccent : t.colors.ink,
                   }}
                 >
-                  {key}
+                  {label}
                 </Text>
               </Pressable>
             )
@@ -86,7 +108,7 @@ export default function KeyPickerSheet({
               onClose()
             }}
             accessibilityRole="button"
-            accessibilityLabel="Use the song's native key"
+            accessibilityLabel={nativeKey ? `Reset to ${nativeKey}` : 'Reset to the original key'}
             style={({ pressed }) => ({
               height: 44,
               borderRadius: t.radii.sm,
@@ -98,7 +120,7 @@ export default function KeyPickerSheet({
             })}
           >
             <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.textAccent }}>
-              Use native key{nativeKey ? ` (${nativeKey})` : ''}
+              Reset to {nativeKey || 'original key'}
             </Text>
           </Pressable>
         ) : null}

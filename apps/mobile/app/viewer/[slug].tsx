@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Animated, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
@@ -26,6 +26,7 @@ import SymbolIcon from '../../src/components/SymbolIcon'
 import TransposeBar from '../../src/components/TransposeBar'
 import ViewOptionsSheet, {
   type Accidental,
+  defaultAccidental,
   resolvePreferFlat,
 } from '../../src/components/ViewOptionsSheet'
 import { exportSong } from '../../src/lib/exportSong'
@@ -77,7 +78,13 @@ export default function ViewerScreen() {
   const [showSections, setShowSections] = useState(true)
   const [fontScale, setFontScale] = useState(1)
   const [chordStyle, setChordStyle] = useState<ChordStyle>('letters')
-  const [accidental, setAccidental] = useState<Accidental>('auto')
+  const [accidental, setAccidental] = useState<Accidental>('sharp')
+  // Seed the accidental from the key until the user flips it themselves.
+  const accidentalTouched = useRef(false)
+  const setAccidentalManual = (v: Accidental) => {
+    accidentalTouched.current = true
+    setAccidental(v)
+  }
   const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
   // Header is a floating overlay so the chart runs edge-to-edge; its measured
   // height seeds the chart's top inset, so the first line starts where the
@@ -87,8 +94,12 @@ export default function ViewerScreen() {
   const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
   const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
   const steps = (((seedSteps + delta) % 12) + 12) % 12
-  const preferFlat = resolvePreferFlat(accidental, nativeKey)
+  const preferFlat = resolvePreferFlat(accidental)
   const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
+
+  useEffect(() => {
+    if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))
+  }, [nativeKey])
 
   // Chrome auto-hide (persisted preference). Pinned visible while a sheet is
   // open so it can't hide behind one. Tap the chart to bring it back.
@@ -344,7 +355,7 @@ export default function ViewerScreen() {
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
         accidental={accidental}
-        onAccidental={setAccidental}
+        onAccidental={setAccidentalManual}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
       />
