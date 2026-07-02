@@ -23,14 +23,6 @@ export const CHART_LINE_HEIGHT = 21
 
 export type ChordStyle = 'letters' | 'solfege'
 
-// The parser re-opens a section after an inline {instrumental} directive,
-// which can leave an empty trailing copy — skip line-less sections so no
-// stray duplicate heading renders. Exported so the screen's section-jump
-// chips share the same array and indices as the rendered chart.
-export function visibleSections(doc: SongDoc): SongSection[] {
-  return doc.sections.filter((section) => section.lines.length > 0)
-}
-
 type Props = {
   doc: SongDoc
   steps: number
@@ -39,7 +31,6 @@ type Props = {
   showSections?: boolean
   fontScale?: number
   chordStyle?: ChordStyle
-  onSectionLayout?: (index: number, y: number) => void
 }
 
 export default function ChordChart({
@@ -50,13 +41,17 @@ export default function ChordChart({
   showSections = true,
   fontScale = 1,
   chordStyle = 'letters',
-  onSectionLayout,
 }: Props) {
   return (
     <View>
-      {visibleSections(doc).map((section, i) => (
-        <View key={i} onLayout={(e) => onSectionLayout?.(i, e.nativeEvent.layout.y)}>
+      {doc.sections
+        // The parser re-opens a section after an inline {instrumental} directive,
+        // which can leave an empty trailing copy — skip line-less sections so no
+        // stray duplicate heading renders.
+        .filter((section) => section.lines.length > 0)
+        .map((section, i) => (
           <ChartSection
+            key={i}
             section={section}
             first={i === 0}
             steps={steps}
@@ -66,8 +61,7 @@ export default function ChordChart({
             fontScale={fontScale}
             chordStyle={chordStyle}
           />
-        </View>
-      ))}
+        ))}
     </View>
   )
 }

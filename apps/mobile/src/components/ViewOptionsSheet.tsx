@@ -1,12 +1,13 @@
-import { Modal, Pressable, Switch, Text, View } from 'react-native'
+import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import BottomSheet from './BottomSheet'
 import type { ChordStyle } from './ChordChart'
 import { useTheme } from '../theme/ThemeProvider'
 
-// The viewer's "View options" bottom sheet (••• button). Same Modal shell as
-// FilterSortSheet. Everything is controlled/ephemeral — the screen owns the
-// state, nothing persists. CHORD STYLE has no Numbers segment: no Nashville
-// conversion exists in core yet (flagged for a future pass).
+// The viewer's "View options" bottom sheet (••• button). Everything is
+// controlled/ephemeral — the screen owns the state, nothing persists.
+// CHORD STYLE has no Numbers segment: no Nashville conversion exists in core
+// yet (flagged for a future pass).
 
 export const FONT_SCALE_MIN = 0.8
 export const FONT_SCALE_MAX = 1.6
@@ -116,162 +117,111 @@ export default function ViewOptionsSheet({
   const atMax = fontScale >= FONT_SCALE_MAX
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable
-          onPress={onClose}
-          accessibilityLabel="Close view options"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.34)',
-          }}
+    <BottomSheet visible={visible} onClose={onClose} title="View options">
+      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
+        <OverlineLabel first>Show</OverlineLabel>
+        <Segmented
+          options={[
+            { value: 'chords', label: 'Chords & lyrics' },
+            { value: 'lyrics', label: 'Lyrics only' },
+          ]}
+          value={showChords ? 'chords' : 'lyrics'}
+          onChange={(v) => onShowChords(v === 'chords')}
         />
+
+        {/* Section labels */}
         <View
           style={{
-            backgroundColor: t.colors.surface,
-            borderTopLeftRadius: t.radii.sheet,
-            borderTopRightRadius: t.radii.sheet,
-            overflow: 'hidden',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: t.spacing.xl,
           }}
         >
-          {/* Grabber */}
-          <View style={{ alignItems: 'center', paddingTop: t.spacing.sm }}>
-            <View
-              style={{ width: 36, height: 5, borderRadius: 3, backgroundColor: t.colors.border }}
-            />
-          </View>
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>Section labels</Text>
+          <Switch
+            value={showSections}
+            onValueChange={onShowSections}
+            trackColor={{ true: t.colors.accent }}
+            accessibilityLabel="Section labels"
+          />
+        </View>
 
-          {/* Title row */}
+        {/* Font size */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: t.spacing.xl,
+          }}
+        >
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>Font size</Text>
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: t.spacing.lg,
-              paddingTop: t.spacing.sm,
-              paddingBottom: t.spacing.md,
-              borderBottomWidth: 1,
-              borderBottomColor: t.colors.border,
+              backgroundColor: t.colors.surfaceAlt,
+              borderRadius: 12,
+              padding: 3,
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-              View options
+            <Pressable
+              onPress={() => stepFont(-1)}
+              disabled={atMin}
+              accessibilityRole="button"
+              accessibilityLabel="Smaller font"
+              style={{
+                width: 40,
+                height: 36,
+                borderRadius: 9,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: atMin ? 0.35 : 1,
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.ink }}>A</Text>
+            </Pressable>
+            <Text
+              style={{
+                minWidth: 52,
+                textAlign: 'center',
+                fontSize: 13,
+                fontWeight: '600',
+                color: t.colors.sec,
+              }}
+            >
+              {Math.round(fontScale * 100)}%
             </Text>
-            <Pressable onPress={onClose} accessibilityRole="button" hitSlop={8}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>Done</Text>
+            <Pressable
+              onPress={() => stepFont(1)}
+              disabled={atMax}
+              accessibilityRole="button"
+              accessibilityLabel="Larger font"
+              style={{
+                width: 40,
+                height: 36,
+                borderRadius: 9,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: atMax ? 0.35 : 1,
+              }}
+            >
+              <Text style={{ fontSize: 20, fontWeight: '700', color: t.colors.ink }}>A</Text>
             </Pressable>
           </View>
-
-          <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
-            <OverlineLabel first>Show</OverlineLabel>
-            <Segmented
-              options={[
-                { value: 'chords', label: 'Chords & lyrics' },
-                { value: 'lyrics', label: 'Lyrics only' },
-              ]}
-              value={showChords ? 'chords' : 'lyrics'}
-              onChange={(v) => onShowChords(v === 'chords')}
-            />
-
-            {/* Section labels */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: t.spacing.xl,
-              }}
-            >
-              <Text style={{ fontSize: 16, color: t.colors.ink }}>Section labels</Text>
-              <Switch
-                value={showSections}
-                onValueChange={onShowSections}
-                trackColor={{ true: t.colors.accent }}
-                accessibilityLabel="Section labels"
-              />
-            </View>
-
-            {/* Font size */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: t.spacing.xl,
-              }}
-            >
-              <Text style={{ fontSize: 16, color: t.colors.ink }}>Font size</Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: t.colors.surfaceAlt,
-                  borderRadius: 12,
-                  padding: 3,
-                }}
-              >
-                <Pressable
-                  onPress={() => stepFont(-1)}
-                  disabled={atMin}
-                  accessibilityRole="button"
-                  accessibilityLabel="Smaller font"
-                  style={{
-                    width: 40,
-                    height: 36,
-                    borderRadius: 9,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: atMin ? 0.35 : 1,
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.ink }}>A</Text>
-                </Pressable>
-                <Text
-                  style={{
-                    minWidth: 52,
-                    textAlign: 'center',
-                    fontSize: 13,
-                    fontWeight: '600',
-                    color: t.colors.sec,
-                  }}
-                >
-                  {Math.round(fontScale * 100)}%
-                </Text>
-                <Pressable
-                  onPress={() => stepFont(1)}
-                  disabled={atMax}
-                  accessibilityRole="button"
-                  accessibilityLabel="Larger font"
-                  style={{
-                    width: 40,
-                    height: 36,
-                    borderRadius: 9,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: atMax ? 0.35 : 1,
-                  }}
-                >
-                  <Text style={{ fontSize: 20, fontWeight: '700', color: t.colors.ink }}>A</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            <OverlineLabel>Chord style</OverlineLabel>
-            <Segmented
-              options={[
-                { value: 'letters', label: 'Letters' },
-                { value: 'solfege', label: 'Solfège' },
-              ]}
-              value={chordStyle}
-              onChange={onChordStyle}
-            />
-          </View>
         </View>
+
+        <OverlineLabel>Chord style</OverlineLabel>
+        <Segmented
+          options={[
+            { value: 'letters', label: 'Letters' },
+            { value: 'solfege', label: 'Solfège' },
+          ]}
+          value={chordStyle}
+          onChange={onChordStyle}
+        />
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }

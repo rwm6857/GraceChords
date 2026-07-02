@@ -1,5 +1,5 @@
 import { File, Paths } from 'expo-file-system'
-import { supabase } from './supabase'
+import { apiError, apiPost } from './api'
 
 // Server-side song export. Calls the web app's Pages Function
 // POST /api/export/song, which renders with the same pure pdf_mvp engine the
@@ -10,43 +10,21 @@ import { supabase } from './supabase'
 
 export type ExportFormat = 'pdf' | 'jpg'
 
-const base = process.env.EXPO_PUBLIC_API_BASE_URL
-
-function apiBase(): string {
-  if (!base) {
-    throw new Error(
-      'Missing EXPO_PUBLIC_API_BASE_URL. ' +
-        'Copy apps/mobile/.env.example to apps/mobile/.env and fill in the values.',
-    )
-  }
-  return base.replace(/\/$/, '')
-}
-
 export async function exportSong(opts: {
   songId: string
   key?: string
   format?: ExportFormat
 }): Promise<string> {
-  const { data } = await supabase.auth.getSession()
-  const session = data?.session
-  if (!session) throw new Error('not_signed_in')
-
   const format = opts.format ?? 'pdf'
-  const res = await fetch(`${apiBase()}/api/export/song`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ song_id: opts.songId, key: opts.key || '', format }),
+  const res = await apiPost('/api/export/song', {
+    song_id: opts.songId,
+    key: opts.key || '',
+    format,
   })
 
   // 501 = server rasteriser unavailable; caller should offer PDF instead.
   if (res.status === 501) throw new Error('image_unavailable')
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null
-    throw new Error(body?.error || `export_failed_${res.status}`)
-  }
+  if (!res.ok) throw await apiError(res, 'export_failed')
 
   const contentType = res.headers.get('content-type') || ''
   const ext = contentType.includes('pdf') ? 'pdf' : 'png'
