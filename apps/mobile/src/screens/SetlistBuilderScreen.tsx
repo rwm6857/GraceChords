@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Clipboard from 'expo-clipboard'
+import * as Sharing from 'expo-sharing'
 import {
   createSetlist,
   effectiveKey,
@@ -30,6 +31,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { supabase } from '../lib/supabase'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
+import { exportSetlist } from '../lib/exportSong'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
@@ -183,6 +185,23 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       showToast('Set link copied')
     } catch (err: unknown) {
       Alert.alert('Could not copy link', errMessage(err))
+    }
+  }
+
+  async function exportSet() {
+    if (items.length === 0) {
+      showToast('Add songs first')
+      return
+    }
+    try {
+      // Combined-set PDF via the same /api/export/setlist endpoint the Performer
+      // uses; keys resolve to each entry's effective key (override or default).
+      const uri = await exportSetlist(
+        items.map((item, i) => ({ songId: item.songId, key: effectiveKeys[i] })),
+      )
+      await Sharing.shareAsync(uri)
+    } catch (err: unknown) {
+      Alert.alert('Export failed', errMessage(err))
     }
   }
 
@@ -491,6 +510,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         visible={shareOpen}
         onClose={() => setShareOpen(false)}
         songCount={items.length}
+        onExport={exportSet}
         onCopyLink={copyLink}
         onTelegram={sendTelegram}
       />

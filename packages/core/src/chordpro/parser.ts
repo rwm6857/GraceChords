@@ -105,7 +105,7 @@ function parseInstrumentalDirective(body: string): InstrumentalDirective {
   return { chords, repeat };
 }
 
-type Dir = { start: boolean; kind: string; label?: string };
+type Dir = { start: boolean; kind: string; label?: string | undefined };
 function parseDirective(raw: string): Dir | null {
   const t = raw.trim();
   let m = RX_LONG_DIR.exec(t);

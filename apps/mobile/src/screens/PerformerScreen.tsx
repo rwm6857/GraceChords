@@ -45,7 +45,8 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { prefetchSong, useSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
-import { getDefaultsSnapshot } from '../lib/defaults'
+import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../lib/defaults'
+import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import {
@@ -136,6 +137,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
   const [autoHide, setAutoHide] = useAutoHidePref()
+  // Keep-awake: shared persisted preference (defaults store), engaged only while
+  // this screen is focused so it never holds the lock in the background.
+  const { keepAwake } = useAppDefaults()
+  useKeepAwakeWhileFocused(keepAwake)
   // Arm only when a chart is on screen (tap-to-reveal lives on the chart) and
   // no sheet is open, so chrome can't hide behind a spinner or a sheet.
   const { visible: chromeVisible, opacity: chromeOpacity, reveal } = useAutoHideChrome(
@@ -568,6 +573,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         onAccidental={setAccidentalManual}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
+        keepAwake={keepAwake}
+        onKeepAwake={setDefaultKeepAwake}
       />
       <PerformerShareSheet
         visible={sheet === 'share'}

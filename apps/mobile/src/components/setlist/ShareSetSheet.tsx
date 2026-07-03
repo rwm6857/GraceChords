@@ -6,23 +6,25 @@ import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // The setlist "Export & share" sheet (modeled on the viewer's ExportSheet).
-// Copy link and Telegram work today; the set-PDF / Charts ZIP / ChordPro
-// exports need backend endpoints that don't exist yet, so those tiles render
-// disabled as "Coming soon" (a later pass, alongside the Setlist Viewer's
-// export work).
+// Set PDF, Copy link, and Telegram work today (the same combined-PDF export the
+// Performer uses, via /api/export/setlist). Only the Charts ZIP / ChordPro
+// exports still need backend endpoints that don't exist yet, so those two tiles
+// render disabled as "Coming soon".
 
-type Busy = 'link' | 'telegram' | null
+type Busy = 'pdf' | 'link' | 'telegram' | null
 
 export default function ShareSetSheet({
   visible,
   onClose,
   songCount,
+  onExport,
   onCopyLink,
   onTelegram,
 }: {
   visible: boolean
   onClose: () => void
   songCount: number
+  onExport: () => Promise<void>
   onCopyLink: () => Promise<void>
   onTelegram: () => Promise<void>
 }) {
@@ -70,9 +72,12 @@ export default function ShareSetSheet({
       closeAccessibilityLabel="Close export and share"
     >
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
-        {/* Primary set-PDF export — endpoint not built yet. */}
-        <View
-          accessibilityLabel="Export set as PDF — coming soon"
+        {/* Primary set-PDF export — combined PDF via /api/export/setlist. */}
+        <Pressable
+          onPress={run('pdf', onExport)}
+          disabled={!!busy}
+          accessibilityRole="button"
+          accessibilityLabel="Export set as PDF"
           style={{
             height: 50,
             borderRadius: 13,
@@ -81,14 +86,18 @@ export default function ShareSetSheet({
             alignItems: 'center',
             justifyContent: 'center',
             gap: t.spacing.sm,
-            opacity: 0.45,
+            opacity: busy && busy !== 'pdf' ? 0.5 : 1,
           }}
         >
-          <SymbolIcon name="square.and.arrow.down" size={19} color={t.colors.onAccent} />
+          {busy === 'pdf' ? (
+            <ActivityIndicator color={t.colors.onAccent} />
+          ) : (
+            <SymbolIcon name="square.and.arrow.down" size={19} color={t.colors.onAccent} />
+          )}
           <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
-            Export set as PDF · {songCount} {songCount === 1 ? 'song' : 'songs'} (soon)
+            Export set as PDF · {songCount} {songCount === 1 ? 'song' : 'songs'}
           </Text>
-        </View>
+        </Pressable>
 
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
           {disabledTile('Charts ZIP', 'folder')}

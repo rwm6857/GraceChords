@@ -24,15 +24,19 @@ export type ChordStyle = 'letters' | 'solfege'
 export type AppDefaults = {
   theme: ThemePref
   chordStyle: ChordStyle
+  /** Keep the screen awake in the Song Viewer / Performer (default off). */
+  keepAwake: boolean
 }
 
 export const DEFAULT_APP_DEFAULTS: AppDefaults = {
   theme: 'system',
   chordStyle: 'letters',
+  keepAwake: false,
 }
 
 const THEME_KEY = 'gc.defaults.theme'
 const CHORD_STYLE_KEY = 'gc.defaults.chordStyle'
+const KEEP_AWAKE_KEY = 'gc.defaults.keepAwake'
 
 const THEME_PREFS: readonly ThemePref[] = ['system', 'light', 'dark']
 const CHORD_STYLES: readonly ChordStyle[] = ['letters', 'solfege']
@@ -64,17 +68,20 @@ export async function hydrateDefaults(store: KVStorage): Promise<AppDefaults> {
   storage = store
   let theme: ThemePref = DEFAULT_APP_DEFAULTS.theme
   let chordStyle: ChordStyle = DEFAULT_APP_DEFAULTS.chordStyle
+  let keepAwake: boolean = DEFAULT_APP_DEFAULTS.keepAwake
   try {
-    const [rawTheme, rawChord] = await Promise.all([
+    const [rawTheme, rawChord, rawKeepAwake] = await Promise.all([
       store.getItem(THEME_KEY),
       store.getItem(CHORD_STYLE_KEY),
+      store.getItem(KEEP_AWAKE_KEY),
     ])
     if (isThemePref(rawTheme)) theme = rawTheme
     if (isChordStyle(rawChord)) chordStyle = rawChord
+    if (rawKeepAwake != null) keepAwake = rawKeepAwake === '1'
   } catch {
     // Best-effort — a bad read must never crash the app; fall back to defaults.
   }
-  cache = { theme, chordStyle }
+  cache = { theme, chordStyle, keepAwake }
   emit()
   return cache
 }
@@ -96,6 +103,13 @@ export function setDefaultChordStyle(v: ChordStyle): void {
   cache = { ...cache, chordStyle: v }
   emit()
   storage?.setItem(CHORD_STYLE_KEY, v).catch(() => {})
+}
+
+export function setDefaultKeepAwake(v: boolean): void {
+  if (cache.keepAwake === v) return
+  cache = { ...cache, keepAwake: v }
+  emit()
+  storage?.setItem(KEEP_AWAKE_KEY, v ? '1' : '0').catch(() => {})
 }
 
 function subscribe(listener: () => void): () => void {
