@@ -8,6 +8,9 @@ const ReadingsPage = React.lazy(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
 const Songbook = React.lazy(() => import('./pages/SongbookPage'))
 const About = React.lazy(() => import('./pages/AboutPage'))
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = React.lazy(() => import('./pages/TermsPage'))
+const LicensesPage = React.lazy(() => import('./pages/LicensesPage'))
 const LoginPage = React.lazy(() => import('./pages/LoginPage'))
 const SignupPage = React.lazy(() => import('./pages/SignupPage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
@@ -40,6 +43,9 @@ export default function App(){
             <Route path="/" element={<HomeDashboard />} />
             <Route path="/songs" element={<Songs />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/licenses" element={<LicensesPage />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/songs/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
