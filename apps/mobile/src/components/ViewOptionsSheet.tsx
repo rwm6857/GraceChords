@@ -102,6 +102,8 @@ export default function ViewOptionsSheet({
   onAccidental,
   autoHide,
   onAutoHide,
+  keepAwake,
+  onKeepAwake,
 }: {
   visible: boolean
   onClose: () => void
@@ -120,6 +122,10 @@ export default function ViewOptionsSheet({
   // wires it (Song Viewer + Setlist Performer).
   autoHide?: boolean
   onAutoHide?: (v: boolean) => void
+  // Optional "keep screen awake" toggle — persisted shared preference, rendered
+  // only when the screen wires it (Song Viewer + Setlist Performer).
+  keepAwake?: boolean
+  onKeepAwake?: (v: boolean) => void
 }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
@@ -249,23 +255,39 @@ export default function ViewOptionsSheet({
           </>
         ) : null}
 
-        {/* Hide controls when idle — persists across launches (unlike the
-            options above). Rendered only when the screen wires it. */}
+        {/* Screen preferences — persist across launches (unlike the options
+            above). Each row renders only when the screen wires it. */}
+        {onAutoHide || onKeepAwake ? <OverlineLabel>Screen</OverlineLabel> : null}
         {onAutoHide ? (
-          <>
-            <OverlineLabel>Screen</OverlineLabel>
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-            >
-              <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
-              <Switch
-                value={!!autoHide}
-                onValueChange={onAutoHide}
-                trackColor={{ true: t.colors.accent }}
-                accessibilityLabel="Hide controls when idle"
-              />
-            </View>
-          </>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
+            <Switch
+              value={!!autoHide}
+              onValueChange={onAutoHide}
+              trackColor={{ true: t.colors.accent }}
+              accessibilityLabel="Hide controls when idle"
+            />
+          </View>
+        ) : null}
+        {onKeepAwake ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: onAutoHide ? t.spacing.xl : 0,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>Keep screen awake</Text>
+            <Switch
+              value={!!keepAwake}
+              onValueChange={onKeepAwake}
+              trackColor={{ true: t.colors.accent }}
+              accessibilityLabel="Keep screen awake"
+            />
+          </View>
         ) : null}
       </View>
     </BottomSheet>

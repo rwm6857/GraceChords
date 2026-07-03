@@ -34,7 +34,8 @@ import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush
 import { useSong } from '../../src/lib/useSong'
 import { recordSongOpened } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
-import { getDefaultsSnapshot } from '../../src/lib/defaults'
+import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
+import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
@@ -123,6 +124,10 @@ export default function ViewerScreen() {
   // Chrome auto-hide (persisted preference). Pinned visible while a sheet is
   // open so it can't hide behind one. Tap the chart to bring it back.
   const [autoHide, setAutoHide] = useAutoHidePref()
+  // Keep-awake: shared persisted preference (defaults store), engaged only while
+  // this screen is focused so it never holds the lock in the background.
+  const { keepAwake } = useAppDefaults()
+  useKeepAwakeWhileFocused(keepAwake)
   // Only arm auto-hide when there's a chart to tap (tap-to-reveal lives on the
   // chart); otherwise the header could hide with no way to bring it back.
   const { visible: chromeVisible, opacity: chromeOpacity, reveal } = useAutoHideChrome(
@@ -377,6 +382,8 @@ export default function ViewerScreen() {
         onAccidental={setAccidentalManual}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
+        keepAwake={keepAwake}
+        onKeepAwake={setDefaultKeepAwake}
       />
       <ExportSheet
         visible={sheet === 'export'}

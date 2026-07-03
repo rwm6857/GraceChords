@@ -2,7 +2,7 @@ export type ChordPlacement = { sym: string; index: number };
 
 export type InstrumentalDirective = {
   chords: string[];
-  repeat?: number;
+  repeat?: number | undefined;
 };
 
 export type SongLine = {
@@ -14,7 +14,7 @@ export type SongLine = {
 
 export type SongSection = {
   kind: string; // e.g., 'verse', 'chorus'
-  label?: string;
+  label?: string | undefined;
   lines: SongLine[];
   instrumental?: InstrumentalDirective;
 };

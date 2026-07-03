@@ -6,6 +6,7 @@ import {
   initialChordStyle,
   resolveThemeMode,
   setDefaultChordStyle,
+  setDefaultKeepAwake,
   setDefaultTheme,
   type KVStorage,
 } from '../defaults'
@@ -24,7 +25,7 @@ describe('defaults store', () => {
   it('falls back to DEFAULT_APP_DEFAULTS when nothing is stored', async () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters' })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters', keepAwake: false })
   })
 
   it('ignores invalid stored values and uses fallbacks', async () => {
@@ -38,10 +39,12 @@ describe('defaults store', () => {
 
     setDefaultTheme('dark')
     setDefaultChordStyle('solfege')
+    setDefaultKeepAwake(true)
 
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege' })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true })
     expect(s.store.get('gc.defaults.theme')).toBe('dark')
     expect(s.store.get('gc.defaults.chordStyle')).toBe('solfege')
+    expect(s.store.get('gc.defaults.keepAwake')).toBe('1')
   })
 
   it('survives a simulated reload (re-hydrate from the same storage)', async () => {
@@ -49,13 +52,25 @@ describe('defaults store', () => {
     await hydrateDefaults(s)
     setDefaultTheme('light')
     setDefaultChordStyle('solfege')
+    setDefaultKeepAwake(true)
 
     // Reset the cache to defaults via a fresh empty hydrate, then reload from `s`.
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
 
     await hydrateDefaults(s)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege' })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege', keepAwake: true })
+  })
+
+  it('hydrates keepAwake from storage and defaults it off', async () => {
+    await hydrateDefaults(memoryStorage())
+    expect(getDefaultsSnapshot().keepAwake).toBe(false)
+
+    await hydrateDefaults(memoryStorage({ 'gc.defaults.keepAwake': '1' }))
+    expect(getDefaultsSnapshot().keepAwake).toBe(true)
+
+    await hydrateDefaults(memoryStorage({ 'gc.defaults.keepAwake': '0' }))
+    expect(getDefaultsSnapshot().keepAwake).toBe(false)
   })
 
   it('returns a stable snapshot reference between changes', async () => {
@@ -85,7 +100,7 @@ describe('resolveThemeMode', () => {
 
 describe('initialChordStyle', () => {
   it('seeds the viewer from the stored default', () => {
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege' })).toBe('solfege')
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters' })).toBe('letters')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false })).toBe('solfege')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false })).toBe('letters')
   })
 })
