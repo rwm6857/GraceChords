@@ -140,15 +140,22 @@ export default function ViewOptionsSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose} title="View options">
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
-        <OverlineLabel first>Show</OverlineLabel>
-        <Segmented
-          options={[
-            { value: 'chords', label: 'Chords & lyrics' },
-            { value: 'lyrics', label: 'Lyrics only' },
-          ]}
-          value={showChords ? 'chords' : 'lyrics'}
-          onChange={(v) => onShowChords(v === 'chords')}
-        />
+        {/* Show chords */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>Show chords</Text>
+          <Switch
+            value={showChords}
+            onValueChange={onShowChords}
+            trackColor={{ true: t.colors.accent }}
+            accessibilityLabel="Show chords"
+          />
+        </View>
 
         {/* Section labels */}
         <View
@@ -246,13 +253,17 @@ export default function ViewOptionsSheet({
         {/* Accidentals — ♯/♭ spelling (session-scoped). Rendered only when the
             screen wires it. */}
         {onAccidental && accidental ? (
-          <>
-            <OverlineLabel>Accidentals</OverlineLabel>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ fontSize: 16, color: t.colors.ink }}>Spelling</Text>
-              <AccidentalToggle value={accidental} onChange={onAccidental} />
-            </View>
-          </>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: t.spacing.xl,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>Accidentals</Text>
+            <AccidentalToggle value={accidental} onChange={onAccidental} />
+          </View>
         ) : null}
 
         {/* Screen preferences — persist across launches (unlike the options

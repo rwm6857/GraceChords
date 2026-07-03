@@ -20,6 +20,7 @@ import ChordChart, {
 } from '../../src/components/ChordChart'
 // CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_LYRIC_FONT drive the raw-text fallback.
 import ExportSheet from '../../src/components/ExportSheet'
+import KeyPickerSheet from '../../src/components/setlist/KeyPickerSheet'
 import Screen from '../../src/components/Screen'
 import StarButton from '../../src/components/StarButton'
 import SymbolIcon from '../../src/components/SymbolIcon'
@@ -105,7 +106,7 @@ export default function ViewerScreen() {
     accidentalTouched.current = true
     setAccidental(v)
   }
-  const [sheet, setSheet] = useState<null | 'options' | 'export'>(null)
+  const [sheet, setSheet] = useState<null | 'options' | 'export' | 'key'>(null)
   // Header is a floating overlay so the chart runs edge-to-edge; its measured
   // height seeds the chart's top inset, so the first line starts where the
   // header sits and the user can scroll up into that space.
@@ -142,6 +143,21 @@ export default function ViewerScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
     reveal()
     setDelta((d) => d + dir)
+  }
+
+  // Long-press key selector: jump straight to a chosen key by deriving the
+  // relative delta the transpose model already uses (null = back to the song's
+  // own key). Uses the same transpose/accidental state as the ± taps.
+  const pickKey = (key: string | null) => {
+    Haptics.selectionAsync().catch(() => {})
+    if (key === null) {
+      setDelta(-seedSteps)
+      accidentalTouched.current = false
+      setAccidental(defaultAccidental(nativeKey))
+    } else {
+      setDelta(stepsBetween(nativeKey, key) - seedSteps)
+      setAccidentalManual(key.includes('b') ? 'flat' : 'sharp')
+    }
   }
 
   const displayTitle = song?.title || title || slug
@@ -252,7 +268,7 @@ export default function ViewerScreen() {
               accessibilityLabel="Export and share"
               style={headerButtonStyle}
             >
-              <SymbolIcon name="square.and.arrow.up" size={17} color={t.colors.ink} />
+              <SymbolIcon name="square.and.arrow.up" size={22} color={t.colors.ink} />
             </Pressable>
           </View>
         </View>
@@ -359,7 +375,12 @@ export default function ViewerScreen() {
                 alignItems: 'center',
               }}
             >
-              <TransposeBar keyLabel={keyLabel} onDown={() => transposeBy(-1)} onUp={() => transposeBy(1)} />
+              <TransposeBar
+                keyLabel={keyLabel}
+                onDown={() => transposeBy(-1)}
+                onUp={() => transposeBy(1)}
+                onLongPress={() => setSheet('key')}
+              />
             </Animated.View>
           ) : null}
         </View>
@@ -384,6 +405,15 @@ export default function ViewerScreen() {
         onAutoHide={setAutoHide}
         keepAwake={keepAwake}
         onKeepAwake={setDefaultKeepAwake}
+      />
+      <KeyPickerSheet
+        visible={sheet === 'key'}
+        onClose={() => setSheet(null)}
+        songTitle={displayTitle}
+        currentKey={effectiveKey || null}
+        nativeKey={nativeKey || null}
+        hasOverride={steps !== 0}
+        onPick={pickKey}
       />
       <ExportSheet
         visible={sheet === 'export'}

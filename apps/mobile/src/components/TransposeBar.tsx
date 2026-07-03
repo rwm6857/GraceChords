@@ -11,10 +11,14 @@ export default function TransposeBar({
   keyLabel,
   onDown,
   onUp,
+  onLongPress,
 }: {
   keyLabel: string
   onDown: () => void
   onUp: () => void
+  // Long-press the center key label to open the key selector. Optional so the
+  // bar still works where no picker is wired.
+  onLongPress?: () => void
 }) {
   const t = useTheme()
   const buttonStyle = {
@@ -52,17 +56,26 @@ export default function TransposeBar({
       >
         <SymbolIcon name="chevron.down" size={20} color={t.colors.accent} weight="semibold" />
       </Pressable>
-      <Text
-        style={{
-          minWidth: 48,
-          textAlign: 'center',
-          fontSize: 24,
-          fontWeight: '700',
-          color: t.colors.ink,
-        }}
+      <Pressable
+        onLongPress={onLongPress}
+        disabled={!onLongPress}
+        accessibilityRole="button"
+        accessibilityLabel="Choose key"
+        accessibilityHint="Opens the key selector"
+        style={({ pressed }) => [pressed && onLongPress ? { opacity: 0.6 } : null]}
       >
-        {keyLabel}
-      </Text>
+        <Text
+          style={{
+            minWidth: 48,
+            textAlign: 'center',
+            fontSize: 24,
+            fontWeight: '700',
+            color: t.colors.ink,
+          }}
+        >
+          {keyLabel}
+        </Text>
+      </Pressable>
       <Pressable
         onPress={onUp}
         accessibilityRole="button"

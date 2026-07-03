@@ -162,7 +162,7 @@ export default function HomeScreen() {
                   }}
                 >
                   {spriteSource ? (
-                    <Image source={spriteSource} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                    <Image source={spriteSource} style={{ width: 30, height: 30 }} resizeMode="contain" />
                   ) : (
                     <SymbolIcon name="person" size={20} color={t.colors.accent} />
                   )}

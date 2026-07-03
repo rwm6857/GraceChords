@@ -74,6 +74,8 @@ export default function DailyWordScreen() {
   const [reloadToken, setReloadToken] = useState(0)
 
   const fade = useRef(new Animated.Value(1)).current
+  // Copy FAB press feedback: 0 = resting, 1 = pressed (scale-down + dim).
+  const fabPress = useRef(new Animated.Value(0)).current
 
   const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
   const currentPassage: Passage | null = passages[passageIndex] || passages[0] || null
@@ -294,7 +296,7 @@ export default function DailyWordScreen() {
         ) : (
           <ScrollView
             contentContainerStyle={{
-              paddingHorizontal: t.spacing.xl,
+              paddingHorizontal: 18,
               paddingTop: t.spacing.xs,
               paddingBottom: t.spacing.xxl,
             }}
@@ -358,29 +360,44 @@ export default function DailyWordScreen() {
 
         {/* Copy FAB — appears while a selection exists (no count badge). */}
         {selection.size > 0 ? (
-          <Pressable
-            onPress={onCopy}
-            accessibilityRole="button"
-            accessibilityLabel={`Copy ${selection.size} verse${selection.size === 1 ? '' : 's'}`}
+          <Animated.View
             style={{
               position: 'absolute',
               bottom: t.spacing.xl,
               [rtl ? 'left' : 'right']: t.spacing.lg,
-              width: 56,
-              height: 56,
-              borderRadius: t.radii.pill,
-              backgroundColor: t.colors.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: t.colors.accent,
-              shadowOpacity: 0.45,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 8,
+              opacity: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] }),
+              transform: [
+                { scale: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }) },
+              ],
             }}
           >
-            <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
-          </Pressable>
+            <Pressable
+              onPress={onCopy}
+              onPressIn={() =>
+                Animated.timing(fabPress, { toValue: 1, duration: 90, useNativeDriver: true }).start()
+              }
+              onPressOut={() =>
+                Animated.spring(fabPress, { toValue: 0, useNativeDriver: true }).start()
+              }
+              accessibilityRole="button"
+              accessibilityLabel={`Copy ${selection.size} verse${selection.size === 1 ? '' : 's'}`}
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: t.radii.pill,
+                backgroundColor: t.colors.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: t.colors.accent,
+                shadowOpacity: 0.45,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 8,
+              }}
+            >
+              <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
+            </Pressable>
+          </Animated.View>
         ) : null}
       </Animated.View>
 
