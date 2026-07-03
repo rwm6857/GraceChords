@@ -12,11 +12,12 @@ export type StarredSong = Pick<
 const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
 
 // Read the current user's starred songs. Two steps rather than a PostgREST embed
-// (`songs!inner(...)`): first the star rows (newest first), then the songs by id.
-// This avoids any relationship-embedding ambiguity and reuses the plain songs
-// select. `user_starred_songs.song_id` is a uuid FK to `songs.id`; RLS scopes the
-// star read to the signed-in user. Read-only — starring/unstarring is a later
-// feature.
+// (`songs!inner(...)`): first the star rows, then the songs by id. This avoids any
+// relationship-embedding ambiguity and reuses the plain songs select.
+// `user_starred_songs.song_id` is a uuid FK to `songs.id`; RLS scopes the star read
+// to the signed-in user. Ordered by song title (A–Z) to match the web Profile page —
+// the table has no timestamp column to sort by recency. Read-only — starring/
+// unstarring is a later feature.
 export function useStarredSongs() {
   const [songs, setSongs] = useState<StarredSong[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,9 +39,8 @@ export function useStarredSongs() {
 
         const { data: stars, error: starsErr } = await supabase
           .from('user_starred_songs')
-          .select('song_id, created_at')
+          .select('song_id')
           .eq('user_id', uid)
-          .order('created_at', { ascending: false })
         if (starsErr) throw starsErr
 
         const ids = (stars ?? []).map((r: { song_id: string }) => r.song_id)
@@ -57,18 +57,11 @@ export function useStarredSongs() {
           .select(SONG_COLUMNS)
           .in('id', ids)
           .eq('is_deleted', false)
+          .order('title', { ascending: true })
         if (songsErr) throw songsErr
 
-        // Preserve the star order (newest first) from the first query.
-        const byId = new Map(
-          (rows ?? []).map((s) => [(s as StarredSong).id, s as StarredSong]),
-        )
-        const ordered = ids
-          .map((id) => byId.get(id))
-          .filter((s): s is StarredSong => s != null)
-
         if (alive) {
-          setSongs(ordered)
+          setSongs((rows ?? []) as StarredSong[])
           setError(null)
         }
       } catch (err: unknown) {
