@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { ThemeProvider } from '../src/theme/ThemeProvider'
+import { ThemeProvider, ThemedStatusBar } from '../src/theme/ThemeProvider'
 import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
 import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
@@ -111,7 +110,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <SafeAreaProvider>
-          <StatusBar style="auto" />
+          <ThemedStatusBar />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="login" />

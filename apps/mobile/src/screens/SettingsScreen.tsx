@@ -31,7 +31,7 @@ const HELP_URL = 'https://gracechords.com/help'
 const FEEDBACK_MAILTO = 'mailto:support@gracechords.com?subject=GraceChords%20feedback'
 
 const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
-  { value: 'system', label: 'System' },
+  { value: 'system', label: 'Auto' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
 ]
