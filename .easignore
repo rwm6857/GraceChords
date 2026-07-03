@@ -1,0 +1,12 @@
+# .easignore (repo root)
+node_modules/
+.expo/
+dist/
+build/
+.git/
+*.log
+.env
+.env.*
+
+# exclude web workspace so its deps (sharp) don't hit the mobile build worker
+apps/web
