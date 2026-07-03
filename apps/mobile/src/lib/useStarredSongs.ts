@@ -11,12 +11,19 @@ export type StarredSong = Pick<
 
 const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
 
+// User-facing fallback shown in the Home section if the read fails. Deliberately
+// generic: never surface raw Supabase/Postgres error text to the UI (that once
+// leaked `column user_starred_songs.created_at does not exist`). The real error is
+// logged for debugging.
+const LOAD_ERROR = 'Couldn’t load your starred songs.'
+
 // Read the current user's starred songs. Two steps rather than a PostgREST embed
 // (`songs!inner(...)`): first the star rows (newest first), then the songs by id.
 // This avoids any relationship-embedding ambiguity and reuses the plain songs
 // select. `user_starred_songs.song_id` is a uuid FK to `songs.id`; RLS scopes the
-// star read to the signed-in user. Read-only — starring/unstarring is a later
-// feature.
+// star read to the signed-in user. Ordered by `created_at` desc so the most
+// recently starred songs come first (requires the created_at column added in
+// migration 20260703000000). Read-only — starring/unstarring is a later feature.
 export function useStarredSongs() {
   const [songs, setSongs] = useState<StarredSong[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,9 +45,10 @@ export function useStarredSongs() {
 
         const { data: stars, error: starsErr } = await supabase
           .from('user_starred_songs')
-          .select('song_id, created_at')
+          .select('song_id')
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
+          .order('song_id', { ascending: true }) // stable tiebreak for equal timestamps (e.g. backfilled rows)
         if (starsErr) throw starsErr
 
         const ids = (stars ?? []).map((r: { song_id: string }) => r.song_id)
@@ -72,7 +80,9 @@ export function useStarredSongs() {
           setError(null)
         }
       } catch (err: unknown) {
-        if (alive) setError(errMessage(err))
+        // Log the real error for debugging; show a generic message to the user.
+        console.error('[useStarredSongs] Failed to load starred songs:', errMessage(err))
+        if (alive) setError(LOAD_ERROR)
       } finally {
         if (alive) setLoading(false)
       }
