@@ -54,7 +54,7 @@ export default function EmptyState({
         ) : null}
       </View>
       {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} fullWidth={false} />
+        <Button title={actionLabel} onPress={onAction} fullWidth={false} style={{ alignSelf: 'center' }} />
       ) : null}
     </View>
   )

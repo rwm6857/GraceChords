@@ -81,7 +81,7 @@ type RenderOpts = {
 function ChartSection({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
   const t = useTheme()
   return (
-    <View style={{ marginTop: first ? 0 : t.spacing.lg }}>
+    <View style={{ marginTop: first ? 0 : t.spacing.md }}>
       {section.label && opts.showSections ? (
         <Text
           style={{
@@ -137,9 +137,9 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
   const lyricSize = CHART_FONT_SIZE * fontScale
   const lineHeight = Math.round(CHART_LINE_HEIGHT * fontScale)
   const chordSize = 14 * fontScale
-  const chordLineHeight = Math.round(20 * fontScale)
+  const chordLineHeight = Math.round(16 * fontScale)
 
-  const lyric = { fontFamily: CHART_LYRIC_FONT, fontSize: lyricSize, lineHeight, color: t.colors.ink }
+  const lyric = { fontFamily: CHART_LYRIC_FONT, fontSize: lyricSize, lineHeight, fontWeight: '500' as const, color: t.colors.ink }
   const chordStyleObj = {
     fontFamily: CHART_MONO,
     fontSize: chordSize,

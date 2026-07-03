@@ -20,7 +20,7 @@ function Segmented<T extends string>({
   value,
   onChange,
 }: {
-  options: { value: T; label: string }[]
+  options: { value: T; label: string; labelFontFamily?: string }[]
   value: T
   onChange: (v: T) => void
 }) {
@@ -51,7 +51,12 @@ function Segmented<T extends string>({
             }}
           >
             <Text
-              style={{ fontSize: 14, fontWeight: '600', color: selected ? t.colors.onAccent : t.colors.sec }}
+              style={{
+                fontSize: 14,
+                fontWeight: '600',
+                fontFamily: opt.labelFontFamily,
+                color: selected ? t.colors.onAccent : t.colors.sec,
+              }}
             >
               {opt.label}
             </Text>
@@ -157,7 +162,9 @@ export default function ReaderSettingsSheet({
         <OverlineLabel>Typeface</OverlineLabel>
         <Segmented<Typeface>
           options={[
-            { value: 'serif', label: 'Serif' },
+            // Render "Serif" in the serif face it selects so the choice is
+            // self-evident (matches the reading font — Georgia).
+            { value: 'serif', label: 'Serif', labelFontFamily: 'Georgia' },
             { value: 'sans', label: 'Sans' },
           ]}
           value={settings.typeface}

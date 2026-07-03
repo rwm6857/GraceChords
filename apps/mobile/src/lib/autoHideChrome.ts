@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // this preference PERSISTS across launches, so it lives in AsyncStorage.
 
 const PREF_KEY = 'gc.viewer.autoHideChrome'
-const HIDE_DELAY_MS = 6500
+const HIDE_DELAY_MS = 4500
 
 // Persisted on/off toggle. Defaults OFF; loads asynchronously so the toggle
 // reflects the stored value once it resolves, and writes through on change.
