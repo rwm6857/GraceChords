@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ScrollView, Text, View } from 'react-native'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -6,7 +7,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider, ThemedStatusBar } from '../src/theme/ThemeProvider'
-import { registerAuthAutoRefresh, supabase } from '../src/lib/supabase'
+import {
+  registerAuthAutoRefresh,
+  supabase,
+  supabaseConfigError,
+} from '../src/lib/supabase'
 import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
@@ -62,13 +67,67 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
   }, [ready])
 }
 
+// Shown instead of the app when required public config is missing (e.g. a
+// release/TestFlight build made without the EXPO_PUBLIC_* env vars). Better a
+// readable message than an instant, unexplained crash on launch.
+function ConfigErrorScreen({ message }: { message: string }) {
+  useEffect(() => {
+    // The auth gate never resolves here, so lift the native splash ourselves.
+    SplashScreen.hideAsync().catch(() => {})
+  }, [])
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: '#14171A',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text
+          style={{
+            color: '#FFFFFF',
+            fontSize: 20,
+            fontWeight: '700',
+            marginBottom: 12,
+            textAlign: 'center',
+          }}
+        >
+          Configuration missing
+        </Text>
+        <Text
+          style={{
+            color: '#B7C0C9',
+            fontSize: 15,
+            lineHeight: 22,
+            textAlign: 'center',
+          }}
+        >
+          {message}
+        </Text>
+      </ScrollView>
+    </View>
+  )
+}
+
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
 
-  useEffect(() => registerAuthAutoRefresh(), [])
+  useEffect(() => {
+    if (supabaseConfigError) return
+    return registerAuthAutoRefresh()
+  }, [])
 
   useEffect(() => {
+    // Missing public config: skip the session read entirely (the supabase client
+    // is null here) and let the ConfigErrorScreen below take over.
+    if (supabaseConfigError) return
     // Load app-wide defaults (theme/chord style) before the splash lifts so the
     // resolved theme is applied on first paint — no light→dark flash. Runs in
     // parallel with the session read; both must resolve before `ready`.
@@ -105,6 +164,10 @@ export default function RootLayout() {
   }, [session])
 
   useProtectedRoute(session, ready)
+
+  if (supabaseConfigError) {
+    return <ConfigErrorScreen message={supabaseConfigError} />
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
