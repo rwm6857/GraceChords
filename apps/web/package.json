@@ -59,7 +59,6 @@
     "mammoth": "^1.10.0",
     "pdf-parse": "^1.1.1",
     "rollup-plugin-visualizer": "^5.12.0",
-    "sharp": "^0.34.5",
     "ttf2woff2": "^8.0.0",
     "typescript-eslint": "^8.59.1",
     "vite-plugin-static-copy": "^3.1.1",
