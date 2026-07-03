@@ -1,5 +1,6 @@
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
 import Constants from 'expo-constants'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
@@ -99,7 +100,7 @@ export default function AboutScreen() {
           <ListRow
             title="Privacy Policy"
             chevron
-            onPress={() => void Linking.openURL(PRIVACY_URL)}
+            onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
           />
           <ListRow
             title="Acknowledgements &amp; Licenses"
