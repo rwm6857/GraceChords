@@ -129,6 +129,19 @@ duplicate logic here and never edit core internals to suit mobile.
   via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
   `choose-icon` is reachable both with and without a session (post-signup step —
   email confirmation may still be pending).
+- **Deep links / Universal Links.** iOS Universal Links are wired for **song
+  pages only**: `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only,
+  no `www`) + `app/+native-intent.tsx` `redirectSystemPath`, which rewrites the
+  web `/song/:id` and `/songs/:id` paths (id == slug) to `/viewer/:slug` — the app
+  has no matching `/song` route. The AASA file lives in the **web** repo at
+  `apps/web/public/.well-known/apple-app-site-association`. Changing
+  `associatedDomains` / `intentFilters` needs a **fresh native build** (prebuild +
+  EAS), not an OTA. Two TODOs: **TODO(setlist)** — shared setlist links
+  (`/setlist`, `/set`, `/worship`) are *excluded* in the AASA and fall back to web
+  because they carry an ephemeral slug-list payload the app can't yet decode (would
+  reuse core's `decodeSet` against the catalog); **TODO(android)** — `android.intentFilters`
+  are wired but dormant until an Android signing key exists and its SHA-256 lands in
+  the web `assetlinks.json`.
 - **Auth flows.** Email/password plus native Google
   (`@react-native-google-signin/google-signin`) and Apple
   (`expo-apple-authentication`, iOS-only button) via

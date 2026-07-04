@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["J7Y8NYZ48Q.com.gracechords.app"],
+        "components": [
+          { "/": "/song/*", "comment": "Song detail -> viewer/[slug]" },
+          { "/": "/songs/*", "comment": "Song detail alias -> viewer/[slug]" },
+          { "/": "/setlist/*", "exclude": true, "comment": "TODO(setlist): open in web until app decodes shared slug-list payloads" },
+          { "/": "/set/*", "exclude": true, "comment": "TODO(setlist): compact short-code, needs decodeSet + catalog" },
+          { "/": "/worship/*", "exclude": true, "comment": "TODO(setlist): worship-mode shared sets" }
+        ]
+      }
+    ]
+  }
+}

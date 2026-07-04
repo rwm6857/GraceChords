@@ -13,12 +13,24 @@
       "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:gracechords.com"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.gracechords.app"
+      "package": "com.gracechords.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-router",
