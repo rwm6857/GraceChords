@@ -27,7 +27,7 @@ Replaces the old GitHub Action; that workflow can be deleted.
 | Direct messages | Telegram webhook POST (`chat.type === 'private'`) | `POST /webhook` |
 | Group / supergroup mentions | Same webhook, when the bot is `@`-mentioned in a group it's a member of | `POST /webhook` |
 | Guest-chat mentions | Same webhook, payload arrives under `update.guest_message` (BotFather → Guest Chat Mode → On) | `POST /webhook` |
-| Feature announcements | `feature-post.yml` on PR merge — fires on `feat(` prefix OR `post` label OR `#post` in title/body. Body is rewritten through Workers AI before posting. | `POST /internal/feature` |
+| Feature announcements | `feature-post.yml` on PR merge — fires on `feat(` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
 | Mon + Fri digest | Cloudflare cron `0 22 * * 1,5` | `scheduled()` handler |
 
 `src/index.js` is the HTTP router; auth lives in `src/auth.js`. Each
@@ -50,7 +50,7 @@ flows based on chat type and the presence of `update.guest_message`.
 | `src/pdfRender.js` | PDF generation (always) and JPG rasterization (best-effort). Imports the shared `pdf_mvp/pure.js` engine + jsPDF; uses bundled pdfium WASM to rasterize the resulting PDF to PNG bytes for `sendPhoto`. |
 | `src/fontsWorker.js` | Lazy R2 fetch + base64 of Noto TTFs for the PDF engine. Cached in module scope. |
 | `src/digest.js` | Builds the Mon/Fri digest message from recent Supabase rows. |
-| `src/feature.js` | Handles `POST /internal/feature` from the GitHub Action. Strips the conventional-commit prefix, skips posting when the PR body is empty, otherwise pipes title+body through Workers AI before sending. |
+| `src/feature.js` | Handles `POST /internal/feature` from the GitHub Action. Skips backend-only scopes (unless `force`), strips the conventional-commit prefix, skips posting when the PR body is empty, otherwise pipes title+body through Workers AI before sending. Appends a "Check it out" link to the app (never GitHub). |
 | `src/aiSummary.js` | Workers AI wrapper. Calls `@cf/meta/llama-3.3-70b-instruct-fp8-fast` with a worship-leader-friendly system prompt; returns HTML-escaped text or `null` (the model can self-veto by returning `SKIP`). Caller falls back to the raw body on null. |
 | `src/mediaCache.js` | `stagePhoto(env, …)` — upload a JPG to `MEDIA_STAGING_CHAT_ID`, return `{ fileId, chatId, messageId }`. Used by the guest-message flow; the caller deletes the staging message after `answerGuestQuery` ships. No cache — every call re-stages. |
 | `src/telegram.js` | Bot API helpers: `sendMessage`, `sendPhoto`, `sendDocument`, `sendMediaGroup`, `sendChatAction`, `answerCallbackQuery`, `answerGuestQuery` (InlineQueryResult-shaped), `deleteMessage`, `getMe`. |
@@ -365,6 +365,13 @@ document is always preferable to a silent failure.
   `chore`, `fix`, `refactor`, etc. only post when explicitly marked
   with the `post` label or `#post` in the title/body. If a real
   user-facing change ships under `fix(` the author has to opt in.
+- **Backend-only `feat(` scopes are dropped by the worker.** The channel
+  is for worship leaders, so `feat(cli)`, `feat(worker)`, `feat(ci)`,
+  `feat(deps)`, and friends (the full list is `BACKEND_SCOPES` in
+  `src/feature.js`) never announce on their own. If such a change really
+  is worth telling users about, add the `post` label or `#post` — that
+  sets `force` on the payload and bypasses the skip. This is why an
+  end user never sees "we updated our CLI ingestion tool."
 
 ## Where to add things
 
@@ -377,7 +384,7 @@ document is always preferable to a silent failure.
 | Change DM rate limit | `src/ratelimit.js` |
 | Change group/guest cooldown | `src/groupRateLimit.js` |
 | Tweak AI feature-post tone | `src/aiSummary.js` system prompt (banned phrases list). |
-| Change feature-post trigger logic | `.github/workflows/feature-post.yml` `if:` clause + the title cleaning sed line. |
+| Change feature-post trigger logic | `.github/workflows/feature-post.yml` `if:` clause + the title cleaning sed line (coarse gate). Backend-scope skip + `force` override live in `src/feature.js` (`BACKEND_SCOPES`, `isBackendOnly`). |
 | Adjust guest-chat reply copy | `src/webhook.js` `handleGuestMessage`. Photo path always tries first; text fallback ships otherwise. |
 | Add a digest content type | `src/digest.js` + Supabase query |
 | Add a secret | `wrangler secret put …` AND document in `README.md` *and* the secrets comment block at the top of `wrangler.toml`. |

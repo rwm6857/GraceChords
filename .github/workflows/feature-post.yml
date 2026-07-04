@@ -8,9 +8,11 @@ name: Notify dev channel on flagged merge
 #   3. PR title or body contains "#post" — same intent as the label, but
 #      settable at commit time without touching the GitHub UI.
 #
-# Empty-body PRs are passed through and skipped on the worker side. We
-# could short-circuit here too, but doing it in one place (feature.js)
-# keeps the gating logic auditable.
+# This is a coarse gate. The worker (feature.js) applies the finer rules in
+# one auditable place: it skips empty-body PRs and backend-only scopes
+# (feat(cli), feat(worker), feat(ci), …) that mean nothing to end users.
+# The `post` label and "#post" marker set FORCE_POST below, which tells the
+# worker to bypass the backend-scope skip — that's the manual override.
 
 on:
   pull_request:
@@ -40,6 +42,9 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          # Explicit opt-in (label or "#post") → force the post through even
+          # if the scope looks backend-only.
+          FORCE_POST: ${{ contains(github.event.pull_request.labels.*.name, 'post') || contains(github.event.pull_request.title, '#post') || contains(github.event.pull_request.body, '#post') }}
         run: |
           if [ -z "${BOT_WORKER_URL:-}" ] || [ -z "${BOT_WEBHOOK_TOKEN:-}" ]; then
             echo "BOT_WORKER_URL or BOT_WEBHOOK_TOKEN not set; skipping."
@@ -56,7 +61,8 @@ jobs:
             --arg title "$cleaned_title" \
             --arg summary "$PR_BODY" \
             --arg url "$PR_URL" \
-            '{title:$title, summary:$summary, url:$url}')
+            --argjson force "${FORCE_POST:-false}" \
+            '{title:$title, summary:$summary, url:$url, force:$force}')
 
           curl -sS -X POST "${BOT_WORKER_URL%/}/internal/feature" \
             -H "Authorization: Bearer $BOT_WEBHOOK_TOKEN" \
