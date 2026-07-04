@@ -38,8 +38,9 @@ the visual rather than porting the HTML/CSS.
   transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
   (export + share sheet), `@react-native-google-signin/google-signin` +
   `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
-  offline downloads), and `expo-build-properties` (`useFrameworks: static`,
-  required by google-signin). Add Expo deps with
+  offline downloads), `expo-build-properties` (`useFrameworks: static`,
+  required by google-signin), and `expo-dev-client` (dev launcher — see the
+  device note under Commands). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
   version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
 
@@ -47,6 +48,14 @@ the visual rather than porting the HTML/CSS.
 
 - `npx expo run:ios` — prebuild + build + launch on the iOS simulator (needs
   macOS + Xcode).
+- `npx expo run:ios --device` — build + launch on a physical device. Because
+  `expo-dev-client` is installed, this produces a **dev client** whose launcher
+  auto-discovers the Metro server on the LAN. This is the supported path for
+  device runs: a bare (no dev-client) debug build has no reliable way to learn
+  the Mac's address on a physical device and boots with
+  `No script URL provided … unsanitizedScriptURLString = (null)`. Keep the phone
+  and Mac on the same Wi-Fi (no Guest SSID / VPN) so the launcher can reach
+  `http://<mac-ip>:8081`.
 - `npm run start` — Metro dev server.
 - `npm run export:ios` — `expo export --platform ios`; a Metro-only bundle that
   works on any OS. Use it to verify resolution/transpile without a simulator.

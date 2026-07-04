@@ -26,6 +26,7 @@
     "expo-clipboard": "~55.0.14",
     "expo-constants": "~55.0.16",
     "expo-crypto": "~55.0.16",
+    "expo-dev-client": "~55.0.36",
     "expo-file-system": "~55.0.23",
     "expo-glass-effect": "55.0.11",
     "expo-haptics": "~55.0.15",
