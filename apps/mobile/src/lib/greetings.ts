@@ -8,9 +8,21 @@ import { supabase } from './supabase'
 // short (one line). This is the intended place to input your own phrases later.
 // ─────────────────────────────────────────────────────────────────────────────
 export const SUB_GREETINGS: string[] = [
-  "Let's make music that honors His name.",
-  'Prepare your heart; the songs will follow.',
-  'A new day to sing a new song.',
+  "Everything's where you left it.",
+  "Let's get to it.",
+  'Good to have you back.',
+  "Glad you're here.",
+  'One song at a time.',
+  'Sing to Him a new song.',
+  'Be still, and know.',
+  'This is the day He has made.',
+  'Let everything that has breath praise Him.',
+  'He is your strength and your song.',
+  'Whatever you do, for His glory.',
+  'Enter His gates with thanksgiving.',
+  'Bless the Lord, O my soul.',
+  'His grace is enough.',
+  'Rejoice always.',
 ]
 
 /** Time-of-day greeting prefix, e.g. "Good morning". */
@@ -22,13 +34,18 @@ export function timeGreeting(date: Date = new Date()): string {
 }
 
 /**
- * Pick a sub-greeting that stays stable for the whole day and rotates to the
- * next one tomorrow (deterministic, so it doesn't flicker on re-render).
+ * The sub-greeting for this app launch. Chosen once at module load so it stays
+ * stable across re-renders and navigation within a session, and varies between
+ * launches. Picking here (not on each render) avoids flicker.
  */
-export function pickSubGreeting(date: Date = new Date()): string {
-  if (SUB_GREETINGS.length === 0) return ''
-  const dayNumber = Math.floor(date.getTime() / 86_400_000)
-  return SUB_GREETINGS[dayNumber % SUB_GREETINGS.length]
+const LAUNCH_SUB_GREETING =
+  SUB_GREETINGS.length === 0
+    ? ''
+    : SUB_GREETINGS[Math.floor(Math.random() * SUB_GREETINGS.length)]
+
+/** The sub-greeting chosen for this launch (see {@link LAUNCH_SUB_GREETING}). */
+export function pickSubGreeting(): string {
+  return LAUNCH_SUB_GREETING
 }
 
 /** A friendly first name for the greeting, derived from the auth user. */
