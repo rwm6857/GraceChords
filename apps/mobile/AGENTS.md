@@ -129,6 +129,24 @@ duplicate logic here and never edit core internals to suit mobile.
   via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
   `choose-icon` is reachable both with and without a session (post-signup step —
   email confirmation may still be pending).
+- **Deep links / Universal Links.** iOS Universal Links are wired via
+  `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`) +
+  `app/+native-intent.tsx` `redirectSystemPath`, and the AASA file lives in the
+  **web** repo at `apps/web/public/.well-known/apple-app-site-association`.
+  Handled paths:
+  - `/song/:id`, `/songs/:id` (id == slug) → `/viewer/:slug` (the app has no
+    `/song` route).
+  - Shared setlists `/setlist/<slugs>?toKeys=`, `/set/<CODE>`, and the
+    `/worship/...` mirrors → `/setlist/import` (the read-only import preview,
+    `SetlistImportScreen`). Decode/resolve lives in `src/lib/setlistImport.ts`
+    (unit-tested), reusing core `decodeSet` for the compact code form and a plain
+    split for the slug-list form; slugs resolve against the shared catalog, misses
+    are dropped with a warning, and "Save to my setlists" creates a normal setlist
+    row (default name "Imported setlist"). Shared links never carry a title.
+  Changing `associatedDomains` / `intentFilters` needs a **fresh native build**
+  (prebuild + EAS), not an OTA. **TODO(android)** — `android.intentFilters` are
+  wired but dormant until an Android signing key exists and its SHA-256 lands in
+  the web `assetlinks.json`.
 - **Auth flows.** Email/password plus native Google
   (`@react-native-google-signin/google-signin`) and Apple
   (`expo-apple-authentication`, iOS-only button) via

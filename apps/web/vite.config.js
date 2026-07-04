@@ -70,7 +70,10 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         { src: 'src/sw.js', dest: '' },
-        { src: '404.html', dest: '' }
+        { src: '404.html', dest: '' },
+        // Ensure the dot-directory deep-link files land in dist/ deterministically.
+        { src: 'public/.well-known/apple-app-site-association', dest: '.well-known' },
+        { src: 'public/.well-known/assetlinks.json', dest: '.well-known' }
       ]
     }),
     injectLcpPreload,

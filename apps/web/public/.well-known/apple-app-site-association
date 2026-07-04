@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["J7Y8NYZ48Q.com.gracechords.app"],
+        "components": [
+          { "/": "/song/*", "comment": "Song detail -> viewer/[slug]" },
+          { "/": "/songs/*", "comment": "Song detail alias -> viewer/[slug]" },
+          { "/": "/setlist/*", "comment": "Shared setlist (slug list) -> setlist import preview" },
+          { "/": "/set/*", "comment": "Shared setlist (compact code) -> setlist import preview" },
+          { "/": "/worship/*", "comment": "Shared worship set -> setlist import preview" }
+        ]
+      }
+    ]
+  }
+}
