@@ -12,6 +12,7 @@ import {
   supabase,
   supabaseConfigError,
 } from '../src/lib/supabase'
+import { resolveInitialSession } from '../src/lib/authSession'
 import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
@@ -120,14 +121,10 @@ export default function RootLayout() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (supabaseConfigError) return
-    return registerAuthAutoRefresh()
-  }, [])
-
-  useEffect(() => {
     // Missing public config: skip the session read entirely (the supabase client
     // is null here) and let the ConfigErrorScreen below take over.
     if (supabaseConfigError) return
+    let stopAutoRefresh: (() => void) | undefined
     // Load app-wide defaults (theme/chord style) before the splash lifts so the
     // resolved theme is applied on first paint — no light→dark flash. Runs in
     // parallel with the session read; both must resolve before `ready`.
@@ -136,13 +133,19 @@ export default function RootLayout() {
     // the first paint has the resolved theme, offline reads know what's
     // downloaded, and Home's "Continue" card can render synchronously.
     Promise.all([
-      supabase.auth.getSession(),
+      resolveInitialSession(supabase.auth),
       hydrateDefaults(AsyncStorage),
       hydrateDownloads(AsyncStorage),
       hydrateRecents(AsyncStorage),
-    ]).then(([{ data }]) => {
-      setSession(data.session)
+    ]).then(([session]) => {
+      setSession(session)
       setReady(true)
+      // Start AppState-driven token auto-refresh only AFTER the persisted
+      // session is resolved. resolveInitialSession has already purged any
+      // stale/revoked refresh token from storage, so the immediate refresh tick
+      // can't fire against a dead token and log "Invalid Refresh Token: Refresh
+      // Token Not Found" on launch.
+      stopAutoRefresh = registerAuthAutoRefresh()
     })
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next)
@@ -153,7 +156,10 @@ export default function RootLayout() {
         void flushPendingSprite(supabase, AsyncStorage, next.user.id)
       }
     })
-    return () => sub.subscription.unsubscribe()
+    return () => {
+      sub.subscription.unsubscribe()
+      stopAutoRefresh?.()
+    }
   }, [])
 
   // Warm today's Daily Word passages on open so the reader is instant even if
