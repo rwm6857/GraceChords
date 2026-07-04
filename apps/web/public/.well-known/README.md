@@ -8,20 +8,16 @@ forces `Content-Type: application/json` for both files (Apple/Android require
 JSON, served over HTTPS, with no redirect).
 
 ## `apple-app-site-association` (iOS — active)
-App ID `J7Y8NYZ48Q.com.gracechords.app`. Currently claims only song detail
-pages, which map to the app's `viewer/[slug]` screen:
+App ID `J7Y8NYZ48Q.com.gracechords.app`. Claims:
 
-- `/song/*` and `/songs/*` → open in app.
-- `/setlist/*`, `/set/*`, `/worship/*` → `exclude: true` (open in web).
-
-### TODO(setlist)
-The web "Share Set" button emits *ephemeral* links carrying a slug list + keys
-(`/setlist/<slug1>,<slug2>?toKeys=...`, plus `/set/<CODE>` and `/worship/...`).
-The app's setlist screens only load personal setlists by Supabase UUID, so they
-cannot yet reconstruct an ephemeral set from these links — hence the excludes.
-When the app gains a screen that decodes the shared payload (reusing
-`packages/core/src/setlists/setcode.js` `decodeSet` against the song catalog),
-flip these entries from `exclude: true` to includes.
+- `/song/*` and `/songs/*` → app song viewer (`viewer/[slug]`).
+- `/setlist/*`, `/set/*`, `/worship/*` → app shared-setlist import preview
+  (`setlist/import`), which decodes the shared payload, previews the resolved
+  songs, and saves the user a copy. The web "Share Set" button emits the
+  ephemeral slug-list form (`/setlist/<slug1>,<slug2>?toKeys=...`); the compact
+  `/set/<CODE>` and `/worship/set/<CODE>` forms decode through
+  `packages/core/src/setlists/setcode.js` `decodeSet`. When the app isn't
+  installed these paths open the web app as usual (Universal Links fallback).
 
 ## `assetlinks.json` (Android — inert scaffold)
 ### TODO(android)

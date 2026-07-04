@@ -26,7 +26,10 @@
           "autoVerify": true,
           "data": [
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" }
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/setlist/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/set/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
