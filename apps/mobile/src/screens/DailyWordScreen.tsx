@@ -22,6 +22,7 @@ import {
 } from '@gracechords/core'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
+import GlassSurface from '../components/GlassSurface'
 import EmptyState from '../components/EmptyState'
 import ReaderSettingsSheet from '../components/reader/ReaderSettingsSheet'
 import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
@@ -381,21 +382,29 @@ export default function DailyWordScreen() {
               }
               accessibilityRole="button"
               accessibilityLabel={`Copy ${selection.size} verse${selection.size === 1 ? '' : 's'}`}
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: t.radii.pill,
-                backgroundColor: t.colors.accent,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: t.colors.accent,
-                shadowOpacity: 0.45,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 8,
-              }}
+              style={{ borderRadius: t.radii.pill }}
             >
-              <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
+              {/* Liquid Glass on iOS 26 (accent-tinted); solid accent fill on
+                  iOS < 26 and Android via GlassSurface's fallback. */}
+              <GlassSurface
+                isInteractive
+                glassTint={t.colors.accent}
+                fallbackColor={t.colors.accent}
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: t.radii.pill,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: t.colors.accent,
+                  shadowOpacity: 0.45,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 6 },
+                  elevation: 8,
+                }}
+              >
+                <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
+              </GlassSurface>
             </Pressable>
           </Animated.View>
         ) : null}
