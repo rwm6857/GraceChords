@@ -9,12 +9,12 @@ import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@gracechords/tokens/native'
 
-// The Utilities tab landing page. This is a STUB: it establishes the navigation
-// slot and lists the planned musician's tools as non-functional "Coming soon"
-// rows. No feature logic lives here yet (pitch detection, metronome timing, capo
-// math, tone generation are all separate, later tasks). Built entirely from the
-// shared primitives (Screen / SectionHeader / Card / ListRow / SymbolIcon) and
-// theme tokens, mirroring the grouped-list layout used by Settings.
+// The Utilities tab landing page: musician's tools as a grouped list. Rows
+// with a `route` are live features (Tuner → /tuner); the rest are "Coming
+// soon" stubs for separate, later tasks (metronome timing, capo math, tone
+// generation). Built entirely from the shared primitives (Screen /
+// SectionHeader / Card / ListRow / SymbolIcon) and theme tokens, mirroring
+// the grouped-list layout used by Settings.
 
 /** Rounded leading icon chip, mirroring the Settings grouped-row pattern. */
 function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; t: Tokens }) {
@@ -34,8 +34,13 @@ function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; 
   )
 }
 
-const UTILITIES: { icon: Parameters<typeof SymbolIcon>[0]['name']; title: string }[] = [
-  { icon: 'tuningfork', title: 'Tuner' },
+const UTILITIES: {
+  icon: Parameters<typeof SymbolIcon>[0]['name']
+  title: string
+  /** Route to push; rows without one render as "Coming soon" stubs. */
+  route?: '/tuner'
+}[] = [
+  { icon: 'tuningfork', title: 'Tuner', route: '/tuner' },
   { icon: 'metronome', title: 'Tap Tempo / Metronome' },
   { icon: 'guitars', title: 'Capo Calculator' },
   { icon: 'pianokeys', title: 'Pitch Pipe' },
@@ -70,23 +75,39 @@ export default function UtilitiesScreen() {
         <SectionHeader label="TOOLS" />
         <Card>
           {UTILITIES.map((u, i) => {
-            // Dev-only doorway to the tuner pipeline spike harness
-            // (spike/tuner/) — production builds still show "Coming soon".
-            const spikeLink = __DEV__ && u.title === 'Tuner'
+            const live = u.route != null
             return (
               <ListRow
                 key={u.title}
                 title={u.title}
                 leading={<RowIcon name={u.icon} t={t} />}
-                value={spikeLink ? 'Spike harness' : 'Coming soon'}
-                chevron={spikeLink}
-                onPress={spikeLink ? () => router.push('/dev/tuner-spike') : undefined}
+                value={live ? undefined : 'Coming soon'}
+                chevron={live}
+                onPress={live ? () => router.push(u.route!) : undefined}
                 isLast={i === UTILITIES.length - 1}
-                accessibilityLabel={spikeLink ? 'Tuner — spike harness' : `${u.title} — coming soon`}
+                accessibilityLabel={live ? u.title : `${u.title} — coming soon`}
               />
             )
           })}
         </Card>
+
+        {__DEV__ ? (
+          // Dev-only doorway to the tuner pipeline spike harness
+          // (spike/tuner/), kept until the device-verify pass is done.
+          <>
+            <SectionHeader label="DEV" />
+            <Card>
+              <ListRow
+                title="Tuner spike harness"
+                leading={<RowIcon name="waveform" t={t} />}
+                chevron
+                onPress={() => router.push('/dev/tuner-spike')}
+                isLast
+                accessibilityLabel="Tuner spike harness (dev only)"
+              />
+            </Card>
+          </>
+        ) : null}
       </ScrollView>
     </Screen>
   )

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { STANDARD_TUNING, centsBetween, nearestString } from '../notes'
+import { STANDARD_TUNING, centsBetween, nearestString, stringReading } from '../notes'
+import { createInTuneHold } from '../hold'
 import { createYinDetector, rmsLevel } from '../yin'
 import { createCentsSmoother } from '../smoothing'
 
@@ -40,6 +41,61 @@ describe('nearestString', () => {
     expect(nearestString(2000)).toBeNull()
     expect(nearestString(0)).toBeNull()
     expect(nearestString(NaN)).toBeNull()
+  })
+})
+
+describe('stringReading (manual lock)', () => {
+  const A2 = STANDARD_TUNING[1]
+  it('auto-detects when no lock is set', () => {
+    expect(stringReading(82.4069, null)?.string.name).toBe('E2')
+  })
+  it('measures against the locked string even when another is nearer', () => {
+    const reading = stringReading(82.4069, A2) // low E pitch, locked to A
+    expect(reading?.string.name).toBe('A2')
+    expect(reading?.cents).toBeCloseTo(-500, 0) // a fourth flat of A2
+  })
+  it('locked mode has no auto-mode range cutoff near the target', () => {
+    const reading = stringReading(A2.frequency * Math.pow(2, -450 / 1200), A2)
+    expect(reading?.string.name).toBe('A2')
+    expect(reading?.cents).toBeCloseTo(-450, 0)
+  })
+  it('still rejects invalid frequencies when locked', () => {
+    expect(stringReading(0, A2)).toBeNull()
+    expect(stringReading(NaN, A2)).toBeNull()
+  })
+})
+
+describe('createInTuneHold', () => {
+  it('reports settling inside the threshold and locks only after the hold', () => {
+    const hold = createInTuneHold({ thresholdCents: 4, holdMs: 500 })
+    expect(hold.push(2, 0)).toBe('settling')
+    expect(hold.push(-3, 250)).toBe('settling')
+    expect(hold.push(1, 499)).toBe('settling')
+    expect(hold.push(0, 500)).toBe('inTune')
+    expect(hold.push(2, 600)).toBe('inTune')
+  })
+  it('restarts the hold when the pitch leaves the threshold', () => {
+    const hold = createInTuneHold({ thresholdCents: 4, holdMs: 500 })
+    hold.push(2, 0)
+    expect(hold.push(10, 300)).toBe('off')
+    expect(hold.push(2, 400)).toBe('settling')
+    expect(hold.push(2, 899)).toBe('settling')
+    expect(hold.push(2, 900)).toBe('inTune')
+  })
+  it('keeps the lock through slack-sized drift but drops beyond it', () => {
+    const hold = createInTuneHold({ thresholdCents: 4, holdMs: 500, exitSlackCents: 2 })
+    hold.push(0, 0)
+    hold.push(0, 500)
+    expect(hold.push(5.5, 600)).toBe('inTune') // within threshold + slack
+    expect(hold.push(7, 700)).toBe('off')
+    expect(hold.push(5.5, 800)).toBe('off') // slack gone until re-held
+  })
+  it('reset clears an active lock', () => {
+    const hold = createInTuneHold()
+    hold.push(0, 0)
+    hold.push(0, 1000)
+    hold.reset()
+    expect(hold.push(0, 1100)).toBe('settling')
   })
 })
 

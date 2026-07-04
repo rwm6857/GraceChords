@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** July 3rd, 2026
+**Effective date:** July 4th, 2026
 **Applies to:** the GraceChords website ([https://gracechords.com](https://gracechords.com)) and the GraceChords mobile app (collectively, the "Service").
 
 GraceChords ("GraceChords," "we," "us," or "our") is a free, non-commercial worship tool operated by Ryan Moore, an individual based in the U.S. state of Georgia. We take your privacy seriously and collect as little information as the Service needs to work. This policy explains what we collect, why, and the choices and rights you have.
@@ -22,6 +22,8 @@ You may create an account directly (email + password) or through **Sign in with 
 
 **Technical information (infrastructure).** We do not run analytics or tracking. However, like any online service, our hosting and infrastructure providers automatically process limited technical data — such as your IP address and standard request logs — to deliver content, keep the Service secure, and prevent abuse. This is not used to profile or track you, and we do not build advertising or behavioral profiles from it.
 
+**Microphone (instrument tuner).** The mobile app includes a guitar tuner that uses your device's microphone **solely for real-time, on-device pitch detection**. The audio is analyzed in memory on your device and immediately discarded — it is **never recorded, stored, or transmitted**, and no audio ever leaves your device. The microphone is active only while the tuner screen is open, and the app asks for microphone permission only when you first use the tuner. You can revoke this permission at any time in your device settings; the rest of the app works without it.
+
 **Essential storage / cookies.**
 
 - On the **website**, we use a strictly necessary cookie to keep you signed in. It is not used for tracking or advertising.
@@ -39,6 +41,7 @@ To be clear about our practices, we do **not**:
 - Show advertising of any kind
 - Use remarketing or retargeting services
 - Sell, rent, or share your personal information
+- Record, store, or transmit audio from your microphone (the tuner analyzes audio on-device only)
 - Send marketing, newsletter, or promotional emails
 - Knowingly collect information from children under 13
 

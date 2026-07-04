@@ -184,6 +184,7 @@ export default function RootLayout() {
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />
             <Stack.Screen name="offline" />
+            <Stack.Screen name="tuner" />
           </Stack>
         </SafeAreaProvider>
       </ThemeProvider>

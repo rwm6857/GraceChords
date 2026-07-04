@@ -2,7 +2,9 @@
 // production tuner UI — it exists to validate the headless benchmark numbers
 // on real hardware: capture health (callback cadence), detection latency,
 // reading stability (raw + smoothed cents jitter), and low-E reliability.
-// Reached via the Utilities tab's Tuner row in __DEV__ builds only.
+// Reached via the Utilities tab's DEV section in __DEV__ builds only; the
+// __DEV__-guarded require in app/dev/tuner-spike.tsx keeps this file (and
+// everything under spike/) out of production bundles.
 
 import { useEffect, useRef, useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'

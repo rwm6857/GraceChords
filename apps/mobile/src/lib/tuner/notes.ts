@@ -51,3 +51,19 @@ export function nearestString(
   if (best && Math.abs(best.cents) > 400) return null
   return best
 }
+
+/**
+ * Resolves a detected frequency to a string reading, honoring a manual lock.
+ * Locked: cents are measured against the locked string regardless of which
+ * string is actually nearest (that's the point — a badly-out-of-tune string
+ * should still read against its target). Unlocked: auto-detect the nearest.
+ */
+export function stringReading(
+  frequency: number,
+  lock: TunerString | null,
+  tuning: readonly TunerString[] = STANDARD_TUNING
+): StringReading | null {
+  if (lock === null) return nearestString(frequency, tuning)
+  if (!Number.isFinite(frequency) || frequency <= 0) return null
+  return { string: lock, cents: centsBetween(frequency, lock.frequency) }
+}
