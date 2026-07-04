@@ -54,6 +54,16 @@
         }
       ],
       [
+        "react-native-audio-api",
+        {
+          "iosMicrophonePermission": "GraceChords uses the microphone only for the real-time instrument tuner. Audio is analyzed on this device to detect pitch and is never recorded, stored, or transmitted.",
+          "iosBackgroundMode": false,
+          "androidPermissions": ["android.permission.RECORD_AUDIO"],
+          "androidForegroundService": false,
+          "disableFFmpeg": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
