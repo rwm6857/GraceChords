@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BibleTranslation } from '@gracechords/core'
 import Card from '../components/Card'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
+import GlassSurface from '../components/GlassSurface'
 import { useTheme } from '../theme/ThemeProvider'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { getTranslations } from '../lib/bibleSource'
@@ -36,6 +38,9 @@ function formatMB(bytes: number): string {
 export default function OfflineDownloadsScreen() {
   const t = useTheme()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
+  // Measured glass-bar height feeds the scroll-behind top inset.
+  const [barH, setBarH] = useState(0)
   const { translations } = useBibleTranslations()
   const { records, wifiOnly } = useDownloads()
 
@@ -134,23 +139,15 @@ export default function OfflineDownloadsScreen() {
   const busyList = translations.filter((tr) => busy[tr.id])
 
   return (
-    <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header */}
-      <View style={{ paddingHorizontal: t.spacing.md, paddingBottom: t.spacing.xs }}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back to Settings"
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
-        </Pressable>
+    <Screen edges={['left', 'right', 'bottom']}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: t.spacing.md, paddingTop: barH + t.spacing.md, paddingBottom: t.spacing.xxl }}
+        showsVerticalScrollIndicator={false}
+      >
         <Text
           style={{
-            marginTop: 6,
             paddingHorizontal: t.spacing.xs,
+            paddingBottom: t.spacing.md,
             fontSize: t.typography.largeTitle.fontSize,
             fontWeight: t.typography.largeTitle.fontWeight,
             letterSpacing: t.typography.largeTitle.letterSpacing,
@@ -159,12 +156,6 @@ export default function OfflineDownloadsScreen() {
         >
           Offline &amp; Downloads
         </Text>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: t.spacing.md, paddingTop: t.spacing.md, paddingBottom: t.spacing.xxl }}
-        showsVerticalScrollIndicator={false}
-      >
         {/* Storage summary */}
         <Card style={{ padding: t.spacing.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
@@ -314,6 +305,34 @@ export default function OfflineDownloadsScreen() {
           the network and aren&apos;t stored offline.
         </Text>
       </ScrollView>
+
+      {/* Scroll-behind top bar: Liquid Glass on iOS 26, opaque page-bg bar on
+          iOS < 26 / Android. Content scrolls under it (measured via onLayout). */}
+      <GlassSurface
+        fallbackColor={t.colors.bg}
+        onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          paddingTop: insets.top,
+          paddingHorizontal: t.spacing.md,
+          paddingBottom: t.spacing.xs,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Settings"
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+        >
+          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
+        </Pressable>
+      </GlassSurface>
     </Screen>
   )
 }

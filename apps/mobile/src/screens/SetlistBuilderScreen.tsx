@@ -22,6 +22,7 @@ import Screen from '../components/Screen'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import SymbolIcon, { type SymbolIconProps } from '../components/SymbolIcon'
+import GlassSurface from '../components/GlassSurface'
 import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
 import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
@@ -284,8 +285,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header: back + share + more */}
-      <View
+      {/* Header: back + share + more. Glass toolbar on iOS 26; transparent
+          (unchanged) on iOS < 26 and Android via GlassSurface's fallback. */}
+      <GlassSurface
+        fallbackColor="transparent"
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -308,7 +311,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           {iconButton('Export and share', 'square.and.arrow.up', () => setShareOpen(true))}
           {iconButton('Setlist options', 'ellipsis', () => setOptionsOpen(true))}
         </View>
-      </View>
+      </GlassSurface>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -426,8 +429,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         </ScrollView>
       )}
 
-      {/* Bottom action bar */}
-      <View
+      {/* Bottom action bar. Glass toolbar on iOS 26; transparent (unchanged)
+          on iOS < 26 and Android via GlassSurface's fallback. */}
+      <GlassSurface
+        fallbackColor="transparent"
         style={{
           flexDirection: 'row',
           gap: t.spacing.sm,
@@ -464,7 +469,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           style={{ flex: 1 }}
           fullWidth={false}
         />
-      </View>
+      </GlassSurface>
 
       {/* Toast */}
       {toast ? (
