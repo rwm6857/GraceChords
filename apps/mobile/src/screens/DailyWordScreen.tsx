@@ -20,6 +20,7 @@ import {
   type BibleTranslation,
   type Passage,
 } from '@gracechords/core'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
 import GlassSurface from '../components/GlassSurface'
@@ -61,6 +62,9 @@ function chipLabel(passage: Passage) {
 
 export default function DailyWordScreen() {
   const t = useTheme()
+  // Native tabs float over the screen; this bottom inset includes the tab bar
+  // height so the Copy FAB clears it (see FAB position below).
+  const insets = useSafeAreaInsets()
   const { translations, groups, defaultTranslationId } = useBibleTranslations()
 
   const [date, setDate] = useState(() => new Date())
@@ -364,7 +368,7 @@ export default function DailyWordScreen() {
           <Animated.View
             style={{
               position: 'absolute',
-              bottom: t.spacing.xl,
+              bottom: insets.bottom + t.spacing.xl,
               [rtl ? 'left' : 'right']: t.spacing.lg,
               opacity: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] }),
               transform: [
