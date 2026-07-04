@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo } from 'react'
-import { Platform, View, type StyleProp, type ViewStyle } from 'react-native'
+import { Platform, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native'
 import {
   GlassView,
   isGlassEffectAPIAvailable,
@@ -50,6 +50,10 @@ export type GlassSurfaceProps = {
   glassStyle?: GlassStyle
   /** Whether the glass reacts to touches (highlights on press) — for buttons. */
   isInteractive?: boolean
+  /** Forwarded to both branches so callers can measure the surface. */
+  onLayout?: ViewProps['onLayout']
+  /** Forwarded to both branches for touch gating (e.g. hidden chrome). */
+  pointerEvents?: ViewProps['pointerEvents']
   children?: ReactNode
 }
 
@@ -59,6 +63,8 @@ export default function GlassSurface({
   glassTint,
   glassStyle = 'regular',
   isInteractive = false,
+  onLayout,
+  pointerEvents,
   children,
 }: GlassSurfaceProps) {
   const t = useTheme()
@@ -73,6 +79,8 @@ export default function GlassSurface({
         tintColor={glassTint}
         colorScheme={t.mode}
         isInteractive={isInteractive}
+        onLayout={onLayout}
+        pointerEvents={pointerEvents}
         style={style}
       >
         {children}
@@ -81,6 +89,12 @@ export default function GlassSurface({
   }
 
   return (
-    <View style={[style, { backgroundColor: fallbackColor ?? t.colors.surface }]}>{children}</View>
+    <View
+      onLayout={onLayout}
+      pointerEvents={pointerEvents}
+      style={[style, { backgroundColor: fallbackColor ?? t.colors.surface }]}
+    >
+      {children}
+    </View>
   )
 }

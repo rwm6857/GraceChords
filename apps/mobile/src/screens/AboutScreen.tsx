@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
@@ -8,6 +9,7 @@ import Card from '../components/Card'
 import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
+import GlassSurface from '../components/GlassSurface'
 import { useTheme } from '../theme/ThemeProvider'
 
 // About GraceChords — reached from Settings → Support. Shows the app version +
@@ -32,6 +34,9 @@ export default function AboutScreen() {
   const t = useTheme()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  // Measured glass-bar height feeds the scroll-behind top inset so content
+  // clears the bar at rest and slides under it on scroll (all versions).
+  const [barH, setBarH] = useState(0)
 
   const version = Constants.expoConfig?.version ?? '—'
   const build =
@@ -42,31 +47,12 @@ export default function AboutScreen() {
   const versionLabel = build ? `${version} (${build})` : version
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: t.spacing.md,
-          paddingBottom: t.spacing.sm,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
-        </Pressable>
-      </View>
-
+    <Screen edges={['left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: t.spacing.lg,
+          paddingTop: barH + t.spacing.sm,
           paddingBottom: insets.bottom + t.spacing.xxl,
         }}
       >
@@ -143,6 +129,34 @@ export default function AboutScreen() {
           {copyrightNotice()}
         </Text>
       </ScrollView>
+
+      {/* Scroll-behind top bar: Liquid Glass on iOS 26, opaque page-bg bar on
+          iOS < 26 / Android. Content scrolls under it (measured via onLayout). */}
+      <GlassSurface
+        fallbackColor={t.colors.bg}
+        onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          paddingTop: insets.top,
+          paddingHorizontal: t.spacing.md,
+          paddingBottom: t.spacing.sm,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+        >
+          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
+        </Pressable>
+      </GlassSurface>
     </Screen>
   )
 }

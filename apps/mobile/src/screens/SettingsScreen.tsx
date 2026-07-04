@@ -7,6 +7,7 @@ import Card from '../components/Card'
 import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
+import GlassSurface from '../components/GlassSurface'
 import BottomSheet from '../components/BottomSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@gracechords/tokens/native'
@@ -143,6 +144,8 @@ export default function SettingsScreen() {
   const defaults = useAppDefaults()
   const { source: spriteSource } = useProfileSprite()
   const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle'>(null)
+  // Measured glass-bar height feeds the scroll-behind top inset.
+  const [barH, setBarH] = useState(0)
 
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
   const fullName = ((meta.full_name ?? meta.name) as string | undefined)?.trim()
@@ -182,32 +185,12 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      {/* Nav header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: t.spacing.md,
-          paddingBottom: t.spacing.sm,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Home</Text>
-        </Pressable>
-      </View>
-
+    <Screen edges={['left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: t.spacing.lg,
+          paddingTop: barH + t.spacing.sm,
           paddingBottom: insets.bottom + t.spacing.xxl,
         }}
       >
@@ -350,6 +333,34 @@ export default function SettingsScreen() {
         <DangerCard label="Log out" onPress={onSignOut} />
         <DangerCard label="Delete account" onPress={onDeleteAccount} />
       </ScrollView>
+
+      {/* Scroll-behind top bar: Liquid Glass on iOS 26, opaque page-bg bar on
+          iOS < 26 / Android. Content scrolls under it (measured via onLayout). */}
+      <GlassSurface
+        fallbackColor={t.colors.bg}
+        onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          paddingTop: insets.top,
+          paddingHorizontal: t.spacing.md,
+          paddingBottom: t.spacing.sm,
+        }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+        >
+          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Home</Text>
+        </Pressable>
+      </GlassSurface>
 
       <OptionSheet
         visible={sheet === 'theme'}
