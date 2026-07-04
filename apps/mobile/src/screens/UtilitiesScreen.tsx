@@ -1,3 +1,4 @@
+import { router } from 'expo-router'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
@@ -68,16 +69,23 @@ export default function UtilitiesScreen() {
 
         <SectionHeader label="TOOLS" />
         <Card>
-          {UTILITIES.map((u, i) => (
-            <ListRow
-              key={u.title}
-              title={u.title}
-              leading={<RowIcon name={u.icon} t={t} />}
-              value="Coming soon"
-              isLast={i === UTILITIES.length - 1}
-              accessibilityLabel={`${u.title} — coming soon`}
-            />
-          ))}
+          {UTILITIES.map((u, i) => {
+            // Dev-only doorway to the tuner pipeline spike harness
+            // (spike/tuner/) — production builds still show "Coming soon".
+            const spikeLink = __DEV__ && u.title === 'Tuner'
+            return (
+              <ListRow
+                key={u.title}
+                title={u.title}
+                leading={<RowIcon name={u.icon} t={t} />}
+                value={spikeLink ? 'Spike harness' : 'Coming soon'}
+                chevron={spikeLink}
+                onPress={spikeLink ? () => router.push('/dev/tuner-spike') : undefined}
+                isLast={i === UTILITIES.length - 1}
+                accessibilityLabel={spikeLink ? 'Tuner — spike harness' : `${u.title} — coming soon`}
+              />
+            )
+          })}
         </Card>
       </ScrollView>
     </Screen>
