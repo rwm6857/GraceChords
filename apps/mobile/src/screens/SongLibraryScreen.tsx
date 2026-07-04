@@ -188,7 +188,9 @@ export default function SongLibraryScreen() {
     const index = sections.findIndex((s) => s.letter === letter)
     if (index < 0) return
     pendingSection.current = index
-    listRef.current?.scrollToLocation({ sectionIndex: index, itemIndex: 0, animated: true })
+    // Non-animated so continuous scrubbing tracks the finger without lag; the
+    // failure fallback still animates a single recovery scroll.
+    listRef.current?.scrollToLocation({ sectionIndex: index, itemIndex: 0, animated: false })
   }
 
   const rowMeta = (song: Song) => ({

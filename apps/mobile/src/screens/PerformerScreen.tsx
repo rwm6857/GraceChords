@@ -378,7 +378,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
               accessibilityLabel="Export and share"
               style={headerButtonStyle}
             >
-              <SymbolIcon name="square.and.arrow.up" size={17} color={t.colors.ink} />
+              <SymbolIcon name="square.and.arrow.up" size={22} color={t.colors.ink} />
             </Pressable>
           </View>
         </View>

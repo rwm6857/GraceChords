@@ -16,6 +16,7 @@
     "test:mvp": "npm run test:mvp -w @gracechords/web",
     "lint": "npm run lint -w @gracechords/web",
     "i18n:check": "npm run i18n:check -w @gracechords/web",
-    "generate:sitemap": "npm run generate:sitemap -w @gracechords/web"
+    "generate:sitemap": "npm run generate:sitemap -w @gracechords/web",
+    "generate:licenses": "npm run generate:licenses -w @gracechords/web"
   }
 }

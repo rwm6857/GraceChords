@@ -88,7 +88,6 @@ export default function SetlistsScreen() {
         <EmptyState
           icon="list.bullet"
           title="No setlists yet"
-          subtitle="Create one to start planning a service."
           actionLabel="New set"
           onAction={onCreate}
         />

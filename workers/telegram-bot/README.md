@@ -9,7 +9,7 @@ Surfaces:
 |---|---|
 | Direct messages | Telegram webhook → `POST /webhook` (`chat.type === 'private'`) |
 | Group / guest-chat mentions | Same webhook, when the bot is `@`-mentioned in a group/supergroup |
-| Feature announcements | GitHub Action (PR labelled `post`, or `#post` in PR title/body) → `POST /internal/feature` |
+| Feature announcements | GitHub Action (user-facing `feat(` merge, PR labelled `post`, or `#post` in PR title/body) → `POST /internal/feature`. Backend-only scopes (`feat(cli)`, `feat(worker)`, …) are dropped unless `post`/`#post` forces them. |
 | Mon/Fri digest | Cloudflare cron → `scheduled()` |
 
 ## Group chat behaviour
@@ -152,11 +152,12 @@ npx wrangler dev
 # Trigger the digest manually
 curl 'http://127.0.0.1:8787/__scheduled?cron=0+22+*+*+1'
 
-# Trigger a feature post
+# Trigger a feature post. `force: true` bypasses the backend-scope skip
+# (it's what the `post` label / `#post` marker set on the real payload).
 curl -X POST http://127.0.0.1:8787/internal/feature \
   -H "Authorization: Bearer ${BOT_WEBHOOK_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"title":"Test","summary":"hello","url":"https://example.com"}'
+  -d '{"title":"feat(mobile): offline songs","summary":"You can now save songs for offline use.","url":"https://example.com","force":false}'
 ```
 
 ## What lives where

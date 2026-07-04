@@ -26,7 +26,9 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#F5F7F9",
-          "dark": { "backgroundColor": "#14171A" }
+          "dark": {
+            "backgroundColor": "#14171A"
+          }
         }
       ],
       "expo-apple-authentication",
@@ -39,12 +41,21 @@
       [
         "expo-build-properties",
         {
-          "ios": { "useFrameworks": "static" }
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3be270a3-166a-492a-a4ec-c95f442175d7"
+      }
+    },
+    "owner": "nohoot23"
   }
 }
