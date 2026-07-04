@@ -8,9 +8,21 @@ import { supabase } from './supabase'
 // short (one line). This is the intended place to input your own phrases later.
 // ─────────────────────────────────────────────────────────────────────────────
 export const SUB_GREETINGS: string[] = [
-  "Let's make music that honors His name.",
-  'Prepare your heart; the songs will follow.',
-  'A new day to sing a new song.',
+  "Everything's where you left it.",
+  "Let's get to it.",
+  'Good to have you back.',
+  "Glad you're here.",
+  'One song at a time.',
+  'Sing to Him a new song.',
+  'Be still, and know.',
+  'This is the day He has made.',
+  'Let everything that has breath praise Him.',
+  'He is your strength and your song.',
+  'Whatever you do, for His glory.',
+  'Enter His gates with thanksgiving.',
+  'Bless the Lord, O my soul.',
+  'His grace is enough.',
+  'Rejoice always.',
 ]
 
 /** Time-of-day greeting prefix, e.g. "Good morning". */
