@@ -303,7 +303,9 @@ export default function DailyWordScreen() {
             contentContainerStyle={{
               paddingHorizontal: 18,
               paddingTop: t.spacing.xs,
-              paddingBottom: t.spacing.xxl,
+              // Clear the floating native tab bar (insets.bottom includes its
+              // height under native tabs) so the last verse scrolls fully above it.
+              paddingBottom: insets.bottom + t.spacing.xl,
             }}
           >
               {settings.layout === 'prose' ? (
