@@ -13,8 +13,12 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 //
 // Icons supply both `sf` (SF Symbols — the iOS design-system requirement) and
 // `md` (Material Symbols) so the Android bar is wired ahead of time; Android is
-// not the current target, hence the TODO markers on the md picks. Home is the
-// only tab with a distinct selected glyph, via the { default, selected } form.
+// not the current target, hence the TODO markers on the md picks. Every tab uses
+// the { default, selected } form so the selected glyph fills in (outline → solid)
+// on selection — NativeTabs does not auto-apply the .fill variant, so it must be
+// named explicitly. Songs and Setlists use guitars / list.bullet.rectangle
+// because their previous glyphs (music.note.list, list.bullet) have no .fill twin
+// in SF Symbols and so could not invert.
 //
 // The NavThemeProvider wrapper (React Navigation's theme, matched to the current
 // color scheme) is required to prevent the known iOS 26 dark-mode glass flicker
@@ -36,7 +40,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="songs">
           <NativeTabs.Trigger.Icon
-            sf="music.note.list"
+            sf={{ default: 'guitars', selected: 'guitars.fill' }}
             md="queue_music" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Songs</NativeTabs.Trigger.Label>
@@ -44,7 +48,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="setlists">
           <NativeTabs.Trigger.Icon
-            sf="list.bullet"
+            sf={{ default: 'list.bullet.rectangle', selected: 'list.bullet.rectangle.fill' }}
             md="list" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Setlists</NativeTabs.Trigger.Label>
@@ -52,7 +56,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="daily">
           <NativeTabs.Trigger.Icon
-            sf="book"
+            sf={{ default: 'book', selected: 'book.fill' }}
             md="menu_book" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Daily Word</NativeTabs.Trigger.Label>
@@ -60,7 +64,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="utilities">
           <NativeTabs.Trigger.Icon
-            sf="wrench.and.screwdriver"
+            sf={{ default: 'wrench.and.screwdriver', selected: 'wrench.and.screwdriver.fill' }}
             md="handyman" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Utilities</NativeTabs.Trigger.Label>
