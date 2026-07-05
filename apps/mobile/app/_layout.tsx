@@ -192,6 +192,8 @@ export default function RootLayout() {
             <Stack.Screen name="about" />
             <Stack.Screen name="offline" />
             <Stack.Screen name="tuner" />
+            <Stack.Screen name="metronome" />
+            <Stack.Screen name="pitch-pipe" />
           </Stack>
         </SafeAreaProvider>
       </ThemeProvider>

@@ -30,6 +30,7 @@ import ViewOptionsSheet, {
   defaultAccidental,
   resolvePreferFlat,
 } from '../../src/components/ViewOptionsSheet'
+import { capoChipLabel } from '../../src/lib/capo'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
@@ -163,6 +164,10 @@ export default function ViewerScreen() {
   const displayTitle = song?.title || title || slug
   const displayArtist = song?.artist ?? artist ?? ''
   const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
+  // Capo chip: only a net DOWNWARD ± transpose (delta < 0) has a capo
+  // equivalent — the played shapes sit below the sounding key, which stays the
+  // seeded/native key the taps started from. Zero/upward → null → no chip.
+  const capoText = effectiveKey ? capoChipLabel(delta, effectiveKey, preferFlat, chordStyle) : null
 
   // --- Export handlers (screen owns errors; the sheet owns busy state) -----
   const exportKey = steps ? effectiveKey : ''
@@ -375,6 +380,21 @@ export default function ViewerScreen() {
                 alignItems: 'center',
               }}
             >
+              {capoText ? (
+                <View
+                  style={{
+                    marginBottom: t.spacing.sm,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: t.radii.pill,
+                    backgroundColor: t.colors.accentSoft,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.textAccent }}>
+                    {capoText}
+                  </Text>
+                </View>
+              ) : null}
               <TransposeBar
                 keyLabel={keyLabel}
                 onDown={() => transposeBy(-1)}
