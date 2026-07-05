@@ -189,8 +189,14 @@ export default function SongLibraryScreen() {
     if (index < 0) return
     pendingSection.current = index
     // Non-animated so continuous scrubbing tracks the finger without lag; the
-    // failure fallback still animates a single recovery scroll.
-    listRef.current?.scrollToLocation({ sectionIndex: index, itemIndex: 0, animated: false })
+    // failure fallback (onScrollToIndexFailed) recovers when the target section
+    // is outside the render window.
+    listRef.current?.scrollToLocation({
+      sectionIndex: index,
+      itemIndex: 0,
+      animated: false,
+      viewPosition: 0,
+    })
   }
 
   const rowMeta = (song: Song) => ({
@@ -389,12 +395,20 @@ export default function SongLibraryScreen() {
               onPress={() => openSong(item)}
             />
           )}
-          onScrollToIndexFailed={() => {
+          onScrollToIndexFailed={(info) => {
+            // scrollToLocation can't reach a section outside the render window
+            // without getItemLayout — it fires this and scrolls nowhere. Nudge
+            // the list to an approximate offset so the target renders, then
+            // retry the precise scroll. Repeats (advancing each time) converge
+            // on far jumps instead of looping in place.
+            const approxOffset = info.averageItemLength * info.index
+            listRef.current?.getScrollResponder()?.scrollTo({ y: approxOffset, animated: false })
             setTimeout(() => {
               listRef.current?.scrollToLocation({
                 sectionIndex: pendingSection.current,
                 itemIndex: 0,
                 animated: true,
+                viewPosition: 0,
               })
             }, 60)
           }}
