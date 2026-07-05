@@ -16,7 +16,7 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 // not the current target, hence the TODO markers on the md picks. Every tab uses
 // the { default, selected } form so the selected glyph fills in (outline → solid)
 // on selection — NativeTabs does not auto-apply the .fill variant, so it must be
-// named explicitly. Songs and Setlists use guitars / list.bullet.rectangle
+// named explicitly. Songs and Setlists use music.pages / music.note.square.stack
 // because their previous glyphs (music.note.list, list.bullet) have no .fill twin
 // in SF Symbols and so could not invert.
 //
@@ -40,7 +40,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="songs">
           <NativeTabs.Trigger.Icon
-            sf={{ default: 'guitars', selected: 'guitars.fill' }}
+            sf={{ default: 'music.pages', selected: 'music.pages.fill' }}
             md="queue_music" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Songs</NativeTabs.Trigger.Label>
@@ -48,7 +48,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="setlists">
           <NativeTabs.Trigger.Icon
-            sf={{ default: 'list.bullet.rectangle', selected: 'list.bullet.rectangle.fill' }}
+            sf={{ default: 'music.note.square.stack', selected: 'music.note.square.stack.fill' }}
             md="list" // TODO(android): verify
           />
           <NativeTabs.Trigger.Label>Setlists</NativeTabs.Trigger.Label>
