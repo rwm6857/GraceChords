@@ -14,7 +14,6 @@ import {
   MAX_OCTAVE,
   MIN_OCTAVE,
   clampOctave,
-  noteFrequency,
 } from '../lib/pitchpipe/notes'
 import { usePitchPipe } from '../lib/pitchpipe/usePitchPipe'
 
@@ -117,6 +116,8 @@ export default function PitchPipeScreen() {
 
   const ringSize = Math.min(width - t.spacing.lg * 2, 340)
   const activeLabel = activeNote ? CHROMATIC_NOTES[activeNote.noteIndex] : null
+  const octaveOffset = octave - DEFAULT_OCTAVE
+  const octaveOffsetLabel = octaveOffset === 0 ? '0' : octaveOffset > 0 ? `+${octaveOffset}` : `${octaveOffset}`
   const octaveButtonStyle = ({ pressed }: { pressed: boolean }) => ({
     width: 44,
     height: 44,
@@ -140,8 +141,10 @@ export default function PitchPipeScreen() {
           alignItems: 'center',
         }}
       >
-        {/* The pipe: 12 chromatic notes on a ring, C at the top. */}
-        <View style={{ width: ringSize, height: ringSize, marginTop: t.spacing.md }}>
+        {/* The pipe: 12 chromatic notes on a ring, C at the top — vertically
+            centered in the space above the octave/hold controls. */}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={{ width: ringSize, height: ringSize }}>
           <View
             pointerEvents="none"
             style={{
@@ -155,7 +158,7 @@ export default function PitchPipeScreen() {
               borderColor: t.colors.border,
             }}
           />
-          {/* Center readout */}
+          {/* Center readout: a dash when silent, the sounding note otherwise. */}
           <View
             pointerEvents="none"
             style={{
@@ -166,32 +169,18 @@ export default function PitchPipeScreen() {
               bottom: 0,
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 2,
             }}
           >
             <Text
               style={{
-                fontSize: 44,
+                fontSize: 52,
                 fontWeight: '700',
                 letterSpacing: -1,
                 color: activeNote ? t.colors.accent : t.colors.muted,
                 fontVariant: ['tabular-nums'],
               }}
             >
-              {activeLabel ? `${activeLabel}${activeNote!.octave}` : `C${octave}–B${octave}`}
-            </Text>
-            <Text
-              style={{
-                fontSize: t.typography.rowSubtitle.fontSize,
-                color: t.colors.sec,
-                fontVariant: ['tabular-nums'],
-              }}
-            >
-              {activeNote
-                ? `${noteFrequency(activeNote.noteIndex, activeNote.octave).toFixed(1)} Hz`
-                : hold
-                  ? 'Tap a note to sustain it'
-                  : 'Hold a note to sound it'}
+              {activeLabel ? `${activeLabel}${activeNote!.octave}` : '–'}
             </Text>
           </View>
           {CHROMATIC_NOTES.map((label, i) => (
@@ -207,10 +196,9 @@ export default function PitchPipeScreen() {
             />
           ))}
         </View>
+        </View>
 
-        <View style={{ flex: 1 }} />
-
-        {/* Octave ± (C3–B5, vocal-centered around middle C) */}
+        {/* Octave ± (C2–B6, shown as an offset from the middle-C octave) */}
         <View
           style={{
             flexDirection: 'row',
@@ -229,11 +217,25 @@ export default function PitchPipeScreen() {
             <SymbolIcon name="minus" size={18} color={t.colors.accent} weight="semibold" />
           </Pressable>
           <View style={{ alignItems: 'center', minWidth: 96 }}>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: t.colors.ink }}>
-              Octave {octave}
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: '700',
+                color: t.colors.ink,
+                fontVariant: ['tabular-nums'],
+              }}
+            >
+              {octaveOffsetLabel}
             </Text>
-            <Text style={{ fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
-              C{MIN_OCTAVE}–B{MAX_OCTAVE} range
+            <Text
+              style={{
+                fontSize: t.typography.overline.fontSize,
+                fontWeight: t.typography.overline.fontWeight,
+                letterSpacing: t.typography.overline.letterSpacing,
+                color: t.colors.muted,
+              }}
+            >
+              OCTAVE
             </Text>
           </View>
           <Pressable
@@ -258,14 +260,9 @@ export default function PitchPipeScreen() {
               paddingVertical: t.spacing.sm,
             }}
           >
-            <View style={{ flexShrink: 1, paddingRight: t.spacing.md }}>
-              <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.ink }}>
-                Hold
-              </Text>
-              <Text style={{ fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
-                {hold ? 'Notes sustain until tapped again' : 'Notes sound while pressed'}
-              </Text>
-            </View>
+            <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.ink }}>
+              Hold note
+            </Text>
             <Switch
               value={hold}
               onValueChange={(on) => {
@@ -273,7 +270,7 @@ export default function PitchPipeScreen() {
                 if (!on) stop()
               }}
               trackColor={{ true: t.colors.accent }}
-              accessibilityLabel="Hold notes"
+              accessibilityLabel="Hold note"
             />
           </View>
         </Card>

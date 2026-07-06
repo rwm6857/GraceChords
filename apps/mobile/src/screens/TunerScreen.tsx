@@ -97,10 +97,7 @@ function StringKey({
         opacity: pressed ? 0.85 : 1,
       })}
     >
-      <Text style={{ fontSize: 17, fontWeight: '700', color: fg }}>{string.label}</Text>
-      <Text style={{ fontSize: 10, fontWeight: '600', color: fg, opacity: 0.7 }}>
-        {string.name.slice(-1)}
-      </Text>
+      <Text style={{ fontSize: 24, fontWeight: '700', color: fg }}>{string.label}</Text>
     </Pressable>
   )
 }
@@ -121,7 +118,8 @@ export default function TunerScreen() {
           -METER_RANGE_CENTS,
           Math.min(METER_RANGE_CENTS, frame.reading.cents)
         )
-        needleCents.value = withTiming(clamped, { duration: 80, easing: Easing.linear })
+        // ~10% longer glide than the original 80 ms for a smoother needle.
+        needleCents.value = withTiming(clamped, { duration: 88, easing: Easing.linear })
         needleActive.value = withTiming(1, { duration: 120 })
       } else {
         needleCents.value = withTiming(0, { duration: 250 })
@@ -192,6 +190,9 @@ export default function TunerScreen() {
           </View>
         ) : (
           <>
+            {/* Balances the spacer below the readout so the meter + note block
+                sits vertically centered above the string row. */}
+            <View style={{ flex: 1 }} />
             {/* Meter */}
             <View style={{ alignItems: 'center' }}>
               <View style={{ width: meterWidth, height: radius + 24, alignItems: 'center' }}>
@@ -321,9 +322,7 @@ export default function TunerScreen() {
                 color: t.colors.muted,
               }}
             >
-              {lockedString
-                ? `Locked to ${lockedString.name} — tap it again for auto-detect`
-                : 'Auto-detecting — tap a string to lock it'}
+              {lockedString ? 'Auto-mode off' : 'Auto-mode on'}
             </Text>
           </>
         )}

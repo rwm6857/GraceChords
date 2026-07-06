@@ -1,6 +1,7 @@
 // Pure pitch-pipe math — RN-free so it unit-tests headless. Equal temperament
-// at A4 = 440 Hz over a 3-octave vocal-centered span: C3 (130.81 Hz) through
-// B5 (987.77 Hz), defaulting to the middle-C octave (C4–B4).
+// at A4 = 440 Hz over a vocal-centered span two octaves either side of the
+// middle-C octave: C2 (65.41 Hz) through B6 (1975.53 Hz), defaulting to the
+// middle-C octave (C4–B4, shown as offset 0).
 
 export const CHROMATIC_NOTES = [
   'C',
@@ -17,8 +18,8 @@ export const CHROMATIC_NOTES = [
   'B',
 ] as const
 
-export const MIN_OCTAVE = 3
-export const MAX_OCTAVE = 5
+export const MIN_OCTAVE = 2
+export const MAX_OCTAVE = 6
 export const DEFAULT_OCTAVE = 4
 
 export function clampOctave(octave: number): number {

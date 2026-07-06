@@ -205,9 +205,6 @@ export default function MetronomeScreen() {
         >
           <SymbolIcon name="hand.tap" size={30} color={t.colors.accent} />
           <Text style={{ fontSize: 17, fontWeight: '600', color: t.colors.ink }}>Tap tempo</Text>
-          <Text style={{ fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
-            Tap along anywhere in this box
-          </Text>
         </Pressable>
 
         {/* Time signature */}
