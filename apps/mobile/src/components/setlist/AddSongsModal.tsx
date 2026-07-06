@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
+import { useKeyboardHeight } from '../../lib/useKeyboardHeight'
 import type { Song } from '../../lib/useSongList'
 
 // Full-screen "Add songs" picker (slides up over the builder): the Song
@@ -25,6 +26,12 @@ export default function AddSongsModal({
 }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  // Keyboard-aware bottom inset: while the keyboard is up the list gains
+  // exactly its height of padding, so the rows behind it can scroll into
+  // view; when it closes the padding collapses back to the safe area (no
+  // dead gap). iOS's automaticallyAdjustKeyboardInsets can't be trusted
+  // inside a Modal, hence the explicit hook.
+  const keyboardHeight = useKeyboardHeight()
   const [query, setQuery] = useState('')
 
   const trimmed = query.trim().toLowerCase()
@@ -96,6 +103,7 @@ export default function AddSongsModal({
           data={results}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: t.spacing.xl }}>
               <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
@@ -134,7 +142,10 @@ export default function AddSongsModal({
               />
             )
           }}
-          contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.lg, flexGrow: 1 }}
+          contentContainerStyle={{
+            paddingBottom: Math.max(keyboardHeight, insets.bottom) + t.spacing.lg,
+            flexGrow: 1,
+          }}
         />
       </View>
     </Modal>
