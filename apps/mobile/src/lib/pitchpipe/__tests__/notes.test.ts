@@ -39,14 +39,16 @@ describe('pitch pipe notes', () => {
     }
   })
 
-  it('spans the vocal-centered C3–B5 range around a C4 default', () => {
+  it('spans the vocal-centered C2–B6 range around a C4 default', () => {
     expect(DEFAULT_OCTAVE).toBe(4)
-    expect(noteFrequency(C, MIN_OCTAVE)).toBeCloseTo(130.8128, 3) // C3
-    expect(noteFrequency(B, MAX_OCTAVE)).toBeCloseTo(987.7666, 3) // B5
+    expect(MIN_OCTAVE).toBe(2)
+    expect(MAX_OCTAVE).toBe(6)
+    expect(noteFrequency(C, MIN_OCTAVE)).toBeCloseTo(65.4064, 3) // C2
+    expect(noteFrequency(B, MAX_OCTAVE)).toBeCloseTo(1975.5332, 3) // B6
   })
 
   it('clamps octaves to the supported range', () => {
-    expect(clampOctave(2)).toBe(MIN_OCTAVE)
+    expect(clampOctave(1)).toBe(MIN_OCTAVE)
     expect(clampOctave(9)).toBe(MAX_OCTAVE)
     expect(clampOctave(4)).toBe(4)
     expect(clampOctave(Number.NaN)).toBe(DEFAULT_OCTAVE)

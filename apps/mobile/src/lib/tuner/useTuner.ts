@@ -20,9 +20,11 @@ const CALLBACK_LENGTH = 1024
 const DECIMATION = 2
 const ANALYSIS_RATE = CAPTURE_RATE / DECIMATION
 const WINDOW = 2048
-const RMS_GATE = 0.008
+// Opened slightly from the spike's 0.008 so a decaying string is still tracked
+// into its tail instead of the gate slamming shut early.
+const RMS_GATE = 0.006
 /** Keep showing the last reading through short detection dropouts (note decay). */
-const DROPOUT_MS = 400
+const DROPOUT_MS = 650
 
 export type TunerPermission = 'unknown' | 'undetermined' | 'granted' | 'denied'
 
@@ -163,7 +165,11 @@ export function useTuner(options: UseTunerOptions = {}): Tuner {
 
         const now = Date.now()
         if (rmsLevel(ring) < RMS_GATE) {
-          if (lastReading) clear()
+          // Same decay grace as a detection miss: hold the last reading for
+          // DROPOUT_MS after the level dips rather than blanking instantly, so
+          // the display lingers through the tail of a ringing string.
+          if (lastReading && now - lastReadingAt > DROPOUT_MS) clear()
+          else if (lastReading) publish(lastReading, false)
           return
         }
 
