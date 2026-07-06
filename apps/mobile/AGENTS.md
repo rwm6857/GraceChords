@@ -176,11 +176,21 @@ duplicate logic here and never edit core internals to suit mobile.
   over lyrics, per-symbol transpose + chord style at render, `RawFallback` when a
   parse yields nothing. Controls: floating `TransposeBar` (±1 semitone, haptic),
   `ViewOptionsSheet` (chords/lyrics · section labels · font scale 80–160% · chord
-  style Letters/Solfège · sharp/flat accidentals · "Hide controls when idle"),
+  style Letters/Solfège · sharp/flat accidentals · columns 1│2 on tablet widths ·
+  "Hide controls when idle"),
   `StarButton`, and `ExportSheet`. Transpose/accidentals/chord-style are
-  **ephemeral** per open; only "Hide controls when idle" persists (separately, in
-  `src/lib/autoHideChrome.ts`). Opening from a setlist seeds transpose via the
-  `initialKey` route param.
+  **ephemeral** per open; "Hide controls when idle" persists (separately, in
+  `src/lib/autoHideChrome.ts`) and the column mode persists **per song**
+  (device-local, `src/lib/viewerPrefs.ts`). Opening from a setlist seeds
+  transpose via the `initialKey` route param.
+- **Two-column mode** (`src/components/TwoColumnChart.tsx` +
+  `src/lib/columnLayout.ts`): tablet-only (`src/lib/useIsTabletWidth.ts`, min
+  window dimension ≥ 600 — phones never see the toggle), fill-first packing
+  (never balanced), sections atomic (never split), single-column rendering is
+  the untouched baseline, and double only engages when a single column would
+  overflow the viewport. Section heights are measured offscreen and memoized
+  per width/font/transpose/chord-style/accidental/visibility inputs; the
+  partition + persistence logic is unit-tested headless (`npm run test`).
 - **Performer** (`app/perform/[id].tsx` → `PerformerScreen`) runs a set one song
   at a time (Prev/Next, swipe, tappable progress rail), prefetches every song
   body, and reuses the same chart/transpose/view-options. Its

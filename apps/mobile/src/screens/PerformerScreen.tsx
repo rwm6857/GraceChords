@@ -29,6 +29,7 @@ import {
   transposeSymPrefer,
 } from '@gracechords/core'
 import ChordChart, { type ChordStyle } from '../components/ChordChart'
+import TwoColumnChart from '../components/TwoColumnChart'
 import Screen from '../components/Screen'
 import StarButton from '../components/StarButton'
 import SymbolIcon from '../components/SymbolIcon'
@@ -47,6 +48,8 @@ import { prefetchSong, useSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../lib/defaults'
 import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
+import { useIsTabletWidth } from '../lib/useIsTabletWidth'
+import { setColumnMode, useColumnMode } from '../lib/viewerPrefs'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import {
@@ -122,6 +125,14 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const [sheet, setSheet] = useState<null | 'options' | 'share'>(null)
   // Floating-overlay header height → chart top inset (edge-to-edge).
   const [headerH, setHeaderH] = useState(0)
+  // Two-column mode: tablet widths only, persisted PER SONG (the current
+  // entry's song), exactly as in the Song Viewer. One song at a time — the
+  // columns split the current song's sections, never tile multiple songs.
+  const isTablet = useIsTabletWidth()
+  const currentSlug = entry?.song.slug
+  const columnMode = useColumnMode(currentSlug)
+  const [chartAreaH, setChartAreaH] = useState(0)
+  const twoColumns = isTablet && columnMode === 'double'
 
   const nativeKey = doc?.meta?.key || entry?.song.default_key || ''
   const targetKey = entryKeys[index] || nativeKey
@@ -474,7 +485,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         </View>
       ) : (
         <GestureDetector gesture={chartGesture}>
-          <Animated.View style={[{ flex: 1 }, chartAnim]}>
+          <Animated.View
+            style={[{ flex: 1 }, chartAnim]}
+            onLayout={(e) => setChartAreaH(e.nativeEvent.layout.height)}
+          >
             {doc ? (
               <ScrollView
                 style={{ flex: 1 }}
@@ -484,15 +498,28 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                   paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
                 }}
               >
-                <ChordChart
-                  doc={doc}
-                  steps={steps}
-                  preferFlat={preferFlat}
-                  showChords={showChords}
-                  showSections={showSections}
-                  fontScale={fontScale}
-                  chordStyle={chordStyle}
-                />
+                {twoColumns ? (
+                  <TwoColumnChart
+                    doc={doc}
+                    steps={steps}
+                    preferFlat={preferFlat}
+                    showChords={showChords}
+                    showSections={showSections}
+                    fontScale={fontScale}
+                    chordStyle={chordStyle}
+                    viewportHeight={Math.max(0, chartAreaH - headerH - t.spacing.sm)}
+                  />
+                ) : (
+                  <ChordChart
+                    doc={doc}
+                    steps={steps}
+                    preferFlat={preferFlat}
+                    showChords={showChords}
+                    showSections={showSections}
+                    fontScale={fontScale}
+                    chordStyle={chordStyle}
+                  />
+                )}
               </ScrollView>
             ) : (
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl, paddingTop: headerH }}>
@@ -571,6 +598,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         onChordStyle={setChordStyle}
         accidental={accidental}
         onAccidental={setAccidentalManual}
+        columnMode={isTablet && currentSlug ? columnMode : undefined}
+        onColumnMode={
+          isTablet && currentSlug ? (m) => setColumnMode(currentSlug, m) : undefined
+        }
         autoHide={autoHide}
         onAutoHide={setAutoHide}
         keepAwake={keepAwake}

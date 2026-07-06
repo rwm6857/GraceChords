@@ -18,6 +18,7 @@ import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateRecents } from '../src/lib/recents'
+import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -137,6 +138,7 @@ export default function RootLayout() {
       hydrateDefaults(AsyncStorage),
       hydrateDownloads(AsyncStorage),
       hydrateRecents(AsyncStorage),
+      hydrateViewerPrefs(AsyncStorage),
     ]).then(([session]) => {
       setSession(session)
       setReady(true)

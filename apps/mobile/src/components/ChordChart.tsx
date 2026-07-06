@@ -69,7 +69,7 @@ export default function ChordChart({
   )
 }
 
-type RenderOpts = {
+export type RenderOpts = {
   steps: number
   preferFlat: boolean
   showChords: boolean
@@ -78,7 +78,9 @@ type RenderOpts = {
   chordStyle: ChordStyle
 }
 
-function ChartSection({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
+// Exported for TwoColumnChart, which renders the same sections one column at a
+// time (and offscreen for measurement). `first` gates the inter-section gap.
+export function ChartSection({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
   const t = useTheme()
   return (
     <View style={{ marginTop: first ? 0 : t.spacing.md }}>
