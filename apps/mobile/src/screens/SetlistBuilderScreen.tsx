@@ -21,8 +21,8 @@ import {
 import Screen from '../components/Screen'
 import Card from '../components/Card'
 import Button from '../components/Button'
-import SymbolIcon, { type SymbolIconProps } from '../components/SymbolIcon'
-import GlassSurface from '../components/GlassSurface'
+import SymbolIcon from '../components/SymbolIcon'
+import HeaderIconButton from '../components/HeaderIconButton'
 import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
 import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
@@ -249,25 +249,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     [openSong, items, moveEntry, removeEntry, showToast],
   )
 
-  const iconButton = (label: string, icon: SymbolIconProps['name'], onPress: () => void) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      hitSlop={8}
-      onPress={onPress}
-      style={{
-        width: 38,
-        height: 38,
-        borderRadius: t.radii.pill,
-        backgroundColor: t.colors.surfaceAlt,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <SymbolIcon name={icon} size={17} color={t.colors.accent} />
-    </Pressable>
-  )
-
   const metaLine = formatSetSummary(summary)
   const edited = timeAgo(updatedAt)
 
@@ -285,10 +266,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
 
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header: back + share + more. Glass toolbar on iOS 26; transparent
-          (unchanged) on iOS < 26 and Android via GlassSurface's fallback. */}
-      <GlassSurface
-        fallbackColor="transparent"
+      {/* Header: back + more + share. Plain bar on the page background — same
+          chrome as the Viewer/Performer headers. (Glass here drew a visible
+          material edge around the bar because it sits inside the safe area.) */}
+      <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -308,10 +289,15 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Setlists</Text>
         </Pressable>
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-          {iconButton('Export and share', 'square.and.arrow.up', () => setShareOpen(true))}
-          {iconButton('Setlist options', 'ellipsis', () => setOptionsOpen(true))}
+          <HeaderIconButton icon="ellipsis" label="Setlist options" onPress={() => setOptionsOpen(true)} />
+          <HeaderIconButton
+            icon="square.and.arrow.up"
+            iconSize={22}
+            label="Export and share"
+            onPress={() => setShareOpen(true)}
+          />
         </View>
-      </GlassSurface>
+      </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -429,17 +415,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         </ScrollView>
       )}
 
-      {/* Bottom action bar. Glass toolbar on iOS 26; transparent (unchanged)
-          on iOS < 26 and Android via GlassSurface's fallback. */}
-      <GlassSurface
-        fallbackColor="transparent"
+      {/* Bottom action bar — borderless, on the page background. */}
+      <View
         style={{
           flexDirection: 'row',
           gap: t.spacing.sm,
           paddingHorizontal: t.spacing.lg,
           paddingTop: t.spacing.sm,
-          borderTopWidth: 0.5,
-          borderTopColor: t.colors.border,
         }}
       >
         <Pressable
@@ -469,7 +451,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           style={{ flex: 1 }}
           fullWidth={false}
         />
-      </GlassSurface>
+      </View>
 
       {/* Toast */}
       {toast ? (

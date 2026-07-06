@@ -20,6 +20,7 @@ import ChordChart, {
 } from '../../src/components/ChordChart'
 // CHART_LINE_HEIGHT / CHART_FONT_SIZE / CHART_LYRIC_FONT drive the raw-text fallback.
 import ExportSheet from '../../src/components/ExportSheet'
+import HeaderIconButton from '../../src/components/HeaderIconButton'
 import KeyPickerSheet from '../../src/components/setlist/KeyPickerSheet'
 import Screen from '../../src/components/Screen'
 import StarButton from '../../src/components/StarButton'
@@ -230,15 +231,6 @@ export default function ViewerScreen() {
     }
   }
 
-  const headerButtonStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: t.radii.pill,
-    backgroundColor: t.colors.surfaceAlt,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  }
-
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -269,22 +261,13 @@ export default function ViewerScreen() {
             <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Songs</Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-            <Pressable
-              onPress={() => setSheet('options')}
-              accessibilityRole="button"
-              accessibilityLabel="View options"
-              style={headerButtonStyle}
-            >
-              <SymbolIcon name="ellipsis" size={17} color={t.colors.ink} />
-            </Pressable>
-            <Pressable
+            <HeaderIconButton icon="ellipsis" label="View options" onPress={() => setSheet('options')} />
+            <HeaderIconButton
+              icon="square.and.arrow.up"
+              iconSize={22}
+              label="Export and share"
               onPress={() => setSheet('export')}
-              accessibilityRole="button"
-              accessibilityLabel="Export and share"
-              style={headerButtonStyle}
-            >
-              <SymbolIcon name="square.and.arrow.up" size={22} color={t.colors.ink} />
-            </Pressable>
+            />
           </View>
         </View>
 
