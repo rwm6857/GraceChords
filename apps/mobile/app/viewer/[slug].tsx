@@ -25,6 +25,7 @@ import Screen from '../../src/components/Screen'
 import StarButton from '../../src/components/StarButton'
 import SymbolIcon from '../../src/components/SymbolIcon'
 import TransposeBar from '../../src/components/TransposeBar'
+import TwoColumnChart from '../../src/components/TwoColumnChart'
 import ViewOptionsSheet, {
   type Accidental,
   defaultAccidental,
@@ -38,15 +39,18 @@ import { recordSongOpened } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
+import { useIsTabletWidth } from '../../src/lib/useIsTabletWidth'
+import { setColumnMode, useColumnMode } from '../../src/lib/viewerPrefs'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
 // view controls (floating transpose bar, View-options sheet) and the Export &
 // share sheet (server-rendered PDF/JPG via the web app's /api/export/song
-// Pages Function, system share, Telegram push). ALL
-// view state here is session-ephemeral useState — discarded on unmount, never
-// persisted. The optional `initialKey` param seeds the transpose so a setlist
-// can open the Viewer at its own key with no refactor.
+// Pages Function, system share, Telegram push). View state here is
+// session-ephemeral useState — discarded on unmount, never persisted — except
+// the tablet-only column mode, which persists per song (src/lib/viewerPrefs).
+// The optional `initialKey` param seeds the transpose so a setlist can open
+// the Viewer at its own key with no refactor.
 
 // Extra scroll room so the last lines clear the floating transpose bar.
 const TRANSPOSE_BAR_CLEARANCE = 96
@@ -112,6 +116,12 @@ export default function ViewerScreen() {
   // height seeds the chart's top inset, so the first line starts where the
   // header sits and the user can scroll up into that space.
   const [headerH, setHeaderH] = useState(0)
+  // Two-column mode: tablet widths only. Persisted PER SONG (device-local);
+  // phones never see the toggle and always take the baseline single path.
+  const isTablet = useIsTabletWidth()
+  const columnMode = useColumnMode(slug)
+  const [chartAreaH, setChartAreaH] = useState(0)
+  const twoColumns = isTablet && columnMode === 'double'
 
   const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
   const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
@@ -347,7 +357,7 @@ export default function ViewerScreen() {
           </Text>
         </View>
       ) : doc ? (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }} onLayout={(e) => setChartAreaH(e.nativeEvent.layout.height)}>
           <GestureDetector gesture={tapReveal}>
             <ScrollView
               style={{ flex: 1 }}
@@ -357,15 +367,28 @@ export default function ViewerScreen() {
                 paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
               }}
             >
-              <ChordChart
-                doc={doc}
-                steps={steps}
-                preferFlat={preferFlat}
-                showChords={showChords}
-                showSections={showSections}
-                fontScale={fontScale}
-                chordStyle={chordStyle}
-              />
+              {twoColumns ? (
+                <TwoColumnChart
+                  doc={doc}
+                  steps={steps}
+                  preferFlat={preferFlat}
+                  showChords={showChords}
+                  showSections={showSections}
+                  fontScale={fontScale}
+                  chordStyle={chordStyle}
+                  viewportHeight={Math.max(0, chartAreaH - headerH - t.spacing.sm)}
+                />
+              ) : (
+                <ChordChart
+                  doc={doc}
+                  steps={steps}
+                  preferFlat={preferFlat}
+                  showChords={showChords}
+                  showSections={showSections}
+                  fontScale={fontScale}
+                  chordStyle={chordStyle}
+                />
+              )}
             </ScrollView>
           </GestureDetector>
           {keyLabel ? (
@@ -421,6 +444,8 @@ export default function ViewerScreen() {
         onChordStyle={setChordStyle}
         accidental={accidental}
         onAccidental={setAccidentalManual}
+        columnMode={isTablet ? columnMode : undefined}
+        onColumnMode={isTablet ? (m) => setColumnMode(slug, m) : undefined}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
         keepAwake={keepAwake}

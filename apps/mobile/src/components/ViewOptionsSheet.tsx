@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BottomSheet from './BottomSheet'
 import AccidentalToggle, { type Accidental } from './AccidentalToggle'
 import type { ChordStyle } from './ChordChart'
+import type { ColumnMode } from '../lib/viewerPrefs'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Re-export so existing screen imports (`from './ViewOptionsSheet'`) keep working.
@@ -100,6 +101,8 @@ export default function ViewOptionsSheet({
   onChordStyle,
   accidental,
   onAccidental,
+  columnMode,
+  onColumnMode,
   autoHide,
   onAutoHide,
   keepAwake,
@@ -118,6 +121,10 @@ export default function ViewOptionsSheet({
   // Accidental spelling (session-scoped). Optional — rendered only when wired.
   accidental?: Accidental
   onAccidental?: (v: Accidental) => void
+  // Column layout (persisted per song). Optional — the screens wire it only at
+  // tablet widths, so phones never see the toggle.
+  columnMode?: ColumnMode
+  onColumnMode?: (v: ColumnMode) => void
   // Optional "hide controls when idle" toggle — rendered only when the screen
   // wires it (Song Viewer + Setlist Performer).
   autoHide?: boolean
@@ -264,6 +271,22 @@ export default function ViewOptionsSheet({
             <Text style={{ fontSize: 16, color: t.colors.ink }}>Accidentals</Text>
             <AccidentalToggle value={accidental} onChange={onAccidental} />
           </View>
+        ) : null}
+
+        {/* Columns — tablet-only 1 │ 2 layout toggle, persisted per song.
+            Rendered only when the screen wires it. */}
+        {onColumnMode && columnMode ? (
+          <>
+            <OverlineLabel>Columns</OverlineLabel>
+            <Segmented
+              options={[
+                { value: 'single', label: '1' },
+                { value: 'double', label: '2' },
+              ]}
+              value={columnMode}
+              onChange={onColumnMode}
+            />
+          </>
         ) : null}
 
         {/* Screen preferences — persist across launches (unlike the options
