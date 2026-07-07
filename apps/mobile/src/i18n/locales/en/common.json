@@ -1,0 +1,25 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "appName": "GraceChords",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "done": "Done",
+  "back": "Back",
+  "add": "Add",
+  "retry": "Retry",
+  "reset": "Reset",
+  "loading": "Loading…",
+  "settings": "Settings",
+  "comingSoon": "Coming soon",
+  "closeSheet": "Close {{title}}",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "copyright": "© {{range}} Ryan Moore. All rights reserved.",
+  "timeAgo": {
+    "justNow": "just now",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago",
+    "days": "{{count}}d ago"
+  }
+}

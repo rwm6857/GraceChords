@@ -9,6 +9,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 
@@ -48,6 +49,7 @@ export default function TextField({
   style,
 }: TextFieldProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('common')
   const [focused, setFocused] = useState(false)
   const [revealed, setRevealed] = useState(false)
 
@@ -112,7 +114,7 @@ export default function TextField({
           <Pressable
             onPress={() => setRevealed((r) => !r)}
             accessibilityRole="button"
-            accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+            accessibilityLabel={revealed ? tx('hidePassword') : tx('showPassword')}
             hitSlop={8}
           >
             <SymbolIcon name={revealed ? 'eye.slash' : 'eye'} size={18} color={t.colors.muted} />

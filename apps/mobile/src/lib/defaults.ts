@@ -26,17 +26,21 @@ export type AppDefaults = {
   chordStyle: ChordStyle
   /** Keep the screen awake in the Song Viewer / Performer (default off). */
   keepAwake: boolean
+  /** UI language override (locale code). null = follow the device language. */
+  language: string | null
 }
 
 export const DEFAULT_APP_DEFAULTS: AppDefaults = {
   theme: 'system',
   chordStyle: 'letters',
   keepAwake: false,
+  language: null,
 }
 
 const THEME_KEY = 'gc.defaults.theme'
 const CHORD_STYLE_KEY = 'gc.defaults.chordStyle'
 const KEEP_AWAKE_KEY = 'gc.defaults.keepAwake'
+const LANGUAGE_KEY = 'gc.defaults.language'
 
 const THEME_PREFS: readonly ThemePref[] = ['system', 'light', 'dark']
 const CHORD_STYLES: readonly ChordStyle[] = ['letters', 'solfege']
@@ -69,19 +73,24 @@ export async function hydrateDefaults(store: KVStorage): Promise<AppDefaults> {
   let theme: ThemePref = DEFAULT_APP_DEFAULTS.theme
   let chordStyle: ChordStyle = DEFAULT_APP_DEFAULTS.chordStyle
   let keepAwake: boolean = DEFAULT_APP_DEFAULTS.keepAwake
+  let language: string | null = DEFAULT_APP_DEFAULTS.language
   try {
-    const [rawTheme, rawChord, rawKeepAwake] = await Promise.all([
+    const [rawTheme, rawChord, rawKeepAwake, rawLanguage] = await Promise.all([
       store.getItem(THEME_KEY),
       store.getItem(CHORD_STYLE_KEY),
       store.getItem(KEEP_AWAKE_KEY),
+      store.getItem(LANGUAGE_KEY),
     ])
     if (isThemePref(rawTheme)) theme = rawTheme
     if (isChordStyle(rawChord)) chordStyle = rawChord
     if (rawKeepAwake != null) keepAwake = rawKeepAwake === '1'
+    // Validated against the supported-locale list at resolution time
+    // (src/i18n/config.ts resolveLanguage), not here — the folders can change.
+    if (typeof rawLanguage === 'string' && rawLanguage.trim()) language = rawLanguage.trim()
   } catch {
     // Best-effort — a bad read must never crash the app; fall back to defaults.
   }
-  cache = { theme, chordStyle, keepAwake }
+  cache = { theme, chordStyle, keepAwake, language }
   emit()
   return cache
 }
@@ -103,6 +112,15 @@ export function setDefaultChordStyle(v: ChordStyle): void {
   cache = { ...cache, chordStyle: v }
   emit()
   storage?.setItem(CHORD_STYLE_KEY, v).catch(() => {})
+}
+
+/** Persist the UI-language override; null = follow the device language. */
+export function setDefaultLanguage(v: string | null): void {
+  if (cache.language === v) return
+  cache = { ...cache, language: v }
+  emit()
+  if (v == null) storage?.removeItem(LANGUAGE_KEY).catch(() => {})
+  else storage?.setItem(LANGUAGE_KEY, v).catch(() => {})
 }
 
 export function setDefaultKeepAwake(v: boolean): void {

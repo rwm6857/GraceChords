@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
 import { radii } from '@gracechords/tokens/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { applyLanguagePreference } from '../src/i18n'
 import { ThemeProvider, ThemedStatusBar } from '../src/theme/ThemeProvider'
 import {
   registerAuthAutoRefresh,
@@ -142,7 +143,10 @@ export default function RootLayout() {
       hydrateRecents(AsyncStorage),
       hydrateReadingStreak(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
-    ]).then(([session]) => {
+    ]).then(([session, defaults]) => {
+      // Apply the stored language pick (null = follow device) while the splash
+      // is still up, so a non-device language never flashes on first paint.
+      applyLanguagePreference(defaults.language)
       setSession(session)
       setReady(true)
       // Start AppState-driven token auto-refresh only AFTER the persisted

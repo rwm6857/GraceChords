@@ -1,0 +1,55 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Profile & Settings",
+  "yourAccount": "Your account",
+  "changeYourIcon": "Change your icon",
+  "sections": {
+    "settings": "SETTINGS",
+    "library": "LIBRARY",
+    "support": "SUPPORT"
+  },
+  "appearance": "Appearance",
+  "appearanceOptions": {
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": "Language",
+  "languageAutomatic": "Automatic (device)",
+  "chordStyle": "Chord style",
+  "chordStyleOptions": {
+    "letters": "Letters",
+    "solfege": "Solfège"
+  },
+  "offlineDownloads": "Offline & downloads",
+  "starred": "Starred",
+  "mySetlists": "My setlists",
+  "helpCenter": "Help center",
+  "sendFeedback": "Send feedback",
+  "aboutGraceChords": "About GraceChords",
+  "logOut": "Log out",
+  "deleteAccount": "Delete account",
+  "signOutAlert": {
+    "title": "Sign out",
+    "message": "Sign out of GraceChords on this device?",
+    "confirm": "Sign out"
+  },
+  "deleteAccountAlert": {
+    "title": "Delete account",
+    "message": "This permanently deletes your account and all your data — starred songs, setlists, and preferences. This cannot be undone.",
+    "confirm": "Delete account"
+  },
+  "deleteFailedAlert": {
+    "title": "Delete failed",
+    "message": "We could not delete your account. Please try again."
+  },
+  "about": {
+    "title": "About",
+    "version": "Version {{version}}",
+    "sectionLegal": "LEGAL",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use",
+    "acknowledgements": "Acknowledgements & Licenses",
+    "contact": "Contact"
+  }
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, Image, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
@@ -17,11 +18,14 @@ import { useCurrentUser } from '../lib/greetings'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import {
   setDefaultChordStyle,
+  setDefaultLanguage,
   setDefaultTheme,
   useAppDefaults,
   type ChordStyle,
   type ThemePref,
 } from '../lib/defaults'
+import { applyLanguagePreference, SUPPORTED_LOCALES } from '../i18n'
+import { localeLabel, normalizeLanguageTag } from '../i18n/config'
 
 // The grouped "Profile & Settings" screen (design: [CONTENT] Settings Content).
 // Built from Stage-0 primitives — a Profile card, three grouped Cards
@@ -32,19 +36,19 @@ import {
 const HELP_URL = 'https://gracechords.com/help'
 const FEEDBACK_MAILTO = 'mailto:support@gracechords.com?subject=GraceChords%20feedback'
 
-const THEME_OPTIONS: { value: ThemePref; label: string }[] = [
-  { value: 'system', label: 'Auto' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
+// Option labels resolve through the settings namespace at render time.
+const THEME_OPTIONS: { value: ThemePref; labelKey: string }[] = [
+  { value: 'system', labelKey: 'appearanceOptions.auto' },
+  { value: 'light', labelKey: 'appearanceOptions.light' },
+  { value: 'dark', labelKey: 'appearanceOptions.dark' },
 ]
-const CHORD_OPTIONS: { value: ChordStyle; label: string }[] = [
-  { value: 'letters', label: 'Letters' },
-  { value: 'solfege', label: 'Solfège' },
+const CHORD_OPTIONS: { value: ChordStyle; labelKey: string }[] = [
+  { value: 'letters', labelKey: 'chordStyleOptions.letters' },
+  { value: 'solfege', labelKey: 'chordStyleOptions.solfege' },
 ]
 
-function labelFor<T extends string>(options: { value: T; label: string }[], value: T): string {
-  return options.find((o) => o.value === value)?.label ?? ''
-}
+// Sentinel for "no override — follow the device language" in the picker.
+const LANGUAGE_SYSTEM = 'system'
 
 /** Rounded leading icon chip used on the grouped rows. */
 function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; t: Tokens }) {
@@ -146,35 +150,54 @@ function OptionSheetContent<T extends string>({
 
 export default function SettingsScreen() {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation(['settings', 'common'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useCurrentUser()
   const defaults = useAppDefaults()
   const { source: spriteSource } = useProfileSprite()
-  const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle'>(null)
+  const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle' | 'language'>(null)
   // Measured glass-bar height feeds the scroll-behind top inset.
   const [barH, setBarH] = useState(0)
 
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
   const fullName = ((meta.full_name ?? meta.name) as string | undefined)?.trim()
   const email = user?.email ?? ''
-  const displayName = fullName || (email ? email.split('@')[0] : 'Your account')
+  const displayName = fullName || (email ? email.split('@')[0] : tx('yourAccount'))
+
+  const themeOptions = THEME_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
+  const chordOptions = CHORD_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
+  // "Automatic (device)" + one entry per locale folder (SUPPORTED_LOCALES is
+  // derived from src/i18n/locales/, not hardcoded).
+  const languageOptions = [
+    { value: LANGUAGE_SYSTEM, label: tx('languageAutomatic') },
+    ...SUPPORTED_LOCALES.map((code) => ({ value: code, label: localeLabel(code) })),
+  ]
+  // The row shows the RESOLVED language (what the UI is actually in), even
+  // when the stored pref is "follow the device".
+  const resolvedLanguage = normalizeLanguageTag(i18n.resolvedLanguage ?? i18n.language)
+
+  function onSelectLanguage(value: string) {
+    const pref = value === LANGUAGE_SYSTEM ? null : value
+    setDefaultLanguage(pref)
+    applyLanguagePreference(pref)
+  }
 
   function onSignOut() {
-    Alert.alert('Sign out', 'Sign out of GraceChords on this device?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => void supabase.auth.signOut() },
+    Alert.alert(tx('signOutAlert.title'), tx('signOutAlert.message'), [
+      { text: tx('common:cancel'), style: 'cancel' },
+      { text: tx('signOutAlert.confirm'), style: 'destructive', onPress: () => void supabase.auth.signOut() },
     ])
   }
 
   function onDeleteAccount() {
     Alert.alert(
-      'Delete account',
-      'This permanently deletes your account and all your data — starred songs, setlists, and preferences. This cannot be undone.',
+      tx('deleteAccountAlert.title'),
+      tx('deleteAccountAlert.message'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: tx('common:cancel'), style: 'cancel' },
         {
-          text: 'Delete account',
+          text: tx('deleteAccountAlert.confirm'),
           style: 'destructive',
           onPress: async () => {
             // Reuses the existing SECURITY DEFINER RPC (same path web uses):
@@ -182,7 +205,7 @@ export default function SettingsScreen() {
             // root auth listener redirects to /login.
             const { error } = await supabase.rpc('delete_user')
             if (error) {
-              Alert.alert('Delete failed', 'We could not delete your account. Please try again.')
+              Alert.alert(tx('deleteFailedAlert.title'), tx('deleteFailedAlert.message'))
               return
             }
             await supabase.auth.signOut()
@@ -212,7 +235,7 @@ export default function SettingsScreen() {
             paddingBottom: t.spacing.md,
           }}
         >
-          Profile &amp; Settings
+          {tx('title')}
         </Text>
 
         {/* Profile card */}
@@ -220,7 +243,7 @@ export default function SettingsScreen() {
           <Pressable
             onPress={() => router.push({ pathname: '/choose-icon', params: { mode: 'edit' } })}
             accessibilityRole="button"
-            accessibilityLabel="Change your icon"
+            accessibilityLabel={tx('changeYourIcon')}
             style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
@@ -266,29 +289,31 @@ export default function SettingsScreen() {
         </Card>
 
         {/* SETTINGS */}
-        <SectionHeader label="SETTINGS" />
+        <SectionHeader label={tx('sections.settings')} />
         <Card>
           <ListRow
-            title="Appearance"
+            title={tx('appearance')}
             leading={<RowIcon name="circle.lefthalf.filled" t={t} />}
-            value={labelFor(THEME_OPTIONS, defaults.theme)}
+            value={themeOptions.find((o) => o.value === defaults.theme)?.label ?? ''}
             chevron
             onPress={() => setSheet('theme')}
           />
           <ListRow
-            title="Language"
+            title={tx('language')}
             leading={<RowIcon name="globe" t={t} />}
-            value="English"
+            value={localeLabel(resolvedLanguage)}
+            chevron
+            onPress={() => setSheet('language')}
           />
           <ListRow
-            title="Chord style"
+            title={tx('chordStyle')}
             leading={<RowIcon name="music.note" t={t} />}
-            value={labelFor(CHORD_OPTIONS, defaults.chordStyle)}
+            value={chordOptions.find((o) => o.value === defaults.chordStyle)?.label ?? ''}
             chevron
             onPress={() => setSheet('chordStyle')}
           />
           <ListRow
-            title="Offline &amp; downloads"
+            title={tx('offlineDownloads')}
             leading={<RowIcon name="arrow.down.circle" t={t} />}
             chevron
             isLast
@@ -297,16 +322,16 @@ export default function SettingsScreen() {
         </Card>
 
         {/* LIBRARY */}
-        <SectionHeader label="LIBRARY" />
+        <SectionHeader label={tx('sections.library')} />
         <Card>
           <ListRow
-            title="Starred"
+            title={tx('starred')}
             leading={<RowIcon name="star" t={t} />}
             chevron
             onPress={() => router.push('/songs')}
           />
           <ListRow
-            title="My setlists"
+            title={tx('mySetlists')}
             leading={<RowIcon name="music.note.list" t={t} />}
             chevron
             isLast
@@ -315,22 +340,22 @@ export default function SettingsScreen() {
         </Card>
 
         {/* SUPPORT */}
-        <SectionHeader label="SUPPORT" />
+        <SectionHeader label={tx('sections.support')} />
         <Card>
           <ListRow
-            title="Help center"
+            title={tx('helpCenter')}
             leading={<RowIcon name="questionmark.circle" t={t} />}
             chevron
             onPress={() => void Linking.openURL(HELP_URL)}
           />
           <ListRow
-            title="Send feedback"
+            title={tx('sendFeedback')}
             leading={<RowIcon name="envelope" t={t} />}
             chevron
             onPress={() => void Linking.openURL(FEEDBACK_MAILTO)}
           />
           <ListRow
-            title="About GraceChords"
+            title={tx('aboutGraceChords')}
             leading={<RowIcon name="info.circle" t={t} />}
             chevron
             isLast
@@ -338,8 +363,8 @@ export default function SettingsScreen() {
           />
         </Card>
 
-        <DangerCard label="Log out" onPress={onSignOut} />
-        <DangerCard label="Delete account" onPress={onDeleteAccount} />
+        <DangerCard label={tx('logOut')} onPress={onSignOut} />
+        <DangerCard label={tx('deleteAccount')} onPress={onDeleteAccount} />
       </ScrollView>
 
       {/* Scroll-behind top bar: Liquid Glass on iOS 26, opaque page-bg bar on
@@ -361,27 +386,35 @@ export default function SettingsScreen() {
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={tx('common:back')}
           hitSlop={8}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Home</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:home')}</Text>
         </Pressable>
       </GlassSurface>
 
       <OptionSheet
         visible={sheet === 'theme'}
-        title="Appearance"
-        options={THEME_OPTIONS}
+        title={tx('appearance')}
+        options={themeOptions}
         value={defaults.theme}
         onSelect={setDefaultTheme}
         onClose={() => setSheet(null)}
       />
       <OptionSheet
+        visible={sheet === 'language'}
+        title={tx('language')}
+        options={languageOptions}
+        value={defaults.language ?? LANGUAGE_SYSTEM}
+        onSelect={onSelectLanguage}
+        onClose={() => setSheet(null)}
+      />
+      <OptionSheet
         visible={sheet === 'chordStyle'}
-        title="Chord style"
-        options={CHORD_OPTIONS}
+        title={tx('chordStyle')}
+        options={chordOptions}
         value={defaults.chordStyle}
         onSelect={setDefaultChordStyle}
         onClose={() => setSheet(null)}
