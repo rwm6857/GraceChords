@@ -50,7 +50,7 @@ describe('validateSignUp', () => {
   })
 
   it('rejects passwords shorter than 8 characters', () => {
-    expect(validateSignUp({ ...valid, password: '1234567' })).toMatch(/8 characters/)
+    expect(validateSignUp({ ...valid, password: '1234567' })).toBe('errors.passwordTooShort')
     expect(validateSignUp({ ...valid, password: '12345678' })).toBeNull()
   })
 })

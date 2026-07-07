@@ -177,7 +177,7 @@ describe('googleSignIn', () => {
     const err = Object.assign(new Error('nope'), { code: 'NO_PLAY_SERVICES' })
     const result = await googleSignIn(googleDeps({ signIn: vi.fn().mockRejectedValue(err) }))
     expect(result.ok).toBe(false)
-    expect(result.error).toMatch(/Play Services/)
+    expect(result.error).toBe('errors.googlePlayUnavailable')
   })
 
   it('errors when no id token comes back', async () => {

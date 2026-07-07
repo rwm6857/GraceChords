@@ -1,0 +1,54 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "hello": "{{greeting}}, {{name}}",
+    "friend": "friend"
+  },
+  "subGreetings": [
+    "Everything's where you left it.",
+    "Let's get to it.",
+    "Good to have you back.",
+    "Glad you're here.",
+    "One song at a time.",
+    "Sing to Him a new song.",
+    "Be still, and know.",
+    "This is the day He has made.",
+    "Let everything that has breath praise Him.",
+    "He is your strength and your song.",
+    "Whatever you do, for His glory.",
+    "Enter His gates with thanksgiving.",
+    "Bless the Lord, O my soul.",
+    "His grace is enough.",
+    "Rejoice always."
+  ],
+  "profileAndSettings": "Profile and settings",
+  "lastSet": {
+    "label": "Last set",
+    "meta_one": "{{count}} song · ~{{min}} min",
+    "meta_other": "{{count}} songs · ~{{min}} min",
+    "keys": "Keys {{keys}}",
+    "resume": "Resume",
+    "editSet": "Edit set"
+  },
+  "continueCard": {
+    "label": "Continue where you left off"
+  },
+  "starredCard": {
+    "label": "Starred songs",
+    "empty": "Songs you star will appear here."
+  },
+  "dailyWordCard": {
+    "label": "Daily Word",
+    "empty": "Open today's reading.",
+    "open": "Open today's Daily Word",
+    "streak_one": "{{count}}-day streak",
+    "streak_other": "{{count}}-day streak"
+  },
+  "recentSongsCard": {
+    "label": "Recent songs",
+    "empty": "Songs you open will appear here."
+  }
+}

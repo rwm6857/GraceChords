@@ -13,12 +13,13 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 import ConstrainedContent from '../components/ConstrainedContent'
 import TextField from '../components/TextField'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
-import { validateSignIn, validateSignUp } from '../lib/authValidation'
+import { MIN_PASSWORD_LENGTH, validateSignIn, validateSignUp } from '../lib/authValidation'
 import { appleSignIn, emailSignIn, emailSignUp, googleSignIn, type AuthResult } from '../lib/authFlows'
 import { makeAppleDeps, makeGoogleDeps } from '../lib/authDeps'
 
@@ -32,6 +33,7 @@ type Mode = 'signin' | 'signup'
 
 export default function AuthScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['auth', 'common'])
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('signin')
@@ -55,7 +57,7 @@ export default function AuthScreen() {
       if (!result.ok && !result.canceled && result.error) setError(result.error)
       return result
     } catch {
-      const result: AuthResult = { ok: false, error: 'Something went wrong. Please try again.' }
+      const result: AuthResult = { ok: false, error: 'errors.generic' }
       setError(result.error!)
       return result
     } finally {
@@ -83,7 +85,7 @@ export default function AuthScreen() {
 
   function onForgot() {
     // The design's "Forgot?" link is not wired to a reset flow this stage.
-    Alert.alert('Reset password', 'Password reset is available on the web at gracechords.com.')
+    Alert.alert(tx('resetPasswordAlert.title'), tx('resetPasswordAlert.message'))
   }
 
   return (
@@ -118,7 +120,7 @@ export default function AuthScreen() {
               color: t.colors.ink,
             }}
           >
-            {isSignup ? 'Create your account' : 'Welcome back'}
+            {isSignup ? tx('createYourAccount') : tx('welcomeBack')}
           </Text>
         </LinearGradient>
 
@@ -126,32 +128,32 @@ export default function AuthScreen() {
         <View style={{ paddingHorizontal: t.spacing.lg, gap: t.spacing.lg }}>
           {isSignup ? (
             <TextField
-              label="Full name"
+              label={tx('fullName')}
               icon="person"
               value={fullName}
               onChangeText={setFullName}
-              placeholder="Alex Brown"
+              placeholder={tx('fullNamePlaceholder')}
               autoCapitalize="words"
               autoComplete="name"
               textContentType="name"
             />
           ) : null}
           <TextField
-            label="Email"
+            label={tx('email')}
             icon="envelope"
             value={email}
             onChangeText={setEmail}
-            placeholder="you@example.com"
+            placeholder={tx('emailPlaceholder')}
             keyboardType="email-address"
             autoComplete="email"
             textContentType="emailAddress"
           />
           <TextField
-            label="Password"
+            label={tx('password')}
             icon="lock"
             value={password}
             onChangeText={setPassword}
-            placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'}
+            placeholder={isSignup ? tx('passwordPlaceholderSignup') : tx('passwordPlaceholderSignin')}
             secureTextEntry
             autoComplete={isSignup ? 'new-password' : 'current-password'}
             textContentType={isSignup ? 'newPassword' : 'password'}
@@ -159,7 +161,7 @@ export default function AuthScreen() {
               isSignup ? undefined : (
                 <Pressable onPress={onForgot} hitSlop={8} accessibilityRole="button">
                   <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.colors.textAccent }}>
-                    Forgot?
+                    {tx('forgot')}
                   </Text>
                 </Pressable>
               )
@@ -167,7 +169,9 @@ export default function AuthScreen() {
           />
 
           {error ? (
-            <Text style={{ fontSize: 13.5, color: t.colors.danger }}>{error}</Text>
+            <Text style={{ fontSize: 13.5, color: t.colors.danger }}>
+              {tx(error, { defaultValue: error, min: MIN_PASSWORD_LENGTH })}
+            </Text>
           ) : null}
 
           {/* Primary CTA: 50px accent bar with trailing chevron per the design
@@ -188,7 +192,7 @@ export default function AuthScreen() {
             })}
           >
             <Text style={{ fontSize: 16.5, fontWeight: '700', color: t.colors.onAccent }}>
-              {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Sign in'}
+              {busy ? tx('pleaseWait') : isSignup ? tx('createAccount') : tx('signIn')}
             </Text>
             <SymbolIcon name="chevron.right" size={13} color={t.colors.onAccent} weight="semibold" />
           </Pressable>
@@ -196,7 +200,7 @@ export default function AuthScreen() {
           {/* Divider */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md }}>
             <View style={{ flex: 1, height: 1, backgroundColor: t.colors.border }} />
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>or continue with</Text>
+            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{tx('orContinueWith')}</Text>
             <View style={{ flex: 1, height: 1, backgroundColor: t.colors.border }} />
           </View>
 
@@ -225,7 +229,7 @@ export default function AuthScreen() {
                 style={{ width: 20, height: 20 }}
               />
               <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>
-                Continue with Google
+                {tx('common:continueWithGoogle')}
               </Text>
             </Pressable>
             {Platform.OS === 'ios' ? (
@@ -247,9 +251,11 @@ export default function AuthScreen() {
 
           {isSignup ? (
             <Text style={{ fontSize: 12.5, color: t.colors.muted, textAlign: 'center' }}>
-              By continuing you agree to our{' '}
-              <Text style={{ color: t.colors.textAccent }}>Terms</Text> &{' '}
-              <Text style={{ color: t.colors.textAccent }}>Privacy Policy</Text>.
+              {tx('terms.prefix')}
+              <Text style={{ color: t.colors.textAccent }}>{tx('terms.terms')}</Text>
+              {tx('terms.and')}
+              <Text style={{ color: t.colors.textAccent }}>{tx('terms.privacy')}</Text>
+              {tx('terms.suffix')}
             </Text>
           ) : null}
 
@@ -264,11 +270,11 @@ export default function AuthScreen() {
             }}
           >
             <Text style={{ fontSize: 14.5, color: t.colors.sec }}>
-              {isSignup ? 'Already have an account?' : "Don't have an account?"}
+              {isSignup ? tx('alreadyHaveAccount') : tx('dontHaveAccount')}
             </Text>
             <Pressable onPress={switchMode} hitSlop={8} accessibilityRole="button">
               <Text style={{ fontSize: 14.5, fontWeight: '700', color: t.colors.textAccent }}>
-                {isSignup ? 'Sign in' : 'Create one'}
+                {isSignup ? tx('signIn') : tx('createOne')}
               </Text>
             </Pressable>
           </View>

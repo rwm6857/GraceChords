@@ -1,5 +1,7 @@
-// Form validation for the auth screens. Pure functions — no React Native
-// imports — so the vitest harness can exercise them headless.
+// Form validation for the auth screens. Pure functions — no React Native or
+// i18n imports — so the vitest harness can exercise them headless. Failures
+// are returned as auth-namespace i18n KEYS (errors.*); the screen resolves
+// them through `t` (raw non-key messages pass through via defaultValue).
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -10,8 +12,8 @@ export function isValidEmail(email: string): boolean {
 }
 
 export function validateSignIn(input: { email: string; password: string }): string | null {
-  if (!isValidEmail(input.email)) return 'Enter a valid email address.'
-  if (!input.password) return 'Enter your password.'
+  if (!isValidEmail(input.email)) return 'errors.invalidEmail'
+  if (!input.password) return 'errors.passwordRequired'
   return null
 }
 
@@ -20,10 +22,10 @@ export function validateSignUp(input: {
   email: string
   password: string
 }): string | null {
-  if (!input.fullName.trim()) return 'Enter your full name.'
-  if (!isValidEmail(input.email)) return 'Enter a valid email address.'
+  if (!input.fullName.trim()) return 'errors.fullNameRequired'
+  if (!isValidEmail(input.email)) return 'errors.invalidEmail'
   if (input.password.length < MIN_PASSWORD_LENGTH) {
-    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+    return 'errors.passwordTooShort'
   }
   return null
 }
