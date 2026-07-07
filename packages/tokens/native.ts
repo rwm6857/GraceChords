@@ -130,9 +130,13 @@ export const layout = {
   maxWidth: {
     /** Focused single-column forms (e.g. the auth screen). */
     form: 440,
-    /** General content columns (Home, index lists). */
+    /** General content columns (index lists). */
     content: 700,
+    /** The Home dashboard's two-column grid region. */
+    dashboard: 1000,
   },
+  /** Entries shown in Home's Recent-songs card. */
+  recentSongs: 6,
   /**
    * Flex weights for tablet list-detail splits (Setlist Builder's library
    * pane · builder column, Utilities' tool list · tool view): ~1/3 · 2/3.

@@ -127,6 +127,12 @@ duplicate logic here and never edit core internals to suit mobile.
   `layout.maxWidth`). It passes through untouched at compact (phone) width and
   caps + centers at regular (tablet) width (`useIsTabletWidth`). Applied to
   Auth (form), Home and the Setlists index (content).
+- **Home dashboard:** Home is a card dashboard (`src/components/home/` —
+  `DailyWordCard`, `RecentSongsCard`, shared `cardStyle`): hero + Continue card
+  full-width (capped at tokens `layout.maxWidth.dashboard`), then Last set /
+  Starred / Daily Word / Recent songs — a 2-column grid at regular width, one
+  stack on phones (same components, only the arrangement differs). The
+  Recent-songs count comes from tokens `layout.recentSongs`.
 - **Song Library tablet grid:** at regular width the library's SectionList
   chunks each letter section's songs into rows of N `ListRow` cells
   (`src/lib/gridRows.ts`; N from tokens `layout.libraryColumns` — 2 portrait,
@@ -287,7 +293,16 @@ duplicate logic here and never edit core internals to suit mobile.
   once at splash, then `getRecentlyOpened()` is **synchronous** (Home reads it in
   render, no flash). The Viewer calls `recordSongOpened()` on load — it dedupes by
   slug, moves the entry to the front, and caps at 20 (`gc.recents.songs.v1` in
-  AsyncStorage, NOT Supabase-synced). Feeds Home's "Continue where you left off".
+  AsyncStorage, NOT Supabase-synced). Feeds Home's "Continue where you left off"
+  and its Recent-songs card. Each entry also stores `lastKey` — the key showing
+  in the viewer (`updateRecentKey` mirrors the effective key as it changes) —
+  and the Recent-songs card reopens the song in that key via the viewer's
+  existing `initialKey` param (Library opens still use the default key).
+- **Reading streak** (`src/lib/readingStreak.ts`, same injected-storage /
+  `useSyncExternalStore` pattern): OPT-IN, off by default — the toggle lives in
+  the Daily Word reader-settings sheet, and `DailyWordScreen` marks a day read
+  when one of TODAY's chapters renders. Home's Daily Word card shows the streak
+  only when enabled (`currentStreak` — 0 once a day is missed). Unit-tested.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,

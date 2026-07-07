@@ -21,9 +21,14 @@ export type RecentSongInput = {
   default_key: string | null
   time_signature?: string | null
   tempo?: number | null
+  /** The key showing in the viewer when recorded (effective/transposed key). */
+  lastKey?: string | null
 }
 
-type RecentRecord = Song & { openedAt: string }
+/** A recent entry: the Song plus the key it was last viewed in (if known). */
+export type RecentSong = Song & { lastKey: string | null }
+
+type RecentRecord = RecentSong & { openedAt: string }
 
 const STORAGE_KEY = 'gc.recents.songs.v1'
 const MAX_RECENTS = 20
@@ -56,7 +61,11 @@ function parse(raw: string | null): RecentRecord[] {
   try {
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(isRecentRecord).slice(0, MAX_RECENTS)
+    return parsed
+      .filter(isRecentRecord)
+      // Entries written before lastKey existed normalize to null.
+      .map((r) => ({ ...r, lastKey: typeof r.lastKey === 'string' ? r.lastKey : null }))
+      .slice(0, MAX_RECENTS)
   } catch {
     return []
   }
@@ -78,7 +87,7 @@ export async function hydrateRecents(store: KVStorage): Promise<Song[]> {
 }
 
 /** Most-recently-opened songs, newest first. Synchronous — safe before hydrate. */
-export function getRecentlyOpened(): Song[] {
+export function getRecentlyOpened(): RecentSong[] {
   return cache.map(({ openedAt: _openedAt, ...song }) => song)
 }
 
@@ -89,8 +98,24 @@ export function getRecentlyOpened(): Song[] {
  */
 export function recordSongOpened(input: RecentSongInput): void {
   if (!input?.slug) return
-  const record: RecentRecord = { ...toSong(input), openedAt: new Date().toISOString() }
+  const record: RecentRecord = {
+    ...toSong(input),
+    lastKey: input.lastKey ?? null,
+    openedAt: new Date().toISOString(),
+  }
   cache = [record, ...cache.filter((r) => r.slug !== input.slug)].slice(0, MAX_RECENTS)
+  storage?.setItem(STORAGE_KEY, JSON.stringify(cache)).catch(() => {})
+}
+
+/**
+ * Mirror the viewer's displayed key into an existing entry (called as the
+ * effective key changes, so the stored value is the key showing when the user
+ * leaves). Updates in place — no reorder — and no-ops for unknown slugs.
+ */
+export function updateRecentKey(slug: string, key: string | null): void {
+  const entry = cache.find((r) => r.slug === slug)
+  if (!entry || entry.lastKey === key) return
+  cache = cache.map((r) => (r.slug === slug ? { ...r, lastKey: key } : r))
   storage?.setItem(STORAGE_KEY, JSON.stringify(cache)).catch(() => {})
 }
 

@@ -19,6 +19,7 @@ import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateRecents } from '../src/lib/recents'
+import { hydrateReadingStreak } from '../src/lib/readingStreak'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 
 // Keep the native splash up past first render so we can resolve the persisted
@@ -139,6 +140,7 @@ export default function RootLayout() {
       hydrateDefaults(AsyncStorage),
       hydrateDownloads(AsyncStorage),
       hydrateRecents(AsyncStorage),
+      hydrateReadingStreak(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
     ]).then(([session]) => {
       setSession(session)

@@ -1,7 +1,8 @@
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import BottomSheet from '../BottomSheet'
 import { useTheme } from '../../theme/ThemeProvider'
+import { setStreakEnabled, useReadingStreak } from '../../lib/readingStreak'
 import {
   READER_PT_MAX,
   READER_PT_MIN,
@@ -13,7 +14,9 @@ import {
 
 // Reader settings sheet (Daily Word screen 18): text size stepper, typeface,
 // verse layout, and line spacing. All session-ephemeral — the screen owns the
-// state and nothing persists across launches.
+// state and nothing persists across launches — EXCEPT the reading-streak
+// opt-in at the bottom, which is a persisted device-local preference
+// (src/lib/readingStreak.ts, read by Home's Daily Word card).
 
 function Segmented<T extends string>({
   options,
@@ -99,6 +102,7 @@ export default function ReaderSettingsSheet({
 }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  const streak = useReadingStreak()
 
   const stepPt = (dir: 1 | -1) => {
     const next = Math.min(READER_PT_MAX, Math.max(READER_PT_MIN, settings.pt + dir))
@@ -191,6 +195,22 @@ export default function ReaderSettingsSheet({
           value={settings.lineSpacing}
           onChange={(v) => onChange({ ...settings, lineSpacing: v })}
         />
+
+        <OverlineLabel>Reading streak</OverlineLabel>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: t.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>Track reading streak</Text>
+            <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 2 }}>
+              Counts consecutive days you open today's reading.
+            </Text>
+          </View>
+          <Switch
+            value={streak.enabled}
+            onValueChange={setStreakEnabled}
+            trackColor={{ true: t.colors.accent }}
+            accessibilityLabel="Track reading streak"
+          />
+        </View>
       </View>
     </BottomSheet>
   )

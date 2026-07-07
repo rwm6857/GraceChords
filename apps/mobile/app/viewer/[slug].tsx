@@ -36,7 +36,7 @@ import { capoChipLabel } from '../../src/lib/capo'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong } from '../../src/lib/useSong'
-import { recordSongOpened } from '../../src/lib/recents'
+import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
@@ -129,6 +129,13 @@ export default function ViewerScreen() {
   const steps = (((seedSteps + delta) % 12) + 12) % 12
   const preferFlat = resolvePreferFlat(accidental)
   const effectiveKey = steps ? transposeSymPrefer(nativeKey, steps, preferFlat) : nativeKey
+
+  // Mirror the displayed key into the recent-songs entry (data only — the
+  // Home Recent-songs card reopens the song in this key via initialKey).
+  // Runs after the recordSongOpened effect above, so the entry always exists.
+  useEffect(() => {
+    if (song && effectiveKey) updateRecentKey(song.slug, effectiveKey)
+  }, [song, effectiveKey])
 
   useEffect(() => {
     if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))

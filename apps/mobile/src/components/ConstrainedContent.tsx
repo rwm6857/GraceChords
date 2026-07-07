@@ -16,7 +16,7 @@ export default function ConstrainedContent({
   style,
   children,
 }: {
-  tier: 'form' | 'content'
+  tier: 'form' | 'content' | 'dashboard'
   style?: StyleProp<ViewStyle>
   children: ReactNode
 }) {
