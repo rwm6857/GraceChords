@@ -103,20 +103,11 @@ export default function AuthScreen() {
           end={{ x: 0, y: 1 }}
           style={{ alignItems: 'center', paddingTop: insets.top + t.spacing.xxl, paddingBottom: t.spacing.xl }}
         >
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: t.radii.card,
-              backgroundColor: t.colors.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 22, fontWeight: '700', letterSpacing: 0.5, color: t.colors.onAccent }}>
-              GC
-            </Text>
-          </View>
+          <Image
+            source={require('../../assets/icon.png')}
+            accessibilityLabel="GraceChords"
+            style={{ width: 64, height: 64, borderRadius: t.radii.card }}
+          />
           <Text
             style={{
               marginTop: t.spacing.lg,
