@@ -29,6 +29,10 @@ export * from './songs/songsRepo'
 // Shared song-authoring form model + slug helpers (web + mobile editors)
 export * from './songs/songAuthoring'
 export * from './songs/slug'
+// Personal-song CRUD, editor direct-write, and suggestion submit/review
+export * from './songs/personalSongsRepo'
+export * from './songs/songsWriteRepo'
+export * from './songs/songSuggestions'
 
 // Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
@@ -36,8 +40,9 @@ export * from './setlists/setlistsRepo'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
 
-// Role hierarchy
+// Role hierarchy + canonical role read
 export * from './rbac/roles'
+export * from './rbac/userRole'
 
 // Supabase factory (createGcSupabase). Web imports it via the
 // '@gracechords/core/supabase/client' subpath, which works under Vite; exposing

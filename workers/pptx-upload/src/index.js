@@ -14,7 +14,7 @@
 // Role hierarchy: lowest privilege → highest. Mirror of `ROLE_ORDER` in
 // `src/lib/roles.js`; this worker is bundled separately so the constant
 // can't be imported. Keep the two in sync if the hierarchy changes.
-const ROLE_HIERARCHY = ['user', 'collaborator', 'editor', 'admin', 'owner']
+const ROLE_HIERARCHY = ['user', 'editor', 'admin', 'owner']
 
 function isAtLeast(userRole, minRole) {
   return ROLE_HIERARCHY.indexOf(userRole) >= ROLE_HIERARCHY.indexOf(minRole)
@@ -218,8 +218,8 @@ async function handleUpload(request, env) {
   if (authResult.error) {
     return jsonError(authResult.msg, authResult.error)
   }
-  if (!isAtLeast(authResult.role, 'collaborator')) {
-    return jsonError('Insufficient role: collaborator or higher required', 403)
+  if (!isAtLeast(authResult.role, 'editor')) {
+    return jsonError('Insufficient role: editor or higher required', 403)
   }
 
   const limit = await checkRateLimit(env, authResult.userId)
