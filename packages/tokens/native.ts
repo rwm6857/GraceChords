@@ -133,6 +133,14 @@ export const layout = {
     /** General content columns (Home, index lists). */
     content: 700,
   },
+  /**
+   * Flex weights for the tablet list-detail split (Setlist Builder): the
+   * library pane vs the builder pane, ~1/3 · 2/3.
+   */
+  split: {
+    library: 1,
+    builder: 2,
+  },
 } as const
 
 /** Corner radii (shared across modes). */

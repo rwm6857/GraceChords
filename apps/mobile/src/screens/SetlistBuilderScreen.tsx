@@ -24,11 +24,13 @@ import Button from '../components/Button'
 import SymbolIcon from '../components/SymbolIcon'
 import HeaderIconButton from '../components/HeaderIconButton'
 import SetlistTimeline, { type TimelineCallbacks } from '../components/setlist/SetlistTimeline'
+import LibraryPane from '../components/setlist/LibraryPane'
 import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
 import ShareSetSheet from '../components/setlist/ShareSetSheet'
 import AddSongsModal from '../components/setlist/AddSongsModal'
 import { useTheme } from '../theme/ThemeProvider'
+import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
 import { supabase } from '../lib/supabase'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
@@ -48,10 +50,12 @@ const TOAST_MS = 1900
 export default function SetlistBuilderScreen({ setlistId }: { setlistId: string }) {
   const t = useTheme()
   const router = useRouter()
+  const isTablet = useIsTabletWidth()
   const {
     name,
     items,
     songs,
+    songsLoading,
     loading,
     notFound,
     error,
@@ -264,8 +268,11 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     )
   }
 
-  return (
-    <Screen edges={['top', 'left', 'right', 'bottom']}>
+  // The full builder column (header → timeline → action bar → toast). Phones
+  // render it directly — the tree is unchanged from the single-column screen.
+  // Tablets place it as the right pane beside the library pane.
+  const builderPane = (
+    <>
       {/* Header: back + more + share. Plain bar on the page background — same
           chrome as the Viewer/Performer headers. (Glass here drew a visible
           material edge around the bar because it sits inside the safe area.) */}
@@ -471,6 +478,35 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.colors.bg }}>{toast}</Text>
         </Animated.View>
       ) : null}
+    </>
+  )
+
+  return (
+    <Screen edges={['top', 'left', 'right', 'bottom']}>
+      {isTablet ? (
+        // Tablet list-detail split: searchable library pane (~1/3) with
+        // tap-to-add, the existing builder (~2/3) on the right. Ratio from
+        // tokens layout.split.
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          <View
+            style={{
+              flex: t.layout.split.library,
+              borderRightWidth: 1,
+              borderRightColor: t.colors.border,
+            }}
+          >
+            <LibraryPane
+              songs={songs}
+              addedSongIds={addedSongIds}
+              onToggle={toggleSong}
+              loading={songsLoading}
+            />
+          </View>
+          <View style={{ flex: t.layout.split.builder }}>{builderPane}</View>
+        </View>
+      ) : (
+        builderPane
+      )}
 
       {/* Sheets */}
       <KeyPickerSheet

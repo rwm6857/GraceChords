@@ -53,10 +53,10 @@ function toEntrySong(song: Song): EntrySong {
 // serialized: while one is in flight at most one trailing save is queued, and
 // pending work is flushed when the app backgrounds or the screen unmounts.
 export function useSetlistBuilder(setlistId: string) {
-  // The catalog is only needed for the Add-songs search; existing rows render
-  // from the setlist fetch's embedded song data, so we do NOT gate the screen
-  // on `songsLoading`.
-  const { songs, error: songsError } = useSongList()
+  // The catalog is only needed for the Add-songs search (modal + tablet
+  // library pane); existing rows render from the setlist fetch's embedded
+  // song data, so we do NOT gate the screen on `songsLoading`.
+  const { songs, loading: songsLoading, error: songsError } = useSongList()
   const [name, setNameState] = useState('')
   const [entries, setEntries] = useState<WorkingEntry[]>([])
   const [serviceDate, setServiceDate] = useState<string | null>(null)
@@ -297,6 +297,7 @@ export function useSetlistBuilder(setlistId: string) {
     name,
     items,
     songs,
+    songsLoading,
     updatedAt,
     // Gated on the setlist fetch only — rows render from embedded song data,
     // so the whole-catalog load never blocks the screen.

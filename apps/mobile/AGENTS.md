@@ -127,6 +127,13 @@ duplicate logic here and never edit core internals to suit mobile.
   `layout.maxWidth`). It passes through untouched at compact (phone) width and
   caps + centers at regular (tablet) width (`useIsTabletWidth`). Applied to
   Auth (form), Home and the Setlists index (content).
+- **Setlist Builder tablet split:** at regular width the builder becomes a
+  list-detail split (ratio from tokens `layout.split`, ~1/3 · 2/3): a
+  searchable `LibraryPane` (`src/components/setlist/LibraryPane.tsx` — its own
+  list instance, not shared with the Songs tab) on the left with the same
+  tap-to-toggle add semantics as `AddSongsModal` (`toggleSong` — one write
+  path, autosave applies), the unchanged builder column on the right. Phones
+  render the single-column builder untouched.
 - **Option sheets:** `ViewOptionsSheet` and `FilterSortSheet` present through
   the native `formSheet` route (`app/sheet.tsx` + `src/lib/formSheetHost.ts` —
   screens keep owning state/callbacks; the host bridges the render into the
