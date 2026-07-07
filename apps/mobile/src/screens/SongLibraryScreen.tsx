@@ -5,6 +5,7 @@ import {
   SectionList,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native'
 import { useRouter } from 'expo-router'
@@ -15,9 +16,15 @@ import SymbolIcon from '../components/SymbolIcon'
 import AlphaScrubber from '../components/AlphaScrubber'
 import FilterSortSheet, { type SortDir, type SortKey } from '../components/FilterSortSheet'
 import { useTheme } from '../theme/ThemeProvider'
+import { useIsTabletWidth } from '../lib/useIsTabletWidth'
+import { chunkRows } from '../lib/gridRows'
 import { useSongList, type Song } from '../lib/useSongList'
 
-type Section = { key: string; title: string; letter: string | null; data: Song[] }
+// A list entry is one song (phone, single-column) or a grid row of songs
+// (tablet — sections are chunked N per row, so letter headers stay full-width
+// and sections never interleave across columns).
+type LibraryRow = Song | Song[]
+type Section = { key: string; title: string; letter: string | null; data: LibraryRow[] }
 
 // First-letter bucket for the A–Z index; anything not A–Z lands under "#".
 function bucketLetter(value: string | null | undefined): string {
@@ -93,6 +100,15 @@ export default function SongLibraryScreen() {
   const t = useTheme()
   const router = useRouter()
   const { songs, loading, error } = useSongList()
+  const isTablet = useIsTabletWidth()
+  const { width, height } = useWindowDimensions()
+  // Grid columns: tablet-only (tokens layout.libraryColumns), 1 on phones —
+  // the single-column path renders exactly as before (no chunking at all).
+  const columns = isTablet
+    ? width > height
+      ? t.layout.libraryColumns.landscape
+      : t.layout.libraryColumns.portrait
+    : 1
 
   const [query, setQuery] = useState('')
   const [searchActive, setSearchActive] = useState(false)
@@ -102,7 +118,7 @@ export default function SongLibraryScreen() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
 
   const inputRef = useRef<TextInput>(null)
-  const listRef = useRef<SectionList<Song, Section>>(null)
+  const listRef = useRef<SectionList<LibraryRow, Section>>(null)
   const pendingSection = useRef(0)
 
   const availableTags = useMemo(() => {
@@ -121,6 +137,18 @@ export default function SongLibraryScreen() {
     [tagFiltered, sortKey, sortDir],
   )
 
+  // Presentation-only chunking for the tablet grid: each section's songs
+  // become rows of N cells. Section count and order are untouched, so the
+  // scrubber's section-index jumps (and sticky full-width headers) work
+  // exactly as in the single-column list.
+  const displaySections = useMemo(
+    () =>
+      columns === 1
+        ? sections
+        : sections.map((s) => ({ ...s, data: chunkRows(s.data as Song[], columns) })),
+    [sections, columns],
+  )
+
   const trimmedQuery = query.trim().toLowerCase()
   const results = useMemo(() => {
     if (!trimmedQuery) return []
@@ -133,6 +161,11 @@ export default function SongLibraryScreen() {
       .slice()
       .sort(byTitle)
   }, [tagFiltered, trimmedQuery])
+
+  const resultRows: LibraryRow[] = useMemo(
+    () => (columns === 1 ? results : chunkRows(results, columns)),
+    [results, columns],
+  )
 
   const showScrubber = !searchActive && (sortKey === 'title' || sortKey === 'artist')
   const presentLetters = useMemo(() => {
@@ -203,6 +236,41 @@ export default function SongLibraryScreen() {
     trailingTop: song.default_key ?? undefined,
     trailingBottom: song.time_signature ?? undefined,
   })
+
+  const keyForRow = (item: LibraryRow) => (Array.isArray(item) ? item[0].id : item.id)
+
+  // One renderer for both lists: a single song renders the row exactly as the
+  // phone list always has; a chunk renders a full-width grid row of flex-equal
+  // cells, the last row padded with empty cells so columns stay aligned.
+  function renderRow({ item }: { item: LibraryRow }) {
+    if (Array.isArray(item)) {
+      return (
+        <View style={{ flexDirection: 'row' }}>
+          {item.map((song) => (
+            <View key={song.id} style={{ flex: 1 }}>
+              <ListRow
+                title={song.title}
+                subtitle={song.artist}
+                {...rowMeta(song)}
+                onPress={() => openSong(song)}
+              />
+            </View>
+          ))}
+          {Array.from({ length: columns - item.length }, (_, i) => (
+            <View key={`pad-${i}`} style={{ flex: 1 }} />
+          ))}
+        </View>
+      )
+    }
+    return (
+      <ListRow
+        title={item.title}
+        subtitle={item.artist}
+        {...rowMeta(item)}
+        onPress={() => openSong(item)}
+      />
+    )
+  }
 
   function renderHeader() {
     return (
@@ -345,8 +413,8 @@ export default function SongLibraryScreen() {
       if (results.length === 0) return centeredMessage(`No songs match “${query.trim()}”.`)
       return (
         <SectionList
-          sections={[{ key: '__results', title: '', letter: null, data: results }]}
-          keyExtractor={(item) => item.id}
+          sections={[{ key: '__results', title: '', letter: null, data: resultRows }]}
+          keyExtractor={keyForRow}
           keyboardShouldPersistTaps="handled"
           renderSectionHeader={() => (
             <View style={{ backgroundColor: t.colors.bg, paddingHorizontal: t.spacing.xl, paddingVertical: 6 }}>
@@ -363,14 +431,7 @@ export default function SongLibraryScreen() {
               </Text>
             </View>
           )}
-          renderItem={({ item }) => (
-            <ListRow
-              title={item.title}
-              subtitle={item.artist}
-              {...rowMeta(item)}
-              onPress={() => openSong(item)}
-            />
-          )}
+          renderItem={renderRow}
         />
       )
     }
@@ -381,20 +442,13 @@ export default function SongLibraryScreen() {
       <View style={{ flex: 1 }}>
         <SectionList
           ref={listRef}
-          sections={sections}
-          keyExtractor={(item) => item.id}
+          sections={displaySections}
+          keyExtractor={keyForRow}
           stickySectionHeadersEnabled
           renderSectionHeader={({ section }) =>
             section.title ? <SectionHeader label={section.title} /> : null
           }
-          renderItem={({ item }) => (
-            <ListRow
-              title={item.title}
-              subtitle={item.artist}
-              {...rowMeta(item)}
-              onPress={() => openSong(item)}
-            />
-          )}
+          renderItem={renderRow}
           onScrollToIndexFailed={(info) => {
             // scrollToLocation can't reach a section outside the render window
             // without getItemLayout — it fires this and scrolls nowhere. Nudge

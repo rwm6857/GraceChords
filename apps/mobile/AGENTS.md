@@ -127,6 +127,12 @@ duplicate logic here and never edit core internals to suit mobile.
   `layout.maxWidth`). It passes through untouched at compact (phone) width and
   caps + centers at regular (tablet) width (`useIsTabletWidth`). Applied to
   Auth (form), Home and the Setlists index (content).
+- **Song Library tablet grid:** at regular width the library's SectionList
+  chunks each letter section's songs into rows of N `ListRow` cells
+  (`src/lib/gridRows.ts`; N from tokens `layout.libraryColumns` — 2 portrait,
+  3 landscape). Presentation-only: sections, sticky full-width headers, the
+  A–Z scrubber's section-index jumps, and search/sort logic are unchanged, and
+  phones keep the unchunked single-column list.
 - **Setlist Builder tablet split:** at regular width the builder becomes a
   list-detail split (ratio from tokens `layout.split`, ~1/3 · 2/3): a
   searchable `LibraryPane` (`src/components/setlist/LibraryPane.tsx` — its own

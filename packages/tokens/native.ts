@@ -141,6 +141,14 @@ export const layout = {
     library: 1,
     builder: 2,
   },
+  /**
+   * Song Library grid columns at regular (tablet) width, by orientation.
+   * Compact (phone) width always renders single-column.
+   */
+  libraryColumns: {
+    portrait: 2,
+    landscape: 3,
+  },
 } as const
 
 /** Corner radii (shared across modes). */
