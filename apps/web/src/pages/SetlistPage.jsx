@@ -19,6 +19,7 @@ import {
   deleteSetlist as dbDeleteSetlist,
   loadSetlist as dbLoadSetlist,
 } from '../hooks/useSetlists'
+import { personalSetlistLimit } from '@gracechords/core/setlists/limits'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../utils/app/toast'
@@ -120,15 +121,6 @@ function buildVerseCompletion(input, suggestion){
   return { composed, prefix: raw, remainder: composed.slice(raw.length) }
 }
 
-// Must match the DB trigger limits in the setlists schema migration.
-const SET_LIMITS = {
-  user: 3,
-  collaborator: 5,
-  editor: 10,
-  admin: 20,
-  owner: 30,
-}
-
 export default function Setlist(){
   const { t } = useTranslation('pages')
   const { code: routeCode, songIds: routeSongIds } = useParams()
@@ -190,6 +182,10 @@ export default function Setlist(){
   const [loadedServiceDate, setLoadedServiceDate] = useState(null)
   // Inline delete confirmation: stores the setlist id pending confirmation
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  // "Limit reached" manage modal: multi-select prune of saved setlists.
+  const [manageOpen, setManageOpen] = useState(false)
+  const [manageSelected, setManageSelected] = useState(() => new Set())
+  const [manageBusy, setManageBusy] = useState(false)
   const [verseOpen, setVerseOpen] = useState(false)
   const [verseInput, setVerseInput] = useState('')
   const [verseError, setVerseError] = useState('')
@@ -597,8 +593,8 @@ export default function Setlist(){
     }))
   }
 
-  // Derive set limit from role
-  const userSetLimit = SET_LIMITS[userRole] ?? SET_LIMITS.user
+  // Derive set limit from role (shared with mobile + the DB trigger).
+  const userSetLimit = personalSetlistLimit(userRole)
 
   // named set helpers
   async function refreshSaved(idToSelect){
@@ -638,10 +634,9 @@ export default function Setlist(){
       try { const { data } = await supabase.rpc('is_collaborator_eligible'); eligible = !!data } catch {}
       if (userRole === 'user' && eligible) {
         showToast(t('setlist.limitReachedCollab', { limit: userSetLimit }))
-      } else {
-        showToast(t('setlist.limitReached', { limit: userSetLimit }))
       }
       setSaveModalOpen(false)
+      openManageModal()
       return
     }
 
@@ -661,7 +656,7 @@ export default function Setlist(){
 
     if (error) {
       if (error.message?.includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
-        showToast(t('setlist.limitReached', { limit: userSetLimit }))
+        openManageModal()
       } else {
         showToast(t('setlist.failedSave'))
         console.error('[Setlist] save:', error)
@@ -701,6 +696,37 @@ export default function Setlist(){
     if (currentId === setlistId) { setCurrentId(null); setLoadedServiceDate(null) }
     await refreshSaved('')
     showToast(t('setlist.setlistDeleted'))
+  }
+
+  // Open the "limit reached" manage modal with a fresh (empty) selection.
+  function openManageModal(){
+    setManageSelected(new Set())
+    setManageOpen(true)
+  }
+
+  function toggleManageSelected(setlistId){
+    setManageSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(setlistId)) next.delete(setlistId)
+      else next.add(setlistId)
+      return next
+    })
+  }
+
+  // Delete every selected setlist, then close the modal so the user can retry.
+  async function handleManageDelete(){
+    if (manageSelected.size === 0) return
+    setManageBusy(true)
+    const ids = Array.from(manageSelected)
+    const results = await Promise.all(ids.map(id => dbDeleteSetlist(id)))
+    const failed = results.filter(r => r.error).length
+    setManageBusy(false)
+    if (currentId && manageSelected.has(currentId)) { setCurrentId(null); setLoadedServiceDate(null) }
+    await refreshSaved(currentId && !manageSelected.has(currentId) ? currentId : '')
+    setManageSelected(new Set())
+    setManageOpen(false)
+    if (failed > 0) showToast(t('setlist.failedDelete'))
+    else showToast(t('setlist.manageDeleted', { count: ids.length }))
   }
 
   // Toolbar Load button: navigate to Saved Sets tab on mobile; no-op on desktop.
@@ -1071,6 +1097,52 @@ async function exportPdf() {
           </div>
         </div>
       ) : null}
+      {/* Limit-reached manage modal: prune saved setlists (oldest first) */}
+      {manageOpen ? (
+        <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true" aria-labelledby="manage-modal-title">
+          <div style={{ background:'var(--card)', color:'var(--text)', border:'1px solid var(--line)', borderRadius:10, padding:20, width:'min(520px, 92vw)', maxHeight:'85vh', display:'flex', flexDirection:'column', gap:12 }}>
+            <h3 id="manage-modal-title" style={{ margin:0 }}>{t('setlist.manageTitle')}</h3>
+            <p className="meta" style={{ margin:0 }}>
+              {t('setlist.manageDesc', { count: savedSets.length, limit: userSetLimit })}
+            </p>
+            <div style={{ overflowY:'auto', display:'grid', gap:6, margin:'4px 0' }}>
+              {savedSets
+                .slice()
+                .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
+                .map(s => {
+                  const songCount = s.setlist_songs?.[0]?.count ?? 0
+                  const created = s.created_at
+                    ? (() => { try { return new Date(s.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) } catch { return '' } })()
+                    : ''
+                  const songLabel = songCount === 1 ? t('setlist.songSingular') : t('setlist.songPlural')
+                  const subtitle = [created, `${songCount} ${songLabel}`].filter(Boolean).join(' · ')
+                  const checked = manageSelected.has(s.id)
+                  return (
+                    <label
+                      key={s.id}
+                      style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', border:'1px solid var(--line)', borderRadius:8, cursor:'pointer', background: checked ? 'var(--gc-surface-2)' : undefined }}
+                    >
+                      <input type="checkbox" checked={checked} onChange={() => toggleManageSelected(s.id)} disabled={manageBusy} />
+                      <span style={{ display:'flex', flexDirection:'column', minWidth:0 }}>
+                        <strong style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.name}</strong>
+                        <span className="meta">{subtitle}</span>
+                      </span>
+                    </label>
+                  )
+                })}
+            </div>
+            <div className="row" style={{ justifyContent:'space-between', alignItems:'center', gap:8, marginTop:4 }}>
+              <span className="meta">{t('setlist.manageSelectedCount', { count: manageSelected.size })}</span>
+              <div className="row" style={{ gap:8 }}>
+                <Button onClick={() => setManageOpen(false)} disabled={manageBusy}>{t('setlist.cancel')}</Button>
+                <Button variant="destructive" onClick={handleManageDelete} disabled={manageBusy || manageSelected.size === 0} loading={manageBusy}>
+                  {t('setlist.manageDeleteSelected')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {/* Add Verse modal */}
       {verseOpen ? (
         <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.45)', zIndex: 90 }} role="dialog" aria-modal="true">
@@ -1393,7 +1465,9 @@ async function exportPdf() {
                   <strong>{t('setlist.savedSets')}</strong>
                   {!setsLoading && (
                     <span className="meta" title={t('setlist.savedSetsLimitTooltip')}>
-                      {t('setlist.usageCount', { count: savedSets.length, limit: userSetLimit })}
+                      {Number.isFinite(userSetLimit)
+                        ? t('setlist.usageCount', { count: savedSets.length, limit: userSetLimit })
+                        : t('setlist.usageCountUnlimited', { count: savedSets.length })}
                     </span>
                   )}
                 </div>
