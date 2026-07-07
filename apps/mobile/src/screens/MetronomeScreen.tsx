@@ -69,7 +69,10 @@ function StepButton({
   )
 }
 
-export default function MetronomeScreen() {
+// `embedded`: rendered inside the Utilities tab's tablet split (right pane) —
+// hides the back link and swaps the bar's safe-area padding for regular
+// spacing (see TunerScreen).
+export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const [barH, setBarH] = useState(0)
@@ -268,7 +271,7 @@ export default function MetronomeScreen() {
           left: 0,
           right: 0,
           zIndex: 10,
-          paddingTop: insets.top,
+          paddingTop: embedded ? t.spacing.sm : insets.top,
           paddingHorizontal: t.spacing.md,
           paddingBottom: t.spacing.sm,
           flexDirection: 'row',
@@ -276,16 +279,20 @@ export default function MetronomeScreen() {
           justifyContent: 'space-between',
         }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={8}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
-        >
-          <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Utilities</Text>
-        </Pressable>
+        {embedded ? (
+          <View style={{ width: 70 }} />
+        ) : (
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={8}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+          >
+            <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Utilities</Text>
+          </Pressable>
+        )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>Metronome</Text>
         <View style={{ width: 70 }} />
       </GlassSurface>

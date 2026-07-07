@@ -413,7 +413,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                 No songs yet
               </Text>
               <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-                Tap Add to search your library.
+                {isTablet ? 'Tap a song in the library to add it.' : 'Tap Add to search your library.'}
               </Text>
             </View>
           ) : (
@@ -431,26 +431,30 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           paddingTop: t.spacing.sm,
         }}
       >
-        <Pressable
-          onPress={() => setAddOpen(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Add songs"
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            height: 48,
-            paddingHorizontal: t.spacing.lg,
-            borderRadius: t.radii.md,
-            backgroundColor: t.colors.surfaceAlt,
-          }}
-        >
-          <SymbolIcon name="plus" size={16} color={t.colors.ink} weight="semibold" />
-          <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
-            Add
-          </Text>
-        </Pressable>
+        {/* The Add modal is phone-only — on tablets the library pane IS the
+            add flow, so the button (and its search sheet) would be redundant. */}
+        {!isTablet ? (
+          <Pressable
+            onPress={() => setAddOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add songs"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              height: 48,
+              paddingHorizontal: t.spacing.lg,
+              borderRadius: t.radii.md,
+              backgroundColor: t.colors.surfaceAlt,
+            }}
+          >
+            <SymbolIcon name="plus" size={16} color={t.colors.ink} weight="semibold" />
+            <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
+              Add
+            </Text>
+          </Pressable>
+        ) : null}
         <Button
           title="Start set"
           onPress={() => router.push(`/perform/${setlistId}`)}
@@ -490,7 +494,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View
             style={{
-              flex: t.layout.split.library,
+              flex: t.layout.split.list,
               borderRightWidth: 1,
               borderRightColor: t.colors.border,
             }}
@@ -502,7 +506,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
               loading={songsLoading}
             />
           </View>
-          <View style={{ flex: t.layout.split.builder }}>{builderPane}</View>
+          <View style={{ flex: t.layout.split.detail }}>{builderPane}</View>
         </View>
       ) : (
         builderPane

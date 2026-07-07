@@ -43,7 +43,9 @@ export default function LibraryPane({
   }, [songs, trimmed])
 
   return (
-    <View style={{ flex: 1 }}>
+    // On `surface` (not the page bg) so the pane reads as a distinct raised
+    // panel beside the builder column.
+    <View style={{ flex: 1, backgroundColor: t.colors.surface }}>
       {/* Search field — same pattern as AddSongsModal. */}
       <View style={{ paddingHorizontal: t.spacing.lg, paddingVertical: t.spacing.sm }}>
         <View
