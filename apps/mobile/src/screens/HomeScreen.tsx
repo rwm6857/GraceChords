@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import ConstrainedContent from '../components/ConstrainedContent'
 import ListRow from '../components/ListRow'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
@@ -113,6 +114,7 @@ export default function HomeScreen() {
               style={StyleSheet.absoluteFill}
             />
 
+            <ConstrainedContent tier="content">
             {/* Brand row + avatar */}
             <View
               style={{
@@ -172,12 +174,14 @@ export default function HomeScreen() {
                 </Text>
               ) : null}
             </View>
+            </ConstrainedContent>
           </LinearGradient>
 
           {/* Continue where you left off — overlaps up into the hero. Shown only
               when there is recent history. */}
           {continueSong ? (
             <View style={{ paddingHorizontal: t.spacing.lg, marginTop: -66 }}>
+              <ConstrainedContent tier="content">
               <View style={cardStyle(t, true)}>
                 <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.2, color: t.colors.ink, marginBottom: 13 }}>
                   Continue where you left off
@@ -230,6 +234,7 @@ export default function HomeScreen() {
                   </View>
                 </Pressable>
               </View>
+              </ConstrainedContent>
             </View>
           ) : null}
         </View>
@@ -237,6 +242,7 @@ export default function HomeScreen() {
         {/* ===== Last set — shown only if present ===== */}
         {lastSet ? (
           <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
+            <ConstrainedContent tier="content">
             <View style={cardStyle(t)}>
               <Text
                 style={{
@@ -312,11 +318,13 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
             </View>
+            </ConstrainedContent>
           </View>
         ) : null}
 
         {/* ===== Starred songs (real data) ===== */}
         <View style={{ marginTop: 28 }}>
+          <ConstrainedContent tier="content">
           <View style={{ paddingHorizontal: t.spacing.xl }}>
             <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
               Starred songs
@@ -347,6 +355,7 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
+          </ConstrainedContent>
         </View>
       </ScrollView>
     </View>

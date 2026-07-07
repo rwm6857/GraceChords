@@ -2,10 +2,12 @@ import {
   Pressable,
   ScrollView,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from './BottomSheet'
+import FormSheetShell from './FormSheetShell'
+import { useFormSheet } from '../lib/formSheetHost'
 import Button from './Button'
 import Card from './Card'
 import Chip from './Chip'
@@ -23,23 +25,14 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'tempo', label: 'Tempo' },
 ]
 
-// The Filter & sort bottom sheet (the design's single filter control — no
-// segment bar). Sort-by rows show an up/down chevron on the active option;
-// tapping it again flips direction. Tags come from the real library and toggle
-// the tag filter. The footer button just closes the sheet — the list behind it
-// already reflects every change live.
-export default function FilterSortSheet({
-  visible,
-  onClose,
-  sortKey,
-  sortDir,
-  onToggleSort,
-  availableTags,
-  selectedTags,
-  onToggleTag,
-  onReset,
-  resultCount,
-}: {
+// The Filter & sort sheet (the design's single filter control — no segment
+// bar), presented via the native formSheet route (src/lib/formSheetHost.ts):
+// a bottom sheet on phones, a centered narrow form sheet on tablets. Sort-by
+// rows show an up/down chevron on the active option; tapping it again flips
+// direction. Tags come from the real library and toggle the tag filter. The
+// footer button just closes the sheet — the list behind it already reflects
+// every change live.
+type FilterSortProps = {
   visible: boolean
   onClose: () => void
   sortKey: SortKey
@@ -50,21 +43,35 @@ export default function FilterSortSheet({
   onToggleTag: (tag: string) => void
   onReset: () => void
   resultCount: number
-}) {
+}
+
+export default function FilterSortSheet(props: FilterSortProps) {
+  useFormSheet(props.visible, () => <FilterSortContent {...props} />, props.onClose)
+  return null
+}
+
+function FilterSortContent({
+  onClose,
+  sortKey,
+  sortDir,
+  onToggleSort,
+  availableTags,
+  selectedTags,
+  onToggleTag,
+  onReset,
+  resultCount,
+}: FilterSortProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  const { height } = useWindowDimensions()
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="Filter & sort"
-      actionLabel="Reset"
-      onAction={onReset}
-      closeAccessibilityLabel="Close filter and sort"
-    >
+    <FormSheetShell title="Filter & sort" actionLabel="Reset" onAction={onReset}>
       <ScrollView
-        style={{ flexGrow: 0 }}
+        // The fitToContents detent doesn't bound over-tall content the way the
+        // old Modal's maxHeight did, so cap the scroll area ourselves — long
+        // tag lists scroll here instead of pushing the footer off screen.
+        style={{ flexGrow: 0, maxHeight: Math.round(height * 0.6) }}
         contentContainerStyle={{ padding: t.spacing.lg }}
       >
         {/* Sort by */}
@@ -158,6 +165,6 @@ export default function FilterSortSheet({
           onPress={onClose}
         />
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

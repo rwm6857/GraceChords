@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import Screen from '../components/Screen'
+import ConstrainedContent from '../components/ConstrainedContent'
 import ListRow from '../components/ListRow'
 import EmptyState from '../components/EmptyState'
 import LoadingSkeleton from '../components/LoadingSkeleton'
@@ -122,6 +123,7 @@ export default function SetlistsScreen() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
+      <ConstrainedContent tier="content" style={{ flex: 1 }}>
       <View
         style={{
           flexDirection: 'row',
@@ -162,6 +164,7 @@ export default function SetlistsScreen() {
         </Pressable>
       </View>
       {renderBody()}
+      </ConstrainedContent>
     </Screen>
   )
 }

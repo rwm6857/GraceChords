@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import type { Session } from '@supabase/supabase-js'
+import { radii } from '@gracechords/tokens/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ThemeProvider, ThemedStatusBar } from '../src/theme/ThemeProvider'
 import {
@@ -196,6 +197,19 @@ export default function RootLayout() {
             <Stack.Screen name="tuner" />
             <Stack.Screen name="metronome" />
             <Stack.Screen name="pitch-pipe" />
+            {/* Shared option-sheet route (src/lib/formSheetHost.ts): native
+                formSheet so phones keep a bottom sheet with grabber/detents
+                while tablets get the centered, naturally-narrow form sheet. */}
+            <Stack.Screen
+              name="sheet"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: 'fitToContents',
+                sheetGrabberVisible: true,
+                sheetCornerRadius: radii.sheet,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
           </Stack>
         </SafeAreaProvider>
       </ThemeProvider>
