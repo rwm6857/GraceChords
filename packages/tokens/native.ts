@@ -134,12 +134,12 @@ export const layout = {
     content: 700,
   },
   /**
-   * Flex weights for the tablet list-detail split (Setlist Builder): the
-   * library pane vs the builder pane, ~1/3 · 2/3.
+   * Flex weights for tablet list-detail splits (Setlist Builder's library
+   * pane · builder column, Utilities' tool list · tool view): ~1/3 · 2/3.
    */
   split: {
-    library: 1,
-    builder: 2,
+    list: 1,
+    detail: 2,
   },
   /**
    * Song Library grid columns at regular (tablet) width, by orientation.

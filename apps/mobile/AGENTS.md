@@ -139,7 +139,13 @@ duplicate logic here and never edit core internals to suit mobile.
   list instance, not shared with the Songs tab) on the left with the same
   tap-to-toggle add semantics as `AddSongsModal` (`toggleSong` — one write
   path, autosave applies), the unchanged builder column on the right. Phones
-  render the single-column builder untouched.
+  render the single-column builder untouched (the Add button/modal is
+  phone-only — the pane is the add flow on tablets).
+- **Utilities tablet split:** same `layout.split` list-detail shape — the tool
+  list on the left, the picked tool rendered inline on the right via each tool
+  screen's `embedded` prop (hides its back link / safe-area bar padding), with
+  a "Pick a tool" placeholder until one is selected. Phones keep pushing
+  `/tuner`, `/metronome`, `/pitch-pipe` as routes.
 - **Option sheets:** `ViewOptionsSheet` and `FilterSortSheet` present through
   the native `formSheet` route (`app/sheet.tsx` + `src/lib/formSheetHost.ts` —
   screens keep owning state/callbacks; the host bridges the render into the

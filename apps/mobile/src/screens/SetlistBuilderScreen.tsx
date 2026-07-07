@@ -494,7 +494,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <View
             style={{
-              flex: t.layout.split.library,
+              flex: t.layout.split.list,
               borderRightWidth: 1,
               borderRightColor: t.colors.border,
             }}
@@ -506,7 +506,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
               loading={songsLoading}
             />
           </View>
-          <View style={{ flex: t.layout.split.builder }}>{builderPane}</View>
+          <View style={{ flex: t.layout.split.detail }}>{builderPane}</View>
         </View>
       ) : (
         builderPane
