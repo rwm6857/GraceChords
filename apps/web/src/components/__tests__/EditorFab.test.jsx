@@ -3,9 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import EditorFab from '../EditorFab.jsx'
 
-const roleMock = vi.hoisted(() => ({ isAtLeast: () => true }))
-vi.mock('../../hooks/useRole', () => ({
-  useRole: () => ({ isAtLeast: roleMock.isAtLeast }),
+const authMock = vi.hoisted(() => ({ isLoggedIn: true }))
+vi.mock('../../hooks/useAuth', () => ({
+  useAuth: () => ({ isLoggedIn: authMock.isLoggedIn }),
 }))
 
 function renderAt(path){
@@ -18,10 +18,10 @@ function renderAt(path){
 
 describe('EditorFab', () => {
   afterEach(() => {
-    roleMock.isAtLeast = () => true
+    authMock.isLoggedIn = true
   })
 
-  test('renders an edit link on a song page for collaborators', () => {
+  test('renders an edit link on a song page for signed-in users', () => {
     renderAt('/song/determined-to-die')
     const link = screen.getByRole('link', { name: /edit this song/i })
     expect(link).toBeInTheDocument()
@@ -35,8 +35,8 @@ describe('EditorFab', () => {
       .toHaveAttribute('href', '/portal/editor/determined-to-die')
   })
 
-  test('hides for non-collaborators', () => {
-    roleMock.isAtLeast = () => false
+  test('hides for signed-out visitors', () => {
+    authMock.isLoggedIn = false
     renderAt('/song/determined-to-die')
     expect(screen.queryByRole('link', { name: /edit this song/i })).toBeNull()
   })

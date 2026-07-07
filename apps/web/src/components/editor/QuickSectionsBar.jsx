@@ -1,24 +1,17 @@
 import React from 'react'
+import { SECTION_PRESETS } from '@gracechords/core'
 
-const SECTIONS = [
-  { label: 'Verse',       directive: 'verse' },
-  { label: 'Chorus',      directive: 'chorus' },
-  { label: 'Bridge',      directive: 'bridge' },
-  { label: 'Pre-Chorus',  directive: 'pre_chorus' },
-  { label: 'Intro',       directive: 'intro' },
-  { label: 'Outro',       directive: 'outro' },
-  { label: 'Tag',         directive: 'tag' },
-  { label: 'Interlude',   directive: 'interlude' },
-]
-
+// SECTION_PRESETS maps each UI label to a parser-supported directive (Pre-Chorus
+// and Interlude become named choruses), so nothing the bar emits is silently
+// dropped by the parser.
 export default function QuickSectionsBar({ onWrap }) {
   return (
     <div className="gc-quick-sections">
-      {SECTIONS.map(({ label, directive }) => (
+      {SECTION_PRESETS.map(({ label, directive, sectionLabel }) => (
         <button
-          key={directive}
+          key={label}
           className="gc-quick-sections__btn"
-          onClick={() => onWrap && onWrap({ directive, label })}
+          onClick={() => onWrap && onWrap({ directive, label: sectionLabel })}
           type="button"
         >
           {label}

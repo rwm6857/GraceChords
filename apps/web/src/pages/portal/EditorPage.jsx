@@ -5,6 +5,7 @@ import MobileEditorPage from './MobileEditorPage'
 import MobilePortalPage from './MobilePortalPage'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../../lib/supabase'
+import { submitSongSuggestion, canDirectWrite } from '@gracechords/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { showToast } from '../../utils/app/toast'
@@ -377,21 +378,23 @@ function DesktopEditorPage() {
     const payload = { ...formValues }
 
     try {
-      if (role === 'collaborator') {
-        const { error } = await supabase.from('song_suggestions').insert({
-          song_id: song?.id || null,
-          suggested_by: session?.user?.id,
-          change_type: isNew ? 'addition' : 'edit',
-          payload,
-          status: 'pending',
-        })
-        if (error) { showToast(`Error submitting suggestion: ${error.message}`); setSaving(false); return }
+      if (!canDirectWrite(role)) {
+        try {
+          await submitSongSuggestion(supabase, {
+            type: isNew ? 'addition' : 'edit',
+            payload,
+            songId: song?.id || null,
+            personalSongId: null,
+          })
+        } catch (err) {
+          showToast(`Error submitting suggestion: ${err.message}`); setSaving(false); return
+        }
         await writeAuditLog('suggestion_submitted', song?.id, song?.slug, formValues.title, payload, null)
         showToast('Suggestion submitted for review')
         setIsDirty(false)
         setSavedFormValues(formValues)
 
-      } else if (isAtLeast('editor')) {
+      } else {
         // Derive slug silently
         const slug = await deriveUniqueSlug(payload.title, song?.id)
 
@@ -407,7 +410,7 @@ function DesktopEditorPage() {
           pptx_url: payload.pptx_url || null,
           slug,
           tags: payload.tags || [],
-          chordpro_content: payload.chordpro_content || null,
+          chordpro_content: payload.chordpro_content || '',
           is_deleted: false,
           updated_at: new Date().toISOString(),
         }
@@ -474,21 +477,23 @@ function DesktopEditorPage() {
   function handleDelete() {
     if (!song) return
 
-    if (role === 'editor') {
+    if (canDirectWrite(role) && !isAtLeast('admin')) {
       setConfirmDialog({
         title: 'Request deletion',
         body: `Submit a deletion request for "${song.title}"? An admin will need to approve it.`,
         confirmLabel: 'Submit Request',
         onConfirm: async () => {
           setConfirmDialog(null)
-          const { error } = await supabase.from('song_suggestions').insert({
-            song_id: song.id,
-            suggested_by: session?.user?.id,
-            change_type: 'deletion',
-            payload: { slug: song.slug, title: song.title },
-            status: 'pending',
-          })
-          if (error) { showToast(`Error submitting deletion request: ${error.message}`); return }
+          try {
+            await submitSongSuggestion(supabase, {
+              type: 'deletion',
+              payload: { slug: song.slug, title: song.title },
+              songId: song.id,
+              personalSongId: null,
+            })
+          } catch (err) {
+            showToast(`Error submitting deletion request: ${err.message}`); return
+          }
           await writeAuditLog('suggestion_submitted', song.id, song.slug, song.title, null, 'Deletion request')
           showToast('Deletion request submitted for Admin review')
         },
@@ -520,7 +525,7 @@ function DesktopEditorPage() {
     showToast('Suggestion loaded into editor. Edit and save to apply.')
   }
 
-  const saveLabel = role === 'collaborator' ? 'Submit Suggestion' : 'Save'
+  const saveLabel = canDirectWrite(role) ? 'Save' : 'Submit for Review'
   const deleteLabel = isAtLeast('admin') ? 'Delete Song' : 'Request Deletion'
 
   return (
@@ -712,8 +717,8 @@ function DesktopEditorPage() {
           Discard
         </button>
 
-        {/* Delete — hidden for collaborator */}
-        {song && role !== 'collaborator' && (
+        {/* Delete — editors request, admins delete directly */}
+        {song && isAtLeast('editor') && (
           <button
             type="button"
             className="gc-btn gc-btn--destructive"

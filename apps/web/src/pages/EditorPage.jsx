@@ -21,7 +21,7 @@ export default function EditorPage() {
         <h2>Editor Tools</h2>
         <p style={{ color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)', margin: 0 }}>
           As an <strong>Editor</strong>, you can add and edit songs &amp; posts directly,
-          approve or reject collaborator suggestions, and request deletions.
+          approve or reject submitted suggestions, and request deletions.
         </p>
         <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
           <Link to="/songs" className="gc-btn gc-btn--primary">

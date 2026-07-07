@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 import { useAuth } from './useAuth'
 
-// Role hierarchy: user < collaborator < editor < admin < owner
+// Role hierarchy: user < editor < admin < owner
 
 const ACTIONS = {
-  suggest:         'collaborator',
+  suggest:         'user',
   directSave:      'editor',
-  suggestDeletion: 'collaborator',
+  suggestDeletion: 'user',
   directDelete:    'admin',
   review:          'editor',
   viewAuditLog:    'admin',
