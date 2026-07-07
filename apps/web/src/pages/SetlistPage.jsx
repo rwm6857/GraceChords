@@ -19,6 +19,7 @@ import {
   deleteSetlist as dbDeleteSetlist,
   loadSetlist as dbLoadSetlist,
 } from '../hooks/useSetlists'
+import { personalSetlistLimit } from '@gracechords/core/setlists/limits'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../utils/app/toast'
@@ -118,16 +119,6 @@ function buildVerseCompletion(input, suggestion){
   if (!normalize(composed).startsWith(normalize(raw))) return null
   if (composed.length <= raw.length) return null
   return { composed, prefix: raw, remainder: composed.slice(raw.length) }
-}
-
-// Must match the DB trigger limits in the setlists schema migration
-// (20260707000000_raise_personal_setlist_limits.sql). Owner is uncapped.
-const SET_LIMITS = {
-  user: 30,
-  collaborator: 50,
-  editor: 50,
-  admin: 50,
-  owner: Infinity,
 }
 
 export default function Setlist(){
@@ -602,8 +593,8 @@ export default function Setlist(){
     }))
   }
 
-  // Derive set limit from role
-  const userSetLimit = SET_LIMITS[userRole] ?? SET_LIMITS.user
+  // Derive set limit from role (shared with mobile + the DB trigger).
+  const userSetLimit = personalSetlistLimit(userRole)
 
   // named set helpers
   async function refreshSaved(idToSelect){

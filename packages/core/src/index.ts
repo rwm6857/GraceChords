@@ -25,10 +25,11 @@ export * from './songs/songMetadata'
 export * from './songs/sort'
 export * from './songs/songsRepo'
 
-// Setlist codec + queries + summary math
+// Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
 export * from './setlists/setlistsRepo'
 export * from './setlists/setlistSummary'
+export * from './setlists/limits'
 
 // Role hierarchy
 export * from './rbac/roles'

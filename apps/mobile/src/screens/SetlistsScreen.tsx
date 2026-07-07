@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState'
 import LoadingSkeleton from '../components/LoadingSkeleton'
 import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
+import PruneSetlistsModal from '../components/setlist/PruneSetlistsModal'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { timeAgo } from '../lib/relativeTime'
@@ -19,9 +20,11 @@ import { errMessage } from '../lib/errors'
 export default function SetlistsScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { setlists, loading, error, refresh, create, remove } = useSetlists()
+  const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } =
+    useSetlists()
   const [refreshing, setRefreshing] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [pruneOpen, setPruneOpen] = useState(false)
 
   // Refresh whenever the tab regains focus so edits made in the builder
   // (name, songs, deletes) are reflected without a manual pull.
@@ -39,6 +42,13 @@ export default function SetlistsScreen() {
 
   async function onCreate() {
     if (creating) return
+    // At the per-role cap: prune instead of navigating into a set the INSERT
+    // would reject. The DB trigger is the real gate; this just avoids a dead
+    // optimistic open.
+    if (atLimit) {
+      setPruneOpen(true)
+      return
+    }
     setCreating(true)
     // Optimistic: mint the id, open the builder instantly, insert in the
     // background. The builder retries its initial fetch a few times to cover
@@ -48,7 +58,15 @@ export default function SetlistsScreen() {
     try {
       await create({ id })
     } catch (err: unknown) {
-      Alert.alert('Could not create set', errMessage(err))
+      // A stale role/limit read can let an over-cap create slip through to the
+      // trigger. Surface the prune flow rather than a raw error.
+      if (errMessage(err).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
+        router.back()
+        await refresh()
+        setPruneOpen(true)
+      } else {
+        Alert.alert('Could not create set', errMessage(err))
+      }
     } finally {
       setCreating(false)
     }
@@ -165,6 +183,16 @@ export default function SetlistsScreen() {
       </View>
       {renderBody()}
       </ConstrainedContent>
+      <PruneSetlistsModal
+        visible={pruneOpen}
+        onClose={() => setPruneOpen(false)}
+        setlists={setlists}
+        limit={limit}
+        onConfirmDelete={async (ids) => {
+          await removeMany(ids)
+          await refresh()
+        }}
+      />
     </Screen>
   )
 }
