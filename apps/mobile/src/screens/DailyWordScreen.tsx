@@ -30,6 +30,7 @@ import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
 import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
+import { markReadToday, streakDateKey } from '../lib/readingStreak'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
@@ -115,6 +116,13 @@ export default function DailyWordScreen() {
   useEffect(() => {
     setPassageIndex(0)
   }, [date])
+
+  // Reading streak: an opted-in user "reads" a day by loading any of TODAY's
+  // passages (browsing past dates doesn't count). Idempotent per day and a
+  // no-op while the streak is off.
+  useEffect(() => {
+    if (chapter && streakDateKey(date) === streakDateKey(new Date())) markReadToday()
+  }, [chapter, date])
 
   // Fade the reading region in whenever new chapter content arrives (chapter
   // switch, translation switch, or first load). The Animated.View is persistent

@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import {
   ActivityIndicator,
   Image,
@@ -6,45 +7,29 @@ import {
   StyleSheet,
   Text,
   View,
-  type ViewStyle,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ConstrainedContent from '../components/ConstrainedContent'
 import ListRow from '../components/ListRow'
 import SymbolIcon from '../components/SymbolIcon'
+import DailyWordCard from '../components/home/DailyWordCard'
+import RecentSongsCard from '../components/home/RecentSongsCard'
+import { cardStyle } from '../components/home/cardStyle'
 import { useTheme } from '../theme/ThemeProvider'
-import type { Tokens } from '@gracechords/tokens/native'
 import {
   getDisplayName,
   pickSubGreeting,
   timeGreeting,
   useCurrentUser,
 } from '../lib/greetings'
+import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { getRecentlyOpened } from '../lib/recents'
 import { useLastSet } from '../lib/useLastSet'
 import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
 import type { Song } from '../lib/useSongList'
-
-// A themed card surface. Unlike the Card primitive (which clips with
-// overflow:hidden), this keeps shadows visible — needed for the hero's
-// overlapping "Continue" card.
-function cardStyle(t: Tokens, elevated = false): ViewStyle {
-  return {
-    backgroundColor: t.colors.surface,
-    borderWidth: 1,
-    borderColor: t.colors.border,
-    borderRadius: t.radii.card,
-    padding: t.spacing.lg,
-    shadowColor: '#000',
-    shadowOpacity: elevated ? 0.12 : 0.05,
-    shadowRadius: elevated ? 16 : 3,
-    shadowOffset: { width: 0, height: elevated ? 8 : 1 },
-    elevation: elevated ? 6 : 2,
-  }
-}
 
 function songMeta(song: Song): string {
   return [
@@ -60,6 +45,7 @@ export default function HomeScreen() {
   const t = useTheme()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const isTablet = useIsTabletWidth()
   const user = useCurrentUser()
   const { source: spriteSource } = useProfileSprite()
   const { songs: starred, loading: starredLoading, error: starredError } = useStarredSongs()
@@ -68,7 +54,15 @@ export default function HomeScreen() {
   const subGreeting = pickSubGreeting()
 
   // Recently-opened comes from on-device history (recorded by the Viewer);
-  // the Last set card reads the real most-recently-edited setlist.
+  // the Last set card reads the real most-recently-edited setlist. Re-render
+  // on focus so the Continue card and Recent-songs card reflect opens made
+  // since Home last rendered.
+  const [, setFocusTick] = useState(0)
+  useFocusEffect(
+    useCallback(() => {
+      setFocusTick((n) => n + 1)
+    }, []),
+  )
   const continueSong = getRecentlyOpened()[0] ?? null
   const { lastSet } = useLastSet()
 
@@ -87,6 +81,121 @@ export default function HomeScreen() {
       },
     })
   }
+
+  // ===== Dashboard cards, arranged by the grid/stack below =====
+
+  const lastSetCard = lastSet ? (
+    <View style={cardStyle(t)}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 0.7,
+          textTransform: 'uppercase',
+          color: t.colors.textAccent,
+        }}
+      >
+        Last set
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
+        <View style={{ minWidth: 0, flex: 1 }}>
+          <Text style={{ fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+            {lastSet.name}
+          </Text>
+          <Text style={{ fontSize: 13, color: t.colors.sec, marginTop: 4 }}>
+            {lastSet.songCount} {lastSet.songCount === 1 ? 'song' : 'songs'} · ~{lastSet.durationMin} min
+          </Text>
+        </View>
+        {lastSet.keys ? (
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: t.colors.textAccent,
+              backgroundColor: t.colors.accentSoft,
+              borderRadius: 8,
+              paddingHorizontal: 9,
+              paddingVertical: 5,
+              overflow: 'hidden',
+            }}
+          >
+            Keys {lastSet.keys}
+          </Text>
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+        <Pressable
+          onPress={() => router.push(`/setlist/${lastSet.id}`)}
+          accessibilityRole="button"
+          style={{
+            flex: 1,
+            height: 46,
+            borderRadius: t.radii.md,
+            backgroundColor: t.colors.accent,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.onAccent }}>
+            Resume
+          </Text>
+          <SymbolIcon name="chevron.right" size={14} color={t.colors.onAccent} weight="semibold" />
+        </Pressable>
+        <Pressable
+          onPress={() => router.push(`/setlist/${lastSet.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel="Edit set"
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: t.radii.md,
+            backgroundColor: t.colors.accentSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <SymbolIcon name="square.and.pencil" size={20} color={t.colors.textAccent} />
+        </Pressable>
+      </View>
+    </View>
+  ) : null
+
+  const starredSection = (
+    <View>
+      <View style={{ paddingHorizontal: t.spacing.xl }}>
+        <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+          Starred songs
+        </Text>
+      </View>
+
+      {starredLoading ? (
+        <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.lg }} />
+      ) : starredError ? (
+        <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, color: t.colors.muted }}>
+          {starredError}
+        </Text>
+      ) : starred.length === 0 ? (
+        <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+          Songs you star will appear here.
+        </Text>
+      ) : (
+        <View style={{ marginTop: t.spacing.sm }}>
+          {starred.map((s: StarredSong) => (
+            <ListRow
+              key={s.id}
+              title={s.title}
+              subtitle={s.artist}
+              trailingTop={s.default_key}
+              trailingBottom={s.time_signature}
+              onPress={() => openSong(s)}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  )
 
   return (
     <View style={{ flex: 1, backgroundColor: t.colors.bg }}>
@@ -114,7 +223,7 @@ export default function HomeScreen() {
               style={StyleSheet.absoluteFill}
             />
 
-            <ConstrainedContent tier="content">
+            <ConstrainedContent tier="dashboard">
             {/* Brand row + avatar */}
             <View
               style={{
@@ -181,7 +290,7 @@ export default function HomeScreen() {
               when there is recent history. */}
           {continueSong ? (
             <View style={{ paddingHorizontal: t.spacing.lg, marginTop: -66 }}>
-              <ConstrainedContent tier="content">
+              <ConstrainedContent tier="dashboard">
               <View style={cardStyle(t, true)}>
                 <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.2, color: t.colors.ink, marginBottom: 13 }}>
                   Continue where you left off
@@ -239,124 +348,43 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
-        {/* ===== Last set — shown only if present ===== */}
-        {lastSet ? (
-          <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
-            <ConstrainedContent tier="content">
-            <View style={cardStyle(t)}>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: '700',
-                  letterSpacing: 0.7,
-                  textTransform: 'uppercase',
-                  color: t.colors.textAccent,
-                }}
-              >
-                Last set
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
-                <View style={{ minWidth: 0, flex: 1 }}>
-                  <Text style={{ fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-                    {lastSet.name}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: t.colors.sec, marginTop: 4 }}>
-                    {lastSet.songCount} {lastSet.songCount === 1 ? 'song' : 'songs'} · ~{lastSet.durationMin} min
-                  </Text>
-                </View>
-                {lastSet.keys ? (
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: '600',
-                      color: t.colors.textAccent,
-                      backgroundColor: t.colors.accentSoft,
-                      borderRadius: 8,
-                      paddingHorizontal: 9,
-                      paddingVertical: 5,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    Keys {lastSet.keys}
-                  </Text>
-                ) : null}
+        {/* ===== Dashboard: 2-column grid on tablets, one stack on phones.
+            Same cards on both form factors — only the arrangement differs. ===== */}
+        <ConstrainedContent tier="dashboard">
+          {isTablet ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: t.spacing.lg,
+                paddingHorizontal: t.spacing.lg,
+                marginTop: 26,
+              }}
+            >
+              <View style={{ flex: 1, gap: t.spacing.lg }}>
+                {lastSetCard}
+                {starredSection}
               </View>
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-                <Pressable
-                  onPress={() => router.push(`/setlist/${lastSet.id}`)}
-                  accessibilityRole="button"
-                  style={{
-                    flex: 1,
-                    height: 46,
-                    borderRadius: t.radii.md,
-                    backgroundColor: t.colors.accent,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.onAccent }}>
-                    Resume
-                  </Text>
-                  <SymbolIcon name="chevron.right" size={14} color={t.colors.onAccent} weight="semibold" />
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push(`/setlist/${lastSet.id}`)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Edit set"
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: t.radii.md,
-                    backgroundColor: t.colors.accentSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <SymbolIcon name="square.and.pencil" size={20} color={t.colors.textAccent} />
-                </Pressable>
+              <View style={{ flex: 1, gap: t.spacing.lg }}>
+                <DailyWordCard />
+                <RecentSongsCard />
               </View>
             </View>
-            </ConstrainedContent>
-          </View>
-        ) : null}
-
-        {/* ===== Starred songs (real data) ===== */}
-        <View style={{ marginTop: 28 }}>
-          <ConstrainedContent tier="content">
-          <View style={{ paddingHorizontal: t.spacing.xl }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-              Starred songs
-            </Text>
-          </View>
-
-          {starredLoading ? (
-            <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.lg }} />
-          ) : starredError ? (
-            <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, color: t.colors.muted }}>
-              {starredError}
-            </Text>
-          ) : starred.length === 0 ? (
-            <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-              Songs you star will appear here.
-            </Text>
           ) : (
-            <View style={{ marginTop: t.spacing.sm }}>
-              {starred.map((s: StarredSong) => (
-                <ListRow
-                  key={s.id}
-                  title={s.title}
-                  subtitle={s.artist}
-                  trailingTop={s.default_key}
-                  trailingBottom={s.time_signature}
-                  onPress={() => openSong(s)}
-                />
-              ))}
-            </View>
+            <>
+              {lastSetCard ? (
+                <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>{lastSetCard}</View>
+              ) : null}
+              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
+                <DailyWordCard />
+              </View>
+              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
+                <RecentSongsCard />
+              </View>
+              <View style={{ marginTop: 28 }}>{starredSection}</View>
+            </>
           )}
-          </ConstrainedContent>
-        </View>
+        </ConstrainedContent>
       </ScrollView>
     </View>
   )

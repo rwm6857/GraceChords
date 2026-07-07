@@ -4,6 +4,7 @@ import {
   getRecentlyOpened,
   hydrateRecents,
   recordSongOpened,
+  updateRecentKey,
 } from '../recents'
 import type { KVStorage } from '../defaults'
 
@@ -60,6 +61,53 @@ describe('recently-opened history (getRecentlyOpened seam)', () => {
     const list = getRecentlyOpened()
     expect(list.map((s) => s.slug)).toEqual(['song-a', 'song-b'])
     expect(list.length).toBe(2)
+  })
+
+  it('stores the viewed key: seeded on record, mirrored by updateRecentKey', async () => {
+    await hydrateRecents(memoryStorage())
+    recordSongOpened(songA)
+    expect(getRecentlyOpened()[0]?.lastKey).toBe(null)
+
+    updateRecentKey('song-a', 'A')
+    expect(getRecentlyOpened()[0]?.lastKey).toBe('A')
+
+    // Update is in place — no reorder, and unknown slugs are a no-op.
+    recordSongOpened(songB)
+    updateRecentKey('song-a', 'Bb')
+    updateRecentKey('missing', 'C')
+    expect(getRecentlyOpened().map((s) => [s.slug, s.lastKey])).toEqual([
+      ['song-b', null],
+      ['song-a', 'Bb'],
+    ])
+  })
+
+  it('re-recording a song resets lastKey to the new open', async () => {
+    await hydrateRecents(memoryStorage())
+    recordSongOpened(songA)
+    updateRecentKey('song-a', 'A')
+    recordSongOpened(songA) // reopened (e.g. from the Library, default key)
+    expect(getRecentlyOpened()[0]?.lastKey).toBe(null)
+  })
+
+  it('persists lastKey across a simulated reload and tolerates pre-lastKey data', async () => {
+    const s = memoryStorage()
+    await hydrateRecents(s)
+    recordSongOpened(songA)
+    updateRecentKey('song-a', 'D')
+
+    __resetRecentsForTest()
+    await hydrateRecents(s)
+    expect(getRecentlyOpened()[0]?.lastKey).toBe('D')
+
+    // Entries written before the field existed normalize to null.
+    const legacy = memoryStorage({
+      'gc.recents.songs.v1': JSON.stringify([
+        { ...songA, time_signature: null, tempo: null, tags: null, created_at: null, openedAt: '2026-01-01T00:00:00.000Z' },
+      ]),
+    })
+    __resetRecentsForTest()
+    await hydrateRecents(legacy)
+    expect(getRecentlyOpened()[0]?.lastKey).toBe(null)
   })
 
   it('survives a simulated reload (re-hydrate from the same storage)', async () => {
