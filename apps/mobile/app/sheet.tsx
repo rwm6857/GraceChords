@@ -14,5 +14,14 @@ export default function SheetRoute() {
 
   useEffect(() => () => notifyFormSheetRouteClosed(), [])
 
-  return <View style={{ backgroundColor: t.colors.surface }}>{content}</View>
+  // collapsable={false}: RN's view flattening would otherwise merge this
+  // wrapper (and the shell) into the sheet container, so react-native-screens'
+  // fitToContents sizing sees many subviews and warns ("FormSheet with
+  // ScrollView expects at most 2 subviews"). Pinning the wrapper keeps the
+  // container at exactly one native child.
+  return (
+    <View collapsable={false} style={{ backgroundColor: t.colors.surface }}>
+      {content}
+    </View>
+  )
 }

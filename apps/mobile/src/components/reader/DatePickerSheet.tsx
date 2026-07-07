@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // Date picker for browsing the reading plan (today + other days). Mirrors the
 // [UI] Daily Word floating calendar: a month grid with prev/next navigation and
 // a Today shortcut. Built on RN primitives — no extra native date-picker dep.
+// Presented via the native formSheet route (src/lib/formSheetHost.ts).
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const MONTHS = [
@@ -19,26 +21,26 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-export default function DatePickerSheet({
-  visible,
-  onClose,
-  value,
-  onSelect,
-}: {
+type DatePickerProps = {
   visible: boolean
   onClose: () => void
   value: Date
   onSelect: (date: Date) => void
-}) {
+}
+
+export default function DatePickerSheet(props: DatePickerProps) {
+  useFormSheet(props.visible, () => <DatePickerContent {...props} />, props.onClose)
+  return null
+}
+
+function DatePickerContent({ value, onSelect }: DatePickerProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const today = new Date()
 
-  // The month currently on screen (resets to the selected date each open).
+  // The month currently on screen. The content mounts fresh on every open
+  // (formSheet route), so the initializer resets to the selected date per open.
   const [view, setView] = useState({ year: value.getFullYear(), month: value.getMonth() })
-  useEffect(() => {
-    if (visible) setView({ year: value.getFullYear(), month: value.getMonth() })
-  }, [visible, value])
 
   const firstDow = new Date(view.year, view.month, 1).getDay()
   const daysInMonth = new Date(view.year, view.month + 1, 0).getDate()
@@ -75,13 +77,7 @@ export default function DatePickerSheet({
   )
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="Select date"
-      actionLabel="Today"
-      onAction={() => onSelect(new Date())}
-    >
+    <FormSheetShell title="Select date" actionLabel="Today" onAction={() => onSelect(new Date())}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
         {/* Month header */}
         <View
@@ -157,6 +153,6 @@ export default function DatePickerSheet({
           </View>
         ))}
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

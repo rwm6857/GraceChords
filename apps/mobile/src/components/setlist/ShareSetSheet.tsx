@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
-// The setlist "Export & share" sheet (modeled on the viewer's ExportSheet).
+// The setlist "Export & share" sheet (modeled on the viewer's ExportSheet),
+// presented via the native formSheet route (src/lib/formSheetHost.ts).
 // Set PDF, Copy link, and Telegram work today (the same combined-PDF export the
 // Performer uses, via /api/export/setlist). Only the Charts ZIP / ChordPro
 // exports still need backend endpoints that don't exist yet, so those two tiles
@@ -13,21 +15,21 @@ import { useTheme } from '../../theme/ThemeProvider'
 
 type Busy = 'pdf' | 'link' | 'telegram' | null
 
-export default function ShareSetSheet({
-  visible,
-  onClose,
-  songCount,
-  onExport,
-  onCopyLink,
-  onTelegram,
-}: {
+type ShareSetProps = {
   visible: boolean
   onClose: () => void
   songCount: number
   onExport: () => Promise<void>
   onCopyLink: () => Promise<void>
   onTelegram: () => Promise<void>
-}) {
+}
+
+export default function ShareSetSheet(props: ShareSetProps) {
+  useFormSheet(props.visible, () => <ShareSetContent {...props} />, props.onClose)
+  return null
+}
+
+function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram }: ShareSetProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
@@ -65,12 +67,7 @@ export default function ShareSetSheet({
   )
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="Export & share"
-      closeAccessibilityLabel="Close export and share"
-    >
+    <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Primary set-PDF export — combined PDF via /api/export/setlist. */}
         <Pressable
@@ -173,6 +170,6 @@ export default function ShareSetSheet({
           <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
         </Pressable>
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

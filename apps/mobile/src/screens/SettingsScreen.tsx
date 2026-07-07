@@ -8,7 +8,8 @@ import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
 import GlassSurface from '../components/GlassSurface'
-import BottomSheet from '../components/BottomSheet'
+import FormSheetShell from '../components/FormSheetShell'
+import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@gracechords/tokens/native'
 import { supabase } from '../lib/supabase'
@@ -94,25 +95,32 @@ function DangerCard({
   )
 }
 
-/** BottomSheet radio list of options with a checkmark on the current value. */
-function OptionSheet<T extends string>({
-  visible,
-  title,
-  options,
-  value,
-  onSelect,
-  onClose,
-}: {
+/** Radio list of options with a checkmark on the current value, presented via
+ * the native formSheet route (src/lib/formSheetHost.ts). */
+type OptionSheetProps<T extends string> = {
   visible: boolean
   title: string
   options: { value: T; label: string }[]
   value: T
   onSelect: (v: T) => void
   onClose: () => void
-}) {
+}
+
+function OptionSheet<T extends string>(props: OptionSheetProps<T>) {
+  useFormSheet(props.visible, () => <OptionSheetContent {...props} />, props.onClose)
+  return null
+}
+
+function OptionSheetContent<T extends string>({
+  title,
+  options,
+  value,
+  onSelect,
+  onClose,
+}: OptionSheetProps<T>) {
   const t = useTheme()
   return (
-    <BottomSheet visible={visible} onClose={onClose} title={title}>
+    <FormSheetShell title={title} onAction={onClose}>
       <View style={{ paddingBottom: t.spacing.lg }}>
         {options.map((o, i) => (
           <ListRow
@@ -132,7 +140,7 @@ function OptionSheet<T extends string>({
           />
         ))}
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }
 
