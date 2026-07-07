@@ -56,7 +56,27 @@ function normalizeLanguageCode(raw: string){
   return cleaned || 'und'
 }
 
+// Explicit code → human-readable name map for the language-group headers.
+// Consulted before Intl.DisplayNames so the picker shows real names even where
+// Intl is unavailable (React Native / Hermes ships no DisplayNames data, which
+// is why headers otherwise fall back to the raw uppercase code), and so
+// non-standard ISO 639-3 codes like `ctd` resolve at all. Codes are normalized
+// to lowercase before lookup.
+const LANGUAGE_NAMES: Record<string, string> = {
+  ar: 'Arabic',
+  ctd: 'Tedim Chin',
+  en: 'English',
+  es: 'Spanish',
+  fa: 'Persian',
+  id: 'Indonesian',
+  ko: 'Korean',
+  tl: 'Tagalog',
+  tr: 'Turkish',
+}
+
 function resolveLanguageLabel(code: string, locale: string){
+  const explicit = LANGUAGE_NAMES[code] || LANGUAGE_NAMES[code.split('-')[0]]
+  if (explicit) return explicit
   const label = languageLabelFromIntl(code, locale)
   if (label) return label
   if (code === 'und') return 'Unknown'

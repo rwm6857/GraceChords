@@ -248,14 +248,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   }
 
   const shareHandlers: PerformerShareHandlers = {
-    onShareSong: async () => {
-      try {
-        await shareSongFile('pdf')
-        setSheet(null)
-      } catch (err) {
-        reportError('Share failed', err)
-      }
-    },
     onExportSong: async (format) => {
       try {
         await shareSongFile(format)

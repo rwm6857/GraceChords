@@ -7,11 +7,11 @@ import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // The setlist "Export & share" sheet (modeled on the viewer's ExportSheet),
-// presented via the native formSheet route (src/lib/formSheetHost.ts).
-// Set PDF, Copy link, and Telegram work today (the same combined-PDF export the
-// Performer uses, via /api/export/setlist). Only the Charts ZIP / ChordPro
-// exports still need backend endpoints that don't exist yet, so those two tiles
-// render disabled as "Coming soon".
+// presented via the native formSheet route (src/lib/formSheetHost.ts). This is
+// the builder version — whole-set only, no This song / Whole set scope toggle.
+// Set PDF, Copy link, and Telegram all work today (the same combined-PDF export
+// the Performer uses, via /api/export/setlist). PDF is the primary (blue)
+// action; Copy link and Telegram are full-width secondary rows.
 
 type Busy = 'pdf' | 'link' | 'telegram' | null
 
@@ -44,28 +44,6 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
     }
   }
 
-  const disabledTile = (label: string, icon: SymbolIconProps['name']) => (
-    <View
-      key={label}
-      accessibilityLabel={`${label} — coming soon`}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        gap: 6,
-        paddingVertical: 14,
-        borderRadius: 13,
-        backgroundColor: t.colors.surfaceAlt,
-        borderWidth: 1,
-        borderColor: t.colors.border,
-        opacity: 0.45,
-      }}
-    >
-      <SymbolIcon name={icon} size={24} color={t.colors.accent} />
-      <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-      <Text style={{ fontSize: 10.5, color: t.colors.muted }}>Coming soon</Text>
-    </View>
-  )
-
   return (
     <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
@@ -89,87 +67,97 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
           {busy === 'pdf' ? (
             <ActivityIndicator color={t.colors.onAccent} />
           ) : (
-            <SymbolIcon name="square.and.arrow.down" size={19} color={t.colors.onAccent} />
+            <SymbolIcon name="square.and.arrow.up" size={19} color={t.colors.onAccent} />
           )}
           <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
             Export set as PDF · {songCount} {songCount === 1 ? 'song' : 'songs'}
           </Text>
         </Pressable>
 
-        <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-          {disabledTile('Charts ZIP', 'folder')}
-          {disabledTile('ChordPro', 'music.note.list')}
-
-          {/* Copy link — works today via the web setlist URL. */}
-          <Pressable
-            onPress={run('link', onCopyLink)}
-            disabled={!!busy}
-            accessibilityRole="button"
-            accessibilityLabel="Copy set link"
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              gap: 6,
-              paddingVertical: 14,
-              borderRadius: 13,
-              backgroundColor: t.colors.surfaceAlt,
-              borderWidth: 1,
-              borderColor: t.colors.border,
-              opacity: busy && busy !== 'link' ? 0.5 : 1,
-            }}
-          >
-            {busy === 'link' ? (
-              <ActivityIndicator color={t.colors.accent} />
-            ) : (
-              <SymbolIcon name="link" size={24} color={t.colors.accent} />
-            )}
-            <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>Copy link</Text>
-          </Pressable>
-        </View>
+        {/* Copy link — works today via the web setlist URL. */}
+        <SecondaryRow
+          label="Copy link"
+          icon="link"
+          busy={busy === 'link'}
+          dimmed={!!busy && busy !== 'link'}
+          disabled={!!busy}
+          onPress={run('link', onCopyLink)}
+        />
 
         {/* Telegram */}
-        <Pressable
-          onPress={run('telegram', onTelegram)}
+        <SecondaryRow
+          label="Send set to Telegram"
+          subtitle="Optional bot"
+          icon="paperplane.fill"
+          busy={busy === 'telegram'}
+          dimmed={!!busy && busy !== 'telegram'}
           disabled={!!busy}
-          accessibilityRole="button"
-          accessibilityLabel="Send set to Telegram"
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 11,
-            padding: t.spacing.md,
-            borderRadius: 13,
-            backgroundColor: t.colors.surfaceAlt,
-            borderWidth: 1,
-            borderColor: t.colors.border,
-            opacity: busy && busy !== 'telegram' ? 0.5 : 1,
-          }}
-        >
-          <View
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: t.colors.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {busy === 'telegram' ? (
-              <ActivityIndicator size="small" color={t.colors.accent} />
-            ) : (
-              <SymbolIcon name="paperplane.fill" size={15} color={t.colors.accent} />
-            )}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>
-              Send set to Telegram
-            </Text>
-            <Text style={{ fontSize: 11.5, color: t.colors.muted }}>Optional bot</Text>
-          </View>
-          <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
-        </Pressable>
+          onPress={run('telegram', onTelegram)}
+        />
       </View>
     </FormSheetShell>
+  )
+}
+
+// Full-width secondary action row: accentSoft icon chip, label (+ optional
+// subtitle), trailing chevron. Shared shape for the Copy link and Telegram rows.
+function SecondaryRow({
+  label,
+  subtitle,
+  icon,
+  busy,
+  dimmed,
+  disabled,
+  onPress,
+}: {
+  label: string
+  subtitle?: string
+  icon: SymbolIconProps['name']
+  busy: boolean
+  dimmed: boolean
+  disabled: boolean
+  onPress: () => void
+}) {
+  const t = useTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 11,
+        padding: t.spacing.md,
+        borderRadius: 13,
+        backgroundColor: t.colors.surfaceAlt,
+        borderWidth: 1,
+        borderColor: t.colors.border,
+        opacity: dimmed ? 0.5 : 1,
+      }}
+    >
+      <View
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: t.colors.accentSoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {busy ? (
+          <ActivityIndicator size="small" color={t.colors.accent} />
+        ) : (
+          <SymbolIcon name={icon} size={15} color={t.colors.accent} />
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
+        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.muted }}>{subtitle}</Text> : null}
+      </View>
+      <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
+    </Pressable>
   )
 }
