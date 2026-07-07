@@ -18,6 +18,45 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
   return msg.includes('refresh token') && (msg.includes('not found') || msg.includes('invalid'))
 }
 
+// GoTrue's automatic init runs `_recoverAndRefresh` the moment the client is
+// constructed (synchronously, at module import) and, when the persisted refresh
+// token is dead, refreshes it and logs the AuthApiError straight to
+// `console.error` itself — see @supabase/auth-js GoTrueClient `_recoverAndRefresh`.
+// That fires BEFORE resolveInitialSession() (or the AppState auto-refresh tick)
+// can react, so purging the token after the fact can't prevent the log. The log
+// is benign: GoTrue removes the dead session immediately and the app routes to
+// /login. But on a dev build it surfaces as a red LogBox screen ("Console
+// Error: Invalid Refresh Token: Refresh Token Not Found") and in production it
+// pollutes crash/log reporters with a non-actionable error. There is no config
+// or API hook to silence that one call, so wrap `console.error` once and drop
+// exactly this self-healing error (everything else passes through untouched).
+//
+// Idempotent per target (marks the wrapper so a second call is a no-op) and
+// returns a restore function. `target` is injectable so it unit-tests without
+// mutating the real global console.
+const REFRESH_LOG_SILENCED = '__gcRefreshTokenLogSilenced'
+
+type ConsoleErrorTarget = { error: (...args: unknown[]) => void }
+
+export function silenceInvalidRefreshTokenLogs(
+  target: ConsoleErrorTarget = console,
+): () => void {
+  const original = target.error
+  if ((original as { [REFRESH_LOG_SILENCED]?: boolean })[REFRESH_LOG_SILENCED]) {
+    return () => {}
+  }
+  const patched = (...args: unknown[]) => {
+    if (args.some(isInvalidRefreshTokenError)) return
+    original.apply(target, args)
+  }
+  ;(patched as { [REFRESH_LOG_SILENCED]?: boolean })[REFRESH_LOG_SILENCED] = true
+  target.error = patched as ConsoleErrorTarget['error']
+  return () => {
+    // Only restore if nothing else re-wrapped console.error after us.
+    if (target.error === patched) target.error = original
+  }
+}
+
 // Resolve the persisted session at launch. getSession() already refreshes an
 // expired token internally and returns { session: null, error } when the stored
 // refresh token is dead — but it leaves the caller to react. If we hit a dead
