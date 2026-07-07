@@ -284,8 +284,8 @@ select{
 }
 .section {
   font-weight: 700;          /* bold */
-  margin-top: 0.85em;        /* just shy of a line */
-  margin-bottom: 0.25em;     /* small gap before the first lyric line */
+  margin-top: 0.45em;        /* tighter gap between sections */
+  margin-bottom: 0.05em;     /* minimal gap before the first lyric line */
   letter-spacing: 0.02em;    /* subtle readability boost (optional) */
 }
 .comment {
