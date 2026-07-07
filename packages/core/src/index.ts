@@ -11,6 +11,8 @@ export * from './chordpro/convert'
 export * from './chordpro/lexer'
 export * from './chordpro/solfege'
 export * from './chordpro/diatonicChords'
+// Pure text-editing helpers for the shared song editor (insert/wrap + presets)
+export * from './chordpro/editing'
 // Transposition + KEYS (chordpro/index.js)
 export * from './chordpro/index.js'
 
@@ -24,6 +26,9 @@ export * from './songs/verseRef'
 export * from './songs/songMetadata'
 export * from './songs/sort'
 export * from './songs/songsRepo'
+// Shared song-authoring form model + slug helpers (web + mobile editors)
+export * from './songs/songAuthoring'
+export * from './songs/slug'
 
 // Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
