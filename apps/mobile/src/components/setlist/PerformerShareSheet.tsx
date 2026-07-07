@@ -9,10 +9,10 @@ import { useTheme } from '../../theme/ThemeProvider'
 // Performer "Export & share" sheet with a This song / Whole set scope toggle,
 // presented via the native formSheet route (src/lib/formSheetHost.ts) — the
 // viewer version, which keeps the scope toggle (the builder's ShareSetSheet
-// does not). This-song mirrors the Song Viewer's ExportSheet (PDF primary + JPG
-// + Telegram); Whole-set offers the combined PDF (server endpoint), Copy link
-// and Telegram. PDF is the primary (blue) action in both scopes — exporting a
-// PDF already opens the system share sheet, so there is no separate "share"
+// does not). This-song mirrors the Song Viewer's ExportSheet (PDF and JPG as
+// equal side-by-side tiles — both export a file and open the system share
+// sheet — plus Telegram); Whole-set offers the combined PDF (server endpoint)
+// as the primary (blue) action, Copy link and Telegram. No separate "share"
 // button, and no ChordPro. The screen owns the async work and error alerts;
 // this component only tracks which action is busy.
 
@@ -138,6 +138,36 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
     </Pressable>
   )
 
+  // Side-by-side export-format tile: accent icon over a short label, sized to
+  // share the row equally with its sibling — mirrors the Song Viewer's
+  // ExportSheet so PDF and JPG read as equals.
+  const formatTile = (label: string, icon: SymbolIconProps['name'], which: string, fn: () => Promise<void>) => (
+    <Pressable
+      onPress={run(which, fn)}
+      disabled={!!busy}
+      accessibilityRole="button"
+      accessibilityLabel={`Export as ${label}`}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 14,
+        borderRadius: 13,
+        backgroundColor: t.colors.surfaceAlt,
+        borderWidth: 1,
+        borderColor: t.colors.border,
+        opacity: busy && busy !== which ? 0.5 : 1,
+      }}
+    >
+      {busy === which ? (
+        <ActivityIndicator color={t.colors.accent} />
+      ) : (
+        <SymbolIcon name={icon} size={24} color={t.colors.accent} />
+      )}
+      <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
+    </Pressable>
+  )
+
   const segment = (value: Scope, label: string) => {
     const active = scope === value
     return (
@@ -179,8 +209,11 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
 
         {scope === 'song' ? (
           <>
-            {primaryButton('Export as PDF', 'square.and.arrow.up', 'song-pdf', () => handlers.onExportSong('pdf'))}
-            {secondaryRow('Export as JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
+            {/* Format tiles — PDF and JPG as equals; both open the share sheet. */}
+            <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+              {formatTile('PDF', 'doc.text', 'song-pdf', () => handlers.onExportSong('pdf'))}
+              {formatTile('JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
+            </View>
             {secondaryRow('Send to Telegram', 'paperplane.fill', 'song-telegram', handlers.onTelegramSong, 'Optional bot')}
           </>
         ) : (
