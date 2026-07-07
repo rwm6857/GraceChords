@@ -7,20 +7,20 @@ import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // Performer "Export & share" sheet with a This song / Whole set scope toggle,
-// presented via the native formSheet route (src/lib/formSheetHost.ts).
-// This-song mirrors the Song Viewer's ExportSheet (system share + PDF/JPG +
-// Telegram, no ChordPro). Whole-set offers the combined PDF (server endpoint),
-// Copy link and Telegram — all working today — with Charts ZIP / ChordPro /
-// Set list rendered disabled ("Coming soon") pending backends. The screen owns
-// the async work and error alerts; this component only tracks which action is
-// busy.
+// presented via the native formSheet route (src/lib/formSheetHost.ts) — the
+// viewer version, which keeps the scope toggle (the builder's ShareSetSheet
+// does not). This-song mirrors the Song Viewer's ExportSheet (PDF primary + JPG
+// + Telegram); Whole-set offers the combined PDF (server endpoint), Copy link
+// and Telegram. PDF is the primary (blue) action in both scopes — exporting a
+// PDF already opens the system share sheet, so there is no separate "share"
+// button, and no ChordPro. The screen owns the async work and error alerts;
+// this component only tracks which action is busy.
 
 type Scope = 'song' | 'set'
 type Busy = string | null
 
 export type PerformerShareHandlers = {
   // This song
-  onShareSong: () => Promise<void>
   onExportSong: (format: 'pdf' | 'jpg') => Promise<void>
   onTelegramSong: () => Promise<void>
   // Whole set
@@ -88,57 +88,15 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
     </Pressable>
   )
 
-  const actionTile = (label: string, icon: SymbolIconProps['name'], which: string, fn: () => Promise<void>) => (
-    <Pressable
-      key={label}
-      onPress={run(which, fn)}
-      disabled={!!busy}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        gap: 6,
-        paddingVertical: 14,
-        borderRadius: 13,
-        backgroundColor: t.colors.surfaceAlt,
-        borderWidth: 1,
-        borderColor: t.colors.border,
-        opacity: busy && busy !== which ? 0.5 : 1,
-      }}
-    >
-      {busy === which ? (
-        <ActivityIndicator color={t.colors.accent} />
-      ) : (
-        <SymbolIcon name={icon} size={24} color={t.colors.accent} />
-      )}
-      <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-    </Pressable>
-  )
-
-  const disabledTile = (label: string, icon: SymbolIconProps['name']) => (
-    <View
-      key={label}
-      accessibilityLabel={`${label} — coming soon`}
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        gap: 6,
-        paddingVertical: 14,
-        borderRadius: 13,
-        backgroundColor: t.colors.surfaceAlt,
-        borderWidth: 1,
-        borderColor: t.colors.border,
-        opacity: 0.45,
-      }}
-    >
-      <SymbolIcon name={icon} size={24} color={t.colors.accent} />
-      <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-      <Text style={{ fontSize: 10.5, color: t.colors.muted }}>Coming soon</Text>
-    </View>
-  )
-
-  const telegramRow = (label: string, which: string, fn: () => Promise<void>) => (
+  // Full-width secondary action row: accentSoft icon chip, label (+ optional
+  // subtitle), trailing chevron. Shared shape for JPG, Copy link and Telegram.
+  const secondaryRow = (
+    label: string,
+    icon: SymbolIconProps['name'],
+    which: string,
+    fn: () => Promise<void>,
+    subtitle?: string,
+  ) => (
     <Pressable
       onPress={run(which, fn)}
       disabled={!!busy}
@@ -169,12 +127,12 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
         {busy === which ? (
           <ActivityIndicator size="small" color={t.colors.accent} />
         ) : (
-          <SymbolIcon name="paperplane.fill" size={15} color={t.colors.accent} />
+          <SymbolIcon name={icon} size={15} color={t.colors.accent} />
         )}
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-        <Text style={{ fontSize: 11.5, color: t.colors.muted }}>Optional bot</Text>
+        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.muted }}>{subtitle}</Text> : null}
       </View>
       <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
     </Pressable>
@@ -206,7 +164,7 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
   return (
     <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
-        {/* Scope toggle */}
+        {/* Scope toggle — a full-width view-switcher (kept full width by design). */}
         <View
           style={{
             flexDirection: 'row',
@@ -221,27 +179,20 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
 
         {scope === 'song' ? (
           <>
-            {primaryButton('Open share sheet…', 'square.and.arrow.up', 'song-share', handlers.onShareSong)}
-            <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-              {actionTile('PDF', 'doc.text', 'song-pdf', () => handlers.onExportSong('pdf'))}
-              {actionTile('JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
-            </View>
-            {telegramRow('Send to Telegram', 'song-telegram', handlers.onTelegramSong)}
+            {primaryButton('Export as PDF', 'square.and.arrow.up', 'song-pdf', () => handlers.onExportSong('pdf'))}
+            {secondaryRow('Export as JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
+            {secondaryRow('Send to Telegram', 'paperplane.fill', 'song-telegram', handlers.onTelegramSong, 'Optional bot')}
           </>
         ) : (
           <>
             {primaryButton(
               `Export set as PDF · ${songCount} ${songCount === 1 ? 'song' : 'songs'}`,
-              'square.and.arrow.down',
+              'square.and.arrow.up',
               'set-pdf',
               handlers.onExportSet,
             )}
-            <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-              {disabledTile('Charts ZIP', 'folder')}
-              {disabledTile('ChordPro', 'music.note.list')}
-              {actionTile('Copy link', 'link', 'set-link', handlers.onCopyLink)}
-            </View>
-            {telegramRow('Send set to Telegram', 'set-telegram', handlers.onTelegramSet)}
+            {secondaryRow('Copy link', 'link', 'set-link', handlers.onCopyLink)}
+            {secondaryRow('Send set to Telegram', 'paperplane.fill', 'set-telegram', handlers.onTelegramSet, 'Optional bot')}
           </>
         )}
       </View>

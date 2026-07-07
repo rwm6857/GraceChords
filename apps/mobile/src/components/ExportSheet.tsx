@@ -2,23 +2,24 @@ import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from './FormSheetShell'
-import SymbolIcon from './SymbolIcon'
+import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 
 // The viewer's "Export & share" sheet (share button), presented via the native
 // formSheet route (src/lib/formSheetHost.ts): a bottom sheet on phones, a
-// centered narrow form sheet on tablets. The screen owns the async work
-// (endpoint fetch, share sheet, Telegram push, error alerts); this component
-// only tracks which action is busy and disables the rest. No ChordPro option
-// by design.
+// centered narrow form sheet on tablets. The screen owns the async work (export
+// endpoint fetch, system share sheet, Telegram push, error alerts); this
+// component only tracks which action is busy and disables the rest. PDF is the
+// primary (blue) action in every mode — exporting a PDF already opens the
+// system share sheet, so there is no separate "share" button. No ChordPro
+// option by design.
 
-type Busy = 'share' | 'pdf' | 'jpg' | 'telegram' | null
+type Busy = 'pdf' | 'jpg' | 'telegram' | null
 
 type ExportSheetProps = {
   visible: boolean
   onClose: () => void
-  onShare: () => Promise<void>
   onExport: (format: 'pdf' | 'jpg') => Promise<void>
   onTelegram: () => Promise<void>
 }
@@ -28,7 +29,7 @@ export default function ExportSheet(props: ExportSheetProps) {
   return null
 }
 
-function ExportContent({ onClose, onShare, onExport, onTelegram }: ExportSheetProps) {
+function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
@@ -43,125 +44,120 @@ function ExportContent({ onClose, onShare, onExport, onTelegram }: ExportSheetPr
     }
   }
 
-  const disabledStyle = (which: Busy) => ({ opacity: busy && busy !== which ? 0.5 : 1 })
-
   return (
     <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
-        {/* Primary: system share sheet */}
+        {/* Primary: export as PDF (opens the system share sheet). */}
         <Pressable
-          onPress={run('share', onShare)}
+          onPress={run('pdf', () => onExport('pdf'))}
           disabled={!!busy}
           accessibilityRole="button"
-          accessibilityLabel="Open share sheet"
-          style={[
-            {
-              height: 50,
-              borderRadius: 13,
-              backgroundColor: t.colors.accent,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: t.spacing.sm,
-            },
-            disabledStyle('share'),
-          ]}
+          accessibilityLabel="Export as PDF"
+          style={{
+            height: 50,
+            borderRadius: 13,
+            backgroundColor: t.colors.accent,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: t.spacing.sm,
+            opacity: busy && busy !== 'pdf' ? 0.5 : 1,
+          }}
         >
-          {busy === 'share' ? (
+          {busy === 'pdf' ? (
             <ActivityIndicator color={t.colors.onAccent} />
           ) : (
             <SymbolIcon name="square.and.arrow.up" size={19} color={t.colors.onAccent} />
           )}
           <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
-            Open share sheet…
+            Export as PDF
           </Text>
         </Pressable>
 
-        {/* Format tiles */}
-        <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-          {(
-            [
-              { format: 'pdf', label: 'PDF', icon: 'doc.text' },
-              { format: 'jpg', label: 'JPG', icon: 'photo' },
-            ] as const
-          ).map((tile) => (
-            <Pressable
-              key={tile.format}
-              onPress={run(tile.format, () => onExport(tile.format))}
-              disabled={!!busy}
-              accessibilityRole="button"
-              accessibilityLabel={`Export as ${tile.label}`}
-              style={[
-                {
-                  flex: 1,
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: 14,
-                  borderRadius: 13,
-                  backgroundColor: t.colors.surfaceAlt,
-                  borderWidth: 1,
-                  borderColor: t.colors.border,
-                },
-                disabledStyle(tile.format),
-              ]}
-            >
-              {busy === tile.format ? (
-                <ActivityIndicator color={t.colors.accent} />
-              ) : (
-                <SymbolIcon name={tile.icon} size={24} color={t.colors.accent} />
-              )}
-              <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>
-                {tile.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        {/* Secondary: JPG image. */}
+        <SecondaryRow
+          label="Export as JPG"
+          icon="photo"
+          busy={busy === 'jpg'}
+          dimmed={!!busy && busy !== 'jpg'}
+          disabled={!!busy}
+          onPress={run('jpg', () => onExport('jpg'))}
+        />
 
         {/* Telegram */}
-        <Pressable
-          onPress={run('telegram', onTelegram)}
+        <SecondaryRow
+          label="Send to Telegram"
+          subtitle="Optional bot"
+          icon="paperplane.fill"
+          busy={busy === 'telegram'}
+          dimmed={!!busy && busy !== 'telegram'}
           disabled={!!busy}
-          accessibilityRole="button"
-          accessibilityLabel="Send to Telegram"
-          style={[
-            {
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 11,
-              padding: t.spacing.md,
-              borderRadius: 13,
-              backgroundColor: t.colors.surfaceAlt,
-              borderWidth: 1,
-              borderColor: t.colors.border,
-            },
-            disabledStyle('telegram'),
-          ]}
-        >
-          <View
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: t.colors.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {busy === 'telegram' ? (
-              <ActivityIndicator size="small" color={t.colors.accent} />
-            ) : (
-              <SymbolIcon name="paperplane.fill" size={15} color={t.colors.accent} />
-            )}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>
-              Send to Telegram
-            </Text>
-            <Text style={{ fontSize: 11.5, color: t.colors.muted }}>Optional bot</Text>
-          </View>
-          <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
-        </Pressable>
+          onPress={run('telegram', onTelegram)}
+        />
       </View>
     </FormSheetShell>
+  )
+}
+
+// Full-width secondary action row: accentSoft icon chip, label (+ optional
+// subtitle), trailing chevron. Shared shape for the JPG and Telegram rows.
+function SecondaryRow({
+  label,
+  subtitle,
+  icon,
+  busy,
+  dimmed,
+  disabled,
+  onPress,
+}: {
+  label: string
+  subtitle?: string
+  icon: SymbolIconProps['name']
+  busy: boolean
+  dimmed: boolean
+  disabled: boolean
+  onPress: () => void
+}) {
+  const t = useTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 11,
+        padding: t.spacing.md,
+        borderRadius: 13,
+        backgroundColor: t.colors.surfaceAlt,
+        borderWidth: 1,
+        borderColor: t.colors.border,
+        opacity: dimmed ? 0.5 : 1,
+      }}
+    >
+      <View
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: t.colors.accentSoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {busy ? (
+          <ActivityIndicator size="small" color={t.colors.accent} />
+        ) : (
+          <SymbolIcon name={icon} size={15} color={t.colors.accent} />
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
+        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.muted }}>{subtitle}</Text> : null}
+      </View>
+      <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
+    </Pressable>
   )
 }

@@ -1,6 +1,7 @@
 import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from './FormSheetShell'
+import SegmentedPill from './SegmentedPill'
 import AccidentalToggle, { type Accidental } from './AccidentalToggle'
 import type { ChordStyle } from './ChordChart'
 import type { ColumnMode } from '../lib/viewerPrefs'
@@ -20,57 +21,6 @@ export { type Accidental, defaultAccidental, resolvePreferFlat } from './Acciden
 export const FONT_SCALE_MIN = 0.8
 export const FONT_SCALE_MAX = 1.6
 export const FONT_SCALE_STEP = 0.1
-
-function Segmented<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { value: T; label: string }[]
-  value: T
-  onChange: (v: T) => void
-}) {
-  const t = useTheme()
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: t.colors.surfaceAlt,
-        borderRadius: 12,
-        padding: 3,
-      }}
-    >
-      {options.map((opt) => {
-        const selected = opt.value === value
-        return (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            style={{
-              flex: 1,
-              paddingVertical: 9,
-              borderRadius: 9,
-              alignItems: 'center',
-              backgroundColor: selected ? t.colors.surface : 'transparent',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: selected ? t.colors.ink : t.colors.sec,
-              }}
-            >
-              {opt.label}
-            </Text>
-          </Pressable>
-        )
-      })}
-    </View>
-  )
-}
 
 function OverlineLabel({ children, first }: { children: string; first?: boolean }) {
   const t = useTheme()
@@ -256,15 +206,25 @@ function ViewOptionsContent({
           </View>
         </View>
 
-        <OverlineLabel>Chord style</OverlineLabel>
-        <Segmented
-          options={[
-            { value: 'letters', label: 'Letters' },
-            { value: 'solfege', label: 'Solfège' },
-          ]}
-          value={chordStyle}
-          onChange={onChordStyle}
-        />
+        {/* Chord style — inline setting-value picker (content-sized pill). */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: t.spacing.xl,
+          }}
+        >
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>Chord style</Text>
+          <SegmentedPill<ChordStyle>
+            options={[
+              { value: 'letters', label: 'Letters' },
+              { value: 'solfege', label: 'Solfège' },
+            ]}
+            value={chordStyle}
+            onChange={onChordStyle}
+          />
+        </View>
 
         {/* Accidentals — ♯/♭ spelling (session-scoped). Rendered only when the
             screen wires it. */}
@@ -285,9 +245,16 @@ function ViewOptionsContent({
         {/* Columns — tablet-only 1 │ 2 layout toggle, persisted per song.
             Rendered only when the screen wires it. */}
         {onColumnMode && columnMode ? (
-          <>
-            <OverlineLabel>Columns</OverlineLabel>
-            <Segmented
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: t.spacing.xl,
+            }}
+          >
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>Columns</Text>
+            <SegmentedPill<ColumnMode>
               options={[
                 { value: 'single', label: '1' },
                 { value: 'double', label: '2' },
@@ -295,7 +262,7 @@ function ViewOptionsContent({
               value={columnMode}
               onChange={onColumnMode}
             />
-          </>
+          </View>
         ) : null}
 
         {/* Screen preferences — persist across launches (unlike the options

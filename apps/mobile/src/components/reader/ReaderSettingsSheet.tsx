@@ -1,6 +1,8 @@
-import { Pressable, Switch, Text, View } from 'react-native'
+import type { ReactNode } from 'react'
+import { Pressable, Switch, Text, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from '../FormSheetShell'
+import SegmentedPill from '../SegmentedPill'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 import { setStreakEnabled, useReadingStreak } from '../../lib/readingStreak'
@@ -19,54 +21,31 @@ import {
 // opt-in at the bottom, which is a persisted device-local preference
 // (src/lib/readingStreak.ts, read by Home's Daily Word card).
 
-function Segmented<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { value: T; label: string; labelFontFamily?: string }[]
-  value: T
-  onChange: (v: T) => void
-}) {
+// Inline setting-value row: label left, control right-aligned and content-sized.
+// `stack` puts the control on its own line below the label — used on narrow
+// iPhone widths where a 3-option control would collide with its label.
+function SettingRow({ label, stack, children }: { label: string; stack?: boolean; children: ReactNode }) {
   const t = useTheme()
+  if (stack) {
+    return (
+      <View style={{ marginTop: t.spacing.xl }}>
+        <Text style={{ fontSize: 16, color: t.colors.ink, marginBottom: t.spacing.sm }}>{label}</Text>
+        {children}
+      </View>
+    )
+  }
   return (
     <View
       style={{
         flexDirection: 'row',
-        backgroundColor: t.colors.surfaceAlt,
-        borderRadius: 12,
-        padding: 3,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: t.spacing.md,
+        marginTop: t.spacing.xl,
       }}
     >
-      {options.map((opt) => {
-        const selected = opt.value === value
-        return (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            style={{
-              flex: 1,
-              paddingVertical: 9,
-              borderRadius: 9,
-              alignItems: 'center',
-              backgroundColor: selected ? t.colors.accent : 'transparent',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                fontFamily: opt.labelFontFamily,
-                color: selected ? t.colors.onAccent : t.colors.sec,
-              }}
-            >
-              {opt.label}
-            </Text>
-          </Pressable>
-        )
-      })}
+      <Text style={{ fontSize: 16, color: t.colors.ink }}>{label}</Text>
+      {children}
     </View>
   )
 }
@@ -106,6 +85,10 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const streak = useReadingStreak()
+  // On narrow iPhone widths the 3-option Line spacing control would collide
+  // with its label, so that row stacks. 2-option rows stay inline everywhere.
+  const { width } = useWindowDimensions()
+  const stackWide = width < 380
 
   const stepPt = (dir: 1 | -1) => {
     const next = Math.min(READER_PT_MAX, Math.max(READER_PT_MIN, settings.pt + dir))
@@ -166,38 +149,41 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
           </Pressable>
         </View>
 
-        <OverlineLabel>Typeface</OverlineLabel>
-        <Segmented<Typeface>
-          options={[
-            // Render "Serif" in the serif face it selects so the choice is
-            // self-evident (matches the reading font — Georgia).
-            { value: 'serif', label: 'Serif', labelFontFamily: 'Georgia' },
-            { value: 'sans', label: 'Sans' },
-          ]}
-          value={settings.typeface}
-          onChange={(v) => onChange({ ...settings, typeface: v })}
-        />
+        <SettingRow label="Typeface">
+          <SegmentedPill<Typeface>
+            options={[
+              // Render "Serif" in the serif face it selects so the choice is
+              // self-evident (matches the reading font — Georgia).
+              { value: 'serif', label: 'Serif', labelFontFamily: 'Georgia' },
+              { value: 'sans', label: 'Sans' },
+            ]}
+            value={settings.typeface}
+            onChange={(v) => onChange({ ...settings, typeface: v })}
+          />
+        </SettingRow>
 
-        <OverlineLabel>Verse layout</OverlineLabel>
-        <Segmented<VerseLayout>
-          options={[
-            { value: 'lines', label: 'Lines' },
-            { value: 'prose', label: 'Prose' },
-          ]}
-          value={settings.layout}
-          onChange={(v) => onChange({ ...settings, layout: v })}
-        />
+        <SettingRow label="Verse layout">
+          <SegmentedPill<VerseLayout>
+            options={[
+              { value: 'lines', label: 'Lines' },
+              { value: 'prose', label: 'Prose' },
+            ]}
+            value={settings.layout}
+            onChange={(v) => onChange({ ...settings, layout: v })}
+          />
+        </SettingRow>
 
-        <OverlineLabel>Line spacing</OverlineLabel>
-        <Segmented<LineSpacing>
-          options={[
-            { value: 'tight', label: 'Tight' },
-            { value: 'normal', label: 'Normal' },
-            { value: 'relaxed', label: 'Relaxed' },
-          ]}
-          value={settings.lineSpacing}
-          onChange={(v) => onChange({ ...settings, lineSpacing: v })}
-        />
+        <SettingRow label="Line spacing" stack={stackWide}>
+          <SegmentedPill<LineSpacing>
+            options={[
+              { value: 'tight', label: 'Tight' },
+              { value: 'normal', label: 'Normal' },
+              { value: 'relaxed', label: 'Relaxed' },
+            ]}
+            value={settings.lineSpacing}
+            onChange={(v) => onChange({ ...settings, lineSpacing: v })}
+          />
+        </SettingRow>
 
         <OverlineLabel>Reading streak</OverlineLabel>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: t.spacing.md }}>

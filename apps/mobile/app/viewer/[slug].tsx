@@ -453,11 +453,6 @@ export default function ViewerScreen() {
       <ExportSheet
         visible={sheet === 'export'}
         onClose={() => setSheet(null)}
-        onShare={() => shareFile('pdf').then(() => setSheet(null)).catch((err) => {
-          const msg = err instanceof Error ? err.message : String(err)
-          Alert.alert(msg === 'not_signed_in' ? 'Sign in required' : 'Share failed',
-            msg === 'not_signed_in' ? 'Sign in to share songs.' : msg)
-        })}
         onExport={handleExport}
         onTelegram={handleTelegram}
       />
