@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { useRouter } from 'expo-router'
 import { useTheme } from '../theme/ThemeProvider'
+import ConstrainedContent from '../components/ConstrainedContent'
 import TextField from '../components/TextField'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
@@ -121,6 +122,7 @@ export default function AuthScreen() {
           </Text>
         </LinearGradient>
 
+        <ConstrainedContent tier="form">
         <View style={{ paddingHorizontal: t.spacing.lg, gap: t.spacing.lg }}>
           {isSignup ? (
             <TextField
@@ -271,6 +273,7 @@ export default function AuthScreen() {
             </Pressable>
           </View>
         </View>
+        </ConstrainedContent>
       </ScrollView>
     </KeyboardAvoidingView>
   )

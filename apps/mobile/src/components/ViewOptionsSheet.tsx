@@ -1,16 +1,19 @@
 import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from './BottomSheet'
+import FormSheetShell from './FormSheetShell'
 import AccidentalToggle, { type Accidental } from './AccidentalToggle'
 import type { ChordStyle } from './ChordChart'
 import type { ColumnMode } from '../lib/viewerPrefs'
+import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Re-export so existing screen imports (`from './ViewOptionsSheet'`) keep working.
 export { type Accidental, defaultAccidental, resolvePreferFlat } from './AccidentalToggle'
 
-// The viewer's "View options" bottom sheet (••• button). Everything is
+// The viewer's "View options" sheet (••• button). Everything is
 // controlled/ephemeral — the screen owns the state, nothing persists.
+// Presented via the native formSheet route (src/lib/formSheetHost.ts): a
+// bottom sheet on phones, a centered narrow form sheet on tablets.
 // CHORD STYLE has no Numbers segment: no Nashville conversion exists in core
 // yet (flagged for a future pass).
 
@@ -88,26 +91,7 @@ function OverlineLabel({ children, first }: { children: string; first?: boolean 
   )
 }
 
-export default function ViewOptionsSheet({
-  visible,
-  onClose,
-  showChords,
-  onShowChords,
-  showSections,
-  onShowSections,
-  fontScale,
-  onFontScale,
-  chordStyle,
-  onChordStyle,
-  accidental,
-  onAccidental,
-  columnMode,
-  onColumnMode,
-  autoHide,
-  onAutoHide,
-  keepAwake,
-  onKeepAwake,
-}: {
+type ViewOptionsProps = {
   visible: boolean
   onClose: () => void
   showChords: boolean
@@ -133,7 +117,32 @@ export default function ViewOptionsSheet({
   // only when the screen wires it (Song Viewer + Setlist Performer).
   keepAwake?: boolean
   onKeepAwake?: (v: boolean) => void
-}) {
+}
+
+export default function ViewOptionsSheet(props: ViewOptionsProps) {
+  useFormSheet(props.visible, () => <ViewOptionsContent {...props} />, props.onClose)
+  return null
+}
+
+function ViewOptionsContent({
+  onClose,
+  showChords,
+  onShowChords,
+  showSections,
+  onShowSections,
+  fontScale,
+  onFontScale,
+  chordStyle,
+  onChordStyle,
+  accidental,
+  onAccidental,
+  columnMode,
+  onColumnMode,
+  autoHide,
+  onAutoHide,
+  keepAwake,
+  onKeepAwake,
+}: ViewOptionsProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
 
@@ -145,7 +154,7 @@ export default function ViewOptionsSheet({
   const atMax = fontScale >= FONT_SCALE_MAX
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="View options">
+    <FormSheetShell title="View options" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
         {/* Show chords */}
         <View
@@ -324,6 +333,6 @@ export default function ViewOptionsSheet({
           </View>
         ) : null}
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

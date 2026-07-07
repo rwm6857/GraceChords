@@ -120,7 +120,19 @@ duplicate logic here and never edit core internals to suit mobile.
 ## Primitives & UI conventions
 
 - Reusable primitives live in `src/components/`: `Screen`, `Button`, `Card`,
-  `ListRow`, `Chip`, `SectionHeader`. Prefer them over bespoke views.
+  `ListRow`, `Chip`, `SectionHeader`, `ConstrainedContent`. Prefer them over
+  bespoke views.
+- **Tablet content width:** wrap screen content in `ConstrainedContent`
+  (`tier="form"` ≈ 440 / `tier="content"` ≈ 700, values in tokens
+  `layout.maxWidth`). It passes through untouched at compact (phone) width and
+  caps + centers at regular (tablet) width (`useIsTabletWidth`). Applied to
+  Auth (form), Home and the Setlists index (content).
+- **Option sheets:** `ViewOptionsSheet` and `FilterSortSheet` present through
+  the native `formSheet` route (`app/sheet.tsx` + `src/lib/formSheetHost.ts` —
+  screens keep owning state/callbacks; the host bridges the render into the
+  route). Phones get a native bottom sheet with grabber/detents, iPads a
+  centered narrow form sheet. The remaining sheets still use the hand-rolled
+  `BottomSheet` Modal shell.
 - **Icons are SF Symbols only**, via `src/components/SymbolIcon.tsx` (wraps
   `expo-symbols`) — no hand-drawn/SVG glyphs. SF Symbols render on iOS/iPadOS only
   (the current target).

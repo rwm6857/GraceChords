@@ -121,6 +121,20 @@ export const spacing = {
   xxl: 32,
 } as const
 
+/**
+ * Content-width caps applied at regular (tablet) width via the mobile app's
+ * `ConstrainedContent` primitive. Compact (phone) layouts never read these —
+ * the primitive passes through untouched there.
+ */
+export const layout = {
+  maxWidth: {
+    /** Focused single-column forms (e.g. the auth screen). */
+    form: 440,
+    /** General content columns (Home, index lists). */
+    content: 700,
+  },
+} as const
+
 /** Corner radii (shared across modes). */
 export const radii = {
   sm: 10,
@@ -158,6 +172,7 @@ export type Tokens = {
   mode: ThemeMode
   colors: ThemeColors
   spacing: typeof spacing
+  layout: typeof layout
   radii: typeof radii
   typography: typeof typography
 }
@@ -166,6 +181,7 @@ export const lightTokens: Tokens = {
   mode: 'light',
   colors: lightColors,
   spacing,
+  layout,
   radii,
   typography,
 }
@@ -174,6 +190,7 @@ export const darkTokens: Tokens = {
   mode: 'dark',
   colors: darkColors,
   spacing,
+  layout,
   radii,
   typography,
 }
