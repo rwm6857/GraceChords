@@ -12,7 +12,6 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ConstrainedContent from '../components/ConstrainedContent'
-import ListRow from '../components/ListRow'
 import SymbolIcon from '../components/SymbolIcon'
 import DailyWordCard from '../components/home/DailyWordCard'
 import RecentSongsCard from '../components/home/RecentSongsCard'
@@ -162,35 +161,93 @@ export default function HomeScreen() {
     </View>
   ) : null
 
-  const starredSection = (
-    <View>
-      <View style={{ paddingHorizontal: t.spacing.xl }}>
-        <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
+  const starredCard = (
+    <View style={cardStyle(t)}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <SymbolIcon name="star.fill" size={12} color={t.colors.star} />
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: '700',
+            letterSpacing: 0.7,
+            textTransform: 'uppercase',
+            color: t.colors.textAccent,
+          }}
+        >
           Starred songs
         </Text>
       </View>
 
       {starredLoading ? (
-        <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.lg }} />
+        <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.md }} />
       ) : starredError ? (
-        <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
           {starredError}
         </Text>
       ) : starred.length === 0 ? (
-        <Text style={{ paddingHorizontal: t.spacing.xl, marginTop: t.spacing.md, fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
           Songs you star will appear here.
         </Text>
       ) : (
-        <View style={{ marginTop: t.spacing.sm }}>
-          {starred.map((s: StarredSong) => (
-            <ListRow
+        <View style={{ marginTop: t.spacing.xs }}>
+          {starred.map((s: StarredSong, i: number) => (
+            <Pressable
               key={s.id}
-              title={s.title}
-              subtitle={s.artist}
-              trailingTop={s.default_key}
-              trailingBottom={s.time_signature}
               onPress={() => openSong(s)}
-            />
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${s.title}`}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: t.spacing.md,
+                paddingVertical: 10,
+                borderTopWidth: i === 0 ? 0 : 0.5,
+                borderTopColor: t.colors.border,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: t.typography.rowTitle.fontSize,
+                    fontWeight: t.typography.rowTitle.fontWeight,
+                    letterSpacing: t.typography.rowTitle.letterSpacing,
+                    color: t.colors.ink,
+                  }}
+                >
+                  {s.title}
+                </Text>
+                {s.artist ? (
+                  <Text
+                    numberOfLines={1}
+                    style={{ marginTop: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
+                  >
+                    {s.artist}
+                  </Text>
+                ) : null}
+              </View>
+              {s.default_key || s.time_signature ? (
+                <View style={{ alignItems: 'flex-end' }}>
+                  {s.default_key ? (
+                    <Text
+                      style={{
+                        fontSize: t.typography.rowKey.fontSize,
+                        fontWeight: t.typography.rowKey.fontWeight,
+                        color: t.colors.textAccent,
+                      }}
+                    >
+                      {s.default_key}
+                    </Text>
+                  ) : null}
+                  {s.time_signature ? (
+                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
+                      {s.time_signature}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </Pressable>
           ))}
         </View>
       )}
@@ -350,41 +407,46 @@ export default function HomeScreen() {
 
         {/* ===== Dashboard: 2-column grid on tablets, one stack on phones.
             Same cards on both form factors — only the arrangement differs. ===== */}
-        <ConstrainedContent tier="dashboard">
-          {isTablet ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'flex-start',
-                gap: t.spacing.lg,
-                paddingHorizontal: t.spacing.lg,
-                marginTop: 26,
-              }}
-            >
-              <View style={{ flex: 1, gap: t.spacing.lg }}>
-                {lastSetCard}
-                {starredSection}
+        {isTablet ? (
+          // Padding sits OUTSIDE the width cap, matching the Continue card's
+          // nesting, so the grid's total width equals the hero cards above.
+          <View style={{ paddingHorizontal: t.spacing.lg }}>
+            <ConstrainedContent tier="dashboard">
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: t.spacing.lg,
+                  marginTop: 26,
+                }}
+              >
+                <View style={{ flex: 1, gap: t.spacing.lg }}>
+                  {lastSetCard}
+                  {starredCard}
+                </View>
+                <View style={{ flex: 1, gap: t.spacing.lg }}>
+                  <DailyWordCard />
+                  <RecentSongsCard />
+                </View>
               </View>
-              <View style={{ flex: 1, gap: t.spacing.lg }}>
-                <DailyWordCard />
-                <RecentSongsCard />
-              </View>
+            </ConstrainedContent>
+          </View>
+        ) : (
+          <>
+            {lastSetCard ? (
+              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>{lastSetCard}</View>
+            ) : null}
+            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
+              <DailyWordCard />
             </View>
-          ) : (
-            <>
-              {lastSetCard ? (
-                <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>{lastSetCard}</View>
-              ) : null}
-              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
-                <DailyWordCard />
-              </View>
-              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
-                <RecentSongsCard />
-              </View>
-              <View style={{ marginTop: 28 }}>{starredSection}</View>
-            </>
-          )}
-        </ConstrainedContent>
+            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
+              <RecentSongsCard />
+            </View>
+            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
+              {starredCard}
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   )
