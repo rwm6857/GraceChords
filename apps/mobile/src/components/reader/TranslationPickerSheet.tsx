@@ -5,34 +5,37 @@ import {
   type BibleTranslation,
   type BibleTranslationGroup,
 } from '@gracechords/core'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
-// Translation picker (Daily Word). Grouped by language; the active translation
+// Translation picker (Daily Word), presented via the native formSheet route
+// (src/lib/formSheetHost.ts). Grouped by language; the active translation
 // carries a checkmark and accent text. Rows always read left-to-right: the
 // option labels are English names/abbreviations (e.g. "Ketab El Hayat (KEH)")
 // even for RTL-script Bibles, so aligning them right would look wrong. Offline
 // download state is out of scope this pass — selection only.
 
-export default function TranslationPickerSheet({
-  visible,
-  onClose,
-  groups,
-  selectedId,
-  onSelect,
-}: {
+type TranslationPickerProps = {
   visible: boolean
   onClose: () => void
   groups: BibleTranslationGroup[]
   selectedId: string
   onSelect: (translation: BibleTranslation) => void
-}) {
+}
+
+export default function TranslationPickerSheet(props: TranslationPickerProps) {
+  useFormSheet(props.visible, () => <TranslationPickerContent {...props} />, props.onClose)
+  return null
+}
+
+function TranslationPickerContent({ onClose, groups, selectedId, onSelect }: TranslationPickerProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Translation">
+    <FormSheetShell title="Translation" onAction={onClose}>
       <ScrollView
         style={{ maxHeight: 440 }}
         contentContainerStyle={{ paddingBottom: t.spacing.md + insets.bottom, paddingTop: t.spacing.xs }}
@@ -92,6 +95,6 @@ export default function TranslationPickerSheet({
           </View>
         ))}
       </ScrollView>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

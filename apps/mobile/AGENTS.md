@@ -152,12 +152,14 @@ duplicate logic here and never edit core internals to suit mobile.
   screen's `embedded` prop (hides its back link / safe-area bar padding), with
   a "Pick a tool" placeholder until one is selected. Phones keep pushing
   `/tuner`, `/metronome`, `/pitch-pipe` as routes.
-- **Option sheets:** `ViewOptionsSheet` and `FilterSortSheet` present through
-  the native `formSheet` route (`app/sheet.tsx` + `src/lib/formSheetHost.ts` —
-  screens keep owning state/callbacks; the host bridges the render into the
-  route). Phones get a native bottom sheet with grabber/detents, iPads a
-  centered narrow form sheet. The remaining sheets still use the hand-rolled
-  `BottomSheet` Modal shell.
+- **Option sheets:** every sheet presents through the native `formSheet` route
+  (`app/sheet.tsx` + `src/lib/formSheetHost.ts` — screens keep owning
+  state/callbacks; the host bridges the render into the route, one sheet at a
+  time). Phones get a native bottom sheet with grabber/detents, iPads a
+  centered narrow form sheet. The ONE exception is the builder's
+  `RowActionsSheet`, which stays on the hand-rolled `BottomSheet` Modal because
+  it chains into the key picker via `onDismissed`; if you add a new sheet, use
+  the `useFormSheet` + `FormSheetShell` pattern.
 - **Icons are SF Symbols only**, via `src/components/SymbolIcon.tsx` (wraps
   `expo-symbols`) — no hand-drawn/SVG glyphs. SF Symbols render on iOS/iPadOS only
   (the current target).

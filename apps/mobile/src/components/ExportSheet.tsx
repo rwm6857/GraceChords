@@ -1,30 +1,34 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from './BottomSheet'
+import FormSheetShell from './FormSheetShell'
 import SymbolIcon from './SymbolIcon'
+import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 
-// The viewer's "Export & share" bottom sheet (share button). The screen owns
-// the async work (endpoint fetch, share sheet, Telegram push, error alerts);
-// this component only tracks which action is busy and disables the rest.
-// No ChordPro option by design.
+// The viewer's "Export & share" sheet (share button), presented via the native
+// formSheet route (src/lib/formSheetHost.ts): a bottom sheet on phones, a
+// centered narrow form sheet on tablets. The screen owns the async work
+// (endpoint fetch, share sheet, Telegram push, error alerts); this component
+// only tracks which action is busy and disables the rest. No ChordPro option
+// by design.
 
 type Busy = 'share' | 'pdf' | 'jpg' | 'telegram' | null
 
-export default function ExportSheet({
-  visible,
-  onClose,
-  onShare,
-  onExport,
-  onTelegram,
-}: {
+type ExportSheetProps = {
   visible: boolean
   onClose: () => void
   onShare: () => Promise<void>
   onExport: (format: 'pdf' | 'jpg') => Promise<void>
   onTelegram: () => Promise<void>
-}) {
+}
+
+export default function ExportSheet(props: ExportSheetProps) {
+  useFormSheet(props.visible, () => <ExportContent {...props} />, props.onClose)
+  return null
+}
+
+function ExportContent({ onClose, onShare, onExport, onTelegram }: ExportSheetProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
@@ -42,12 +46,7 @@ export default function ExportSheet({
   const disabledStyle = (which: Busy) => ({ opacity: busy && busy !== which ? 0.5 : 1 })
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="Export & share"
-      closeAccessibilityLabel="Close export and share"
-    >
+    <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Primary: system share sheet */}
         <Pressable
@@ -163,6 +162,6 @@ export default function ExportSheet({
           <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
         </Pressable>
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { KEYS, normKey } from '@gracechords/core'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
 import AccidentalToggle, { type Accidental, defaultAccidental } from '../AccidentalToggle'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
 // Flat spellings aligned to KEYS index (C, C#/Db, D, …). Used to relabel the
@@ -15,15 +16,7 @@ const FLAT_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', '
 // spellings; the picked spelling is what's stored as the override. The current
 // key is highlighted by enharmonic equivalence. "Reset to {key}" clears the
 // override so the entry follows the song's own key again.
-export default function KeyPickerSheet({
-  visible,
-  onClose,
-  songTitle,
-  currentKey,
-  nativeKey,
-  hasOverride,
-  onPick,
-}: {
+type KeyPickerProps = {
   visible: boolean
   onClose: () => void
   songTitle: string | null
@@ -33,23 +26,35 @@ export default function KeyPickerSheet({
   /** Whether the entry currently stores an override (enables the reset row). */
   hasOverride: boolean
   onPick: (key: string | null) => void
-}) {
+}
+
+export default function KeyPickerSheet(props: KeyPickerProps) {
+  useFormSheet(props.visible, () => <KeyPickerContent {...props} />, props.onClose)
+  return null
+}
+
+function KeyPickerContent({
+  onClose,
+  songTitle,
+  currentKey,
+  nativeKey,
+  hasOverride,
+  onPick,
+}: KeyPickerProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const current = currentKey ? (normKey(currentKey) as string) : null
 
-  // Default the spelling from the current/native key; re-seed each open.
+  // Default the spelling from the current/native key. The content mounts fresh
+  // on every open (formSheet route), so the initializer re-seeds per open.
   const [accidental, setAccidental] = useState<Accidental>(() =>
     defaultAccidental(currentKey ?? nativeKey),
   )
-  useEffect(() => {
-    if (visible) setAccidental(defaultAccidental(currentKey ?? nativeKey))
-  }, [visible, currentKey, nativeKey])
 
   const labels = accidental === 'flat' ? FLAT_KEYS : (KEYS as readonly string[])
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Key" closeAccessibilityLabel="Close key picker">
+    <FormSheetShell title="Key" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           {songTitle ? (
@@ -125,6 +130,6 @@ export default function KeyPickerSheet({
           </Pressable>
         ) : null}
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 
-// Performer "Export & share" sheet with a This song / Whole set scope toggle.
+// Performer "Export & share" sheet with a This song / Whole set scope toggle,
+// presented via the native formSheet route (src/lib/formSheetHost.ts).
 // This-song mirrors the Song Viewer's ExportSheet (system share + PDF/JPG +
 // Telegram, no ChordPro). Whole-set offers the combined PDF (server endpoint),
 // Copy link and Telegram — all working today — with Charts ZIP / ChordPro /
@@ -27,30 +29,28 @@ export type PerformerShareHandlers = {
   onTelegramSet: () => Promise<void>
 }
 
-export default function PerformerShareSheet({
-  visible,
-  onClose,
-  songCount,
-  initialScope,
-  handlers,
-}: {
+type PerformerShareProps = {
   visible: boolean
   onClose: () => void
   songCount: number
   /** Defaults the toggle: whole set for multi-song, this song otherwise. */
   initialScope: Scope
   handlers: PerformerShareHandlers
-}) {
+}
+
+export default function PerformerShareSheet(props: PerformerShareProps) {
+  useFormSheet(props.visible, () => <PerformerShareContent {...props} />, props.onClose)
+  return null
+}
+
+function PerformerShareContent({ onClose, songCount, initialScope, handlers }: PerformerShareProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  // The content mounts fresh on every open (formSheet route), so the scope
+  // initializer re-seeds per open (single-song sets shouldn't land on
+  // "Whole set").
   const [scope, setScope] = useState<Scope>(initialScope)
   const [busy, setBusy] = useState<Busy>(null)
-
-  // Re-seed the scope each time the sheet opens (single-song sets shouldn't
-  // land on "Whole set").
-  useEffect(() => {
-    if (visible) setScope(initialScope)
-  }, [visible, initialScope])
 
   const run = (which: string, fn: () => Promise<void>) => async () => {
     if (busy) return
@@ -204,12 +204,7 @@ export default function PerformerShareSheet({
   }
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      title="Export & share"
-      closeAccessibilityLabel="Close export and share"
-    >
+    <FormSheetShell title="Export & share" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Scope toggle */}
         <View
@@ -250,6 +245,6 @@ export default function PerformerShareSheet({
           </>
         )}
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

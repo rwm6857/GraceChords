@@ -1,6 +1,7 @@
 import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BottomSheet from '../BottomSheet'
+import FormSheetShell from '../FormSheetShell'
+import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
 import { setStreakEnabled, useReadingStreak } from '../../lib/readingStreak'
 import {
@@ -89,17 +90,19 @@ function OverlineLabel({ children, first }: { children: string; first?: boolean 
   )
 }
 
-export default function ReaderSettingsSheet({
-  visible,
-  onClose,
-  settings,
-  onChange,
-}: {
+type ReaderSettingsProps = {
   visible: boolean
   onClose: () => void
   settings: ReaderSettings
   onChange: (next: ReaderSettings) => void
-}) {
+}
+
+export default function ReaderSettingsSheet(props: ReaderSettingsProps) {
+  useFormSheet(props.visible, () => <ReaderSettingsContent {...props} />, props.onClose)
+  return null
+}
+
+function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsProps) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const streak = useReadingStreak()
@@ -112,7 +115,7 @@ export default function ReaderSettingsSheet({
   const atMax = settings.pt >= READER_PT_MAX
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Reader settings">
+    <FormSheetShell title="Reader settings" onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
         <OverlineLabel first>Text size</OverlineLabel>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md }}>
@@ -212,6 +215,6 @@ export default function ReaderSettingsSheet({
           />
         </View>
       </View>
-    </BottomSheet>
+    </FormSheetShell>
   )
 }

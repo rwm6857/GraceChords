@@ -250,7 +250,9 @@ export default function SongLibraryScreen() {
             <View key={song.id} style={{ flex: 1 }}>
               <ListRow
                 title={song.title}
-                subtitle={song.artist}
+                // Artist-less songs keep a blank subtitle line so every cell in
+                // a grid row is the same height and the hairlines align.
+                subtitle={song.artist || ' '}
                 {...rowMeta(song)}
                 onPress={() => openSong(song)}
               />
