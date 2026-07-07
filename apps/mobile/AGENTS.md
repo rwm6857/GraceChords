@@ -85,6 +85,17 @@ step to core to make mobile work — fix Metro config instead.
   `persistSession`/`autoRefreshToken` keep the factory defaults (`true`).
 - Token refresh is driven by `AppState` (`registerAuthAutoRefresh` in
   `src/lib/supabase.ts`), called once at the app root.
+- A **dead persisted refresh token** (signed out elsewhere, token rotated,
+  session deleted) is benign and self-healing: `resolveInitialSession`
+  (`src/lib/authSession.ts`) purges it locally at launch and the gate routes to
+  `/login`. But GoTrue also logs it to `console.error` from inside its own
+  automatic init (`_recoverAndRefresh`, run when the client is constructed) —
+  before any of our code can react, and with no config hook to disable that one
+  call. `silenceInvalidRefreshTokenLogs` wraps `console.error` once (installed in
+  `src/lib/supabase.ts` **before** the client is created) to drop exactly that
+  self-healing error; everything else passes through. Don't "fix" this by
+  flipping `autoRefreshToken` off — that changes real refresh behavior and
+  relies on GoTrue internals.
 - Env: `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` from
   `apps/mobile/.env` (the **public anon** key — same as the web client, never the
   service-role key). Mirror any new `EXPO_PUBLIC_*` var into `.env.example`.

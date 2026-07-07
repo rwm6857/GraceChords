@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { AppState } from 'react-native'
 import { createGcSupabase } from '@gracechords/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { silenceInvalidRefreshTokenLogs } from './authSession'
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -23,6 +24,15 @@ export const supabaseConfigError: string | null =
       'cloud build — set these as EAS environment variables ' +
       '(eas env:create --environment production ...).'
     : null
+
+// Drop GoTrue's benign, self-healing "Invalid Refresh Token" console.error
+// before the client is created. That log is emitted from inside GoTrue's own
+// automatic init (`_recoverAndRefresh`), which kicks off when createGcSupabase()
+// constructs the client below — so the filter must be installed FIRST to be in
+// place when init runs. See silenceInvalidRefreshTokenLogs for the full why.
+if (!supabaseConfigError) {
+  silenceInvalidRefreshTokenLogs()
+}
 
 // Consume the SAME core factory the web app uses. We inject AsyncStorage as the
 // native session store; persistSession + autoRefreshToken default to true in
