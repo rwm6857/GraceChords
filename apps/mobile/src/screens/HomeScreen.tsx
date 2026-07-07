@@ -123,20 +123,11 @@ export default function HomeScreen() {
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 8,
-                    backgroundColor: t.colors.accent,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 0.3, color: t.colors.onAccent }}>
-                    GC
-                  </Text>
-                </View>
+                <Image
+                  source={require('../../assets/icon.png')}
+                  accessibilityLabel="GraceChords"
+                  style={{ width: 28, height: 28, borderRadius: 8 }}
+                />
                 <Text style={{ fontSize: 20, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
                   GraceChords
                 </Text>
