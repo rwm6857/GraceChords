@@ -176,7 +176,11 @@ duplicate logic here and never edit core internals to suit mobile.
   `src/lib/authDeps.ts`. Google client ids come from
   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, and the
   reversed iOS client id must be set in `app.json` → google-signin plugin
-  `iosUrlScheme`. The sprite pick is written to `users.preferences.sprite`
+  `iosUrlScheme`. Supabase's Google provider must have **"Skip nonce checks"**
+  enabled: iOS embeds a nonce in the id-token that the free google-signin lib
+  can't reproduce, so otherwise `signInWithIdToken` rejects it ("Passed nonce and
+  nonce in id_token should either both exist or not"). Apple is unaffected — it
+  drives the raw/hashed nonce pair itself (see `appleSignIn`). The sprite pick is written to `users.preferences.sprite`
   (`src/lib/profile.ts`) — the same JSONB shape the web Profile page writes; ids in
   `src/lib/sprites.ts` must stay in sync with web's `SpritePicker.jsx`.
 

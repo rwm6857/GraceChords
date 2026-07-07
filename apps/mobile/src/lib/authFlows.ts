@@ -95,6 +95,13 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     return { ok: false, error: 'Google did not return a credential.' }
   }
 
+  // No nonce is passed here — unlike Apple. On iOS the native Google SDK embeds
+  // its own nonce claim in the id_token, but the FREE @react-native-google-signin
+  // cannot supply/read a matching raw nonce (custom nonce is a paid feature). So
+  // the Google provider MUST have "Skip nonce checks" enabled in the Supabase
+  // dashboard (Auth -> Providers -> Google); otherwise Supabase rejects the token
+  // with "Passed nonce and nonce in id_token should either both exist or not."
+  // Do not add a `nonce` here expecting parity with appleSignIn — it would not match.
   const { error } = await deps.supabase.auth.signInWithIdToken({
     provider: 'google',
     token: result.idToken,
