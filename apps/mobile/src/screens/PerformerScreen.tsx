@@ -45,7 +45,7 @@ import PerformerShareSheet, {
 } from '../components/setlist/PerformerShareSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
-import { prefetchSong, useSong } from '../lib/useSong'
+import { prefetchSong, useSong, usePersonalSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../lib/defaults'
 import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
@@ -77,12 +77,23 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   const [index, setIndex] = useState(0)
   const entry = items[index]
-  const { song, loading: songLoading, error: songError } = useSong(entry?.song.slug)
+  // Personal-song entries (id `personal:<uuid>`) resolve from personal_songs;
+  // catalog entries from the shared cache. Both hooks always run (undefined arg
+  // = no-op) to keep hook order stable.
+  const isPersonalEntry = typeof entry?.songId === 'string' && entry.songId.startsWith('personal:')
+  const personalEntryId = isPersonalEntry ? entry!.songId.slice('personal:'.length) : undefined
+  const catalogSong = useSong(isPersonalEntry ? undefined : entry?.song.slug)
+  const personalSong = usePersonalSong(personalEntryId)
+  const { song, loading: songLoading, error: songError } = isPersonalEntry ? personalSong : catalogSong
 
-  // useSong keeps the previous song while the next slug loads, so guard every
-  // render on the loaded song actually being this entry's song. Until it
-  // matches, treat the chart as still loading (no stale flash / mistranspose).
-  const songReady = !!(song && entry && song.slug === entry.song.slug)
+  // useSong keeps the previous song while the next loads, so guard every render
+  // on the loaded song actually being this entry's song. Until it matches,
+  // treat the chart as still loading (no stale flash / mistranspose).
+  const songReady = !!(
+    song &&
+    entry &&
+    (isPersonalEntry ? song.id === personalEntryId : song.slug === entry.song.slug)
+  )
 
   const { doc, parseError } = useMemo<{ doc: SongDoc | null; parseError: boolean }>(() => {
     if (!songReady || !song?.chordpro_content) return { doc: null, parseError: false }

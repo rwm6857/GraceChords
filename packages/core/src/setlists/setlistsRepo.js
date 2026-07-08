@@ -40,24 +40,30 @@ export async function fetchSetlist(client, setlistId) {
     .from('setlists')
     .select(
       'id, name, service_date, updated_at, ' +
-        'setlist_songs(id, song_id, position, key_override, notes, ' +
-        'songs(slug, title, artist, default_key, tempo, time_signature))',
+        'setlist_songs(id, song_id, personal_song_id, position, key_override, notes, ' +
+        'songs(slug, title, artist, default_key, tempo, time_signature), ' +
+        'personal_songs(slug, title, artist, default_key, tempo, time_signature))',
     )
     .eq('id', setlistId)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
+  // A personal-song entry exposes song_id as `personal:<uuid>` so the builder's
+  // single opaque-id model round-trips; updateSetlist decodes it on save.
   const entries = (data.setlist_songs || [])
     .slice()
     .sort((a, b) => a.position - b.position)
-    .map((row) => ({
-      id: row.id,
-      song_id: row.song_id,
-      position: row.position,
-      toKey: row.key_override || null,
-      notes: row.notes || null,
-      song: row.songs || null,
-    }))
+    .map((row) => {
+      const isPersonal = !!row.personal_song_id
+      return {
+        id: row.id,
+        song_id: isPersonal ? `personal:${row.personal_song_id}` : row.song_id,
+        position: row.position,
+        toKey: row.key_override || null,
+        notes: row.notes || null,
+        song: isPersonal ? row.personal_songs || null : row.songs || null,
+      }
+    })
   return {
     id: data.id,
     name: data.name,
@@ -126,13 +132,19 @@ export async function updateSetlist(client, setlistId, input = {}) {
 
   const songs = input.songs || []
   if (songs.length > 0) {
-    const rows = songs.map((song, i) => ({
-      setlist_id: setlistId,
-      song_id: song.id,
-      position: i,
-      key_override: song.toKey || null,
-      notes: null,
-    }))
+    // A `personal:<uuid>` id targets the personal_songs FK; anything else is a
+    // public catalog song. The DB enforces exactly one of the two per row.
+    const rows = songs.map((song, i) => {
+      const isPersonal = typeof song.id === 'string' && song.id.startsWith('personal:')
+      return {
+        setlist_id: setlistId,
+        song_id: isPersonal ? null : song.id,
+        personal_song_id: isPersonal ? song.id.slice('personal:'.length) : null,
+        position: i,
+        key_override: song.toKey || null,
+        notes: null,
+      }
+    })
     const { error: songsError } = await client.from('setlist_songs').insert(rows)
     if (songsError) throw songsError
   }
@@ -160,17 +172,23 @@ export async function deleteSetlist(client, setlistId) {
 export async function fetchLastSetSummary(client) {
   const { data, error } = await client
     .from('setlists')
-    .select('id, name, updated_at, setlist_songs(key_override, songs(default_key, tempo))')
+    .select(
+      'id, name, updated_at, setlist_songs(key_override, ' +
+        'songs(default_key, tempo), personal_songs(default_key, tempo))',
+    )
     .is('team_id', null)
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const entries = (data.setlist_songs || []).map((row) => ({
-    toKey: row.key_override || null,
-    default_key: (row.songs && row.songs.default_key) || null,
-    tempo: (row.songs && row.songs.tempo) ?? null,
-  }))
+  const entries = (data.setlist_songs || []).map((row) => {
+    const s = row.songs || row.personal_songs
+    return {
+      toKey: row.key_override || null,
+      default_key: (s && s.default_key) || null,
+      tempo: (s && s.tempo) ?? null,
+    }
+  })
   return { id: data.id, name: data.name, updated_at: data.updated_at, entries }
 }
