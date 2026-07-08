@@ -1,0 +1,115 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "셋리스트",
+  "newSet": "새 셋리스트",
+  "empty": "아직 셋리스트가 없습니다",
+  "syncing": "셋리스트 동기화 중…",
+  "editedAgo": "{{time}} 편집됨",
+  "deleteConfirm": {
+    "title": "“{{name}}”을(를) 삭제할까요?",
+    "message": "이 작업은 되돌릴 수 없습니다."
+  },
+  "alerts": {
+    "couldNotCreate": "셋리스트를 만들 수 없음",
+    "couldNotDelete": "셋리스트를 삭제할 수 없음",
+    "couldNotDeleteMany": "셋리스트를 삭제할 수 없음",
+    "couldNotCopyLink": "링크를 복사할 수 없음",
+    "couldNotSendSet": "셋리스트를 보낼 수 없음",
+    "telegramNotLinkedTitle": "텔레그램 미연결",
+    "telegramNotLinkedMessage": "먼저 봇으로 계정을 연결하세요: {{url}}",
+    "deleteSetTitle": "셋리스트를 삭제할까요?",
+    "deleteSetMessage": "“{{name}}”과(와) 포함된 찬양곡이 삭제됩니다."
+  },
+  "toasts": {
+    "addSongsFirst": "먼저 찬양곡을 추가하세요",
+    "setLinkCopied": "셋리스트 링크 복사됨",
+    "sentToTelegram": "텔레그램으로 전송됨",
+    "removedFromSet": "셋리스트에서 제거됨"
+  },
+  "builder": {
+    "back": "셋리스트",
+    "setlistOptions": "셋리스트 옵션",
+    "setName": "셋리스트 이름",
+    "renameSet": "셋리스트 이름 변경",
+    "clearSetName": "셋리스트 이름 지우기",
+    "backToSetlists": "셋리스트로 돌아가기",
+    "lastEdited": "마지막 편집 {{time}}",
+    "noSongs": "아직 찬양곡이 없습니다",
+    "addHintTablet": "추가하려면 라이브러리에서 찬양곡을 탭하세요.",
+    "addHintPhone": "라이브러리를 검색하려면 추가를 탭하세요.",
+    "add": "추가",
+    "addSongs": "찬양곡 추가",
+    "startSet": "셋리스트 시작",
+    "notFound": "이 셋리스트는 더 이상 존재하지 않습니다."
+  },
+  "timeline": {
+    "reorder": "{{title}} 순서 변경",
+    "changeKeyFor": "{{title}} 키 변경",
+    "noKey": "—"
+  },
+  "options": {
+    "title": "셋리스트",
+    "renameSet": "셋리스트 이름 변경",
+    "savedSets": "저장된 셋리스트…",
+    "newSet": "새 셋리스트",
+    "deleteSet": "셋리스트 삭제"
+  },
+  "rowActions": {
+    "closeSongOptions": "찬양곡 옵션 닫기",
+    "changeKey": "키 변경",
+    "duplicate": "복제",
+    "removeFromSet": "셋리스트에서 제거"
+  },
+  "remove": "제거",
+  "performer": {
+    "back": "셋리스트",
+    "viewOptions": "보기 옵션",
+    "backToSetlist": "셋리스트로 돌아가기",
+    "goToSong": "{{number}}번째 곡으로 이동",
+    "previousSong": "이전 곡",
+    "nextSong": "다음 곡",
+    "noSongs": "이 셋리스트에 찬양곡이 없습니다",
+    "notFound": "이 셋리스트는 더 이상 존재하지 않습니다."
+  },
+  "addSongs": {
+    "title": "찬양곡 추가",
+    "doneAdding": "찬양곡 추가 완료",
+    "searchPlaceholder": "찬양곡, 아티스트, 주제 검색…",
+    "clearSearch": "검색 지우기",
+    "noMatches": "“{{query}}”와 일치하는 찬양곡이 없습니다.",
+    "emptyLibrary": "라이브러리가 비어 있습니다.",
+    "add": "{{title}} 셋리스트에 추가",
+    "remove": "{{title}} 셋리스트에서 제거"
+  },
+  "libraryPane": {
+    "searchPlaceholder": "찬양곡 검색…",
+    "searchLibrary": "라이브러리 검색"
+  },
+  "prune": {
+    "title": "셋리스트 개수 한도에 도달함",
+    "message": "{{limit}}개 중 {{count}}개의 셋리스트를 저장했습니다. 삭제할 항목을 선택한 후(오래된 것부터) 다시 시도하세요.",
+    "select": "{{name}} 삭제 선택",
+    "deselect": "{{name}} 선택 해제",
+    "deleteSelected": "선택한 셋리스트 삭제",
+    "deleteCount": "{{count}}개 삭제",
+    "deleteSelectedShort": "선택 항목 삭제"
+  },
+  "import": {
+    "back": "뒤로",
+    "title": "셋리스트 가져오기",
+    "couldNotLoadTitle": "찬양곡을 불러올 수 없음",
+    "couldNotLoadSubtitle": "연결을 확인하고 링크를 다시 열어 보세요.",
+    "couldNotImportTitle": "이 셋리스트를 가져올 수 없습니다",
+    "couldNotImportSubtitle": "이 링크에서 찾을 수 있는 찬양곡이 없습니다.",
+    "backToSetlists": "셋리스트로 돌아가기",
+    "save": "내 셋리스트에 저장",
+    "saving": "저장 중…",
+    "couldNotImportAlert": "셋리스트를 가져올 수 없음",
+    "missingCount_one": "{{count}}곡을 찾을 수 없습니다.",
+    "missingCount_other": "{{count}}곡을 찾을 수 없습니다.",
+    "missingNamed": "{{subject}}을(를) 찾을 수 없습니다.",
+    "missingWithOthers_one": "{{names}} 외 {{count}}곡",
+    "missingWithOthers_other": "{{names}} 외 {{count}}곡",
+    "listAnd": "{{head}} 및 {{last}}"
+  }
+}

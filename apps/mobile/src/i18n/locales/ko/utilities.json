@@ -1,0 +1,45 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "도구",
+  "sectionTools": "도구",
+  "pickTool": "시작하려면 도구를 선택하세요",
+  "tools": {
+    "tuner": "튜너",
+    "metronome": "탭 템포 / 메트로놈",
+    "pitchPipe": "피치 파이프"
+  },
+  "tuner": {
+    "title": "튜너",
+    "permissionDenied": "튜너가 기타 소리를 들으려면 마이크 접근 권한이 필요합니다. 오디오는 이 기기에서만 분석되며, 절대 녹음되거나 어디에도 전송되지 않습니다.",
+    "enableInSettings": "설정에서 사용 설정",
+    "inTune": "정확함",
+    "cents": "{{sign}}{{cents}}¢",
+    "hz": "{{freq}} Hz",
+    "playAString": "현을 연주하세요…",
+    "stringLocked": "{{name}} — 잠김, 자동은 탭",
+    "stringAuto": "{{name}}",
+    "autoModeOff": "자동 모드 꺼짐",
+    "autoModeOn": "자동 모드 켜짐"
+  },
+  "metronome": {
+    "title": "메트로놈",
+    "bpm": "BPM",
+    "slower": "느리게",
+    "faster": "빠르게",
+    "tapTempo": "탭 템포",
+    "tapTempoHint": "메트로놈 템포를 설정하려면 곡에 맞춰 탭하세요",
+    "metronomeStopped": "메트로놈 정지됨",
+    "beatOf": "{{total}}박 중 {{current}}박",
+    "accentDownbeat": "첫 박 강조",
+    "stop": "정지",
+    "start": "시작"
+  },
+  "pitchPipe": {
+    "title": "피치 파이프",
+    "octave": "옥타브",
+    "note": "{{label}} 음",
+    "octaveDown": "옥타브 내림",
+    "octaveUp": "옥타브 올림",
+    "holdNote": "음 유지"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "chooseTranslation": "번역본 선택",
+  "chooseDate": "날짜 선택",
+  "readerSettings": "읽기 설정",
+  "defaultTranslationLabel": "ESV",
+  "copyVerses_one": "{{count}}개 구절 복사",
+  "copyVerses_other": "{{count}}개 구절 복사",
+  "error": {
+    "title": "오늘의 말씀을 불러올 수 없습니다",
+    "subtitle": "인터넷에 연결한 후 다시 시도하거나, 오프라인에서 읽으려면 설정 → 오프라인 및 다운로드에서 이 번역본을 다운로드하세요.",
+    "retry": "다시 시도"
+  },
+  "empty": {
+    "title": "이 날짜에는 읽을 말씀이 없습니다",
+    "subtitle": "계속 읽으려면 다른 날짜를 선택하세요."
+  },
+  "translationPicker": {
+    "title": "번역본"
+  },
+  "settings": {
+    "title": "읽기 설정",
+    "textSize": "글자 크기",
+    "smallerText": "글자 작게",
+    "largerText": "글자 크게",
+    "pt": "{{pt}} pt",
+    "typeface": "서체",
+    "serif": "세리프",
+    "sans": "산세리프",
+    "verseLayout": "구절 배치",
+    "lines": "줄 단위",
+    "prose": "문단",
+    "lineSpacing": "줄 간격",
+    "tight": "좁게",
+    "normal": "보통",
+    "relaxed": "넓게",
+    "readingStreak": "읽기 연속 기록",
+    "trackReadingStreak": "읽기 연속 기록 추적",
+    "trackReadingStreakDesc": "오늘의 말씀을 연속으로 열어본 일수를 셉니다."
+  },
+  "datePicker": {
+    "title": "날짜 선택",
+    "today": "오늘",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "monthYear": "{{year}}년 {{month}}",
+    "weekdays": [
+      "일",
+      "월",
+      "화",
+      "수",
+      "목",
+      "금",
+      "토"
+    ],
+    "months": [
+      "1월",
+      "2월",
+      "3월",
+      "4월",
+      "5월",
+      "6월",
+      "7월",
+      "8월",
+      "9월",
+      "10월",
+      "11월",
+      "12월"
+    ]
+  }
+}

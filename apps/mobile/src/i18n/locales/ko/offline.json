@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "오프라인 및 다운로드",
+  "onThisDeviceStorage": "이 기기의 번역본",
+  "downloadedCount": "{{total}}개 번역본 중 {{count}}개 다운로드됨",
+  "mb": "{{value}} MB",
+  "percent": "{{value}}%",
+  "sections": {
+    "downloading": "다운로드 중",
+    "onThisDevice": "이 기기에 · {{count}}",
+    "available": "다운로드 가능",
+    "options": "옵션"
+  },
+  "updateAvailable": "업데이트 있음",
+  "translationMeta": "{{language}} · {{size}}",
+  "translationMetaStale": "{{language}} · {{size}} · 업데이트 있음",
+  "cancelDownload": "다운로드 취소",
+  "updateDownload": "다운로드 업데이트",
+  "deleteDownload": "다운로드 삭제",
+  "download": "{{name}} 다운로드",
+  "wifiOnly": "Wi-Fi에서만 다운로드",
+  "footer": "다운로드한 번역본은 연결 없이도 읽을 수 있습니다. The Gospel Coalition의 매일 묵상은 네트워크로 스트리밍되며 오프라인에 저장되지 않습니다.",
+  "back": "설정",
+  "backToSettings": "설정으로 돌아가기",
+  "alerts": {
+    "wifiRequiredTitle": "Wi-Fi 필요",
+    "wifiRequiredMessage": "\"Wi-Fi에서만 다운로드\"가 켜져 있습니다. Wi-Fi에 연결하거나 셀룰러 데이터로 다운로드하려면 옵션을 끄세요.",
+    "downloadFailedTitle": "다운로드 실패",
+    "downloadFailedMessage": "이 번역본을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+    "deleteTitle": "다운로드 삭제",
+    "deleteMessage": "\"{{name}}\"을(를) 이 기기에서 제거할까요? 언제든지 다시 다운로드할 수 있습니다."
+  }
+}

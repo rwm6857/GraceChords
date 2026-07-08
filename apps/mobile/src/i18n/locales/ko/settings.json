@@ -1,0 +1,55 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "프로필 및 설정",
+  "yourAccount": "내 계정",
+  "changeYourIcon": "아이콘 변경",
+  "sections": {
+    "settings": "설정",
+    "library": "라이브러리",
+    "support": "지원"
+  },
+  "appearance": "테마",
+  "appearanceOptions": {
+    "auto": "자동",
+    "light": "라이트",
+    "dark": "다크"
+  },
+  "language": "언어",
+  "languageAutomatic": "자동 (기기)",
+  "chordStyle": "코드 표기",
+  "chordStyleOptions": {
+    "letters": "알파벳",
+    "solfege": "계이름"
+  },
+  "offlineDownloads": "오프라인 및 다운로드",
+  "starred": "즐겨찾기",
+  "mySetlists": "내 셋리스트",
+  "helpCenter": "고객센터",
+  "sendFeedback": "피드백 보내기",
+  "aboutGraceChords": "GraceChords 정보",
+  "logOut": "로그아웃",
+  "deleteAccount": "계정 삭제",
+  "signOutAlert": {
+    "title": "로그아웃",
+    "message": "이 기기에서 GraceChords 로그아웃할까요?",
+    "confirm": "로그아웃"
+  },
+  "deleteAccountAlert": {
+    "title": "계정 삭제",
+    "message": "계정과 모든 데이터(즐겨찾기 찬양곡, 셋리스트, 환경설정)가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "confirm": "계정 삭제"
+  },
+  "deleteFailedAlert": {
+    "title": "삭제 실패",
+    "message": "계정을 삭제하지 못했습니다. 다시 시도해 주세요."
+  },
+  "about": {
+    "title": "정보",
+    "version": "버전 {{version}}",
+    "sectionLegal": "법적 고지",
+    "privacyPolicy": "개인정보 처리방침",
+    "termsOfUse": "이용약관",
+    "acknowledgements": "감사의 말 및 라이선스",
+    "contact": "문의"
+  }
+}
