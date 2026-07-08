@@ -268,7 +268,9 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: t.colors.bg }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: t.spacing.xl }}
+        // Clear the floating native tab bar (insets.bottom includes its height
+        // under native tabs) so the last card scrolls fully above it.
+        contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
       >
         {/* ===== Hero ===== */}
         <View>
