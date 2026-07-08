@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useFormSheet } from '../lib/formSheetHost'
@@ -31,6 +32,7 @@ export default function ExportSheet(props: ExportSheetProps) {
 
 function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('export')
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
 
@@ -45,14 +47,14 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   }
 
   return (
-    <FormSheetShell title="Export & share" onAction={onClose}>
+    <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Primary: export as PDF (opens the system share sheet). */}
         <Pressable
           onPress={run('pdf', () => onExport('pdf'))}
           disabled={!!busy}
           accessibilityRole="button"
-          accessibilityLabel="Export as PDF"
+          accessibilityLabel={tx('exportAsPdf')}
           style={{
             height: 50,
             borderRadius: 13,
@@ -70,13 +72,13 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
             <SymbolIcon name="square.and.arrow.up" size={19} color={t.colors.onAccent} />
           )}
           <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
-            Export as PDF
+            {tx('exportAsPdf')}
           </Text>
         </Pressable>
 
         {/* Secondary: JPG image. */}
         <SecondaryRow
-          label="Export as JPG"
+          label={tx('exportAsJpg')}
           icon="photo"
           busy={busy === 'jpg'}
           dimmed={!!busy && busy !== 'jpg'}
@@ -86,8 +88,8 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
 
         {/* Telegram */}
         <SecondaryRow
-          label="Send to Telegram"
-          subtitle="Optional bot"
+          label={tx('sendToTelegram')}
+          subtitle={tx('optionalBot')}
           icon="paperplane.fill"
           busy={busy === 'telegram'}
           dimmed={!!busy && busy !== 'telegram'}

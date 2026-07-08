@@ -108,7 +108,7 @@ export default function SetlistImportScreen({
       <Pressable
         onPress={goBack}
         accessibilityRole="button"
-        accessibilityLabel="Back"
+        accessibilityLabel={tx('import.back')}
         hitSlop={8}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
       >

@@ -262,9 +262,11 @@ duplicate logic here and never edit core internals to suit mobile.
 ## Settings & defaults
 
 - **Settings** (`app/settings.tsx` → `SettingsScreen`) is a grouped screen:
-  profile card (→ sprite picker), theme, chord style, Offline & downloads,
-  library shortcuts, Help/Feedback, About, sign-out, and **Delete account**
-  (`supabase.rpc('delete_user')`). The Language row is a static "English".
+  profile card (→ sprite picker), theme, chord style, **Language**, Offline &
+  downloads, library shortcuts, Help/Feedback, About, sign-out, and **Delete
+  account** (`supabase.rpc('delete_user')`). The Language row opens an
+  `OptionSheet` (Automatic + the supported locales) and shows the resolved
+  language — see the i18n section below.
 - **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
   (`system`/`light`/`dark`) and `chordStyle` (`letters`/`solfege`), **device-local
   in AsyncStorage, not Supabase-synced**. Storage is injected (KVStorage, like
@@ -335,14 +337,47 @@ duplicate logic here and never edit core internals to suit mobile.
   in `bibleSource.ts` reads a downloaded chapter before falling back to R2.
   Staleness compares the stored translations `version` against the live manifest.
 
+## Internationalization (i18n)
+
+Mirrors the web app's setup (`apps/web/src/i18n`) so the shared `gracechords-i18n`
+tooling serves both. **`i18next` + `react-i18next`** (same versions as web) plus
+**`expo-localization`** for the device locale; all pure JS, so the same locale
+JSONs serve iOS now and Android later — no native `.strings`.
+
+- Locale files: `src/i18n/locales/{en,tr}/<ns>.json`. **`en/` is the source of
+  truth**; each file opens with a single-line `_meta` block, camelCase keys,
+  `{{var}}` interpolation, and i18next `_one`/`_other` plural keys. `tr/` mirrors
+  `en/` exactly (English placeholder values until translated). Namespaces:
+  `common, nav, home, auth, song, setlist, export, settings, reader, offline,
+  utilities, errors`.
+- Runtime: `src/i18n/` — `resources.ts` builds the resource map + `SUPPORTED_LOCALES`
+  from the locale folders via `require.context` (folders are the source of truth,
+  **don't hardcode a locale list**); `config.ts` holds `resolveLanguage` (stored
+  pick → device locale → English) and the native-name labels; `index.ts` inits
+  i18next (`fallbackLng:'en'`, `defaultNS:'common'`) and exports
+  `applyLanguagePreference`.
+- Consume via `useTranslation('ns')` → `t('key')` (or `t('ns:key')` across
+  namespaces). RN-free `src/lib` modules stay pure by returning locale KEYS or
+  taking an injected translator (`greetings.ts`, `authValidation.ts`,
+  `authFlows.ts`, `setlistImport.ts`, `relativeTime.ts`, `capo.ts`).
+- **App language** persists in `defaults.ts` (`gc.defaults.language`, `null` =
+  follow device), applied during the splash hold. **Bible translation** persists
+  separately in `bibleTranslationPref.ts` (`gc.bible.translation.v1`) and is
+  INDEPENDENT of UI language: a stored pick always wins; with none,
+  `defaultTranslationForLocale` seeds the first manifest translation matching the
+  app locale, else ESV.
+- Adding a language: create `src/i18n/locales/<code>/` mirroring `en/`, add a
+  label in `config.ts`, run `npm run i18n:check` (parity gate, mirrors web's).
+  Adding/renaming a key: change it in `en/` AND `tr/` together. Never translate
+  the brand "GraceChords".
+
 ## Out of scope (for now)
 
 The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 `/api/export/setlist`; the ZIP/ChordPro tiles render disabled), **offline
 downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
-**"Add song"** button (a no-op) and Settings **Language** picker (static
-"English"), **password reset / email-confirmation** screens (the login "Forgot?"
+**"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
 link is an informational alert only), tablet master-detail, EAS Build /
 TestFlight, Android (auth code is cross-platform-safe, but Android OAuth config —
 SHA-1, google-services — is not set up), GraceTracks, and migrating web's
