@@ -1,55 +1,55 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "title": "Profile & Settings",
-  "yourAccount": "Your account",
-  "changeYourIcon": "Change your icon",
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Profil ve Ayarlar",
+  "yourAccount": "Hesabınız",
+  "changeYourIcon": "Simgenizi değiştirin",
   "sections": {
-    "settings": "SETTINGS",
-    "library": "LIBRARY",
-    "support": "SUPPORT"
+    "settings": "AYARLAR",
+    "library": "KÜTÜPHANE",
+    "support": "DESTEK"
   },
-  "appearance": "Appearance",
+  "appearance": "Görünüm",
   "appearanceOptions": {
-    "auto": "Auto",
-    "light": "Light",
-    "dark": "Dark"
+    "auto": "Otomatik",
+    "light": "Açık",
+    "dark": "Koyu"
   },
-  "language": "Language",
-  "languageAutomatic": "Automatic (device)",
-  "chordStyle": "Chord style",
+  "language": "Dil",
+  "languageAutomatic": "Otomatik (cihaz)",
+  "chordStyle": "Akor gösterimi",
   "chordStyleOptions": {
-    "letters": "Letters",
-    "solfege": "Solfège"
+    "letters": "Harfler",
+    "solfege": "Solfej"
   },
-  "offlineDownloads": "Offline & downloads",
-  "starred": "Starred",
-  "mySetlists": "My setlists",
-  "helpCenter": "Help center",
-  "sendFeedback": "Send feedback",
-  "aboutGraceChords": "About GraceChords",
-  "logOut": "Log out",
-  "deleteAccount": "Delete account",
+  "offlineDownloads": "Çevrimdışı ve indirmeler",
+  "starred": "Yıldızlılar",
+  "mySetlists": "Set listelerim",
+  "helpCenter": "Yardım merkezi",
+  "sendFeedback": "Geri bildirim gönder",
+  "aboutGraceChords": "GraceChords Hakkında",
+  "logOut": "Çıkış yap",
+  "deleteAccount": "Hesabı sil",
   "signOutAlert": {
-    "title": "Sign out",
-    "message": "Sign out of GraceChords on this device?",
-    "confirm": "Sign out"
+    "title": "Çıkış yap",
+    "message": "Bu cihazda GraceChords oturumunuzu kapatmak istiyor musunuz?",
+    "confirm": "Çıkış yap"
   },
   "deleteAccountAlert": {
-    "title": "Delete account",
-    "message": "This permanently deletes your account and all your data — starred songs, setlists, and preferences. This cannot be undone.",
-    "confirm": "Delete account"
+    "title": "Hesabı sil",
+    "message": "Bu işlem hesabınızı ve tüm verilerinizi — yıldızlı ilahiler, set listeleri ve tercihler — kalıcı olarak siler. Bu geri alınamaz.",
+    "confirm": "Hesabı sil"
   },
   "deleteFailedAlert": {
-    "title": "Delete failed",
-    "message": "We could not delete your account. Please try again."
+    "title": "Silme başarısız",
+    "message": "Hesabınız silinemedi. Lütfen tekrar deneyin."
   },
   "about": {
-    "title": "About",
-    "version": "Version {{version}}",
-    "sectionLegal": "LEGAL",
-    "privacyPolicy": "Privacy Policy",
-    "termsOfUse": "Terms of Use",
-    "acknowledgements": "Acknowledgements & Licenses",
-    "contact": "Contact"
+    "title": "Hakkında",
+    "version": "Sürüm {{version}}",
+    "sectionLegal": "YASAL",
+    "privacyPolicy": "Gizlilik Politikası",
+    "termsOfUse": "Kullanım Koşulları",
+    "acknowledgements": "Teşekkürler ve Lisanslar",
+    "contact": "İletişim"
   }
 }

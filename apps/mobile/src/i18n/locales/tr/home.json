@@ -1,54 +1,54 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "greeting": {
-    "morning": "Good morning",
-    "afternoon": "Good afternoon",
-    "evening": "Good evening",
+    "morning": "Günaydın",
+    "afternoon": "İyi günler",
+    "evening": "İyi akşamlar",
     "hello": "{{greeting}}, {{name}}",
-    "friend": "friend"
+    "friend": "dostum"
   },
   "subGreetings": [
-    "Everything's where you left it.",
-    "Let's get to it.",
-    "Good to have you back.",
-    "Glad you're here.",
-    "One song at a time.",
-    "Sing to Him a new song.",
-    "Be still, and know.",
-    "This is the day He has made.",
-    "Let everything that has breath praise Him.",
-    "He is your strength and your song.",
-    "Whatever you do, for His glory.",
-    "Enter His gates with thanksgiving.",
-    "Bless the Lord, O my soul.",
-    "His grace is enough.",
-    "Rejoice always."
+    "Her şey bıraktığın yerde.",
+    "Hadi başlayalım.",
+    "Döndüğüne sevindik.",
+    "Burada olmana sevindik.",
+    "Her seferinde bir ilahi.",
+    "O'na yeni bir ezgi söyleyin.",
+    "Sakin olun ve bilin.",
+    "Bugün RAB'bin yarattığı gündür.",
+    "Soluğu olan her şey RAB'be övgüler sunsun.",
+    "O senin gücün ve ezgindir.",
+    "Ne yaparsanız yapın, O'nun yüceliği için.",
+    "O'nun kapılarından şükranla girin.",
+    "RAB'be övgüler sun, ey canım.",
+    "O'nun lütfu yeter.",
+    "Her zaman sevinin."
   ],
-  "profileAndSettings": "Profile and settings",
+  "profileAndSettings": "Profil ve ayarlar",
   "lastSet": {
-    "label": "Last set",
-    "meta_one": "{{count}} song · ~{{min}} min",
-    "meta_other": "{{count}} songs · ~{{min}} min",
-    "keys": "Keys {{keys}}",
-    "resume": "Resume",
-    "editSet": "Edit set"
+    "label": "Son set",
+    "meta_one": "{{count}} ilahi · ~{{min}} dk",
+    "meta_other": "{{count}} ilahi · ~{{min}} dk",
+    "keys": "Tonlar: {{keys}}",
+    "resume": "Devam et",
+    "editSet": "Seti düzenle"
   },
   "continueCard": {
-    "label": "Continue where you left off"
+    "label": "Kaldığın yerden devam et"
   },
   "starredCard": {
-    "label": "Starred songs",
-    "empty": "Songs you star will appear here."
+    "label": "Yıldızlı ilahiler",
+    "empty": "Yıldızladığın ilahiler burada görünecek."
   },
   "dailyWordCard": {
-    "label": "Daily Word",
-    "empty": "Open today's reading.",
-    "open": "Open today's Daily Word",
-    "streak_one": "{{count}}-day streak",
-    "streak_other": "{{count}}-day streak"
+    "label": "Kutsal Kitap",
+    "empty": "Bugünün okumasını aç.",
+    "open": "Bugünün Kutsal Kitap bölümünü aç",
+    "streak_one": "{{count}} günlük seri",
+    "streak_other": "{{count}} günlük seri"
   },
   "recentSongsCard": {
-    "label": "Recent songs",
-    "empty": "Songs you open will appear here."
+    "label": "Son ilahiler",
+    "empty": "Açtığın ilahiler burada görünecek."
   }
 }

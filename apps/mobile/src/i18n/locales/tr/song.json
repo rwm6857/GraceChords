@@ -1,70 +1,70 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "library": {
-    "title": "Song Library",
-    "addSong": "Add song",
-    "filterAndSort": "Filter and sort",
-    "searchPlaceholder": "Search songs, artists, themes…",
-    "empty": "Your library is empty.",
-    "noMatchesForQuery": "No songs match “{{query}}”.",
-    "noMatchesFilters": "No songs match your filters.",
-    "results_one": "{{count}} result",
-    "results_other": "{{count}} results",
-    "noKey": "No key"
+    "title": "İlahi Kütüphanesi",
+    "addSong": "İlahi ekle",
+    "filterAndSort": "Filtrele ve sırala",
+    "searchPlaceholder": "İlahi, sanatçı, tema ara…",
+    "empty": "Kütüphaneniz boş.",
+    "noMatchesForQuery": "“{{query}}” ile eşleşen ilahi yok.",
+    "noMatchesFilters": "Filtrelerinizle eşleşen ilahi yok.",
+    "results_one": "{{count}} sonuç",
+    "results_other": "{{count}} sonuç",
+    "noKey": "Ton yok"
   },
   "filterSheet": {
-    "title": "Filter & sort",
-    "sortBy": "Sort by",
+    "title": "Filtrele ve sırala",
+    "sortBy": "Sıralama ölçütü",
     "sort": {
-      "title": "Title",
-      "artist": "Artist",
-      "key": "Key",
-      "recent": "Recently added",
+      "title": "Başlık",
+      "artist": "Sanatçı",
+      "key": "Ton",
+      "recent": "Son eklenen",
       "tempo": "Tempo"
     },
-    "filterByTag": "Filter by tag",
-    "show_one": "Show {{count}} song",
-    "show_other": "Show {{count}} songs"
+    "filterByTag": "Etikete göre filtrele",
+    "show_one": "{{count}} ilahiyi göster",
+    "show_other": "{{count}} ilahiyi göster"
   },
   "viewer": {
-    "viewOptions": "View options",
-    "exportAndShare": "Export and share",
-    "noChart": "No chart available",
-    "noChartBody": "This song has no ChordPro content yet.",
-    "chordsUnavailable": "Chords unavailable",
-    "rawFallback": "Chords unavailable — showing raw text",
-    "capo": "Capo {{fret}} for {{key}}"
+    "viewOptions": "Görüntüleme seçenekleri",
+    "exportAndShare": "Dışa aktar ve paylaş",
+    "noChart": "Nota yok",
+    "noChartBody": "Bu ilahinin henüz ChordPro içeriği yok.",
+    "chordsUnavailable": "Akorlar kullanılamıyor",
+    "rawFallback": "Akorlar kullanılamıyor — ham metin gösteriliyor",
+    "capo": "{{key}} için kapo: {{fret}}"
   },
   "viewOptions": {
-    "showChords": "Show chords",
-    "sectionLabels": "Section labels",
-    "fontSize": "Font size",
-    "smallerFont": "Smaller font",
-    "largerFont": "Larger font",
-    "chordStyle": "Chord style",
-    "letters": "Letters",
-    "solfege": "Solfège",
-    "accidentals": "Accidentals",
-    "columns": "Columns",
-    "screen": "Screen",
-    "hideControlsWhenIdle": "Hide controls when idle",
-    "keepScreenAwake": "Keep screen awake"
+    "showChords": "Akorları göster",
+    "sectionLabels": "Bölüm etiketleri",
+    "fontSize": "Yazı boyutu",
+    "smallerFont": "Daha küçük yazı",
+    "largerFont": "Daha büyük yazı",
+    "chordStyle": "Akor gösterimi",
+    "letters": "Harfler",
+    "solfege": "Solfej",
+    "accidentals": "Arızalar",
+    "columns": "Sütunlar",
+    "screen": "Ekran",
+    "hideControlsWhenIdle": "Boştayken kontrolleri gizle",
+    "keepScreenAwake": "Ekranı açık tut"
   },
   "transpose": {
-    "down": "Transpose down",
-    "up": "Transpose up",
-    "chooseKey": "Choose key",
-    "chooseKeyHint": "Opens the key selector"
+    "down": "Tonu düşür",
+    "up": "Tonu yükselt",
+    "chooseKey": "Ton seç",
+    "chooseKeyHint": "Ton seçiciyi açar"
   },
   "accidentals": {
-    "sharps": "Sharps",
-    "flats": "Flats"
+    "sharps": "Diyezler",
+    "flats": "Bemoller"
   },
   "keyPicker": {
-    "title": "Key",
-    "playIn": "Play {{title}} in…",
-    "resetTo": "Reset to {{key}}",
-    "resetToOriginal": "Reset to original key",
-    "resetToOriginalA11y": "Reset to the original key"
+    "title": "Ton",
+    "playIn": "{{title}} şu tonda çal…",
+    "resetTo": "{{key}} tonuna sıfırla",
+    "resetToOriginal": "Özgün tona sıfırla",
+    "resetToOriginalA11y": "Özgün tona sıfırla"
   }
 }

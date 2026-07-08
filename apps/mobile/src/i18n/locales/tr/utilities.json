@@ -1,45 +1,45 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "title": "Utilities",
-  "sectionTools": "TOOLS",
-  "pickTool": "Pick a tool to get started",
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Araçlar",
+  "sectionTools": "ARAÇLAR",
+  "pickTool": "Başlamak için bir araç seçin",
   "tools": {
-    "tuner": "Tuner",
-    "metronome": "Tap Tempo / Metronome",
-    "pitchPipe": "Pitch Pipe"
+    "tuner": "Akort Aleti",
+    "metronome": "Tempo / Metronom",
+    "pitchPipe": "Nota Düdüğü"
   },
   "tuner": {
-    "title": "Tuner",
-    "permissionDenied": "The tuner needs microphone access to hear your guitar. Audio is analyzed on this device only — never recorded or sent anywhere.",
-    "enableInSettings": "Enable in Settings",
-    "inTune": "In tune",
+    "title": "Akort Aleti",
+    "permissionDenied": "Akort aleti gitarınızı duymak için mikrofon erişimine ihtiyaç duyar. Ses yalnızca bu cihazda analiz edilir — asla kaydedilmez veya bir yere gönderilmez.",
+    "enableInSettings": "Ayarlar'dan etkinleştir",
+    "inTune": "Akortlu",
     "cents": "{{sign}}{{cents}}¢",
     "hz": "{{freq}} Hz",
-    "playAString": "Play a string…",
-    "stringLocked": "{{name}} — locked, tap for auto",
+    "playAString": "Bir tel çalın…",
+    "stringLocked": "{{name}} — kilitli, otomatik için dokunun",
     "stringAuto": "{{name}}",
-    "autoModeOff": "Auto-mode off",
-    "autoModeOn": "Auto-mode on"
+    "autoModeOff": "Otomatik mod kapalı",
+    "autoModeOn": "Otomatik mod açık"
   },
   "metronome": {
-    "title": "Metronome",
+    "title": "Metronom",
     "bpm": "BPM",
-    "slower": "Slower",
-    "faster": "Faster",
-    "tapTempo": "Tap tempo",
-    "tapTempoHint": "Tap along to the song to set the metronome tempo",
-    "metronomeStopped": "Metronome stopped",
-    "beatOf": "Beat {{current}} of {{total}}",
-    "accentDownbeat": "Accent downbeat",
-    "stop": "Stop",
-    "start": "Start"
+    "slower": "Daha yavaş",
+    "faster": "Daha hızlı",
+    "tapTempo": "Tempoya vur",
+    "tapTempoHint": "Metronom temposunu ayarlamak için ilahiye eşlik ederek dokunun",
+    "metronomeStopped": "Metronom durdu",
+    "beatOf": "Vuruş {{current}}/{{total}}",
+    "accentDownbeat": "İlk vuruşu vurgula",
+    "stop": "Durdur",
+    "start": "Başlat"
   },
   "pitchPipe": {
-    "title": "Pitch Pipe",
-    "octave": "OCTAVE",
-    "note": "Note {{label}}",
-    "octaveDown": "Octave down",
-    "octaveUp": "Octave up",
-    "holdNote": "Hold note"
+    "title": "Nota Düdüğü",
+    "octave": "OKTAV",
+    "note": "{{label}} notası",
+    "octaveDown": "Oktav aşağı",
+    "octaveUp": "Oktav yukarı",
+    "holdNote": "Notayı tut"
   }
 }

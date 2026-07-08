@@ -1,53 +1,71 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "chooseTranslation": "Choose translation",
-  "chooseDate": "Choose date",
-  "readerSettings": "Reader settings",
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "chooseTranslation": "Çeviri seç",
+  "chooseDate": "Tarih seç",
+  "readerSettings": "Okuyucu ayarları",
   "defaultTranslationLabel": "ESV",
-  "copyVerses_one": "Copy {{count}} verse",
-  "copyVerses_other": "Copy {{count}} verses",
+  "copyVerses_one": "{{count}} ayeti kopyala",
+  "copyVerses_other": "{{count}} ayeti kopyala",
   "error": {
-    "title": "Can't load today's reading",
-    "subtitle": "Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline.",
-    "retry": "Retry"
+    "title": "Bugünün okuması yüklenemiyor",
+    "subtitle": "İnternete bağlanıp tekrar deneyin veya çevrimdışı okumak için bu çeviriyi Ayarlar → Çevrimdışı ve İndirmeler'den indirin.",
+    "retry": "Tekrar dene"
   },
   "empty": {
-    "title": "No reading for this day",
-    "subtitle": "Pick another date to keep reading."
+    "title": "Bu gün için okuma yok",
+    "subtitle": "Okumaya devam etmek için başka bir tarih seçin."
   },
   "translationPicker": {
-    "title": "Translation"
+    "title": "Çeviri"
   },
   "settings": {
-    "title": "Reader settings",
-    "textSize": "Text size",
-    "smallerText": "Smaller text",
-    "largerText": "Larger text",
+    "title": "Okuyucu ayarları",
+    "textSize": "Yazı boyutu",
+    "smallerText": "Daha küçük yazı",
+    "largerText": "Daha büyük yazı",
     "pt": "{{pt}} pt",
-    "typeface": "Typeface",
+    "typeface": "Yazı tipi",
     "serif": "Serif",
     "sans": "Sans",
-    "verseLayout": "Verse layout",
-    "lines": "Lines",
-    "prose": "Prose",
-    "lineSpacing": "Line spacing",
-    "tight": "Tight",
+    "verseLayout": "Ayet düzeni",
+    "lines": "Satırlar",
+    "prose": "Düz metin",
+    "lineSpacing": "Satır aralığı",
+    "tight": "Dar",
     "normal": "Normal",
-    "relaxed": "Relaxed",
-    "readingStreak": "Reading streak",
-    "trackReadingStreak": "Track reading streak",
-    "trackReadingStreakDesc": "Counts consecutive days you open today's reading."
+    "relaxed": "Geniş",
+    "readingStreak": "Okuma serisi",
+    "trackReadingStreak": "Okuma serisini takip et",
+    "trackReadingStreakDesc": "Bugünün okumasını açtığın ardışık günleri sayar."
   },
   "datePicker": {
-    "title": "Select date",
-    "today": "Today",
-    "previousMonth": "Previous month",
-    "nextMonth": "Next month",
+    "title": "Tarih seç",
+    "today": "Bugün",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
     "monthYear": "{{month}} {{year}}",
-    "weekdays": ["S", "M", "T", "W", "T", "F", "S"],
+    "weekdays": [
+      "Pa",
+      "Pt",
+      "Sa",
+      "Ça",
+      "Pe",
+      "Cu",
+      "Ct"
+    ],
     "months": [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "Ocak",
+      "Şubat",
+      "Mart",
+      "Nisan",
+      "Mayıs",
+      "Haziran",
+      "Temmuz",
+      "Ağustos",
+      "Eylül",
+      "Ekim",
+      "Kasım",
+      "Aralık"
     ]
   }
 }

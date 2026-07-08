@@ -1,5 +1,5 @@
 {
-  "_meta": { "reviewer": "", "reviewedAt": "" },
-  "couldntLoadSong": "Couldn't load song",
-  "songNotFound": "This song could not be found."
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "couldntLoadSong": "İlahi yüklenemedi",
+  "songNotFound": "Bu ilahi bulunamadı."
 }
