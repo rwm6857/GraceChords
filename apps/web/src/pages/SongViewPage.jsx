@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { fetchPersonalSongById } from '@gracechords/core'
+import { supabase } from '../lib/supabase'
 import { useTranslation } from 'react-i18next'
 import StarButton from '../components/song/StarButton'
 import { Helmet } from 'react-helmet-async'
@@ -100,10 +102,45 @@ export default function SongView(){
   const { t } = useTranslation('song')
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const personalParam = searchParams.get('p')
   const { songs } = useSongs()
   const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
-  const entry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+  const catalogEntry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+
+  // Read-only personal draft mode: /song/...?p=<personal_songs.id>. Fetched
+  // per-view (owner-scoped by RLS); synthesized into the same entry shape the
+  // page renders from, but marked so public-only actions are hidden.
+  const [personalRow, setPersonalRow] = useState(null)
+  useEffect(() => {
+    if (!personalParam) { setPersonalRow(null); return }
+    let alive = true
+    fetchPersonalSongById(supabase, personalParam)
+      .then((row) => { if (alive) setPersonalRow(row || null) })
+      .catch(() => { if (alive) setPersonalRow(null) })
+    return () => { alive = false }
+  }, [personalParam])
+
+  const personalEntry = useMemo(() => {
+    if (!personalRow) return null
+    return {
+      id: personalRow.slug || personalRow.id,
+      dbId: null,
+      title: personalRow.title,
+      originalKey: personalRow.default_key || '',
+      tags: Array.isArray(personalRow.tags) ? personalRow.tags : [],
+      authors: personalRow.artist ? personalRow.artist.split(/,\s*/).filter(Boolean) : [],
+      language: personalRow.language || 'en',
+      chordpro_content: personalRow.chordpro_content || '',
+      filename: '',
+      isPersonal: true,
+      reviewStatus: personalRow.status,
+    }
+  }, [personalRow])
+
+  const entry = personalEntry || catalogEntry
+  const isPersonal = !!personalEntry
   const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
@@ -300,6 +337,15 @@ export default function SongView(){
   )
 
   if(!entry){
+    // Don't flash "not found" while a personal draft is still being fetched.
+    if (personalParam && !personalRow) {
+      return (
+        <div className="container">
+          {helmet}
+          <Busy busy />
+        </div>
+      )
+    }
     return (
       <div className="container">
         {helmet}
@@ -463,6 +509,8 @@ export default function SongView(){
     try { localStorage.setItem('songView:twoCols', next ? '1' : '0') } catch {}
   }
 
+  const editHref = personalParam ? `/portal/editor?p=${personalParam}` : null
+
   const desktopToolbar = !isNarrow ? (
     <Toolbar className="gc-song-toolbar">
       <div className="gc-toolbar__group">
@@ -490,6 +538,11 @@ export default function SongView(){
         </IconButton>
       </div>
       <div className="gc-toolbar__actions">
+        {isPersonal ? (
+          <Button variant="primary" as={Link} to={editHref} leftIcon={<EyeIcon />} title="Edit song">
+            Edit
+          </Button>
+        ) : (<>
         <div className="gc-download-menu">
           <Button
             variant="primary"
@@ -565,6 +618,7 @@ export default function SongView(){
         >
           {t('worshipMode')}
         </Button>
+        </>)}
         {entry?.dbId ? (
           <PushToTelegramButton
             items={[{ song_id: entry.dbId, key: toKey }]}
@@ -609,7 +663,13 @@ export default function SongView(){
                 ))}
               </span>
             ) : null}
-            <StarButton songId={entry?.dbId} />
+            {isPersonal ? (
+              <span className="gc-tag gc-tag--gray">
+                {entry.reviewStatus === 'submitted' ? 'Pending review' : 'Personal draft'}
+              </span>
+            ) : (
+              <StarButton songId={entry?.dbId} />
+            )}
           </div>
         }
         subtitle={`Key: ${baseKey}${parsed?.meta?.capo ? ` • Capo: ${parsed.meta.capo}` : ''}`}
@@ -701,8 +761,10 @@ export default function SongView(){
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>
-          <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
-          <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>
+          {!isPersonal && (<>
+            <Button variant="primary" iconOnly leftIcon={<DownloadIcon />} onClick={() => setMobileActionsOpen(true)} title="Download" aria-label="Download">Download</Button>
+            <Button variant="primary" iconOnly as={Link} to={`/worship/${entry.id}?toKey=${encodeURIComponent(toKey)}`} leftIcon={<MediaIcon />} title="Worship Mode" aria-label="Worship Mode">Worship</Button>
+          </>)}
           {entry?.dbId ? (
             <PushToTelegramButton
               items={[{ song_id: entry.dbId, key: toKey }]}

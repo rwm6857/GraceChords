@@ -1,11 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import MobileEditorPage from './MobileEditorPage'
 import MobilePortalPage from './MobilePortalPage'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../../lib/supabase'
-import { submitSongSuggestion, canDirectWrite } from '@gracechords/core'
+import {
+  submitSongSuggestion,
+  canDirectWrite,
+  fetchPersonalSongById,
+  updatePersonalSong,
+  songRowToForm,
+  formToSongRow,
+  canonicalizeForm,
+} from '@gracechords/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { showToast } from '../../utils/app/toast'
@@ -61,12 +69,18 @@ function ConfirmDialog({ title, body, confirmLabel, confirmVariant = 'destructiv
 
 function DesktopEditorPage() {
   const { slug: slugParam } = useParams()
+  const [searchParams] = useSearchParams()
+  const personalParam = searchParams.get('p')
   const navigate = useNavigate()
   const { session } = useAuth()
   const { role, isAtLeast } = useRole()
   const editorRef = useRef(null)
 
   const [song, setSong] = useState(null)
+  // When editing a personal draft (opened via ?p=<id> from the library viewer):
+  // the id of the personal_songs row being edited, plus its fork provenance.
+  const [personalId, setPersonalId] = useState(null)
+  const [personalSource, setPersonalSource] = useState(null)
   const [formValues, setFormValues] = useState(BLANK_FORM)
   const [savedFormValues, setSavedFormValues] = useState(BLANK_FORM)
   const [isDirty, setIsDirty] = useState(false)
@@ -87,13 +101,41 @@ function DesktopEditorPage() {
   const importFileRef = useRef(null)
   const [showDropdown, setShowDropdown] = useState(false)
 
+  // ---- Load personal draft (opened via ?p=<id>) ----
+  useEffect(() => {
+    if (!personalParam) { setPersonalId(null); return }
+    let cancelled = false
+    setNotFound(false)
+    setLoadingError(null)
+    ;(async () => {
+      try {
+        const row = await fetchPersonalSongById(supabase, personalParam)
+        if (cancelled) return
+        if (!row) { setNotFound(true); return }
+        const loaded = songRowToForm(row)
+        setSong(null)
+        setPersonalId(row.id)
+        setPersonalSource(row.source_song_id || null)
+        setFormValues(loaded)
+        setSavedFormValues(loaded)
+        setIsDirty(false)
+        setSubmitted(false)
+      } catch (err) {
+        if (!cancelled) { setLoadingError(err.message); showToast(`Error loading draft: ${err.message}`) }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [personalParam])
+
   // ---- Load song ----
   useEffect(() => {
+    if (personalParam) return // personal draft handled above
     setNotFound(false)
     setLoadingError(null)
 
     if (!slugParam) {
       setSong(null)
+      setPersonalId(null)
       setFormValues(BLANK_FORM)
       setSavedFormValues(BLANK_FORM)
       setIsDirty(false)
@@ -145,7 +187,7 @@ function DesktopEditorPage() {
 
     load()
     return () => { cancelled = true }
-  }, [slugParam])
+  }, [slugParam, personalParam])
 
   // ---- Debounced search ----
   useEffect(() => {
@@ -378,6 +420,20 @@ function DesktopEditorPage() {
     const payload = { ...formValues }
 
     try {
+      // Personal draft (opened via ?p=): Save updates the personal_songs row.
+      if (personalId) {
+        try {
+          await updatePersonalSong(supabase, personalId, formToSongRow(canonicalizeForm(payload)))
+        } catch (err) {
+          showToast(`Error saving draft: ${err.message}`); setSaving(false); return
+        }
+        showToast('Draft saved')
+        setIsDirty(false)
+        setSavedFormValues(formValues)
+        setSaving(false)
+        return
+      }
+
       if (!canDirectWrite(role)) {
         try {
           await submitSongSuggestion(supabase, {
@@ -439,6 +495,37 @@ function DesktopEditorPage() {
       showToast(`Unexpected error: ${err.message}`)
     }
 
+    setSaving(false)
+  }
+
+  // ---- Submit a personal draft for review ----
+  async function handleSubmitForReview() {
+    setSubmitted(true)
+    const errors = {}
+    if (!formValues.title?.trim()) errors.title = 'Title is required'
+    if (!formValues.default_key) errors.default_key = 'Key is required'
+    if (!Array.isArray(formValues.tags) || formValues.tags.length === 0) {
+      errors.tags = 'At least one tag is required'
+    }
+    if (Object.keys(errors).length > 0 || !personalId) return
+    if (saving) return
+    setSaving(true)
+    try {
+      const row = formToSongRow(canonicalizeForm(formValues))
+      await updatePersonalSong(supabase, personalId, row)
+      await submitSongSuggestion(supabase, {
+        type: personalSource ? 'edit' : 'addition',
+        payload: row,
+        songId: personalSource || null,
+        personalSongId: personalId,
+      })
+      await updatePersonalSong(supabase, personalId, { status: 'submitted' })
+      showToast('Submitted for review')
+      setIsDirty(false)
+      navigate('/songs')
+    } catch (err) {
+      showToast(`Error submitting: ${err.message}`)
+    }
     setSaving(false)
   }
 
@@ -525,7 +612,7 @@ function DesktopEditorPage() {
     showToast('Suggestion loaded into editor. Edit and save to apply.')
   }
 
-  const saveLabel = canDirectWrite(role) ? 'Save' : 'Submit for Review'
+  const saveLabel = personalId ? 'Save Draft' : (canDirectWrite(role) ? 'Save' : 'Submit for Review')
   const deleteLabel = isAtLeast('admin') ? 'Delete Song' : 'Request Deletion'
 
   return (
@@ -707,6 +794,17 @@ function DesktopEditorPage() {
         >
           {saving ? 'Saving…' : saveLabel}
         </button>
+
+        {personalId && (
+          <button
+            type="button"
+            className="gc-btn gc-btn--secondary"
+            onClick={handleSubmitForReview}
+            disabled={saving}
+          >
+            Submit for Review
+          </button>
+        )}
 
         <button
           type="button"
