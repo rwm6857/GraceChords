@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Pressable, Switch, Text, View } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import * as Haptics from 'expo-haptics'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -74,6 +75,7 @@ function StepButton({
 // spacing (see TunerScreen).
 export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()
   const [barH, setBarH] = useState(0)
 
@@ -117,7 +119,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
         {/* Beat indicator — the sounding beat within the measure. */}
         <View
           accessibilityLabel={
-            currentBeat === null ? 'Metronome stopped' : `Beat ${currentBeat + 1} of ${beats}`
+            currentBeat === null ? tx('metronome.metronomeStopped') : tx('metronome.beatOf', { current: currentBeat + 1, total: beats })
           }
           style={{
             flexDirection: 'row',
@@ -159,7 +161,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
             gap: t.spacing.xl,
           }}
         >
-          <StepButton icon="minus" label="Slower" onStep={() => stepBpm(-1)} t={t} />
+          <StepButton icon="minus" label={tx('metronome.slower')} onStep={() => stepBpm(-1)} t={t} />
           <View style={{ alignItems: 'center', minWidth: 140 }}>
             <Text
               style={{
@@ -181,18 +183,18 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
                 color: t.colors.muted,
               }}
             >
-              BPM
+              {tx('metronome.bpm')}
             </Text>
           </View>
-          <StepButton icon="plus" label="Faster" onStep={() => stepBpm(1)} t={t} />
+          <StepButton icon="plus" label={tx('metronome.faster')} onStep={() => stepBpm(1)} t={t} />
         </View>
 
         {/* Tap tempo — a large, forgiving pad; tapping sets the tempo above. */}
         <Pressable
           onPressIn={onTap}
           accessibilityRole="button"
-          accessibilityLabel="Tap tempo"
-          accessibilityHint="Tap along to the song to set the metronome tempo"
+          accessibilityLabel={tx('metronome.tapTempo')}
+          accessibilityHint={tx('metronome.tapTempoHint')}
           style={({ pressed }) => ({
             marginTop: t.spacing.xl,
             flexGrow: 1,
@@ -207,7 +209,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
           })}
         >
           <SymbolIcon name="hand.tap" size={30} color={t.colors.accent} />
-          <Text style={{ fontSize: 17, fontWeight: '600', color: t.colors.ink }}>Tap tempo</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: t.colors.ink }}>{tx('metronome.tapTempo')}</Text>
         </Pressable>
 
         {/* Time signature */}
@@ -241,13 +243,13 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
             }}
           >
             <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.ink }}>
-              Accent downbeat
+              {tx('metronome.accentDownbeat')}
             </Text>
             <Switch
               value={accentEnabled}
               onValueChange={setAccentEnabled}
               trackColor={{ true: t.colors.accent }}
-              accessibilityLabel="Accent downbeat"
+              accessibilityLabel={tx('metronome.accentDownbeat')}
             />
           </View>
         </Card>
@@ -255,7 +257,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
         <View style={{ flex: 1 }} />
 
         <Button
-          title={running ? 'Stop' : 'Start'}
+          title={running ? tx('metronome.stop') : tx('metronome.start')}
           variant={running ? 'secondary' : 'primary'}
           onPress={() => (running ? stop() : void start())}
         />
@@ -285,15 +287,15 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={tx('common:back')}
             hitSlop={8}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Utilities</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
-        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>Metronome</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('metronome.title')}</Text>
         <View style={{ width: 70 }} />
       </GlassSurface>
     </Screen>

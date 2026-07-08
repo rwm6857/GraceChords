@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
@@ -10,12 +11,6 @@ import { useTheme } from '../../theme/ThemeProvider'
 // [UI] Daily Word floating calendar: a month grid with prev/next navigation and
 // a Today shortcut. Built on RN primitives — no extra native date-picker dep.
 // Presented via the native formSheet route (src/lib/formSheetHost.ts).
-
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
@@ -35,8 +30,11 @@ export default function DatePickerSheet(props: DatePickerProps) {
 
 function DatePickerContent({ value, onSelect }: DatePickerProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('reader')
   const insets = useSafeAreaInsets()
   const today = new Date()
+  const WEEKDAYS = tx('datePicker.weekdays', { returnObjects: true }) as unknown as string[]
+  const MONTHS = tx('datePicker.months', { returnObjects: true }) as unknown as string[]
 
   // The month currently on screen. The content mounts fresh on every open
   // (formSheet route), so the initializer resets to the selected date per open.
@@ -77,7 +75,7 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
   )
 
   return (
-    <FormSheetShell title="Select date" actionLabel="Today" onAction={() => onSelect(new Date())}>
+    <FormSheetShell title={tx('datePicker.title')} actionLabel={tx('datePicker.today')} onAction={() => onSelect(new Date())}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
         {/* Month header */}
         <View
@@ -89,11 +87,11 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
           }}
         >
           <Text style={{ fontSize: 16, fontWeight: '700', letterSpacing: -0.2, color: t.colors.ink }}>
-            {MONTHS[view.month]} {view.year}
+            {tx('datePicker.monthYear', { month: MONTHS[view.month], year: view.year })}
           </Text>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-            <NavButton dir={-1} label="Previous month" />
-            <NavButton dir={1} label="Next month" />
+            <NavButton dir={-1} label={tx('datePicker.previousMonth')} />
+            <NavButton dir={1} label={tx('datePicker.nextMonth')} />
           </View>
         </View>
 

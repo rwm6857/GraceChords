@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 import {
   isRtlBibleLanguage,
   resolveBibleTranslationSelection,
@@ -46,9 +47,9 @@ type Sheet = 'none' | 'translations' | 'settings' | 'date'
 // Stable empty set for passages with no selection (never mutated).
 const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
 
-function formatDateLabel(d: Date) {
+function formatDateLabel(d: Date, locale: string) {
   const now = new Date()
-  const base = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+  const base = d.toLocaleDateString(locale, { month: 'long', day: 'numeric' })
   return d.getFullYear() === now.getFullYear() ? base : `${base}, ${d.getFullYear()}`
 }
 
@@ -63,6 +64,7 @@ function chipLabel(passage: Passage) {
 
 export default function DailyWordScreen() {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation('reader')
   // Native tabs float over the screen; this bottom inset includes the tab bar
   // height so the Copy FAB clears it (see FAB position below).
   const insets = useSafeAreaInsets()
@@ -93,7 +95,7 @@ export default function DailyWordScreen() {
   )
   const selectedTranslation: BibleTranslation | null =
     translations.find((x) => x.id === effectiveId) || translations[0] || null
-  const translationLabel = selectedTranslation?.label || 'ESV'
+  const translationLabel = selectedTranslation?.label || tx('defaultTranslationLabel')
   const rtl = isRtlBibleLanguage(selectedTranslation?.language)
 
   const { chapter, loading, error } = usePassageChapter(currentPassage, selectedTranslation, reloadToken)
@@ -210,7 +212,7 @@ export default function DailyWordScreen() {
           <Pressable
             onPress={() => setSheet('translations')}
             accessibilityRole="button"
-            accessibilityLabel="Choose translation"
+            accessibilityLabel={tx('chooseTranslation')}
             style={controlButton}
           >
             <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
@@ -223,12 +225,12 @@ export default function DailyWordScreen() {
         <Pressable
           onPress={() => setSheet('date')}
           accessibilityRole="button"
-          accessibilityLabel="Choose date"
+          accessibilityLabel={tx('chooseDate')}
           style={controlButton}
         >
           <SymbolIcon name="calendar" size={15} color={t.colors.muted} />
           <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
-            {formatDateLabel(date)}
+            {formatDateLabel(date, i18n.language)}
           </Text>
         </Pressable>
 
@@ -236,7 +238,7 @@ export default function DailyWordScreen() {
           <Pressable
             onPress={() => setSheet('settings')}
             accessibilityRole="button"
-            accessibilityLabel="Reader settings"
+            accessibilityLabel={tx('readerSettings')}
             style={[controlButton, { paddingHorizontal: 12 }]}
           >
             <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.accent }}>A</Text>
@@ -299,13 +301,13 @@ export default function DailyWordScreen() {
         ) : error ? (
           <EmptyState
             icon="wifi.slash"
-            title="Can't load today's reading"
-            subtitle="Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline."
-            actionLabel="Retry"
+            title={tx('error.title')}
+            subtitle={tx('error.subtitle')}
+            actionLabel={tx('error.retry')}
             onAction={() => setReloadToken((n) => n + 1)}
           />
         ) : versesInScope.length === 0 ? (
-          <EmptyState icon="book.closed" title="No reading for this day" subtitle="Pick another date to keep reading." />
+          <EmptyState icon="book.closed" title={tx('empty.title')} subtitle={tx('empty.subtitle')} />
         ) : (
           <ScrollView
             contentContainerStyle={{
@@ -395,7 +397,7 @@ export default function DailyWordScreen() {
                 Animated.spring(fabPress, { toValue: 0, useNativeDriver: true }).start()
               }
               accessibilityRole="button"
-              accessibilityLabel={`Copy ${selection.size} verse${selection.size === 1 ? '' : 's'}`}
+              accessibilityLabel={tx('copyVerses', { count: selection.size })}
               style={{ borderRadius: t.radii.pill }}
             >
               {/* Liquid Glass on iOS 26 (accent-tinted); solid accent fill on

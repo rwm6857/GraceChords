@@ -1,0 +1,53 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "chooseTranslation": "Choose translation",
+  "chooseDate": "Choose date",
+  "readerSettings": "Reader settings",
+  "defaultTranslationLabel": "ESV",
+  "copyVerses_one": "Copy {{count}} verse",
+  "copyVerses_other": "Copy {{count}} verses",
+  "error": {
+    "title": "Can't load today's reading",
+    "subtitle": "Connect to the internet and try again, or download this translation in Settings → Offline & Downloads to read it offline.",
+    "retry": "Retry"
+  },
+  "empty": {
+    "title": "No reading for this day",
+    "subtitle": "Pick another date to keep reading."
+  },
+  "translationPicker": {
+    "title": "Translation"
+  },
+  "settings": {
+    "title": "Reader settings",
+    "textSize": "Text size",
+    "smallerText": "Smaller text",
+    "largerText": "Larger text",
+    "pt": "{{pt}} pt",
+    "typeface": "Typeface",
+    "serif": "Serif",
+    "sans": "Sans",
+    "verseLayout": "Verse layout",
+    "lines": "Lines",
+    "prose": "Prose",
+    "lineSpacing": "Line spacing",
+    "tight": "Tight",
+    "normal": "Normal",
+    "relaxed": "Relaxed",
+    "readingStreak": "Reading streak",
+    "trackReadingStreak": "Track reading streak",
+    "trackReadingStreakDesc": "Counts consecutive days you open today's reading."
+  },
+  "datePicker": {
+    "title": "Select date",
+    "today": "Today",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "monthYear": "{{month}} {{year}}",
+    "weekdays": ["S", "M", "T", "W", "T", "F", "S"],
+    "months": [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ]
+  }
+}

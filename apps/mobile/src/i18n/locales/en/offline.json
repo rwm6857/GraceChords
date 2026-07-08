@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Offline & Downloads",
+  "onThisDeviceStorage": "Translations on this device",
+  "downloadedCount": "{{count}} of {{total}} translations downloaded",
+  "mb": "{{value}} MB",
+  "percent": "{{value}}%",
+  "sections": {
+    "downloading": "Downloading",
+    "onThisDevice": "On this device · {{count}}",
+    "available": "Available to download",
+    "options": "Options"
+  },
+  "updateAvailable": "Update available",
+  "translationMeta": "{{language}} · {{size}}",
+  "translationMetaStale": "{{language}} · {{size}} · Update available",
+  "cancelDownload": "Cancel download",
+  "updateDownload": "Update download",
+  "deleteDownload": "Delete download",
+  "download": "Download {{name}}",
+  "wifiOnly": "Download over Wi-Fi only",
+  "footer": "Downloaded translations stay readable with no connection. Daily devotionals from The Gospel Coalition stream over the network and aren't stored offline.",
+  "back": "Settings",
+  "backToSettings": "Back to Settings",
+  "alerts": {
+    "wifiRequiredTitle": "Wi-Fi required",
+    "wifiRequiredMessage": "You have \"Download over Wi-Fi only\" turned on. Connect to Wi-Fi or turn the option off to download on cellular.",
+    "downloadFailedTitle": "Download failed",
+    "downloadFailedMessage": "Could not download this translation. Check your connection and try again.",
+    "deleteTitle": "Delete download",
+    "deleteMessage": "Remove \"{{name}}\" from this device? You can download it again anytime."
+  }
+}

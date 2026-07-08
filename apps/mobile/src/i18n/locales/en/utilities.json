@@ -1,0 +1,45 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Utilities",
+  "sectionTools": "TOOLS",
+  "pickTool": "Pick a tool to get started",
+  "tools": {
+    "tuner": "Tuner",
+    "metronome": "Tap Tempo / Metronome",
+    "pitchPipe": "Pitch Pipe"
+  },
+  "tuner": {
+    "title": "Tuner",
+    "permissionDenied": "The tuner needs microphone access to hear your guitar. Audio is analyzed on this device only — never recorded or sent anywhere.",
+    "enableInSettings": "Enable in Settings",
+    "inTune": "In tune",
+    "cents": "{{sign}}{{cents}}¢",
+    "hz": "{{freq}} Hz",
+    "playAString": "Play a string…",
+    "stringLocked": "{{name}} — locked, tap for auto",
+    "stringAuto": "{{name}}",
+    "autoModeOff": "Auto-mode off",
+    "autoModeOn": "Auto-mode on"
+  },
+  "metronome": {
+    "title": "Metronome",
+    "bpm": "BPM",
+    "slower": "Slower",
+    "faster": "Faster",
+    "tapTempo": "Tap tempo",
+    "tapTempoHint": "Tap along to the song to set the metronome tempo",
+    "metronomeStopped": "Metronome stopped",
+    "beatOf": "Beat {{current}} of {{total}}",
+    "accentDownbeat": "Accent downbeat",
+    "stop": "Stop",
+    "start": "Start"
+  },
+  "pitchPipe": {
+    "title": "Pitch Pipe",
+    "octave": "OCTAVE",
+    "note": "Note {{label}}",
+    "octaveDown": "Octave down",
+    "octaveUp": "Octave up",
+    "holdNote": "Hold note"
+  }
+}

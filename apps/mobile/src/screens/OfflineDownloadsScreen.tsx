@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import type { BibleTranslation } from '@gracechords/core'
 import Card from '../components/Card'
 import Screen from '../components/Screen'
@@ -31,12 +32,13 @@ import {
 // device quota for our small translation set).
 const DISPLAY_CAP_BYTES = 80 * 1024 * 1024
 
-function formatMB(bytes: number): string {
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+function formatMB(bytes: number, tx: (k: string, o?: Record<string, unknown>) => string): string {
+  return tx('mb', { value: (bytes / (1024 * 1024)).toFixed(1) })
 }
 
 export default function OfflineDownloadsScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['offline', 'common'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   // Measured glass-bar height feeds the scroll-behind top inset.
@@ -79,12 +81,9 @@ export default function OfflineDownloadsScreen() {
       })
     } catch (err) {
       if (err instanceof WifiRequiredError) {
-        Alert.alert(
-          'Wi-Fi required',
-          'You have "Download over Wi-Fi only" turned on. Connect to Wi-Fi or turn the option off to download on cellular.',
-        )
+        Alert.alert(tx('alerts.wifiRequiredTitle'), tx('alerts.wifiRequiredMessage'))
       } else if (!token.aborted) {
-        Alert.alert('Download failed', 'Could not download this translation. Check your connection and try again.')
+        Alert.alert(tx('alerts.downloadFailedTitle'), tx('alerts.downloadFailedMessage'))
       }
     } finally {
       delete tokens.current[tr.id]
@@ -102,9 +101,9 @@ export default function OfflineDownloadsScreen() {
   }
 
   function handleDelete(id: string, name: string) {
-    Alert.alert('Delete download', `Remove "${name}" from this device? You can download it again anytime.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void deleteBibleDownload(id) },
+    Alert.alert(tx('alerts.deleteTitle'), tx('alerts.deleteMessage', { name }), [
+      { text: tx('common:cancel'), style: 'cancel' },
+      { text: tx('common:delete'), style: 'destructive', onPress: () => void deleteBibleDownload(id) },
     ])
   }
 
@@ -154,13 +153,13 @@ export default function OfflineDownloadsScreen() {
             color: t.colors.ink,
           }}
         >
-          Offline &amp; Downloads
+          {tx('title')}
         </Text>
         {/* Storage summary */}
         <Card style={{ padding: t.spacing.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>Translations on this device</Text>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: t.colors.ink }}>{formatMB(totalBytes)}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>{tx('onThisDeviceStorage')}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: t.colors.ink }}>{formatMB(totalBytes, tx)}</Text>
           </View>
           <View
             style={{ marginTop: 12, height: 7, borderRadius: t.radii.pill, backgroundColor: t.colors.surfaceAlt, overflow: 'hidden' }}
@@ -168,14 +167,14 @@ export default function OfflineDownloadsScreen() {
             <View style={{ height: '100%', width: `${usagePct}%`, backgroundColor: t.colors.accent, borderRadius: t.radii.pill }} />
           </View>
           <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 9 }}>
-            {downloadedList.length} of {translations.length} translations downloaded
+            {tx('downloadedCount', { count: downloadedList.length, total: translations.length })}
           </Text>
         </Card>
 
         {/* Downloading */}
         {busyList.length > 0 ? (
           <>
-            {sectionLabel('Downloading')}
+            {sectionLabel(tx('sections.downloading'))}
             <Card>
               {busyList.map((tr, i) => {
                 const p = busy[tr.id]
@@ -191,12 +190,12 @@ export default function OfflineDownloadsScreen() {
                       >
                         <View style={{ height: '100%', width: `${pct}%`, backgroundColor: t.colors.accent, borderRadius: t.radii.pill }} />
                       </View>
-                      <Text style={{ fontSize: 12, color: t.colors.muted, marginTop: 6 }}>{pct}%</Text>
+                      <Text style={{ fontSize: 12, color: t.colors.muted, marginTop: 6 }}>{tx('percent', { value: pct })}</Text>
                     </View>
                     <Pressable
                       onPress={() => handleCancel(tr.id)}
                       accessibilityRole="button"
-                      accessibilityLabel="Cancel download"
+                      accessibilityLabel={tx('cancelDownload')}
                       hitSlop={8}
                       style={{
                         width: 30,
@@ -219,7 +218,7 @@ export default function OfflineDownloadsScreen() {
         {/* On this device */}
         {downloadedList.length > 0 ? (
           <>
-            {sectionLabel(`On this device · ${downloadedList.length}`)}
+            {sectionLabel(tx('sections.onThisDevice', { count: downloadedList.length }))}
             <Card>
               {downloadedList.map((r, i) => {
                 const stale = isTranslationStale(r.version, remoteVersion)
@@ -231,15 +230,16 @@ export default function OfflineDownloadsScreen() {
                         {r.name}
                       </Text>
                       <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 1 }}>
-                        {r.language} · {formatMB(r.sizeBytes)}
-                        {stale ? ' · Update available' : ''}
+                        {stale
+                          ? tx('translationMetaStale', { language: r.language, size: formatMB(r.sizeBytes, tx) })
+                          : tx('translationMeta', { language: r.language, size: formatMB(r.sizeBytes, tx) })}
                       </Text>
                     </View>
                     {stale ? (
                       <Pressable
                         onPress={() => handleDownload({ id: r.id, label: r.label, name: r.name, language: r.language, dataRoot: r.dataRoot })}
                         accessibilityRole="button"
-                        accessibilityLabel="Update download"
+                        accessibilityLabel={tx('updateDownload')}
                         hitSlop={8}
                         style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
                       >
@@ -249,7 +249,7 @@ export default function OfflineDownloadsScreen() {
                     <Pressable
                       onPress={() => handleDelete(r.id, r.name)}
                       accessibilityRole="button"
-                      accessibilityLabel="Delete download"
+                      accessibilityLabel={tx('deleteDownload')}
                       hitSlop={8}
                       style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
                     >
@@ -265,14 +265,14 @@ export default function OfflineDownloadsScreen() {
         {/* Available */}
         {available.length > 0 ? (
           <>
-            {sectionLabel('Available to download')}
+            {sectionLabel(tx('sections.available'))}
             <Card>
               {available.map((tr, i) => (
                 <Pressable
                   key={tr.id}
                   onPress={() => handleDownload(tr)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Download ${tr.name}`}
+                  accessibilityLabel={tx('download', { name: tr.name })}
                   style={({ pressed }) => [rowStyle(i === 0), { backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent' }]}
                 >
                   <View style={{ flex: 1, minWidth: 0 }}>
@@ -289,10 +289,10 @@ export default function OfflineDownloadsScreen() {
         ) : null}
 
         {/* Options */}
-        {sectionLabel('Options')}
+        {sectionLabel(tx('sections.options'))}
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md, paddingHorizontal: t.spacing.lg, minHeight: 54 }}>
-            <Text style={{ flex: 1, fontSize: 16, color: t.colors.ink }}>Download over Wi-Fi only</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: t.colors.ink }}>{tx('wifiOnly')}</Text>
             <Switch
               value={wifiOnly}
               onValueChange={setWifiOnly}
@@ -301,8 +301,7 @@ export default function OfflineDownloadsScreen() {
           </View>
         </Card>
         <Text style={{ fontSize: 12.5, lineHeight: 19, color: t.colors.muted, paddingHorizontal: t.spacing.lg, paddingTop: 8 }}>
-          Downloaded translations stay readable with no connection. Daily devotionals from The Gospel Coalition stream over
-          the network and aren&apos;t stored offline.
+          {tx('footer')}
         </Text>
       </ScrollView>
 
@@ -325,12 +324,12 @@ export default function OfflineDownloadsScreen() {
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Back to Settings"
+          accessibilityLabel={tx('backToSettings')}
           hitSlop={8}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('back')}</Text>
         </Pressable>
       </GlassSurface>
     </Screen>
