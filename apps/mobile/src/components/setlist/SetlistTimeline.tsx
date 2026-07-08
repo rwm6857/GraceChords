@@ -10,6 +10,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 import SwipeToDelete from '../SwipeToDelete'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -62,6 +63,7 @@ const Row = memo(function Row({
   callbacks: TimelineCallbacks
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['setlist', 'common'])
 
   const startDragHaptic = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
@@ -153,7 +155,7 @@ const Row = memo(function Row({
       ]}
       layout={LinearTransition.duration(200)}
     >
-      <SwipeToDelete onDelete={() => callbacks.onRemove(index)} label="Remove">
+      <SwipeToDelete onDelete={() => callbacks.onRemove(index)} label={tx('remove')}>
         <View
           style={{
             height: ROW_HEIGHT,
@@ -165,7 +167,7 @@ const Row = memo(function Row({
           {/* Drag grip */}
             <GestureDetector gesture={pan}>
               <View
-                accessibilityLabel={`Reorder ${item.song.title}`}
+                accessibilityLabel={tx('timeline.reorder', { title: item.song.title })}
                 style={{
                   width: 40,
                   height: '100%',
@@ -210,7 +212,7 @@ const Row = memo(function Row({
             <Pressable
               onPress={() => callbacks.onPressRow(index)}
               accessibilityRole="button"
-              accessibilityLabel={`Open ${item.song.title}`}
+              accessibilityLabel={tx('common:openSong', { title: item.song.title })}
               style={{ flex: 1, minWidth: 0, paddingHorizontal: t.spacing.md }}
             >
               <Text
@@ -242,7 +244,7 @@ const Row = memo(function Row({
             <Pressable
               onPress={() => callbacks.onKeyTap(index)}
               accessibilityRole="button"
-              accessibilityLabel={`Change key for ${item.song.title}`}
+              accessibilityLabel={tx('timeline.changeKeyFor', { title: item.song.title })}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -254,7 +256,7 @@ const Row = memo(function Row({
               }}
             >
               <Text style={{ fontSize: 13.5, fontWeight: '700', color: t.colors.textAccent }}>
-                {effectiveKey ?? '—'}
+                {effectiveKey ?? tx('timeline.noKey')}
               </Text>
               <SymbolIcon name="chevron.up.chevron.down" size={10} color={t.colors.textAccent} />
             </Pressable>

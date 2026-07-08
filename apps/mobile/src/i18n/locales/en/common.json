@@ -20,6 +20,9 @@
   "keyOf": "Key of {{key}}",
   "bpm": "{{tempo}} BPM",
   "openSong": "Open {{title}}",
+  "songCount_one": "{{count}} song",
+  "songCount_other": "{{count}} songs",
+  "close": "Close",
   "timeAgo": {
     "justNow": "just now",
     "minutes": "{{count}}m ago",

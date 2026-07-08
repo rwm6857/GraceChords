@@ -1,5 +1,6 @@
 import { View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import BottomSheet from '../BottomSheet'
 import ActionSheetRow from './ActionSheetRow'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -24,6 +25,7 @@ export default function RowActionsSheet({
   onRemove: () => void
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('setlist')
   const insets = useSafeAreaInsets()
 
   const run = (fn: () => void) => () => {
@@ -37,12 +39,12 @@ export default function RowActionsSheet({
       onClose={onClose}
       onDismissed={onDismissed}
       title={songTitle}
-      closeAccessibilityLabel="Close song options"
+      closeAccessibilityLabel={tx('rowActions.closeSongOptions')}
     >
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.sm }}>
-        <ActionSheetRow icon="music.note" label="Change key" onPress={run(onChangeKey)} />
-        <ActionSheetRow icon="plus.square.on.square" label="Duplicate" onPress={run(onDuplicate)} />
-        <ActionSheetRow icon="trash" label="Remove from set" destructive onPress={run(onRemove)} />
+        <ActionSheetRow icon="music.note" label={tx('rowActions.changeKey')} onPress={run(onChangeKey)} />
+        <ActionSheetRow icon="plus.square.on.square" label={tx('rowActions.duplicate')} onPress={run(onDuplicate)} />
+        <ActionSheetRow icon="trash" label={tx('rowActions.removeFromSet')} destructive onPress={run(onRemove)} />
       </View>
     </BottomSheet>
   )

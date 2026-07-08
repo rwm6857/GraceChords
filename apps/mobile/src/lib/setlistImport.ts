@@ -93,30 +93,38 @@ export function resolveEntries(entries: ImportedEntry[], songs: Song[]): ImportR
   return { resolved, unresolved }
 }
 
-function joinAnd(list: string[]): string {
+// i18n translator for the setlist namespace (t('import.*', …)). Kept as a
+// parameter so this module stays RN/i18n-free and unit-testable.
+export type Translator = (key: string, options?: Record<string, unknown>) => string
+
+function joinAnd(list: string[], t: Translator): string {
   if (list.length <= 1) return list[0] || ''
-  return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`
+  return t('import.listAnd', {
+    head: list.slice(0, -1).join(', '),
+    last: list[list.length - 1],
+  })
 }
 
 /**
  * Grammatically-correct warning naming the dropped song(s). `unresolved` holds a
  * best-effort display name per miss, or '' where none could be derived. Returns
- * null when nothing is missing. Never produces "1 songs".
+ * null when nothing is missing. Never produces "1 songs" — plural forms come
+ * from the setlist namespace via the injected translator.
  */
-export function buildMissingWarning(unresolved: string[]): string | null {
+export function buildMissingWarning(unresolved: string[], t: Translator): string | null {
   const n = unresolved.length
   if (n === 0) return null
   const named = unresolved.filter(Boolean)
   if (named.length === 0) {
-    return `${n} ${n === 1 ? 'song' : 'songs'} could not be found.`
+    return t('import.missingCount', { count: n })
   }
   const shown = named.slice(0, 2)
   const others = n - shown.length
   const subject =
     others === 0
-      ? joinAnd(shown)
-      : `${shown.join(', ')} and ${others} ${others === 1 ? 'other' : 'others'}`
-  return `${subject} could not be found.`
+      ? joinAnd(shown, t)
+      : t('import.missingWithOthers', { names: shown.join(', '), count: others })
+  return t('import.missingNamed', { subject })
 }
 
 /**

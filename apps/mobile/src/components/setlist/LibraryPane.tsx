@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -26,6 +27,7 @@ export default function LibraryPane({
   loading: boolean
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['setlist', 'common'])
   const insets = useSafeAreaInsets()
   const keyboardHeight = useKeyboardHeight()
   const [query, setQuery] = useState('')
@@ -63,18 +65,18 @@ export default function LibraryPane({
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search songs…"
+            placeholder={tx('libraryPane.searchPlaceholder')}
             placeholderTextColor={t.colors.muted}
             returnKeyType="search"
             autoCorrect={false}
-            accessibilityLabel="Search library"
+            accessibilityLabel={tx('libraryPane.searchLibrary')}
             style={{ flex: 1, fontSize: 16, color: t.colors.ink, padding: 0 }}
           />
           {query ? (
             <Pressable
               onPress={() => setQuery('')}
               accessibilityRole="button"
-              accessibilityLabel="Clear search"
+              accessibilityLabel={tx('addSongs.clearSearch')}
               hitSlop={8}
             >
               <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.muted} />
@@ -100,7 +102,7 @@ export default function LibraryPane({
                   textAlign: 'center',
                 }}
               >
-                {trimmed ? `No songs match “${query.trim()}”.` : 'Your library is empty.'}
+                {trimmed ? tx('addSongs.noMatches', { query: query.trim() }) : tx('addSongs.emptyLibrary')}
               </Text>
             </View>
           }
@@ -111,7 +113,7 @@ export default function LibraryPane({
                 title={item.title}
                 subtitle={item.artist}
                 trailingTop={item.default_key}
-                accessibilityLabel={added ? `Remove ${item.title} from set` : `Add ${item.title} to set`}
+                accessibilityLabel={added ? tx('addSongs.remove', { title: item.title }) : tx('addSongs.add', { title: item.title })}
                 onPress={() => onToggle(item)}
                 trailing={
                   <View

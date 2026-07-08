@@ -31,6 +31,7 @@
     "exportAndShare": "Export and share",
     "noChart": "No chart available",
     "noChartBody": "This song has no ChordPro content yet.",
+    "chordsUnavailable": "Chords unavailable",
     "rawFallback": "Chords unavailable — showing raw text",
     "capo": "Capo {{fret}} for {{key}}"
   },

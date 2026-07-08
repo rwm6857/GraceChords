@@ -107,39 +107,57 @@ describe('deslugify', () => {
   })
 })
 
+// Fake translator reproducing the English setlist:import.* strings so the
+// grammar assertions still exercise buildMissingWarning's branching.
+const t = (key: string, o: Record<string, unknown> = {}): string => {
+  const n = Number(o.count)
+  switch (key) {
+    case 'import.missingCount':
+      return `${n} ${n === 1 ? 'song' : 'songs'} could not be found.`
+    case 'import.missingNamed':
+      return `${o.subject} could not be found.`
+    case 'import.missingWithOthers':
+      return `${o.names} and ${n} ${n === 1 ? 'other' : 'others'}`
+    case 'import.listAnd':
+      return `${o.head} and ${o.last}`
+    default:
+      return key
+  }
+}
+
 describe('buildMissingWarning (grammar for 1 / 2 / 3+)', () => {
   it('returns null when nothing is missing', () => {
-    expect(buildMissingWarning([])).toBeNull()
+    expect(buildMissingWarning([], t)).toBeNull()
   })
 
   it('names a single dropped song', () => {
-    expect(buildMissingWarning(['Amazing Grace'])).toBe('Amazing Grace could not be found.')
+    expect(buildMissingWarning(['Amazing Grace'], t)).toBe('Amazing Grace could not be found.')
   })
 
   it('joins two named songs with "and"', () => {
-    expect(buildMissingWarning(['Amazing Grace', 'Cornerstone'])).toBe(
+    expect(buildMissingWarning(['Amazing Grace', 'Cornerstone'], t)).toBe(
       'Amazing Grace and Cornerstone could not be found.',
     )
   })
 
   it('names up to two then counts the rest as "others"', () => {
-    expect(buildMissingWarning(['Amazing Grace', 'Cornerstone', 'Doxology'])).toBe(
+    expect(buildMissingWarning(['Amazing Grace', 'Cornerstone', 'Doxology'], t)).toBe(
       'Amazing Grace, Cornerstone and 1 other could not be found.',
     )
     expect(
-      buildMissingWarning(['Amazing Grace', 'Cornerstone', 'Doxology', 'Sanctus']),
+      buildMissingWarning(['Amazing Grace', 'Cornerstone', 'Doxology', 'Sanctus'], t),
     ).toBe('Amazing Grace, Cornerstone and 2 others could not be found.')
   })
 
   it('mixes a named song with unnamed misses', () => {
-    expect(buildMissingWarning(['Amazing Grace', ''])).toBe(
+    expect(buildMissingWarning(['Amazing Grace', ''], t)).toBe(
       'Amazing Grace and 1 other could not be found.',
     )
   })
 
   it('falls back to a count when no name is derivable (never "1 songs")', () => {
-    expect(buildMissingWarning([''])).toBe('1 song could not be found.')
-    expect(buildMissingWarning(['', '', ''])).toBe('3 songs could not be found.')
+    expect(buildMissingWarning([''], t)).toBe('1 song could not be found.')
+    expect(buildMissingWarning(['', '', ''], t)).toBe('3 songs could not be found.')
   })
 })
 

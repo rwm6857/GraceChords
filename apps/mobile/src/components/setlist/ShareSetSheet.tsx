@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
@@ -31,6 +32,7 @@ export default function ShareSetSheet(props: ShareSetProps) {
 
 function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram }: ShareSetProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('export')
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
 
@@ -45,14 +47,14 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
   }
 
   return (
-    <FormSheetShell title="Export & share" onAction={onClose}>
+    <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Primary set-PDF export — combined PDF via /api/export/setlist. */}
         <Pressable
           onPress={run('pdf', onExport)}
           disabled={!!busy}
           accessibilityRole="button"
-          accessibilityLabel="Export set as PDF"
+          accessibilityLabel={tx('exportSetAsPdf')}
           style={{
             height: 50,
             borderRadius: 13,
@@ -70,13 +72,13 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
             <SymbolIcon name="square.and.arrow.up" size={19} color={t.colors.onAccent} />
           )}
           <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
-            Export set as PDF · {songCount} {songCount === 1 ? 'song' : 'songs'}
+            {tx('exportSetAsPdfCount', { count: songCount })}
           </Text>
         </Pressable>
 
         {/* Copy link — works today via the web setlist URL. */}
         <SecondaryRow
-          label="Copy link"
+          label={tx('copyLink')}
           icon="link"
           busy={busy === 'link'}
           dimmed={!!busy && busy !== 'link'}
@@ -86,8 +88,8 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
 
         {/* Telegram */}
         <SecondaryRow
-          label="Send set to Telegram"
-          subtitle="Optional bot"
+          label={tx('sendSetToTelegram')}
+          subtitle={tx('optionalBot')}
           icon="paperplane.fill"
           busy={busy === 'telegram'}
           dimmed={!!busy && busy !== 'telegram'}
