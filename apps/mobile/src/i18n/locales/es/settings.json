@@ -1,0 +1,55 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Perfil y ajustes",
+  "yourAccount": "Tu cuenta",
+  "changeYourIcon": "Cambia tu icono",
+  "sections": {
+    "settings": "AJUSTES",
+    "library": "BIBLIOTECA",
+    "support": "AYUDA"
+  },
+  "appearance": "Apariencia",
+  "appearanceOptions": {
+    "auto": "Automático",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "language": "Idioma",
+  "languageAutomatic": "Automático (dispositivo)",
+  "chordStyle": "Estilo de acordes",
+  "chordStyleOptions": {
+    "letters": "Letras",
+    "solfege": "Solfeo"
+  },
+  "offlineDownloads": "Sin conexión y descargas",
+  "starred": "Favoritos",
+  "mySetlists": "Mis repertorios",
+  "helpCenter": "Centro de ayuda",
+  "sendFeedback": "Enviar comentarios",
+  "aboutGraceChords": "Acerca de GraceChords",
+  "logOut": "Cerrar sesión",
+  "deleteAccount": "Eliminar cuenta",
+  "signOutAlert": {
+    "title": "Cerrar sesión",
+    "message": "¿Cerrar sesión de GraceChords en este dispositivo?",
+    "confirm": "Cerrar sesión"
+  },
+  "deleteAccountAlert": {
+    "title": "Eliminar cuenta",
+    "message": "Esto elimina permanentemente tu cuenta y todos tus datos: canciones favoritas, repertorios y preferencias. Esta acción no se puede deshacer.",
+    "confirm": "Eliminar cuenta"
+  },
+  "deleteFailedAlert": {
+    "title": "Error al eliminar",
+    "message": "No pudimos eliminar tu cuenta. Inténtalo de nuevo."
+  },
+  "about": {
+    "title": "Acerca de",
+    "version": "Versión {{version}}",
+    "sectionLegal": "LEGAL",
+    "privacyPolicy": "Política de privacidad",
+    "termsOfUse": "Términos de uso",
+    "acknowledgements": "Agradecimientos y licencias",
+    "contact": "Contacto"
+  }
+}

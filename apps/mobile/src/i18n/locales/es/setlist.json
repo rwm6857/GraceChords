@@ -1,0 +1,115 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Repertorios",
+  "newSet": "Nuevo repertorio",
+  "empty": "Aún no hay repertorios",
+  "syncing": "Sincronizando tus repertorios…",
+  "editedAgo": "editado {{time}}",
+  "deleteConfirm": {
+    "title": "¿Eliminar «{{name}}»?",
+    "message": "No puedes deshacer esta acción."
+  },
+  "alerts": {
+    "couldNotCreate": "No se pudo crear el repertorio",
+    "couldNotDelete": "No se pudo eliminar el repertorio",
+    "couldNotDeleteMany": "No se pudieron eliminar los repertorios",
+    "couldNotCopyLink": "No se pudo copiar el enlace",
+    "couldNotSendSet": "No se pudo enviar el repertorio",
+    "telegramNotLinkedTitle": "Telegram no vinculado",
+    "telegramNotLinkedMessage": "Primero vincula tu cuenta con el bot: {{url}}",
+    "deleteSetTitle": "¿Eliminar repertorio?",
+    "deleteSetMessage": "Se eliminará «{{name}}» y sus canciones."
+  },
+  "toasts": {
+    "addSongsFirst": "Primero añade canciones",
+    "setLinkCopied": "Enlace del repertorio copiado",
+    "sentToTelegram": "Enviado a Telegram",
+    "removedFromSet": "Eliminada del repertorio"
+  },
+  "builder": {
+    "back": "Repertorios",
+    "setlistOptions": "Opciones del repertorio",
+    "setName": "Nombre del repertorio",
+    "renameSet": "Cambiar nombre del repertorio",
+    "clearSetName": "Borrar nombre del repertorio",
+    "backToSetlists": "Volver a repertorios",
+    "lastEdited": "Última edición {{time}}",
+    "noSongs": "Aún no hay canciones",
+    "addHintTablet": "Toca una canción en la biblioteca para añadirla.",
+    "addHintPhone": "Toca Añadir para buscar en tu biblioteca.",
+    "add": "Añadir",
+    "addSongs": "Añadir canciones",
+    "startSet": "Iniciar repertorio",
+    "notFound": "Este repertorio ya no existe."
+  },
+  "timeline": {
+    "reorder": "Reordenar {{title}}",
+    "changeKeyFor": "Cambiar tono de {{title}}",
+    "noKey": "—"
+  },
+  "options": {
+    "title": "Repertorio",
+    "renameSet": "Cambiar nombre del repertorio",
+    "savedSets": "Repertorios guardados…",
+    "newSet": "Nuevo repertorio",
+    "deleteSet": "Eliminar repertorio"
+  },
+  "rowActions": {
+    "closeSongOptions": "Cerrar opciones de la canción",
+    "changeKey": "Cambiar tono",
+    "duplicate": "Duplicar",
+    "removeFromSet": "Quitar del repertorio"
+  },
+  "remove": "Quitar",
+  "performer": {
+    "back": "Repertorio",
+    "viewOptions": "Opciones de vista",
+    "backToSetlist": "Volver al repertorio",
+    "goToSong": "Ir a la canción {{number}}",
+    "previousSong": "Canción anterior",
+    "nextSong": "Canción siguiente",
+    "noSongs": "Este repertorio no tiene canciones",
+    "notFound": "Este repertorio ya no existe."
+  },
+  "addSongs": {
+    "title": "Añadir canciones",
+    "doneAdding": "Terminar de añadir canciones",
+    "searchPlaceholder": "Busca canciones, artistas, temas…",
+    "clearSearch": "Borrar búsqueda",
+    "noMatches": "Ninguna canción coincide con «{{query}}».",
+    "emptyLibrary": "Tu biblioteca está vacía.",
+    "add": "Añadir {{title}} al repertorio",
+    "remove": "Quitar {{title}} del repertorio"
+  },
+  "libraryPane": {
+    "searchPlaceholder": "Buscar canciones…",
+    "searchLibrary": "Buscar en la biblioteca"
+  },
+  "prune": {
+    "title": "Límite de repertorios alcanzado",
+    "message": "Has guardado {{count}} de tus {{limit}} repertorios. Selecciona algunos para eliminar (primero los más antiguos) e inténtalo de nuevo.",
+    "select": "Seleccionar {{name}} para eliminar",
+    "deselect": "Deseleccionar {{name}}",
+    "deleteSelected": "Eliminar repertorios seleccionados",
+    "deleteCount": "Eliminar {{count}}",
+    "deleteSelectedShort": "Eliminar seleccionados"
+  },
+  "import": {
+    "back": "Atrás",
+    "title": "Importar repertorio",
+    "couldNotLoadTitle": "No se pudieron cargar las canciones",
+    "couldNotLoadSubtitle": "Comprueba tu conexión e intenta abrir el enlace de nuevo.",
+    "couldNotImportTitle": "No se pudo importar este repertorio",
+    "couldNotImportSubtitle": "Este enlace no contenía ninguna canción que pudiéramos encontrar.",
+    "backToSetlists": "Volver a repertorios",
+    "save": "Guardar en mis repertorios",
+    "saving": "Guardando…",
+    "couldNotImportAlert": "No se pudo importar el repertorio",
+    "missingCount_one": "No se pudo encontrar {{count}} canción.",
+    "missingCount_other": "No se pudieron encontrar {{count}} canciones.",
+    "missingNamed": "No se encontró: {{subject}}.",
+    "missingWithOthers_one": "{{names}} y {{count}} más",
+    "missingWithOthers_other": "{{names}} y {{count}} más",
+    "listAnd": "{{head}} y {{last}}"
+  }
+}

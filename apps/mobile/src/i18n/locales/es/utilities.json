@@ -1,0 +1,45 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Herramientas",
+  "sectionTools": "HERRAMIENTAS",
+  "pickTool": "Elige una herramienta para empezar",
+  "tools": {
+    "tuner": "Afinador",
+    "metronome": "Marca tempo / Metrónomo",
+    "pitchPipe": "Diapasón"
+  },
+  "tuner": {
+    "title": "Afinador",
+    "permissionDenied": "El afinador necesita acceso al micrófono para escuchar tu guitarra. El audio se analiza solo en este dispositivo, nunca se graba ni se envía a ningún lugar.",
+    "enableInSettings": "Activar en Ajustes",
+    "inTune": "Afinado",
+    "cents": "{{sign}}{{cents}}¢",
+    "hz": "{{freq}} Hz",
+    "playAString": "Toca una cuerda…",
+    "stringLocked": "{{name}} — bloqueada, toca para automático",
+    "stringAuto": "{{name}}",
+    "autoModeOff": "Modo automático desactivado",
+    "autoModeOn": "Modo automático activado"
+  },
+  "metronome": {
+    "title": "Metrónomo",
+    "bpm": "BPM",
+    "slower": "Más lento",
+    "faster": "Más rápido",
+    "tapTempo": "Marca tempo",
+    "tapTempoHint": "Toca al ritmo de la canción para fijar el tempo del metrónomo",
+    "metronomeStopped": "Metrónomo detenido",
+    "beatOf": "Tiempo {{current}} de {{total}}",
+    "accentDownbeat": "Acentuar primer tiempo",
+    "stop": "Detener",
+    "start": "Iniciar"
+  },
+  "pitchPipe": {
+    "title": "Diapasón",
+    "octave": "OCTAVA",
+    "note": "Nota {{label}}",
+    "octaveDown": "Bajar octava",
+    "octaveUp": "Subir octava",
+    "holdNote": "Mantener nota"
+  }
+}

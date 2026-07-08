@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "chooseTranslation": "Elegir traducción",
+  "chooseDate": "Elegir fecha",
+  "readerSettings": "Ajustes de lectura",
+  "defaultTranslationLabel": "ESV",
+  "copyVerses_one": "Copiar {{count}} versículo",
+  "copyVerses_other": "Copiar {{count}} versículos",
+  "error": {
+    "title": "No se puede cargar la lectura de hoy",
+    "subtitle": "Conéctate a internet e inténtalo de nuevo, o descarga esta traducción en Ajustes → Sin conexión y descargas para leerla sin conexión.",
+    "retry": "Reintentar"
+  },
+  "empty": {
+    "title": "No hay lectura para este día",
+    "subtitle": "Elige otra fecha para seguir leyendo."
+  },
+  "translationPicker": {
+    "title": "Traducción"
+  },
+  "settings": {
+    "title": "Ajustes de lectura",
+    "textSize": "Tamaño del texto",
+    "smallerText": "Texto más pequeño",
+    "largerText": "Texto más grande",
+    "pt": "{{pt}} pt",
+    "typeface": "Tipo de letra",
+    "serif": "Serif",
+    "sans": "Sans",
+    "verseLayout": "Disposición de versículos",
+    "lines": "Líneas",
+    "prose": "Prosa",
+    "lineSpacing": "Interlineado",
+    "tight": "Estrecho",
+    "normal": "Normal",
+    "relaxed": "Amplio",
+    "readingStreak": "Racha de lectura",
+    "trackReadingStreak": "Registrar racha de lectura",
+    "trackReadingStreakDesc": "Cuenta los días seguidos que abres la lectura de hoy."
+  },
+  "datePicker": {
+    "title": "Seleccionar fecha",
+    "today": "Hoy",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "monthYear": "{{month}} {{year}}",
+    "weekdays": [
+      "D",
+      "L",
+      "M",
+      "X",
+      "J",
+      "V",
+      "S"
+    ],
+    "months": [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre"
+    ]
+  }
+}

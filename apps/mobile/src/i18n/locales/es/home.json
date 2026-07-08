@@ -1,0 +1,54 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "greeting": {
+    "morning": "Buenos días",
+    "afternoon": "Buenas tardes",
+    "evening": "Buenas noches",
+    "hello": "{{greeting}}, {{name}}",
+    "friend": "amigo"
+  },
+  "subGreetings": [
+    "Todo está donde lo dejaste.",
+    "Manos a la obra.",
+    "Qué bueno tenerte de vuelta.",
+    "Nos alegra que estés aquí.",
+    "Una canción a la vez.",
+    "Cántale un cántico nuevo.",
+    "Estad quietos, y conoced.",
+    "Este es el día que hizo el Señor.",
+    "Todo lo que respira alabe al Señor.",
+    "Él es tu fortaleza y tu canción.",
+    "Hagas lo que hagas, para su gloria.",
+    "Entra por sus puertas con acción de gracias.",
+    "Bendice, alma mía, al Señor.",
+    "Su gracia es suficiente.",
+    "Regocíjate siempre."
+  ],
+  "profileAndSettings": "Perfil y ajustes",
+  "lastSet": {
+    "label": "Último repertorio",
+    "meta_one": "{{count}} canción · ~{{min}} min",
+    "meta_other": "{{count}} canciones · ~{{min}} min",
+    "keys": "Tonos {{keys}}",
+    "resume": "Reanudar",
+    "editSet": "Editar repertorio"
+  },
+  "continueCard": {
+    "label": "Continúa donde lo dejaste"
+  },
+  "starredCard": {
+    "label": "Canciones favoritas",
+    "empty": "Las canciones que marques aparecerán aquí."
+  },
+  "dailyWordCard": {
+    "label": "Palabra del día",
+    "empty": "Abre la lectura de hoy.",
+    "open": "Abrir la Palabra del día de hoy",
+    "streak_one": "racha de {{count}} día",
+    "streak_other": "racha de {{count}} días"
+  },
+  "recentSongsCard": {
+    "label": "Canciones recientes",
+    "empty": "Las canciones que abras aparecerán aquí."
+  }
+}
