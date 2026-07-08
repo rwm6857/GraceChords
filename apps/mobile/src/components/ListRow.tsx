@@ -21,6 +21,8 @@ export type ListRowProps = {
   trailing?: ReactNode
   /** Leading accessory (e.g. an SF Symbol) rendered before the title. */
   leading?: ReactNode
+  /** Small accessory rendered inline after the title (e.g. a Personal chip). */
+  badge?: ReactNode
   /** Muted trailing value text (settings rows: "English", "Letters"). */
   value?: string | null
   /** Show a disclosure chevron at the far right (navigation rows). */
@@ -38,6 +40,7 @@ export default function ListRow({
   trailingBottom,
   trailing,
   leading,
+  badge,
   value,
   chevron,
   isLast,
@@ -63,17 +66,21 @@ export default function ListRow({
     >
       {leading}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontSize: t.typography.rowTitle.fontSize,
-            fontWeight: t.typography.rowTitle.fontWeight,
-            letterSpacing: t.typography.rowTitle.letterSpacing,
-            color: t.colors.ink,
-          }}
-        >
-          {title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              flexShrink: 1,
+              fontSize: t.typography.rowTitle.fontSize,
+              fontWeight: t.typography.rowTitle.fontWeight,
+              letterSpacing: t.typography.rowTitle.letterSpacing,
+              color: t.colors.ink,
+            }}
+          >
+            {title}
+          </Text>
+          {badge}
+        </View>
         {subtitle ? (
           <Text
             numberOfLines={1}

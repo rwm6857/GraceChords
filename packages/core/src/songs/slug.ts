@@ -25,7 +25,11 @@ export function slugify(title: string): string {
  *   owner (personal_songs).
  * @returns {Promise<string>}
  */
-export async function deriveUniqueSlug(client, title, opts = {}) {
+export async function deriveUniqueSlug(
+  client: any,
+  title: string,
+  opts: { currentId?: string; table?: string; ownerId?: string } = {},
+): Promise<string> {
   const { currentId, table = 'songs', ownerId } = opts
   const base = slugify(title)
   if (!base) return ''
