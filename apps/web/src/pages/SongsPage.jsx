@@ -6,6 +6,7 @@ import { compareSongsByTitle } from '../utils/songs/sort'
 import { searchSongs } from '../utils/songs/search'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
+import { usePersonalSongs } from '../hooks/usePersonalSongs'
 import { Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -25,9 +26,20 @@ const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 const SONGS_TITLE = 'Browse Songs — Free Worship Chord Sheets & Lyrics | GraceChords'
 const SONGS_DESCRIPTION = 'Browse free worship chord sheets and lyrics for churches, worship teams, and believers. Build setlists and access transposable charts at GraceChords.'
 
+// Personal/Pending pill shown on a library card for the user's own drafts.
+function personalBadge(s) {
+  if (!s?.isPersonal) return null
+  return (
+    <span className="gc-tag gc-tag--gray">
+      {s.reviewStatus === 'submitted' ? 'Pending' : 'Personal'}
+    </span>
+  )
+}
+
 export default function Songs(){
   const { t } = useTranslation('pages')
   const { songs: itemsRaw } = useSongs()
+  const { personalSongs } = usePersonalSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
   const languageChipCodes = catalog.translationLanguages || []
   const [selectedLanguage, setSelectedLanguage] = useState(() =>
@@ -74,8 +86,37 @@ export default function Songs(){
         searchTitles: group.variants.map((v) => v.title || '').filter(Boolean),
       })
     }
+
+    // The signed-in user's personal drafts, baked into the same list (sorted +
+    // searchable with everything else). A draft that's already been published
+    // (published_song_id set) is hidden — its catalog twin already appears.
+    for (const p of personalSongs) {
+      if (p.published_song_id) continue
+      const { keys, labels } = canonicalizeTags(p.tags || [], tagMap)
+      const authors = p.artist ? p.artist.split(/,\s*/).filter(Boolean) : []
+      out.push({
+        id: `p_${p.id}`,
+        personalId: p.id,
+        // Route through the viewer's read-only personal mode (?p=<id>).
+        to: `/song/${p.slug || p.id}?p=${p.id}`,
+        isPersonal: true,
+        reviewStatus: p.status,
+        title: p.title,
+        originalKey: p.default_key || '',
+        tags: labels,
+        tagKeys: keys,
+        authors,
+        hasSelectedLanguage: true, // always visible regardless of language chip
+        hasTranslations: false,
+        group: null,
+        searchTags: p.tags || [],
+        searchAuthors: authors,
+        searchText: `${p.title} ${(p.tags || []).join(' ')} ${p.artist || ''}`.toLowerCase(),
+        searchTitles: [p.title].filter(Boolean),
+      })
+    }
     return out
-  }, [catalog.groups, selectedLanguage, tagMap])
+  }, [catalog.groups, selectedLanguage, tagMap, personalSongs])
 
   const navigationType = useNavigationType()
   const navigationTypeRef = useRef(navigationType)
@@ -432,13 +473,14 @@ export default function Songs(){
             <SongCard
               as={Link}
               key={s.id}
-              to={`/song/${s.id}`}
+              to={s.to || `/song/${s.id}`}
               role="option"
               ref={(el) => (optionRefs.current[i] = el)}
               tabIndex={i === activeIndex ? 0 : -1}
               aria-selected={i === activeIndex}
               className={i === activeIndex ? 'active' : ''}
               title={s.title}
+              rightSlot={personalBadge(s)}
               subtitle={(() => {
                 const visible = filterDisplayTags(s.tags)
                 return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
@@ -458,13 +500,14 @@ export default function Songs(){
               <SongCard
                 as={Link}
                 key={s.id}
-                to={`/song/${s.id}`}
+                to={s.to || `/song/${s.id}`}
                 role="option"
                 ref={(el) => (optionRefs.current[idx] = el)}
                 tabIndex={idx === activeIndex ? 0 : -1}
                 aria-selected={idx === activeIndex}
                 className={idx === activeIndex ? 'active' : ''}
                 title={s.title}
+                rightSlot={personalBadge(s)}
                 subtitle={(() => {
                 const visible = filterDisplayTags(s.tags)
                 return `${s.originalKey || '—'}${visible.length ? ` • ${visible.join(', ')}` : ''}`
