@@ -1,5 +1,6 @@
 import { Pressable, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import SegmentedPill from './SegmentedPill'
 import AccidentalToggle, { type Accidental } from './AccidentalToggle'
@@ -94,6 +95,7 @@ function ViewOptionsContent({
   onKeepAwake,
 }: ViewOptionsProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('song')
   const insets = useSafeAreaInsets()
 
   const stepFont = (dir: 1 | -1) => {
@@ -104,7 +106,7 @@ function ViewOptionsContent({
   const atMax = fontScale >= FONT_SCALE_MAX
 
   return (
-    <FormSheetShell title="View options" onAction={onClose}>
+    <FormSheetShell title={tx('viewer.viewOptions')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
         {/* Show chords */}
         <View
@@ -114,12 +116,12 @@ function ViewOptionsContent({
             justifyContent: 'space-between',
           }}
         >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>Show chords</Text>
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.showChords')}</Text>
           <Switch
             value={showChords}
             onValueChange={onShowChords}
             trackColor={{ true: t.colors.accent }}
-            accessibilityLabel="Show chords"
+            accessibilityLabel={tx('viewOptions.showChords')}
           />
         </View>
 
@@ -132,12 +134,12 @@ function ViewOptionsContent({
             marginTop: t.spacing.xl,
           }}
         >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>Section labels</Text>
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.sectionLabels')}</Text>
           <Switch
             value={showSections}
             onValueChange={onShowSections}
             trackColor={{ true: t.colors.accent }}
-            accessibilityLabel="Section labels"
+            accessibilityLabel={tx('viewOptions.sectionLabels')}
           />
         </View>
 
@@ -150,7 +152,7 @@ function ViewOptionsContent({
             marginTop: t.spacing.xl,
           }}
         >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>Font size</Text>
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.fontSize')}</Text>
           <View
             style={{
               flexDirection: 'row',
@@ -164,7 +166,7 @@ function ViewOptionsContent({
               onPress={() => stepFont(-1)}
               disabled={atMin}
               accessibilityRole="button"
-              accessibilityLabel="Smaller font"
+              accessibilityLabel={tx('viewOptions.smallerFont')}
               style={{
                 width: 40,
                 height: 36,
@@ -191,7 +193,7 @@ function ViewOptionsContent({
               onPress={() => stepFont(1)}
               disabled={atMax}
               accessibilityRole="button"
-              accessibilityLabel="Larger font"
+              accessibilityLabel={tx('viewOptions.largerFont')}
               style={{
                 width: 40,
                 height: 36,
@@ -215,11 +217,11 @@ function ViewOptionsContent({
             marginTop: t.spacing.xl,
           }}
         >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>Chord style</Text>
+          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.chordStyle')}</Text>
           <SegmentedPill<ChordStyle>
             options={[
-              { value: 'letters', label: 'Letters' },
-              { value: 'solfege', label: 'Solfège' },
+              { value: 'letters', label: tx('viewOptions.letters') },
+              { value: 'solfege', label: tx('viewOptions.solfege') },
             ]}
             value={chordStyle}
             onChange={onChordStyle}
@@ -237,7 +239,7 @@ function ViewOptionsContent({
               marginTop: t.spacing.xl,
             }}
           >
-            <Text style={{ fontSize: 16, color: t.colors.ink }}>Accidentals</Text>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.accidentals')}</Text>
             <AccidentalToggle value={accidental} onChange={onAccidental} />
           </View>
         ) : null}
@@ -253,7 +255,7 @@ function ViewOptionsContent({
               marginTop: t.spacing.xl,
             }}
           >
-            <Text style={{ fontSize: 16, color: t.colors.ink }}>Columns</Text>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.columns')}</Text>
             <SegmentedPill<ColumnMode>
               options={[
                 { value: 'single', label: '1' },
@@ -267,17 +269,17 @@ function ViewOptionsContent({
 
         {/* Screen preferences — persist across launches (unlike the options
             above). Each row renders only when the screen wires it. */}
-        {onAutoHide || onKeepAwake ? <OverlineLabel>Screen</OverlineLabel> : null}
+        {onAutoHide || onKeepAwake ? <OverlineLabel>{tx('viewOptions.screen')}</OverlineLabel> : null}
         {onAutoHide ? (
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <Text style={{ fontSize: 16, color: t.colors.ink }}>Hide controls when idle</Text>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.hideControlsWhenIdle')}</Text>
             <Switch
               value={!!autoHide}
               onValueChange={onAutoHide}
               trackColor={{ true: t.colors.accent }}
-              accessibilityLabel="Hide controls when idle"
+              accessibilityLabel={tx('viewOptions.hideControlsWhenIdle')}
             />
           </View>
         ) : null}
@@ -290,12 +292,12 @@ function ViewOptionsContent({
               marginTop: onAutoHide ? t.spacing.xl : 0,
             }}
           >
-            <Text style={{ fontSize: 16, color: t.colors.ink }}>Keep screen awake</Text>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.keepScreenAwake')}</Text>
             <Switch
               value={!!keepAwake}
               onValueChange={onKeepAwake}
               trackColor={{ true: t.colors.accent }}
-              accessibilityLabel="Keep screen awake"
+              accessibilityLabel={tx('viewOptions.keepScreenAwake')}
             />
           </View>
         ) : null}

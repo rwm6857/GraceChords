@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import SymbolIcon from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -21,6 +22,7 @@ export default function TransposeBar({
   onLongPress?: () => void
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('song')
   const buttonStyle = {
     width: 46,
     height: 44,
@@ -51,7 +53,7 @@ export default function TransposeBar({
       <Pressable
         onPress={onDown}
         accessibilityRole="button"
-        accessibilityLabel="Transpose down"
+        accessibilityLabel={tx('transpose.down')}
         style={({ pressed }) => [buttonStyle, pressed && { opacity: 0.6 }]}
       >
         <SymbolIcon name="chevron.down" size={20} color={t.colors.accent} weight="semibold" />
@@ -60,8 +62,8 @@ export default function TransposeBar({
         onLongPress={onLongPress}
         disabled={!onLongPress}
         accessibilityRole="button"
-        accessibilityLabel="Choose key"
-        accessibilityHint="Opens the key selector"
+        accessibilityLabel={tx('transpose.chooseKey')}
+        accessibilityHint={tx('transpose.chooseKeyHint')}
         style={({ pressed }) => [pressed && onLongPress ? { opacity: 0.6 } : null]}
       >
         <Text
@@ -79,7 +81,7 @@ export default function TransposeBar({
       <Pressable
         onPress={onUp}
         accessibilityRole="button"
-        accessibilityLabel="Transpose up"
+        accessibilityLabel={tx('transpose.up')}
         style={({ pressed }) => [buttonStyle, pressed && { opacity: 0.6 }]}
       >
         <SymbolIcon name="chevron.up" size={20} color={t.colors.accent} weight="semibold" />

@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import { useFormSheet } from '../lib/formSheetHost'
 import Button from './Button'
@@ -17,12 +18,12 @@ import { useTheme } from '../theme/ThemeProvider'
 export type SortKey = 'title' | 'artist' | 'key' | 'recent' | 'tempo'
 export type SortDir = 'asc' | 'desc'
 
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'title', label: 'Title' },
-  { key: 'artist', label: 'Artist' },
-  { key: 'key', label: 'Key' },
-  { key: 'recent', label: 'Recently added' },
-  { key: 'tempo', label: 'Tempo' },
+const SORT_OPTIONS: { key: SortKey; labelKey: string }[] = [
+  { key: 'title', labelKey: 'filterSheet.sort.title' },
+  { key: 'artist', labelKey: 'filterSheet.sort.artist' },
+  { key: 'key', labelKey: 'filterSheet.sort.key' },
+  { key: 'recent', labelKey: 'filterSheet.sort.recent' },
+  { key: 'tempo', labelKey: 'filterSheet.sort.tempo' },
 ]
 
 // The Filter & sort sheet (the design's single filter control — no segment
@@ -62,11 +63,12 @@ function FilterSortContent({
   resultCount,
 }: FilterSortProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['song', 'common'])
   const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
 
   return (
-    <FormSheetShell title="Filter & sort" actionLabel="Reset" onAction={onReset}>
+    <FormSheetShell title={tx('filterSheet.title')} actionLabel={tx('common:reset')} onAction={onReset}>
       <ScrollView
         // The fitToContents detent doesn't bound over-tall content the way the
         // old Modal's maxHeight did, so cap the scroll area ourselves — long
@@ -85,7 +87,7 @@ function FilterSortContent({
             paddingBottom: t.spacing.sm,
           }}
         >
-          Sort by
+          {tx('filterSheet.sortBy')}
         </Text>
         <Card>
           {SORT_OPTIONS.map((opt, i) => {
@@ -107,7 +109,7 @@ function FilterSortContent({
                 })}
               >
                 <Text style={{ flex: 1, fontSize: 16.5, letterSpacing: -0.3, color: t.colors.ink }}>
-                  {opt.label}
+                  {tx(opt.labelKey)}
                 </Text>
                 {selected ? (
                   <SymbolIcon
@@ -135,7 +137,7 @@ function FilterSortContent({
                 marginTop: t.spacing.xl,
               }}
             >
-              Filter by tag
+              {tx('filterSheet.filterByTag')}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9 }}>
               {availableTags.map((tag) => (
@@ -161,7 +163,7 @@ function FilterSortContent({
         }}
       >
         <Button
-          title={`Show ${resultCount} ${resultCount === 1 ? 'song' : 'songs'}`}
+          title={tx('filterSheet.show', { count: resultCount })}
           onPress={onClose}
         />
       </View>

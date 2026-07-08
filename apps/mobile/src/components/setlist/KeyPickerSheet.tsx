@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import { KEYS, normKey } from '@gracechords/core'
 import FormSheetShell from '../FormSheetShell'
 import AccidentalToggle, { type Accidental, defaultAccidental } from '../AccidentalToggle'
@@ -42,6 +43,7 @@ function KeyPickerContent({
   onPick,
 }: KeyPickerProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['song', 'common'])
   const insets = useSafeAreaInsets()
   const current = currentKey ? (normKey(currentKey) as string) : null
 
@@ -54,12 +56,12 @@ function KeyPickerContent({
   const labels = accidental === 'flat' ? FLAT_KEYS : (KEYS as readonly string[])
 
   return (
-    <FormSheetShell title="Key" onAction={onClose}>
+    <FormSheetShell title={tx('keyPicker.title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           {songTitle ? (
             <Text style={{ flexShrink: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
-              Play {songTitle} in…
+              {tx('keyPicker.playIn', { title: songTitle })}
             </Text>
           ) : (
             <View />
@@ -78,7 +80,7 @@ function KeyPickerContent({
                   onClose()
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={`Key of ${label}`}
+                accessibilityLabel={tx('common:keyOf', { key: label })}
                 accessibilityState={{ selected }}
                 style={{
                   // 4 columns with the wrap gap accounted for.
@@ -113,7 +115,7 @@ function KeyPickerContent({
               onClose()
             }}
             accessibilityRole="button"
-            accessibilityLabel={nativeKey ? `Reset to ${nativeKey}` : 'Reset to the original key'}
+            accessibilityLabel={nativeKey ? tx('keyPicker.resetTo', { key: nativeKey }) : tx('keyPicker.resetToOriginalA11y')}
             style={({ pressed }) => ({
               height: 44,
               borderRadius: t.radii.sm,
@@ -125,7 +127,7 @@ function KeyPickerContent({
             })}
           >
             <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.textAccent }}>
-              Reset to {nativeKey || 'original key'}
+              {nativeKey ? tx('keyPicker.resetTo', { key: nativeKey }) : tx('keyPicker.resetToOriginal')}
             </Text>
           </Pressable>
         ) : null}

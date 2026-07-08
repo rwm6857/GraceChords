@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import Screen from '../components/Screen'
 import ListRow from '../components/ListRow'
@@ -40,7 +41,9 @@ function byTitle(a: Song, b: Song) {
 // active sort. Title/Artist bucket by first letter (with the A–Z scrubber);
 // Key regroups into "Key of X"; Recently added / Tempo are a single flat,
 // header-less section. sortDir flips the order.
-function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir): Section[] {
+type Translator = (key: string, options?: Record<string, unknown>) => string
+
+function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir, tx: Translator): Section[] {
   const desc = sortDir === 'desc'
 
   if (sortKey === 'title' || sortKey === 'artist') {
@@ -77,7 +80,7 @@ function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir): Secti
     if (desc) keys.reverse()
     return keys.map((k) => ({
       key: k || '__nokey',
-      title: k ? `Key of ${k}` : 'No key',
+      title: k ? tx('common:keyOf', { key: k }) : tx('library.noKey'),
       letter: null,
       data: groups.get(k)!.slice().sort(byTitle),
     }))
@@ -98,6 +101,7 @@ function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir): Secti
 
 export default function SongLibraryScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['song', 'common'])
   const router = useRouter()
   const { songs, loading, error } = useSongList()
   const isTablet = useIsTabletWidth()
@@ -133,8 +137,8 @@ export default function SongLibraryScreen() {
   }, [songs, selectedTags])
 
   const sections = useMemo(
-    () => buildSections(tagFiltered, sortKey, sortDir),
-    [tagFiltered, sortKey, sortDir],
+    () => buildSections(tagFiltered, sortKey, sortDir, tx),
+    [tagFiltered, sortKey, sortDir, tx],
   )
 
   // Presentation-only chunking for the tablet grid: each section's songs
@@ -300,11 +304,11 @@ export default function SongLibraryScreen() {
                 color: t.colors.ink,
               }}
             >
-              Song Library
+              {tx('library.title')}
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Add song"
+              accessibilityLabel={tx('library.addSong')}
               hitSlop={8}
               onPress={() => {}}
               style={{
@@ -340,7 +344,7 @@ export default function SongLibraryScreen() {
               value={query}
               onChangeText={setQuery}
               onFocus={() => setSearchActive(true)}
-              placeholder="Search songs, artists, themes…"
+              placeholder={tx('library.searchPlaceholder')}
               placeholderTextColor={t.colors.muted}
               returnKeyType="search"
               autoCorrect={false}
@@ -350,13 +354,13 @@ export default function SongLibraryScreen() {
 
           {searchActive ? (
             <Pressable onPress={cancelSearch} accessibilityRole="button" hitSlop={8}>
-              <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Cancel</Text>
+              <Text style={{ fontSize: 16, color: t.colors.textAccent }}>{tx('common:cancel')}</Text>
             </Pressable>
           ) : (
             <Pressable
               onPress={() => setSheetOpen(true)}
               accessibilityRole="button"
-              accessibilityLabel="Filter and sort"
+              accessibilityLabel={tx('library.filterAndSort')}
               style={{
                 width: 44,
                 height: 44,
@@ -408,11 +412,11 @@ export default function SongLibraryScreen() {
       )
     }
     if (error) return centeredMessage(error)
-    if (songs.length === 0) return centeredMessage('Your library is empty.')
+    if (songs.length === 0) return centeredMessage(tx('library.empty'))
 
     if (searchActive) {
       if (!trimmedQuery) return <View style={{ flex: 1 }} />
-      if (results.length === 0) return centeredMessage(`No songs match “${query.trim()}”.`)
+      if (results.length === 0) return centeredMessage(tx('library.noMatchesForQuery', { query: query.trim() }))
       return (
         <SectionList
           sections={[{ key: '__results', title: '', letter: null, data: resultRows }]}
@@ -429,7 +433,7 @@ export default function SongLibraryScreen() {
                   color: t.colors.muted,
                 }}
               >
-                {results.length} {results.length === 1 ? 'result' : 'results'}
+                {tx('library.results', { count: results.length })}
               </Text>
             </View>
           )}
@@ -438,7 +442,7 @@ export default function SongLibraryScreen() {
       )
     }
 
-    if (sections.length === 0) return centeredMessage('No songs match your filters.')
+    if (sections.length === 0) return centeredMessage(tx('library.noMatchesFilters'))
 
     return (
       <View style={{ flex: 1 }}>

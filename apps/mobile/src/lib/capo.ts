@@ -30,14 +30,18 @@ export function capoHint(delta: number, displayedKey: string, preferFlat = false
   return { fret, soundingKey: transposeSymPrefer(displayedKey, fret, preferFlat) }
 }
 
-/** Exact chip text — `Capo # for __` — or null when the chip is hidden. */
-export function capoChipLabel(
+/**
+ * Interpolation values for the capo chip (`song:viewer.capo` → "Capo {{fret}}
+ * for {{key}}"), or null when the chip is hidden. Kept RN/i18n-free — the
+ * Viewer formats the string through its own `t`.
+ */
+export function capoChipValues(
   delta: number,
   displayedKey: string,
   preferFlat = false,
   chordStyle: 'letters' | 'solfege' = 'letters'
-): string | null {
+): { fret: number; key: string } | null {
   const hint = capoHint(delta, displayedKey, preferFlat)
   if (!hint) return null
-  return `Capo ${hint.fret} for ${formatKeyDisplay(hint.soundingKey, chordStyle)}`
+  return { fret: hint.fret, key: formatKeyDisplay(hint.soundingKey, chordStyle) }
 }
