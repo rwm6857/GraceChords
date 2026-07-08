@@ -17,6 +17,7 @@ import {
 import { resolveInitialSession } from '../src/lib/authSession'
 import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
+import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateRecents } from '../src/lib/recents'
@@ -143,6 +144,7 @@ export default function RootLayout() {
       hydrateRecents(AsyncStorage),
       hydrateReadingStreak(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
+      hydrateBibleTranslationPref(AsyncStorage),
     ]).then(([session, defaults]) => {
       // Apply the stored language pick (null = follow device) while the splash
       // is still up, so a non-device language never flashes on first paint.

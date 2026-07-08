@@ -31,6 +31,11 @@ import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
 import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
+import {
+  defaultTranslationForLocale,
+  setBibleTranslationPref,
+  useBibleTranslationPref,
+} from '../lib/bibleTranslationPref'
 import { markReadToday, streakDateKey } from '../lib/readingStreak'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { useDailyHighlights } from '../lib/useDailyHighlights'
@@ -72,7 +77,8 @@ export default function DailyWordScreen() {
 
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
-  const [selectedId, setSelectedId] = useState('')
+  // The user's explicit, persisted translation pick ('' = none yet).
+  const storedTranslationId = useBibleTranslationPref()
   // Highlights persist per passage (keyed by passageId), stored to disk and
   // day-scoped, so switching chapters, copying, or a cold restart never clears
   // them — but a new day starts clean.
@@ -88,11 +94,15 @@ export default function DailyWordScreen() {
   const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
   const currentPassage: Passage | null = passages[passageIndex] || passages[0] || null
 
-  // Resolve a valid translation even before the user picks one.
-  const effectiveId = useMemo(
-    () => resolveBibleTranslationSelection(selectedId, translations, defaultTranslationId),
-    [selectedId, translations, defaultTranslationId]
-  )
+  // Resolve the active translation: a stored pick always wins; with no prior
+  // choice, seed the default from the app locale (locale→translation is derived
+  // from the manifest, so a future Turkish Bible is picked up automatically —
+  // today a Turkish locale correctly falls through to ESV). App UI language and
+  // Bible translation stay independent — the locale only seeds this default.
+  const effectiveId = useMemo(() => {
+    const seed = storedTranslationId || defaultTranslationForLocale(i18n.language, translations, defaultTranslationId)
+    return resolveBibleTranslationSelection(seed, translations, defaultTranslationId)
+  }, [storedTranslationId, i18n.language, translations, defaultTranslationId])
   const selectedTranslation: BibleTranslation | null =
     translations.find((x) => x.id === effectiveId) || translations[0] || null
   const translationLabel = selectedTranslation?.label || tx('defaultTranslationLabel')
@@ -432,7 +442,7 @@ export default function DailyWordScreen() {
         groups={groups}
         selectedId={effectiveId}
         onSelect={(item) => {
-          setSelectedId(item.id)
+          setBibleTranslationPref(item.id)
           setSheet('none')
         }}
       />
