@@ -2,60 +2,44 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EDIT ME: rotating sub-greetings shown under the hero greeting on Home.
-// Add as many lines as you like — Home rotates through them by day. Keep them
-// short (one line). This is the intended place to input your own phrases later.
-// ─────────────────────────────────────────────────────────────────────────────
-export const SUB_GREETINGS: string[] = [
-  "Everything's where you left it.",
-  "Let's get to it.",
-  'Good to have you back.',
-  "Glad you're here.",
-  'One song at a time.',
-  'Sing to Him a new song.',
-  'Be still, and know.',
-  'This is the day He has made.',
-  'Let everything that has breath praise Him.',
-  'He is your strength and your song.',
-  'Whatever you do, for His glory.',
-  'Enter His gates with thanksgiving.',
-  'Bless the Lord, O my soul.',
-  'His grace is enough.',
-  'Rejoice always.',
-]
+// The greeting PHRASES live in the home locale namespace
+// (src/i18n/locales/<lng>/home.json — greeting.* and the editable subGreetings
+// array). This module stays RN/i18n-free (unit-testable) and returns keys or
+// indices; Home resolves them through its own `t`.
 
-/** Time-of-day greeting prefix, e.g. "Good morning". */
-export function timeGreeting(date: Date = new Date()): string {
+/** Time-of-day greeting key under home:greeting.*, e.g. 'greeting.morning'. */
+export function timeGreetingKey(date: Date = new Date()): string {
   const h = date.getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return 'greeting.morning'
+  if (h < 18) return 'greeting.afternoon'
+  return 'greeting.evening'
 }
 
 /**
- * The sub-greeting for this app launch. Chosen once at module load so it stays
- * stable across re-renders and navigation within a session, and varies between
- * launches. Picking here (not on each render) avoids flicker.
+ * The sub-greeting index for this app launch. Chosen once at module load so it
+ * stays stable across re-renders and navigation within a session, and varies
+ * between launches. Picking here (not on each render) avoids flicker. Home maps
+ * it into the home:subGreetings array (modulo its length, so locale files may
+ * carry any number of phrases).
  */
-const LAUNCH_SUB_GREETING =
-  SUB_GREETINGS.length === 0
-    ? ''
-    : SUB_GREETINGS[Math.floor(Math.random() * SUB_GREETINGS.length)]
+const LAUNCH_SUB_GREETING_INDEX = Math.floor(Math.random() * 1024)
 
-/** The sub-greeting chosen for this launch (see {@link LAUNCH_SUB_GREETING}). */
-export function pickSubGreeting(): string {
-  return LAUNCH_SUB_GREETING
+export function pickSubGreetingIndex(): number {
+  return LAUNCH_SUB_GREETING_INDEX
 }
 
-/** A friendly first name for the greeting, derived from the auth user. */
-export function getDisplayName(user: User | null): string {
+/**
+ * A friendly first name for the greeting, derived from the auth user.
+ * Returns null when nothing usable exists — callers show the localized
+ * home:greeting.friend fallback.
+ */
+export function getDisplayName(user: User | null): string | null {
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
   const full = (meta.full_name ?? meta.name) as string | undefined
   if (full && full.trim()) return full.trim().split(/\s+/)[0]
   const email = user?.email
   if (email) return email.split('@')[0]
-  return 'friend'
+  return null
 }
 
 /** Track the current auth user (for the greeting). Mirrors the root auth wiring. */

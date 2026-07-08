@@ -1,5 +1,6 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs'
 import { ThemeProvider as NavThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // The five-tab bottom bar: Home · Songs · Setlists · Daily Word · Utilities.
@@ -27,6 +28,7 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 
 export default function TabsLayout() {
   const t = useTheme()
+  const { t: tx } = useTranslation('nav')
   return (
     <NavThemeProvider value={t.mode === 'dark' ? DarkTheme : DefaultTheme}>
       <NativeTabs tintColor={t.colors.accent}>
@@ -35,7 +37,7 @@ export default function TabsLayout() {
             sf={{ default: 'house', selected: 'house.fill' }}
             md="home" // TODO(android): verify
           />
-          <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{tx('home')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="songs">
@@ -43,7 +45,7 @@ export default function TabsLayout() {
             sf={{ default: 'music.pages', selected: 'music.pages.fill' }}
             md="queue_music" // TODO(android): verify
           />
-          <NativeTabs.Trigger.Label>Songs</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{tx('songs')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="setlists">
@@ -51,7 +53,7 @@ export default function TabsLayout() {
             sf={{ default: 'music.note.square.stack', selected: 'music.note.square.stack.fill' }}
             md="list" // TODO(android): verify
           />
-          <NativeTabs.Trigger.Label>Setlists</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{tx('setlists')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="daily">
@@ -59,7 +61,7 @@ export default function TabsLayout() {
             sf={{ default: 'book', selected: 'book.fill' }}
             md="menu_book" // TODO(android): verify
           />
-          <NativeTabs.Trigger.Label>Daily Word</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{tx('dailyWord')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="utilities">
@@ -67,7 +69,7 @@ export default function TabsLayout() {
             sf={{ default: 'wrench.and.screwdriver', selected: 'wrench.and.screwdriver.fill' }}
             md="handyman" // TODO(android): verify
           />
-          <NativeTabs.Trigger.Label>Utilities</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{tx('utilities')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     </NavThemeProvider>

@@ -10,6 +10,11 @@ type SupabaseAuth = Pick<SupabaseClient, 'auth'>
 export type AuthResult = {
   ok: boolean
   canceled?: boolean
+  /**
+   * Either an auth-namespace i18n key (errors.*) for this module's own
+   * failures, or a raw passthrough message from Supabase. The screen renders
+   * it via t(error, { defaultValue: error }) so both forms display.
+   */
   error?: string
   needsConfirmation?: boolean
 }
@@ -38,11 +43,11 @@ export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
     credential = await deps.signInAsync(hashedNonce)
   } catch (e) {
     if (deps.isCancelError(e)) return { ok: false, canceled: true }
-    return { ok: false, error: 'Apple sign-in failed. Please try again.' }
+    return { ok: false, error: 'errors.appleFailed' }
   }
 
   if (!credential.identityToken) {
-    return { ok: false, error: 'Apple did not return a credential.' }
+    return { ok: false, error: 'errors.appleNoCredential' }
   }
 
   const { data, error } = await deps.supabase.auth.signInWithIdToken({
@@ -86,13 +91,13 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
   } catch (e) {
     if (deps.isCancelError(e)) return { ok: false, canceled: true }
     if (deps.isPlayServicesError(e)) {
-      return { ok: false, error: 'Google Play Services is unavailable on this device.' }
+      return { ok: false, error: 'errors.googlePlayUnavailable' }
     }
-    return { ok: false, error: 'Google sign-in failed. Please try again.' }
+    return { ok: false, error: 'errors.googleFailed' }
   }
 
   if (!result.idToken) {
-    return { ok: false, error: 'Google did not return a credential.' }
+    return { ok: false, error: 'errors.googleNoCredential' }
   }
 
   // No nonce is passed here — unlike Apple. On iOS the native Google SDK embeds

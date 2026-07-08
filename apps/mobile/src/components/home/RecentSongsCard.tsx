@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { cardStyle } from './cardStyle'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -11,6 +12,7 @@ import { getRecentlyOpened, type RecentSong } from '../../lib/recents'
 
 export default function RecentSongsCard() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['home', 'common'])
   const router = useRouter()
   const recents = getRecentlyOpened().slice(0, t.layout.recentSongs)
 
@@ -38,12 +40,12 @@ export default function RecentSongsCard() {
           color: t.colors.textAccent,
         }}
       >
-        Recent songs
+        {tx('recentSongsCard.label')}
       </Text>
 
       {recents.length === 0 ? (
         <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-          Songs you open will appear here.
+          {tx('recentSongsCard.empty')}
         </Text>
       ) : (
         <View style={{ marginTop: t.spacing.xs }}>
@@ -52,7 +54,7 @@ export default function RecentSongsCard() {
               key={s.slug}
               onPress={() => openSong(s)}
               accessibilityRole="button"
-              accessibilityLabel={`Open ${s.title}`}
+              accessibilityLabel={tx('common:openSong', { title: s.title })}
               style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',

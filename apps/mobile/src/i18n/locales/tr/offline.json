@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Çevrimdışı ve İndirmeler",
+  "onThisDeviceStorage": "Bu cihazdaki çeviriler",
+  "downloadedCount": "{{total}} çeviriden {{count}} tanesi indirildi",
+  "mb": "{{value}} MB",
+  "percent": "%{{value}}",
+  "sections": {
+    "downloading": "İndiriliyor",
+    "onThisDevice": "Bu cihazda · {{count}}",
+    "available": "İndirilebilir",
+    "options": "Seçenekler"
+  },
+  "updateAvailable": "Güncelleme mevcut",
+  "translationMeta": "{{language}} · {{size}}",
+  "translationMetaStale": "{{language}} · {{size}} · Güncelleme mevcut",
+  "cancelDownload": "İndirmeyi iptal et",
+  "updateDownload": "İndirmeyi güncelle",
+  "deleteDownload": "İndirmeyi sil",
+  "download": "{{name}} indir",
+  "wifiOnly": "Yalnızca Wi-Fi ile indir",
+  "footer": "İndirilen çeviriler bağlantı olmadan okunabilir. The Gospel Coalition'ın günlük adanmışlıkları ağ üzerinden akışla gelir ve çevrimdışı saklanmaz.",
+  "back": "Ayarlar",
+  "backToSettings": "Ayarlara dön",
+  "alerts": {
+    "wifiRequiredTitle": "Wi-Fi gerekli",
+    "wifiRequiredMessage": "\"Yalnızca Wi-Fi ile indir\" seçeneği açık. Wi-Fi'ye bağlanın veya hücresel veriyle indirmek için seçeneği kapatın.",
+    "downloadFailedTitle": "İndirme başarısız",
+    "downloadFailedMessage": "Bu çeviri indirilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "deleteTitle": "İndirmeyi sil",
+    "deleteMessage": "\"{{name}}\" bu cihazdan kaldırılsın mı? İstediğiniz zaman tekrar indirebilirsiniz."
+  }
+}

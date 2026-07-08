@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import {
   createSetlist,
   effectiveKey,
@@ -44,6 +45,7 @@ export default function SetlistImportScreen({
   code?: string
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['setlist', 'common'])
   const router = useRouter()
   const { songs, loading: songsLoading, error: songsError } = useSongList()
   const [saving, setSaving] = useState(false)
@@ -54,7 +56,7 @@ export default function SetlistImportScreen({
     () => (songsLoading ? { resolved: [], unresolved: [] } : resolveImport({ ids, toKeys, code }, songs)),
     [songsLoading, songs, ids, toKeys, code],
   )
-  const warning = buildMissingWarning(resolution.unresolved)
+  const warning = buildMissingWarning(resolution.unresolved, tx)
   const summary = useMemo(
     () =>
       formatSetSummary(
@@ -90,7 +92,7 @@ export default function SetlistImportScreen({
       router.replace(`/setlist/${id}`)
     } catch (err: unknown) {
       setSaving(false)
-      Alert.alert('Could not import setlist', errMessage(err))
+      Alert.alert(tx('import.couldNotImportAlert'), errMessage(err))
     }
   }
 
@@ -106,12 +108,12 @@ export default function SetlistImportScreen({
       <Pressable
         onPress={goBack}
         accessibilityRole="button"
-        accessibilityLabel="Back"
+        accessibilityLabel={tx('import.back')}
         hitSlop={8}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
       >
         <SymbolIcon name="chevron.left" size={17} color={t.colors.textAccent} weight="semibold" />
-        <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Back</Text>
+        <Text style={{ fontSize: 16, color: t.colors.textAccent }}>{tx('import.back')}</Text>
       </Pressable>
     </View>
   )
@@ -133,8 +135,8 @@ export default function SetlistImportScreen({
         {header}
         <EmptyState
           icon="wifi.slash"
-          title="Couldn't load songs"
-          subtitle="Check your connection and try opening the link again."
+          title={tx('import.couldNotLoadTitle')}
+          subtitle={tx('import.couldNotLoadSubtitle')}
         />
       </Screen>
     )
@@ -146,9 +148,9 @@ export default function SetlistImportScreen({
         {header}
         <EmptyState
           icon="music.note.list"
-          title="Couldn't import this setlist"
-          subtitle={warning ?? "This link didn't contain any songs we could find."}
-          actionLabel="Back to setlists"
+          title={tx('import.couldNotImportTitle')}
+          subtitle={warning ?? tx('import.couldNotImportSubtitle')}
+          actionLabel={tx('import.backToSetlists')}
           onAction={goBack}
         />
       </Screen>
@@ -171,7 +173,7 @@ export default function SetlistImportScreen({
               color: t.colors.ink,
             }}
           >
-            Import setlist
+            {tx('import.title')}
           </Text>
           <Text style={{ marginTop: 4, fontSize: 14, color: t.colors.sec }}>{summary}</Text>
         </View>
@@ -236,7 +238,7 @@ export default function SetlistImportScreen({
         }}
       >
         <Button
-          title={saving ? 'Saving…' : 'Save to my setlists'}
+          title={saving ? tx('import.saving') : tx('import.save')}
           onPress={save}
           disabled={saving}
         />

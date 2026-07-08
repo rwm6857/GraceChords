@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import Constants from 'expo-constants'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
 import ListRow from '../components/ListRow'
@@ -23,15 +24,15 @@ const CONTACT_EMAIL = 'ryan@gracechords.com'
 
 // Matches the web app's copyright (apps/web/src/config/copyright.ts): a range
 // from the first public-release year to the current year.
-function copyrightNotice(): string {
+function copyrightRange(): string {
   const year = new Date().getFullYear()
   const base = 2023
-  const range = year === base ? `${year}` : `${base}–${year}`
-  return `© ${range} Ryan Moore. All rights reserved.`
+  return year === base ? `${year}` : `${base}–${year}`
 }
 
 export default function AboutScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['settings', 'common'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   // Measured glass-bar height feeds the scroll-behind top inset so content
@@ -66,7 +67,7 @@ export default function AboutScreen() {
             paddingBottom: t.spacing.md,
           }}
         >
-          About
+          {tx('about.title')}
         </Text>
 
         {/* App identity */}
@@ -89,29 +90,29 @@ export default function AboutScreen() {
             <Text style={{ fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
               GraceChords
             </Text>
-            <Text style={{ fontSize: 13.5, color: t.colors.sec }}>Version {versionLabel}</Text>
+            <Text style={{ fontSize: 13.5, color: t.colors.sec }}>{tx('about.version', { version: versionLabel })}</Text>
           </View>
         </Card>
 
-        <SectionHeader label="LEGAL" />
+        <SectionHeader label={tx('about.sectionLegal')} />
         <Card>
           <ListRow
-            title="Privacy Policy"
+            title={tx('about.privacyPolicy')}
             chevron
             onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
           />
           <ListRow
-            title="Terms of Use"
+            title={tx('about.termsOfUse')}
             chevron
             onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
           />
           <ListRow
-            title="Acknowledgements &amp; Licenses"
+            title={tx('about.acknowledgements')}
             chevron
             onPress={() => void WebBrowser.openBrowserAsync(LICENSES_URL)}
           />
           <ListRow
-            title="Contact"
+            title={tx('about.contact')}
             chevron
             isLast
             onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}`)}
@@ -126,7 +127,7 @@ export default function AboutScreen() {
             color: t.colors.muted,
           }}
         >
-          {copyrightNotice()}
+          {tx('common:copyright', { range: copyrightRange() })}
         </Text>
       </ScrollView>
 
@@ -149,12 +150,12 @@ export default function AboutScreen() {
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={tx('common:back')}
           hitSlop={8}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Settings</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('common:settings')}</Text>
         </Pressable>
       </GlassSurface>
     </Screen>

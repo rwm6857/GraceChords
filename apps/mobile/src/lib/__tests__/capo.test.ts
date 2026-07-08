@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capoChipLabel, capoFret, capoHint } from '../capo'
+import { capoChipValues, capoFret, capoHint } from '../capo'
 
 describe('capoFret', () => {
   it('has no capo at zero or upward transpose', () => {
@@ -25,7 +25,7 @@ describe('capoFret', () => {
   })
 })
 
-describe('capoHint / capoChipLabel', () => {
+describe('capoHint / capoChipValues', () => {
   it('computes fret + sounding key for several keys', () => {
     // Chart shows G after 2 down from A: capo 2 sounds A.
     expect(capoHint(-2, 'G')).toEqual({ fret: 2, soundingKey: 'A' })
@@ -42,23 +42,23 @@ describe('capoHint / capoChipLabel', () => {
     expect(capoHint(-1, 'A', false)).toEqual({ fret: 1, soundingKey: 'A#' })
   })
 
-  it('renders the exact chip text', () => {
-    expect(capoChipLabel(-2, 'G')).toBe('Capo 2 for A')
-    expect(capoChipLabel(-3, 'D')).toBe('Capo 3 for F')
-    expect(capoChipLabel(-1, 'A', true)).toBe('Capo 1 for Bb')
+  it('returns the fret + display key for interpolation', () => {
+    expect(capoChipValues(-2, 'G')).toEqual({ fret: 2, key: 'A' })
+    expect(capoChipValues(-3, 'D')).toEqual({ fret: 3, key: 'F' })
+    expect(capoChipValues(-1, 'A', true)).toEqual({ fret: 1, key: 'Bb' })
   })
 
   it('is hidden for zero and upward transposes', () => {
-    expect(capoChipLabel(0, 'G')).toBeNull()
-    expect(capoChipLabel(2, 'G')).toBeNull()
+    expect(capoChipValues(0, 'G')).toBeNull()
+    expect(capoChipValues(2, 'G')).toBeNull()
     expect(capoHint(3, 'C')).toBeNull()
   })
 
   it('is hidden without a displayed key', () => {
-    expect(capoChipLabel(-2, '')).toBeNull()
+    expect(capoChipValues(-2, '')).toBeNull()
   })
 
   it('follows the solfège display style', () => {
-    expect(capoChipLabel(-2, 'G', false, 'solfege')).toBe('Capo 2 for La')
+    expect(capoChipValues(-2, 'G', false, 'solfege')).toEqual({ fret: 2, key: 'La' })
   })
 })

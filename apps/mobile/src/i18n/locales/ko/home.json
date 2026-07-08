@@ -1,0 +1,54 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "greeting": {
+    "morning": "좋은 아침이에요",
+    "afternoon": "좋은 오후예요",
+    "evening": "좋은 저녁이에요",
+    "hello": "{{greeting}}, {{name}}",
+    "friend": "친구"
+  },
+  "subGreetings": [
+    "모든 것이 그대로 있어요.",
+    "이제 시작해 볼까요.",
+    "다시 오셨네요, 반가워요.",
+    "함께해 주셔서 기뻐요.",
+    "한 번에 한 곡씩.",
+    "새 노래로 주님을 찬양하세요.",
+    "잠잠히 그분을 알라.",
+    "이 날은 주님께서 만드신 날이에요.",
+    "호흡이 있는 모든 것이 그분을 찬양하라.",
+    "그분은 너의 힘이요 노래시라.",
+    "무엇을 하든지 그분의 영광을 위하여.",
+    "감사함으로 그분의 문에 들어가라.",
+    "내 영혼아, 주님을 송축하라.",
+    "그분의 은혜로 충분합니다.",
+    "항상 기뻐하세요."
+  ],
+  "profileAndSettings": "프로필 및 설정",
+  "lastSet": {
+    "label": "최근 셋리스트",
+    "meta_one": "{{count}}곡 · 약 {{min}}분",
+    "meta_other": "{{count}}곡 · 약 {{min}}분",
+    "keys": "키 {{keys}}",
+    "resume": "이어하기",
+    "editSet": "셋리스트 편집"
+  },
+  "continueCard": {
+    "label": "중단한 곳부터 이어보기"
+  },
+  "starredCard": {
+    "label": "즐겨찾기 찬양곡",
+    "empty": "즐겨찾기한 찬양곡이 여기에 표시됩니다."
+  },
+  "dailyWordCard": {
+    "label": "오늘의 말씀",
+    "empty": "오늘의 말씀을 열어보세요.",
+    "open": "오늘의 말씀 열기",
+    "streak_one": "{{count}}일 연속",
+    "streak_other": "{{count}}일 연속"
+  },
+  "recentSongsCard": {
+    "label": "최근 찬양곡",
+    "empty": "열어본 찬양곡이 여기에 표시됩니다."
+  }
+}

@@ -5,6 +5,7 @@ import {
   type BibleTranslation,
   type BibleTranslationGroup,
 } from '@gracechords/core'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
@@ -32,10 +33,11 @@ export default function TranslationPickerSheet(props: TranslationPickerProps) {
 
 function TranslationPickerContent({ onClose, groups, selectedId, onSelect }: TranslationPickerProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('reader')
   const insets = useSafeAreaInsets()
 
   return (
-    <FormSheetShell title="Translation" onAction={onClose}>
+    <FormSheetShell title={tx('translationPicker.title')} onAction={onClose}>
       <ScrollView
         style={{ maxHeight: 440 }}
         contentContainerStyle={{ paddingBottom: t.spacing.md + insets.bottom, paddingTop: t.spacing.xs }}

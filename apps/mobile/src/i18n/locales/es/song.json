@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "library": {
+    "title": "Biblioteca de canciones",
+    "addSong": "Añadir canción",
+    "filterAndSort": "Filtrar y ordenar",
+    "searchPlaceholder": "Busca canciones, artistas, temas…",
+    "empty": "Tu biblioteca está vacía.",
+    "noMatchesForQuery": "Ninguna canción coincide con «{{query}}».",
+    "noMatchesFilters": "Ninguna canción coincide con tus filtros.",
+    "results_one": "{{count}} resultado",
+    "results_other": "{{count}} resultados",
+    "noKey": "Sin tono"
+  },
+  "filterSheet": {
+    "title": "Filtrar y ordenar",
+    "sortBy": "Ordenar por",
+    "sort": {
+      "title": "Título",
+      "artist": "Artista",
+      "key": "Tono",
+      "recent": "Añadidas recientemente",
+      "tempo": "Tempo"
+    },
+    "filterByTag": "Filtrar por etiqueta",
+    "show_one": "Mostrar {{count}} canción",
+    "show_other": "Mostrar {{count}} canciones"
+  },
+  "viewer": {
+    "viewOptions": "Opciones de vista",
+    "exportAndShare": "Exportar y compartir",
+    "editSong": "Editar canción",
+    "noChart": "No hay partitura",
+    "noChartBody": "Esta canción aún no tiene contenido ChordPro.",
+    "chordsUnavailable": "Acordes no disponibles",
+    "rawFallback": "Acordes no disponibles — mostrando texto sin formato",
+    "capo": "Cejilla {{fret}} para {{key}}"
+  },
+  "viewOptions": {
+    "showChords": "Mostrar acordes",
+    "sectionLabels": "Etiquetas de sección",
+    "fontSize": "Tamaño de letra",
+    "smallerFont": "Letra más pequeña",
+    "largerFont": "Letra más grande",
+    "chordStyle": "Estilo de acordes",
+    "letters": "Letras",
+    "solfege": "Solfeo",
+    "accidentals": "Alteraciones",
+    "columns": "Columnas",
+    "screen": "Pantalla",
+    "hideControlsWhenIdle": "Ocultar controles al estar inactivo",
+    "keepScreenAwake": "Mantener pantalla encendida"
+  },
+  "transpose": {
+    "down": "Bajar tono",
+    "up": "Subir tono",
+    "chooseKey": "Elegir tono",
+    "chooseKeyHint": "Abre el selector de tono"
+  },
+  "accidentals": {
+    "sharps": "Sostenidos",
+    "flats": "Bemoles"
+  },
+  "keyPicker": {
+    "title": "Tono",
+    "playIn": "Tocar {{title}} en…",
+    "resetTo": "Restablecer a {{key}}",
+    "resetToOriginal": "Restablecer al tono original",
+    "resetToOriginalA11y": "Restablecer al tono original"
+  }
+}

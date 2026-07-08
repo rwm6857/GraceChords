@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "library": {
+    "title": "찬양곡 라이브러리",
+    "addSong": "찬양곡 추가",
+    "filterAndSort": "필터 및 정렬",
+    "searchPlaceholder": "찬양곡, 아티스트, 주제 검색…",
+    "empty": "라이브러리가 비어 있습니다.",
+    "noMatchesForQuery": "“{{query}}”와 일치하는 찬양곡이 없습니다.",
+    "noMatchesFilters": "필터와 일치하는 찬양곡이 없습니다.",
+    "results_one": "결과 {{count}}개",
+    "results_other": "결과 {{count}}개",
+    "noKey": "키 없음"
+  },
+  "filterSheet": {
+    "title": "필터 및 정렬",
+    "sortBy": "정렬 기준",
+    "sort": {
+      "title": "제목",
+      "artist": "아티스트",
+      "key": "키",
+      "recent": "최근 추가순",
+      "tempo": "템포"
+    },
+    "filterByTag": "태그로 필터링",
+    "show_one": "찬양곡 {{count}}곡 보기",
+    "show_other": "찬양곡 {{count}}곡 보기"
+  },
+  "viewer": {
+    "viewOptions": "보기 옵션",
+    "exportAndShare": "내보내기 및 공유",
+    "editSong": "찬양곡 편집",
+    "noChart": "악보 없음",
+    "noChartBody": "이 찬양곡에는 아직 ChordPro 콘텐츠가 없습니다.",
+    "chordsUnavailable": "코드를 사용할 수 없음",
+    "rawFallback": "코드를 사용할 수 없음 — 원본 텍스트 표시 중",
+    "capo": "카포 {{fret}}프렛, {{key}}"
+  },
+  "viewOptions": {
+    "showChords": "코드 표시",
+    "sectionLabels": "구간 레이블",
+    "fontSize": "글자 크기",
+    "smallerFont": "글자 작게",
+    "largerFont": "글자 크게",
+    "chordStyle": "코드 표기",
+    "letters": "알파벳",
+    "solfege": "계이름",
+    "accidentals": "임시표",
+    "columns": "단",
+    "screen": "화면",
+    "hideControlsWhenIdle": "대기 시 컨트롤 숨기기",
+    "keepScreenAwake": "화면 켜 두기"
+  },
+  "transpose": {
+    "down": "조 내림",
+    "up": "조 올림",
+    "chooseKey": "키 선택",
+    "chooseKeyHint": "키 선택기를 엽니다"
+  },
+  "accidentals": {
+    "sharps": "샵",
+    "flats": "플랫"
+  },
+  "keyPicker": {
+    "title": "키",
+    "playIn": "{{title}} 연주할 키…",
+    "resetTo": "{{key}} 키로 초기화",
+    "resetToOriginal": "원래 키로 초기화",
+    "resetToOriginalA11y": "원래 키로 초기화"
+  }
+}

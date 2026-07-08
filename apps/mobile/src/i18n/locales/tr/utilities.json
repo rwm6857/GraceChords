@@ -1,0 +1,45 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Araçlar",
+  "sectionTools": "ARAÇLAR",
+  "pickTool": "Başlamak için bir araç seçin",
+  "tools": {
+    "tuner": "Akort Aleti",
+    "metronome": "Tempo / Metronom",
+    "pitchPipe": "Nota Düdüğü"
+  },
+  "tuner": {
+    "title": "Akort Aleti",
+    "permissionDenied": "Akort aleti gitarınızı duymak için mikrofon erişimine ihtiyaç duyar. Ses yalnızca bu cihazda analiz edilir — asla kaydedilmez veya bir yere gönderilmez.",
+    "enableInSettings": "Ayarlar'dan etkinleştir",
+    "inTune": "Akortlu",
+    "cents": "{{sign}}{{cents}}¢",
+    "hz": "{{freq}} Hz",
+    "playAString": "Bir tel çalın…",
+    "stringLocked": "{{name}} — kilitli, otomatik için dokunun",
+    "stringAuto": "{{name}}",
+    "autoModeOff": "Otomatik mod kapalı",
+    "autoModeOn": "Otomatik mod açık"
+  },
+  "metronome": {
+    "title": "Metronom",
+    "bpm": "BPM",
+    "slower": "Daha yavaş",
+    "faster": "Daha hızlı",
+    "tapTempo": "Tempoya vur",
+    "tapTempoHint": "Metronom temposunu ayarlamak için ilahiye eşlik ederek dokunun",
+    "metronomeStopped": "Metronom durdu",
+    "beatOf": "Vuruş {{current}}/{{total}}",
+    "accentDownbeat": "İlk vuruşu vurgula",
+    "stop": "Durdur",
+    "start": "Başlat"
+  },
+  "pitchPipe": {
+    "title": "Nota Düdüğü",
+    "octave": "OKTAV",
+    "note": "{{label}} notası",
+    "octaveDown": "Oktav aşağı",
+    "octaveUp": "Oktav yukarı",
+    "holdNote": "Notayı tut"
+  }
+}

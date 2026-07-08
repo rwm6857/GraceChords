@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Chrome for sheets hosted in the native formSheet route (app/sheet.tsx): the
@@ -8,17 +9,20 @@ import { useTheme } from '../theme/ThemeProvider'
 
 export default function FormSheetShell({
   title,
-  actionLabel = 'Done',
+  actionLabel,
   onAction,
   children,
 }: {
   title: string
+  /** Defaults to the localized "Done". */
   actionLabel?: string
   /** Header action; pass the sheet's close/reset handler. */
   onAction: () => void
   children: ReactNode
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('common')
+  const action = actionLabel ?? tx('done')
   return (
     <View style={{ backgroundColor: t.colors.surface }}>
       <View
@@ -38,7 +42,7 @@ export default function FormSheetShell({
         </Text>
         <Pressable onPress={onAction} accessibilityRole="button" hitSlop={8}>
           <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>
-            {actionLabel}
+            {action}
           </Text>
         </Pressable>
       </View>

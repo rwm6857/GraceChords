@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Animated, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import * as Crypto from 'expo-crypto'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
@@ -35,7 +36,7 @@ import ViewOptionsSheet, {
   defaultAccidental,
   resolvePreferFlat,
 } from '../../src/components/ViewOptionsSheet'
-import { capoChipLabel } from '../../src/lib/capo'
+import { capoChipValues } from '../../src/lib/capo'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
 import { useSong, usePersonalSong } from '../../src/lib/useSong'
@@ -64,6 +65,7 @@ const TRANSPOSE_BAR_CLEARANCE = 96
 
 export default function ViewerScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['song', 'export', 'errors', 'common'])
   const router = useRouter()
   const { slug, title, artist, songKey, initialKey, source, personalId } = useLocalSearchParams<{
     slug: string
@@ -199,7 +201,8 @@ export default function ViewerScreen() {
   // Capo chip: only a net DOWNWARD ± transpose (delta < 0) has a capo
   // equivalent — the played shapes sit below the sounding key, which stays the
   // seeded/native key the taps started from. Zero/upward → null → no chip.
-  const capoText = effectiveKey ? capoChipLabel(delta, effectiveKey, preferFlat, chordStyle) : null
+  const capoValues = effectiveKey ? capoChipValues(delta, effectiveKey, preferFlat, chordStyle) : null
+  const capoText = capoValues ? tx('song:viewer.capo', capoValues) : null
 
   // Open the editor on this personal draft: re-fetch the full row (the viewer
   // detail omits tags/country/etc.), seed a local draft, and push the editor.
@@ -242,11 +245,11 @@ export default function ViewerScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       if (msg === 'image_unavailable') {
-        Alert.alert('Image unavailable', 'The server could not render an image for this song. Try PDF instead.')
+        Alert.alert(tx('export:alerts.imageUnavailableTitle'), tx('export:alerts.imageUnavailableSong'))
       } else if (msg === 'not_signed_in') {
-        Alert.alert('Sign in required', 'Sign in to export songs.')
+        Alert.alert(tx('export:alerts.signInRequiredTitle'), tx('export:alerts.signInToExportSongs'))
       } else {
-        Alert.alert('Export failed', msg)
+        Alert.alert(tx('export:alerts.exportFailedTitle'), msg)
       }
     }
   }
@@ -257,22 +260,22 @@ export default function ViewerScreen() {
       const result = await pushSongToTelegram({ songId: song.id, key: exportKey })
       if (result === 'not_linked') {
         Alert.alert(
-          'Link your Telegram',
-          'Send /link to the GraceChords bot on Telegram, then connect it from your profile on the website.',
+          tx('export:alerts.linkTelegramTitle'),
+          tx('export:alerts.linkTelegramMessage'),
           [
-            { text: 'Open Telegram', onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
-            { text: 'Not now', style: 'cancel' },
+            { text: tx('export:alerts.openTelegram'), onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
+            { text: tx('export:alerts.notNow'), style: 'cancel' },
           ],
         )
         return
       }
       setSheet(null)
-      Alert.alert('Sent', 'The chart is on its way to your Telegram chat.')
+      Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSongMessage'))
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       Alert.alert(
-        msg === 'not_signed_in' ? 'Sign in required' : 'Telegram failed',
-        msg === 'not_signed_in' ? 'Sign in to send songs to Telegram.' : msg,
+        msg === 'not_signed_in' ? tx('export:alerts.signInRequiredTitle') : tx('export:alerts.telegramFailedTitle'),
+        msg === 'not_signed_in' ? tx('export:alerts.signInToSendTelegram') : msg,
       )
     }
   }
@@ -304,17 +307,17 @@ export default function ViewerScreen() {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Songs</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:songs')}</Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
             {isPersonal ? (
-              <HeaderIconButton icon="square.and.pencil" label="Edit song" onPress={handleEditPersonal} />
+              <HeaderIconButton icon="square.and.pencil" label={tx('song:viewer.editSong')} onPress={handleEditPersonal} />
             ) : null}
-            <HeaderIconButton icon="ellipsis" label="View options" onPress={() => setSheet('options')} />
+            <HeaderIconButton icon="ellipsis" label={tx('song:viewer.viewOptions')} onPress={() => setSheet('options')} />
             <HeaderIconButton
               icon="square.and.arrow.up"
               iconSize={22}
-              label="Export and share"
+              label={tx('export:exportAndShare')}
               onPress={() => setSheet('export')}
             />
           </View>
@@ -362,7 +365,7 @@ export default function ViewerScreen() {
               }}
             >
               <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.textAccent }}>
-                Key of {keyLabel}
+                {tx('common:keyOf', { key: keyLabel })}
               </Text>
             </View>
           ) : null}
@@ -370,7 +373,7 @@ export default function ViewerScreen() {
             <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{song.time_signature}</Text>
           ) : null}
           {song?.tempo ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{song.tempo} BPM</Text>
+            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{tx('common:bpm', { tempo: song.tempo })}</Text>
           ) : null}
         </View>
       </Animated.View>
@@ -382,10 +385,10 @@ export default function ViewerScreen() {
       ) : error || !song ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
           <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-            Couldn't load song
+            {tx('errors:couldntLoadSong')}
           </Text>
           <Text style={{ marginTop: t.spacing.sm, fontSize: 13.5, color: t.colors.muted, textAlign: 'center' }}>
-            {error || 'This song could not be found.'}
+            {error || tx('errors:songNotFound')}
           </Text>
         </View>
       ) : doc ? (
@@ -506,6 +509,7 @@ export default function ViewerScreen() {
 // stripping [Chord] tokens and {directive} lines from the raw ChordPro text.
 function RawFallback({ content, parseError }: { content: string; parseError: boolean }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('song')
   const lines = useMemo(
     () =>
       content
@@ -520,10 +524,10 @@ function RawFallback({ content, parseError }: { content: string; parseError: boo
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
         <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-          No chart available
+          {tx('viewer.noChart')}
         </Text>
         <Text style={{ marginTop: t.spacing.sm, fontSize: 13.5, color: t.colors.muted }}>
-          This song has no ChordPro content yet.
+          {tx('viewer.noChartBody')}
         </Text>
       </View>
     )
@@ -536,7 +540,7 @@ function RawFallback({ content, parseError }: { content: string; parseError: boo
     >
       {parseError ? (
         <Text style={{ marginBottom: t.spacing.md, fontSize: 13, color: t.colors.muted }}>
-          Chords unavailable — showing raw text
+          {tx('viewer.rawFallback')}
         </Text>
       ) : null}
       {lines.map((ln, i) => (

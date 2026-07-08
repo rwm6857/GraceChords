@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { router } from 'expo-router'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
 import ListRow from '../components/ListRow'
@@ -48,16 +49,17 @@ type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe'
 
 const UTILITIES: {
   icon: Parameters<typeof SymbolIcon>[0]['name']
-  title: string
+  titleKey: string
   route: ToolRoute
 }[] = [
-  { icon: 'tuningfork', title: 'Tuner', route: '/tuner' },
-  { icon: 'metronome', title: 'Tap Tempo / Metronome', route: '/metronome' },
-  { icon: 'pianokeys', title: 'Pitch Pipe', route: '/pitch-pipe' },
+  { icon: 'tuningfork', titleKey: 'tools.tuner', route: '/tuner' },
+  { icon: 'metronome', titleKey: 'tools.metronome', route: '/metronome' },
+  { icon: 'pianokeys', titleKey: 'tools.pitchPipe', route: '/pitch-pipe' },
 ]
 
 export default function UtilitiesScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation('utilities')
   const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
   const [tool, setTool] = useState<ToolRoute | null>(null)
@@ -81,17 +83,18 @@ export default function UtilitiesScreen() {
           paddingBottom: t.spacing.md,
         }}
       >
-        Utilities
+        {tx('title')}
       </Text>
 
-      <SectionHeader label="TOOLS" />
+      <SectionHeader label={tx('sectionTools')} />
       <Card>
         {UTILITIES.map((u, i) => {
           const selected = isTablet && tool === u.route
+          const title = tx(u.titleKey)
           return (
             <ListRow
-              key={u.title}
-              title={u.title}
+              key={u.route}
+              title={title}
               leading={<RowIcon name={u.icon} t={t} />}
               chevron={!selected}
               trailing={
@@ -101,7 +104,7 @@ export default function UtilitiesScreen() {
               }
               onPress={() => (isTablet ? setTool(u.route) : router.push(u.route))}
               isLast={i === UTILITIES.length - 1}
-              accessibilityLabel={u.title}
+              accessibilityLabel={title}
             />
           )
         })}
@@ -143,7 +146,7 @@ export default function UtilitiesScreen() {
             >
               <SymbolIcon name="wrench.and.screwdriver" size={34} color={t.colors.muted} />
               <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-                Pick a tool to get started
+                {tx('pickTool')}
               </Text>
             </View>
           )}

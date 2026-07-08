@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import * as Clipboard from 'expo-clipboard'
 import * as Sharing from 'expo-sharing'
 import {
@@ -49,6 +50,7 @@ const TOAST_MS = 1900
 // setlist key via the existing initialKey param.
 export default function SetlistBuilderScreen({ setlistId }: { setlistId: string }) {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export'])
   const router = useRouter()
   const isTablet = useIsTabletWidth()
   const {
@@ -153,17 +155,17 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   )
 
   function confirmDelete() {
-    Alert.alert('Delete set?', `“${name}” and its songs will be removed.`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(tx('alerts.deleteSetTitle'), tx('alerts.deleteSetMessage', { name }), [
+      { text: tx('common:cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: tx('common:delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteSet()
             router.back()
           } catch (err: unknown) {
-            Alert.alert('Could not delete set', errMessage(err))
+            Alert.alert(tx('alerts.couldNotDelete'), errMessage(err))
           }
         },
       },
@@ -176,26 +178,26 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     const id = uuidv4()
     router.replace(`/setlist/${id}`)
     createSetlist(supabase, { id }).catch((err: unknown) => {
-      Alert.alert('Could not create set', errMessage(err))
+      Alert.alert(tx('alerts.couldNotCreate'), errMessage(err))
     })
   }
 
   async function copyLink() {
     if (items.length === 0) {
-      showToast('Add songs first')
+      showToast(tx('toasts.addSongsFirst'))
       return
     }
     try {
       await Clipboard.setStringAsync(buildSetlistShareUrl(items))
-      showToast('Set link copied')
+      showToast(tx('toasts.setLinkCopied'))
     } catch (err: unknown) {
-      Alert.alert('Could not copy link', errMessage(err))
+      Alert.alert(tx('alerts.couldNotCopyLink'), errMessage(err))
     }
   }
 
   async function exportSet() {
     if (items.length === 0) {
-      showToast('Add songs first')
+      showToast(tx('toasts.addSongsFirst'))
       return
     }
     try {
@@ -206,13 +208,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       )
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
-      Alert.alert('Export failed', errMessage(err))
+      Alert.alert(tx('export:alerts.exportFailedTitle'), errMessage(err))
     }
   }
 
   async function sendTelegram() {
     if (items.length === 0) {
-      showToast('Add songs first')
+      showToast(tx('toasts.addSongsFirst'))
       return
     }
     try {
@@ -220,12 +222,12 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         items.map((item, i) => ({ songId: item.songId, key: effectiveKeys[i] })),
       )
       if (result === 'not_linked') {
-        Alert.alert('Telegram not linked', `Link your account with the bot first: ${TELEGRAM_BOT_URL}`)
+        Alert.alert(tx('alerts.telegramNotLinkedTitle'), tx('alerts.telegramNotLinkedMessage', { url: TELEGRAM_BOT_URL }))
         return
       }
-      showToast('Sent to Telegram')
+      showToast(tx('toasts.sentToTelegram'))
     } catch (err: unknown) {
-      Alert.alert('Could not send set', errMessage(err))
+      Alert.alert(tx('alerts.couldNotSendSet'), errMessage(err))
     }
   }
 
@@ -247,21 +249,21 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         const entryKey = items[index]?.entryKey
         if (!entryKey) return
         removeEntry(entryKey)
-        showToast('Removed from set')
+        showToast(tx('toasts.removedFromSet'))
       },
     }),
     [openSong, items, moveEntry, removeEntry, showToast],
   )
 
   const metaLine = formatSetSummary(summary)
-  const edited = timeAgo(updatedAt)
+  const edited = timeAgo(updatedAt, (k, o) => tx(`common:${k}`, o), i18n.language)
 
   if (notFound) {
     return (
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
           <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-            This setlist no longer exists.
+            {tx('builder.notFound')}
           </Text>
         </View>
       </Screen>
@@ -288,19 +290,19 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Back to setlists"
+          accessibilityLabel={tx('builder.backToSetlists')}
           hitSlop={8}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
         >
           <SymbolIcon name="chevron.left" size={17} color={t.colors.textAccent} weight="semibold" />
-          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Setlists</Text>
+          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>{tx('builder.back')}</Text>
         </Pressable>
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-          <HeaderIconButton icon="ellipsis" label="Setlist options" onPress={() => setOptionsOpen(true)} />
+          <HeaderIconButton icon="ellipsis" label={tx('builder.setlistOptions')} onPress={() => setOptionsOpen(true)} />
           <HeaderIconButton
             icon="square.and.arrow.up"
             iconSize={22}
-            label="Export and share"
+            label={tx('export:exportAndShare')}
             onPress={() => setShareOpen(true)}
           />
         </View>
@@ -328,7 +330,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     color: t.colors.muted,
                   }}
                 >
-                  Set name
+                  {tx('builder.setName')}
                 </Text>
                 <View
                   style={{
@@ -350,7 +352,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     selectTextOnFocus
                     returnKeyType="done"
                     onSubmitEditing={commitRename}
-                    accessibilityLabel="Set name"
+                    accessibilityLabel={tx('builder.setName')}
                     style={{ flex: 1, fontSize: 17, fontWeight: '600', color: t.colors.ink, padding: 0 }}
                   />
                   <Pressable
@@ -359,7 +361,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                       nameInput.current?.focus()
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel="Clear set name"
+                    accessibilityLabel={tx('builder.clearSetName')}
                     hitSlop={8}
                   >
                     <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.muted} />
@@ -369,11 +371,11 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                   <Text style={{ fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                     {metaLine}
                   </Text>
-                  <Button title="Done" onPress={commitRename} fullWidth={false} style={{ height: 40 }} />
+                  <Button title={tx('common:done')} onPress={commitRename} fullWidth={false} style={{ height: 40 }} />
                 </View>
               </View>
             ) : (
-              <Pressable onPress={startRename} accessibilityRole="button" accessibilityLabel="Rename set">
+              <Pressable onPress={startRename} accessibilityRole="button" accessibilityLabel={tx('builder.renameSet')}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
                   <Text
                     numberOfLines={1}
@@ -388,7 +390,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                 </Text>
                 {edited ? (
                   <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
-                    Last edited {edited}
+                    {tx('builder.lastEdited', { time: edited })}
                   </Text>
                 ) : null}
               </Pressable>
@@ -410,10 +412,10 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           {items.length === 0 ? (
             <View style={{ alignItems: 'center', paddingVertical: t.spacing.xxl, gap: 4 }}>
               <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-                No songs yet
+                {tx('builder.noSongs')}
               </Text>
               <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-                {isTablet ? 'Tap a song in the library to add it.' : 'Tap Add to search your library.'}
+                {isTablet ? tx('builder.addHintTablet') : tx('builder.addHintPhone')}
               </Text>
             </View>
           ) : (
@@ -437,7 +439,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           <Pressable
             onPress={() => setAddOpen(true)}
             accessibilityRole="button"
-            accessibilityLabel="Add songs"
+            accessibilityLabel={tx('builder.addSongs')}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -451,12 +453,12 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           >
             <SymbolIcon name="plus" size={16} color={t.colors.ink} weight="semibold" />
             <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
-              Add
+              {tx('builder.add')}
             </Text>
           </Pressable>
         ) : null}
         <Button
-          title="Start set"
+          title={tx('builder.startSet')}
           onPress={() => router.push(`/perform/${setlistId}`)}
           disabled={items.length === 0}
           style={{ flex: 1 }}

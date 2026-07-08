@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import Screen from '../components/Screen'
 import Button from '../components/Button'
 import GlassSurface from '../components/GlassSurface'
@@ -71,11 +72,13 @@ function StringKey({
   state,
   onPress,
   t,
+  label,
 }: {
   string: TunerString
   state: 'idle' | 'active' | 'locked'
   onPress: () => void
   t: Tokens
+  label: string
 }) {
   const bg =
     state === 'locked' ? t.colors.accent : state === 'active' ? t.colors.accentSoft : t.colors.surfaceAlt
@@ -85,7 +88,7 @@ function StringKey({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: state === 'locked' }}
-      accessibilityLabel={`${string.name}${state === 'locked' ? ' — locked, tap for auto' : ''}`}
+      accessibilityLabel={label}
       style={({ pressed }) => ({
         flex: 1,
         alignItems: 'center',
@@ -108,6 +111,7 @@ function StringKey({
 // tab's top inset).
 export default function TunerScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const [barH, setBarH] = useState(0)
@@ -158,8 +162,8 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
   const centsText = !reading
     ? '—'
     : inTune
-      ? 'In tune'
-      : `${reading.cents > 0 ? '+' : '−'}${Math.abs(reading.cents).toFixed(0)}¢`
+      ? tx('tuner.inTune')
+      : tx('tuner.cents', { sign: reading.cents > 0 ? '+' : '−', cents: Math.abs(reading.cents).toFixed(0) })
 
   return (
     <Screen edges={['left', 'right']}>
@@ -182,11 +186,10 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                 maxWidth: 300,
               }}
             >
-              The tuner needs microphone access to hear your guitar. Audio is analyzed on this
-              device only — never recorded or sent anywhere.
+              {tx('tuner.permissionDenied')}
             </Text>
             <Button
-              title="Enable in Settings"
+              title={tx('tuner.enableInSettings')}
               fullWidth={false}
               style={{ alignSelf: 'center' }}
               onPress={() => Linking.openSettings()}
@@ -292,7 +295,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                   fontVariant: ['tabular-nums'],
                 }}
               >
-                {reading ? `${reading.frequency.toFixed(1)} Hz` : running ? 'Play a string…' : ' '}
+                {reading ? tx('tuner.hz', { freq: reading.frequency.toFixed(1) }) : running ? tx('tuner.playAString') : ' '}
               </Text>
             </View>
 
@@ -314,6 +317,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                     state={state}
                     onPress={() => setLockedString(lockedString?.name === s.name ? null : s)}
                     t={t}
+                    label={state === 'locked' ? tx('tuner.stringLocked', { name: s.name }) : tx('tuner.stringAuto', { name: s.name })}
                   />
                 )
               })}
@@ -326,7 +330,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                 color: t.colors.muted,
               }}
             >
-              {lockedString ? 'Auto-mode off' : 'Auto-mode on'}
+              {lockedString ? tx('tuner.autoModeOff') : tx('tuner.autoModeOn')}
             </Text>
           </>
         )}
@@ -356,15 +360,15 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={tx('common:back')}
             hitSlop={8}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Utilities</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
-        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>Tuner</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('tuner.title')}</Text>
         <View style={{ width: 70 }} />
       </GlassSurface>
     </Screen>

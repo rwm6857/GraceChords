@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { formatPassageLabel } from '@gracechords/core'
 import SymbolIcon from '../SymbolIcon'
@@ -15,6 +16,7 @@ import { currentStreak, useReadingStreak } from '../../lib/readingStreak'
 
 export default function DailyWordCard() {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation('home')
   const router = useRouter()
   const streak = useReadingStreak()
 
@@ -22,7 +24,7 @@ export default function DailyWordCard() {
   // Keyed by calendar day so the plan re-derives at midnight, not per render.
   const dayKey = today.toDateString()
   const passages = useMemo(() => expandReadings(getPlanForDate(new Date()).readings), [dayKey])
-  const dateLabel = today.toLocaleDateString('en-US', {
+  const dateLabel = today.toLocaleDateString(i18n.language, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -33,7 +35,7 @@ export default function DailyWordCard() {
     <Pressable
       onPress={() => router.navigate('/daily')}
       accessibilityRole="button"
-      accessibilityLabel="Open today's Daily Word"
+      accessibilityLabel={tx('dailyWordCard.open')}
       style={cardStyle(t)}
     >
       <Text
@@ -45,7 +47,7 @@ export default function DailyWordCard() {
           color: t.colors.textAccent,
         }}
       >
-        Daily Word
+        {tx('dailyWordCard.label')}
       </Text>
       <Text style={{ marginTop: 6, fontSize: 19, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
         {dateLabel}
@@ -71,7 +73,7 @@ export default function DailyWordCard() {
         </View>
       ) : (
         <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-          Open today's reading.
+          {tx('dailyWordCard.empty')}
         </Text>
       )}
 
@@ -79,7 +81,7 @@ export default function DailyWordCard() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: t.spacing.md }}>
           <SymbolIcon name="flame.fill" size={14} color={streakCount > 0 ? t.colors.star : t.colors.muted} />
           <Text style={{ fontSize: 12.5, fontWeight: '600', color: t.colors.sec }}>
-            {streakCount === 1 ? '1-day streak' : `${streakCount}-day streak`}
+            {tx('dailyWordCard.streak', { count: streakCount })}
           </Text>
         </View>
       ) : null}

@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Animated, Easing, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Shared bottom-sheet shell: dimmed backdrop that FADES while the sheet
@@ -12,7 +13,7 @@ export default function BottomSheet({
   visible,
   onClose,
   title,
-  actionLabel = 'Done',
+  actionLabel,
   onAction,
   onDismissed,
   closeAccessibilityLabel,
@@ -33,6 +34,7 @@ export default function BottomSheet({
   children: ReactNode
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('common')
   const { height } = useWindowDimensions()
   const [mounted, setMounted] = useState(visible)
   const progress = useRef(new Animated.Value(0)).current
@@ -85,7 +87,7 @@ export default function BottomSheet({
         >
           <Pressable
             onPress={onClose}
-            accessibilityLabel={closeAccessibilityLabel || `Close ${title.toLowerCase()}`}
+            accessibilityLabel={closeAccessibilityLabel || tx('closeSheet', { title: title.toLowerCase() })}
             style={{ flex: 1 }}
           />
         </Animated.View>
@@ -125,7 +127,7 @@ export default function BottomSheet({
             </Text>
             <Pressable onPress={onAction || onClose} accessibilityRole="button" hitSlop={8}>
               <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>
-                {actionLabel}
+                {actionLabel ?? tx('done')}
               </Text>
             </Pressable>
           </View>

@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
 // Accidental spelling: a concrete ♯ or ♭ (no "auto" state — the default is
@@ -27,6 +28,7 @@ export default function AccidentalToggle({
   onChange: (v: Accidental) => void
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('song')
 
   const cell = (v: Accidental, glyph: string, label: string) => {
     const selected = value === v
@@ -55,8 +57,8 @@ export default function AccidentalToggle({
 
   return (
     <View style={{ flexDirection: 'row', backgroundColor: t.colors.surfaceAlt, borderRadius: 10, padding: 3 }}>
-      {cell('sharp', '♯', 'Sharps')}
-      {cell('flat', '♭', 'Flats')}
+      {cell('sharp', '♯', tx('accidentals.sharps'))}
+      {cell('flat', '♭', tx('accidentals.flats'))}
     </View>
   )
 }

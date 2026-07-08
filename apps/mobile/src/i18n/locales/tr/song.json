@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "library": {
+    "title": "İlahi Kütüphanesi",
+    "addSong": "İlahi ekle",
+    "filterAndSort": "Filtrele ve sırala",
+    "searchPlaceholder": "İlahi, sanatçı, tema ara…",
+    "empty": "Kütüphaneniz boş.",
+    "noMatchesForQuery": "“{{query}}” ile eşleşen ilahi yok.",
+    "noMatchesFilters": "Filtrelerinizle eşleşen ilahi yok.",
+    "results_one": "{{count}} sonuç",
+    "results_other": "{{count}} sonuç",
+    "noKey": "Ton yok"
+  },
+  "filterSheet": {
+    "title": "Filtrele ve sırala",
+    "sortBy": "Sıralama ölçütü",
+    "sort": {
+      "title": "Başlık",
+      "artist": "Sanatçı",
+      "key": "Ton",
+      "recent": "Son eklenen",
+      "tempo": "Tempo"
+    },
+    "filterByTag": "Etikete göre filtrele",
+    "show_one": "{{count}} ilahiyi göster",
+    "show_other": "{{count}} ilahiyi göster"
+  },
+  "viewer": {
+    "viewOptions": "Görüntüleme seçenekleri",
+    "exportAndShare": "Dışa aktar ve paylaş",
+    "editSong": "İlahiyi düzenle",
+    "noChart": "Nota yok",
+    "noChartBody": "Bu ilahinin henüz ChordPro içeriği yok.",
+    "chordsUnavailable": "Akorlar kullanılamıyor",
+    "rawFallback": "Akorlar kullanılamıyor — ham metin gösteriliyor",
+    "capo": "{{key}} için kapo: {{fret}}"
+  },
+  "viewOptions": {
+    "showChords": "Akorları göster",
+    "sectionLabels": "Bölüm etiketleri",
+    "fontSize": "Yazı boyutu",
+    "smallerFont": "Daha küçük yazı",
+    "largerFont": "Daha büyük yazı",
+    "chordStyle": "Akor gösterimi",
+    "letters": "Harfler",
+    "solfege": "Solfej",
+    "accidentals": "Arızalar",
+    "columns": "Sütunlar",
+    "screen": "Ekran",
+    "hideControlsWhenIdle": "Boştayken kontrolleri gizle",
+    "keepScreenAwake": "Ekranı açık tut"
+  },
+  "transpose": {
+    "down": "Tonu düşür",
+    "up": "Tonu yükselt",
+    "chooseKey": "Ton seç",
+    "chooseKeyHint": "Ton seçiciyi açar"
+  },
+  "accidentals": {
+    "sharps": "Diyezler",
+    "flats": "Bemoller"
+  },
+  "keyPicker": {
+    "title": "Ton",
+    "playIn": "{{title}} şu tonda çal…",
+    "resetTo": "{{key}} tonuna sıfırla",
+    "resetToOriginal": "Özgün tona sıfırla",
+    "resetToOriginalA11y": "Özgün tona sıfırla"
+  }
+}

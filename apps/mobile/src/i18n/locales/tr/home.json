@@ -1,0 +1,54 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "greeting": {
+    "morning": "Günaydın",
+    "afternoon": "İyi günler",
+    "evening": "İyi akşamlar",
+    "hello": "{{greeting}}, {{name}}",
+    "friend": "dostum"
+  },
+  "subGreetings": [
+    "Her şey bıraktığın yerde.",
+    "Hadi başlayalım.",
+    "Döndüğüne sevindik.",
+    "Burada olmana sevindik.",
+    "Her seferinde bir ilahi.",
+    "O'na yeni bir ezgi söyleyin.",
+    "Sakin olun ve bilin.",
+    "Bugün RAB'bin yarattığı gündür.",
+    "Soluğu olan her şey RAB'be övgüler sunsun.",
+    "O senin gücün ve ezgindir.",
+    "Ne yaparsanız yapın, O'nun yüceliği için.",
+    "O'nun kapılarından şükranla girin.",
+    "RAB'be övgüler sun, ey canım.",
+    "O'nun lütfu yeter.",
+    "Her zaman sevinin."
+  ],
+  "profileAndSettings": "Profil ve ayarlar",
+  "lastSet": {
+    "label": "Son set",
+    "meta_one": "{{count}} ilahi · ~{{min}} dk",
+    "meta_other": "{{count}} ilahi · ~{{min}} dk",
+    "keys": "Tonlar: {{keys}}",
+    "resume": "Devam et",
+    "editSet": "Seti düzenle"
+  },
+  "continueCard": {
+    "label": "Kaldığın yerden devam et"
+  },
+  "starredCard": {
+    "label": "Yıldızlı ilahiler",
+    "empty": "Yıldızladığın ilahiler burada görünecek."
+  },
+  "dailyWordCard": {
+    "label": "Kutsal Kitap",
+    "empty": "Bugünün okumasını aç.",
+    "open": "Bugünün Kutsal Kitap bölümünü aç",
+    "streak_one": "{{count}} günlük seri",
+    "streak_other": "{{count}} günlük seri"
+  },
+  "recentSongsCard": {
+    "label": "Son ilahiler",
+    "empty": "Açtığın ilahiler burada görünecek."
+  }
+}

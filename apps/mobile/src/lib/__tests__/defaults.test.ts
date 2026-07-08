@@ -7,6 +7,7 @@ import {
   resolveThemeMode,
   setDefaultChordStyle,
   setDefaultKeepAwake,
+  setDefaultLanguage,
   setDefaultTheme,
   type KVStorage,
 } from '../defaults'
@@ -25,7 +26,7 @@ describe('defaults store', () => {
   it('falls back to DEFAULT_APP_DEFAULTS when nothing is stored', async () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters', keepAwake: false })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null })
   })
 
   it('ignores invalid stored values and uses fallbacks', async () => {
@@ -40,11 +41,23 @@ describe('defaults store', () => {
     setDefaultTheme('dark')
     setDefaultChordStyle('solfege')
     setDefaultKeepAwake(true)
+    setDefaultLanguage('tr')
 
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true, language: 'tr' })
     expect(s.store.get('gc.defaults.theme')).toBe('dark')
     expect(s.store.get('gc.defaults.chordStyle')).toBe('solfege')
     expect(s.store.get('gc.defaults.keepAwake')).toBe('1')
+    expect(s.store.get('gc.defaults.language')).toBe('tr')
+  })
+
+  it('clears the language key when set back to follow-device (null)', async () => {
+    const s = memoryStorage({ 'gc.defaults.language': 'tr' })
+    await hydrateDefaults(s)
+    expect(getDefaultsSnapshot().language).toBe('tr')
+
+    setDefaultLanguage(null)
+    expect(getDefaultsSnapshot().language).toBeNull()
+    expect(s.store.has('gc.defaults.language')).toBe(false)
   })
 
   it('survives a simulated reload (re-hydrate from the same storage)', async () => {
@@ -59,7 +72,7 @@ describe('defaults store', () => {
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
 
     await hydrateDefaults(s)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege', keepAwake: true })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege', keepAwake: true, language: null })
   })
 
   it('hydrates keepAwake from storage and defaults it off', async () => {
@@ -100,7 +113,7 @@ describe('resolveThemeMode', () => {
 
 describe('initialChordStyle', () => {
   it('seeds the viewer from the stored default', () => {
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false })).toBe('solfege')
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false })).toBe('letters')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false, language: null })).toBe('solfege')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null })).toBe('letters')
   })
 })

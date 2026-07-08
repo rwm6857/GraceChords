@@ -1,0 +1,55 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Profil ve Ayarlar",
+  "yourAccount": "Hesabınız",
+  "changeYourIcon": "Simgenizi değiştirin",
+  "sections": {
+    "settings": "AYARLAR",
+    "library": "KÜTÜPHANE",
+    "support": "DESTEK"
+  },
+  "appearance": "Görünüm",
+  "appearanceOptions": {
+    "auto": "Otomatik",
+    "light": "Açık",
+    "dark": "Koyu"
+  },
+  "language": "Dil",
+  "languageAutomatic": "Otomatik (cihaz)",
+  "chordStyle": "Akor gösterimi",
+  "chordStyleOptions": {
+    "letters": "Harfler",
+    "solfege": "Solfej"
+  },
+  "offlineDownloads": "Çevrimdışı ve indirmeler",
+  "starred": "Yıldızlılar",
+  "mySetlists": "Set listelerim",
+  "helpCenter": "Yardım merkezi",
+  "sendFeedback": "Geri bildirim gönder",
+  "aboutGraceChords": "GraceChords Hakkında",
+  "logOut": "Çıkış yap",
+  "deleteAccount": "Hesabı sil",
+  "signOutAlert": {
+    "title": "Çıkış yap",
+    "message": "Bu cihazda GraceChords oturumunuzu kapatmak istiyor musunuz?",
+    "confirm": "Çıkış yap"
+  },
+  "deleteAccountAlert": {
+    "title": "Hesabı sil",
+    "message": "Bu işlem hesabınızı ve tüm verilerinizi — yıldızlı ilahiler, set listeleri ve tercihler — kalıcı olarak siler. Bu geri alınamaz.",
+    "confirm": "Hesabı sil"
+  },
+  "deleteFailedAlert": {
+    "title": "Silme başarısız",
+    "message": "Hesabınız silinemedi. Lütfen tekrar deneyin."
+  },
+  "about": {
+    "title": "Hakkında",
+    "version": "Sürüm {{version}}",
+    "sectionLegal": "YASAL",
+    "privacyPolicy": "Gizlilik Politikası",
+    "termsOfUse": "Kullanım Koşulları",
+    "acknowledgements": "Teşekkürler ve Lisanslar",
+    "contact": "İletişim"
+  }
+}

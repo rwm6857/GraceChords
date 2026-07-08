@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Sin conexión y descargas",
+  "onThisDeviceStorage": "Traducciones en este dispositivo",
+  "downloadedCount": "{{count}} de {{total}} traducciones descargadas",
+  "mb": "{{value}} MB",
+  "percent": "{{value}} %",
+  "sections": {
+    "downloading": "Descargando",
+    "onThisDevice": "En este dispositivo · {{count}}",
+    "available": "Disponibles para descargar",
+    "options": "Opciones"
+  },
+  "updateAvailable": "Actualización disponible",
+  "translationMeta": "{{language}} · {{size}}",
+  "translationMetaStale": "{{language}} · {{size}} · Actualización disponible",
+  "cancelDownload": "Cancelar descarga",
+  "updateDownload": "Actualizar descarga",
+  "deleteDownload": "Eliminar descarga",
+  "download": "Descargar {{name}}",
+  "wifiOnly": "Descargar solo con Wi-Fi",
+  "footer": "Las traducciones descargadas se pueden leer sin conexión. Los devocionales diarios de The Gospel Coalition se transmiten por la red y no se guardan sin conexión.",
+  "back": "Ajustes",
+  "backToSettings": "Volver a Ajustes",
+  "alerts": {
+    "wifiRequiredTitle": "Wi-Fi requerido",
+    "wifiRequiredMessage": "Tienes activada la opción «Descargar solo con Wi-Fi». Conéctate a una red Wi-Fi o desactiva la opción para descargar con datos móviles.",
+    "downloadFailedTitle": "Error de descarga",
+    "downloadFailedMessage": "No se pudo descargar esta traducción. Comprueba tu conexión e inténtalo de nuevo.",
+    "deleteTitle": "Eliminar descarga",
+    "deleteMessage": "¿Quitar «{{name}}» de este dispositivo? Puedes descargarla de nuevo cuando quieras."
+  }
+}

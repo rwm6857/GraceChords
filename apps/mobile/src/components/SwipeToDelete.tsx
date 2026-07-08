@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 import SymbolIcon from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -29,13 +30,13 @@ export type ConfirmDelete = { title: string; message?: string; confirmLabel?: st
 export default function SwipeToDelete({
   children,
   onDelete,
-  label = 'Delete',
+  label,
   background,
   confirm,
 }: {
   children: ReactNode
   onDelete: () => void
-  /** Button label + accessibility label (e.g. "Delete", "Remove"). */
+  /** Button label + accessibility label (e.g. "Remove"); localized "Delete" by default. */
   label?: string
   /** Opaque background for the moving row layer; defaults to the page bg. */
   background?: string
@@ -43,6 +44,9 @@ export default function SwipeToDelete({
   confirm?: ConfirmDelete
 }) {
   const t = useTheme()
+  // Aliased `tr` — `tx` is this component's translateX shared value.
+  const { t: tr } = useTranslation('common')
+  const deleteLabel = label ?? tr('delete')
   const { width } = useWindowDimensions()
   const tx = useSharedValue(0)
   const startX = useSharedValue(0)
@@ -64,8 +68,8 @@ export default function SwipeToDelete({
   const requestDelete = useCallback(() => {
     if (confirm) {
       Alert.alert(confirm.title, confirm.message, [
-        { text: 'Cancel', style: 'cancel', onPress: snapClosed },
-        { text: confirm.confirmLabel ?? 'Delete', style: 'destructive', onPress: commit },
+        { text: tr('cancel'), style: 'cancel', onPress: snapClosed },
+        { text: confirm.confirmLabel ?? tr('delete'), style: 'destructive', onPress: commit },
       ])
     } else {
       commit()
@@ -125,11 +129,11 @@ export default function SwipeToDelete({
         <Pressable
           onPress={requestDelete}
           accessibilityRole="button"
-          accessibilityLabel={label}
+          accessibilityLabel={deleteLabel}
           style={{ width: BUTTON_W, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 3 }}
         >
           <SymbolIcon name="trash" size={20} color={t.colors.onDanger} />
-          <Text style={{ fontSize: 12, fontWeight: '600', color: t.colors.onDanger }}>{label}</Text>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: t.colors.onDanger }}>{deleteLabel}</Text>
         </Pressable>
       </Animated.View>
 

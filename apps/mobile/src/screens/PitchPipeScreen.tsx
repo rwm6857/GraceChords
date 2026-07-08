@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { Pressable, Switch, Text, View, useWindowDimensions } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import Card from '../components/Card'
 import GlassSurface from '../components/GlassSurface'
 import Screen from '../components/Screen'
@@ -29,6 +30,7 @@ const NOTE_BUTTON = 56
 
 function NoteButton({
   label,
+  label2,
   active,
   angleDeg,
   ringSize,
@@ -37,6 +39,7 @@ function NoteButton({
   t,
 }: {
   label: string
+  label2: string
   active: boolean
   angleDeg: number
   ringSize: number
@@ -53,7 +56,7 @@ function NoteButton({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       accessibilityRole="button"
-      accessibilityLabel={`Note ${label}`}
+      accessibilityLabel={label2}
       accessibilityState={{ selected: active }}
       style={({ pressed }) => ({
         position: 'absolute',
@@ -88,6 +91,7 @@ function NoteButton({
 // spacing (see TunerScreen).
 export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const [barH, setBarH] = useState(0)
@@ -190,6 +194,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
             <NoteButton
               key={label}
               label={label}
+              label2={tx('pitchPipe.note', { label })}
               active={activeNote?.noteIndex === i}
               angleDeg={i * 30}
               ringSize={ringSize}
@@ -214,7 +219,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
             onPress={() => shiftOctave(-1)}
             disabled={octave <= MIN_OCTAVE}
             accessibilityRole="button"
-            accessibilityLabel="Octave down"
+            accessibilityLabel={tx('pitchPipe.octaveDown')}
             style={(s) => [octaveButtonStyle(s), octave <= MIN_OCTAVE && { opacity: 0.4 }]}
           >
             <SymbolIcon name="minus" size={18} color={t.colors.accent} weight="semibold" />
@@ -238,14 +243,14 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
                 color: t.colors.muted,
               }}
             >
-              OCTAVE
+              {tx('pitchPipe.octave')}
             </Text>
           </View>
           <Pressable
             onPress={() => shiftOctave(1)}
             disabled={octave >= MAX_OCTAVE}
             accessibilityRole="button"
-            accessibilityLabel="Octave up"
+            accessibilityLabel={tx('pitchPipe.octaveUp')}
             style={(s) => [octaveButtonStyle(s), octave >= MAX_OCTAVE && { opacity: 0.4 }]}
           >
             <SymbolIcon name="plus" size={18} color={t.colors.accent} weight="semibold" />
@@ -264,7 +269,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
             }}
           >
             <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.ink }}>
-              Hold note
+              {tx('pitchPipe.holdNote')}
             </Text>
             <Switch
               value={hold}
@@ -273,7 +278,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
                 if (!on) stop()
               }}
               trackColor={{ true: t.colors.accent }}
-              accessibilityLabel="Hold note"
+              accessibilityLabel={tx('pitchPipe.holdNote')}
             />
           </View>
         </Card>
@@ -303,15 +308,15 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={tx('common:back')}
             hitSlop={8}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>Utilities</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
-        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>Pitch Pipe</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('pitchPipe.title')}</Text>
         <View style={{ width: 70 }} />
       </GlassSurface>
     </Screen>

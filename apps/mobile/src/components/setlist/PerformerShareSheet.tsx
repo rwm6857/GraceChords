@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
@@ -45,6 +46,7 @@ export default function PerformerShareSheet(props: PerformerShareProps) {
 
 function PerformerShareContent({ onClose, songCount, initialScope, handlers }: PerformerShareProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('export')
   const insets = useSafeAreaInsets()
   // The content mounts fresh on every open (formSheet route), so the scope
   // initializer re-seeds per open (single-song sets shouldn't land on
@@ -146,7 +148,7 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
       onPress={run(which, fn)}
       disabled={!!busy}
       accessibilityRole="button"
-      accessibilityLabel={`Export as ${label}`}
+      accessibilityLabel={label === 'PDF' ? tx('exportAsPdf') : tx('exportAsJpg')}
       style={{
         flex: 1,
         alignItems: 'center',
@@ -192,7 +194,7 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
   }
 
   return (
-    <FormSheetShell title="Export & share" onAction={onClose}>
+    <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Scope toggle — a full-width view-switcher (kept full width by design). */}
         <View
@@ -203,8 +205,8 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
             backgroundColor: t.colors.surfaceAlt,
           }}
         >
-          {segment('song', 'This song')}
-          {segment('set', 'Whole set')}
+          {segment('song', tx('thisSong'))}
+          {segment('set', tx('wholeSet'))}
         </View>
 
         {scope === 'song' ? (
@@ -214,18 +216,18 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
               {formatTile('PDF', 'doc.text', 'song-pdf', () => handlers.onExportSong('pdf'))}
               {formatTile('JPG', 'photo', 'song-jpg', () => handlers.onExportSong('jpg'))}
             </View>
-            {secondaryRow('Send to Telegram', 'paperplane.fill', 'song-telegram', handlers.onTelegramSong, 'Optional bot')}
+            {secondaryRow(tx('sendToTelegram'), 'paperplane.fill', 'song-telegram', handlers.onTelegramSong, tx('optionalBot'))}
           </>
         ) : (
           <>
             {primaryButton(
-              `Export set as PDF · ${songCount} ${songCount === 1 ? 'song' : 'songs'}`,
+              tx('exportSetAsPdfCount', { count: songCount }),
               'square.and.arrow.up',
               'set-pdf',
               handlers.onExportSet,
             )}
-            {secondaryRow('Copy link', 'link', 'set-link', handlers.onCopyLink)}
-            {secondaryRow('Send set to Telegram', 'paperplane.fill', 'set-telegram', handlers.onTelegramSet, 'Optional bot')}
+            {secondaryRow(tx('copyLink'), 'link', 'set-link', handlers.onCopyLink)}
+            {secondaryRow(tx('sendSetToTelegram'), 'paperplane.fill', 'set-telegram', handlers.onTelegramSet, tx('optionalBot'))}
           </>
         )}
       </View>

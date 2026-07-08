@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ConstrainedContent from '../components/ConstrainedContent'
@@ -19,8 +20,8 @@ import { cardStyle } from '../components/home/cardStyle'
 import { useTheme } from '../theme/ThemeProvider'
 import {
   getDisplayName,
-  pickSubGreeting,
-  timeGreeting,
+  pickSubGreetingIndex,
+  timeGreetingKey,
   useCurrentUser,
 } from '../lib/greetings'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
@@ -30,11 +31,13 @@ import { useLastSet } from '../lib/useLastSet'
 import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
 import type { Song } from '../lib/useSongList'
 
-function songMeta(song: Song): string {
+type Translator = (key: string, options?: Record<string, unknown>) => string
+
+function songMeta(song: Song, tx: Translator): string {
   return [
-    song.default_key ? `Key of ${song.default_key}` : null,
+    song.default_key ? tx('common:keyOf', { key: song.default_key }) : null,
     song.time_signature,
-    song.tempo ? `${song.tempo} BPM` : null,
+    song.tempo ? tx('common:bpm', { tempo: song.tempo }) : null,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -42,6 +45,7 @@ function songMeta(song: Song): string {
 
 export default function HomeScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['home', 'common'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
@@ -49,8 +53,14 @@ export default function HomeScreen() {
   const { source: spriteSource } = useProfileSprite()
   const { songs: starred, loading: starredLoading, error: starredError } = useStarredSongs()
 
-  const greeting = `${timeGreeting()}, ${getDisplayName(user)}`
-  const subGreeting = pickSubGreeting()
+  const greeting = tx('greeting.hello', {
+    greeting: tx(timeGreetingKey()),
+    name: getDisplayName(user) ?? tx('greeting.friend'),
+  })
+  const subGreetings = tx('subGreetings', { returnObjects: true }) as unknown as string[]
+  const subGreeting = subGreetings.length
+    ? subGreetings[pickSubGreetingIndex() % subGreetings.length]
+    : ''
 
   // Recently-opened comes from on-device history (recorded by the Viewer);
   // the Last set card reads the real most-recently-edited setlist. Re-render
@@ -94,7 +104,7 @@ export default function HomeScreen() {
           color: t.colors.textAccent,
         }}
       >
-        Last set
+        {tx('lastSet.label')}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginTop: 6 }}>
         <View style={{ minWidth: 0, flex: 1 }}>
@@ -102,7 +112,7 @@ export default function HomeScreen() {
             {lastSet.name}
           </Text>
           <Text style={{ fontSize: 13, color: t.colors.sec, marginTop: 4 }}>
-            {lastSet.songCount} {lastSet.songCount === 1 ? 'song' : 'songs'} · ~{lastSet.durationMin} min
+            {tx('lastSet.meta', { count: lastSet.songCount, min: lastSet.durationMin })}
           </Text>
         </View>
         {lastSet.keys ? (
@@ -118,7 +128,7 @@ export default function HomeScreen() {
               overflow: 'hidden',
             }}
           >
-            Keys {lastSet.keys}
+            {tx('lastSet.keys', { keys: lastSet.keys })}
           </Text>
         ) : null}
       </View>
@@ -138,14 +148,14 @@ export default function HomeScreen() {
           }}
         >
           <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.onAccent }}>
-            Resume
+            {tx('lastSet.resume')}
           </Text>
           <SymbolIcon name="chevron.right" size={14} color={t.colors.onAccent} weight="semibold" />
         </Pressable>
         <Pressable
           onPress={() => router.push(`/setlist/${lastSet.id}`)}
           accessibilityRole="button"
-          accessibilityLabel="Edit set"
+          accessibilityLabel={tx('lastSet.editSet')}
           style={{
             width: 46,
             height: 46,
@@ -174,7 +184,7 @@ export default function HomeScreen() {
             color: t.colors.textAccent,
           }}
         >
-          Starred songs
+          {tx('starredCard.label')}
         </Text>
       </View>
 
@@ -186,7 +196,7 @@ export default function HomeScreen() {
         </Text>
       ) : starred.length === 0 ? (
         <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-          Songs you star will appear here.
+          {tx('starredCard.empty')}
         </Text>
       ) : (
         <View style={{ marginTop: t.spacing.xs }}>
@@ -195,7 +205,7 @@ export default function HomeScreen() {
               key={s.id}
               onPress={() => openSong(s)}
               accessibilityRole="button"
-              accessibilityLabel={`Open ${s.title}`}
+              accessibilityLabel={tx('common:openSong', { title: s.title })}
               style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -303,7 +313,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={onAvatar}
                 accessibilityRole="button"
-                accessibilityLabel="Profile and settings"
+                accessibilityLabel={tx('profileAndSettings')}
                 hitSlop={8}
                 style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
               >
@@ -350,7 +360,7 @@ export default function HomeScreen() {
               <ConstrainedContent tier="dashboard">
               <View style={cardStyle(t, true)}>
                 <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.2, color: t.colors.ink, marginBottom: 13 }}>
-                  Continue where you left off
+                  {tx('continueCard.label')}
                 </Text>
                 <Pressable
                   onPress={() => openSong(continueSong)}
@@ -380,9 +390,9 @@ export default function HomeScreen() {
                         {continueSong.artist}
                       </Text>
                     ) : null}
-                    {songMeta(continueSong) ? (
+                    {songMeta(continueSong, tx) ? (
                       <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 3 }}>
-                        {songMeta(continueSong)}
+                        {songMeta(continueSong, tx)}
                       </Text>
                     ) : null}
                   </View>

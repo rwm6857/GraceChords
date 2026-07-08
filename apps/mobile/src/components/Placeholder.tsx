@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import Screen from './Screen'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -8,6 +9,7 @@ import { useTheme } from '../theme/ThemeProvider'
 
 export default function Placeholder({ title }: { title: string }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('common')
   return (
     <Screen edges={['top', 'left', 'right']}>
       <View style={{ paddingHorizontal: t.spacing.lg, paddingTop: t.spacing.sm }}>
@@ -24,7 +26,7 @@ export default function Placeholder({ title }: { title: string }) {
       </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-          Coming soon
+          {tx('comingSoon')}
         </Text>
       </View>
     </Screen>

@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "chooseTranslation": "Çeviri seç",
+  "chooseDate": "Tarih seç",
+  "readerSettings": "Okuyucu ayarları",
+  "defaultTranslationLabel": "ESV",
+  "copyVerses_one": "{{count}} ayeti kopyala",
+  "copyVerses_other": "{{count}} ayeti kopyala",
+  "error": {
+    "title": "Bugünün okuması yüklenemiyor",
+    "subtitle": "İnternete bağlanıp tekrar deneyin veya çevrimdışı okumak için bu çeviriyi Ayarlar → Çevrimdışı ve İndirmeler'den indirin.",
+    "retry": "Tekrar dene"
+  },
+  "empty": {
+    "title": "Bu gün için okuma yok",
+    "subtitle": "Okumaya devam etmek için başka bir tarih seçin."
+  },
+  "translationPicker": {
+    "title": "Çeviri"
+  },
+  "settings": {
+    "title": "Okuyucu ayarları",
+    "textSize": "Yazı boyutu",
+    "smallerText": "Daha küçük yazı",
+    "largerText": "Daha büyük yazı",
+    "pt": "{{pt}} pt",
+    "typeface": "Yazı tipi",
+    "serif": "Serif",
+    "sans": "Sans",
+    "verseLayout": "Ayet düzeni",
+    "lines": "Satırlar",
+    "prose": "Düz metin",
+    "lineSpacing": "Satır aralığı",
+    "tight": "Dar",
+    "normal": "Normal",
+    "relaxed": "Geniş",
+    "readingStreak": "Okuma serisi",
+    "trackReadingStreak": "Okuma serisini takip et",
+    "trackReadingStreakDesc": "Bugünün okumasını açtığın ardışık günleri sayar."
+  },
+  "datePicker": {
+    "title": "Tarih seç",
+    "today": "Bugün",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "monthYear": "{{month}} {{year}}",
+    "weekdays": [
+      "Pa",
+      "Pt",
+      "Sa",
+      "Ça",
+      "Pe",
+      "Cu",
+      "Ct"
+    ],
+    "months": [
+      "Ocak",
+      "Şubat",
+      "Mart",
+      "Nisan",
+      "Mayıs",
+      "Haziran",
+      "Temmuz",
+      "Ağustos",
+      "Eylül",
+      "Ekim",
+      "Kasım",
+      "Aralık"
+    ]
+  }
+}

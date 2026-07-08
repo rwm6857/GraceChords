@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import Screen from '../components/Screen'
 import ConstrainedContent from '../components/ConstrainedContent'
 import ListRow from '../components/ListRow'
@@ -19,6 +20,7 @@ import { errMessage } from '../lib/errors'
 // action, and tap-to-open into the builder.
 export default function SetlistsScreen() {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation(['setlist', 'common'])
   const router = useRouter()
   const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } =
     useSetlists()
@@ -65,7 +67,7 @@ export default function SetlistsScreen() {
         await refresh()
         setPruneOpen(true)
       } else {
-        Alert.alert('Could not create set', errMessage(err))
+        Alert.alert(tx('alerts.couldNotCreate'), errMessage(err))
       }
     } finally {
       setCreating(false)
@@ -76,22 +78,21 @@ export default function SetlistsScreen() {
     try {
       await remove(item.id)
     } catch (err: unknown) {
-      Alert.alert('Could not delete set', errMessage(err))
+      Alert.alert(tx('alerts.couldNotDelete'), errMessage(err))
       refresh()
     }
   }
 
   function subtitle(item: SetlistRow) {
-    const n = item.songCount
-    const edited = timeAgo(item.updated_at)
-    return [`${n} ${n === 1 ? 'song' : 'songs'}`, edited ? `edited ${edited}` : null]
+    const edited = timeAgo(item.updated_at, (k, o) => tx(`common:${k}`, o), i18n.language)
+    return [tx('common:songCount', { count: item.songCount }), edited ? tx('editedAgo', { time: edited }) : null]
       .filter(Boolean)
       .join(' · ')
   }
 
   function renderBody() {
     if (loading) {
-      return <LoadingSkeleton label="Syncing your setlists…" />
+      return <LoadingSkeleton label={tx('syncing')} />
     }
     if (error) {
       return (
@@ -106,8 +107,8 @@ export default function SetlistsScreen() {
       return (
         <EmptyState
           icon="list.bullet"
-          title="No setlists yet"
-          actionLabel="New set"
+          title={tx('empty')}
+          actionLabel={tx('newSet')}
           onAction={onCreate}
         />
       )
@@ -123,8 +124,8 @@ export default function SetlistsScreen() {
           <SwipeToDelete
             onDelete={() => onDeleteSetlist(item)}
             confirm={{
-              title: `Delete “${item.name}”?`,
-              message: 'You cannot undo this action.',
+              title: tx('deleteConfirm.title', { name: item.name }),
+              message: tx('deleteConfirm.message'),
             }}
           >
             <ListRow
@@ -160,11 +161,11 @@ export default function SetlistsScreen() {
             color: t.colors.ink,
           }}
         >
-          Setlists
+          {tx('title')}
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="New set"
+          accessibilityLabel={tx('newSet')}
           hitSlop={8}
           onPress={onCreate}
           disabled={creating}

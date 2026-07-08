@@ -1,0 +1,71 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "library": {
+    "title": "Song Library",
+    "addSong": "Add song",
+    "filterAndSort": "Filter and sort",
+    "searchPlaceholder": "Search songs, artists, themes…",
+    "empty": "Your library is empty.",
+    "noMatchesForQuery": "No songs match “{{query}}”.",
+    "noMatchesFilters": "No songs match your filters.",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results",
+    "noKey": "No key"
+  },
+  "filterSheet": {
+    "title": "Filter & sort",
+    "sortBy": "Sort by",
+    "sort": {
+      "title": "Title",
+      "artist": "Artist",
+      "key": "Key",
+      "recent": "Recently added",
+      "tempo": "Tempo"
+    },
+    "filterByTag": "Filter by tag",
+    "show_one": "Show {{count}} song",
+    "show_other": "Show {{count}} songs"
+  },
+  "viewer": {
+    "viewOptions": "View options",
+    "exportAndShare": "Export and share",
+    "editSong": "Edit song",
+    "noChart": "No chart available",
+    "noChartBody": "This song has no ChordPro content yet.",
+    "chordsUnavailable": "Chords unavailable",
+    "rawFallback": "Chords unavailable — showing raw text",
+    "capo": "Capo {{fret}} for {{key}}"
+  },
+  "viewOptions": {
+    "showChords": "Show chords",
+    "sectionLabels": "Section labels",
+    "fontSize": "Font size",
+    "smallerFont": "Smaller font",
+    "largerFont": "Larger font",
+    "chordStyle": "Chord style",
+    "letters": "Letters",
+    "solfege": "Solfège",
+    "accidentals": "Accidentals",
+    "columns": "Columns",
+    "screen": "Screen",
+    "hideControlsWhenIdle": "Hide controls when idle",
+    "keepScreenAwake": "Keep screen awake"
+  },
+  "transpose": {
+    "down": "Transpose down",
+    "up": "Transpose up",
+    "chooseKey": "Choose key",
+    "chooseKeyHint": "Opens the key selector"
+  },
+  "accidentals": {
+    "sharps": "Sharps",
+    "flats": "Flats"
+  },
+  "keyPicker": {
+    "title": "Key",
+    "playIn": "Play {{title}} in…",
+    "resetTo": "Reset to {{key}}",
+    "resetToOriginal": "Reset to original key",
+    "resetToOriginalA11y": "Reset to the original key"
+  }
+}

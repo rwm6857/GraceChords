@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   runOnJS,
@@ -69,6 +70,7 @@ const SWIPE_THRESHOLD = 50
 // tappable progress rail, all sliding between songs.
 export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['setlist', 'song', 'export', 'errors', 'common'])
   const router = useRouter()
 
   // Read-only reuse of the builder hook for the ordered entries + song
@@ -235,9 +237,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // --- Export / share handlers (screen owns errors) ------------------------
   function reportError(title: string, err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
-    if (msg === 'not_signed_in') Alert.alert('Sign in required', 'Sign in to export.')
+    if (msg === 'not_signed_in') Alert.alert(tx('export:alerts.signInRequiredTitle'), tx('export:alerts.signInToExport'))
     else if (msg === 'image_unavailable') {
-      Alert.alert('Image unavailable', 'The server could not render an image. Try PDF instead.')
+      Alert.alert(tx('export:alerts.imageUnavailableTitle'), tx('export:alerts.imageUnavailableGeneric'))
     } else Alert.alert(title, msg)
   }
 
@@ -249,11 +251,11 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   async function notLinkedAlert() {
     Alert.alert(
-      'Link your Telegram',
-      'Send /link to the GraceChords bot on Telegram, then connect it from your profile on the website.',
+      tx('export:alerts.linkTelegramTitle'),
+      tx('export:alerts.linkTelegramMessage'),
       [
-        { text: 'Open Telegram', onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
-        { text: 'Not now', style: 'cancel' },
+        { text: tx('export:alerts.openTelegram'), onPress: () => Linking.openURL(TELEGRAM_BOT_URL) },
+        { text: tx('export:alerts.notNow'), style: 'cancel' },
       ],
     )
   }
@@ -264,7 +266,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         await shareSongFile(format)
         setSheet(null)
       } catch (err) {
-        reportError('Export failed', err)
+        reportError(tx('export:alerts.exportFailedTitle'), err)
       }
     },
     onTelegramSong: async () => {
@@ -273,9 +275,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         const result = await pushSongToTelegram({ songId: entry.songId, key: exportKey })
         if (result === 'not_linked') return notLinkedAlert()
         setSheet(null)
-        Alert.alert('Sent', 'The chart is on its way to your Telegram chat.')
+        Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSongMessage'))
       } catch (err) {
-        reportError('Telegram failed', err)
+        reportError(tx('export:alerts.telegramFailedTitle'), err)
       }
     },
     onExportSet: async () => {
@@ -286,16 +288,16 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         await Sharing.shareAsync(uri)
         setSheet(null)
       } catch (err) {
-        reportError('Export failed', err)
+        reportError(tx('export:alerts.exportFailedTitle'), err)
       }
     },
     onCopyLink: async () => {
       try {
         await Clipboard.setStringAsync(buildSetlistShareUrl(items))
         setSheet(null)
-        Alert.alert('Copied', 'Set link copied to the clipboard.')
+        Alert.alert(tx('export:alerts.copiedTitle'), tx('export:alerts.setLinkCopied'))
       } catch (err) {
-        reportError('Could not copy link', err)
+        reportError(tx('export:alerts.couldNotCopyLinkTitle'), err)
       }
     },
     onTelegramSet: async () => {
@@ -305,9 +307,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         )
         if (result === 'not_linked') return notLinkedAlert()
         setSheet(null)
-        Alert.alert('Sent', 'The set is on its way to your Telegram chat.')
+        Alert.alert(tx('export:alerts.sentTitle'), tx('export:alerts.sentSetMessage'))
       } catch (err) {
-        reportError('Telegram failed', err)
+        reportError(tx('export:alerts.telegramFailedTitle'), err)
       }
     },
   }
@@ -329,7 +331,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
           <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-            This setlist no longer exists.
+            {tx('setlist:performer.notFound')}
           </Text>
         </View>
       </Screen>
@@ -360,21 +362,21 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Back to setlist"
+            accessibilityLabel={tx('setlist:performer.backToSetlist')}
             hitSlop={8}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
             <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent, maxWidth: 160 }}>
-              {name || 'Setlist'}
+              {name || tx('setlist:performer.back')}
             </Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
-            <HeaderIconButton icon="ellipsis" label="View options" onPress={() => setSheet('options')} />
+            <HeaderIconButton icon="ellipsis" label={tx('setlist:performer.viewOptions')} onPress={() => setSheet('options')} />
             <HeaderIconButton
               icon="square.and.arrow.up"
               iconSize={22}
-              label="Export and share"
+              label={tx('export:exportAndShare')}
               onPress={() => setSheet('share')}
             />
           </View>
@@ -391,7 +393,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                   key={it.entryKey}
                   onPress={() => goTo(i, i > index ? 'next' : 'prev')}
                   accessibilityRole="button"
-                  accessibilityLabel={`Go to song ${i + 1}`}
+                  accessibilityLabel={tx('setlist:performer.goToSong', { number: i + 1 })}
                   hitSlop={{ top: 10, bottom: 10 }}
                   style={{ flex: isCurrent ? 1.6 : 1 }}
                 >
@@ -446,7 +448,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
               }}
             >
               <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.textAccent }}>
-                Key of {keyLabel}
+                {tx('common:keyOf', { key: keyLabel })}
               </Text>
             </View>
           ) : null}
@@ -461,7 +463,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       ) : setError || songError || !entry ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
           <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-            {!entry ? 'This set has no songs' : "Couldn't load song"}
+            {!entry ? tx('setlist:performer.noSongs') : tx('errors:couldntLoadSong')}
           </Text>
           {setError || songError ? (
             <Text style={{ marginTop: t.spacing.sm, fontSize: 13.5, color: t.colors.muted, textAlign: 'center' }}>
@@ -510,10 +512,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
             ) : (
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl, paddingTop: headerH }}>
                 <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
-                  {parseError ? 'Chords unavailable' : 'No chart available'}
+                  {parseError ? tx('song:viewer.chordsUnavailable') : tx('song:viewer.noChart')}
                 </Text>
                 <Text style={{ marginTop: t.spacing.sm, fontSize: 13.5, color: t.colors.muted }}>
-                  This song has no ChordPro content yet.
+                  {tx('song:viewer.noChartBody')}
                 </Text>
               </View>
             )}
@@ -542,7 +544,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
               onPress={goPrev}
               disabled={index === 0}
               accessibilityRole="button"
-              accessibilityLabel="Previous song"
+              accessibilityLabel={tx('setlist:performer.previousSong')}
               style={navButtonStyle(index === 0)}
             >
               <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} weight="semibold" />
@@ -562,7 +564,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
               onPress={goNext}
               disabled={index === count - 1}
               accessibilityRole="button"
-              accessibilityLabel="Next song"
+              accessibilityLabel={tx('setlist:performer.nextSong')}
               style={navButtonStyle(index === count - 1)}
             >
               <SymbolIcon name="chevron.right" size={22} color={t.colors.accent} weight="semibold" />

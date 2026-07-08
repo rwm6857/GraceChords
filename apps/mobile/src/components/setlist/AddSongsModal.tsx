@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -25,6 +26,7 @@ export default function AddSongsModal({
   onToggle: (song: Song) => void
 }) {
   const t = useTheme()
+  const { t: tx } = useTranslation(['setlist', 'common'])
   const insets = useSafeAreaInsets()
   // Keyboard-aware bottom inset: while the keyboard is up the list gains
   // exactly its height of padding, so the rows behind it can scroll into
@@ -60,10 +62,10 @@ export default function AddSongsModal({
           }}
         >
           <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-            Add songs
+            {tx('addSongs.title')}
           </Text>
-          <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Done adding songs" hitSlop={8}>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.textAccent }}>Done</Text>
+          <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={tx('addSongs.doneAdding')} hitSlop={8}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.textAccent }}>{tx('common:done')}</Text>
           </Pressable>
         </View>
 
@@ -84,14 +86,14 @@ export default function AddSongsModal({
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search songs, artists, themes…"
+              placeholder={tx('addSongs.searchPlaceholder')}
               placeholderTextColor={t.colors.muted}
               returnKeyType="search"
               autoCorrect={false}
               style={{ flex: 1, fontSize: 16, color: t.colors.ink, padding: 0 }}
             />
             {query ? (
-              <Pressable onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={8}>
+              <Pressable onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel={tx('addSongs.clearSearch')} hitSlop={8}>
                 <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.muted} />
               </Pressable>
             ) : null}
@@ -107,7 +109,7 @@ export default function AddSongsModal({
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: t.spacing.xl }}>
               <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
-                {trimmed ? `No songs match “${query.trim()}”.` : 'Your library is empty.'}
+                {trimmed ? tx('addSongs.noMatches', { query: query.trim() }) : tx('addSongs.emptyLibrary')}
               </Text>
             </View>
           }
@@ -118,7 +120,7 @@ export default function AddSongsModal({
                 title={item.title}
                 subtitle={item.artist}
                 trailingTop={item.default_key}
-                accessibilityLabel={added ? `Remove ${item.title} from set` : `Add ${item.title} to set`}
+                accessibilityLabel={added ? tx('addSongs.remove', { title: item.title }) : tx('addSongs.add', { title: item.title })}
                 onPress={() => onToggle(item)}
                 trailing={
                   <View

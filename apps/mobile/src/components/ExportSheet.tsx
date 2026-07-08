@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useFormSheet } from '../lib/formSheetHost'
@@ -31,6 +32,7 @@ export default function ExportSheet(props: ExportSheetProps) {
 
 function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   const t = useTheme()
+  const { t: tx } = useTranslation('export')
   const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
 
@@ -45,7 +47,7 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   }
 
   return (
-    <FormSheetShell title="Export & share" onAction={onClose}>
+    <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
         {/* Format tiles — PDF and JPG as equals; both open the share sheet. */}
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
@@ -58,6 +60,7 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
             <FormatTile
               key={tile.format}
               label={tile.label}
+              accessibilityLabel={tile.format === 'pdf' ? tx('exportAsPdf') : tx('exportAsJpg')}
               icon={tile.icon}
               busy={busy === tile.format}
               dimmed={!!busy && busy !== tile.format}
@@ -69,8 +72,8 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
 
         {/* Telegram */}
         <SecondaryRow
-          label="Send to Telegram"
-          subtitle="Optional bot"
+          label={tx('sendToTelegram')}
+          subtitle={tx('optionalBot')}
           icon="paperplane.fill"
           busy={busy === 'telegram'}
           dimmed={!!busy && busy !== 'telegram'}
@@ -87,6 +90,7 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
 // the two formats read as equals.
 function FormatTile({
   label,
+  accessibilityLabel,
   icon,
   busy,
   dimmed,
@@ -94,6 +98,7 @@ function FormatTile({
   onPress,
 }: {
   label: string
+  accessibilityLabel: string
   icon: SymbolIconProps['name']
   busy: boolean
   dimmed: boolean
@@ -106,7 +111,7 @@ function FormatTile({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={`Export as ${label}`}
+      accessibilityLabel={accessibilityLabel}
       style={{
         flex: 1,
         alignItems: 'center',

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Alert, FlatList, Modal, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
 import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -25,6 +26,7 @@ export default function PruneSetlistsModal({
   onConfirmDelete: (ids: string[]) => Promise<void>
 }) {
   const t = useTheme()
+  const { t: tx, i18n } = useTranslation(['setlist', 'common'])
   const insets = useSafeAreaInsets()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
@@ -60,7 +62,7 @@ export default function PruneSetlistsModal({
       setSelected(new Set())
       onClose()
     } catch (err: unknown) {
-      Alert.alert('Could not delete setlists', errMessage(err))
+      Alert.alert(tx('alerts.couldNotDeleteMany'), errMessage(err))
     } finally {
       setBusy(false)
     }
@@ -70,7 +72,7 @@ export default function PruneSetlistsModal({
     const created = item.created_at
       ? (() => {
           try {
-            return new Date(item.created_at).toLocaleDateString('en-US', {
+            return new Date(item.created_at).toLocaleDateString(i18n.language, {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
@@ -81,7 +83,7 @@ export default function PruneSetlistsModal({
         })()
       : ''
     const n = item.songCount
-    return [created, `${n} ${n === 1 ? 'song' : 'songs'}`].filter(Boolean).join(' · ')
+    return [created, tx('common:songCount', { count: n })].filter(Boolean).join(' · ')
   }
 
   return (
@@ -98,11 +100,11 @@ export default function PruneSetlistsModal({
           }}
         >
           <Text style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3, color: t.colors.ink }}>
-            Setlist limit reached
+            {tx('prune.title')}
           </Text>
-          <Pressable onPress={close} accessibilityRole="button" accessibilityLabel="Close" hitSlop={8} disabled={busy}>
+          <Pressable onPress={close} accessibilityRole="button" accessibilityLabel={tx('common:close')} hitSlop={8} disabled={busy}>
             <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.textAccent, opacity: busy ? 0.5 : 1 }}>
-              Cancel
+              {tx('common:cancel')}
             </Text>
           </Pressable>
         </View>
@@ -115,7 +117,7 @@ export default function PruneSetlistsModal({
             color: t.colors.muted,
           }}
         >
-          {`You've saved ${setlists.length} of your ${limit} setlists. Select some to delete (oldest first), then try again.`}
+          {tx('prune.message', { count: setlists.length, limit })}
         </Text>
 
         <FlatList
@@ -127,7 +129,7 @@ export default function PruneSetlistsModal({
               <ListRow
                 title={item.name}
                 subtitle={subtitle(item)}
-                accessibilityLabel={checked ? `Deselect ${item.name}` : `Select ${item.name} to delete`}
+                accessibilityLabel={checked ? tx('prune.deselect', { name: item.name }) : tx('prune.select', { name: item.name })}
                 onPress={() => toggle(item.id)}
                 trailing={
                   <View
@@ -167,7 +169,7 @@ export default function PruneSetlistsModal({
             onPress={confirm}
             disabled={selected.size === 0 || busy}
             accessibilityRole="button"
-            accessibilityLabel="Delete selected setlists"
+            accessibilityLabel={tx('prune.deleteSelected')}
             style={({ pressed }) => ({
               height: 48,
               borderRadius: t.radii.md,
@@ -178,7 +180,7 @@ export default function PruneSetlistsModal({
             })}
           >
             <Text style={{ color: t.colors.onDanger, fontSize: 16, fontWeight: '600', letterSpacing: -0.2 }}>
-              {selected.size > 0 ? `Delete ${selected.size}` : 'Delete selected'}
+              {selected.size > 0 ? tx('prune.deleteCount', { count: selected.size }) : tx('prune.deleteSelectedShort')}
             </Text>
           </Pressable>
         </View>

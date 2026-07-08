@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
@@ -19,6 +20,7 @@ import { setLocalSprite, useProfileSprite } from '../lib/useProfileSprite'
 
 export default function SpritePickerScreen() {
   const t = useTheme()
+  const { t: tx } = useTranslation(['auth', 'common'])
   const router = useRouter()
   const { mode } = useLocalSearchParams<{ mode?: string }>()
   const isEdit = mode === 'edit'
@@ -51,7 +53,7 @@ export default function SpritePickerScreen() {
       else router.replace('/')
     } else {
       if (sprite) await stashPendingSprite(AsyncStorage, sprite)
-      Alert.alert('Check your email', 'Confirm your account, then sign in.')
+      Alert.alert(tx('spritePicker.checkEmailAlert.title'), tx('spritePicker.checkEmailAlert.message'))
       router.replace('/login')
     }
     setBusy(false)
@@ -62,7 +64,7 @@ export default function SpritePickerScreen() {
       <Pressable
         onPress={() => router.back()}
         accessibilityRole="button"
-        accessibilityLabel="Back"
+        accessibilityLabel={tx('common:back')}
         hitSlop={8}
         style={{
           flexDirection: 'row',
@@ -74,7 +76,7 @@ export default function SpritePickerScreen() {
         }}
       >
         <SymbolIcon name="chevron.left" size={16} color={t.colors.textAccent} weight="semibold" />
-        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.textAccent }}>Back</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.textAccent }}>{tx('common:back')}</Text>
       </Pressable>
 
       <ScrollView
@@ -90,11 +92,11 @@ export default function SpritePickerScreen() {
             marginTop: t.spacing.md,
           }}
         >
-          {isEdit ? 'Change your icon' : 'Choose your icon'}
+          {isEdit ? tx('spritePicker.changeYourIcon') : tx('spritePicker.chooseYourIcon')}
         </Text>
         {isEdit ? null : (
           <Text style={{ fontSize: 15, color: t.colors.sec, marginTop: t.spacing.xs }}>
-            You can change this later
+            {tx('spritePicker.subtitle')}
           </Text>
         )}
 
@@ -177,7 +179,7 @@ export default function SpritePickerScreen() {
           })}
         >
           <Text style={{ fontSize: 16.5, fontWeight: '700', color: t.colors.onAccent }}>
-            {isEdit ? 'Save' : 'Continue'}
+            {isEdit ? tx('common:save') : tx('spritePicker.continue')}
           </Text>
           {isEdit ? null : (
             <SymbolIcon name="chevron.right" size={13} color={t.colors.onAccent} weight="semibold" />
@@ -192,7 +194,7 @@ export default function SpritePickerScreen() {
             style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}
           >
             <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.muted }}>
-              Skip for now
+              {tx('spritePicker.skipForNow')}
             </Text>
           </Pressable>
         )}

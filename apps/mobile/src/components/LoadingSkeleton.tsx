@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { ActivityIndicator, Animated, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
 // The "Loading · spinner · skeleton" component from [DOC] Components &
@@ -17,8 +18,10 @@ const ROWS = [
   { title: '62%', sub: '40%' },
 ] as const
 
-export default function LoadingSkeleton({ label = 'Loading…' }: { label?: string }) {
+export default function LoadingSkeleton({ label }: { label?: string }) {
   const t = useTheme()
+  const { t: tx } = useTranslation('common')
+  const displayLabel = label ?? tx('loading')
   const pulse = useRef(new Animated.Value(0.45)).current
 
   useEffect(() => {
@@ -48,7 +51,7 @@ export default function LoadingSkeleton({ label = 'Loading…' }: { label?: stri
     <View style={{ paddingHorizontal: t.spacing.xl, paddingTop: t.spacing.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: t.spacing.lg }}>
         <ActivityIndicator size="small" color={t.colors.accent} />
-        <Text style={{ fontSize: 13, color: t.colors.muted }}>{label}</Text>
+        <Text style={{ fontSize: 13, color: t.colors.muted }}>{displayLabel}</Text>
       </View>
 
       {ROWS.map((row, i) => (

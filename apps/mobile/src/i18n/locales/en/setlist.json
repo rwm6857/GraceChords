@@ -1,0 +1,115 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Setlists",
+  "newSet": "New set",
+  "empty": "No setlists yet",
+  "syncing": "Syncing your setlists…",
+  "editedAgo": "edited {{time}}",
+  "deleteConfirm": {
+    "title": "Delete “{{name}}”?",
+    "message": "You cannot undo this action."
+  },
+  "alerts": {
+    "couldNotCreate": "Could not create set",
+    "couldNotDelete": "Could not delete set",
+    "couldNotDeleteMany": "Could not delete setlists",
+    "couldNotCopyLink": "Could not copy link",
+    "couldNotSendSet": "Could not send set",
+    "telegramNotLinkedTitle": "Telegram not linked",
+    "telegramNotLinkedMessage": "Link your account with the bot first: {{url}}",
+    "deleteSetTitle": "Delete set?",
+    "deleteSetMessage": "“{{name}}” and its songs will be removed."
+  },
+  "toasts": {
+    "addSongsFirst": "Add songs first",
+    "setLinkCopied": "Set link copied",
+    "sentToTelegram": "Sent to Telegram",
+    "removedFromSet": "Removed from set"
+  },
+  "builder": {
+    "back": "Setlists",
+    "setlistOptions": "Setlist options",
+    "setName": "Set name",
+    "renameSet": "Rename set",
+    "clearSetName": "Clear set name",
+    "backToSetlists": "Back to setlists",
+    "lastEdited": "Last edited {{time}}",
+    "noSongs": "No songs yet",
+    "addHintTablet": "Tap a song in the library to add it.",
+    "addHintPhone": "Tap Add to search your library.",
+    "add": "Add",
+    "addSongs": "Add songs",
+    "startSet": "Start set",
+    "notFound": "This setlist no longer exists."
+  },
+  "timeline": {
+    "reorder": "Reorder {{title}}",
+    "changeKeyFor": "Change key for {{title}}",
+    "noKey": "—"
+  },
+  "options": {
+    "title": "Setlist",
+    "renameSet": "Rename set",
+    "savedSets": "Saved sets…",
+    "newSet": "New set",
+    "deleteSet": "Delete set"
+  },
+  "rowActions": {
+    "closeSongOptions": "Close song options",
+    "changeKey": "Change key",
+    "duplicate": "Duplicate",
+    "removeFromSet": "Remove from set"
+  },
+  "remove": "Remove",
+  "performer": {
+    "back": "Setlist",
+    "viewOptions": "View options",
+    "backToSetlist": "Back to setlist",
+    "goToSong": "Go to song {{number}}",
+    "previousSong": "Previous song",
+    "nextSong": "Next song",
+    "noSongs": "This set has no songs",
+    "notFound": "This setlist no longer exists."
+  },
+  "addSongs": {
+    "title": "Add songs",
+    "doneAdding": "Done adding songs",
+    "searchPlaceholder": "Search songs, artists, themes…",
+    "clearSearch": "Clear search",
+    "noMatches": "No songs match “{{query}}”.",
+    "emptyLibrary": "Your library is empty.",
+    "add": "Add {{title}} to set",
+    "remove": "Remove {{title}} from set"
+  },
+  "libraryPane": {
+    "searchPlaceholder": "Search songs…",
+    "searchLibrary": "Search library"
+  },
+  "prune": {
+    "title": "Setlist limit reached",
+    "message": "You've saved {{count}} of your {{limit}} setlists. Select some to delete (oldest first), then try again.",
+    "select": "Select {{name}} to delete",
+    "deselect": "Deselect {{name}}",
+    "deleteSelected": "Delete selected setlists",
+    "deleteCount": "Delete {{count}}",
+    "deleteSelectedShort": "Delete selected"
+  },
+  "import": {
+    "back": "Back",
+    "title": "Import setlist",
+    "couldNotLoadTitle": "Couldn't load songs",
+    "couldNotLoadSubtitle": "Check your connection and try opening the link again.",
+    "couldNotImportTitle": "Couldn't import this setlist",
+    "couldNotImportSubtitle": "This link didn't contain any songs we could find.",
+    "backToSetlists": "Back to setlists",
+    "save": "Save to my setlists",
+    "saving": "Saving…",
+    "couldNotImportAlert": "Could not import setlist",
+    "missingCount_one": "{{count}} song could not be found.",
+    "missingCount_other": "{{count}} songs could not be found.",
+    "missingNamed": "{{subject}} could not be found.",
+    "missingWithOthers_one": "{{names}} and {{count}} other",
+    "missingWithOthers_other": "{{names}} and {{count}} others",
+    "listAnd": "{{head}} and {{last}}"
+  }
+}
