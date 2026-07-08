@@ -53,7 +53,7 @@ function PptxWidget({ value, onChange, onPptxSaved, disabled, slug, title }) {
   const [actionError, setActionError] = useState('')
   const [replacing, setReplacing] = useState(false)
 
-  const canUpload = can('suggest') // collaborator+
+  const canUpload = isAtLeast('editor') // public-catalog PPTX is an editor concern
   const canReplace = isAtLeast('editor')
   const canDelete = can('deletePptx') // admin+
 

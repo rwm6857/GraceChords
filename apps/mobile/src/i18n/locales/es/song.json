@@ -29,6 +29,7 @@
   "viewer": {
     "viewOptions": "Opciones de vista",
     "exportAndShare": "Exportar y compartir",
+    "editSong": "Editar canción",
     "noChart": "No hay partitura",
     "noChartBody": "Esta canción aún no tiene contenido ChordPro.",
     "chordsUnavailable": "Acordes no disponibles",

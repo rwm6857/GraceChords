@@ -39,20 +39,18 @@ function formatAccountAge(createdAt) {
 
 // Role matrix data
 const MATRIX_ROWS = [
-  { label: 'Basic access & personal features', user: true,  collab: true,  editor: true,  admin: true,             owner: true          },
-  { label: 'Suggest song edits/additions',     user: false, collab: true,  editor: true,  admin: true,             owner: true          },
-  { label: 'Manage song content',              user: false, collab: false, editor: true,  admin: true,             owner: true          },
-  { label: 'Delete content',                   user: false, collab: false, editor: false, admin: true,             owner: true          },
-  { label: 'Promote users',                    user: false, collab: false, editor: false, admin: 'Up to Editor',   owner: 'Up to Admin' },
-  { label: 'Manage user accounts',             user: false, collab: false, editor: false, admin: false,            owner: true          },
+  { label: 'Basic access & personal features', user: true,  editor: true,  admin: true,             owner: true          },
+  { label: 'Create personal songs & submit for review', user: true, editor: true, admin: true,      owner: true          },
+  { label: 'Manage song content',              user: false, editor: true,  admin: true,             owner: true          },
+  { label: 'Delete content',                   user: false, editor: false, admin: true,             owner: true          },
+  { label: 'Promote users',                    user: false, editor: false, admin: 'Up to Editor',   owner: 'Up to Admin' },
+  { label: 'Manage user accounts',             user: false, editor: false, admin: false,            owner: true          },
 ]
 
 export default function AdminPage() {
   const { session, role: currentRole, isOwner } = useAuth()
   const [users, setUsers] = useState([])
   const [usersLoading, setUsersLoading] = useState(true)
-  const [pendingRequests, setPendingRequests] = useState([])
-  const [pendingLoading, setPendingLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [changingRole, setChangingRole] = useState({}) // { userId: true }
@@ -75,40 +73,21 @@ export default function AdminPage() {
     setUsersLoading(false)
   }, [])
 
-  const loadPendingRequests = useCallback(async () => {
-    setPendingLoading(true)
-    const { data, error } = await supabase
-      .from('collaborator_requests')
-      .select('id, user_id, requested_at, users(display_name)')
-      .eq('status', 'pending')
-      .order('requested_at', { ascending: true })
-    if (error) {
-      if (error.code !== '42P01') { // 42P01 = table doesn't exist yet
-        console.error('[AdminPage] loadPendingRequests:', error)
-      }
-      setPendingRequests([])
-    } else {
-      setPendingRequests(data || [])
-    }
-    setPendingLoading(false)
-  }, [])
-
   useEffect(() => {
-    Promise.all([loadUsers(), loadPendingRequests()])
-      .then(() => setLastUpdated(new Date()))
-  }, [loadUsers, loadPendingRequests])
+    loadUsers().then(() => setLastUpdated(new Date()))
+  }, [loadUsers])
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
-    await Promise.all([loadUsers(), loadPendingRequests()])
+    await loadUsers()
     setLastUpdated(new Date())
     setRefreshing(false)
-  }, [loadUsers, loadPendingRequests])
+  }, [loadUsers])
 
   function getAvailableRoles(targetRole) {
     if (isOwner) return ALL_ROLES
-    // Admins can set editor, collaborator, user only
-    return ['editor', 'collaborator', 'user']
+    // Admins can set editor or user only
+    return ['editor', 'user']
   }
 
   async function handleRoleChange(userId, newRole) {
@@ -126,37 +105,6 @@ export default function AdminPage() {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
     }
     setChangingRole(prev => ({ ...prev, [userId]: false }))
-  }
-
-  async function handleApproveRequest(req) {
-    const { error } = await supabase.rpc('update_user_role', {
-      target_user_id: req.user_id,
-      new_role: 'collaborator',
-    })
-    if (error) {
-      showToast(`Failed to approve: ${error.message}`)
-      return
-    }
-    await supabase
-      .from('collaborator_requests')
-      .update({ status: 'approved' })
-      .eq('id', req.id)
-    showToast('Collaborator access granted.')
-    setPendingRequests(prev => prev.filter(r => r.id !== req.id))
-    setUsers(prev => prev.map(u => u.id === req.user_id ? { ...u, role: 'collaborator' } : u))
-  }
-
-  async function handleDenyRequest(req) {
-    const { error } = await supabase
-      .from('collaborator_requests')
-      .update({ status: 'denied' })
-      .eq('id', req.id)
-    if (error) {
-      showToast('Failed to deny request.')
-      return
-    }
-    showToast('Request denied.')
-    setPendingRequests(prev => prev.filter(r => r.id !== req.id))
   }
 
   async function handleDeleteUser() {
@@ -302,48 +250,6 @@ export default function AdminPage() {
         )}
       </section>
 
-      {/* ── 4c. Pending Collaborator Requests ─────────────────────── */}
-      <section className="gc-portal-section">
-        <h2>Pending Collaborator Requests</h2>
-        {pendingLoading ? (
-          <p className="gc-portal-empty">Loading requests…</p>
-        ) : pendingRequests.length === 0 ? (
-          <p className="gc-portal-empty">No pending requests.</p>
-        ) : (
-          <div className="gc-pending-list">
-            {pendingRequests.map(req => {
-              const prof = req.users
-              const name = prof?.display_name || '—'
-              const email = '—'
-              return (
-                <div key={req.id} className="gc-pending-item">
-                  <div className="gc-pending-item__info">
-                    <div className="gc-pending-item__name">{name}</div>
-                    <div className="gc-pending-item__meta">
-                      {email} · Requested {formatAccountAge(req.requested_at)} ago
-                    </div>
-                  </div>
-                  <div className="gc-pending-item__actions">
-                    <button
-                      className="gc-btn gc-btn--primary gc-btn--sm"
-                      onClick={() => handleApproveRequest(req)}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="gc-btn gc-btn--ghost gc-btn--sm"
-                      onClick={() => handleDenyRequest(req)}
-                    >
-                      Deny
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
       {/* ── 4b. Role & Privilege Matrix ───────────────────────────── */}
       <section className="gc-portal-section">
         <h2>Role & Privilege Matrix</h2>
@@ -353,7 +259,6 @@ export default function AdminPage() {
               <tr>
                 <th>Capability</th>
                 <th><RolePill role="user" /></th>
-                <th><RolePill role="collaborator" /></th>
                 <th><RolePill role="editor" /></th>
                 <th><RolePill role="admin" /></th>
                 <th><RolePill role="owner" /></th>
@@ -368,7 +273,6 @@ export default function AdminPage() {
                   <tr key={row.label}>
                     <td>{row.label}</td>
                     <td>{cell(row.user)}</td>
-                    <td>{cell(row.collab)}</td>
                     <td>{cell(row.editor)}</td>
                     <td>{cell(row.admin)}</td>
                     <td>{cell(row.owner)}</td>

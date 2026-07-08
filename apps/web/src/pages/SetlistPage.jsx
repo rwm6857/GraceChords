@@ -630,11 +630,6 @@ export default function Setlist(){
     // Client-side limit check for new setlists
     const isNew = !currentId
     if (isNew && savedSets.length >= userSetLimit) {
-      let eligible = false
-      try { const { data } = await supabase.rpc('is_collaborator_eligible'); eligible = !!data } catch {}
-      if (userRole === 'user' && eligible) {
-        showToast(t('setlist.limitReachedCollab', { limit: userSetLimit }))
-      }
       setSaveModalOpen(false)
       openManageModal()
       return

@@ -29,6 +29,7 @@
   "viewer": {
     "viewOptions": "Görüntüleme seçenekleri",
     "exportAndShare": "Dışa aktar ve paylaş",
+    "editSong": "İlahiyi düzenle",
     "noChart": "Nota yok",
     "noChartBody": "Bu ilahinin henüz ChordPro içeriği yok.",
     "chordsUnavailable": "Akorlar kullanılamıyor",

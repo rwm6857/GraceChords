@@ -1,14 +1,15 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useRole } from '../hooks/useRole'
+import { useAuth } from '../hooks/useAuth'
 import { PencilIcon } from './Icons'
 
 export default function EditorFab() {
-  const { isAtLeast } = useRole()
+  const { isLoggedIn } = useAuth()
   const location = useLocation()
 
-  // Only render for Collaborator+
-  if (!isAtLeast('collaborator')) return null
+  // Any signed-in user can open the editor (to submit for review; editor+ save
+  // directly). Hidden for anonymous visitors.
+  if (!isLoggedIn) return null
 
   const pathname = location.pathname
 

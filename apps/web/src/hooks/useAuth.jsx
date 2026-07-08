@@ -96,14 +96,13 @@ export function AuthProvider({ children }) {
     isLoggedIn: !!session,
     // Legacy fields kept for backward compat
     isEditor: ['admin', 'editor', 'owner'].includes(role),
-    isContributor: profile?.global_role != null || checkHasMinRole(role, 'collaborator'),
+    isContributor: checkHasMinRole(role, 'editor'),
     refreshProfile: () => session && fetchProfile(session.user.id),
     // New role system
     role,
     isOwner: role === 'owner',
     isAdmin: checkHasMinRole(role, 'admin'),
     isEditorRole: checkHasMinRole(role, 'editor'),
-    isCollaborator: checkHasMinRole(role, 'collaborator'),
     hasMinRole,
   }
 
@@ -125,7 +124,6 @@ export function useAuth() {
       isOwner: false,
       isAdmin: false,
       isEditorRole: false,
-      isCollaborator: false,
       hasMinRole: () => false,
     }
   }

@@ -10,16 +10,20 @@ import {
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
+import * as Crypto from 'expo-crypto'
+import { BLANK_SONG_FORM } from '@gracechords/core'
 import Screen from '../components/Screen'
 import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
 import AlphaScrubber from '../components/AlphaScrubber'
 import FilterSortSheet, { type SortDir, type SortKey } from '../components/FilterSortSheet'
+import { songBadge } from '../components/PersonalChip'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { chunkRows } from '../lib/gridRows'
 import { useSongList, type Song } from '../lib/useSongList'
+import { upsertDraft } from '../lib/drafts/draftsStore'
 
 // A list entry is one song (phone, single-column) or a grid row of songs
 // (tablet — sections are chunked N per row, so letter headers stay full-width
@@ -184,12 +188,23 @@ export default function SongLibraryScreen() {
     router.push({
       pathname: '/viewer/[slug]',
       params: {
-        slug: song.slug,
+        // Personal drafts may have no slug yet — use the personal id as the
+        // route segment and flag the source so the viewer reads personal_songs.
+        slug: song.source === 'personal' ? song.personalId! : song.slug,
         title: song.title,
         artist: song.artist ?? '',
         songKey: song.default_key ?? '',
+        ...(song.source === 'personal'
+          ? { source: 'personal', personalId: song.personalId! }
+          : {}),
       },
     })
+  }
+
+  function handleAddSong() {
+    const draftId = Crypto.randomUUID()
+    upsertDraft({ id: draftId, form: { ...BLANK_SONG_FORM }, status: 'draft', updatedAt: '' })
+    router.push({ pathname: '/editor/[draftId]', params: { draftId } })
   }
 
   function cancelSearch() {
@@ -257,6 +272,7 @@ export default function SongLibraryScreen() {
                 // Artist-less songs keep a blank subtitle line so every cell in
                 // a grid row is the same height and the hairlines align.
                 subtitle={song.artist || ' '}
+                badge={songBadge(song.source, song.reviewStatus)}
                 {...rowMeta(song)}
                 onPress={() => openSong(song)}
               />
@@ -272,6 +288,7 @@ export default function SongLibraryScreen() {
       <ListRow
         title={item.title}
         subtitle={item.artist}
+        badge={songBadge(item.source, item.reviewStatus)}
         {...rowMeta(item)}
         onPress={() => openSong(item)}
       />
@@ -310,7 +327,7 @@ export default function SongLibraryScreen() {
               accessibilityRole="button"
               accessibilityLabel={tx('library.addSong')}
               hitSlop={8}
-              onPress={() => {}}
+              onPress={handleAddSong}
               style={{
                 width: 38,
                 height: 38,

@@ -11,10 +11,10 @@ import { useTheme } from '../theme/ThemeProvider'
 // formSheet route (src/lib/formSheetHost.ts): a bottom sheet on phones, a
 // centered narrow form sheet on tablets. The screen owns the async work (export
 // endpoint fetch, system share sheet, Telegram push, error alerts); this
-// component only tracks which action is busy and disables the rest. PDF is the
-// primary (blue) action in every mode — exporting a PDF already opens the
-// system share sheet, so there is no separate "share" button. No ChordPro
-// option by design.
+// component only tracks which action is busy and disables the rest. PDF and
+// JPG are equal side-by-side tiles — both export a file and open the system
+// share sheet, just in different formats — so neither is a hero and there is
+// no separate "share" button. No ChordPro option by design.
 
 type Busy = 'pdf' | 'jpg' | 'telegram' | null
 
@@ -49,42 +49,26 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   return (
     <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
-        {/* Primary: export as PDF (opens the system share sheet). */}
-        <Pressable
-          onPress={run('pdf', () => onExport('pdf'))}
-          disabled={!!busy}
-          accessibilityRole="button"
-          accessibilityLabel={tx('exportAsPdf')}
-          style={{
-            height: 50,
-            borderRadius: 13,
-            backgroundColor: t.colors.accent,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: t.spacing.sm,
-            opacity: busy && busy !== 'pdf' ? 0.5 : 1,
-          }}
-        >
-          {busy === 'pdf' ? (
-            <ActivityIndicator color={t.colors.onAccent} />
-          ) : (
-            <SymbolIcon name="square.and.arrow.up" size={19} color={t.colors.onAccent} />
-          )}
-          <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.onAccent }}>
-            {tx('exportAsPdf')}
-          </Text>
-        </Pressable>
-
-        {/* Secondary: JPG image. */}
-        <SecondaryRow
-          label={tx('exportAsJpg')}
-          icon="photo"
-          busy={busy === 'jpg'}
-          dimmed={!!busy && busy !== 'jpg'}
-          disabled={!!busy}
-          onPress={run('jpg', () => onExport('jpg'))}
-        />
+        {/* Format tiles — PDF and JPG as equals; both open the share sheet. */}
+        <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+          {(
+            [
+              { format: 'pdf', label: 'PDF', icon: 'doc.text' },
+              { format: 'jpg', label: 'JPG', icon: 'photo' },
+            ] as const
+          ).map((tile) => (
+            <FormatTile
+              key={tile.format}
+              label={tile.label}
+              accessibilityLabel={tile.format === 'pdf' ? tx('exportAsPdf') : tx('exportAsJpg')}
+              icon={tile.icon}
+              busy={busy === tile.format}
+              dimmed={!!busy && busy !== tile.format}
+              disabled={!!busy}
+              onPress={run(tile.format, () => onExport(tile.format))}
+            />
+          ))}
+        </View>
 
         {/* Telegram */}
         <SecondaryRow
@@ -101,8 +85,57 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   )
 }
 
+// Side-by-side export-format tile: accent icon over a short label, sized to
+// share the row equally with its sibling. PDF and JPG use the same shape so
+// the two formats read as equals.
+function FormatTile({
+  label,
+  accessibilityLabel,
+  icon,
+  busy,
+  dimmed,
+  disabled,
+  onPress,
+}: {
+  label: string
+  accessibilityLabel: string
+  icon: SymbolIconProps['name']
+  busy: boolean
+  dimmed: boolean
+  disabled: boolean
+  onPress: () => void
+}) {
+  const t = useTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 14,
+        borderRadius: 13,
+        backgroundColor: t.colors.surfaceAlt,
+        borderWidth: 1,
+        borderColor: t.colors.border,
+        opacity: dimmed ? 0.5 : 1,
+      }}
+    >
+      {busy ? (
+        <ActivityIndicator color={t.colors.accent} />
+      ) : (
+        <SymbolIcon name={icon} size={24} color={t.colors.accent} />
+      )}
+      <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
+    </Pressable>
+  )
+}
+
 // Full-width secondary action row: accentSoft icon chip, label (+ optional
-// subtitle), trailing chevron. Shared shape for the JPG and Telegram rows.
+// subtitle), trailing chevron. Used for the Telegram row.
 function SecondaryRow({
   label,
   subtitle,

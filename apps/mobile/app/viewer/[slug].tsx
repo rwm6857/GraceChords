@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Animated, Linking, Pressable, ScrollView, Text, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import * as Crypto from 'expo-crypto'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
@@ -12,6 +13,8 @@ import {
   parseChordProOrLegacy,
   stepsBetween,
   transposeSymPrefer,
+  songRowToForm,
+  fetchPersonalSongById,
 } from '@gracechords/core'
 import ChordChart, {
   CHART_FONT_SIZE,
@@ -36,7 +39,10 @@ import ViewOptionsSheet, {
 import { capoChipValues } from '../../src/lib/capo'
 import { exportSong } from '../../src/lib/exportSong'
 import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush'
-import { useSong } from '../../src/lib/useSong'
+import { useSong, usePersonalSong } from '../../src/lib/useSong'
+import { supabase } from '../../src/lib/supabase'
+import { upsertDraft } from '../../src/lib/drafts/draftsStore'
+import { PersonalChip } from '../../src/components/PersonalChip'
 import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
@@ -61,20 +67,28 @@ export default function ViewerScreen() {
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'export', 'errors', 'common'])
   const router = useRouter()
-  const { slug, title, artist, songKey, initialKey } = useLocalSearchParams<{
+  const { slug, title, artist, songKey, initialKey, source, personalId } = useLocalSearchParams<{
     slug: string
     title?: string
     artist?: string
     songKey?: string
     initialKey?: string
+    source?: string
+    personalId?: string
   }>()
 
-  const { song, loading, error } = useSong(slug)
+  // A personal draft is read from personal_songs (owner-scoped); a catalog song
+  // from the shared cache. Both hooks are always called (undefined arg = no-op)
+  // so hook order stays stable.
+  const isPersonal = source === 'personal'
+  const catalog = useSong(isPersonal ? undefined : slug)
+  const personal = usePersonalSong(isPersonal ? personalId : undefined)
+  const { song, loading, error } = isPersonal ? personal : catalog
 
   // Record the open for Home's "Continue where you left off" card once the song
   // (with its real title/artist/key) has loaded. Device-local history only.
   useEffect(() => {
-    if (!song) return
+    if (!song || isPersonal) return
     recordSongOpened({
       id: song.id,
       slug: song.slug,
@@ -136,7 +150,7 @@ export default function ViewerScreen() {
   // Home Recent-songs card reopens the song in this key via initialKey).
   // Runs after the recordSongOpened effect above, so the entry always exists.
   useEffect(() => {
-    if (song && effectiveKey) updateRecentKey(song.slug, effectiveKey)
+    if (song && !isPersonal && effectiveKey) updateRecentKey(song.slug, effectiveKey)
   }, [song, effectiveKey])
 
   useEffect(() => {
@@ -189,6 +203,31 @@ export default function ViewerScreen() {
   // seeded/native key the taps started from. Zero/upward → null → no chip.
   const capoValues = effectiveKey ? capoChipValues(delta, effectiveKey, preferFlat, chordStyle) : null
   const capoText = capoValues ? tx('song:viewer.capo', capoValues) : null
+
+  // Open the editor on this personal draft: re-fetch the full row (the viewer
+  // detail omits tags/country/etc.), seed a local draft, and push the editor.
+  const handleEditPersonal = async () => {
+    if (!personalId) return
+    try {
+      const row = (await fetchPersonalSongById(supabase, personalId)) as
+        | (Record<string, any> & { id: string; source_song_id?: string | null; published_song_id?: string | null })
+        | null
+      if (!row) return
+      const draftId = Crypto.randomUUID()
+      upsertDraft({
+        id: draftId,
+        personalSongId: row.id,
+        sourceSongId: row.source_song_id ?? null,
+        publishedSongId: row.published_song_id ?? null,
+        form: songRowToForm(row),
+        status: 'draft',
+        updatedAt: '',
+      })
+      router.push({ pathname: '/editor/[draftId]', params: { draftId } })
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : String(err))
+    }
+  }
 
   // --- Export handlers (screen owns errors; the sheet owns busy state) -----
   const exportKey = steps ? effectiveKey : ''
@@ -271,6 +310,9 @@ export default function ViewerScreen() {
             <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:songs')}</Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+            {isPersonal ? (
+              <HeaderIconButton icon="square.and.pencil" label={tx('song:viewer.editSong')} onPress={handleEditPersonal} />
+            ) : null}
             <HeaderIconButton icon="ellipsis" label={tx('song:viewer.viewOptions')} onPress={() => setSheet('options')} />
             <HeaderIconButton
               icon="square.and.arrow.up"
@@ -294,7 +336,7 @@ export default function ViewerScreen() {
           >
             {displayTitle}
           </Text>
-          <StarButton songId={song?.id} />
+          {isPersonal ? <PersonalChip /> : <StarButton songId={song?.id} />}
         </View>
         {/* Subtitle row per the reference: artist · Key pill (+ time sig / BPM) */}
         <View

@@ -29,6 +29,7 @@
   "viewer": {
     "viewOptions": "보기 옵션",
     "exportAndShare": "내보내기 및 공유",
+    "editSong": "찬양곡 편집",
     "noChart": "악보 없음",
     "noChartBody": "이 찬양곡에는 아직 ChordPro 콘텐츠가 없습니다.",
     "chordsUnavailable": "코드를 사용할 수 없음",

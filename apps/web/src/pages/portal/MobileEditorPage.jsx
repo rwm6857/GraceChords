@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../../lib/supabase'
+import { submitSongSuggestion, canDirectWrite } from '@gracechords/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { showToast } from '../../utils/app/toast'
@@ -173,15 +174,17 @@ export default function MobileEditorPage() {
     const payload = { ...formValues }
 
     try {
-      if (role === 'collaborator') {
-        const { error } = await supabase.from('song_suggestions').insert({
-          song_id: song?.id || null,
-          suggested_by: session?.user?.id,
-          change_type: isNew ? 'addition' : 'edit',
-          payload,
-          status: 'pending',
-        })
-        if (error) { showToast(`Error: ${error.message}`); setSaving(false); return false }
+      if (!canDirectWrite(role)) {
+        try {
+          await submitSongSuggestion(supabase, {
+            type: isNew ? 'addition' : 'edit',
+            payload,
+            songId: song?.id || null,
+            personalSongId: null,
+          })
+        } catch (err) {
+          showToast(`Error: ${err.message}`); setSaving(false); return false
+        }
         await writeAuditLog('suggestion_submitted', song?.id, song?.slug, formValues.title, payload, null)
         showToast('Suggestion submitted for review')
         setIsDirty(false)
@@ -189,7 +192,7 @@ export default function MobileEditorPage() {
         setSaving(false)
         return true
 
-      } else if (isAtLeast('editor')) {
+      } else {
         const slug = await deriveUniqueSlug(payload.title, song?.id)
         const upsertPayload = {
           title: payload.title,
@@ -203,7 +206,7 @@ export default function MobileEditorPage() {
           pptx_url: payload.pptx_url || null,
           slug,
           tags: payload.tags || [],
-          chordpro_content: payload.chordpro_content || null,
+          chordpro_content: payload.chordpro_content || '',
           stem_slug: payload.stem_slug || null,
           gracetracks_url: payload.gracetracks_url || null,
           is_deleted: false,
@@ -258,7 +261,7 @@ export default function MobileEditorPage() {
     navigate('/portal/editor')
   }
 
-  const saveLabel = saving ? 'Saving…' : (role === 'collaborator' ? 'Submit' : 'Save')
+  const saveLabel = saving ? 'Saving…' : (canDirectWrite(role) ? 'Save' : 'Submit')
   const headerTitle = formValues.title
     ? `${formValues.title}${formValues.default_key ? ` (${formValues.default_key})` : ''}`
     : (slugParam ? 'Loading…' : 'New Song')

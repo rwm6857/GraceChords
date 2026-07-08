@@ -57,8 +57,8 @@ export default function App(){
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
             <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
-            <Route path="/portal/editor" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
-            <Route path="/portal/editor/:slug" element={<RoleGuard minRole="collaborator"><PortalEditorPage /></RoleGuard>} />
+            <Route path="/portal/editor" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
+            <Route path="/portal/editor/:slug" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/audit" element={<RoleGuard minRole="admin"><AuditLogPage /></RoleGuard>} />
             <Route path="/portal/posts" element={<RoleGuard minRole="editor"><ManagePostsPage /></RoleGuard>} />
             <Route path="/portal/posts/new" element={<RoleGuard minRole="editor"><EditPostPage /></RoleGuard>} />

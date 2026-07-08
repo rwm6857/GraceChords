@@ -31,33 +31,63 @@ export async function fetchPersonalSetlists(client) {
  * @param {string} setlistId
  * @returns {Promise<{ id: string, name: string, service_date: string|null, updated_at: string, entries: Array<{ id: string, song_id: string, position: number, toKey: string|null, notes: string|null, song: { slug: string, title: string, artist: string|null, default_key: string|null, tempo: number|null, time_signature: string|null }|null }> }|null>}
  */
+// The personal_songs table / setlist_songs.personal_song_id column only exist
+// once the personal-songs migration has been applied. Detect a PostgREST schema
+// error about them so queries can fall back to the legacy (personal-free) shape
+// and keep working against an un-migrated database.
+function isMissingPersonalSchema(err) {
+  const msg = String(err?.message || '')
+  return msg.includes('personal_song') || err?.code === 'PGRST200' || err?.code === 'PGRST204'
+}
+
+const SETLIST_SELECT_PERSONAL =
+  'id, name, service_date, updated_at, ' +
+  'setlist_songs(id, song_id, personal_song_id, position, key_override, notes, ' +
+  'songs(slug, title, artist, default_key, tempo, time_signature), ' +
+  'personal_songs(slug, title, artist, default_key, tempo, time_signature))'
+
+const SETLIST_SELECT_LEGACY =
+  'id, name, service_date, updated_at, ' +
+  'setlist_songs(id, song_id, position, key_override, notes, ' +
+  'songs(slug, title, artist, default_key, tempo, time_signature))'
+
 export async function fetchSetlist(client, setlistId) {
   // Embed each entry's song metadata so the builder/performer can render rows
   // immediately without waiting on the full song catalog to load. The chart
   // body (chordpro_content) is intentionally NOT embedded — it's fetched
-  // per-song when a chart is actually shown.
-  const { data, error } = await client
+  // per-song when a chart is actually shown. Falls back to the legacy select
+  // when the personal-songs schema isn't present yet.
+  let { data, error } = await client
     .from('setlists')
-    .select(
-      'id, name, service_date, updated_at, ' +
-        'setlist_songs(id, song_id, position, key_override, notes, ' +
-        'songs(slug, title, artist, default_key, tempo, time_signature))',
-    )
+    .select(SETLIST_SELECT_PERSONAL)
     .eq('id', setlistId)
     .maybeSingle()
+  if (error && isMissingPersonalSchema(error)) {
+    ;({ data, error } = await client
+      .from('setlists')
+      .select(SETLIST_SELECT_LEGACY)
+      .eq('id', setlistId)
+      .maybeSingle())
+  }
   if (error) throw error
   if (!data) return null
-  const entries = (data.setlist_songs || [])
+  // A personal-song entry exposes song_id as `personal:<uuid>` so the builder's
+  // single opaque-id model round-trips; updateSetlist decodes it on save.
+  const rows = /** @type {any[]} */ (data.setlist_songs || [])
+  const entries = rows
     .slice()
     .sort((a, b) => a.position - b.position)
-    .map((row) => ({
-      id: row.id,
-      song_id: row.song_id,
-      position: row.position,
-      toKey: row.key_override || null,
-      notes: row.notes || null,
-      song: row.songs || null,
-    }))
+    .map((row) => {
+      const isPersonal = !!row.personal_song_id
+      return {
+        id: row.id,
+        song_id: isPersonal ? `personal:${row.personal_song_id}` : row.song_id,
+        position: row.position,
+        toKey: row.key_override || null,
+        notes: row.notes || null,
+        song: isPersonal ? row.personal_songs || null : row.songs || null,
+      }
+    })
   return {
     id: data.id,
     name: data.name,
@@ -126,13 +156,22 @@ export async function updateSetlist(client, setlistId, input = {}) {
 
   const songs = input.songs || []
   if (songs.length > 0) {
-    const rows = songs.map((song, i) => ({
-      setlist_id: setlistId,
-      song_id: song.id,
-      position: i,
-      key_override: song.toKey || null,
-      notes: null,
-    }))
+    // A `personal:<uuid>` id targets the personal_songs FK; anything else is a
+    // public catalog song. Only personal rows carry personal_song_id, so a
+    // catalog-only set writes the exact legacy row shape and keeps working
+    // against a database that hasn't had the personal-songs migration applied.
+    const rows = songs.map((song, i) => {
+      const isPersonal = typeof song.id === 'string' && song.id.startsWith('personal:')
+      const row = {
+        setlist_id: setlistId,
+        position: i,
+        key_override: song.toKey || null,
+        notes: null,
+      }
+      if (isPersonal) row.personal_song_id = song.id.slice('personal:'.length)
+      else row.song_id = song.id
+      return row
+    })
     const { error: songsError } = await client.from('setlist_songs').insert(rows)
     if (songsError) throw songsError
   }
@@ -158,19 +197,35 @@ export async function deleteSetlist(client, setlistId) {
  * @returns {Promise<{ id: string, name: string, updated_at: string, entries: Array<{ toKey: string|null, default_key: string|null, tempo: number|null }> }|null>}
  */
 export async function fetchLastSetSummary(client) {
-  const { data, error } = await client
+  const withPersonal =
+    'id, name, updated_at, setlist_songs(key_override, ' +
+    'songs(default_key, tempo), personal_songs(default_key, tempo))'
+  const legacy = 'id, name, updated_at, setlist_songs(key_override, songs(default_key, tempo))'
+  let { data, error } = await client
     .from('setlists')
-    .select('id, name, updated_at, setlist_songs(key_override, songs(default_key, tempo))')
+    .select(withPersonal)
     .is('team_id', null)
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error && isMissingPersonalSchema(error)) {
+    ;({ data, error } = await client
+      .from('setlists')
+      .select(legacy)
+      .is('team_id', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle())
+  }
   if (error) throw error
   if (!data) return null
-  const entries = (data.setlist_songs || []).map((row) => ({
-    toKey: row.key_override || null,
-    default_key: (row.songs && row.songs.default_key) || null,
-    tempo: (row.songs && row.songs.tempo) ?? null,
-  }))
+  const entries = (data.setlist_songs || []).map((row) => {
+    const s = row.songs || row.personal_songs
+    return {
+      toKey: row.key_override || null,
+      default_key: (s && s.default_key) || null,
+      tempo: (s && s.tempo) ?? null,
+    }
+  })
   return { id: data.id, name: data.name, updated_at: data.updated_at, entries }
 }
