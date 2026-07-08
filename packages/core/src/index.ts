@@ -11,6 +11,8 @@ export * from './chordpro/convert'
 export * from './chordpro/lexer'
 export * from './chordpro/solfege'
 export * from './chordpro/diatonicChords'
+// Pure text-editing helpers for the shared song editor (insert/wrap + presets)
+export * from './chordpro/editing'
 // Transposition + KEYS (chordpro/index.js)
 export * from './chordpro/index.js'
 
@@ -24,6 +26,13 @@ export * from './songs/verseRef'
 export * from './songs/songMetadata'
 export * from './songs/sort'
 export * from './songs/songsRepo'
+// Shared song-authoring form model + slug helpers (web + mobile editors)
+export * from './songs/songAuthoring'
+export * from './songs/slug'
+// Personal-song CRUD, editor direct-write, and suggestion submit/review
+export * from './songs/personalSongsRepo'
+export * from './songs/songsWriteRepo'
+export * from './songs/songSuggestions'
 
 // Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
@@ -31,8 +40,9 @@ export * from './setlists/setlistsRepo'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
 
-// Role hierarchy
+// Role hierarchy + canonical role read
 export * from './rbac/roles'
+export * from './rbac/userRole'
 
 // Supabase factory (createGcSupabase). Web imports it via the
 // '@gracechords/core/supabase/client' subpath, which works under Vite; exposing

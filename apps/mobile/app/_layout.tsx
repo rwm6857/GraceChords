@@ -18,6 +18,7 @@ import { flushPendingSprite } from '../src/lib/profile'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
+import { hydrateDrafts } from '../src/lib/drafts/draftsStore'
 import { hydrateRecents } from '../src/lib/recents'
 import { hydrateReadingStreak } from '../src/lib/readingStreak'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
@@ -139,6 +140,7 @@ export default function RootLayout() {
       resolveInitialSession(supabase.auth),
       hydrateDefaults(AsyncStorage),
       hydrateDownloads(AsyncStorage),
+      hydrateDrafts(AsyncStorage),
       hydrateRecents(AsyncStorage),
       hydrateReadingStreak(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),

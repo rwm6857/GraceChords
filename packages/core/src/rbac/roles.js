@@ -3,7 +3,7 @@
 // own copy because it's bundled separately; if you change the hierarchy, mirror
 // it there too.
 
-export const ROLE_ORDER = ['user', 'collaborator', 'editor', 'admin', 'owner']
+export const ROLE_ORDER = ['user', 'editor', 'admin', 'owner']
 
 // Same list, highest → lowest. Useful for role-picker UIs that show the most
 // powerful option first.
@@ -14,4 +14,10 @@ export function hasMinRole(userRole, minRole) {
   const minIdx = ROLE_ORDER.indexOf(minRole || 'user')
   if (minIdx < 0) return false
   return userIdx >= minIdx
+}
+
+// Editor+ may write directly to the public catalog; everyone else submits for
+// review. All authenticated users may create personal songs and submit.
+export function canDirectWrite(userRole) {
+  return hasMinRole(userRole, 'editor')
 }

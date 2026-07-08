@@ -221,7 +221,7 @@ export default function Navbar(){
                     >
                       {t('profile')}
                     </Link>
-                    {hasMinRole('collaborator') && (
+                    {hasMinRole('user') && (
                       <Link
                         to="/portal/editor"
                         className="gc-user-dropdown__item"
@@ -287,7 +287,7 @@ export default function Navbar(){
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>{t('dailyWord')}</Link>
               <Link to="/posts" onClick={closeDrawer} className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>{t('blog')}</Link>
 
-              {isLoggedIn && hasMinRole('collaborator') && (
+              {isLoggedIn && hasMinRole('user') && (
                 <Link to="/portal/editor" onClick={closeDrawer} className={`gc-navlink ${isActive('/portal/editor') ? 'active':''}`}>{t('songEditor')}</Link>
               )}
               {isLoggedIn && hasMinRole('admin') && (

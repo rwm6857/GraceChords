@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchSongBySlug } from '@gracechords/core'
+import { fetchSongBySlug, fetchPersonalSongById } from '@gracechords/core'
 import { supabase } from './supabase'
 import { errMessage } from './errors'
 
@@ -79,6 +79,42 @@ export function useSong(slug: string | undefined) {
       alive = false
     }
   }, [slug])
+
+  return { song, loading, error }
+}
+
+// Fetch one of the current user's personal songs by id (owner-scoped via RLS).
+// Shape-compatible with SongDetail so the Viewer can render it identically.
+// Not cached — drafts change, unlike published bodies.
+export function usePersonalSong(id: string | undefined) {
+  const [song, setSong] = useState<SongDetail | null>(null)
+  const [loading, setLoading] = useState(!!id)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
+    let alive = true
+    setLoading(true)
+    fetchPersonalSongById(supabase, id)
+      .then((row: unknown) => {
+        if (alive) {
+          setSong((row as SongDetail | null) ?? null)
+          setError(null)
+        }
+      })
+      .catch((err: unknown) => {
+        if (alive) setError(errMessage(err))
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [id])
 
   return { song, loading, error }
 }

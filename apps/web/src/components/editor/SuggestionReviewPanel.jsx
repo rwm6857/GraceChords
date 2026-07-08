@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { reviewSongSuggestion } from '@gracechords/core'
 import { useRole } from '../../hooks/useRole'
-import { useAuth } from '../../hooks/useAuth'
 import { showToast } from '../../utils/app/toast'
 
 function formatDate(str) {
@@ -127,60 +127,22 @@ function RejectionForm({ onSubmit, onCancel }) {
 }
 
 function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTouchUp, canDirectDelete }) {
-  const { session } = useAuth()
   const [rejecting, setRejecting] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  async function writeAuditLog(action, note) {
-    await supabase.from('editor_audit_log').insert({
-      actor_id: session?.user?.id,
-      action,
-      song_id: suggestion.song_id,
-      song_slug: currentSong?.slug,
-      song_title: currentSong?.title,
-      payload_snapshot: suggestion.payload,
-      note,
-    })
-  }
-
+  // Approve/reject go through the SECURITY DEFINER RPC: it publishes into
+  // `songs` (or soft-deletes), flips the linked draft, records the reason, and
+  // writes the audit row — atomically, and with the cross-owner writes the
+  // client can't do under RLS.
   async function handleApprove() {
     if (loading) return
     setLoading(true)
     try {
-      // Merge payload into songs table
-      const payload = suggestion.payload || {}
-      const { error: songError } = await supabase
-        .from('songs')
-        .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq('id', suggestion.song_id)
-
-      if (songError) {
-        showToast(`Error applying suggestion: ${songError.message}`)
-        setLoading(false)
-        return
-      }
-
-      // Update suggestion status
-      const { error: sugError } = await supabase
-        .from('song_suggestions')
-        .update({
-          status: 'approved',
-          reviewed_by: session?.user?.id,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', suggestion.id)
-
-      if (sugError) {
-        showToast(`Error updating suggestion: ${sugError.message}`)
-        setLoading(false)
-        return
-      }
-
-      await writeAuditLog('approved', null)
+      await reviewSongSuggestion(supabase, suggestion.id, 'approve')
       showToast('Suggestion approved.')
       onApproved(suggestion.id)
     } catch (err) {
-      showToast(`Unexpected error: ${err.message}`)
+      showToast(`Error applying suggestion: ${err.message}`)
     }
     setLoading(false)
   }
@@ -189,33 +151,17 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
     if (loading) return
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('song_suggestions')
-        .update({
-          status: 'rejected',
-          reviewed_by: session?.user?.id,
-          reviewed_at: new Date().toISOString(),
-          rejection_reason: reason || null,
-        })
-        .eq('id', suggestion.id)
-
-      if (error) {
-        showToast(`Error rejecting suggestion: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await writeAuditLog('rejected', reason || null)
+      await reviewSongSuggestion(supabase, suggestion.id, 'reject', reason || null)
       showToast('Suggestion rejected.')
       onRejected(suggestion.id)
     } catch (err) {
-      showToast(`Unexpected error: ${err.message}`)
+      showToast(`Error rejecting suggestion: ${err.message}`)
     }
     setLoading(false)
     setRejecting(false)
   }
 
-  const isDeletion = suggestion.change_type === 'deletion'
+  const isDeletion = suggestion.type === 'deletion'
 
   return (
     <div className={`gc-suggestion-card${isDeletion ? ' gc-suggestion-card--deletion' : ''}`}>
@@ -224,8 +170,8 @@ function SuggestionCard({ suggestion, currentSong, onApproved, onRejected, onTou
           {suggestion.users?.display_name || 'Unknown user'}
         </span>
         <span className="gc-suggestion-card__meta">{formatDate(suggestion.created_at)}</span>
-        <span className={`gc-suggestion-card__badge gc-suggestion-card__badge--${suggestion.change_type}`}>
-          {suggestion.change_type}
+        <span className={`gc-suggestion-card__badge gc-suggestion-card__badge--${suggestion.type}`}>
+          {suggestion.type}
         </span>
       </div>
 

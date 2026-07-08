@@ -7,7 +7,6 @@ import { useAuth } from '../hooks/useAuth'
 import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
 import LanguageSelector from '../components/ui/LanguageSelector'
-import CollaboratorRequest from '../components/CollaboratorRequest'
 import TelegramLoginButton from '../components/TelegramLoginButton'
 import { showToast } from '../utils/app/toast'
 import '../styles/settings.css'
@@ -423,7 +422,6 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-        <CollaboratorRequest />
         {showContributorRequestBtn && (
           <button
             className="gc-btn gc-btn--secondary"
