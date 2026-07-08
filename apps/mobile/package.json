@@ -10,6 +10,7 @@
     "prebuild": "expo prebuild",
     "export:ios": "expo export --platform ios",
     "typecheck": "tsc --noEmit",
+    "i18n:check": "node scripts/i18n-check.mjs",
     "test": "vitest run",
     "test:watch": "vitest --watch"
   },
