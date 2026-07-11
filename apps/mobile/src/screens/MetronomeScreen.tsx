@@ -97,14 +97,16 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
   // Silence the clicks whenever the screen loses focus (back, app switch).
   useFocusEffect(useCallback(() => stop, [stop]))
 
+  const beats = beatsInMeasure(signature)
+
   const tapperRef = useRef(createTapTempo())
   const onTap = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
-    const tapped = tapperRef.current.tap(Date.now())
+    // Average the last X taps (X = measure's top number) → X − 1 gaps, so a new
+    // tempo catches up within a measure instead of dragging old taps along.
+    const tapped = tapperRef.current.tap(Date.now(), beats - 1)
     if (tapped != null) setBpm(tapped)
   }
-
-  const beats = beatsInMeasure(signature)
 
   return (
     <Screen edges={['left', 'right']}>

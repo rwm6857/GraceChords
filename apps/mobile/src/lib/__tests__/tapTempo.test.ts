@@ -11,6 +11,21 @@ function tapSeries(tapper: ReturnType<typeof createTapTempo>, start: number, int
   return bpm
 }
 
+function tapSeries2(
+  tapper: ReturnType<typeof createTapTempo>,
+  start: number,
+  intervals: number[],
+  windowSize: number
+) {
+  let now = start
+  let bpm: number | null = tapper.tap(now, windowSize)
+  for (const gap of intervals) {
+    now += gap
+    bpm = tapper.tap(now, windowSize)
+  }
+  return bpm
+}
+
 describe('createTapTempo', () => {
   it('returns null on the first tap', () => {
     expect(createTapTempo().tap(1000)).toBeNull()
@@ -36,6 +51,30 @@ describe('createTapTempo', () => {
     // holds only the fast ones, so the slow start no longer drags the BPM.
     const bpm = tapSeries(tapper, 0, [1000, 1000, 1000, 1000, 500, 500, 500, 500])
     expect(bpm).toBeCloseTo(120, 6)
+  })
+
+  it('honors a per-tap window (X most recent taps)', () => {
+    const tapper = createTapTempo()
+    // Window of 3 gaps (4 taps). Three slow gaps then three fast: only the fast
+    // ones remain, so a new slow→fast switch catches up within a measure.
+    const bpm = tapSeries2(tapper, 0, [1000, 1000, 1000, 500, 500, 500], 3)
+    expect(bpm).toBeCloseTo(120, 6)
+  })
+
+  it('shrinking the window mid-run drops older gaps at once', () => {
+    const tapper = createTapTempo()
+    // Fill five 1000 ms gaps under a wide window...
+    tapSeries2(tapper, 0, [1000, 1000, 1000, 1000, 1000], 6)
+    // ...then a single 500 ms tap under a window of 1 → only that gap counts.
+    expect(tapper.tap(5500, 1)).toBeCloseTo(120, 6)
+  })
+
+  it('a window of 1 uses only the single most recent gap (2/4 case)', () => {
+    const tapper = createTapTempo()
+    expect(tapper.tap(0, 1)).toBeNull()
+    expect(tapper.tap(1000, 1)).toBeCloseTo(60, 6)
+    // The next gap fully replaces the tempo — no smoothing.
+    expect(tapper.tap(1500, 1)).toBeCloseTo(120, 6)
   })
 
   it('resets after a stale gap and needs a fresh second tap', () => {
