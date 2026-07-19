@@ -27,6 +27,10 @@
     "notificationBody": "Today's reading is ready. Take a moment to spend in the Word.",
     "channelName": "Daily Word reminders"
   },
+  "readingStreak": {
+    "title": "Reading streak",
+    "description": "Counts consecutive days you open today's reading."
+  },
   "appearance": "Appearance",
   "appearanceOptions": {
     "auto": "Auto",

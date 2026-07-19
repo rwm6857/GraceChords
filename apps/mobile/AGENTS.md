@@ -320,7 +320,8 @@ duplicate logic here and never edit core internals to suit mobile.
   existing `initialKey` param (Library opens still use the default key).
 - **Reading streak** (`src/lib/readingStreak.ts`, same injected-storage /
   `useSyncExternalStore` pattern): OPT-IN, off by default — the toggle lives in
-  the Daily Word reader-settings sheet, and `DailyWordScreen` marks a day read
+  **Settings → Reader** (alongside the Daily Word reminder), not the reader
+  settings sheet, and `DailyWordScreen` marks a day read
   when one of TODAY's chapters renders. Home's Daily Word card shows the streak
   only when enabled (`currentStreak` — 0 once a day is missed). Unit-tested.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
