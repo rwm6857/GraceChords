@@ -10,6 +10,7 @@ import Button from '../components/Button'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
+import { currentStreak, useReadingStreak } from '../lib/readingStreak'
 import { useTodayReflection } from '../lib/useReflections'
 import { usePublicReflectionsEnabled } from '../lib/usePublicReflections'
 import SharedReflectionsFeed from '../components/reflections/SharedReflectionsFeed'
@@ -39,6 +40,13 @@ export default function DailyWordLandingScreen() {
     month: 'long',
     day: 'numeric',
   })
+
+  // Reading streak — OPT-IN (enabled in Daily Word → Reader settings). Mirrors
+  // Home's DailyWordCard: shown only when enabled. Opening the Reader from the
+  // landing marks the day read (DailyWordScreen.markReadToday), and this hook
+  // re-renders the landing live on return.
+  const streak = useReadingStreak()
+  const streakCount = currentStreak(streak, today)
 
   const { reflection, loading, refresh, remove } = useTodayReflection()
   // Kill-switch: the community feed + public compose only render when the flag is
@@ -101,6 +109,18 @@ export default function DailyWordLandingScreen() {
             >
               {tx('landingTitle')}
             </Text>
+            {streak.enabled ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 }}>
+                <SymbolIcon
+                  name="flame.fill"
+                  size={13}
+                  color={streakCount > 0 ? t.colors.star : t.colors.muted}
+                />
+                <Text style={{ fontSize: 12.5, fontWeight: '600', color: t.colors.sec }}>
+                  {tx('streakDays', { count: streakCount })}
+                </Text>
+              </View>
+            ) : null}
           </View>
           <Pressable
             onPress={openReader}

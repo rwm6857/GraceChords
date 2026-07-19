@@ -5,6 +5,8 @@
   "readerSettings": "Reader settings",
   "defaultTranslationLabel": "ESV",
   "landingTitle": "Daily Word",
+  "streakDays_one": "{{count}}-day streak",
+  "streakDays_other": "{{count}}-day streak",
   "landingReadingHeader": "Today's reading · M'Cheyne",
   "landingReadCta": "Read today's passages",
   "backToLanding": "Back to Daily Word",
