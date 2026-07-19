@@ -133,7 +133,13 @@ export function usePublicFeed() {
     void refresh()
   }, [refresh])
 
-  const posts = useMemo(() => raw.filter((p) => !hidden.has(p.id)), [raw, hidden])
+  // The user's own post is never served back to them in the community feed —
+  // they read it (with its live heart count) in their own "Shared reflection"
+  // slot instead. Everyone else sees it in their feed with the heart count.
+  const posts = useMemo(
+    () => raw.filter((p) => !p.isOwn && !hidden.has(p.id)),
+    [raw, hidden],
+  )
 
   // Optimistic heart toggle: flip + adjust the local count, revert on failure.
   // Own posts and self-hearts are refused (UI hides the control; RLS backstops).

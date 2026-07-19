@@ -7,7 +7,7 @@
   "landingTitle": "Kutsal Kitap",
   "streakDays_one": "{{count}} günlük seri",
   "streakDays_other": "{{count}} günlük seri",
-  "landingReadingHeader": "Bugünün okuması · M'Cheyne",
+  "landingReadingHeader": "{{date}} okuması · M'Cheyne",
   "landingReadCta": "Bugünün bölümlerini oku",
   "backToLanding": "Kutsal Kitap'a dön",
   "reflection": {
