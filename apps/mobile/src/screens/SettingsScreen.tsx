@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Image, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { Alert, Image, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -26,6 +26,13 @@ import {
 } from '../lib/defaults'
 import { applyLanguagePreference, SUPPORTED_LOCALES } from '../i18n'
 import { localeLabel, normalizeLanguageTag } from '../i18n/config'
+import { formatReminderTime, useReaderReminder } from '../lib/readerReminder'
+import {
+  disableReaderReminder,
+  enableReaderReminder,
+  updateReaderReminderTime,
+} from '../lib/readerReminderService'
+import ReminderTimeSheet from '../components/reader/ReminderTimeSheet'
 
 // The grouped "Profile & Settings" screen (design: [CONTENT] Settings Content).
 // Built from Stage-0 primitives — a Profile card, three grouped Cards
@@ -156,7 +163,9 @@ export default function SettingsScreen() {
   const user = useCurrentUser()
   const defaults = useAppDefaults()
   const { source: spriteSource } = useProfileSprite()
-  const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle' | 'language'>(null)
+  const reminder = useReaderReminder()
+  const [reminderBusy, setReminderBusy] = useState(false)
+  const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle' | 'language' | 'reminderTime'>(null)
   // Measured glass-bar height feeds the scroll-behind top inset.
   const [barH, setBarH] = useState(0)
 
@@ -181,6 +190,29 @@ export default function SettingsScreen() {
     const pref = value === LANGUAGE_SYSTEM ? null : value
     setDefaultLanguage(pref)
     applyLanguagePreference(pref)
+  }
+
+  // Enabling requests notification permission (the iOS system prompt appears
+  // here); we only persist + schedule when it's granted, and steer the user to
+  // the system Settings app on denial. Disabling cancels the scheduled reminder.
+  async function onToggleReminder(next: boolean) {
+    if (reminderBusy) return
+    setReminderBusy(true)
+    try {
+      if (next) {
+        const granted = await enableReaderReminder(reminder.hour, reminder.minute)
+        if (!granted) {
+          Alert.alert(tx('reminder.permissionDeniedTitle'), tx('reminder.permissionDeniedMessage'), [
+            { text: tx('common:cancel'), style: 'cancel' },
+            { text: tx('reminder.openSettings'), onPress: () => void Linking.openSettings() },
+          ])
+        }
+      } else {
+        await disableReaderReminder()
+      }
+    } finally {
+      setReminderBusy(false)
+    }
   }
 
   function onSignOut() {
@@ -321,6 +353,36 @@ export default function SettingsScreen() {
           />
         </Card>
 
+        {/* READER */}
+        <SectionHeader label={tx('sections.reader')} />
+        <Card>
+          <ListRow
+            title={tx('reminder.dailyReminder')}
+            subtitle={tx('reminder.dailyReminderDesc')}
+            leading={<RowIcon name="bell" t={t} />}
+            isLast={!reminder.enabled}
+            trailing={
+              <Switch
+                value={reminder.enabled}
+                disabled={reminderBusy}
+                onValueChange={(v) => void onToggleReminder(v)}
+                trackColor={{ true: t.colors.accent }}
+                accessibilityLabel={tx('reminder.dailyReminder')}
+              />
+            }
+          />
+          {reminder.enabled ? (
+            <ListRow
+              title={tx('reminder.time')}
+              leading={<RowIcon name="clock" t={t} />}
+              value={formatReminderTime(reminder.hour, reminder.minute, i18n.language)}
+              chevron
+              isLast
+              onPress={() => setSheet('reminderTime')}
+            />
+          ) : null}
+        </Card>
+
         {/* LIBRARY */}
         <SectionHeader label={tx('sections.library')} />
         <Card>
@@ -417,6 +479,13 @@ export default function SettingsScreen() {
         options={chordOptions}
         value={defaults.chordStyle}
         onSelect={setDefaultChordStyle}
+        onClose={() => setSheet(null)}
+      />
+      <ReminderTimeSheet
+        visible={sheet === 'reminderTime'}
+        hour={reminder.hour}
+        minute={reminder.minute}
+        onConfirm={(h, m) => void updateReaderReminderTime(h, m)}
         onClose={() => setSheet(null)}
       />
     </Screen>

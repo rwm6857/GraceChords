@@ -5,8 +5,27 @@
   "changeYourIcon": "Simgenizi değiştirin",
   "sections": {
     "settings": "AYARLAR",
+    "reader": "OKUYUCU",
     "library": "KÜTÜPHANE",
     "support": "DESTEK"
+  },
+  "reminder": {
+    "dailyReminder": "Günün Sözü hatırlatıcısı",
+    "dailyReminderDesc": "Bugünün okumasını açmanız için günlük hatırlatma.",
+    "time": "Hatırlatma saati",
+    "timeSheetTitle": "Hatırlatma saati",
+    "hour": "Saat",
+    "minute": "Dakika",
+    "increaseHour": "Saati artır",
+    "decreaseHour": "Saati azalt",
+    "increaseMinute": "Dakikayı artır",
+    "decreaseMinute": "Dakikayı azalt",
+    "permissionDeniedTitle": "Bildirimler kapalı",
+    "permissionDeniedMessage": "Günlük okuma hatırlatmaları almak için cihaz Ayarlarınızdan GraceChords bildirimlerini açın.",
+    "openSettings": "Ayarları aç",
+    "notificationTitle": "Günün Sözü",
+    "notificationBody": "Bugünün okuması hazır. Söz'le baş başa kalmak için bir an ayırın.",
+    "channelName": "Günün Sözü hatırlatıcıları"
   },
   "appearance": "Görünüm",
   "appearanceOptions": {

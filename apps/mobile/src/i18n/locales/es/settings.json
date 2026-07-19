@@ -5,8 +5,27 @@
   "changeYourIcon": "Cambia tu icono",
   "sections": {
     "settings": "AJUSTES",
+    "reader": "LECTOR",
     "library": "BIBLIOTECA",
     "support": "AYUDA"
+  },
+  "reminder": {
+    "dailyReminder": "Recordatorio de Palabra diaria",
+    "dailyReminderDesc": "Un aviso diario para abrir la lectura de hoy.",
+    "time": "Hora del recordatorio",
+    "timeSheetTitle": "Hora del recordatorio",
+    "hour": "Hora",
+    "minute": "Minuto",
+    "increaseHour": "Aumentar la hora",
+    "decreaseHour": "Disminuir la hora",
+    "increaseMinute": "Aumentar los minutos",
+    "decreaseMinute": "Disminuir los minutos",
+    "permissionDeniedTitle": "Las notificaciones están desactivadas",
+    "permissionDeniedMessage": "Activa las notificaciones de GraceChords en los Ajustes de tu dispositivo para recibir recordatorios de lectura diaria.",
+    "openSettings": "Abrir Ajustes",
+    "notificationTitle": "Palabra diaria",
+    "notificationBody": "La lectura de hoy está lista. Tómate un momento para estar en la Palabra.",
+    "channelName": "Recordatorios de Palabra diaria"
   },
   "appearance": "Apariencia",
   "appearanceOptions": {
