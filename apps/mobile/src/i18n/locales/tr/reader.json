@@ -20,7 +20,7 @@
     "editTitle": "Düşünceyi düzenle",
     "edit": "Düzenle",
     "editErrorTitle": "Düşünce güncellenemedi",
-    "placeholder": "Düşüncelerini yaz…",
+    "placeholder": "Düşüncelerini, fikirlerini ya da dualarını yaz…",
     "charCount": "{{count}} / {{max}}",
     "save": "Kaydet",
     "cancel": "İptal",
@@ -65,7 +65,7 @@
   "publicCompose": {
     "title": "Paylaşılan düşünce",
     "banner": "Herkese açık paylaşılır, anonim gösterilir ve bugün başkalarına görünür.",
-    "placeholder": "Bugünün okumasından bir yüreklendirme paylaş…",
+    "placeholder": "Düşüncelerini, fikirlerini ya da dualarını paylaş…",
     "share": "Paylaş",
     "cancel": "İptal",
     "confirmTitle": "Herkese açık paylaşılsın mı?",
