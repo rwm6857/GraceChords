@@ -339,6 +339,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
       {/* Scroll-behind top bar, same pattern as Settings/About. */}
       <GlassSurface
         fallbackColor={t.colors.bg}
+        fallbackHairline
         onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
         style={{
           position: 'absolute',

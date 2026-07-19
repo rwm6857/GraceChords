@@ -135,6 +135,7 @@ export default function AboutScreen() {
           iOS < 26 / Android. Content scrolls under it (measured via onLayout). */}
       <GlassSurface
         fallbackColor={t.colors.bg}
+        fallbackHairline
         onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
         style={{
           position: 'absolute',

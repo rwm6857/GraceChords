@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo } from 'react'
-import { Platform, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native'
+import { Platform, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native'
 import {
   GlassView,
   isGlassEffectAPIAvailable,
@@ -44,6 +44,13 @@ export type GlassSurfaceProps = {
   style?: StyleProp<ViewStyle>
   /** Solid fill on non-glass devices. Defaults to the raised `surface` token. */
   fallbackColor?: string
+  /**
+   * Non-glass only: draw a hairline bottom separator on the solid fallback.
+   * Glass supplies its own edge via the blurred material, so this is ignored on
+   * iOS 26. Set it on scroll-behind top bars whose fallback fill matches the
+   * page background — without it the bar has no visible edge on iOS < 26.
+   */
+  fallbackHairline?: boolean
   /** GlassView tint on iOS 26. Omit for a neutral (untinted) material. */
   glassTint?: string
   /** Glass material weight on iOS 26. */
@@ -60,6 +67,7 @@ export type GlassSurfaceProps = {
 export default function GlassSurface({
   style,
   fallbackColor,
+  fallbackHairline = false,
   glassTint,
   glassStyle = 'regular',
   isInteractive = false,
@@ -92,7 +100,14 @@ export default function GlassSurface({
     <View
       onLayout={onLayout}
       pointerEvents={pointerEvents}
-      style={[style, { backgroundColor: fallbackColor ?? t.colors.surface }]}
+      style={[
+        style,
+        { backgroundColor: fallbackColor ?? t.colors.surface },
+        fallbackHairline && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: t.colors.border,
+        },
+      ]}
     >
       {children}
     </View>
