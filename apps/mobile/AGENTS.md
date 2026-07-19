@@ -340,8 +340,9 @@ duplicate logic here and never edit core internals to suit mobile.
   the `visibility` column is forward-compatible with a Phase-2 public/anonymous
   feed that is NOT built (no public read path, feed, hearts, or moderation). The
   landing's **devotional** hero card + long-read page from the design are
-  **deferred**: the public-domain (Spurgeon/Bonar) devotional content pipeline
-  does not exist yet (no ingestion/R2/data) — it's an outstanding prerequisite.
+  **dropped** (no public-domain content pipeline was ever built); the landing's
+  lead slot — above today's reading — is reserved for the **Phase-2 public
+  reflections feed**, which will take the devotional's place there.
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),

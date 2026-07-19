@@ -53,7 +53,7 @@ Native correctness (HIG / UIKit) sits above all three: those govern *design*, HI
 
 ## Design decisions (locked)
 
-- **Daily Word opens the landing hub by default.** The `[UI] Daily Word Landing (Pass)` direction is revived: the Daily Word tab opens a landing (today's M'Cheyne reading + the signed-in user's private reflection) that routes onward to the Reader, and the Reader gains a back chevron when reached that way. A Settings → Reader toggle ("Daily Word opens") lets the user choose "Reader directly" to bypass the landing. NOTE: the landing's devotional hero card + long-read page are deferred — the public-domain (Spurgeon/Bonar) devotional content pipeline does not exist yet; the layout is forward-compatible for when it lands.
+- **Daily Word opens the landing hub by default.** The `[UI] Daily Word Landing (Pass)` direction is revived: the Daily Word tab opens a landing (today's M'Cheyne reading + the signed-in user's private reflection) that routes onward to the Reader, and the Reader gains a back chevron when reached that way. A Settings → Reader toggle ("Daily Word opens") lets the user choose "Reader directly" to bypass the landing. NOTE: the landing's devotional hero card + long-read page are dropped (no public-domain devotional content pipeline was ever built); the landing's lead slot — above today's reading — is reserved for the **Phase-2 public reflections feed**, which takes the devotional's place there.
 - **Home uses the H1 Hero.** Build the `[Spec] Home (H1 - Hero)` version with the subtle gradient hero header. This is the one sanctioned gradient — an atmospheric header, not a UI-surface gradient.
 
 ## Screen inventory & flow
