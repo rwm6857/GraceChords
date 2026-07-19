@@ -14,8 +14,8 @@ import { useReflectionList } from '../lib/useReflections'
 
 // The reflection journal (design intent: reverse-chronological list of the
 // user's own reflections, grouped by date). Reachable from the Daily Word
-// landing. Tap a row to read the entry; delete own with confirm. There is NO
-// edit affordance anywhere — reflections are create/read/delete only.
+// landing. Tap a row to read the entry; edit or delete own private reflections
+// with confirm. Public posts are immutable (delete only) — no edit affordance.
 
 /** Parse a YYYY-MM-DD key into a LOCAL Date (avoids UTC day-shift). */
 function dateFromKey(key: string): Date {
@@ -210,7 +210,34 @@ export default function ReflectionJournalScreen() {
                     <Text style={{ fontFamily: 'Georgia', fontSize: 16, lineHeight: 25, color: t.colors.ink }}>
                       {r.body}
                     </Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: t.spacing.md }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: r.visibility === 'private' ? 'space-between' : 'flex-end',
+                        marginTop: t.spacing.md,
+                      }}
+                    >
+                      {/* Only private reflections are editable — public posts are immutable. */}
+                      {r.visibility === 'private' ? (
+                        <Pressable
+                          onPress={() =>
+                            router.push({
+                              pathname: '/daily/reflection',
+                              params: { editId: r.id, initialBody: r.body, date: r.reflection_date },
+                            })
+                          }
+                          accessibilityRole="button"
+                          accessibilityLabel={tx('reflection.edit')}
+                          hitSlop={8}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+                        >
+                          <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                            {tx('reflection.edit')}
+                          </Text>
+                        </Pressable>
+                      ) : null}
                       <Pressable
                         onPress={() => onDelete(r.id)}
                         accessibilityRole="button"

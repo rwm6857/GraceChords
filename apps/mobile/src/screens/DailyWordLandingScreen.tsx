@@ -265,19 +265,41 @@ export default function DailyWordLandingScreen() {
             >
               {reflection.body}
             </Text>
-            {/* Footer sits below a hairline so the delete action reads as
-                intentional whether the body is one line or many. */}
+            {/* Footer sits below a hairline so the actions read as intentional
+                whether the body is one line or many. Private reflections are
+                editable; delete stays available. */}
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
                 borderTopWidth: 0.5,
                 borderTopColor: t.colors.border,
                 paddingHorizontal: t.spacing.lg,
                 paddingVertical: t.spacing.sm,
               }}
             >
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/daily/reflection',
+                    params: {
+                      editId: reflection.id,
+                      initialBody: reflection.body,
+                      date: reflection.reflection_date,
+                    },
+                  })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={tx('reflection.edit')}
+                hitSlop={8}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+              >
+                <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
+                <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                  {tx('reflection.edit')}
+                </Text>
+              </Pressable>
               <Pressable
                 onPress={onDelete}
                 accessibilityRole="button"

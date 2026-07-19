@@ -3,10 +3,11 @@
 // Client-injected counterpart to the mobile hook at
 // apps/mobile/src/lib/useReflections.ts — callers inject the Supabase client
 // created via createGcSupabase() (like setlistsRepo/songsRepo). Errors throw;
-// callers catch. Phase 1 is PRIVATE-ONLY: createReflection always writes
-// visibility = 'private' and the queries only ever touch the caller's own rows
-// (RLS scopes SELECT/INSERT/DELETE to auth.uid(); there is no UPDATE path — the
-// no-edit rule is enforced at the DB layer).
+// callers catch. createReflection always writes visibility = 'private'; public
+// posts are created only by the service-role submit path (never a client insert).
+// Private reflections are editable (updateReflection, RLS-scoped to the owner's
+// own private rows); public posts stay immutable. All private read/write queries
+// touch only the caller's own rows (RLS scopes them to auth.uid()).
 
 const REFLECTION_COLUMNS =
   'id, user_id, reflection_date, content_key, visibility, body, created_at, heart_count'
@@ -76,6 +77,29 @@ export async function createReflection(client, input = {}) {
   const { data, error } = await client
     .from('reflections')
     .insert(row)
+    .select(REFLECTION_COLUMNS)
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * Update the body of one of the caller's own PRIVATE reflections. RLS
+ * (own_update_private) restricts this to the owner's private rows and forbids
+ * flipping visibility to public, so public posts stay immutable. The
+ * `.eq('visibility', 'private')` filter mirrors that at the query layer.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} client
+ * @param {string} id
+ * @param {string} body
+ * @returns {Promise<import('./types').Reflection>}
+ */
+export async function updateReflection(client, id, body) {
+  const { data, error } = await client
+    .from('reflections')
+    .update({ body: (body || '').trim() })
+    .eq('id', id)
+    .eq('visibility', 'private')
     .select(REFLECTION_COLUMNS)
     .single()
   if (error) throw error

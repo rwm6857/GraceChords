@@ -5,6 +5,7 @@ import {
   fetchReflectionForDate,
   fetchReflections,
   isDuplicateReflectionError,
+  updateReflection,
   type Reflection,
 } from '@gracechords/core'
 import { supabase } from './supabase'
@@ -74,13 +75,20 @@ export function useTodayReflection(dateKey: string = reflectionDateKey(new Date(
     [dateKey],
   )
 
+  // Edit an existing PRIVATE reflection in place (public posts are immutable).
+  const update = useCallback(async (id: string, body: string) => {
+    const row = (await updateReflection(supabase, id, body)) as Reflection
+    setReflection((prev) => (prev && prev.id === id ? row : prev))
+    return row
+  }, [])
+
   const remove = useCallback(async () => {
     if (!reflection) return
     await deleteReflection(supabase, reflection.id)
     setReflection(null)
   }, [reflection])
 
-  return { reflection, loading, error, refresh, create, remove }
+  return { reflection, loading, error, refresh, create, update, remove }
 }
 
 /**
@@ -109,10 +117,16 @@ export function useReflectionList() {
     void refresh()
   }, [refresh])
 
+  const update = useCallback(async (id: string, body: string) => {
+    const row = (await updateReflection(supabase, id, body)) as Reflection
+    setReflections((prev) => prev.map((r) => (r.id === id ? row : r)))
+    return row
+  }, [])
+
   const remove = useCallback(async (id: string) => {
     await deleteReflection(supabase, id)
     setReflections((prev) => prev.filter((r) => r.id !== id))
   }, [])
 
-  return { reflections, loading, error, refresh, remove }
+  return { reflections, loading, error, refresh, update, remove }
 }
