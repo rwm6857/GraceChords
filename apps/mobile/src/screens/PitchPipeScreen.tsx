@@ -287,6 +287,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
       {/* Scroll-behind top bar, same pattern as Tuner/Settings. */}
       <GlassSurface
         fallbackColor={t.colors.bg}
+        fallbackHairline
         onLayout={(e) => setBarH(e.nativeEvent.layout.height)}
         style={{
           position: 'absolute',
