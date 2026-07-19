@@ -40,10 +40,10 @@
     "letters": "Harfler",
     "solfege": "Solfej"
   },
-  "dailyWordEntry": "Daily Word opens",
+  "dailyWordEntry": "Kutsal Kitap açılışı",
   "dailyWordOptions": {
-    "landing": "Landing page",
-    "reader": "Reader directly"
+    "landing": "Açılış sayfası",
+    "reader": "Doğrudan okuyucu"
   },
   "offlineDownloads": "Çevrimdışı ve indirmeler",
   "starred": "Yıldızlılar",

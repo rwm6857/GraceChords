@@ -37,7 +37,7 @@ GraceChords/
 | Workspace | Package | What it is |
 |-----------|---------|------------|
 | `apps/web` | `@gracechords/web` | The production single-page app: full song catalog, setlists, worship mode, admin/editor portals, Daily Word, resources. Deployed to Cloudflare Pages. |
-| `apps/mobile` | `@gracechords/mobile` | Native iOS client (Expo SDK 55, Expo Router v7). A themed four-tab shell (Home · Songs · Setlists · Daily Word) with a real chord-chart Song Viewer, Performer mode, the setlist builder, the Daily Word reader, and native Google/Apple auth. |
+| `apps/mobile` | `@gracechords/mobile` | Native iOS client (Expo SDK 55, Expo Router v7). A themed four-tab shell (Home · Songs · Setlists · Daily Word) with a real chord-chart Song Viewer, Performer mode, the setlist builder, the Daily Word landing + reader (M'Cheyne reading, private journal reflections, an opt-in reading streak, and an anonymous, moderated public "Shared Reflections" feed behind a kill switch), and native Google/Apple auth. |
 | `packages/core` | `@gracechords/core` | Pure TypeScript/JS shared by both apps — ChordPro **parser** (not the renderer), transposition, chord placement, song metadata/sort, the setlist codec, the role hierarchy, and the Supabase client **factory**. Consumed as source, no build step. |
 | `packages/tokens` | `@gracechords/tokens` | The single home for design tokens. Web imports `tokens.css`; native imports the typed map from `@gracechords/tokens/native`. |
 | `workers/*` | — | Cloudflare Workers deployed independently: authenticated PPTX upload/delete, weekly sitemap rebuild, and the `@gracechords_bot` Telegram bot. |

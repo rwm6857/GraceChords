@@ -74,13 +74,17 @@ VITE_R2_PUBLIC_URL=https://assets.gracechords.com
 VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
 VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
 
+# Public-reflections moderation — server-side only (Pages Function, never bundled)
+OPENAI_API_KEY=your-openai-api-key
+
 # Optional
 VITE_ENABLE_DISCLAIMER=1
 VITE_CONTACT_EMAIL=you@example.com
 ```
 
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are required for all song loading and auth.
-- `SUPABASE_SERVICE_ROLE_KEY` is used **only** by the Node build scripts to generate static SEO HTML and the sitemap. It is never bundled into the frontend.
+- `SUPABASE_SERVICE_ROLE_KEY` is used **only** by the Node build scripts and the server-side Pages Functions (including the moderated public-reflection endpoints). It is never bundled into the frontend.
+- `OPENAI_API_KEY` powers the second (AI) layer of reflection moderation in the `POST /api/reflections/submit` Pages Function. Server-side only — never `VITE_`-prefixed.
 - Production values are configured in **Cloudflare Pages → Settings → Variables**. Any new `VITE_*` variable must be added to `.env.example` in the same commit.
 
 ## Supabase setup
@@ -94,6 +98,7 @@ root) in order. Key tables:
 - `public.user_starred_songs` — per-user song stars
 - `public.saved_sets` — cloud-saved setlists for logged-in users
 - `public.collaborator_requests` — queue for users requesting collaborator access
+- `public.reflections` — per-user Daily Word reflections (private journal + anonymous public posts); moderation adds `reflection_hearts`, `reports`, `banned_users`, and a `feature_flags` kill switch. Public rows are written only by the service-role `submit` Pages Function after moderation.
 
 Every table has row-level security — test query changes with a `user`-role account.
 
