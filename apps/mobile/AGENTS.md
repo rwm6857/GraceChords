@@ -324,6 +324,24 @@ duplicate logic here and never edit core internals to suit mobile.
   when one of TODAY's chapters renders. Home's Daily Word card shows the streak
   only when enabled (`currentStreak` — 0 once a day is missed). Unit-tested.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
+- **Daily Word landing + reflections.** The Daily Word tab opens a **landing
+  hub** (`DailyWordLandingScreen`) by default — today's M'Cheyne reading + the
+  signed-in user's own **private reflection** — routing onward to the Reader
+  (pushed `app/daily/reader.tsx`, which shows a back chevron via
+  `DailyWordScreen`'s `showBackToLanding` prop; the reader-direct tab root has
+  none). A **Settings → Reader** toggle ("Daily Word opens", stored in
+  `defaults.ts` as `dailyWordDestination`) switches the tab to open the Reader
+  directly, bypassing the landing. Reflections are private per-user Supabase data
+  — table `public.reflections` (migration
+  `supabase/migrations/20260719000000_create_reflections.sql`), owner-scoped RLS,
+  **no UPDATE policy** (no-edit is a DB invariant), one private reflection per day
+  (unique index). Queries live in core (`reflections/reflectionsRepo.js`); mobile
+  hooks are `useTodayReflection`/`useReflectionList`. **Phase 1 is private-only** —
+  the `visibility` column is forward-compatible with a Phase-2 public/anonymous
+  feed that is NOT built (no public read path, feed, hearts, or moderation). The
+  landing's **devotional** hero card + long-read page from the design are
+  **deferred**: the public-domain (Spurgeon/Bonar) devotional content pipeline
+  does not exist yet (no ingestion/R2/data) — it's an outstanding prerequisite.
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),

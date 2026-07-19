@@ -53,7 +53,7 @@ Native correctness (HIG / UIKit) sits above all three: those govern *design*, HI
 
 ## Design decisions (locked)
 
-- **Daily Word navigates straight to the Reader.** Skip `[UI] Daily Word Landing (Pass)` for now — it may return later.
+- **Daily Word opens the landing hub by default.** The `[UI] Daily Word Landing (Pass)` direction is revived: the Daily Word tab opens a landing (today's M'Cheyne reading + the signed-in user's private reflection) that routes onward to the Reader, and the Reader gains a back chevron when reached that way. A Settings → Reader toggle ("Daily Word opens") lets the user choose "Reader directly" to bypass the landing. NOTE: the landing's devotional hero card + long-read page are deferred — the public-domain (Spurgeon/Bonar) devotional content pipeline does not exist yet; the layout is forward-compatible for when it lands.
 - **Home uses the H1 Hero.** Build the `[Spec] Home (H1 - Hero)` version with the subtle gradient hero header. This is the one sanctioned gradient — an atmospheric header, not a UI-surface gradient.
 
 ## Screen inventory & flow
@@ -84,7 +84,7 @@ song-library/    [SPEC] Song Library · [UI] Song Library + [CONTENT] Song Libra
 song-viewer/     [SPEC] Song Viewer · [UI] Song Viewer · [UI] Song Flow (Library + Song View)
 setlist-builder/ [SPEC] Setlist Builder (1a) · [UI] Setlist Builder
 setlist-viewer/  [UI] Setlist Viewer + [CONTENT] Setlist Viewer Content
-daily-word/      [SPEC] Daily Word · [UI] Daily Word   (Daily Word Landing (Pass) = skipped)
+daily-word/      [SPEC] Daily Word · [UI] Daily Word · [UI] Daily Word Landing (Pass) (landing + reader; devotional deferred)
 settings/        [CONTENT] Settings Content · [UI] Offline Downloads
 demo/            [DEMO] GC iOS   (+ runtime files — reference only, do not port)
 screenshots/     curated demo walkthrough (20 screens)
@@ -92,7 +92,7 @@ screenshots/     curated demo walkthrough (20 screens)
 
 Notes:
 - `[UI] Song Flow (Library + Song View)` is a combined library → viewer flow; use it to see the transition, with `[UI] Song Viewer` as the detailed chart spec.
-- The Reader (demo screens 17–18) lives within the Daily Word feature; there is no separate landing step for now.
+- The Reader (demo screens 17–18) lives within the Daily Word feature; the tab opens the landing hub first by default (a Settings toggle can bypass it straight to the Reader).
 - Main Settings UI is in `[CONTENT] Settings Content`; Offline Downloads is its own `[UI]`.
 
 ## Build order

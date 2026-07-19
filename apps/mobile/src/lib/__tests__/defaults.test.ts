@@ -6,6 +6,7 @@ import {
   initialChordStyle,
   resolveThemeMode,
   setDefaultChordStyle,
+  setDefaultDailyWordDestination,
   setDefaultKeepAwake,
   setDefaultLanguage,
   setDefaultTheme,
@@ -26,7 +27,7 @@ describe('defaults store', () => {
   it('falls back to DEFAULT_APP_DEFAULTS when nothing is stored', async () => {
     await hydrateDefaults(memoryStorage())
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null, dailyWordDestination: 'landing' })
   })
 
   it('ignores invalid stored values and uses fallbacks', async () => {
@@ -43,7 +44,7 @@ describe('defaults store', () => {
     setDefaultKeepAwake(true)
     setDefaultLanguage('tr')
 
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true, language: 'tr' })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'dark', chordStyle: 'solfege', keepAwake: true, language: 'tr', dailyWordDestination: 'landing' })
     expect(s.store.get('gc.defaults.theme')).toBe('dark')
     expect(s.store.get('gc.defaults.chordStyle')).toBe('solfege')
     expect(s.store.get('gc.defaults.keepAwake')).toBe('1')
@@ -72,7 +73,26 @@ describe('defaults store', () => {
     expect(getDefaultsSnapshot()).toEqual(DEFAULT_APP_DEFAULTS)
 
     await hydrateDefaults(s)
-    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege', keepAwake: true, language: null })
+    expect(getDefaultsSnapshot()).toEqual({ theme: 'light', chordStyle: 'solfege', keepAwake: true, language: null, dailyWordDestination: 'landing' })
+  })
+
+  it('hydrates dailyWordDestination, defaults it to landing, and ignores invalid values', async () => {
+    await hydrateDefaults(memoryStorage())
+    expect(getDefaultsSnapshot().dailyWordDestination).toBe('landing')
+
+    await hydrateDefaults(memoryStorage({ 'gc.defaults.dailyWordDestination': 'reader' }))
+    expect(getDefaultsSnapshot().dailyWordDestination).toBe('reader')
+
+    await hydrateDefaults(memoryStorage({ 'gc.defaults.dailyWordDestination': 'bogus' }))
+    expect(getDefaultsSnapshot().dailyWordDestination).toBe('landing')
+  })
+
+  it('writes dailyWordDestination through to storage', async () => {
+    const s = memoryStorage()
+    await hydrateDefaults(s)
+    setDefaultDailyWordDestination('reader')
+    expect(getDefaultsSnapshot().dailyWordDestination).toBe('reader')
+    expect(s.store.get('gc.defaults.dailyWordDestination')).toBe('reader')
   })
 
   it('hydrates keepAwake from storage and defaults it off', async () => {
@@ -113,7 +133,7 @@ describe('resolveThemeMode', () => {
 
 describe('initialChordStyle', () => {
   it('seeds the viewer from the stored default', () => {
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false, language: null })).toBe('solfege')
-    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null })).toBe('letters')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'solfege', keepAwake: false, language: null, dailyWordDestination: 'landing' })).toBe('solfege')
+    expect(initialChordStyle({ theme: 'system', chordStyle: 'letters', keepAwake: false, language: null, dailyWordDestination: 'landing' })).toBe('letters')
   })
 })

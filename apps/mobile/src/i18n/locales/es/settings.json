@@ -40,6 +40,11 @@
     "letters": "Letras",
     "solfege": "Solfeo"
   },
+  "dailyWordEntry": "Daily Word opens",
+  "dailyWordOptions": {
+    "landing": "Landing page",
+    "reader": "Reader directly"
+  },
   "offlineDownloads": "Sin conexión y descargas",
   "starred": "Favoritos",
   "mySetlists": "Mis repertorios",

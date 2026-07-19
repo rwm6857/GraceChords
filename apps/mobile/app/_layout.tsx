@@ -220,6 +220,9 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="choose-icon" />
             <Stack.Screen name="viewer/[slug]" />
+            <Stack.Screen name="daily/reader" />
+            <Stack.Screen name="daily/journal" />
+            <Stack.Screen name="daily/reflection" />
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />
