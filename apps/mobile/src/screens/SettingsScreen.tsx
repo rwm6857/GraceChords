@@ -35,6 +35,7 @@ import {
   updateReaderReminderTime,
 } from '../lib/readerReminderService'
 import ReminderTimeSheet from '../components/reader/ReminderTimeSheet'
+import { setStreakEnabled, useReadingStreak } from '../lib/readingStreak'
 
 // The grouped "Profile & Settings" screen (design: [CONTENT] Settings Content).
 // Built from Stage-0 primitives — a Profile card, three grouped Cards
@@ -170,6 +171,7 @@ export default function SettingsScreen() {
   const defaults = useAppDefaults()
   const { source: spriteSource } = useProfileSprite()
   const reminder = useReaderReminder()
+  const streak = useReadingStreak()
   const [reminderBusy, setReminderBusy] = useState(false)
   const [sheet, setSheet] = useState<
     null | 'theme' | 'chordStyle' | 'language' | 'reminderTime' | 'dailyEntry'
@@ -376,7 +378,6 @@ export default function SettingsScreen() {
             title={tx('reminder.dailyReminder')}
             subtitle={tx('reminder.dailyReminderDesc')}
             leading={<RowIcon name="bell" t={t} />}
-            isLast={!reminder.enabled}
             trailing={
               <Switch
                 value={reminder.enabled}
@@ -393,10 +394,23 @@ export default function SettingsScreen() {
               leading={<RowIcon name="clock" t={t} />}
               value={formatReminderTime(reminder.hour, reminder.minute, i18n.language)}
               chevron
-              isLast
               onPress={() => setSheet('reminderTime')}
             />
           ) : null}
+          <ListRow
+            title={tx('readingStreak.title')}
+            subtitle={tx('readingStreak.description')}
+            leading={<RowIcon name="flame.fill" t={t} />}
+            isLast
+            trailing={
+              <Switch
+                value={streak.enabled}
+                onValueChange={setStreakEnabled}
+                trackColor={{ true: t.colors.accent }}
+                accessibilityLabel={tx('readingStreak.title')}
+              />
+            }
+          />
         </Card>
 
         {/* LIBRARY */}

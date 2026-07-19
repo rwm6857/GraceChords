@@ -27,6 +27,10 @@
     "notificationBody": "오늘의 말씀이 준비되었습니다. 잠시 말씀과 함께하세요.",
     "channelName": "매일 말씀 알림"
   },
+  "readingStreak": {
+    "title": "읽기 연속 기록",
+    "description": "오늘의 읽기를 여는 연속 일수를 계산합니다."
+  },
   "appearance": "테마",
   "appearanceOptions": {
     "auto": "자동",

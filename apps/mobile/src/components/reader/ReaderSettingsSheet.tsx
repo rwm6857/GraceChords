@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
-import { Pressable, Switch, Text, View, useWindowDimensions } from 'react-native'
+import { Pressable, Text, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SegmentedPill from '../SegmentedPill'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
-import { setStreakEnabled, useReadingStreak } from '../../lib/readingStreak'
 import {
   READER_PT_MAX,
   READER_PT_MIN,
@@ -18,9 +17,8 @@ import {
 
 // Reader settings sheet (Daily Word screen 18): text size stepper, typeface,
 // verse layout, and line spacing. All session-ephemeral — the screen owns the
-// state and nothing persists across launches — EXCEPT the reading-streak
-// opt-in at the bottom, which is a persisted device-local preference
-// (src/lib/readingStreak.ts, read by Home's Daily Word card).
+// state and nothing persists across launches. The reading-streak opt-in lives
+// in Settings → Reader (src/lib/readingStreak.ts), not here.
 
 // Inline setting-value row: label left, control right-aligned and content-sized.
 // `stack` puts the control on its own line below the label — used on narrow
@@ -86,7 +84,6 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
   const insets = useSafeAreaInsets()
-  const streak = useReadingStreak()
   // On narrow iPhone widths the 3-option Line spacing control would collide
   // with its label, so that row stacks. 2-option rows stay inline everywhere.
   const { width } = useWindowDimensions()
@@ -186,22 +183,6 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
             onChange={(v) => onChange({ ...settings, lineSpacing: v })}
           />
         </SettingRow>
-
-        <OverlineLabel>{tx('settings.readingStreak')}</OverlineLabel>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: t.spacing.md }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('settings.trackReadingStreak')}</Text>
-            <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 2 }}>
-              {tx('settings.trackReadingStreakDesc')}
-            </Text>
-          </View>
-          <Switch
-            value={streak.enabled}
-            onValueChange={setStreakEnabled}
-            trackColor={{ true: t.colors.accent }}
-            accessibilityLabel={tx('settings.trackReadingStreak')}
-          />
-        </View>
       </View>
     </FormSheetShell>
   )

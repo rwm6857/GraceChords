@@ -27,6 +27,10 @@
     "notificationBody": "La lectura de hoy está lista. Tómate un momento para estar en la Palabra.",
     "channelName": "Recordatorios de Palabra diaria"
   },
+  "readingStreak": {
+    "title": "Racha de lectura",
+    "description": "Cuenta los días consecutivos que abres la lectura de hoy."
+  },
   "appearance": "Apariencia",
   "appearanceOptions": {
     "auto": "Automático",

@@ -27,6 +27,10 @@
     "notificationBody": "Bugünün okuması hazır. Söz'le baş başa kalmak için bir an ayırın.",
     "channelName": "Günün Sözü hatırlatıcıları"
   },
+  "readingStreak": {
+    "title": "Okuma serisi",
+    "description": "Bugünün okumasını açtığın ardışık günleri sayar."
+  },
   "appearance": "Görünüm",
   "appearanceOptions": {
     "auto": "Otomatik",

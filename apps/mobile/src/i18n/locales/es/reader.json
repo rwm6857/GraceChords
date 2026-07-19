@@ -117,10 +117,7 @@
     "lineSpacing": "Interlineado",
     "tight": "Estrecho",
     "normal": "Normal",
-    "relaxed": "Amplio",
-    "readingStreak": "Racha de lectura",
-    "trackReadingStreak": "Registrar racha de lectura",
-    "trackReadingStreakDesc": "Cuenta los días seguidos que abres la lectura de hoy."
+    "relaxed": "Amplio"
   },
   "datePicker": {
     "title": "Seleccionar fecha",

@@ -117,10 +117,7 @@
     "lineSpacing": "줄 간격",
     "tight": "좁게",
     "normal": "보통",
-    "relaxed": "넓게",
-    "readingStreak": "읽기 연속 기록",
-    "trackReadingStreak": "읽기 연속 기록 추적",
-    "trackReadingStreakDesc": "오늘의 말씀을 연속으로 열어본 일수를 셉니다."
+    "relaxed": "넓게"
   },
   "datePicker": {
     "title": "날짜 선택",
