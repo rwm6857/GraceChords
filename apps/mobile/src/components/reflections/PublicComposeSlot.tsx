@@ -59,7 +59,7 @@ export default function PublicComposeSlot() {
         </Card>
       ) : (
         <Pressable
-          onPress={() => router.push('/daily/public-reflection')}
+          onPress={() => router.push({ pathname: '/daily/reflection', params: { visibility: 'public' } })}
           accessibilityRole="button"
           accessibilityLabel={tx('shared.composeCta')}
           style={({ pressed }) => ({

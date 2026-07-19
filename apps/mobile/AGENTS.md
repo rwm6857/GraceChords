@@ -334,12 +334,20 @@ duplicate logic here and never edit core internals to suit mobile.
   directly, bypassing the landing. Reflections are private per-user Supabase data
   — table `public.reflections` (migration
   `supabase/migrations/20260719000000_create_reflections.sql`), owner-scoped RLS,
-  **no UPDATE policy** (no-edit is a DB invariant), one private reflection per day
-  (unique index). Queries live in core (`reflections/reflectionsRepo.js`); mobile
-  hooks are `useTodayReflection`/`useReflectionList`. **Phase 1 is private-only** —
-  the `visibility` column carries public "Shared Reflections" too (Phase 2).
+  one private reflection per day (unique index). **Private reflections are
+  editable** — migration `20260719000400_edit_private_reflections.sql` adds a
+  tightly-scoped `own_update_private` UPDATE policy (owner + `visibility='private'`
+  in both USING and WITH CHECK, so a public post can never be edited and an edit
+  can't flip a private row to public); `updateReflection` in core drives it, and
+  the composer's edit mode (`editId`/`initialBody`/`date` params) + the landing/
+  journal "Edit" actions reach it. Public posts stay immutable. Queries live in
+  core (`reflections/reflectionsRepo.js`); mobile hooks are
+  `useTodayReflection`/`useReflectionList` (both expose `update`). The
+  `visibility` column carries public "Shared Reflections" too.
   **Phase 2A (backend + moderation)** is server-side — the `feature_flags` kill
-  switch (`public_reflections`, off by default), `banned_users`, `reports`,
+  switch (`public_reflections`, **enabled** by migration
+  `20260719000300_enable_public_reflections.sql`; flip the row to `false` in the
+  Supabase dashboard to take the feature back down), `banned_users`, `reports`,
   `reflection_hearts`, soft-delete columns, the moderated submit/report Pages
   Functions, and the Telegram report alert (see `apps/web/AGENTS.md` → "Public
   reflections moderation"). **Phase 2B (client surfaces)** is the landing's
@@ -347,10 +355,15 @@ duplicate logic here and never edit core internals to suit mobile.
   stays dark until an admin flips the flag (private reflection + journal are
   untouched when off): an anonymous today-only feed (`SharedReflectionsFeed`;
   the feed query selects **only** `id/body/heart_count` — never `user_id`),
-  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked),
-  a **distinct** public composer (`app/daily/public-reflection.tsx`, no
-  visibility toggle) posting through the moderated `/api/reflections/submit`
-  (`reflectionsApi.ts`) with an explicit confirm, the Apple-1.2 **UGC gate**
+  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked; a
+  user is **never served their own post** back in the feed — they read it, with
+  its live heart count, in the "Share a reflection" slot), the **unified
+  composer** (`ReflectionComposeScreen`, one `app/daily/reflection.tsx` route)
+  with a **Private/Shared toggle** — selecting Shared posts through the moderated
+  `/api/reflections/submit` (`reflectionsApi.ts`) behind the UGC gate + an
+  explicit confirm, so nothing goes public without a deliberate action; the
+  landing/journal pass `visibility=public` to preset the toggle. The Apple-1.2
+  **UGC gate**
   (`UgcTermsSheet` + `accept_ugc_terms()` RPC → `users.ugc_accepted_at`,
   migration `20260719000200_ugc_acceptance.sql`; gate copy in `ugcTerms.ts`,
   full terms in web `terms-of-use.md`), report + local **hide** (`hiddenPosts.ts`,

@@ -7,7 +7,7 @@
   "landingTitle": "Daily Word",
   "streakDays_one": "{{count}}-day streak",
   "streakDays_other": "{{count}}-day streak",
-  "landingReadingHeader": "Today's reading · M'Cheyne",
+  "landingReadingHeader": "{{date}}'s reading · M'Cheyne",
   "landingReadCta": "Read today's passages",
   "backToLanding": "Back to Daily Word",
   "reflection": {
@@ -17,6 +17,9 @@
     "viewAll": "View all reflections",
     "journalTitle": "Reflections",
     "composeTitle": "New reflection",
+    "editTitle": "Edit reflection",
+    "edit": "Edit",
+    "editErrorTitle": "Couldn't update reflection",
     "placeholder": "Write your thoughts…",
     "charCount": "{{count}} / {{max}}",
     "save": "Save",

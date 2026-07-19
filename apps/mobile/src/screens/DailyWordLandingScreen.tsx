@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -11,6 +11,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { currentStreak, useReadingStreak } from '../lib/readingStreak'
+import { useProfileSprite } from '../lib/useProfileSprite'
 import { useTodayReflection } from '../lib/useReflections'
 import { usePublicReflectionsEnabled } from '../lib/usePublicReflections'
 import SharedReflectionsFeed from '../components/reflections/SharedReflectionsFeed'
@@ -26,20 +27,30 @@ import PublicComposeSlot from '../components/reflections/PublicComposeSlot'
 // exist yet. The layout is kept forward-compatible so the devotional slots in
 // above the reading section when that content lands.
 
+// English ordinal suffix for a day-of-month (1 → "1st", 22 → "22nd").
+function ordinal(n: number): string {
+  const v = n % 100
+  const suffixes = ['th', 'st', 'nd', 'rd']
+  return `${n}${suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]}`
+}
+
 export default function DailyWordLandingScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { t: tx, i18n } = useTranslation('reader')
+  const { t: tx, i18n } = useTranslation(['reader', 'home'])
   const insets = useSafeAreaInsets()
+  const { source: spriteSource } = useProfileSprite()
 
   const today = new Date()
   const dayKey = today.toDateString()
   const passages = useMemo(() => expandReadings(getPlanForDate(new Date()).readings), [dayKey])
-  const dateLabel = today.toLocaleDateString(i18n.language, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  })
+  // The date now lives on the reading section header ("July 19th's reading")
+  // instead of the page header, keeping the header consistent with the rest of
+  // the app (serif title + profile avatar). English gets an ordinal day; other
+  // locales use their natural month/day order.
+  const readingDate = i18n.language.startsWith('en')
+    ? `${today.toLocaleDateString('en', { month: 'long' })} ${ordinal(today.getDate())}`
+    : today.toLocaleDateString(i18n.language, { month: 'long', day: 'numeric' })
 
   // Reading streak — OPT-IN (enabled in Daily Word → Reader settings). Mirrors
   // Home's DailyWordCard: shown only when enabled. Opening the Reader from the
@@ -84,19 +95,10 @@ export default function DailyWordLandingScreen() {
           paddingBottom: insets.bottom + t.spacing.xxl,
         }}
       >
-        {/* Header: date + serif title + a reader shortcut */}
+        {/* Header: serif title (+ optional streak) + the profile/settings avatar,
+            matching the Home header for cross-app consistency. */}
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: '600',
-                letterSpacing: 0.3,
-                color: t.colors.muted,
-              }}
-            >
-              {dateLabel}
-            </Text>
             <Text
               style={{
                 fontFamily: 'Georgia',
@@ -104,7 +106,6 @@ export default function DailyWordLandingScreen() {
                 fontWeight: '700',
                 letterSpacing: -0.4,
                 color: t.colors.ink,
-                marginTop: 3,
               }}
             >
               {tx('landingTitle')}
@@ -123,20 +124,31 @@ export default function DailyWordLandingScreen() {
             ) : null}
           </View>
           <Pressable
-            onPress={openReader}
+            onPress={() => router.push('/settings')}
             accessibilityRole="button"
-            accessibilityLabel={tx('chooseDate')}
+            accessibilityLabel={tx('home:profileAndSettings')}
             hitSlop={8}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: t.radii.pill,
-              backgroundColor: t.colors.surfaceAlt,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
           >
-            <SymbolIcon name="calendar" size={17} color={t.colors.sec} />
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: t.radii.pill,
+                backgroundColor: t.colors.accentSoft,
+                borderWidth: 1,
+                borderColor: t.colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              {spriteSource ? (
+                <Image source={spriteSource} style={{ width: 30, height: 30 }} resizeMode="contain" />
+              ) : (
+                <SymbolIcon name="person" size={20} color={t.colors.accent} />
+              )}
+            </View>
           </Pressable>
         </View>
 
@@ -152,7 +164,7 @@ export default function DailyWordLandingScreen() {
             marginBottom: t.spacing.md,
           }}
         >
-          {tx('landingReadingHeader')}
+          {tx('landingReadingHeader', { date: readingDate })}
         </Text>
         {passages.length > 0 ? (
           <Card>
@@ -241,25 +253,53 @@ export default function DailyWordLandingScreen() {
             <ActivityIndicator color={t.colors.accent} />
           </View>
         ) : reflection ? (
-          <Card style={{ padding: t.spacing.lg }}>
+          <Card style={{ padding: 0, overflow: 'hidden' }}>
             <Text
               style={{
                 fontFamily: 'Georgia',
                 fontSize: 16,
                 lineHeight: 25,
                 color: t.colors.ink,
+                padding: t.spacing.lg,
               }}
             >
               {reflection.body}
             </Text>
+            {/* Footer sits below a hairline so the actions read as intentional
+                whether the body is one line or many. Private reflections are
+                editable; delete stays available. */}
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
-                marginTop: t.spacing.md,
+                justifyContent: 'space-between',
+                borderTopWidth: 0.5,
+                borderTopColor: t.colors.border,
+                paddingHorizontal: t.spacing.lg,
+                paddingVertical: t.spacing.sm,
               }}
             >
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/daily/reflection',
+                    params: {
+                      editId: reflection.id,
+                      initialBody: reflection.body,
+                      date: reflection.reflection_date,
+                    },
+                  })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={tx('reflection.edit')}
+                hitSlop={8}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+              >
+                <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
+                <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                  {tx('reflection.edit')}
+                </Text>
+              </Pressable>
               <Pressable
                 onPress={onDelete}
                 accessibilityRole="button"

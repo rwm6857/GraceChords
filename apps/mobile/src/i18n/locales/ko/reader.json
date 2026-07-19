@@ -7,7 +7,7 @@
   "landingTitle": "오늘의 말씀",
   "streakDays_one": "{{count}}일 연속",
   "streakDays_other": "{{count}}일 연속",
-  "landingReadingHeader": "오늘의 읽기 · 맥체인",
+  "landingReadingHeader": "{{date}} 읽기 · 맥체인",
   "landingReadCta": "오늘의 본문 읽기",
   "backToLanding": "오늘의 말씀으로 돌아가기",
   "reflection": {
@@ -17,6 +17,9 @@
     "viewAll": "모든 묵상 보기",
     "journalTitle": "묵상",
     "composeTitle": "새 묵상",
+    "editTitle": "묵상 편집",
+    "edit": "편집",
+    "editErrorTitle": "묵상을 수정할 수 없습니다",
     "placeholder": "생각을 적어 보세요…",
     "charCount": "{{count}} / {{max}}",
     "save": "저장",
