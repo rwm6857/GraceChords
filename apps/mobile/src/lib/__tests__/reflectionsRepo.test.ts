@@ -68,11 +68,12 @@ describe('reflectionsRepo', () => {
     })
   })
 
-  it('fetchReflections scopes to private and orders newest first', async () => {
+  it('fetchReflections returns ALL own reflections (private + public) newest first', async () => {
     const { client, recorded } = fakeClient({ data: [] })
     await fetchReflections(client as never)
     expect(recorded.table).toBe('reflections')
-    expect(recorded.calls).toContainEqual(['eq', '"visibility"', '"private"'])
+    // Phase 2B: the journal shows both kinds, so no visibility filter here.
+    expect(recorded.calls).not.toContainEqual(['eq', '"visibility"', '"private"'])
     expect(recorded.calls).toContainEqual(['order', '"reflection_date"', '{"ascending":false}'])
   })
 

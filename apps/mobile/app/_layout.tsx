@@ -30,6 +30,7 @@ import {
   syncReaderReminderOnLaunch,
 } from '../src/lib/readerReminderService'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
+import { hydrateHiddenPosts } from '../src/lib/hiddenPosts'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -158,6 +159,7 @@ export default function RootLayout() {
       hydrateReaderReminder(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
       hydrateBibleTranslationPref(AsyncStorage),
+      hydrateHiddenPosts(AsyncStorage),
     ]).then(([session, defaults]) => {
       // Apply the stored language pick (null = follow device) while the splash
       // is still up, so a non-device language never flashes on first paint.
@@ -223,6 +225,7 @@ export default function RootLayout() {
             <Stack.Screen name="daily/reader" />
             <Stack.Screen name="daily/journal" />
             <Stack.Screen name="daily/reflection" />
+            <Stack.Screen name="daily/public-reflection" />
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />

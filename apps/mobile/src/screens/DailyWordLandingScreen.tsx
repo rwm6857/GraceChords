@@ -11,6 +11,9 @@ import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { useTodayReflection } from '../lib/useReflections'
+import { usePublicReflectionsEnabled } from '../lib/usePublicReflections'
+import SharedReflectionsFeed from '../components/reflections/SharedReflectionsFeed'
+import PublicComposeSlot from '../components/reflections/PublicComposeSlot'
 
 // The Daily Word landing hub (design: [UI] Daily Word Landing). Reached as the
 // Daily Word tab root when the "Daily Word opens" preference is "Landing page"
@@ -38,6 +41,10 @@ export default function DailyWordLandingScreen() {
   })
 
   const { reflection, loading, refresh, remove } = useTodayReflection()
+  // Kill-switch: the community feed + public compose only render when the flag is
+  // on. When off (or not yet resolved), the private experience below is unchanged.
+  const { enabled: publicEnabled, ready: publicReady } = usePublicReflectionsEnabled()
+  const showPublic = publicReady && publicEnabled
 
   // Re-read the reflection when the landing regains focus so a just-composed or
   // just-deleted entry (on the pushed compose/journal screens) shows correctly.
@@ -190,6 +197,10 @@ export default function DailyWordLandingScreen() {
           />
         ) : null}
 
+        {/* Shared Reflections — anonymous community feed (flag-gated, above the
+            user's own reflection per the design decision). */}
+        {showPublic ? <SharedReflectionsFeed /> : null}
+
         {/* Your reflection */}
         <Text
           style={{
@@ -284,6 +295,10 @@ export default function DailyWordLandingScreen() {
             <SymbolIcon name="chevron.right" size={13} color={t.colors.muted} />
           </Pressable>
         )}
+
+        {/* Share a reflection — public compose slot (flag-gated), below the
+            private reflection. Shows a compose CTA or the user's own public post. */}
+        {showPublic ? <PublicComposeSlot /> : null}
 
         <Pressable
           onPress={() => router.push('/daily/journal')}

@@ -16,4 +16,17 @@ export type Reflection = {
   visibility: ReflectionVisibility
   body: string
   created_at: string
+  /** Denormalized heart count (public posts; 0 for private). Phase 2. */
+  heart_count?: number
+  /** Set when moderation soft-deletes a public post; absent/NULL otherwise. */
+  removed_at?: string | null
+}
+
+// A public feed post as the client is allowed to see it — deliberately WITHOUT
+// user_id or any author-identifying field (anonymity). The public feed query
+// selects exactly these columns.
+export type PublicReflection = {
+  id: string
+  body: string
+  heart_count: number
 }

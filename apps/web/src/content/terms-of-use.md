@@ -116,7 +116,47 @@ These Terms are governed by the laws of the State of Georgia, USA, without regar
 
 ---
 
-## 14. Contact
+## 14. Shared Reflections (User-Generated Content)
+
+**What this covers.** GraceChords lets you post reflections that are shared publicly with other users ("Shared Reflections"). By posting a Shared Reflection, you agree to this section in addition to the rest of these Terms.
+
+**Your content and your responsibility.** You keep ownership of what you write. You confirm that you created it, that you have the right to share it, and that you are solely responsible for it.
+
+**Permission to display.** You grant GraceChords a non-exclusive, worldwide, royalty-free license to store, display, and distribute your Shared Reflections within the app for the purpose of operating this feature.
+
+**Anonymous, and public.** Shared Reflections are displayed without your name or email, and are shown to other users only for a limited time (generally the day they are posted). We can't prevent others from reading, copying, or capturing a reflection while it is visible, so do not post anything you would not want seen or saved.
+
+**Prohibited content and conduct.** You may not post, and may not use Shared Reflections to engage in, any of the following:
+
+- Unlawful content, or content that promotes illegal activity;
+- Harassment, bullying, threats, or targeting of any person;
+- Hateful or discriminatory content based on race, ethnicity, national origin, religion, sex, gender, sexual orientation, disability, or any protected characteristic;
+- Sexual, obscene, or pornographic content;
+- Violent, graphic, or gratuitously disturbing content;
+- Content that encourages self-harm or harm to others;
+- Spam, advertising, solicitation, links, or malware;
+- Impersonation of any person or organization;
+- Private or personally identifying information about yourself or anyone else;
+- Content that infringes anyone's intellectual property or other rights;
+- Any other content that is objectionable or abusive.
+
+**Zero tolerance.** There is no tolerance for objectionable content or abusive users.
+
+**Moderation.** Shared Reflections are screened automatically before they are published (using a third-party content-moderation service) and may be reviewed by us. We may remove any content, and suspend or permanently terminate any account, at our discretion and without prior notice.
+
+**Reporting and response.** Any user can report a Shared Reflection. We act on reports of objectionable content — removing the content and ejecting the responsible user — normally within 24 hours.
+
+**Enforcement.** Violations may result in removal of content and a temporary or permanent ban from posting.
+
+**No responsibility for user content.** Shared Reflections express the views of the users who post them, not GraceChords. We are not responsible for content posted by users and are under no obligation to monitor it, though we reserve the right to do so.
+
+**Age.** You must meet the minimum age stated in these Terms (see Eligibility) to post Shared Reflections. This feature is not directed to children.
+
+**Changes to the feature.** We may modify, suspend, or discontinue Shared Reflections at any time.
+
+---
+
+## 15. Contact
 
 Questions about these Terms:
 

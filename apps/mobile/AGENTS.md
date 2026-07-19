@@ -337,14 +337,26 @@ duplicate logic here and never edit core internals to suit mobile.
   **no UPDATE policy** (no-edit is a DB invariant), one private reflection per day
   (unique index). Queries live in core (`reflections/reflectionsRepo.js`); mobile
   hooks are `useTodayReflection`/`useReflectionList`. **Phase 1 is private-only** —
-  the `visibility` column is forward-compatible with a Phase-2 public/anonymous
-  feed. **Phase 2A (backend + moderation) now exists server-side** — the
-  `feature_flags` kill switch (`public_reflections`, off), `banned_users`,
-  `reports`, `reflection_hearts`, soft-delete columns, the moderated
-  submit/report Pages Functions, and the Telegram report alert (see
-  `apps/web/AGENTS.md` → "Public reflections moderation"). **No client UI ships
-  yet** (compose/feed/hearts/report are Phase 2B); the mobile app renders nothing
-  public until then. The
+  the `visibility` column carries public "Shared Reflections" too (Phase 2).
+  **Phase 2A (backend + moderation)** is server-side — the `feature_flags` kill
+  switch (`public_reflections`, off by default), `banned_users`, `reports`,
+  `reflection_hearts`, soft-delete columns, the moderated submit/report Pages
+  Functions, and the Telegram report alert (see `apps/web/AGENTS.md` → "Public
+  reflections moderation"). **Phase 2B (client surfaces)** is the landing's
+  **Shared Reflections** feature, gated on `usePublicReflectionsEnabled()` so it
+  stays dark until an admin flips the flag (private reflection + journal are
+  untouched when off): an anonymous today-only feed (`SharedReflectionsFeed`;
+  the feed query selects **only** `id/body/heart_count` — never `user_id`),
+  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked),
+  a **distinct** public composer (`app/daily/public-reflection.tsx`, no
+  visibility toggle) posting through the moderated `/api/reflections/submit`
+  (`reflectionsApi.ts`) with an explicit confirm, the Apple-1.2 **UGC gate**
+  (`UgcTermsSheet` + `accept_ugc_terms()` RPC → `users.ugc_accepted_at`,
+  migration `20260719000200_ugc_acceptance.sql`; gate copy in `ugcTerms.ts`,
+  full terms in web `terms-of-use.md`), report + local **hide** (`hiddenPosts.ts`,
+  device-local), and the journal now listing public + private with heart counts.
+  Public reflections are **never** a client insert — only the service-role submit
+  endpoint writes them. The
   landing's **devotional** hero card + long-read page from the design are
   **dropped** (no public-domain content pipeline was ever built); the landing's
   lead slot — above today's reading — is reserved for the **Phase-2 public
