@@ -338,7 +338,13 @@ duplicate logic here and never edit core internals to suit mobile.
   (unique index). Queries live in core (`reflections/reflectionsRepo.js`); mobile
   hooks are `useTodayReflection`/`useReflectionList`. **Phase 1 is private-only** —
   the `visibility` column is forward-compatible with a Phase-2 public/anonymous
-  feed that is NOT built (no public read path, feed, hearts, or moderation). The
+  feed. **Phase 2A (backend + moderation) now exists server-side** — the
+  `feature_flags` kill switch (`public_reflections`, off), `banned_users`,
+  `reports`, `reflection_hearts`, soft-delete columns, the moderated
+  submit/report Pages Functions, and the Telegram report alert (see
+  `apps/web/AGENTS.md` → "Public reflections moderation"). **No client UI ships
+  yet** (compose/feed/hearts/report are Phase 2B); the mobile app renders nothing
+  public until then. The
   landing's **devotional** hero card + long-read page from the design are
   **dropped** (no public-domain content pipeline was ever built); the landing's
   lead slot — above today's reading — is reserved for the **Phase-2 public
