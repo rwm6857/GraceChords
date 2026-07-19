@@ -23,6 +23,12 @@ import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateDrafts } from '../src/lib/drafts/draftsStore'
 import { hydrateRecents } from '../src/lib/recents'
 import { hydrateReadingStreak } from '../src/lib/readingStreak'
+import { hydrateReaderReminder } from '../src/lib/readerReminder'
+import {
+  addReminderResponseListener,
+  initReaderReminders,
+  syncReaderReminderOnLaunch,
+} from '../src/lib/readerReminderService'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 
 // Keep the native splash up past first render so we can resolve the persisted
@@ -125,12 +131,16 @@ function ConfigErrorScreen({ message }: { message: string }) {
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // Missing public config: skip the session read entirely (the supabase client
     // is null here) and let the ConfigErrorScreen below take over.
     if (supabaseConfigError) return
     let stopAutoRefresh: (() => void) | undefined
+    // Install the notification foreground handler / Android channel once, before
+    // any reminder is (re)scheduled below.
+    initReaderReminders()
     // Load app-wide defaults (theme/chord style) before the splash lifts so the
     // resolved theme is applied on first paint — no light→dark flash. Runs in
     // parallel with the session read; both must resolve before `ready`.
@@ -145,6 +155,7 @@ export default function RootLayout() {
       hydrateDrafts(AsyncStorage),
       hydrateRecents(AsyncStorage),
       hydrateReadingStreak(AsyncStorage),
+      hydrateReaderReminder(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
       hydrateBibleTranslationPref(AsyncStorage),
     ]).then(([session, defaults]) => {
@@ -153,6 +164,9 @@ export default function RootLayout() {
       applyLanguagePreference(defaults.language)
       setSession(session)
       setReady(true)
+      // Reconcile the OS-scheduled Daily Word reminder with the stored
+      // preference now that it (and the language) are loaded. Best-effort.
+      void syncReaderReminderOnLaunch()
       // Start AppState-driven token auto-refresh only AFTER the persisted
       // session is resolved. resolveInitialSession has already purged any
       // stale/revoked refresh token from storage, so the immediate refresh tick
@@ -181,6 +195,14 @@ export default function RootLayout() {
   useEffect(() => {
     if (session) prefetchToday()
   }, [session])
+
+  // Tapping the Daily Word reminder opens the reader tab. The auth gate still
+  // applies — a signed-out tap lands on /login.
+  useEffect(() => {
+    return addReminderResponseListener((url) => {
+      router.navigate(url as Parameters<typeof router.navigate>[0])
+    })
+  }, [router])
 
   useProtectedRoute(session, ready)
 

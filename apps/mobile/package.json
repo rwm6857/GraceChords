@@ -36,6 +36,7 @@
     "expo-linking": "~55.0.16",
     "expo-localization": "~55.0.16",
     "expo-network": "~55.0.15",
+    "expo-notifications": "~55.0.25",
     "expo-router": "55.0.16",
     "expo-sharing": "~55.0.21",
     "expo-splash-screen": "~55.0.22",

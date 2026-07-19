@@ -263,10 +263,26 @@ duplicate logic here and never edit core internals to suit mobile.
 
 - **Settings** (`app/settings.tsx` → `SettingsScreen`) is a grouped screen:
   profile card (→ sprite picker), theme, chord style, **Language**, Offline &
-  downloads, library shortcuts, Help/Feedback, About, sign-out, and **Delete
-  account** (`supabase.rpc('delete_user')`). The Language row opens an
-  `OptionSheet` (Automatic + the supported locales) and shows the resolved
-  language — see the i18n section below.
+  downloads, a **Reader** section (Daily Word reminder — see below), library
+  shortcuts, Help/Feedback, About, sign-out, and **Delete account**
+  (`supabase.rpc('delete_user')`). The Language row opens an `OptionSheet`
+  (Automatic + the supported locales) and shows the resolved language — see the
+  i18n section below.
+- **Daily Word reminder** (Settings → Reader) is an OPT-IN, off-by-default local
+  notification via **`expo-notifications`** (config plugin in `app.json`). The
+  preference (enabled + local hour/minute) is device-local in AsyncStorage
+  (`gc.readerReminder.v1`), following the `defaults.ts` injected-storage /
+  `useSyncExternalStore` pattern. `src/lib/readerReminder.ts` is the **pure,
+  RN-free** store plus the dependency-injected `syncReminder()` reconciler (and
+  a locale-aware `formatReminderTime`), unit-tested headless;
+  `src/lib/readerReminderService.ts` wires the real expo-notifications backend
+  (permission request, a single daily-repeating notification under a stable id,
+  the foreground handler, and the tap→`/daily` deep link). Enabling requests
+  notification permission (iOS shows the system prompt then) and only
+  persists/schedules on grant, steering the user to system Settings on denial.
+  The time is set via a custom stepper sheet (`ReminderTimeSheet` — RN
+  primitives, no extra native picker dep, like `DatePickerSheet`). The app root
+  hydrates the preference at splash and reconciles the OS schedule on launch.
 - **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
   (`system`/`light`/`dark`) and `chordStyle` (`letters`/`solfege`), **device-local
   in AsyncStorage, not Supabase-synced**. Storage is injected (KVStorage, like

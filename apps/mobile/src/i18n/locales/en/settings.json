@@ -5,8 +5,27 @@
   "changeYourIcon": "Change your icon",
   "sections": {
     "settings": "SETTINGS",
+    "reader": "READER",
     "library": "LIBRARY",
     "support": "SUPPORT"
+  },
+  "reminder": {
+    "dailyReminder": "Daily Word reminder",
+    "dailyReminderDesc": "A daily nudge to open today's reading.",
+    "time": "Reminder time",
+    "timeSheetTitle": "Reminder time",
+    "hour": "Hour",
+    "minute": "Minute",
+    "increaseHour": "Increase hour",
+    "decreaseHour": "Decrease hour",
+    "increaseMinute": "Increase minute",
+    "decreaseMinute": "Decrease minute",
+    "permissionDeniedTitle": "Notifications are off",
+    "permissionDeniedMessage": "Turn on notifications for GraceChords in your device Settings to get daily reading reminders.",
+    "openSettings": "Open Settings",
+    "notificationTitle": "Daily Word",
+    "notificationBody": "Today's reading is ready. Take a moment to spend in the Word.",
+    "channelName": "Daily Word reminders"
   },
   "appearance": "Appearance",
   "appearanceOptions": {
