@@ -37,6 +37,19 @@ if (!i18n.isInitialized) {
     returnEmptyString: false,
     react: { useSuspense: false },
   })
+} else {
+  // Dev Fast Refresh re-evaluates this module (rebuilding RESOURCES from the
+  // edited locale JSON) without resetting i18next, so `i18n.isInitialized` is
+  // already true and the `.init()` branch above — the only place RESOURCES
+  // normally lands in the live instance — never runs again. Without this, a
+  // key added/changed in a locale file shows as its raw key until a full app
+  // restart. addResourceBundle (deep-merge, overwrite) patches every
+  // locale/namespace into the running instance so edits take effect on reload.
+  for (const locale of Object.keys(RESOURCES)) {
+    for (const ns of Object.keys(RESOURCES[locale])) {
+      i18n.addResourceBundle(locale, ns, RESOURCES[locale][ns], true, true)
+    }
+  }
 }
 
 /**
