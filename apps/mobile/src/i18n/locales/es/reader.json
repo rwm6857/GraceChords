@@ -20,7 +20,7 @@
     "editTitle": "Editar reflexión",
     "edit": "Editar",
     "editErrorTitle": "No se pudo actualizar la reflexión",
-    "placeholder": "Escribe tus pensamientos…",
+    "placeholder": "Escribe tus reflexiones, pensamientos u oraciones…",
     "charCount": "{{count}} / {{max}}",
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -65,7 +65,7 @@
   "publicCompose": {
     "title": "Reflexión compartida",
     "banner": "Se comparte públicamente, se muestra de forma anónima y hoy la verán otros.",
-    "placeholder": "Comparte un aliento de la lectura de hoy…",
+    "placeholder": "Comparte tu reflexión, pensamientos u oraciones…",
     "share": "Compartir",
     "cancel": "Cancelar",
     "confirmTitle": "¿Compartir públicamente?",

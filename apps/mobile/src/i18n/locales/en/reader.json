@@ -20,7 +20,7 @@
     "editTitle": "Edit reflection",
     "edit": "Edit",
     "editErrorTitle": "Couldn't update reflection",
-    "placeholder": "Write your thoughts…",
+    "placeholder": "Write your reflections, thoughts, or prayers…",
     "charCount": "{{count}} / {{max}}",
     "save": "Save",
     "cancel": "Cancel",
@@ -65,7 +65,7 @@
   "publicCompose": {
     "title": "Shared Reflection",
     "banner": "Shared publicly, shown anonymously, visible to others today.",
-    "placeholder": "Share an encouragement from today’s reading…",
+    "placeholder": "Share your reflection, thoughts, or prayers…",
     "share": "Share",
     "cancel": "Cancel",
     "confirmTitle": "Share publicly?",

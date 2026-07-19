@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +25,7 @@ import {
   useTodayReflection,
 } from '../lib/useReflections'
 import { submitPublicReflection } from '../lib/reflectionsApi'
+import { useMyPublicPost } from '../lib/usePublicReflections'
 import { useUgcAccepted } from '../lib/ugc'
 import { errMessage } from '../lib/errors'
 
@@ -41,6 +42,15 @@ import { errMessage } from '../lib/errors'
 //     the visibility toggle is hidden.
 // One reflection per visibility per day is enforced by the DB unique index; a
 // duplicate is surfaced gracefully.
+//
+// In create mode, each side of the Private/Shared toggle keeps its OWN draft
+// (privateBody/publicBody below) — flipping the toggle never loses text you
+// were mid-typing on the other side. The first time each side's existing
+// today's-entry resolves (a private reflection already written, or a public
+// post already shared), that draft is hydrated from it exactly once, so
+// flipping to a side that already has content shows that content instead of a
+// blank box. Saving the private side updates that existing entry in place
+// instead of trying to insert a second one (which the DB would reject).
 
 const MAX_BODY = 2000
 
@@ -69,10 +79,13 @@ export default function ReflectionComposeScreen() {
   const dateKey =
     typeof params.date === 'string' && params.date ? params.date : reflectionDateKey(new Date())
 
-  const { create, update } = useTodayReflection(dateKey)
+  const { reflection: existingPrivate, create, update } = useTodayReflection(dateKey)
+  const { post: existingPublic } = useMyPublicPost()
   const ugc = useUgcAccepted()
 
-  const [body, setBody] = useState(
+  // Edit mode (reached via editId) has its own single body — no toggle, no
+  // per-side drafts, just the one row being edited.
+  const [editBody, setEditBody] = useState(
     typeof params.initialBody === 'string' ? params.initialBody : '',
   )
   // Editing is private-only (public posts are immutable), so the toggle is hidden
@@ -82,6 +95,33 @@ export default function ReflectionComposeScreen() {
   )
   const [saving, setSaving] = useState(false)
   const [ugcVisible, setUgcVisible] = useState(false)
+
+  // Create-mode per-side drafts (see file-header comment). Hydrated once, the
+  // first time each side's existing today's-entry resolves.
+  const [privateBody, setPrivateBody] = useState('')
+  const [publicBody, setPublicBody] = useState('')
+  const privateHydrated = useRef(false)
+  const publicHydrated = useRef(false)
+
+  useEffect(() => {
+    if (isEditing || privateHydrated.current || !existingPrivate) return
+    privateHydrated.current = true
+    setPrivateBody(existingPrivate.body)
+  }, [isEditing, existingPrivate])
+
+  useEffect(() => {
+    if (isEditing || publicHydrated.current || !existingPublic) return
+    publicHydrated.current = true
+    setPublicBody(existingPublic.body)
+  }, [isEditing, existingPublic])
+
+  const body = isEditing ? editBody : visibility === 'private' ? privateBody : publicBody
+  const setBody = (v: string) => {
+    const next = v.slice(0, MAX_BODY)
+    if (isEditing) setEditBody(next)
+    else if (visibility === 'private') setPrivateBody(next)
+    else setPublicBody(next)
+  }
 
   const composeDate = useMemo(() => dateFromKey(dateKey), [dateKey])
   const dateLabel = composeDate.toLocaleDateString(i18n.language, {
@@ -95,10 +135,21 @@ export default function ReflectionComposeScreen() {
   )
 
   const isPublic = !isEditing && visibility === 'public'
+  // Already shared today — public posts are immutable, so this side becomes
+  // read-only (the moderated submit path would just bounce as "already
+  // posted" anyway; refusing up front is clearer than letting them retype and
+  // then telling them it didn't save).
+  const hasExistingPublic = isPublic && !!existingPublic
+  const isEditingPrivateInPlace = !isEditing && visibility === 'private' && !!existingPrivate
   const trimmed = body.trim()
-  const canAct = trimmed.length > 0 && trimmed.length <= MAX_BODY && !saving && (!isPublic || ugc.ready)
+  const canAct =
+    !hasExistingPublic &&
+    trimmed.length > 0 &&
+    trimmed.length <= MAX_BODY &&
+    !saving &&
+    (!isPublic || ugc.ready)
 
-  const title = isEditing
+  const title = isEditing || isEditingPrivateInPlace
     ? tx('reflection.editTitle')
     : isPublic
       ? tx('publicCompose.title')
@@ -118,15 +169,20 @@ export default function ReflectionComposeScreen() {
     }
   }
 
-  // ── Create a new private reflection ─────────────────────────────────────────
+  // ── Save the private side: update today's existing entry in place if the
+  // toggle loaded one, otherwise create a fresh one ───────────────────────────
   const onSavePrivate = async () => {
     setSaving(true)
     try {
-      await create(trimmed)
+      if (existingPrivate) {
+        await update(existingPrivate.id, trimmed)
+      } else {
+        await create(trimmed)
+      }
       router.back()
     } catch (err: unknown) {
       setSaving(false)
-      if (err instanceof DuplicateReflectionError) {
+      if (!existingPrivate && err instanceof DuplicateReflectionError) {
         Alert.alert(tx('reflection.duplicateTitle'), tx('reflection.duplicateMessage'), [
           { text: tx('reflection.ok'), onPress: () => router.back() },
         ])
@@ -309,7 +365,9 @@ export default function ReflectionComposeScreen() {
             </View>
           ) : null}
 
-          {/* Public banner — only when sharing. */}
+          {/* Public banner — the sharing notice normally, or an "already
+              shared today" notice once this side has loaded an existing
+              (immutable) public post. */}
           {isPublic ? (
             <View
               style={{
@@ -323,20 +381,21 @@ export default function ReflectionComposeScreen() {
                 marginTop: t.spacing.md,
               }}
             >
-              <SymbolIcon name="eye" size={14} color={t.colors.textAccent} />
+              <SymbolIcon name={hasExistingPublic ? 'checkmark.circle.fill' : 'eye'} size={14} color={t.colors.textAccent} />
               <Text style={{ flex: 1, fontSize: 12.5, color: t.colors.textAccent }}>
-                {tx('publicCompose.banner')}
+                {hasExistingPublic ? tx('publicCompose.alreadyMessage') : tx('publicCompose.banner')}
               </Text>
             </View>
           ) : null}
 
           <TextInput
             value={body}
-            onChangeText={(v) => setBody(v.slice(0, MAX_BODY))}
+            onChangeText={setBody}
+            editable={!hasExistingPublic}
             placeholder={isPublic ? tx('publicCompose.placeholder') : tx('reflection.placeholder')}
             placeholderTextColor={t.colors.muted}
             multiline
-            autoFocus
+            autoFocus={!isPublic}
             textAlignVertical="top"
             maxLength={MAX_BODY}
             style={{
@@ -345,13 +404,15 @@ export default function ReflectionComposeScreen() {
               fontFamily: 'Georgia',
               fontSize: 16,
               lineHeight: 25,
-              color: t.colors.ink,
+              color: hasExistingPublic ? t.colors.muted : t.colors.ink,
             }}
           />
 
-          <Text style={{ marginTop: t.spacing.sm, fontSize: 12, color: t.colors.muted, textAlign: 'right' }}>
-            {tx('reflection.charCount', { count: body.length, max: MAX_BODY })}
-          </Text>
+          {!hasExistingPublic ? (
+            <Text style={{ marginTop: t.spacing.sm, fontSize: 12, color: t.colors.muted, textAlign: 'right' }}>
+              {tx('reflection.charCount', { count: body.length, max: MAX_BODY })}
+            </Text>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 

@@ -20,7 +20,7 @@
     "editTitle": "묵상 편집",
     "edit": "편집",
     "editErrorTitle": "묵상을 수정할 수 없습니다",
-    "placeholder": "생각을 적어 보세요…",
+    "placeholder": "묵상과 생각, 기도를 적어 보세요…",
     "charCount": "{{count}} / {{max}}",
     "save": "저장",
     "cancel": "취소",
@@ -65,7 +65,7 @@
   "publicCompose": {
     "title": "함께 나누는 묵상",
     "banner": "공개적으로 공유되며 익명으로 표시되고 오늘 다른 사람에게 보입니다.",
-    "placeholder": "오늘의 읽기에서 받은 격려를 나눠 보세요…",
+    "placeholder": "오늘의 묵상과 생각, 기도를 나눠 보세요…",
     "share": "나누기",
     "cancel": "취소",
     "confirmTitle": "공개로 나눌까요?",
