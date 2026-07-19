@@ -40,6 +40,11 @@
     "letters": "알파벳",
     "solfege": "계이름"
   },
+  "dailyWordEntry": "오늘의 말씀 열기",
+  "dailyWordOptions": {
+    "landing": "시작 화면",
+    "reader": "바로 리더 열기"
+  },
   "offlineDownloads": "오프라인 및 다운로드",
   "starred": "즐겨찾기",
   "mySetlists": "내 셋리스트",

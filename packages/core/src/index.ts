@@ -40,6 +40,10 @@ export * from './setlists/setlistsRepo'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
 
+// Private per-user reading reflections (Daily Word landing + journal)
+export * from './reflections/types'
+export * from './reflections/reflectionsRepo'
+
 // Role hierarchy + canonical role read
 export * from './rbac/roles'
 export * from './rbac/userRole'

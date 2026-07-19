@@ -324,6 +324,43 @@ duplicate logic here and never edit core internals to suit mobile.
   when one of TODAY's chapters renders. Home's Daily Word card shows the streak
   only when enabled (`currentStreak` — 0 once a day is missed). Unit-tested.
   Editable greeting phrases live in `src/lib/greetings.ts` (`SUB_GREETINGS`).
+- **Daily Word landing + reflections.** The Daily Word tab opens a **landing
+  hub** (`DailyWordLandingScreen`) by default — today's M'Cheyne reading + the
+  signed-in user's own **private reflection** — routing onward to the Reader
+  (pushed `app/daily/reader.tsx`, which shows a back chevron via
+  `DailyWordScreen`'s `showBackToLanding` prop; the reader-direct tab root has
+  none). A **Settings → Reader** toggle ("Daily Word opens", stored in
+  `defaults.ts` as `dailyWordDestination`) switches the tab to open the Reader
+  directly, bypassing the landing. Reflections are private per-user Supabase data
+  — table `public.reflections` (migration
+  `supabase/migrations/20260719000000_create_reflections.sql`), owner-scoped RLS,
+  **no UPDATE policy** (no-edit is a DB invariant), one private reflection per day
+  (unique index). Queries live in core (`reflections/reflectionsRepo.js`); mobile
+  hooks are `useTodayReflection`/`useReflectionList`. **Phase 1 is private-only** —
+  the `visibility` column carries public "Shared Reflections" too (Phase 2).
+  **Phase 2A (backend + moderation)** is server-side — the `feature_flags` kill
+  switch (`public_reflections`, off by default), `banned_users`, `reports`,
+  `reflection_hearts`, soft-delete columns, the moderated submit/report Pages
+  Functions, and the Telegram report alert (see `apps/web/AGENTS.md` → "Public
+  reflections moderation"). **Phase 2B (client surfaces)** is the landing's
+  **Shared Reflections** feature, gated on `usePublicReflectionsEnabled()` so it
+  stays dark until an admin flips the flag (private reflection + journal are
+  untouched when off): an anonymous today-only feed (`SharedReflectionsFeed`;
+  the feed query selects **only** `id/body/heart_count` — never `user_id`),
+  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked),
+  a **distinct** public composer (`app/daily/public-reflection.tsx`, no
+  visibility toggle) posting through the moderated `/api/reflections/submit`
+  (`reflectionsApi.ts`) with an explicit confirm, the Apple-1.2 **UGC gate**
+  (`UgcTermsSheet` + `accept_ugc_terms()` RPC → `users.ugc_accepted_at`,
+  migration `20260719000200_ugc_acceptance.sql`; gate copy in `ugcTerms.ts`,
+  full terms in web `terms-of-use.md`), report + local **hide** (`hiddenPosts.ts`,
+  device-local), and the journal now listing public + private with heart counts.
+  Public reflections are **never** a client insert — only the service-role submit
+  endpoint writes them. The
+  landing's **devotional** hero card + long-read page from the design are
+  **dropped** (no public-domain content pipeline was ever built); the landing's
+  lead slot — above today's reading — is reserved for the **Phase-2 public
+  reflections feed**, which will take the devotional's place there.
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),

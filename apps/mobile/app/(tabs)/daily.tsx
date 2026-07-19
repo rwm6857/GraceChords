@@ -1,7 +1,12 @@
 import DailyWordScreen from '../../src/screens/DailyWordScreen'
+import DailyWordLandingScreen from '../../src/screens/DailyWordLandingScreen'
+import { useAppDefaults } from '../../src/lib/defaults'
 
-// Per the locked design decision, the Daily Word tab navigates straight to the
-// M'Cheyne Reader (no landing page).
+// The Daily Word tab opens the landing hub by default; the Settings → Reader
+// "Daily Word opens" preference can switch it to open the M'Cheyne Reader
+// directly (bypassing the landing and reflections). The pref is device-local and
+// read synchronously (hydrated at splash), so this branch never flashes.
 export default function DailyTab() {
-  return <DailyWordScreen />
+  const { dailyWordDestination } = useAppDefaults()
+  return dailyWordDestination === 'reader' ? <DailyWordScreen /> : <DailyWordLandingScreen />
 }

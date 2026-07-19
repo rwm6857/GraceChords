@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
+import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import {
   isRtlBibleLanguage,
@@ -67,8 +68,13 @@ function chipLabel(passage: Passage) {
   return `${head}:${start}-${end}`
 }
 
-export default function DailyWordScreen() {
+// `showBackToLanding` renders a back chevron to the Daily Word landing. It is
+// true only when the Reader was PUSHED from the landing (app/daily/reader.tsx);
+// as the Daily Word tab root (reader-direct mode) it is false and the layout is
+// unchanged from before the landing existed.
+export default function DailyWordScreen({ showBackToLanding = false }: { showBackToLanding?: boolean } = {}) {
   const t = useTheme()
+  const router = useRouter()
   const { t: tx, i18n } = useTranslation('reader')
   // Native tabs float over the screen; this bottom inset includes the tab bar
   // height so the Copy FAB clears it (see FAB position below).
@@ -208,6 +214,32 @@ export default function DailyWordScreen() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
+      {/* Back to the landing — only when reached via it (pushed reader route).
+          Absent in reader-direct mode, so that layout is unchanged. */}
+      {showBackToLanding ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: t.spacing.lg,
+            paddingBottom: t.spacing.sm,
+          }}
+        >
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={tx('backToLanding')}
+            hitSlop={8}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+          >
+            <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>
+              {tx('landingTitle')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       {/* Control bar: translation · date · Aa */}
       <View
         style={{

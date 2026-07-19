@@ -20,6 +20,8 @@ export type KVStorage = {
 export type ThemePref = 'system' | 'light' | 'dark'
 /** Chord token spelling. Structurally identical to ChordChart's ChordStyle. */
 export type ChordStyle = 'letters' | 'solfege'
+/** What the Daily Word tab opens: the landing hub, or straight to the Reader. */
+export type DailyWordDestination = 'landing' | 'reader'
 
 export type AppDefaults = {
   theme: ThemePref
@@ -28,6 +30,8 @@ export type AppDefaults = {
   keepAwake: boolean
   /** UI language override (locale code). null = follow the device language. */
   language: string | null
+  /** Daily Word tab entry point (default 'landing'). */
+  dailyWordDestination: DailyWordDestination
 }
 
 export const DEFAULT_APP_DEFAULTS: AppDefaults = {
@@ -35,15 +39,18 @@ export const DEFAULT_APP_DEFAULTS: AppDefaults = {
   chordStyle: 'letters',
   keepAwake: false,
   language: null,
+  dailyWordDestination: 'landing',
 }
 
 const THEME_KEY = 'gc.defaults.theme'
 const CHORD_STYLE_KEY = 'gc.defaults.chordStyle'
 const KEEP_AWAKE_KEY = 'gc.defaults.keepAwake'
 const LANGUAGE_KEY = 'gc.defaults.language'
+const DAILY_WORD_DESTINATION_KEY = 'gc.defaults.dailyWordDestination'
 
 const THEME_PREFS: readonly ThemePref[] = ['system', 'light', 'dark']
 const CHORD_STYLES: readonly ChordStyle[] = ['letters', 'solfege']
+const DAILY_WORD_DESTINATIONS: readonly DailyWordDestination[] = ['landing', 'reader']
 
 // Module-level cache + write-through storage. `cache` is replaced with a NEW
 // object on every change so useSyncExternalStore sees a stable reference between
@@ -62,6 +69,9 @@ function isThemePref(v: unknown): v is ThemePref {
 function isChordStyle(v: unknown): v is ChordStyle {
   return typeof v === 'string' && (CHORD_STYLES as readonly string[]).includes(v)
 }
+function isDailyWordDestination(v: unknown): v is DailyWordDestination {
+  return typeof v === 'string' && (DAILY_WORD_DESTINATIONS as readonly string[]).includes(v)
+}
 
 /**
  * Load stored defaults into the cache and remember `store` for write-through.
@@ -74,12 +84,14 @@ export async function hydrateDefaults(store: KVStorage): Promise<AppDefaults> {
   let chordStyle: ChordStyle = DEFAULT_APP_DEFAULTS.chordStyle
   let keepAwake: boolean = DEFAULT_APP_DEFAULTS.keepAwake
   let language: string | null = DEFAULT_APP_DEFAULTS.language
+  let dailyWordDestination: DailyWordDestination = DEFAULT_APP_DEFAULTS.dailyWordDestination
   try {
-    const [rawTheme, rawChord, rawKeepAwake, rawLanguage] = await Promise.all([
+    const [rawTheme, rawChord, rawKeepAwake, rawLanguage, rawDailyWord] = await Promise.all([
       store.getItem(THEME_KEY),
       store.getItem(CHORD_STYLE_KEY),
       store.getItem(KEEP_AWAKE_KEY),
       store.getItem(LANGUAGE_KEY),
+      store.getItem(DAILY_WORD_DESTINATION_KEY),
     ])
     if (isThemePref(rawTheme)) theme = rawTheme
     if (isChordStyle(rawChord)) chordStyle = rawChord
@@ -87,10 +99,11 @@ export async function hydrateDefaults(store: KVStorage): Promise<AppDefaults> {
     // Validated against the supported-locale list at resolution time
     // (src/i18n/config.ts resolveLanguage), not here — the folders can change.
     if (typeof rawLanguage === 'string' && rawLanguage.trim()) language = rawLanguage.trim()
+    if (isDailyWordDestination(rawDailyWord)) dailyWordDestination = rawDailyWord
   } catch {
     // Best-effort — a bad read must never crash the app; fall back to defaults.
   }
-  cache = { theme, chordStyle, keepAwake, language }
+  cache = { theme, chordStyle, keepAwake, language, dailyWordDestination }
   emit()
   return cache
 }
@@ -128,6 +141,14 @@ export function setDefaultKeepAwake(v: boolean): void {
   cache = { ...cache, keepAwake: v }
   emit()
   storage?.setItem(KEEP_AWAKE_KEY, v ? '1' : '0').catch(() => {})
+}
+
+/** Persist what the Daily Word tab opens: the landing hub or the Reader. */
+export function setDefaultDailyWordDestination(v: DailyWordDestination): void {
+  if (cache.dailyWordDestination === v) return
+  cache = { ...cache, dailyWordDestination: v }
+  emit()
+  storage?.setItem(DAILY_WORD_DESTINATION_KEY, v).catch(() => {})
 }
 
 function subscribe(listener: () => void): () => void {

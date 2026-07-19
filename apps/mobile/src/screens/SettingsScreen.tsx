@@ -18,10 +18,12 @@ import { useCurrentUser } from '../lib/greetings'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import {
   setDefaultChordStyle,
+  setDefaultDailyWordDestination,
   setDefaultLanguage,
   setDefaultTheme,
   useAppDefaults,
   type ChordStyle,
+  type DailyWordDestination,
   type ThemePref,
 } from '../lib/defaults'
 import { applyLanguagePreference, SUPPORTED_LOCALES } from '../i18n'
@@ -52,6 +54,10 @@ const THEME_OPTIONS: { value: ThemePref; labelKey: string }[] = [
 const CHORD_OPTIONS: { value: ChordStyle; labelKey: string }[] = [
   { value: 'letters', labelKey: 'chordStyleOptions.letters' },
   { value: 'solfege', labelKey: 'chordStyleOptions.solfege' },
+]
+const DAILY_WORD_OPTIONS: { value: DailyWordDestination; labelKey: string }[] = [
+  { value: 'landing', labelKey: 'dailyWordOptions.landing' },
+  { value: 'reader', labelKey: 'dailyWordOptions.reader' },
 ]
 
 // Sentinel for "no override — follow the device language" in the picker.
@@ -165,7 +171,9 @@ export default function SettingsScreen() {
   const { source: spriteSource } = useProfileSprite()
   const reminder = useReaderReminder()
   const [reminderBusy, setReminderBusy] = useState(false)
-  const [sheet, setSheet] = useState<null | 'theme' | 'chordStyle' | 'language' | 'reminderTime'>(null)
+  const [sheet, setSheet] = useState<
+    null | 'theme' | 'chordStyle' | 'language' | 'reminderTime' | 'dailyEntry'
+  >(null)
   // Measured glass-bar height feeds the scroll-behind top inset.
   const [barH, setBarH] = useState(0)
 
@@ -176,6 +184,7 @@ export default function SettingsScreen() {
 
   const themeOptions = THEME_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
   const chordOptions = CHORD_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
+  const dailyWordOptions = DAILY_WORD_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
   // "Automatic (device)" + one entry per locale folder (SUPPORTED_LOCALES is
   // derived from src/i18n/locales/, not hardcoded).
   const languageOptions = [
@@ -357,6 +366,13 @@ export default function SettingsScreen() {
         <SectionHeader label={tx('sections.reader')} />
         <Card>
           <ListRow
+            title={tx('dailyWordEntry')}
+            leading={<RowIcon name="book" t={t} />}
+            value={dailyWordOptions.find((o) => o.value === defaults.dailyWordDestination)?.label ?? ''}
+            chevron
+            onPress={() => setSheet('dailyEntry')}
+          />
+          <ListRow
             title={tx('reminder.dailyReminder')}
             subtitle={tx('reminder.dailyReminderDesc')}
             leading={<RowIcon name="bell" t={t} />}
@@ -480,6 +496,14 @@ export default function SettingsScreen() {
         options={chordOptions}
         value={defaults.chordStyle}
         onSelect={setDefaultChordStyle}
+        onClose={() => setSheet(null)}
+      />
+      <OptionSheet
+        visible={sheet === 'dailyEntry'}
+        title={tx('dailyWordEntry')}
+        options={dailyWordOptions}
+        value={defaults.dailyWordDestination}
+        onSelect={setDefaultDailyWordDestination}
         onClose={() => setSheet(null)}
       />
       <ReminderTimeSheet

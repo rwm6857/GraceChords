@@ -21,9 +21,14 @@ core worship-team flows all ship:
 - a **Performer** (setlist play-through) screen — the native worship-mode analog,
 - **Setlists**: list, builder with debounced autosave and drag reorder,
   swipe-to-delete, per-song key overrides, sharing, and whole-set PDF export,
-- a **Daily Word / Reader** — the M'Cheyne daily plan with translation picker,
-  reader settings, day-scoped highlight persistence, and **offline downloads**
-  (save a whole Bible translation to the device; the reader reads it offline-first),
+- a **Daily Word** — a landing hub (default) leading to the **M'Cheyne Reader**
+  (translation picker, reader settings, day-scoped highlights, and **offline
+  downloads** — save a whole Bible translation and read offline-first). The
+  landing carries a private **reflection** journal (one per day, no-edit), an
+  opt-in **reading streak**, and — behind an admin **kill switch** — an
+  anonymous, moderated **Shared Reflections** feed (public compose gated by a
+  one-time UGC-terms acceptance, hearts, report + local hide). A Settings toggle
+  can bypass the landing straight to the Reader,
 - **auth** with email/password plus native **Google** and **Apple** sign-in, a
   post-signup sprite avatar picker, and an **authenticated-only** route gate,
 - a grouped **Settings** screen with app-wide theme and chord-style defaults, an
@@ -34,7 +39,7 @@ A few things are still stubs or later stages — see [Roadmap](#roadmap).
 - **Stack:** Expo SDK 55, Expo Router v7, TypeScript, React 19.2 / React Native 0.83.
 - **Native dirs:** `ios/` and `android/` use Continuous Native Generation — they are gitignored and regenerated via `npx expo prebuild`. Never commit them; treat `app.json` (+ config plugins) as the source of truth for native config.
 - **Theme:** the typed token map from `@gracechords/tokens/native` (iOS light/dark palette), consumed via `useTheme()`. Icons are **SF Symbols only**.
-- **Backends:** Supabase (auth, stars, setlists) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export** and **Telegram** push; Cloudflare R2 for **Daily Word** Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export**, **Telegram** push, and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
 
 ## Run it (macOS + Xcode required for the simulator)
 

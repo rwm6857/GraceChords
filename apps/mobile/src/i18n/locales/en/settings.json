@@ -40,6 +40,11 @@
     "letters": "Letters",
     "solfege": "Solfège"
   },
+  "dailyWordEntry": "Daily Word opens",
+  "dailyWordOptions": {
+    "landing": "Landing page",
+    "reader": "Reader directly"
+  },
   "offlineDownloads": "Offline & downloads",
   "starred": "Starred",
   "mySetlists": "My setlists",
