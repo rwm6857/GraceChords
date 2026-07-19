@@ -95,16 +95,15 @@ export default function DailyWordLandingScreen() {
           paddingBottom: insets.bottom + t.spacing.xxl,
         }}
       >
-        {/* Header: serif title (+ optional streak) + the profile/settings avatar,
-            matching the Home header for cross-app consistency. */}
+        {/* Header: large-title (+ optional streak) + the profile/settings avatar,
+            matching the Home header and every other screen's page title. */}
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               style={{
-                fontFamily: 'Georgia',
-                fontSize: 30,
-                fontWeight: '700',
-                letterSpacing: -0.4,
+                fontSize: t.typography.largeTitle.fontSize,
+                fontWeight: t.typography.largeTitle.fontWeight,
+                letterSpacing: t.typography.largeTitle.letterSpacing,
                 color: t.colors.ink,
               }}
             >
