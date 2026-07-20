@@ -82,6 +82,20 @@
     "startFailed": "Oturum başlatılamadı",
     "endFailed": "Oturum sonlandırılamadı"
   },
+  "sessionFollower": {
+    "joining": "Oturuma katılınıyor…",
+    "notFoundTitle": "Oturum bulunamadı",
+    "notFoundBody": "Bu oturum sona ermiş veya bağlantı hatalı olabilir.",
+    "endedTitle": "Oturumumuza katıldığınız için teşekkürler!",
+    "endedBody": "Oturum sona erdi.",
+    "unavailable": "Bu görünümde kullanılamıyor.",
+    "catchUp": "Lider ilerledi — yetişmek için dokunun",
+    "reconnecting": "Yeniden bağlanılıyor…",
+    "waiting": "Lider bekleniyor…",
+    "live": "CANLI",
+    "loadingSong": "Şarkı yükleniyor…",
+    "home": "Ana sayfa"
+  },
   "resume": {
     "title": "Canlı oturuma devam edilsin mi?",
     "message": "Devam eden bir canlı oturumunuz var. Devam edin veya şimdi sonlandırın.",

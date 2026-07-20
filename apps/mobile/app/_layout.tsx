@@ -55,7 +55,10 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
     // WITH a session (confirm-email off signs in immediately — don't bounce to
     // Home before the pick) and WITHOUT one (confirmation pending).
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
-    if (!session && !inAuthFlow) {
+    // `session/[code]` is the anonymous live-session follower — a logged-out app
+    // user must be able to view it without being bounced to /login.
+    const isPublic = seg === 'session'
+    if (!session && !inAuthFlow && !isPublic) {
       router.replace('/login')
     } else if (session && seg === 'login') {
       router.replace('/')
@@ -70,7 +73,8 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
     if (!ready) return
     const seg = segments[0] as string | undefined
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
-    const settled = session ? seg !== 'login' : inAuthFlow
+    const isPublic = seg === 'session'
+    const settled = session ? seg !== 'login' : (inAuthFlow || isPublic)
     if (settled) SplashScreen.hideAsync().catch(() => {})
   }, [session, ready, segments])
 
@@ -261,6 +265,7 @@ export default function RootLayout() {
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />
+            <Stack.Screen name="session/[code]" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />
             <Stack.Screen name="offline" />

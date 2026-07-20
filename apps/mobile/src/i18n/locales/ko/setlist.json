@@ -82,6 +82,20 @@
     "startFailed": "세션을 시작할 수 없습니다",
     "endFailed": "세션을 종료할 수 없습니다"
   },
+  "sessionFollower": {
+    "joining": "세션에 참여하는 중…",
+    "notFoundTitle": "세션을 찾을 수 없습니다",
+    "notFoundBody": "세션이 종료되었거나 링크가 잘못되었을 수 있습니다.",
+    "endedTitle": "세션에 참여해 주셔서 감사합니다!",
+    "endedBody": "세션이 종료되었습니다.",
+    "unavailable": "이 화면에서는 볼 수 없습니다.",
+    "catchUp": "인도자가 다음으로 넘어갔습니다 — 탭하여 따라가기",
+    "reconnecting": "다시 연결하는 중…",
+    "waiting": "인도자를 기다리는 중…",
+    "live": "라이브",
+    "loadingSong": "곡을 불러오는 중…",
+    "home": "홈"
+  },
   "resume": {
     "title": "라이브 세션을 다시 시작할까요?",
     "message": "진행 중인 라이브 세션이 있습니다. 다시 시작하거나 지금 종료하세요.",

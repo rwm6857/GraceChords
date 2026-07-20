@@ -82,6 +82,20 @@
     "startFailed": "No se pudo iniciar la sesión",
     "endFailed": "No se pudo finalizar la sesión"
   },
+  "sessionFollower": {
+    "joining": "Uniéndose a la sesión…",
+    "notFoundTitle": "Sesión no encontrada",
+    "notFoundBody": "Es posible que esta sesión haya terminado o que el enlace sea incorrecto.",
+    "endedTitle": "¡Gracias por unirte a nuestra sesión!",
+    "endedBody": "La sesión ha terminado.",
+    "unavailable": "No disponible en esta vista.",
+    "catchUp": "El líder avanzó — toca para ponerte al día",
+    "reconnecting": "Reconectando…",
+    "waiting": "Esperando al líder…",
+    "live": "EN VIVO",
+    "loadingSong": "Cargando canción…",
+    "home": "Inicio"
+  },
   "resume": {
     "title": "¿Reanudar la sesión en vivo?",
     "message": "Tienes una sesión en vivo activa. Reanúdala o finalízala ahora.",

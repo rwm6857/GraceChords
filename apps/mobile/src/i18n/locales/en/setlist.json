@@ -82,6 +82,20 @@
     "startFailed": "Could not start session",
     "endFailed": "Could not end session"
   },
+  "sessionFollower": {
+    "joining": "Joining session…",
+    "notFoundTitle": "Session not found",
+    "notFoundBody": "This session may have ended or the link is incorrect.",
+    "endedTitle": "Thanks for joining our session!",
+    "endedBody": "The session has ended.",
+    "unavailable": "Not available in this view.",
+    "catchUp": "Leader moved on — tap to catch up",
+    "reconnecting": "Reconnecting…",
+    "waiting": "Waiting for the leader…",
+    "live": "LIVE",
+    "loadingSong": "Loading song…",
+    "home": "Home"
+  },
   "resume": {
     "title": "Resume live session?",
     "message": "You have a live session running. Resume it or end it now.",

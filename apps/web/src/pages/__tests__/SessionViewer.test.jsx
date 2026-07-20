@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, beforeEach, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 // The follower reads its song content from the public catalog via useSongs().
@@ -25,6 +25,14 @@ vi.mock('@gracechords/core', () => ({
   subscribeToSession: vi.fn(() => () => {}),
 }))
 
+// Platform detection drives the mobile-only "open in app" banner. Toggle per test.
+const platformMock = vi.hoisted(() => ({ mobile: false }))
+vi.mock('../../utils/app/platform', () => ({
+  isMobile: () => platformMock.mobile,
+  isIOS: () => platformMock.mobile,
+  isAndroid: () => false,
+}))
+
 import SessionViewer from '../SessionViewerPage'
 
 function renderAt(code = 'ABC123') {
@@ -40,9 +48,10 @@ function renderAt(code = 'ABC123') {
 describe('SessionViewer', () => {
   beforeEach(() => {
     localStorage.clear()
+    platformMock.mobile = false
   })
 
-  it('renders the leader’s current song lyrics for a live session', async () => {
+  it('renders the leader’s current song lyrics (lyrics-only) for a live session', async () => {
     sessionMock.row = {
       id: 'sess-1', code: 'ABC123', status: 'live', setlist_id: null,
       items: [{ uid: 'i0', kind: 'song', slug: 'abba', title: 'Abba', defaultKey: 'Am' }],
@@ -51,6 +60,23 @@ describe('SessionViewer', () => {
     renderAt()
     expect(await screen.findByText('Father we love You')).toBeInTheDocument()
     expect(screen.getByText('LIVE')).toBeInTheDocument()
+    // Lyrics-only: no key/transpose display.
+    expect(screen.queryByText(/Key:/)).not.toBeInTheDocument()
+  })
+
+  it('shows a dismissible open-in-app banner on mobile only', async () => {
+    platformMock.mobile = true
+    sessionMock.row = {
+      id: 'sess-1', code: 'ABC123', status: 'live', setlist_id: null,
+      items: [{ uid: 'i0', kind: 'song', slug: 'abba', title: 'Abba', defaultKey: 'Am' }],
+      current_item_uid: 'i0', transpose: 0, current_key: 'Am',
+    }
+    renderAt()
+    const openBtn = await screen.findByRole('button', { name: /Open in app/i })
+    expect(openBtn).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Dismiss/i }))
+    expect(screen.queryByRole('button', { name: /Open in app/i })).not.toBeInTheDocument()
+    expect(localStorage.getItem('session:appBannerDismissed')).toBe('1')
   })
 
   it('shows the gentle end screen when the session has ended', async () => {

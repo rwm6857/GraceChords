@@ -9,7 +9,8 @@
           { "/": "/songs/*", "comment": "Song detail alias -> viewer/[slug]" },
           { "/": "/setlist/*", "comment": "Shared setlist (slug list) -> setlist import preview" },
           { "/": "/set/*", "comment": "Shared setlist (compact code) -> setlist import preview" },
-          { "/": "/worship/*", "comment": "Shared worship set -> setlist import preview" }
+          { "/": "/worship/*", "comment": "Shared worship set -> setlist import preview" },
+          { "/": "/s/*", "comment": "Live session follower -> session/[code]" }
         ]
       }
     ]

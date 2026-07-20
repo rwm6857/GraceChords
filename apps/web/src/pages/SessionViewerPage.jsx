@@ -4,45 +4,51 @@ import { fetchSessionByCode, subscribeToSession } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
-import { formatKeyDisplay } from '../utils/chordpro/solfege'
-import { useChordStyle } from '../hooks/useSettings'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
-import { ChordLine, InstrumentalRow } from '../components/song/ChordRender'
+import { isMobile } from '../utils/app/platform'
+import { ChordLine } from '../components/song/ChordRender'
 
 // Live Session follower (web). Joined via a plain link at /s/{code}. Reads ONE
 // `sessions` row (single source of truth: late-join snapshot + live stream) and
-// follows the leader's current item + transpose in real time. Lyrics-only for
-// now: public songs render from the follower's own public catalog by slug;
-// personal songs / verses arrive as `unavailable` placeholders. The follower can
-// free-scroll the current song; when the leader moves to a different item while
-// they've scrolled away, a "leader moved on" pill lets them catch up. Transpose
-// is leader-only — the follower has no key controls.
+// follows the leader's current item in real time. LYRICS-ONLY (matches the native
+// follower): no chords, no key/transpose controls. Public songs render from the
+// follower's own public catalog by slug; personal songs / verses arrive as
+// `unavailable` placeholders. The follower can free-scroll the current song; when
+// the leader moves to a different item while they've scrolled away, a "leader
+// moved on" pill lets them catch up. A passive, dismissible banner nudges
+// app-having users on mobile to open the native follower.
 
 // After this long without any realtime signal following a drop, soften the
 // "reconnecting" hint (we still HOLD the last-known state either way).
 const GRACE_MS = 50_000
+const BANNER_DISMISS_KEY = 'session:appBannerDismissed'
 
-// Parse a catalog song's ChordPro into the section shape ChordLine/InstrumentalRow
-// consume — mirrors the mapping used by Worship Mode so the render is identical.
+// Parse a catalog song's ChordPro into the lyrics-only section shape ChordLine
+// consumes (chords are suppressed at render via showChords={false}).
 function buildSongView(song) {
   const doc = parseChordProOrLegacy(song.chordpro_content || '')
   const title = doc?.meta?.title || song.title || song.id
-  const baseKey = doc?.meta?.key || doc?.meta?.originalkey || song.originalKey || 'C'
   const sections = (doc.sections || []).map((sec) => ({
     label: sec.label,
     lines: (sec.lines || []).map((ln) => {
-      if (ln.instrumental) return { plain: '', chords: [], comment: false, instrumental: ln.instrumental }
-      if (ln.comment) return { plain: ln.comment, chords: [], comment: true }
-      return { plain: ln.lyrics || '', chords: ln.chords || [], comment: false }
+      if (ln.instrumental) return { instrumental: true }
+      if (ln.comment) return { plain: ln.comment, comment: true }
+      return { plain: ln.lyrics || '', comment: false }
     }),
   }))
-  return { title, baseKey, sections }
+  return { title, sections }
+}
+
+function bannerInitiallyDismissed() {
+  try {
+    return localStorage.getItem(BANNER_DISMISS_KEY) === '1'
+  } catch {
+    return false
+  }
 }
 
 export default function SessionViewer() {
   const { code = '' } = useParams()
-  const chordStyle = useChordStyle()
   const { songs: catalogSongs } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
 
@@ -51,11 +57,13 @@ export default function SessionViewer() {
   const [connected, setConnected] = useState(true)
   const [staleReconnect, setStaleReconnect] = useState(false)
 
+  // "Open in app" banner: mobile-only, dismissible, persists via localStorage.
+  const [bannerDismissed, setBannerDismissed] = useState(bannerInitiallyDismissed)
+
   // What the follower is currently looking at, and whether we auto-advance with
   // the leader. `autoFollow` flips off when they scroll into the song and back on
   // when they return to the top (unless they're behind — then it's the pill).
   const [displayedUid, setDisplayedUid] = useState(null)
-  const [displayedTranspose, setDisplayedTranspose] = useState(0)
   const [autoFollow, setAutoFollow] = useState(true)
 
   const scrollRef = useRef(null)
@@ -123,20 +131,15 @@ export default function SessionViewer() {
   const leaderUid = session?.current_item_uid || null
   const behind = phase === 'ready' && !!displayedUid && leaderUid !== displayedUid
 
-  // Follow the leader: advance the displayed item when auto-following, and keep
-  // transpose live whenever the follower is on the leader's current item.
+  // Follow the leader: advance the displayed item when auto-following.
   useEffect(() => {
     if (!session) return
-    const lu = session.current_item_uid || null
     if (autoFollow) {
-      setDisplayedUid(lu)
-      setDisplayedTranspose(session.transpose || 0)
+      setDisplayedUid(session.current_item_uid || null)
       if (scrollRef.current) scrollRef.current.scrollTop = 0
-    } else if (lu === displayedUid) {
-      setDisplayedTranspose(session.transpose || 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.current_item_uid, session?.transpose, autoFollow])
+  }, [session?.current_item_uid, autoFollow])
 
   const items = useMemo(() => session?.items || [], [session])
   const displayedItem = useMemo(
@@ -156,17 +159,6 @@ export default function SessionViewer() {
     }
   }, [displayedItem, catalog])
 
-  const steps = useMemo(() => {
-    if (!view) return 0
-    return ((((displayedTranspose || 0) % 12) + 12) % 12)
-  }, [view, displayedTranspose])
-
-  const effectiveKey = useMemo(() => {
-    if (!view) return ''
-    const target = steps ? transposeSymPrefer(view.baseKey, steps, false) : view.baseKey
-    return formatKeyDisplay(target, chordStyle)
-  }, [view, steps, chordStyle])
-
   const onScroll = (e) => {
     const top = e.currentTarget.scrollTop
     if (top > 40 && autoFollow) setAutoFollow(false)
@@ -176,9 +168,29 @@ export default function SessionViewer() {
   const catchUp = () => {
     setAutoFollow(true)
     setDisplayedUid(leaderUid)
-    setDisplayedTranspose(session?.transpose || 0)
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
+
+  const openInApp = () => {
+    // Attempt the custom-scheme deep link. If the app is installed the OS opens
+    // it; if not, nothing happens and the user stays on web (no timer/redirect).
+    try {
+      window.location.href = `gracechords://s/${encodeURIComponent(code)}`
+    } catch {
+      /* no-op */
+    }
+  }
+
+  const dismissBanner = () => {
+    setBannerDismissed(true)
+    try {
+      localStorage.setItem(BANNER_DISMISS_KEY, '1')
+    } catch {
+      /* ignore storage failures */
+    }
+  }
+
+  const showBanner = phase === 'ready' && session?.status !== 'ended' && !bannerDismissed && isMobile()
 
   // ---------- Render ----------
   if (phase === 'loading') {
@@ -221,10 +233,16 @@ export default function SessionViewer() {
             {displayedItem?.title || ''}
           </span>
         </div>
-        {view && effectiveKey ? (
-          <span style={KEY_PILL}>Key: {effectiveKey}</span>
-        ) : null}
       </div>
+
+      {/* Passive "open in app" banner (mobile only, dismissible). */}
+      {showBanner ? (
+        <div style={BANNER} role="region" aria-label="Open in app">
+          <span style={{ flex: 1, minWidth: 0 }}>Following on the web — open in the GraceChords app.</span>
+          <button onClick={openInApp} style={BANNER_BTN}>Open in app</button>
+          <button onClick={dismissBanner} style={BANNER_X} aria-label="Dismiss">×</button>
+        </div>
+      ) : null}
 
       {!connected ? (
         <div style={RECONNECT} role="status" aria-live="polite">
@@ -245,26 +263,17 @@ export default function SessionViewer() {
               <div key={si} style={{ breakInside: 'avoid', marginBottom: 6 }}>
                 {sec.label ? <div className="section" style={SECTION}>[{sec.label}]</div> : null}
                 {(sec.lines || []).map((ln, li) =>
-                  ln.instrumental ? (
-                    <InstrumentalRow
-                      key={`${si}-${li}`}
-                      spec={ln.instrumental}
-                      steps={steps}
-                      preferFlat={false}
-                      split={false}
-                      chordStyle={chordStyle}
-                    />
-                  ) : ln.comment ? (
+                  // Lyrics-only: chord-only (instrumental) lines are dropped.
+                  ln.instrumental ? null : ln.comment ? (
                     <div key={`${si}-${li}`} className="comment" style={COMMENT}>{ln.plain}</div>
                   ) : (
                     <ChordLine
                       key={`${si}-${li}`}
                       plain={ln.plain}
-                      chords={ln.chords}
-                      steps={steps}
+                      chords={[]}
+                      steps={0}
                       preferFlat={false}
-                      showChords
-                      chordStyle={chordStyle}
+                      showChords={false}
                     />
                   ),
                 )}
@@ -300,9 +309,21 @@ const CONTENT = { flex: 1, overflowY: 'auto', padding: '16px 18px 96px' }
 const CENTER = { minHeight: '60%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24 }
 const SECTION = { fontWeight: 700, opacity: 0.7, margin: '10px 0 4px' }
 const COMMENT = { fontStyle: 'italic', opacity: 0.75, marginBottom: 8 }
-const KEY_PILL = { background: 'var(--gc-accent-soft, rgba(0,0,0,.06))', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }
 const LIVE_DOT = { width: 9, height: 9, borderRadius: 999, background: '#e0245e', flexShrink: 0 }
 const RECONNECT = { textAlign: 'center', padding: '6px 12px', fontSize: 13, background: 'var(--gc-accent-soft, rgba(0,0,0,.06))', opacity: 0.85 }
+const BANNER = {
+  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+  background: 'var(--gc-accent-soft, rgba(0,0,0,.06))', fontSize: 14,
+  borderBottom: '1px solid var(--gc-border, rgba(0,0,0,.1))',
+}
+const BANNER_BTN = {
+  background: 'var(--gc-accent, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
+  padding: '6px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+}
+const BANNER_X = {
+  background: 'transparent', border: 'none', color: 'inherit', fontSize: 20, lineHeight: 1,
+  cursor: 'pointer', padding: '0 4px', opacity: 0.6, flexShrink: 0,
+}
 const PILL = {
   position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)',
   background: 'var(--gc-accent, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
