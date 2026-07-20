@@ -90,7 +90,7 @@ export const ICON_MAP = {
 // (stale entry) — so this list shrinks slice by slice and MUST be empty once the
 // registry growth (Slice 3) lands. Do not use it as a dumping ground.
 export const WEB_PENDING = [
-  'LiveSessionIcon', 'SyncIcon', 'BellIcon', 'BookOpenIcon', 'BookIcon', 'CalendarIcon',
+  'LiveSessionIcon', 'BellIcon', 'BookOpenIcon', 'BookIcon', 'CalendarIcon',
   'CheckIcon', 'CheckCircleIcon', 'ChevronDownIcon', 'ChevronLeftIcon', 'ChevronUpIcon',
   'SortIcon', 'ThemeIcon', 'ClockIcon', 'FileTextIcon', 'EllipsisIcon', 'MailIcon',
   'WarningIcon', 'EyeOffIcon', 'FlameIcon', 'TapIcon', 'HeartIcon', 'InfoIcon',

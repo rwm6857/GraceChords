@@ -51,6 +51,7 @@ const wrap = (Icon) => {
 // "web-only" marks concepts with no mobile SF equivalent.
 export const DownloadIcon = wrap(Download) // SF: arrow.down.circle
 export const TransposeIcon = wrap(RefreshCw) // web-only (transpose; distinct from SyncIcon)
+export const SyncIcon = wrap(RefreshCw) // SF: arrow.triangle.2.circlepath
 export const MediaIcon = wrap(LucideImage) // SF: photo
 export const SelectAllIcon = wrap(CheckSquare) // web-only
 export const ClearIcon = wrap(Trash2) // web-only (clear; distinct from TrashIcon)
