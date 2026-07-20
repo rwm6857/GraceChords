@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 import ConstrainedContent from '../components/ConstrainedContent'
+import HeroOverscrollFill from '../components/HeroOverscrollFill'
 import TextField from '../components/TextField'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
@@ -98,6 +99,7 @@ export default function AuthScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: t.spacing.xl }}
       >
+        <HeroOverscrollFill />
         {/* Hero band: the sanctioned atmospheric gradient (same tokens as Home). */}
         <LinearGradient
           colors={t.colors.heroGradient.colors}
