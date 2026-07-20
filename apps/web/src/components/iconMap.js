@@ -90,3 +90,20 @@ export const ICON_MAP = {
 // (stale entry) — so this list shrinks slice by slice and MUST be empty once the
 // registry growth (Slice 3) lands. Do not use it as a dumping ground.
 export const WEB_PENDING = []
+
+// ACCEPTED COMPROMISES — decisions, not bugs. Recorded so future edits don't "fix" them.
+//
+// No clean Lucide match (rely on an accompanying label; matches mobile's Material choice):
+//   - hand.tap   (tap tempo) -> Pointer     (Lucide has no touch/tap glyph; ≈ Material touch_app)
+//   - tuningfork (tuner)     -> AudioLines  (Lucide has no tuning fork; ≈ Material graphic_eq)
+//
+// No filled/combined Lucide variant (single glyph stands in for both, matching Material):
+//   - person.2 / person.2.fill        -> Users  (no filled Users; matches Material `group`)
+//   - wrench.and.screwdriver(.fill)    -> Wrench (no combined tool; matches Material `handyman`)
+//
+// Outline/fill convention: SF names ending in `.fill` (heart.fill, star.fill, house.fill,
+// checkmark.circle.fill, book.fill, …) reuse the SAME web export as their outline sibling;
+// web renders the solid state with the Lucide `fill` prop rather than a second glyph.
+//
+// Songs vs Setlists deliberately differ on web (as they do on mobile): Songs -> FileMusic
+// (music.pages), Setlists -> ListMusic (music.note.square.stack).
