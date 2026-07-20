@@ -27,13 +27,14 @@ describe('buildSnapshot', () => {
     ])
   })
 
-  it('records personal songs and verses as unavailable placeholders', () => {
-    const snap = buildSnapshot([
-      { songId: 'personal:abc', song: { title: 'My Draft' } },
-      { songId: 'v:esv|John 3:16', song: { title: 'John 3:16' } },
-    ])
+  it('records personal songs as unavailable placeholders', () => {
+    const snap = buildSnapshot([{ songId: 'personal:abc', song: { title: 'My Draft' } }])
     expect(snap[0]).toEqual({ uid: 'i0', kind: 'unavailable', title: 'My Draft', reason: 'personal' })
-    expect(snap[1]).toEqual({ uid: 'i1', kind: 'unavailable', title: 'John 3:16', reason: 'verse' })
+  })
+
+  it('emits verses as first-class verse items carrying the ref', () => {
+    const snap = buildSnapshot([{ songId: 'v:esv|John 3:16', song: { title: 'ignored' } }])
+    expect(snap[0]).toEqual({ uid: 'i0', kind: 'verse', ref: 'v:esv|John 3:16', title: 'John 3:16' })
   })
 
   it('treats a public song with no slug as unavailable rather than shipping an unrenderable ref', () => {

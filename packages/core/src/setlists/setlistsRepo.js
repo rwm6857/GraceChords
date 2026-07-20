@@ -7,6 +7,8 @@
 // throw (songsRepo convention); callers catch. The per-entry setlist-scoped
 // key lives in setlist_songs.key_override and is exposed app-side as `toKey`.
 
+import { isVerseId } from '../songs/verseRef.js'
+
 /**
  * Fetch all personal (team_id IS NULL) setlists for the current user,
  * sorted by updated_at DESC, with a song count via the relationship.
@@ -37,12 +39,17 @@ export async function fetchPersonalSetlists(client) {
 // and keep working against an un-migrated database.
 function isMissingPersonalSchema(err) {
   const msg = String(err?.message || '')
-  return msg.includes('personal_song') || err?.code === 'PGRST200' || err?.code === 'PGRST204'
+  return (
+    msg.includes('personal_song') ||
+    msg.includes('verse_ref') ||
+    err?.code === 'PGRST200' ||
+    err?.code === 'PGRST204'
+  )
 }
 
 const SETLIST_SELECT_PERSONAL =
   'id, name, service_date, updated_at, ' +
-  'setlist_songs(id, song_id, personal_song_id, position, key_override, notes, ' +
+  'setlist_songs(id, song_id, personal_song_id, verse_ref, position, key_override, notes, ' +
   'songs(slug, title, artist, default_key, tempo, time_signature), ' +
   'personal_songs(slug, title, artist, default_key, tempo, time_signature))'
 
@@ -71,21 +78,27 @@ export async function fetchSetlist(client, setlistId) {
   }
   if (error) throw error
   if (!data) return null
-  // A personal-song entry exposes song_id as `personal:<uuid>` so the builder's
-  // single opaque-id model round-trips; updateSetlist decodes it on save.
+  // A personal-song entry exposes song_id as `personal:<uuid>` and a verse entry
+  // exposes song_id as its `v:...` id, so the builder's single opaque-id model
+  // round-trips; updateSetlist decodes both on save.
   const rows = /** @type {any[]} */ (data.setlist_songs || [])
   const entries = rows
     .slice()
     .sort((a, b) => a.position - b.position)
     .map((row) => {
-      const isPersonal = !!row.personal_song_id
+      const isVerse = !!row.verse_ref
+      const isPersonal = !isVerse && !!row.personal_song_id
+      let songId
+      if (isVerse) songId = row.verse_ref
+      else if (isPersonal) songId = `personal:${row.personal_song_id}`
+      else songId = row.song_id
       return {
         id: row.id,
-        song_id: isPersonal ? `personal:${row.personal_song_id}` : row.song_id,
+        song_id: songId,
         position: row.position,
         toKey: row.key_override || null,
         notes: row.notes || null,
-        song: isPersonal ? row.personal_songs || null : row.songs || null,
+        song: isVerse ? null : isPersonal ? row.personal_songs || null : row.songs || null,
       }
     })
   return {
@@ -161,14 +174,18 @@ export async function updateSetlist(client, setlistId, input = {}) {
     // catalog-only set writes the exact legacy row shape and keeps working
     // against a database that hasn't had the personal-songs migration applied.
     const rows = songs.map((song, i) => {
-      const isPersonal = typeof song.id === 'string' && song.id.startsWith('personal:')
+      // A `v:...` id is a bible verse; a `personal:<uuid>` id targets the
+      // personal_songs FK; anything else is a public catalog song.
+      const isVerse = isVerseId(song.id)
+      const isPersonal = !isVerse && typeof song.id === 'string' && song.id.startsWith('personal:')
       const row = {
         setlist_id: setlistId,
         position: i,
         key_override: song.toKey || null,
         notes: null,
       }
-      if (isPersonal) row.personal_song_id = song.id.slice('personal:'.length)
+      if (isVerse) row.verse_ref = song.id
+      else if (isPersonal) row.personal_song_id = song.id.slice('personal:'.length)
       else row.song_id = song.id
       return row
     })

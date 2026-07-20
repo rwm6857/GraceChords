@@ -30,6 +30,7 @@ import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
 import ShareSetSheet from '../components/setlist/ShareSetSheet'
 import AddSongsModal from '../components/setlist/AddSongsModal'
+import AddVerseModal from '../components/setlist/AddVerseModal'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useSetlistBuilder } from '../lib/useSetlistBuilder'
@@ -63,6 +64,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     error,
     setName,
     toggleSong,
+    addVerse,
     removeEntry,
     moveEntry,
     setKeyFor,
@@ -80,6 +82,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  const [addVerseOpen, setAddVerseOpen] = useState(false)
 
   // Toast pill (bottom-center, auto-dismiss).
   const [toast, setToast] = useState<string | null>(null)
@@ -457,6 +460,26 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
             </Text>
           </Pressable>
         ) : null}
+        <Pressable
+          onPress={() => setAddVerseOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={tx('verse.add')}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            height: 48,
+            paddingHorizontal: t.spacing.lg,
+            borderRadius: t.radii.md,
+            backgroundColor: t.colors.surfaceAlt,
+          }}
+        >
+          <SymbolIcon name="book.closed" size={16} color={t.colors.ink} weight="semibold" />
+          <Text style={{ fontSize: 16, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
+            {tx('verse.add')}
+          </Text>
+        </Pressable>
         <Button
           title={tx('builder.startSet')}
           onPress={() => router.push(`/perform/${setlistId}`)}
@@ -549,6 +572,11 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         songs={songs}
         addedSongIds={addedSongIds}
         onToggle={toggleSong}
+      />
+      <AddVerseModal
+        visible={addVerseOpen}
+        onClose={() => setAddVerseOpen(false)}
+        onAdd={addVerse}
       />
     </Screen>
   )

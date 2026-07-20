@@ -17,7 +17,7 @@ import { buildSessionShareUrl } from './setlistShare'
 const BROADCAST_DEBOUNCE_MS = 250
 const HEARTBEAT_MS = 60_000
 
-export type ActiveSession = { id: string; code: string }
+export type ActiveSession = { id: string; code: string; chordCode: string | null }
 
 type SnapshotEntry = {
   songId: string
@@ -45,7 +45,9 @@ export function useSessionController(setlistId: string) {
     fetchActiveSessionForController(supabase)
       .then((row) => {
         if (!alive || !row) return
-        if (row.setlist_id === setlistId) setSession({ id: row.id, code: row.code })
+        if (row.setlist_id === setlistId) {
+          setSession({ id: row.id, code: row.code, chordCode: row.chord_code ?? null })
+        }
       })
       .catch(() => {})
     return () => {
@@ -76,7 +78,9 @@ export function useSessionController(setlistId: string) {
       try {
         const items = buildSnapshot(entries)
         const row = await createSession(supabase, { setlistId, items })
-        setSession({ id: row.id, code: row.code })
+        setSession({ id: row.id, code: row.code, chordCode: row.chord_code ?? null })
+        // Share the lyric (everyone) link on start; the leader can share the
+        // team/chord link from the manage sheet.
         await Share.share({ message: buildSessionShareUrl(row.code) }).catch(() => {})
       } finally {
         setBusy(false)
@@ -85,10 +89,16 @@ export function useSessionController(setlistId: string) {
     [busy, setlistId],
   )
 
-  const reshare = useCallback(async () => {
+  const reshareLyrics = useCallback(async () => {
     const s = sessionRef.current
     if (!s) return
     await Share.share({ message: buildSessionShareUrl(s.code) }).catch(() => {})
+  }, [])
+
+  const reshareChords = useCallback(async () => {
+    const s = sessionRef.current
+    if (!s || !s.chordCode) return
+    await Share.share({ message: buildSessionShareUrl(s.chordCode) }).catch(() => {})
   }, [])
 
   const end = useCallback(async () => {
@@ -122,5 +132,5 @@ export function useSessionController(setlistId: string) {
     }, BROADCAST_DEBOUNCE_MS)
   }, [])
 
-  return { session, busy, start, reshare, end, broadcast }
+  return { session, busy, start, reshareLyrics, reshareChords, end, broadcast }
 }

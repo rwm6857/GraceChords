@@ -1,42 +1,49 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchSessionByCode, subscribeToSession } from '@gracechords/core'
+import { fetchSessionByCode, subscribeToSession, parseVerseId, resolveVerseLines } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
+import { useChordStyle } from '../hooks/useSettings'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
+import { fetchBibleChapter } from '../utils/bible/chapters'
 import { isMobile } from '../utils/app/platform'
-import { ChordLine } from '../components/song/ChordRender'
+import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordRender'
 
 // Live Session follower (web). Joined via a plain link at /s/{code}. Reads ONE
 // `sessions` row (single source of truth: late-join snapshot + live stream) and
-// follows the leader's current item in real time. LYRICS-ONLY (matches the native
-// follower): no chords, no key/transpose controls. Public songs render from the
-// follower's own public catalog by slug; personal songs / verses arrive as
-// `unavailable` placeholders. The follower can free-scroll the current song; when
-// the leader moves to a different item while they've scrolled away, a "leader
-// moved on" pill lets them catch up. A passive, dismissible banner nudges
-// app-having users on mobile to open the native follower.
+// follows the leader's current item in real time. The join code decides the
+// content TIER: the chord tier renders chords in the leader's live key; the lyric
+// tier renders lyrics only. Public songs render from the follower's own public
+// catalog by slug; Bible verses fetch anonymously from /bible/* and render
+// identically in both tiers; personal songs arrive as `unavailable` placeholders.
+// The follower can free-scroll; a "leader moved on" pill catches up on a change.
 
 // After this long without any realtime signal following a drop, soften the
 // "reconnecting" hint (we still HOLD the last-known state either way).
 const GRACE_MS = 50_000
 const BANNER_DISMISS_KEY = 'session:appBannerDismissed'
 
-// Parse a catalog song's ChordPro into the lyrics-only section shape ChordLine
-// consumes (chords are suppressed at render via showChords={false}).
+// Parse a catalog song's ChordPro into the section shape the renderer consumes.
+// Chords are kept; the render decides per-tier whether to show them.
 function buildSongView(song) {
   const doc = parseChordProOrLegacy(song.chordpro_content || '')
   const title = doc?.meta?.title || song.title || song.id
   const sections = (doc.sections || []).map((sec) => ({
     label: sec.label,
     lines: (sec.lines || []).map((ln) => {
-      if (ln.instrumental) return { instrumental: true }
+      if (ln.instrumental) return { instrumental: ln.instrumental }
       if (ln.comment) return { plain: ln.comment, comment: true }
-      return { plain: ln.lyrics || '', comment: false }
+      return { plain: ln.lyrics || '', chords: ln.chords || [], comment: false }
     }),
   }))
   return { title, sections }
+}
+
+// Adapter: resolveVerseLines(translationId, bookNumber, chapter) → chapter data
+// via the anonymous same-origin /bible/* proxy.
+function webFetchChapter(translationId, bookNumber, chapter) {
+  return fetchBibleChapter({ translationId, book: String(bookNumber), chapter }).catch(() => null)
 }
 
 function bannerInitiallyDismissed() {
@@ -49,28 +56,29 @@ function bannerInitiallyDismissed() {
 
 export default function SessionViewer() {
   const { code = '' } = useParams()
+  const chordStyle = useChordStyle()
   const { songs: catalogSongs } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
 
   const [session, setSession] = useState(null)
+  const [tier, setTier] = useState('lyric') // 'chord' | 'lyric', from the join code
   const [phase, setPhase] = useState('loading') // loading | ready | notfound
   const [connected, setConnected] = useState(true)
   const [staleReconnect, setStaleReconnect] = useState(false)
 
-  // "Open in app" banner: mobile-only, dismissible, persists via localStorage.
   const [bannerDismissed, setBannerDismissed] = useState(bannerInitiallyDismissed)
 
-  // What the follower is currently looking at, and whether we auto-advance with
-  // the leader. `autoFollow` flips off when they scroll into the song and back on
-  // when they return to the top (unless they're behind — then it's the pill).
   const [displayedUid, setDisplayedUid] = useState(null)
   const [autoFollow, setAutoFollow] = useState(true)
 
+  // Resolved verse lines keyed by verse ref (cache across item changes).
+  const [verseByRef, setVerseByRef] = useState({})
+
   const scrollRef = useRef(null)
   const graceTimer = useRef(null)
+  const showChords = tier === 'chord'
 
-  // Late-join: fetch the row once, then subscribe for live updates. On (re)connect
-  // we re-fetch so a reconnect resyncs anything missed while disconnected.
+  // Late-join: fetch the row once (which resolves the tier), then subscribe.
   useEffect(() => {
     if (!code) return
     let alive = true
@@ -90,6 +98,7 @@ export default function SessionViewer() {
         return
       }
       setSession(row)
+      setTier(row.tier === 'chord' ? 'chord' : 'lyric')
       setPhase('ready')
       unsubscribe = subscribeToSession(supabase, row.id, {
         onChange: (next) => {
@@ -100,7 +109,6 @@ export default function SessionViewer() {
           if (status === 'SUBSCRIBED') {
             setConnected(true)
             setStaleReconnect(false)
-            // Resync in case an update landed during the connect gap.
             fetchSessionByCode(supabase, code)
               .then((r) => { if (alive && r) setSession(r) })
               .catch(() => {})
@@ -131,7 +139,6 @@ export default function SessionViewer() {
   const leaderUid = session?.current_item_uid || null
   const behind = phase === 'ready' && !!displayedUid && leaderUid !== displayedUid
 
-  // Follow the leader: advance the displayed item when auto-following.
   useEffect(() => {
     if (!session) return
     if (autoFollow) {
@@ -159,6 +166,27 @@ export default function SessionViewer() {
     }
   }, [displayedItem, catalog])
 
+  // Fetch verse content anonymously (cache-first), for every verse item on join
+  // and whenever the displayed item is a verse.
+  useEffect(() => {
+    let alive = true
+    const verseRefs = items.filter((it) => it.kind === 'verse' && it.ref).map((it) => it.ref)
+    for (const ref of verseRefs) {
+      if (verseByRef[ref]) continue
+      const parsed = parseVerseId(ref)
+      if (!parsed) continue
+      resolveVerseLines(parsed, webFetchChapter)
+        .then((res) => {
+          if (alive) setVerseByRef((prev) => (prev[ref] ? prev : { ...prev, [ref]: res.lines }))
+        })
+        .catch(() => {})
+    }
+    return () => { alive = false }
+  }, [items, verseByRef])
+
+  const steps = showChords ? (((((session?.transpose || 0) % 12) + 12) % 12)) : 0
+  const preferFlat = String(session?.current_key || '').includes('b')
+
   const onScroll = (e) => {
     const top = e.currentTarget.scrollTop
     if (top > 40 && autoFollow) setAutoFollow(false)
@@ -172,8 +200,6 @@ export default function SessionViewer() {
   }
 
   const openInApp = () => {
-    // Attempt the custom-scheme deep link. If the app is installed the OS opens
-    // it; if not, nothing happens and the user stays on web (no timer/redirect).
     try {
       window.location.href = `gracechords://s/${encodeURIComponent(code)}`
     } catch {
@@ -222,6 +248,9 @@ export default function SessionViewer() {
     )
   }
 
+  const isVerse = displayedItem?.kind === 'verse'
+  const verseLines = isVerse && displayedItem?.ref ? verseByRef[displayedItem.ref] : null
+
   return (
     <div style={SHELL}>
       {/* Header */}
@@ -233,6 +262,9 @@ export default function SessionViewer() {
             {displayedItem?.title || ''}
           </span>
         </div>
+        {showChords && !isVerse && session?.current_key ? (
+          <span style={KEY_PILL}>Key: {session.current_key}</span>
+        ) : null}
       </div>
 
       {/* Passive "open in app" banner (mobile only, dismissible). */}
@@ -252,7 +284,15 @@ export default function SessionViewer() {
 
       {/* Content */}
       <div ref={scrollRef} onScroll={onScroll} style={CONTENT}>
-        {displayedItem && displayedItem.kind !== 'song' ? (
+        {isVerse ? (
+          verseLines ? (
+            <div style={{ maxWidth: 900, margin: '0 auto', fontSize: 20 }}>
+              <VerseView sections={[{ label: '', lines: verseLines }]} />
+            </div>
+          ) : (
+            <div style={CENTER}>Loading verse…</div>
+          )
+        ) : displayedItem && displayedItem.kind !== 'song' ? (
           <div style={CENTER}>
             <h2 style={{ fontSize: 20, marginBottom: 8 }}>{displayedItem.title || 'This item'}</h2>
             <p style={{ opacity: 0.6 }}>Not available in this view.</p>
@@ -263,17 +303,29 @@ export default function SessionViewer() {
               <div key={si} style={{ breakInside: 'avoid', marginBottom: 6 }}>
                 {sec.label ? <div className="section" style={SECTION}>[{sec.label}]</div> : null}
                 {(sec.lines || []).map((ln, li) =>
-                  // Lyrics-only: chord-only (instrumental) lines are dropped.
-                  ln.instrumental ? null : ln.comment ? (
+                  ln.instrumental ? (
+                    // Chord-only lines only appear in the chord tier.
+                    showChords ? (
+                      <InstrumentalRow
+                        key={`${si}-${li}`}
+                        spec={ln.instrumental}
+                        steps={steps}
+                        preferFlat={preferFlat}
+                        split={false}
+                        chordStyle={chordStyle}
+                      />
+                    ) : null
+                  ) : ln.comment ? (
                     <div key={`${si}-${li}`} className="comment" style={COMMENT}>{ln.plain}</div>
                   ) : (
                     <ChordLine
                       key={`${si}-${li}`}
                       plain={ln.plain}
-                      chords={[]}
-                      steps={0}
-                      preferFlat={false}
-                      showChords={false}
+                      chords={showChords ? ln.chords : []}
+                      steps={steps}
+                      preferFlat={preferFlat}
+                      showChords={showChords}
+                      chordStyle={chordStyle}
                     />
                   ),
                 )}
@@ -309,6 +361,7 @@ const CONTENT = { flex: 1, overflowY: 'auto', padding: '16px 18px 96px' }
 const CENTER = { minHeight: '60%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24 }
 const SECTION = { fontWeight: 700, opacity: 0.7, margin: '10px 0 4px' }
 const COMMENT = { fontStyle: 'italic', opacity: 0.75, marginBottom: 8 }
+const KEY_PILL = { background: 'var(--gc-accent-soft, rgba(0,0,0,.06))', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }
 const LIVE_DOT = { width: 9, height: 9, borderRadius: 999, background: '#e0245e', flexShrink: 0 }
 const RECONNECT = { textAlign: 'center', padding: '6px 12px', fontSize: 13, background: 'var(--gc-accent-soft, rgba(0,0,0,.06))', opacity: 0.85 }
 const BANNER = {

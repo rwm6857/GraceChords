@@ -77,10 +77,19 @@
     "live": "라이브",
     "manageTitle": "라이브 세션",
     "manageMessage": "참여자들이 보고 있습니다. 링크를 공유하거나 세션을 종료하세요.",
-    "shareLink": "링크 공유",
+    "shareTeam": "팀 링크 공유 (코드 포함)",
+    "shareEveryone": "모두를 위한 링크 공유 (가사)",
     "end": "세션 종료",
     "startFailed": "세션을 시작할 수 없습니다",
     "endFailed": "세션을 종료할 수 없습니다"
+  },
+  "verse": {
+    "add": "구절 추가",
+    "title": "구절 추가",
+    "placeholder": "예: 요한복음 3:16",
+    "translation": "번역본",
+    "invalid": "올바른 성경 구절을 입력하세요 (예: John 3:16).",
+    "confirm": "추가"
   },
   "sessionFollower": {
     "joining": "세션에 참여하는 중…",

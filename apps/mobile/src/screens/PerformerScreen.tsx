@@ -25,12 +25,14 @@ import type { SongDoc } from '@gracechords/core'
 import {
   effectiveKey as computeEffectiveKey,
   formatKeyDisplay,
+  isVerseId,
   parseChordProOrLegacy,
   stepsBetween,
   transposeSymPrefer,
 } from '@gracechords/core'
 import ChordChart, { type ChordStyle } from '../components/ChordChart'
 import TwoColumnChart from '../components/TwoColumnChart'
+import VerseChart from '../components/VerseChart'
 import HeaderIconButton from '../components/HeaderIconButton'
 import Screen from '../components/Screen'
 import StarButton from '../components/StarButton'
@@ -88,9 +90,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // Personal-song entries (id `personal:<uuid>`) resolve from personal_songs;
   // catalog entries from the shared cache. Both hooks always run (undefined arg
   // = no-op) to keep hook order stable.
+  const isVerseEntry = typeof entry?.songId === 'string' && isVerseId(entry.songId)
   const isPersonalEntry = typeof entry?.songId === 'string' && entry.songId.startsWith('personal:')
   const personalEntryId = isPersonalEntry ? entry!.songId.slice('personal:'.length) : undefined
-  const catalogSong = useSong(isPersonalEntry ? undefined : entry?.song.slug)
+  const catalogSong = useSong(isVerseEntry || isPersonalEntry ? undefined : entry?.song.slug)
   const personalSong = usePersonalSong(personalEntryId)
   const { song, loading: songLoading, error: songError } = isPersonalEntry ? personalSong : catalogSong
 
@@ -269,7 +272,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   function onSessionButton() {
     if (sessionCtl.session) {
       Alert.alert(tx('setlist:session.manageTitle'), tx('setlist:session.manageMessage'), [
-        { text: tx('setlist:session.shareLink'), onPress: () => { void sessionCtl.reshare() } },
+        { text: tx('setlist:session.shareTeam'), onPress: () => { void sessionCtl.reshareChords() } },
+        { text: tx('setlist:session.shareEveryone'), onPress: () => { void sessionCtl.reshareLyrics() } },
         {
           text: tx('setlist:session.end'),
           style: 'destructive',
@@ -528,7 +532,22 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       </RNAnimated.View>
 
       {/* Chart area */}
-      {setLoading || songLoading || (entry && !songReady && !songError) ? (
+      {isVerseEntry && entry ? (
+        <GestureDetector gesture={chartGesture}>
+          <Animated.View style={[{ flex: 1 }, chartAnim]}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: t.spacing.lg,
+                paddingTop: headerH + t.spacing.sm,
+                paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
+              }}
+            >
+              <VerseChart verseRef={entry.songId} />
+            </ScrollView>
+          </Animated.View>
+        </GestureDetector>
+      ) : setLoading || songLoading || (entry && !songReady && !songError) ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.accent} />
         </View>

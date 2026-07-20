@@ -3,6 +3,8 @@ import { AppState } from 'react-native'
 import {
   deleteSetlist as repoDeleteSetlist,
   fetchSetlist,
+  isVerseId,
+  parseVerseId,
   updateSetlist,
 } from '@gracechords/core'
 import { supabase } from './supabase'
@@ -205,6 +207,22 @@ export function useSetlistBuilder(setlistId: string) {
     () =>
       entries
         .map((entry) => {
+          // Bible verses have no catalog song — synthesize a display song from
+          // the parsed reference so verse entries survive (and reach the session
+          // snapshot) instead of being filtered out.
+          if (isVerseId(entry.songId)) {
+            const parsed = parseVerseId(entry.songId)
+            const song: EntrySong = {
+              id: entry.songId,
+              slug: '',
+              title: (parsed && parsed.refDisplay) || 'Scripture',
+              artist: null,
+              default_key: null,
+              tempo: null,
+              time_signature: null,
+            }
+            return { entryKey: entry.entryKey, songId: entry.songId, toKey: entry.toKey, song }
+          }
           // Prefer the entry's embedded song; fall back to the catalog (e.g.
           // an entry that arrived before its embed, or edge cases).
           const catalog = songsById.get(entry.songId)
@@ -232,6 +250,20 @@ export function useSetlistBuilder(setlistId: string) {
         if (last >= 0) return prev.filter((_, i) => i !== last)
         return [...prev, { entryKey: makeEntryKey(song.id), songId: song.id, toKey: null, song: toEntrySong(song) }]
       })
+      scheduleSave()
+    },
+    [makeEntryKey, scheduleSave],
+  )
+
+  // Append a Bible verse (a `v:<translation>|<Book> <ref>` id from
+  // makeVerseId/parseVerseReference). No catalog song; the items memo derives its
+  // display from the parsed reference.
+  const addVerse = useCallback(
+    (verseId: string) => {
+      setEntries((prev) => [
+        ...prev,
+        { entryKey: makeEntryKey(verseId), songId: verseId, toKey: null, song: null },
+      ])
       scheduleSave()
     },
     [makeEntryKey, scheduleSave],
@@ -306,6 +338,7 @@ export function useSetlistBuilder(setlistId: string) {
     error: error ?? songsError,
     setName,
     toggleSong,
+    addVerse,
     removeEntry,
     duplicateEntry,
     moveEntry,

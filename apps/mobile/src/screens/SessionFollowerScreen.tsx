@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import type { SongDoc } from '@gracechords/core'
 import { fetchSessionByCode, parseChordProOrLegacy, subscribeToSession } from '@gracechords/core'
 import ChordChart from '../components/ChordChart'
+import VerseChart from '../components/VerseChart'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
@@ -26,17 +27,22 @@ const GRACE_MS = 50_000
 
 type SnapshotItem = {
   uid: string
-  kind: 'song' | 'unavailable'
+  kind: 'song' | 'verse' | 'unavailable'
   slug?: string
   title?: string
+  ref?: string
   reason?: string
 }
 type SessionRow = {
   id: string
   code: string
+  chord_code?: string | null
+  tier?: 'chord' | 'lyric'
   status: 'live' | 'ended'
   items: SnapshotItem[]
   current_item_uid: string | null
+  transpose?: number
+  current_key?: string | null
 }
 
 // Native, LYRICS-ONLY live-session follower. Mirrors the web follower
@@ -52,6 +58,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
   const router = useRouter()
 
   const [session, setSession] = useState<SessionRow | null>(null)
+  const [tier, setTier] = useState<'chord' | 'lyric'>('lyric')
   const [phase, setPhase] = useState<'loading' | 'ready' | 'notfound'>('loading')
   const [connected, setConnected] = useState(true)
   const [staleReconnect, setStaleReconnect] = useState(false)
@@ -83,6 +90,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         return
       }
       setSession(row)
+      setTier(row.tier === 'chord' ? 'chord' : 'lyric')
       setPhase('ready')
       unsubscribe = subscribeToSession(supabase, row.id, {
         onChange: (next) => {
@@ -158,6 +166,11 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
   }, [items])
 
   const isSong = displayedItem?.kind === 'song'
+  const isVerse = displayedItem?.kind === 'verse'
+  // Chord tier renders chords in the leader's live key; lyric tier is lyrics-only.
+  const showChords = tier === 'chord'
+  const steps = showChords ? ((((session?.transpose || 0) % 12) + 12) % 12) : 0
+  const preferFlat = String(session?.current_key || '').includes('b')
   const { song } = useSong(isSong ? displayedItem?.slug : undefined)
   const songReady = !!(song && isSong && song.slug === displayedItem?.slug)
 
@@ -283,7 +296,9 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl * 2 }}
       >
-        {displayedItem && !isSong ? (
+        {isVerse && displayedItem?.ref ? (
+          <VerseChart verseRef={displayedItem.ref} />
+        ) : displayedItem && !isSong ? (
           <View style={styles.center}>
             <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
               {displayedItem.title || ''}
@@ -291,7 +306,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
             <Text style={{ color: t.colors.muted }}>{tx('setlist:sessionFollower.unavailable')}</Text>
           </View>
         ) : doc ? (
-          <ChordChart doc={doc} steps={0} preferFlat={false} showChords={false} />
+          <ChordChart doc={doc} steps={steps} preferFlat={preferFlat} showChords={showChords} />
         ) : (
           <View style={styles.center}>
             <ActivityIndicator color={t.colors.accent} />

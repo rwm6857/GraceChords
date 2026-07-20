@@ -14,19 +14,27 @@
 // slug (followers resolve lyrics from the public catalog); personal songs and
 // bible verses are recorded as { kind: 'unavailable' } placeholders in phase 1.
 
-import { isVerseId } from '../songs/verseRef.js'
+import { isVerseId, parseVerseId } from '../songs/verseRef.js'
 import { generateSessionCode } from './sessionCode.js'
 
 const CREATE_MAX_RETRIES = 5 // code-collision retries against the UNIQUE index
 
+// Session codes are drawn from an unambiguous alphanumeric alphabet. Validate a
+// join code before interpolating it into a PostgREST `.or(...)` filter so an
+// unexpected value can't alter the filter's structure.
+function sanitizeCode(code) {
+  return typeof code === 'string' && /^[A-Za-z0-9]+$/.test(code) ? code : null
+}
+
 /**
  * @typedef {Object} SnapshotItem
  * @property {string} uid            Stable per-snapshot id (index-derived).
- * @property {'song'|'unavailable'} kind
+ * @property {'song'|'verse'|'unavailable'} kind
  * @property {string} title
  * @property {string} [slug]         Public-song slug (kind === 'song').
  * @property {string|null} [defaultKey] Song's native key (kind === 'song').
  * @property {string|null} [toKey]   Setlist-scoped key override, if any.
+ * @property {string} [ref]          Verse id `v:<translation>|<Book> <ref>` (kind === 'verse').
  * @property {'personal'|'verse'} [reason] Why an item is unavailable.
  */
 
@@ -47,7 +55,8 @@ export function buildSnapshot(entries = []) {
     const song = (entry && entry.song) || null
     const title = (song && song.title) || 'Untitled'
     if (isVerseId(songId)) {
-      return { uid, kind: 'unavailable', title, reason: 'verse' }
+      const parsed = parseVerseId(songId)
+      return { uid, kind: 'verse', ref: songId, title: (parsed && parsed.refDisplay) || title }
     }
     if (typeof songId === 'string' && songId.startsWith('personal:')) {
       return { uid, kind: 'unavailable', title, reason: 'personal' }
@@ -74,9 +83,12 @@ export function buildSnapshot(entries = []) {
  * collision against the UNIQUE index. The caller supplies the frozen snapshot
  * (see buildSnapshot) and the initial current item.
  *
+ * The session gets TWO fresh codes: `code` (lyric tier) and `chord_code` (team /
+ * chord tier). The follower's tier is decided by which code it joins with.
+ *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {{ setlistId?: string|null, items: SnapshotItem[], currentItemUid?: string|null, transpose?: number, currentKey?: string|null }} input
- * @returns {Promise<{ id: string, code: string, status: string, setlist_id: string|null, items: SnapshotItem[], current_item_uid: string|null, transpose: number, current_key: string|null }>}
+ * @returns {Promise<{ id: string, code: string, chord_code: string, status: string, setlist_id: string|null, items: SnapshotItem[], current_item_uid: string|null, transpose: number, current_key: string|null }>}
  */
 export async function createSession(client, input = {}) {
   const { data: userData, error: authError } = await client.auth.getUser()
@@ -97,14 +109,17 @@ export async function createSession(client, input = {}) {
 
   let lastError = null
   for (let attempt = 0; attempt < CREATE_MAX_RETRIES; attempt += 1) {
-    const row = { ...base, code: generateSessionCode() }
+    const code = generateSessionCode()
+    const chordCode = generateSessionCode()
+    if (code === chordCode) continue // astronomically unlikely; just retry
+    const row = { ...base, code, chord_code: chordCode }
     const { data, error } = await client
       .from('sessions')
       .insert(row)
-      .select('id, code, status, setlist_id, items, current_item_uid, transpose, current_key')
+      .select('id, code, chord_code, status, setlist_id, items, current_item_uid, transpose, current_key')
       .single()
     if (!error) return data
-    // 23505 = unique_violation (duplicate code). Anything else is fatal.
+    // 23505 = unique_violation (duplicate on either code index). Retry.
     if (error.code === '23505') {
       lastError = error
       continue
@@ -188,32 +203,39 @@ export async function endSession(client, sessionId) {
  * @typedef {Object} SessionRow
  * @property {string} id
  * @property {string} code
+ * @property {string|null} [chord_code]
  * @property {'live'|'ended'} status
  * @property {string|null} setlist_id
  * @property {SnapshotItem[]} items
  * @property {string|null} current_item_uid
  * @property {number} transpose
  * @property {string|null} current_key
+ * @property {'chord'|'lyric'} [tier]
  * @property {string} [updated_at]
  * @property {string} [last_active_at]
  */
 
 /**
- * Fetch a single session by its share code (the follower's late-join snapshot).
- * Returns null when no such code exists.
+ * Fetch a single session by EITHER of its share codes (the follower's late-join
+ * snapshot). The returned row carries a derived `tier`: 'chord' when the join
+ * code matched `chord_code`, else 'lyric'. Returns null when no code matches.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {string} code
  * @returns {Promise<SessionRow|null>}
  */
 export async function fetchSessionByCode(client, code) {
+  const safe = sanitizeCode(code)
+  if (!safe) return null
   const { data, error } = await client
     .from('sessions')
-    .select('id, code, status, setlist_id, items, current_item_uid, transpose, current_key, updated_at, last_active_at')
-    .eq('code', code)
+    .select('id, code, chord_code, status, setlist_id, items, current_item_uid, transpose, current_key, updated_at, last_active_at')
+    .or(`code.eq.${safe},chord_code.eq.${safe}`)
     .maybeSingle()
   if (error) throw error
-  return data || null
+  if (!data) return null
+  const tier = data.chord_code && data.chord_code === safe ? 'chord' : 'lyric'
+  return { ...data, tier }
 }
 
 /**
@@ -229,7 +251,7 @@ export async function fetchActiveSessionForController(client) {
   if (authError || !user) return null
   const { data, error } = await client
     .from('sessions')
-    .select('id, code, status, setlist_id, items, current_item_uid, transpose, current_key, updated_at')
+    .select('id, code, chord_code, status, setlist_id, items, current_item_uid, transpose, current_key, updated_at')
     .eq('controller_id', user.id)
     .eq('status', 'live')
     .order('updated_at', { ascending: false })

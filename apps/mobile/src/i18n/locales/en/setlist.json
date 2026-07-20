@@ -76,11 +76,20 @@
     "starting": "Starting…",
     "live": "Live",
     "manageTitle": "Live session",
-    "manageMessage": "Followers are watching. Share the link or end the session.",
-    "shareLink": "Share link",
+    "manageMessage": "Followers are watching. Share a link or end the session.",
+    "shareTeam": "Share team link (chords)",
+    "shareEveryone": "Share everyone link (lyrics)",
     "end": "End session",
     "startFailed": "Could not start session",
     "endFailed": "Could not end session"
+  },
+  "verse": {
+    "add": "Add verse",
+    "title": "Add a verse",
+    "placeholder": "e.g. John 3:16",
+    "translation": "Translation",
+    "invalid": "Enter a valid reference (e.g. John 3:16).",
+    "confirm": "Add"
   },
   "sessionFollower": {
     "joining": "Joining session…",
