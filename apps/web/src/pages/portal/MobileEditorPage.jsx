@@ -6,6 +6,7 @@ import { submitSongSuggestion, canDirectWrite } from '@gracechords/core'
 import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { showToast } from '../../utils/app/toast'
+import { ChevronLeftIcon } from '../../components/Icons'
 import SegmentedControl from '../../components/ui/layout-kit/SegmentedControl'
 import MobileActionSheet from '../../components/ui/mobile/MobileActionSheet'
 import MobileInfoTab from '../../components/editor/mobile/MobileInfoTab'
@@ -286,9 +287,7 @@ export default function MobileEditorPage() {
       {/* Header */}
       <div className="gc-me-header">
         <button type="button" className="gc-me-header__back" onClick={handleBack} aria-label="Back">
-          <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 1L1 9l8 8"/>
-          </svg>
+          <ChevronLeftIcon size={20} />
         </button>
         <span className="gc-me-header__title">{headerTitle}</span>
         <button

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useSongs } from '../../hooks/useSongs'
+import { ChevronRightIcon } from '../../components/Icons'
 import '../../styles/mobile-editor.css'
 
 export default function MobilePortalPage() {
@@ -60,20 +61,7 @@ export default function MobilePortalPage() {
                 <span className="gc-me-portal__row-key">{s.originalKey}</span>
               )}
             </span>
-            <svg
-              className="gc-me-portal__row-arrow"
-              width="8"
-              height="14"
-              viewBox="0 0 8 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M1 1l6 6-6 6"/>
-            </svg>
+            <ChevronRightIcon className="gc-me-portal__row-arrow" size={14} />
           </Link>
         ))}
       </div>
