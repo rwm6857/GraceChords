@@ -76,6 +76,7 @@ binding = "AI"
 "@gracechords/core/chordpro/index.js" = "../../packages/core/src/chordpro/index.js"
 "@gracechords/core/chordpro/parser.ts" = "../../packages/core/src/chordpro/parser.ts"
 "@gracechords/core/songs/instrumental.js" = "../../packages/core/src/songs/instrumental.js"
+"@gracechords/core/songs/sort.js" = "../../packages/core/src/songs/sort.js"
 
 [observability]
 enabled = true
