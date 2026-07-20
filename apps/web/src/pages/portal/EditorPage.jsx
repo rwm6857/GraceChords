@@ -5,6 +5,7 @@ import MobileEditorPage from './MobileEditorPage'
 import MobilePortalPage from './MobilePortalPage'
 import { Helmet } from 'react-helmet-async'
 import { supabase } from '../../lib/supabase'
+import { SearchIcon } from '../../components/Icons'
 import {
   submitSongSuggestion,
   canDirectWrite,
@@ -656,10 +657,7 @@ function DesktopEditorPage() {
         {/* Search */}
         <div className="gc-editor-page__search-wrap">
           <span className="gc-editor-page__search-icon" aria-hidden>
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="9" r="6"/>
-              <path d="M15 15l3 3"/>
-            </svg>
+            <SearchIcon size={16} />
           </span>
           <input
             className="gc-editor-page__search"
