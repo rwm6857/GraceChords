@@ -6,7 +6,8 @@
   "tools": {
     "tuner": "Akort Aleti",
     "metronome": "Tempo / Metronom",
-    "pitchPipe": "Nota Düdüğü"
+    "pitchPipe": "Nota Düdüğü",
+    "songbook": "Şarkı Kitabı"
   },
   "tuner": {
     "title": "Akort Aleti",
@@ -41,5 +42,32 @@
     "octaveDown": "Oktav aşağı",
     "octaveUp": "Oktav yukarı",
     "holdNote": "Notayı tut"
+  },
+  "songbook": {
+    "title": "Şarkı Kitabı",
+    "defaultTitle": "Şarkı Kitabı",
+    "addSongs": "Şarkı ekle",
+    "selectedCount_one": "{{count}} şarkı seçildi",
+    "selectedCount_other": "{{count}} şarkı seçildi",
+    "noneSelected": "Henüz şarkı seçilmedi. Şarkı kitabınızı oluşturmak için şarkı ekleyin.",
+    "removeSong": "{{title}} kaldır",
+    "customizeExport": "Özelleştir ve dışa aktar",
+    "optionsTitle": "Şarkı kitabı seçenekleri",
+    "nameLabel": "Ad",
+    "namePlaceholder": "Şarkı Kitabı",
+    "subtitleLabel": "Alt başlık",
+    "subtitlePlaceholder": "İsteğe bağlı alt başlık veya tarih",
+    "tocLabel": "İçindekiler",
+    "tocHint": "Bir içindekiler sayfası ekler ve her şarkıyı numaralandırır.",
+    "coverLabel": "Kapak görseli",
+    "addCover": "Kapak görseli ekle",
+    "replaceCover": "Değiştir",
+    "removeCover": "Kapağı kaldır",
+    "coverHint": "İsteğe bağlı. Metin kapak sayfasının yerini alır.",
+    "coverTooLargeTitle": "Görsel çok büyük",
+    "coverTooLarge": "Lütfen daha küçük bir kapak görseli seçin (yaklaşık 2 MB altında).",
+    "pickCoverErrorTitle": "Fotoğraflar açılamadı",
+    "exportPdf_one": "PDF'yi dışa aktar ({{count}} şarkı)",
+    "exportPdf_other": "PDF'yi dışa aktar ({{count}} şarkı)"
   }
 }

@@ -71,6 +71,12 @@
             "useFrameworks": "static"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GraceChords uses your photo library only so you can pick a cover image for a songbook PDF you export."
+        }
       ]
     ],
     "experiments": {

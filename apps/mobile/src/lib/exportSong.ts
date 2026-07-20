@@ -38,6 +38,38 @@ export async function exportSong(opts: {
   return file.uri
 }
 
+// Songbook export: renders the selected songs to one PDF via the web app's
+// POST /api/export/songbook — a cover page, an optional numbered table of
+// contents, then every song (one per page) in alphabetical order. Songs render
+// in their default key. Writes the bytes to the app cache and returns the local
+// URI for expo-sharing.
+export async function exportSongbook(opts: {
+  items: Array<{ songId: string; key?: string | null }>
+  title?: string
+  subtitle?: string
+  includeTOC?: boolean
+  coverImageDataUrl?: string | null
+}): Promise<string> {
+  const res = await apiPost('/api/export/songbook', {
+    items: opts.items.map((it) => ({ song_id: it.songId, key: it.key || '' })),
+    title: opts.title || '',
+    subtitle: opts.subtitle || '',
+    include_toc: opts.includeTOC !== false,
+    cover_image: opts.coverImageDataUrl || undefined,
+  })
+
+  if (!res.ok) throw await apiError(res, 'export_failed')
+
+  const disposition = res.headers.get('content-disposition') || ''
+  const nameMatch = disposition.match(/filename="([^"]+)"/)
+  const filename = nameMatch?.[1] || 'songbook.pdf'
+
+  const file = new File(Paths.cache, filename)
+  if (file.exists) file.delete()
+  file.write(new Uint8Array(await res.arrayBuffer()))
+  return file.uri
+}
+
 // Whole-set export: renders the ordered setlist to one combined PDF via the
 // web app's POST /api/export/setlist (the multi-song counterpart of
 // /api/export/song), writes the bytes to the app cache, and returns the local

@@ -6,7 +6,8 @@
   "tools": {
     "tuner": "튜너",
     "metronome": "탭 템포 / 메트로놈",
-    "pitchPipe": "피치 파이프"
+    "pitchPipe": "피치 파이프",
+    "songbook": "노래책"
   },
   "tuner": {
     "title": "튜너",
@@ -41,5 +42,32 @@
     "octaveDown": "옥타브 내림",
     "octaveUp": "옥타브 올림",
     "holdNote": "음 유지"
+  },
+  "songbook": {
+    "title": "노래책",
+    "defaultTitle": "노래책",
+    "addSongs": "노래 추가",
+    "selectedCount_one": "{{count}}곡 선택됨",
+    "selectedCount_other": "{{count}}곡 선택됨",
+    "noneSelected": "아직 선택된 노래가 없습니다. 노래를 추가해 노래책을 만드세요.",
+    "removeSong": "{{title}} 제거",
+    "customizeExport": "맞춤 설정 및 내보내기",
+    "optionsTitle": "노래책 옵션",
+    "nameLabel": "이름",
+    "namePlaceholder": "노래책",
+    "subtitleLabel": "부제",
+    "subtitlePlaceholder": "부제 또는 날짜 (선택 사항)",
+    "tocLabel": "목차",
+    "tocHint": "목차 페이지를 추가하고 각 노래에 번호를 매깁니다.",
+    "coverLabel": "표지 이미지",
+    "addCover": "표지 이미지 추가",
+    "replaceCover": "교체",
+    "removeCover": "표지 제거",
+    "coverHint": "선택 사항입니다. 텍스트 표지 페이지를 대체합니다.",
+    "coverTooLargeTitle": "이미지가 너무 큼",
+    "coverTooLarge": "더 작은 표지 이미지를 선택하세요 (약 2MB 미만).",
+    "pickCoverErrorTitle": "사진을 열 수 없음",
+    "exportPdf_one": "PDF 내보내기 ({{count}}곡)",
+    "exportPdf_other": "PDF 내보내기 ({{count}}곡)"
   }
 }

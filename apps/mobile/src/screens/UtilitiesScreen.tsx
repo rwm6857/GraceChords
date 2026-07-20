@@ -11,6 +11,7 @@ import SymbolIcon from '../components/SymbolIcon'
 import TunerScreen from './TunerScreen'
 import MetronomeScreen from './MetronomeScreen'
 import PitchPipeScreen from './PitchPipeScreen'
+import SongbookBuilderScreen from './SongbookBuilderScreen'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import type { Tokens } from '@gracechords/tokens/native'
@@ -45,7 +46,7 @@ function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; 
   )
 }
 
-type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe'
+type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/songbook'
 
 const UTILITIES: {
   icon: Parameters<typeof SymbolIcon>[0]['name']
@@ -55,6 +56,7 @@ const UTILITIES: {
   { icon: 'tuningfork', titleKey: 'tools.tuner', route: '/tuner' },
   { icon: 'metronome', titleKey: 'tools.metronome', route: '/metronome' },
   { icon: 'pianokeys', titleKey: 'tools.pitchPipe', route: '/pitch-pipe' },
+  { icon: 'book', titleKey: 'tools.songbook', route: '/songbook' },
 ]
 
 export default function UtilitiesScreen() {
@@ -135,6 +137,8 @@ export default function UtilitiesScreen() {
             <MetronomeScreen embedded />
           ) : tool === '/pitch-pipe' ? (
             <PitchPipeScreen embedded />
+          ) : tool === '/songbook' ? (
+            <SongbookBuilderScreen embedded />
           ) : (
             <View
               style={{
