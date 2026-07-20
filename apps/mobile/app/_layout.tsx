@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, ScrollView, Text, View } from 'react-native'
 import { Stack, useRouter, useSegments } from 'expo-router'
+import { useTranslation } from 'react-i18next'
+import { endSession, fetchActiveSessionForController } from '@gracechords/core'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -53,7 +55,10 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
     // WITH a session (confirm-email off signs in immediately — don't bounce to
     // Home before the pick) and WITHOUT one (confirmation pending).
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
-    if (!session && !inAuthFlow) {
+    // `session/[code]` is the anonymous live-session follower — a logged-out app
+    // user must be able to view it without being bounced to /login.
+    const isPublic = seg === 'session'
+    if (!session && !inAuthFlow && !isPublic) {
       router.replace('/login')
     } else if (session && seg === 'login') {
       router.replace('/')
@@ -68,7 +73,8 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
     if (!ready) return
     const seg = segments[0] as string | undefined
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
-    const settled = session ? seg !== 'login' : inAuthFlow
+    const isPublic = seg === 'session'
+    const settled = session ? seg !== 'login' : (inAuthFlow || isPublic)
     if (settled) SplashScreen.hideAsync().catch(() => {})
   }, [session, ready, segments])
 
@@ -133,6 +139,8 @@ export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
   const router = useRouter()
+  const { t: tx } = useTranslation(['setlist', 'common'])
+  const resumeChecked = useRef(false)
 
   useEffect(() => {
     // Missing public config: skip the session read entirely (the supabase client
@@ -198,6 +206,35 @@ export default function RootLayout() {
     if (session) prefetchToday()
   }, [session])
 
+  // On relaunch, if the leader has a session still marked live, offer to resume
+  // it (jump back into the Performer, which re-adopts the row) or end it now.
+  // Runs once per launch after auth resolves. Best-effort.
+  useEffect(() => {
+    if (!ready || !session || resumeChecked.current) return
+    resumeChecked.current = true
+    fetchActiveSessionForController(supabase)
+      .then((row) => {
+        if (!row) return
+        Alert.alert(tx('setlist:resume.title'), tx('setlist:resume.message'), [
+          {
+            text: tx('setlist:resume.resume'),
+            onPress: () => {
+              if (row.setlist_id) router.push(`/perform/${row.setlist_id}`)
+            },
+          },
+          {
+            text: tx('setlist:resume.endNow'),
+            style: 'destructive',
+            onPress: () => {
+              endSession(supabase, row.id).catch(() => {})
+            },
+          },
+          { text: tx('setlist:resume.later'), style: 'cancel' },
+        ])
+      })
+      .catch(() => {})
+  }, [ready, session, router, tx])
+
   // Tapping the Daily Word reminder opens the reader tab. The auth gate still
   // applies — a signed-out tap lands on /login.
   useEffect(() => {
@@ -228,6 +265,7 @@ export default function RootLayout() {
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />
+            <Stack.Screen name="session/[code]" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />
             <Stack.Screen name="offline" />

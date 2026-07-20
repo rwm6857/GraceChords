@@ -71,6 +71,47 @@
     "noSongs": "Bu sette ilahi yok",
     "notFound": "Bu set listesi artık mevcut değil."
   },
+  "session": {
+    "start": "Canlı oturum başlat",
+    "starting": "Başlatılıyor…",
+    "live": "Canlı",
+    "manageTitle": "Canlı oturum",
+    "manageMessage": "Takipçiler izliyor. Bir bağlantı paylaşın veya oturumu sonlandırın.",
+    "shareTeam": "Ekip bağlantısını paylaş (akorlar)",
+    "shareEveryone": "Herkes için bağlantıyı paylaş (sözler)",
+    "end": "Oturumu sonlandır",
+    "startFailed": "Oturum başlatılamadı",
+    "endFailed": "Oturum sonlandırılamadı"
+  },
+  "verse": {
+    "add": "Ayet ekle",
+    "title": "Ayet ekle",
+    "placeholder": "örn. Yuhanna 3:16",
+    "translation": "Çeviri",
+    "invalid": "Geçerli bir referans girin (örn. John 3:16).",
+    "confirm": "Ekle"
+  },
+  "sessionFollower": {
+    "joining": "Oturuma katılınıyor…",
+    "notFoundTitle": "Oturum bulunamadı",
+    "notFoundBody": "Bu oturum sona ermiş veya bağlantı hatalı olabilir.",
+    "endedTitle": "Oturumumuza katıldığınız için teşekkürler!",
+    "endedBody": "Oturum sona erdi.",
+    "unavailable": "Bu görünümde kullanılamıyor.",
+    "catchUp": "Lider ilerledi — yetişmek için dokunun",
+    "reconnecting": "Yeniden bağlanılıyor…",
+    "waiting": "Lider bekleniyor…",
+    "live": "CANLI",
+    "loadingSong": "Şarkı yükleniyor…",
+    "home": "Ana sayfa"
+  },
+  "resume": {
+    "title": "Canlı oturuma devam edilsin mi?",
+    "message": "Devam eden bir canlı oturumunuz var. Devam edin veya şimdi sonlandırın.",
+    "resume": "Devam et",
+    "endNow": "Oturumu sonlandır",
+    "later": "Daha sonra"
+  },
   "addSongs": {
     "title": "İlahi ekle",
     "doneAdding": "İlahi eklemeyi bitir",

@@ -25,12 +25,14 @@ import type { SongDoc } from '@gracechords/core'
 import {
   effectiveKey as computeEffectiveKey,
   formatKeyDisplay,
+  isVerseId,
   parseChordProOrLegacy,
   stepsBetween,
   transposeSymPrefer,
 } from '@gracechords/core'
 import ChordChart, { type ChordStyle } from '../components/ChordChart'
 import TwoColumnChart from '../components/TwoColumnChart'
+import VerseChart from '../components/VerseChart'
 import HeaderIconButton from '../components/HeaderIconButton'
 import Screen from '../components/Screen'
 import StarButton from '../components/StarButton'
@@ -54,6 +56,7 @@ import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { setColumnMode, useColumnMode } from '../lib/viewerPrefs'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
+import { useSessionController } from '../lib/useSessionController'
 import {
   pushSetToTelegram,
   pushSongToTelegram,
@@ -77,14 +80,20 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // metadata. We never mutate here, so its autosave stays idle.
   const { name, items, loading: setLoading, notFound, error: setError } = useSetlistBuilder(setlistId)
 
+  // Leader-side live session (broadcasts current item + transpose to web
+  // followers). Idle until "Start session" is tapped; adopts an already-running
+  // session for this setlist on mount.
+  const sessionCtl = useSessionController(setlistId)
+
   const [index, setIndex] = useState(0)
   const entry = items[index]
   // Personal-song entries (id `personal:<uuid>`) resolve from personal_songs;
   // catalog entries from the shared cache. Both hooks always run (undefined arg
   // = no-op) to keep hook order stable.
+  const isVerseEntry = typeof entry?.songId === 'string' && isVerseId(entry.songId)
   const isPersonalEntry = typeof entry?.songId === 'string' && entry.songId.startsWith('personal:')
   const personalEntryId = isPersonalEntry ? entry!.songId.slice('personal:'.length) : undefined
-  const catalogSong = useSong(isPersonalEntry ? undefined : entry?.song.slug)
+  const catalogSong = useSong(isVerseEntry || isPersonalEntry ? undefined : entry?.song.slug)
   const personalSong = usePersonalSong(personalEntryId)
   const { song, loading: songLoading, error: songError } = isPersonalEntry ? personalSong : catalogSong
 
@@ -158,6 +167,20 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   useEffect(() => {
     if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))
   }, [nativeKey])
+
+  // Broadcast the leader's current item + transpose whenever they change. The
+  // snapshot the session was created from preserves item order, so the current
+  // item's stable uid is `i${index}`. `steps` is the net semitone offset from
+  // native, which the follower re-applies to the same song. The controller
+  // de-dupes + debounces, so calling this on every relevant change is safe.
+  useEffect(() => {
+    if (!sessionCtl.session) return
+    sessionCtl.broadcast({
+      itemUid: `i${index}`,
+      transpose: steps,
+      currentKey: effectiveKey || null,
+    })
+  }, [sessionCtl, index, steps, effectiveKey])
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
@@ -241,6 +264,34 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     else if (msg === 'image_unavailable') {
       Alert.alert(tx('export:alerts.imageUnavailableTitle'), tx('export:alerts.imageUnavailableGeneric'))
     } else Alert.alert(title, msg)
+  }
+
+  // Start / manage the live session from the header. Starting builds the frozen
+  // snapshot from the current entries and opens the native share sheet with the
+  // /s/{code} follower link; managing an active session offers re-share or end.
+  function onSessionButton() {
+    if (sessionCtl.session) {
+      Alert.alert(tx('setlist:session.manageTitle'), tx('setlist:session.manageMessage'), [
+        { text: tx('setlist:session.shareTeam'), onPress: () => { void sessionCtl.reshareChords() } },
+        { text: tx('setlist:session.shareEveryone'), onPress: () => { void sessionCtl.reshareLyrics() } },
+        {
+          text: tx('setlist:session.end'),
+          style: 'destructive',
+          onPress: () => {
+            sessionCtl.end().catch((err) => reportError(tx('setlist:session.endFailed'), err))
+          },
+        },
+        { text: tx('common:cancel'), style: 'cancel' },
+      ])
+      return
+    }
+    if (!count) {
+      Alert.alert(tx('setlist:performer.noSongs'))
+      return
+    }
+    sessionCtl
+      .start(items.map((it) => ({ songId: it.songId, toKey: it.toKey, song: it.song })))
+      .catch((err) => reportError(tx('setlist:session.startFailed'), err))
   }
 
   const shareSongFile = async (format: 'pdf' | 'jpg') => {
@@ -372,6 +423,31 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
             </Text>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
+            <Pressable
+              onPress={onSessionButton}
+              disabled={sessionCtl.busy}
+              accessibilityRole="button"
+              accessibilityState={{ selected: !!sessionCtl.session }}
+              accessibilityLabel={
+                sessionCtl.session ? tx('setlist:session.manageTitle') : tx('setlist:session.start')
+              }
+              hitSlop={8}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: t.radii.pill,
+                backgroundColor: sessionCtl.session ? t.colors.accent : t.colors.surfaceAlt,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: sessionCtl.busy ? 0.5 : 1,
+              }}
+            >
+              <SymbolIcon
+                name="antenna.radiowaves.left.and.right"
+                size={18}
+                color={sessionCtl.session ? t.colors.onAccent : t.colors.ink}
+              />
+            </Pressable>
             <HeaderIconButton icon="ellipsis" label={tx('setlist:performer.viewOptions')} onPress={() => setSheet('options')} />
             <HeaderIconButton
               icon="square.and.arrow.up"
@@ -456,7 +532,22 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       </RNAnimated.View>
 
       {/* Chart area */}
-      {setLoading || songLoading || (entry && !songReady && !songError) ? (
+      {isVerseEntry && entry ? (
+        <GestureDetector gesture={chartGesture}>
+          <Animated.View style={[{ flex: 1 }, chartAnim]}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: t.spacing.lg,
+                paddingTop: headerH + t.spacing.sm,
+                paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
+              }}
+            >
+              <VerseChart verseRef={entry.songId} />
+            </ScrollView>
+          </Animated.View>
+        </GestureDetector>
+      ) : setLoading || songLoading || (entry && !songReady && !songError) ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.accent} />
         </View>

@@ -71,6 +71,47 @@
     "noSongs": "Este repertorio no tiene canciones",
     "notFound": "Este repertorio ya no existe."
   },
+  "session": {
+    "start": "Iniciar sesión en vivo",
+    "starting": "Iniciando…",
+    "live": "En vivo",
+    "manageTitle": "Sesión en vivo",
+    "manageMessage": "Los seguidores están viendo. Comparte un enlace o finaliza la sesión.",
+    "shareTeam": "Compartir enlace del equipo (acordes)",
+    "shareEveryone": "Compartir enlace para todos (letra)",
+    "end": "Finalizar sesión",
+    "startFailed": "No se pudo iniciar la sesión",
+    "endFailed": "No se pudo finalizar la sesión"
+  },
+  "verse": {
+    "add": "Añadir versículo",
+    "title": "Añadir un versículo",
+    "placeholder": "p. ej. Juan 3:16",
+    "translation": "Traducción",
+    "invalid": "Introduce una referencia válida (p. ej. Juan 3:16).",
+    "confirm": "Añadir"
+  },
+  "sessionFollower": {
+    "joining": "Uniéndose a la sesión…",
+    "notFoundTitle": "Sesión no encontrada",
+    "notFoundBody": "Es posible que esta sesión haya terminado o que el enlace sea incorrecto.",
+    "endedTitle": "¡Gracias por unirte a nuestra sesión!",
+    "endedBody": "La sesión ha terminado.",
+    "unavailable": "No disponible en esta vista.",
+    "catchUp": "El líder avanzó — toca para ponerte al día",
+    "reconnecting": "Reconectando…",
+    "waiting": "Esperando al líder…",
+    "live": "EN VIVO",
+    "loadingSong": "Cargando canción…",
+    "home": "Inicio"
+  },
+  "resume": {
+    "title": "¿Reanudar la sesión en vivo?",
+    "message": "Tienes una sesión en vivo activa. Reanúdala o finalízala ahora.",
+    "resume": "Reanudar",
+    "endNow": "Finalizar sesión",
+    "later": "Más tarde"
+  },
   "addSongs": {
     "title": "Añadir canciones",
     "doneAdding": "Terminar de añadir canciones",

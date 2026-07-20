@@ -1,6 +1,18 @@
 // Supabase-backed setlists operations (new setlists + setlist_songs schema).
 // All functions return { data, error } matching Supabase conventions.
 import { supabase } from '../lib/supabase'
+import { isVerseId } from '@gracechords/core'
+
+// Map a working-list item id to the right setlist_songs column. An item id is a
+// `v:...` bible verse, a `personal:<uuid>` draft, or a public catalog song uuid.
+function setlistSongRow(song, i, setlistId) {
+  const row = { setlist_id: setlistId, position: i, key_override: song.toKey || null, notes: null }
+  if (isVerseId(song.id)) row.verse_ref = song.id
+  else if (typeof song.id === 'string' && song.id.startsWith('personal:')) {
+    row.personal_song_id = song.id.slice('personal:'.length)
+  } else row.song_id = song.id
+  return row
+}
 
 /**
  * Fetch all personal (team_id IS NULL) setlists for the current user,
@@ -37,13 +49,7 @@ export async function saveSetlist(name, serviceDate, songs) {
   if (setlistError) return { data: null, error: setlistError }
 
   if (songs && songs.length > 0) {
-    const rows = songs.map((song, i) => ({
-      setlist_id: setlist.id,
-      song_id: song.id,
-      position: i,
-      key_override: song.toKey || null,
-      notes: null,
-    }))
+    const rows = songs.map((song, i) => setlistSongRow(song, i, setlist.id))
     const { error: songsError } = await supabase
       .from('setlist_songs')
       .insert(rows)
@@ -76,13 +82,7 @@ export async function updateSetlist(setlistId, name, serviceDate, songs) {
   if (deleteError) return { error: deleteError }
 
   if (songs && songs.length > 0) {
-    const rows = songs.map((song, i) => ({
-      setlist_id: setlistId,
-      song_id: song.id,
-      position: i,
-      key_override: song.toKey || null,
-      notes: null,
-    }))
+    const rows = songs.map((song, i) => setlistSongRow(song, i, setlistId))
     const { error: songsError } = await supabase
       .from('setlist_songs')
       .insert(rows)
@@ -104,12 +104,24 @@ export async function deleteSetlist(setlistId) {
 
 /**
  * Fetch the ordered songs for a setlist, ready to hydrate the working list.
- * Returns rows: [{ song_id, key_override, position }]
+ * Returns rows: [{ song_id, key_override, position }] where `song_id` is the
+ * working-list opaque id — a public uuid, `personal:<uuid>`, or a `v:...` verse.
  */
 export async function loadSetlist(setlistId) {
-  return supabase
+  const { data, error } = await supabase
     .from('setlist_songs')
-    .select('song_id, key_override, position')
+    .select('song_id, personal_song_id, verse_ref, key_override, position')
     .eq('setlist_id', setlistId)
     .order('position', { ascending: true })
+  if (error) return { data: null, error }
+  const rows = (data || []).map((r) => ({
+    song_id: r.verse_ref
+      ? r.verse_ref
+      : r.personal_song_id
+        ? `personal:${r.personal_song_id}`
+        : r.song_id,
+    key_override: r.key_override,
+    position: r.position,
+  }))
+  return { data: rows, error: null }
 }

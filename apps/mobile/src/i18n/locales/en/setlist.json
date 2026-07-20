@@ -71,6 +71,47 @@
     "noSongs": "This set has no songs",
     "notFound": "This setlist no longer exists."
   },
+  "session": {
+    "start": "Start session",
+    "starting": "Starting…",
+    "live": "Live",
+    "manageTitle": "Live session",
+    "manageMessage": "Followers are watching. Share a link or end the session.",
+    "shareTeam": "Share team link (chords)",
+    "shareEveryone": "Share everyone link (lyrics)",
+    "end": "End session",
+    "startFailed": "Could not start session",
+    "endFailed": "Could not end session"
+  },
+  "verse": {
+    "add": "Add verse",
+    "title": "Add a verse",
+    "placeholder": "e.g. John 3:16",
+    "translation": "Translation",
+    "invalid": "Enter a valid reference (e.g. John 3:16).",
+    "confirm": "Add"
+  },
+  "sessionFollower": {
+    "joining": "Joining session…",
+    "notFoundTitle": "Session not found",
+    "notFoundBody": "This session may have ended or the link is incorrect.",
+    "endedTitle": "Thanks for joining our session!",
+    "endedBody": "The session has ended.",
+    "unavailable": "Not available in this view.",
+    "catchUp": "Leader moved on — tap to catch up",
+    "reconnecting": "Reconnecting…",
+    "waiting": "Waiting for the leader…",
+    "live": "LIVE",
+    "loadingSong": "Loading song…",
+    "home": "Home"
+  },
+  "resume": {
+    "title": "Resume live session?",
+    "message": "You have a live session running. Resume it or end it now.",
+    "resume": "Resume",
+    "endNow": "End session",
+    "later": "Later"
+  },
   "addSongs": {
     "title": "Add songs",
     "doneAdding": "Done adding songs",

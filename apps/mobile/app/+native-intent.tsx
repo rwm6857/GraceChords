@@ -33,6 +33,12 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
       return `/viewer/${encodeURIComponent(slug)}`
     }
 
+    // /s/:code -> native live-session follower (session/[code]). Also handles the
+    // gracechords://s/:code custom-scheme link the web "open in app" banner uses.
+    if (seg[0] === 's' && seg[1]) {
+      return `/session/${encodeURIComponent(seg[1])}`
+    }
+
     // Compact code form -> import preview.
     if (seg[0] === 'set' && seg[1]) {
       return `/setlist/import?code=${encodeURIComponent(seg[1])}`
