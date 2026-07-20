@@ -1,0 +1,19 @@
+# Required secrets — set with `wrangler secret put` before deploying:
+#   SUPABASE_URL              — e.g. https://xyz.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY — service role key (bypasses RLS for the delete)
+#
+# Optional var (below): SESSION_TTL_HOURS — inactivity TTL in hours (default 24).
+
+name = "gracechords-session-cleanup"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Every 15 minutes: prune ended sessions and abandoned (stale) ones.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+SESSION_TTL_HOURS = "24"
+
+[observability]
+enabled = true

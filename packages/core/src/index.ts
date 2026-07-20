@@ -40,6 +40,10 @@ export * from './setlists/setlistsRepo'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
 
+// Live sessions: fresh code generation + row queries + Realtime subscription
+export * from './sessions/sessionCode'
+export * from './sessions/sessionsRepo'
+
 // Private per-user reading reflections (Daily Word landing + journal)
 export * from './reflections/types'
 export * from './reflections/reflectionsRepo'

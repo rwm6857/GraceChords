@@ -71,6 +71,24 @@
     "noSongs": "This set has no songs",
     "notFound": "This setlist no longer exists."
   },
+  "session": {
+    "start": "Start session",
+    "starting": "Starting…",
+    "live": "Live",
+    "manageTitle": "Live session",
+    "manageMessage": "Followers are watching. Share the link or end the session.",
+    "shareLink": "Share link",
+    "end": "End session",
+    "startFailed": "Could not start session",
+    "endFailed": "Could not end session"
+  },
+  "resume": {
+    "title": "Resume live session?",
+    "message": "You have a live session running. Resume it or end it now.",
+    "resume": "Resume",
+    "endNow": "End session",
+    "later": "Later"
+  },
   "addSongs": {
     "title": "Add songs",
     "doneAdding": "Done adding songs",

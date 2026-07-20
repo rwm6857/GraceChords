@@ -23,6 +23,7 @@ const PortalEditorPage = React.lazy(() => import('./pages/portal/EditorPage'))
 const AuditLogPage = React.lazy(() => import('./components/editor/AuditLogPanel'))
 const PostsPage = React.lazy(() => import('./pages/PostsPage'))
 const PostDetailPage = React.lazy(() => import('./pages/PostDetailPage'))
+const SessionViewer = React.lazy(() => import('./pages/SessionViewerPage'))
 const ManagePostsPage = React.lazy(() => import('./pages/portal/ManagePostsPage'))
 const EditPostPage = React.lazy(() => import('./pages/portal/EditPostPage'))
 import NavBar from './components/ui/Navbar'
@@ -73,6 +74,7 @@ export default function App(){
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />
           <Route path="/worship/set/:code" element={<WorshipSetRoute />} />
+          <Route path="/s/:code" element={<SessionViewer />} />
           <Route path="*" element={<div className="container"><h1>Not found</h1><Link to="/">Back</Link></div>} />
         </Routes>
       </React.Suspense>

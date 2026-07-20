@@ -71,6 +71,24 @@
     "noSongs": "Bu sette ilahi yok",
     "notFound": "Bu set listesi artık mevcut değil."
   },
+  "session": {
+    "start": "Canlı oturum başlat",
+    "starting": "Başlatılıyor…",
+    "live": "Canlı",
+    "manageTitle": "Canlı oturum",
+    "manageMessage": "Takipçiler izliyor. Bağlantıyı paylaşın veya oturumu sonlandırın.",
+    "shareLink": "Bağlantıyı paylaş",
+    "end": "Oturumu sonlandır",
+    "startFailed": "Oturum başlatılamadı",
+    "endFailed": "Oturum sonlandırılamadı"
+  },
+  "resume": {
+    "title": "Canlı oturuma devam edilsin mi?",
+    "message": "Devam eden bir canlı oturumunuz var. Devam edin veya şimdi sonlandırın.",
+    "resume": "Devam et",
+    "endNow": "Oturumu sonlandır",
+    "later": "Daha sonra"
+  },
   "addSongs": {
     "title": "İlahi ekle",
     "doneAdding": "İlahi eklemeyi bitir",

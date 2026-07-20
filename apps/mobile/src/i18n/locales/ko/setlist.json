@@ -71,6 +71,24 @@
     "noSongs": "이 셋리스트에 찬양곡이 없습니다",
     "notFound": "이 셋리스트는 더 이상 존재하지 않습니다."
   },
+  "session": {
+    "start": "세션 시작",
+    "starting": "시작하는 중…",
+    "live": "라이브",
+    "manageTitle": "라이브 세션",
+    "manageMessage": "참여자들이 보고 있습니다. 링크를 공유하거나 세션을 종료하세요.",
+    "shareLink": "링크 공유",
+    "end": "세션 종료",
+    "startFailed": "세션을 시작할 수 없습니다",
+    "endFailed": "세션을 종료할 수 없습니다"
+  },
+  "resume": {
+    "title": "라이브 세션을 다시 시작할까요?",
+    "message": "진행 중인 라이브 세션이 있습니다. 다시 시작하거나 지금 종료하세요.",
+    "resume": "다시 시작",
+    "endNow": "세션 종료",
+    "later": "나중에"
+  },
   "addSongs": {
     "title": "찬양곡 추가",
     "doneAdding": "찬양곡 추가 완료",

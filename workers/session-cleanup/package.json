@@ -1,0 +1,10 @@
+{
+  "name": "gracechords-session-cleanup",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cloudflare cron worker that deletes ended + inactive live-session rows.",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  }
+}
