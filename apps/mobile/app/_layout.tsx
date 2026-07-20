@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, ScrollView, Text, View } from 'react-native'
+import { Alert, Platform, ScrollView, Text, View } from 'react-native'
+import * as Font from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { endSession, fetchActiveSessionForController } from '@gracechords/core'
@@ -168,6 +169,16 @@ export default function RootLayout() {
       hydrateViewerPrefs(AsyncStorage),
       hydrateBibleTranslationPref(AsyncStorage),
       hydrateHiddenPosts(AsyncStorage),
+      // Load the Material Symbols subset fonts before the splash lifts so
+      // Android never paints a missing glyph on first frame. iOS renders icons
+      // through SF Symbols natively (SymbolIcon), so there is nothing to load
+      // there — skip it to keep the iOS launch path byte-for-byte unchanged.
+      Platform.OS === 'android'
+        ? Font.loadAsync({
+            MaterialSymbolsOutlined: require('../assets/fonts/MaterialSymbolsOutlined.ttf'),
+            MaterialSymbolsFilled: require('../assets/fonts/MaterialSymbolsFilled.ttf'),
+          })
+        : Promise.resolve(),
     ]).then(([session, defaults]) => {
       // Apply the stored language pick (null = follow device) while the splash
       // is still up, so a non-device language never flashes on first paint.

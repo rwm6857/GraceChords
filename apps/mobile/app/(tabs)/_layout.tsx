@@ -13,11 +13,14 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 // (headerShown:false lives on the root Stack, not here).
 //
 // Icons supply both `sf` (SF Symbols — the iOS design-system requirement) and
-// `md` (Material Symbols) so the Android bar is wired ahead of time; Android is
-// not the current target, hence the TODO markers on the md picks. Every tab uses
-// the { default, selected } form so the selected glyph fills in (outline → solid)
-// on selection — NativeTabs does not auto-apply the .fill variant, so it must be
-// named explicitly. Songs and Setlists use music.pages / music.note.square.stack
+// `md` (Material Symbols) for the Android bar. The md picks share the same
+// SF→Material convention as the in-app SymbolIcon (see src/components/symbolMap.ts):
+// queue_music, list, menu_book, and handyman all match their SymbolIcon
+// counterparts so the tab bar and the rest of the UI stay visually consistent
+// on Android. Every tab uses the { default, selected } form so the selected
+// glyph fills in (outline → solid) on selection — NativeTabs does not auto-apply
+// the .fill variant, so it must be named explicitly. Songs and Setlists use
+// music.pages / music.note.square.stack
 // because their previous glyphs (music.note.list, list.bullet) have no .fill twin
 // in SF Symbols and so could not invert.
 //
@@ -35,7 +38,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger name="index">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'house', selected: 'house.fill' }}
-            md="home" // TODO(android): verify
+            md="home"
           />
           <NativeTabs.Trigger.Label>{tx('home')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
@@ -43,7 +46,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger name="songs">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'music.pages', selected: 'music.pages.fill' }}
-            md="queue_music" // TODO(android): verify
+            md="queue_music"
           />
           <NativeTabs.Trigger.Label>{tx('songs')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
@@ -51,7 +54,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger name="setlists">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'music.note.square.stack', selected: 'music.note.square.stack.fill' }}
-            md="list" // TODO(android): verify
+            md="list"
           />
           <NativeTabs.Trigger.Label>{tx('setlists')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
@@ -59,7 +62,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger name="daily">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'book', selected: 'book.fill' }}
-            md="menu_book" // TODO(android): verify
+            md="menu_book"
           />
           <NativeTabs.Trigger.Label>{tx('dailyWord')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
@@ -67,7 +70,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger name="utilities">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'wrench.and.screwdriver', selected: 'wrench.and.screwdriver.fill' }}
-            md="handyman" // TODO(android): verify
+            md="handyman"
           />
           <NativeTabs.Trigger.Label>{tx('utilities')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
