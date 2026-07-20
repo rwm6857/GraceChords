@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ConstrainedContent from '../components/ConstrainedContent'
+import HeroOverscrollFill from '../components/HeroOverscrollFill'
 import SymbolIcon from '../components/SymbolIcon'
 import DailyWordCard from '../components/home/DailyWordCard'
 import RecentSongsCard from '../components/home/RecentSongsCard'
@@ -272,6 +273,7 @@ export default function HomeScreen() {
         // under native tabs) so the last card scrolls fully above it.
         contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
       >
+        <HeroOverscrollFill />
         {/* ===== Hero ===== */}
         <View>
           <LinearGradient
