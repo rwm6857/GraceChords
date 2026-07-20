@@ -107,11 +107,48 @@ function recoverFromMissingStylesheets(){
   }, { once: true })
 }
 
+// Recover from stale lazy-route chunks after a deploy. A client running an
+// older bundle references chunk hashes (e.g. SongbookPage-<hash>.js) that the
+// new deploy no longer serves, so the dynamic import 404s and the route dies
+// with "Something went wrong". The service worker self-heals only the entry
+// asset, not per-route chunks — so recover here by reloading once, which pulls
+// fresh HTML + the current chunk hashes (navigations are network-first in
+// sw.js). A sessionStorage timestamp guards against reload loops if a reload
+// can't fix it (e.g. genuinely offline).
+function recoverFromStaleChunks(){
+  if (typeof window === 'undefined') return
+  const RELOAD_KEY = 'gc:chunkReloadAt'
+  const CHUNK_ERROR_RE = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload (?:CSS|module)/i
+
+  function reloadOnce(){
+    let last = 0
+    try { last = Number(window.sessionStorage.getItem(RELOAD_KEY) || 0) } catch {}
+    if (Date.now() - last < 15000) return
+    try { window.sessionStorage.setItem(RELOAD_KEY, String(Date.now())) } catch {}
+    window.location.reload()
+  }
+
+  // Vite dispatches this when __vitePreload can't load a dynamically imported
+  // chunk — the canonical stale-deploy signal. preventDefault stops Vite from
+  // rethrowing (we're reloading anyway).
+  window.addEventListener('vite:preloadError', (event) => {
+    if (typeof event?.preventDefault === 'function') event.preventDefault()
+    reloadOnce()
+  })
+
+  // Backstop for failures that surface as an unhandled promise rejection.
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = event?.reason?.message ?? event?.reason ?? ''
+    if (CHUNK_ERROR_RE.test(String(message))) reloadOnce()
+  })
+}
+
 bootstrapRouteFromQuery()
 initTheme()
 resetServiceWorkerIfRequested()
 registerServiceWorker()
 recoverFromMissingStylesheets()
+recoverFromStaleChunks()
 
 // Global styles
 import './styles/index.css'
