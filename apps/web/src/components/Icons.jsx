@@ -37,6 +37,47 @@ import {
   Globe,
   ChevronRight,
   LogOut,
+  RadioTower,
+  Bell,
+  BookOpen,
+  Book,
+  Calendar,
+  Check,
+  CircleCheck,
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  ChevronsUpDown,
+  Contrast,
+  Clock,
+  FileText,
+  Ellipsis,
+  Mail,
+  TriangleAlert,
+  EyeOff,
+  Flame,
+  Pointer,
+  Heart,
+  Info,
+  GripHorizontal,
+  ListFilter,
+  List,
+  Lock,
+  MicOff,
+  Music,
+  User,
+  Users,
+  Piano,
+  CopyPlus,
+  CircleHelp,
+  Share,
+  SquarePen,
+  Star,
+  AudioLines,
+  WifiOff,
+  Wrench,
+  X,
+  FileMusic,
 } from 'lucide-react'
 
 const DEFAULT_SIZE = 18
@@ -88,3 +129,48 @@ export const SendIcon = wrap(Send) // SF: paperplane.fill
 export const GlobeIcon = wrap(Globe) // SF: globe
 export const ChevronRightIcon = wrap(ChevronRight) // SF: chevron.right
 export const LogOutIcon = wrap(LogOut) // web-only
+
+// --- Signal Blue convergence: semantic exports mirroring the mobile SF vocabulary ---
+// (see iconMap.js). Additive only — not yet wired to consumers. Outline/fill SF variants
+// share one export; callers pass fill via props where a solid state is needed.
+export const LiveSessionIcon = wrap(RadioTower) // SF: antenna.radiowaves.left.and.right
+export const BellIcon = wrap(Bell) // SF: bell
+export const BookOpenIcon = wrap(BookOpen) // SF: book, book.fill
+export const BookIcon = wrap(Book) // SF: book.closed
+export const CalendarIcon = wrap(Calendar) // SF: calendar
+export const CheckIcon = wrap(Check) // SF: checkmark
+export const CheckCircleIcon = wrap(CircleCheck) // SF: checkmark.circle.fill
+export const ChevronDownIcon = wrap(ChevronDown) // SF: chevron.down
+export const ChevronLeftIcon = wrap(ChevronLeft) // SF: chevron.left
+export const ChevronUpIcon = wrap(ChevronUp) // SF: chevron.up
+export const SortIcon = wrap(ChevronsUpDown) // SF: chevron.up.chevron.down
+export const ThemeIcon = wrap(Contrast) // SF: circle.lefthalf.filled
+export const ClockIcon = wrap(Clock) // SF: clock
+export const FileTextIcon = wrap(FileText) // SF: doc.text
+export const EllipsisIcon = wrap(Ellipsis) // SF: ellipsis
+export const MailIcon = wrap(Mail) // SF: envelope
+export const WarningIcon = wrap(TriangleAlert) // SF: exclamationmark.triangle.fill
+export const EyeOffIcon = wrap(EyeOff) // SF: eye.slash
+export const FlameIcon = wrap(Flame) // SF: flame.fill
+export const TapIcon = wrap(Pointer) // SF: hand.tap — compromise, no tap glyph in Lucide (see iconMap.js)
+export const HeartIcon = wrap(Heart) // SF: heart, heart.fill
+export const InfoIcon = wrap(Info) // SF: info.circle
+export const DragHandleIcon = wrap(GripHorizontal) // SF: line.3.horizontal
+export const FilterIcon = wrap(ListFilter) // SF: line.3.horizontal.decrease
+export const ListIcon = wrap(List) // SF: list.bullet
+export const LockIcon = wrap(Lock) // SF: lock
+export const MicOffIcon = wrap(MicOff) // SF: mic.slash
+export const MusicIcon = wrap(Music) // SF: music.note
+export const UserIcon = wrap(User) // SF: person
+export const UsersIcon = wrap(Users) // SF: person.2, person.2.fill (no filled Users in Lucide)
+export const PitchPipeIcon = wrap(Piano) // SF: pianokeys
+export const DuplicateIcon = wrap(CopyPlus) // SF: plus.square.on.square
+export const HelpIcon = wrap(CircleHelp) // SF: questionmark.circle
+export const ShareIcon = wrap(Share) // SF: square.and.arrow.up (Share, not Share2)
+export const ComposeIcon = wrap(SquarePen) // SF: square.and.pencil
+export const StarIcon = wrap(Star) // SF: star, star.fill
+export const TunerIcon = wrap(AudioLines) // SF: tuningfork — compromise, no tuning fork in Lucide (see iconMap.js)
+export const WifiOffIcon = wrap(WifiOff) // SF: wifi.slash
+export const UtilitiesIcon = wrap(Wrench) // SF: wrench.and.screwdriver, .fill
+export const CloseIcon = wrap(X) // SF: xmark
+export const SongsIcon = wrap(FileMusic) // SF: music.pages, music.pages.fill

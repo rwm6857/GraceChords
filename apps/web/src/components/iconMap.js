@@ -89,13 +89,4 @@ export const ICON_MAP = {
 // The parity test allows these; it also fails if any listed name HAS since been added
 // (stale entry) — so this list shrinks slice by slice and MUST be empty once the
 // registry growth (Slice 3) lands. Do not use it as a dumping ground.
-export const WEB_PENDING = [
-  'LiveSessionIcon', 'BellIcon', 'BookOpenIcon', 'BookIcon', 'CalendarIcon',
-  'CheckIcon', 'CheckCircleIcon', 'ChevronDownIcon', 'ChevronLeftIcon', 'ChevronUpIcon',
-  'SortIcon', 'ThemeIcon', 'ClockIcon', 'FileTextIcon', 'EllipsisIcon', 'MailIcon',
-  'WarningIcon', 'EyeOffIcon', 'FlameIcon', 'TapIcon', 'HeartIcon', 'InfoIcon',
-  'DragHandleIcon', 'FilterIcon', 'ListIcon', 'LockIcon', 'MicOffIcon', 'MusicIcon',
-  'UserIcon', 'UsersIcon', 'PitchPipeIcon', 'DuplicateIcon', 'HelpIcon', 'ShareIcon',
-  'ComposeIcon', 'StarIcon', 'TunerIcon', 'WifiOffIcon', 'UtilitiesIcon', 'CloseIcon',
-  'SongsIcon',
-]
+export const WEB_PENDING = []
