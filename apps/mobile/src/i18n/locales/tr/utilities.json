@@ -7,7 +7,8 @@
     "tuner": "Akort Aleti",
     "metronome": "Tempo / Metronom",
     "pitchPipe": "Nota Düdüğü",
-    "songbook": "Şarkı Kitabı"
+    "songbook": "Şarkı Kitabı",
+    "capo": "Kapo Hesaplayıcı"
   },
   "tuner": {
     "title": "Akort Aleti",
@@ -69,5 +70,14 @@
     "pickCoverErrorTitle": "Fotoğraflar açılamadı",
     "exportPdf_one": "PDF'yi dışa aktar ({{count}} şarkı)",
     "exportPdf_other": "PDF'yi dışa aktar ({{count}} şarkı)"
+  },
+  "capo": {
+    "title": "Kapo Hesaplayıcı",
+    "songKey": "ŞARKININ TONU",
+    "playIn": "ŞU TONDA ÇAL",
+    "result": "Kapo {{fret}}",
+    "resultNone": "Kapo yok",
+    "hint": "{{key}} tonunda duyulması için {{shape}} akorlarını çal.",
+    "hintNone": "{{key}} tonunda çal — kapo gerekmez."
   }
 }

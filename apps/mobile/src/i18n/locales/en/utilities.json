@@ -7,7 +7,8 @@
     "tuner": "Tuner",
     "metronome": "Tap Tempo / Metronome",
     "pitchPipe": "Pitch Pipe",
-    "songbook": "Songbook"
+    "songbook": "Songbook",
+    "capo": "Capo Calculator"
   },
   "tuner": {
     "title": "Tuner",
@@ -69,5 +70,14 @@
     "pickCoverErrorTitle": "Could not open photos",
     "exportPdf_one": "Export PDF ({{count}} song)",
     "exportPdf_other": "Export PDF ({{count}} songs)"
+  },
+  "capo": {
+    "title": "Capo Calculator",
+    "songKey": "SONG KEY",
+    "playIn": "PLAY SHAPES IN",
+    "result": "Capo {{fret}}",
+    "resultNone": "No capo",
+    "hint": "Play {{shape}} shapes to sound in {{key}}.",
+    "hintNone": "Play in {{key}} — no capo needed."
   }
 }

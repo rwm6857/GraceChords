@@ -7,7 +7,8 @@
     "tuner": "Afinador",
     "metronome": "Marca tempo / Metrónomo",
     "pitchPipe": "Diapasón",
-    "songbook": "Cancionero"
+    "songbook": "Cancionero",
+    "capo": "Calculadora de cejilla"
   },
   "tuner": {
     "title": "Afinador",
@@ -69,5 +70,14 @@
     "pickCoverErrorTitle": "No se pudieron abrir las fotos",
     "exportPdf_one": "Exportar PDF ({{count}} canción)",
     "exportPdf_other": "Exportar PDF ({{count}} canciones)"
+  },
+  "capo": {
+    "title": "Calculadora de cejilla",
+    "songKey": "TONO DE LA CANCIÓN",
+    "playIn": "TOCAR ACORDES EN",
+    "result": "Cejilla {{fret}}",
+    "resultNone": "Sin cejilla",
+    "hint": "Toca acordes de {{shape}} para sonar en {{key}}.",
+    "hintNone": "Toca en {{key}} — no hace falta cejilla."
   }
 }

@@ -7,7 +7,8 @@
     "tuner": "튜너",
     "metronome": "탭 템포 / 메트로놈",
     "pitchPipe": "피치 파이프",
-    "songbook": "노래책"
+    "songbook": "노래책",
+    "capo": "카포 계산기"
   },
   "tuner": {
     "title": "튜너",
@@ -69,5 +70,14 @@
     "pickCoverErrorTitle": "사진을 열 수 없음",
     "exportPdf_one": "PDF 내보내기 ({{count}}곡)",
     "exportPdf_other": "PDF 내보내기 ({{count}}곡)"
+  },
+  "capo": {
+    "title": "카포 계산기",
+    "songKey": "곡의 조",
+    "playIn": "연주할 코드 조",
+    "result": "카포 {{fret}}",
+    "resultNone": "카포 없음",
+    "hint": "{{key}} 조로 소리 내려면 {{shape}} 코드로 연주하세요.",
+    "hintNone": "{{key}} 조로 연주 — 카포가 필요 없습니다."
   }
 }
