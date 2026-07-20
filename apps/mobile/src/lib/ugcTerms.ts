@@ -5,23 +5,22 @@
 // (title, buttons, link) DO go through i18n; only this body copy is fixed.
 
 export const UGC_GATE_INTRO =
-  'When you share a reflection publicly, it appears anonymously to other GraceChords users alongside today’s reading — your name and email are never shown. Public reflections are visible to others only on the day they’re posted.'
+  'When you share a reflection, it appears anonymously to other users. Your name, email, and private reflections are never shown.'
 
-export const UGC_GATE_SUBHEAD = 'Please help keep this a place of encouragement:'
+export const UGC_GATE_SUBHEAD = 'Help keep GraceChords a place of encouragement!'
 
 export const UGC_GATE_RULES: readonly string[] = [
-  'Share your own words — a reflection, prayer, or encouragement rooted in today’s passage.',
-  'Be kind. No harassment, hate, threats, or attacks on others.',
-  'Keep it clean. No sexual, violent, or otherwise objectionable content.',
-  'No spam, advertising, links, or pretending to be someone else.',
-  'Don’t share private information — your own or anyone else’s.',
+  'Be real: share your own reflection, prayer, or encouragement from the day’s passage.',
+  'Be kind: no harassment, hate, or threats.',
+  'Be clean: no explicit sexual or violent content.',
+  'Be smart: no personal information, spam, or ads.',
 ]
 
 export const UGC_GATE_ENFORCEMENT =
-  'Reflections are automatically screened before they post, and anyone can report a reflection. We remove content that breaks these rules and may permanently block anyone who posts it — normally within 24 hours of a report.'
+  'All content is screened and can be reported by other users. Rule-breaking posts are removed and accounts blocked from the feature.'
 
 // Shown just above the buttons; the "Terms of Use" words are rendered as a link.
 export const UGC_GATE_CONFIRM_PREFIX =
-  'By sharing publicly, you confirm this reflection is your own, you’re responsible for it, and you agree to these rules and our '
+  'By sharing publicly, you confirm this post is your sole creation and responsibility, and you agree to the rules and our '
 
 export const TERMS_URL = 'https://gracechords.com/terms'
