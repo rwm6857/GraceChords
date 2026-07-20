@@ -7,7 +7,7 @@
 export const UGC_GATE_INTRO =
   'When you share a reflection, it appears anonymously to other users. Your name, email, and private reflections are never shown.'
 
-export const UGC_GATE_SUBHEAD = 'Please help keep GraceChords encouraging!'
+export const UGC_GATE_SUBHEAD = 'Help keep GraceChords a place of encouragement!'
 
 export const UGC_GATE_RULES: readonly string[] = [
   'Be real: share your own reflection, prayer, or encouragement from the day’s passage.',
