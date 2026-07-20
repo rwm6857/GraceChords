@@ -20,8 +20,9 @@ primitives below — don't add one-off styles or hardcoded colors where a
 primitive/token fits.
 
 Design source: `gc-ios-design-reference/` (repo root). Follow its
-non-negotiables — HIG/UIKit over the mockups, **SF Symbols only**, and translate
-the visual rather than porting the HTML/CSS.
+non-negotiables — HIG/UIKit over the mockups, **native design-system icons
+only** (SF Symbols on iOS, Material Symbols on Android — never hand-drawn/SVG),
+and translate the visual rather than porting the HTML/CSS.
 
 ## Stack
 
@@ -32,7 +33,9 @@ the visual rather than porting the HTML/CSS.
 - **Continuous Native Generation (CNG).** `ios/` and `android/` are **gitignored
   and never committed** — regenerate them with `npx expo prebuild`. Treat
   `app.json` (+ config plugins) as the source of truth for native config.
-- **UI/native deps:** `expo-symbols` (SF Symbols), `expo-linear-gradient` (the
+- **UI/native deps:** `expo-symbols` (SF Symbols, iOS), `expo-font` (registers
+  the bundled Material Symbols subset fonts for the Android icon path),
+  `expo-linear-gradient` (the
   Home hero), `expo-splash-screen` (auth-gate hold), `expo-haptics`,
   `react-native-gesture-handler` + `react-native-reanimated` (swipe-to-delete,
   transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
@@ -160,9 +163,19 @@ duplicate logic here and never edit core internals to suit mobile.
   `RowActionsSheet`, which stays on the hand-rolled `BottomSheet` Modal because
   it chains into the key picker via `onDismissed`; if you add a new sheet, use
   the `useFormSheet` + `FormSheetShell` pattern.
-- **Icons are SF Symbols only**, via `src/components/SymbolIcon.tsx` (wraps
-  `expo-symbols`) — no hand-drawn/SVG glyphs. SF Symbols render on iOS/iPadOS only
-  (the current target).
+- **Icons are native design-system glyphs only** (no hand-drawn/SVG), always via
+  `src/components/SymbolIcon.tsx`. Call sites pass a single SF Symbol `name`;
+  `SymbolIcon` branches internally on `Platform.OS`: iOS renders it through
+  `expo-symbols` (`SymbolView`), Android maps the SF name to a Material Symbols
+  glyph via `src/components/symbolMap.ts` and renders it from the subset fonts in
+  `assets/fonts/` (`MaterialSymbolsOutlined`/`MaterialSymbolsFilled`, registered
+  in `app/_layout.tsx`). **When you introduce a new icon, add its SF→Material
+  mapping to `symbolMap.ts` and re-run the font subset build** so the Android
+  glyph exists — an unmapped name renders a fallback and warns in dev. Pass the
+  optional `md` prop only to override an ambiguous auto-mapping (iOS ignores it).
+  The tab bar (`app/(tabs)/_layout.tsx`) is separate — it uses
+  `NativeTabs.Trigger.Icon` with explicit `sf`/`md`, but follows the same
+  SF→Material naming convention.
 - Gradients use `expo-linear-gradient` with tokens from `native.ts`
   (`heroGradient`/`heroGlow`). The atmospheric Home hero is the **only** sanctioned
   gradient — never a UI-surface gradient. (RN has no radial gradient; the hero
