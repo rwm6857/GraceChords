@@ -305,11 +305,11 @@
 }
 
 .gc-star-btn:hover {
-  color: #D97706;
+  color: #F0B000;
 }
 
 .gc-star-btn.starred {
-  color: #D97706;
+  color: #F0B000;
 }
 
 .gc-star-btn:active {
