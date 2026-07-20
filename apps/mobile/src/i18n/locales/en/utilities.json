@@ -6,7 +6,8 @@
   "tools": {
     "tuner": "Tuner",
     "metronome": "Tap Tempo / Metronome",
-    "pitchPipe": "Pitch Pipe"
+    "pitchPipe": "Pitch Pipe",
+    "songbook": "Songbook"
   },
   "tuner": {
     "title": "Tuner",
@@ -41,5 +42,32 @@
     "octaveDown": "Octave down",
     "octaveUp": "Octave up",
     "holdNote": "Hold note"
+  },
+  "songbook": {
+    "title": "Songbook",
+    "defaultTitle": "Songbook",
+    "addSongs": "Add songs",
+    "selectedCount_one": "{{count}} song selected",
+    "selectedCount_other": "{{count}} songs selected",
+    "noneSelected": "No songs selected yet. Add songs to build your songbook.",
+    "removeSong": "Remove {{title}}",
+    "customizeExport": "Customize & export",
+    "optionsTitle": "Songbook options",
+    "nameLabel": "Name",
+    "namePlaceholder": "Songbook",
+    "subtitleLabel": "Subtitle",
+    "subtitlePlaceholder": "Optional subtitle or date",
+    "tocLabel": "Table of contents",
+    "tocHint": "Adds a contents page and numbers each song.",
+    "coverLabel": "Cover image",
+    "addCover": "Add cover image",
+    "replaceCover": "Replace",
+    "removeCover": "Remove cover",
+    "coverHint": "Optional. Replaces the text cover page.",
+    "coverTooLargeTitle": "Image too large",
+    "coverTooLarge": "Please choose a smaller cover image (under about 2 MB).",
+    "pickCoverErrorTitle": "Could not open photos",
+    "exportPdf_one": "Export PDF ({{count}} song)",
+    "exportPdf_other": "Export PDF ({{count}} songs)"
   }
 }

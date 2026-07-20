@@ -17,6 +17,7 @@
 import { jsPDF } from 'jspdf'
 import { applyFooterToAllPages } from './footer'
 import { formatInstrumental } from '../songs/instrumental.js'
+import { compareSongsByTitle } from '../songs/sort.js'
 
 const PAGE = { w: 612, h: 792 } // Letter
 const MARGINS = { top: 36, right: 36, bottom: 36, left: 36 }
@@ -436,6 +437,166 @@ export async function renderSingleSongPdfBuffer(song, opts = {}){
 
 export async function renderMultiSongPdfBuffer(songs, opts = {}){
   const res = await renderMultiSongPdfDoc(songs, opts)
+  if (!res) return new Uint8Array(0)
+  return bufferOf(res.doc)
+}
+
+// Songbook: a cover page, an optional numbered table of contents, then every
+// song (one per page) in alphabetical order. DOM-free — the cover image is
+// sized via jsPDF's getImageProperties (not `new Image()`), so this runs both
+// in the browser (via ./index.js) and server-side (the /api/export/songbook
+// Pages Function). `subtitle` is supplied by the caller (e.g. a date string)
+// to keep this function deterministic. When `includeTOC` is false, no TOC
+// pages are emitted and song titles are not numbered.
+export async function renderSongbookPdfDoc(songs = [], {
+  includeTOC = true,
+  coverImageDataUrl = null,
+  title = 'GraceChords Songbook',
+  subtitle = '',
+  registerFonts,
+} = {}){
+  if (!Array.isArray(songs) || songs.length === 0) return null
+
+  const ordered = songs.slice().sort(compareSongsByTitle)
+
+  const doc = createDoc()
+  await applyFonts(doc, registerFonts)
+
+  const pre = []
+  for (const s of ordered){
+    const plan = planForSong(doc, s)
+    pre.push({ song: s, plan, sections: sectionify(s) })
+  }
+
+  // --- Cover page ---------------------------------------------------------
+  const drawTextCover = () => {
+    try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+    doc.setFontSize(TITLE_PT)
+    try { doc.text(title, PAGE.w / 2, PAGE.h / 2 - 10, { align: 'center', baseline: 'middle' }) } catch {}
+    if (subtitle) {
+      try { doc.setFont('NotoSans', 'italic') } catch { try { doc.setFont('helvetica', 'italic') } catch {} }
+      doc.setFontSize(SUBTITLE_PT)
+      try { doc.setTextColor(90, 90, 90) } catch {}
+      try { doc.text(subtitle, PAGE.w / 2, PAGE.h / 2 + 14, { align: 'center', baseline: 'middle' }) } catch {}
+      try { doc.setTextColor(0, 0, 0) } catch {}
+    }
+  }
+
+  if (coverImageDataUrl){
+    try {
+      const availW = PAGE.w - MARGINS.left - MARGINS.right
+      const availH = PAGE.h - MARGINS.top - MARGINS.bottom
+      const props = doc.getImageProperties(coverImageDataUrl)
+      const iw = props?.width
+      const ih = props?.height
+      if (!iw || !ih) throw new Error('image has no dimensions')
+      const scale = Math.min(availW / iw, availH / ih)
+      const w = iw * scale
+      const h = ih * scale
+      const x = MARGINS.left + (availW - w) / 2
+      const y = MARGINS.top + (availH - h) / 2
+      doc.addImage(coverImageDataUrl, undefined, x, y, w, h, undefined, 'FAST')
+    } catch {
+      drawTextCover()
+    }
+  } else {
+    drawTextCover()
+  }
+
+  // --- Table of contents (optional) --------------------------------------
+  const entries = pre.length
+  const lineH = 16
+  const yStartFirst = MARGINS.top + 24
+  const rowsPerColFirst = Math.max(1, Math.floor((PAGE.h - MARGINS.bottom - yStartFirst) / lineH))
+  const rowsPerColNext = Math.max(1, Math.floor((PAGE.h - MARGINS.bottom - MARGINS.top) / lineH))
+
+  let tocPages = 0
+  if (includeTOC){
+    if (entries <= rowsPerColFirst) tocPages = 1
+    else if (entries <= 2 * rowsPerColFirst) tocPages = 1
+    else {
+      const remaining = Math.max(0, entries - 2 * rowsPerColFirst)
+      const extraPages = Math.ceil(remaining / (2 * rowsPerColNext))
+      tocPages = 1 + extraPages
+    }
+
+    const leftX = MARGINS.left
+    const rightX = PAGE.w / 2 + 10
+
+    doc.addPage([PAGE.w, PAGE.h])
+    try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+    doc.setFontSize(18)
+    drawTextSafe(doc, 'Table of Contents', MARGINS.left, MARGINS.top)
+    try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+    doc.setFontSize(11)
+
+    let idx = 0
+    if (entries <= rowsPerColFirst){
+      let y = yStartFirst
+      while (idx < entries && y <= PAGE.h - MARGINS.bottom - lineH){
+        const t = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx + 1}. ${t}`, leftX, y)
+        y += lineH
+        idx++
+      }
+    } else {
+      let yL = yStartFirst
+      for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++){
+        const t = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx + 1}. ${t}`, leftX, yL)
+        yL += lineH
+      }
+      let yR = yStartFirst
+      for (let c = 0; c < rowsPerColFirst && idx < entries; c++, idx++){
+        const t = String(pre[idx].song?.title || 'Untitled')
+        drawTextSafe(doc, `${idx + 1}. ${t}`, rightX, yR)
+        yR += lineH
+      }
+
+      while (idx < entries){
+        doc.addPage([PAGE.w, PAGE.h])
+        try { doc.setFont('NotoSans', 'bold') } catch { try { doc.setFont('helvetica', 'bold') } catch {} }
+        doc.setFontSize(18)
+        drawTextSafe(doc, 'Table of Contents (continued)', MARGINS.left, MARGINS.top)
+        try { doc.setFont('NotoSans', 'normal') } catch { try { doc.setFont('helvetica', 'normal') } catch {} }
+        doc.setFontSize(11)
+        let yL2 = MARGINS.top + 24
+        for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++){
+          const t = String(pre[idx].song?.title || 'Untitled')
+          drawTextSafe(doc, `${idx + 1}. ${t}`, leftX, yL2)
+          yL2 += lineH
+        }
+        let yR2 = MARGINS.top + 24
+        for (let c = 0; c < rowsPerColNext && idx < entries; c++, idx++){
+          const t = String(pre[idx].song?.title || 'Untitled')
+          drawTextSafe(doc, `${idx + 1}. ${t}`, rightX, yR2)
+          yR2 += lineH
+        }
+      }
+    }
+  }
+
+  // --- Songs (one per page) ----------------------------------------------
+  for (let i = 0; i < pre.length; i++){
+    doc.addPage([PAGE.w, PAGE.h])
+    const baseTitle = pre[i].song?.title || 'Untitled'
+    const displayTitle = includeTOC ? `${i + 1}. ${baseTitle}` : baseTitle
+    const numbered = { ...pre[i].song, title: displayTitle }
+    renderPlanned(doc, pre[i].plan, pre[i].sections, numbered)
+  }
+
+  const prePages = 1 + (includeTOC ? tocPages : 0)
+  applyFooterToAllPages(
+    doc,
+    { left: MARGINS.left, bottom: MARGINS.bottom },
+    { w: PAGE.w, h: PAGE.h },
+    { startPage: prePages + 1 },
+  )
+  return { doc }
+}
+
+export async function renderSongbookPdfBuffer(songs, opts = {}){
+  const res = await renderSongbookPdfDoc(songs, opts)
   if (!res) return new Uint8Array(0)
   return bufferOf(res.doc)
 }

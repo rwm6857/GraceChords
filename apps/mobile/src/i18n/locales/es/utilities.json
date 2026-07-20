@@ -6,7 +6,8 @@
   "tools": {
     "tuner": "Afinador",
     "metronome": "Marca tempo / Metrónomo",
-    "pitchPipe": "Diapasón"
+    "pitchPipe": "Diapasón",
+    "songbook": "Cancionero"
   },
   "tuner": {
     "title": "Afinador",
@@ -41,5 +42,32 @@
     "octaveDown": "Bajar octava",
     "octaveUp": "Subir octava",
     "holdNote": "Mantener nota"
+  },
+  "songbook": {
+    "title": "Cancionero",
+    "defaultTitle": "Cancionero",
+    "addSongs": "Añadir canciones",
+    "selectedCount_one": "{{count}} canción seleccionada",
+    "selectedCount_other": "{{count}} canciones seleccionadas",
+    "noneSelected": "Aún no hay canciones seleccionadas. Añade canciones para crear tu cancionero.",
+    "removeSong": "Quitar {{title}}",
+    "customizeExport": "Personalizar y exportar",
+    "optionsTitle": "Opciones del cancionero",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Cancionero",
+    "subtitleLabel": "Subtítulo",
+    "subtitlePlaceholder": "Subtítulo o fecha (opcional)",
+    "tocLabel": "Índice",
+    "tocHint": "Añade una página de índice y numera cada canción.",
+    "coverLabel": "Imagen de portada",
+    "addCover": "Añadir imagen de portada",
+    "replaceCover": "Reemplazar",
+    "removeCover": "Quitar portada",
+    "coverHint": "Opcional. Reemplaza la página de portada de texto.",
+    "coverTooLargeTitle": "Imagen demasiado grande",
+    "coverTooLarge": "Elige una imagen de portada más pequeña (menos de unos 2 MB).",
+    "pickCoverErrorTitle": "No se pudieron abrir las fotos",
+    "exportPdf_one": "Exportar PDF ({{count}} canción)",
+    "exportPdf_other": "Exportar PDF ({{count}} canciones)"
   }
 }
