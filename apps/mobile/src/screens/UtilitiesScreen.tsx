@@ -11,17 +11,17 @@ import SymbolIcon from '../components/SymbolIcon'
 import TunerScreen from './TunerScreen'
 import MetronomeScreen from './MetronomeScreen'
 import PitchPipeScreen from './PitchPipeScreen'
+import CapoCalculatorScreen from './CapoCalculatorScreen'
 import SongbookBuilderScreen from './SongbookBuilderScreen'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import type { Tokens } from '@gracechords/tokens/native'
 
 // The Utilities tab landing page: musician's tools as a grouped list. Every
-// row is a live feature (Tuner, Tap Tempo / Metronome, Pitch Pipe). Capo
-// math lives inline in the Song Viewer's capo chip, not as a tool here. Built
-// entirely from the shared primitives (Screen / SectionHeader / Card /
-// ListRow / SymbolIcon) and theme tokens, mirroring the grouped-list layout
-// used by Settings.
+// row is a live feature (Tuner, Tap Tempo / Metronome, Pitch Pipe, Capo
+// Calculator). Built entirely from the shared primitives (Screen /
+// SectionHeader / Card / ListRow / SymbolIcon) and theme tokens, mirroring the
+// grouped-list layout used by Settings.
 //
 // Phones push each tool as its own route. At regular (tablet) width the tab
 // becomes a list-detail split (tokens layout.split, ~1/3 · 2/3): the tool
@@ -46,7 +46,7 @@ function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; 
   )
 }
 
-type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/songbook'
+type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/capo' | '/songbook'
 
 const UTILITIES: {
   icon: Parameters<typeof SymbolIcon>[0]['name']
@@ -57,6 +57,7 @@ const UTILITIES: {
   { icon: 'metronome', titleKey: 'tools.metronome', route: '/metronome' },
   { icon: 'pianokeys', titleKey: 'tools.pitchPipe', route: '/pitch-pipe' },
   { icon: 'book', titleKey: 'tools.songbook', route: '/songbook' },
+  { icon: 'music.note', titleKey: 'tools.capo', route: '/capo' },
 ]
 
 export default function UtilitiesScreen() {
@@ -139,6 +140,8 @@ export default function UtilitiesScreen() {
             <PitchPipeScreen embedded />
           ) : tool === '/songbook' ? (
             <SongbookBuilderScreen embedded />
+          ) : tool === '/capo' ? (
+            <CapoCalculatorScreen embedded />
           ) : (
             <View
               style={{
