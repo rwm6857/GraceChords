@@ -7,7 +7,6 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { useChordStyle } from '../hooks/useSettings'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
 import { fetchBibleChapter } from '../utils/bible/chapters'
-import { isMobile } from '../utils/app/platform'
 import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordRender'
 
 // Live Session follower (web). Joined via a plain link at /s/{code}. Reads ONE
@@ -22,7 +21,6 @@ import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordR
 // After this long without any realtime signal following a drop, soften the
 // "reconnecting" hint (we still HOLD the last-known state either way).
 const GRACE_MS = 50_000
-const BANNER_DISMISS_KEY = 'session:appBannerDismissed'
 
 // Parse a catalog song's ChordPro into the section shape the renderer consumes.
 // Chords are kept; the render decides per-tier whether to show them.
@@ -46,14 +44,6 @@ function webFetchChapter(translationId, bookNumber, chapter) {
   return fetchBibleChapter({ translationId, book: String(bookNumber), chapter }).catch(() => null)
 }
 
-function bannerInitiallyDismissed() {
-  try {
-    return localStorage.getItem(BANNER_DISMISS_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
 export default function SessionViewer() {
   const { code = '' } = useParams()
   const chordStyle = useChordStyle()
@@ -65,8 +55,6 @@ export default function SessionViewer() {
   const [phase, setPhase] = useState('loading') // loading | ready | notfound
   const [connected, setConnected] = useState(true)
   const [staleReconnect, setStaleReconnect] = useState(false)
-
-  const [bannerDismissed, setBannerDismissed] = useState(bannerInitiallyDismissed)
 
   const [displayedUid, setDisplayedUid] = useState(null)
   const [autoFollow, setAutoFollow] = useState(true)
@@ -199,25 +187,6 @@ export default function SessionViewer() {
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
-  const openInApp = () => {
-    try {
-      window.location.href = `gracechords://s/${encodeURIComponent(code)}`
-    } catch {
-      /* no-op */
-    }
-  }
-
-  const dismissBanner = () => {
-    setBannerDismissed(true)
-    try {
-      localStorage.setItem(BANNER_DISMISS_KEY, '1')
-    } catch {
-      /* ignore storage failures */
-    }
-  }
-
-  const showBanner = phase === 'ready' && session?.status !== 'ended' && !bannerDismissed && isMobile()
-
   // ---------- Render ----------
   if (phase === 'loading') {
     return <div style={SHELL}><div style={CENTER}>Joining session…</div></div>
@@ -266,15 +235,6 @@ export default function SessionViewer() {
           <span style={KEY_PILL}>Key: {session.current_key}</span>
         ) : null}
       </div>
-
-      {/* Passive "open in app" banner (mobile only, dismissible). */}
-      {showBanner ? (
-        <div style={BANNER} role="region" aria-label="Open in app">
-          <span style={{ flex: 1, minWidth: 0 }}>Following on the web — open in the GraceChords app.</span>
-          <button onClick={openInApp} style={BANNER_BTN}>Open in app</button>
-          <button onClick={dismissBanner} style={BANNER_X} aria-label="Dismiss">×</button>
-        </div>
-      ) : null}
 
       {!connected ? (
         <div style={RECONNECT} role="status" aria-live="polite">
@@ -364,19 +324,6 @@ const COMMENT = { fontStyle: 'italic', opacity: 0.75, marginBottom: 8 }
 const KEY_PILL = { background: 'var(--gc-surface-2, rgba(0,0,0,.06))', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }
 const LIVE_DOT = { width: 9, height: 9, borderRadius: 999, background: '#e0245e', flexShrink: 0 }
 const RECONNECT = { textAlign: 'center', padding: '6px 12px', fontSize: 13, background: 'var(--gc-surface-2, rgba(0,0,0,.06))', opacity: 0.85 }
-const BANNER = {
-  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
-  background: 'var(--gc-surface-2, rgba(0,0,0,.06))', fontSize: 14,
-  borderBottom: '1px solid var(--gc-separator, rgba(0,0,0,.1))',
-}
-const BANNER_BTN = {
-  background: 'var(--gc-primary, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
-  padding: '6px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-}
-const BANNER_X = {
-  background: 'transparent', border: 'none', color: 'inherit', fontSize: 20, lineHeight: 1,
-  cursor: 'pointer', padding: '0 4px', opacity: 0.6, flexShrink: 0,
-}
 const PILL = {
   position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)',
   background: 'var(--gc-primary, #2563eb)', color: '#fff', border: 'none', borderRadius: 999,
