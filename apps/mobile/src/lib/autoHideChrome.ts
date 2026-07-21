@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Animated } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useAccessibilityFlags } from './accessibilityFlags'
 
 // "Hide controls when idle" — shared by the Song Viewer and the Setlist
 // Performer. Unlike the other view options (transpose, font, chord style),
@@ -43,6 +44,9 @@ export function useAutoHideChrome(enabled: boolean) {
   const [visible, setVisible] = useState(true)
   const opacity = useRef(new Animated.Value(1)).current
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Reduce Motion: snap chrome in/out instead of fading. Default settings keep
+  // the 260ms fade.
+  const { reduceMotion } = useAccessibilityFlags()
 
   const clearTimer = useCallback(() => {
     if (timer.current) {
@@ -64,10 +68,10 @@ export function useAutoHideChrome(enabled: boolean) {
   useEffect(() => {
     Animated.timing(opacity, {
       toValue: visible ? 1 : 0,
-      duration: 260,
+      duration: reduceMotion ? 0 : 260,
       useNativeDriver: true,
     }).start()
-  }, [visible, opacity])
+  }, [visible, opacity, reduceMotion])
 
   // Enabling starts the hide countdown; disabling pins chrome visible.
   useEffect(() => {

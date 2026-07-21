@@ -1,9 +1,13 @@
-import { Pressable, Text } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
+import { useAccessibilityFlags } from '../lib/accessibilityFlags'
+import SymbolIcon from './SymbolIcon'
 
 // A pill-shaped, toggleable chip — used for the tag filters in the Filter & sort
 // sheet. Selected chips fill with the accent; unselected chips are a bordered
-// surface.
+// surface. When iOS "Differentiate Without Color" is on, a selected chip also
+// shows a checkmark so selection is not conveyed by fill color alone; default
+// settings render exactly as before (no icon).
 
 export default function Chip({
   label,
@@ -15,12 +19,17 @@ export default function Chip({
   onPress?: () => void
 }) {
   const t = useTheme()
+  const { differentiateWithoutColor } = useAccessibilityFlags()
+  const showCue = selected && differentiateWithoutColor
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: showCue ? t.spacing.xs : 0,
         paddingVertical: t.spacing.sm,
         paddingHorizontal: t.spacing.lg,
         borderRadius: t.radii.pill,
@@ -30,6 +39,9 @@ export default function Chip({
         opacity: pressed ? 0.85 : 1,
       })}
     >
+      {showCue ? (
+        <SymbolIcon name="checkmark" size={13} color={t.colors.onAccent} />
+      ) : null}
       <Text
         style={{
           fontSize: 14,
