@@ -111,6 +111,34 @@ export const darkColors: ThemeColors = {
   heroGlow: 'rgba(78,166,230,0.18)',
 }
 
+/**
+ * Increase-Contrast overlays — merged over the palette ONLY when iOS "Increase
+ * Contrast" is enabled (see the mobile ThemeProvider). They strengthen the few
+ * tokens that sit near the WCAG contrast floor: secondary/muted text and the
+ * hairline separators, plus a deeper accent-text tone. Every other token is
+ * inherited unchanged, and on a device with the setting OFF these are never
+ * applied — the app renders the exact base palette above.
+ */
+export const lightContrastBoost: Partial<ThemeColors> = {
+  sec: '#454C54',
+  muted: '#5A626B',
+  textAccent: '#0F5088',
+  border: '#C4CCD3',
+  off: 'rgba(90,98,107,0.7)',
+}
+
+export const darkContrastBoost: Partial<ThemeColors> = {
+  sec: '#C7CED5',
+  muted: '#9AA2AA',
+  textAccent: '#8AC4EE',
+  border: '#3C444C',
+  off: 'rgba(154,162,170,0.75)',
+}
+
+export function getContrastBoost(mode: ThemeMode): Partial<ThemeColors> {
+  return mode === 'dark' ? darkContrastBoost : lightContrastBoost
+}
+
 /** 4-pt spacing scale (shared across modes). */
 export const spacing = {
   xs: 4,
@@ -215,6 +243,10 @@ export const darkTokens: Tokens = {
   typography,
 }
 
-export function getTokens(mode: ThemeMode): Tokens {
-  return mode === 'dark' ? darkTokens : lightTokens
+export function getTokens(mode: ThemeMode, increaseContrast = false): Tokens {
+  const base = mode === 'dark' ? darkTokens : lightTokens
+  // Default settings return the base object unchanged (stable reference). Only
+  // when Increase Contrast is on do we build a boosted variant.
+  if (!increaseContrast) return base
+  return { ...base, colors: { ...base.colors, ...getContrastBoost(mode) } }
 }

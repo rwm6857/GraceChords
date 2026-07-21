@@ -34,6 +34,8 @@ import {
 } from '../src/lib/readerReminderService'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 import { hydrateHiddenPosts } from '../src/lib/hiddenPosts'
+import { startAccessibilityFlags } from '../src/lib/accessibilityFlagsService'
+import { useAccessibilityFlags } from '../src/lib/accessibilityFlags'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -142,6 +144,7 @@ export default function RootLayout() {
   const router = useRouter()
   const { t: tx } = useTranslation(['setlist', 'common'])
   const resumeChecked = useRef(false)
+  const { reduceMotion } = useAccessibilityFlags()
 
   useEffect(() => {
     // Missing public config: skip the session read entirely (the supabase client
@@ -151,6 +154,11 @@ export default function RootLayout() {
     // Install the notification foreground handler / Android channel once, before
     // any reminder is (re)scheduled below.
     initReaderReminders()
+    // Begin tracking the OS accessibility settings (Reduce Motion / Increase
+    // Contrast / Differentiate Without Color). `ready` joins the splash hold
+    // below so the first paint already reflects any enabled setting; `stop`
+    // removes the OS listeners on unmount.
+    const a11y = startAccessibilityFlags()
     // Load app-wide defaults (theme/chord style) before the splash lifts so the
     // resolved theme is applied on first paint — no light→dark flash. Runs in
     // parallel with the session read; both must resolve before `ready`.
@@ -179,6 +187,9 @@ export default function RootLayout() {
             MaterialSymbolsFilled: require('../assets/fonts/MaterialSymbolsFilled.ttf'),
           })
         : Promise.resolve(),
+      // Resolve the initial accessibility-flag query before the splash lifts so
+      // the contrast overlay (if enabled) is applied on first paint — no flash.
+      a11y.ready,
     ]).then(([session, defaults]) => {
       // Apply the stored language pick (null = follow device) while the splash
       // is still up, so a non-device language never flashes on first paint.
@@ -207,6 +218,7 @@ export default function RootLayout() {
     return () => {
       sub.subscription.unsubscribe()
       stopAutoRefresh?.()
+      a11y.stop()
     }
   }, [])
 
@@ -265,7 +277,15 @@ export default function RootLayout() {
       <ThemeProvider>
         <SafeAreaProvider>
           <ThemedStatusBar />
-          <Stack screenOptions={{ headerShown: false }}>
+          {/* Reduce Motion: swap the default slide push for a cross-fade
+              (the HIG-preferred reduced-motion transition). Default settings
+              keep the standard push animation. */}
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: reduceMotion ? 'fade' : 'default',
+            }}
+          >
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="login" />
             <Stack.Screen name="choose-icon" />

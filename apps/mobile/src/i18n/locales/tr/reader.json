@@ -86,7 +86,17 @@
     "agree": "Kabul et ve paylaş",
     "cancel": "İptal",
     "termsLink": "Kullanım Şartları",
-    "errorTitle": "Onayın kaydedilemedi"
+    "errorTitle": "Onayın kaydedilemedi",
+    "ageHeading": "Kaç yaşındasın?",
+    "age13Plus": "13 yaşında veya daha büyüğüm",
+    "ageUnder13": "13 yaşından küçüğüm",
+    "ageUnder13Notice": "Topluluk düşüncelerini paylaşmak ve görüntülemek 13 yaşından küçükler için kullanılamaz. Yine de özel düşünceler yazabilir ve her günün pasajını okuyabilirsin.",
+    "ageUnder13Confirm": "Devam et"
+  },
+  "publicLocked": {
+    "title": "Topluluk düşünceleri",
+    "body": "Topluluğun düşüncelerini görüntülemek ve paylaşmak için yaşını onayla.",
+    "cta": "Devam et"
   },
   "copyVerses_one": "{{count}} ayeti kopyala",
   "copyVerses_other": "{{count}} ayeti kopyala",

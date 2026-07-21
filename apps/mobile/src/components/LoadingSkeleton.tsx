@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { ActivityIndicator, Animated, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
+import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 
 // The "Loading · spinner · skeleton" component from [DOC] Components &
 // Foundations: a syncing label with a spinner over shimmering placeholder
@@ -23,8 +24,14 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
   const { t: tx } = useTranslation('common')
   const displayLabel = label ?? tx('loading')
   const pulse = useRef(new Animated.Value(0.45)).current
+  // Reduce Motion: hold the placeholders at a steady opacity instead of pulsing.
+  const { reduceMotion } = useAccessibilityFlags()
 
   useEffect(() => {
+    if (reduceMotion) {
+      pulse.setValue(0.7)
+      return
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
@@ -33,7 +40,7 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
     )
     loop.start()
     return () => loop.stop()
-  }, [pulse])
+  }, [pulse, reduceMotion])
 
   const bar = (width: string, height: number) => (
     <Animated.View
