@@ -36,8 +36,12 @@ export default function SpritePickerScreen() {
     if (isEdit && !touched && currentSprite) setSelected(currentSprite)
   }, [isEdit, touched, currentSprite])
 
+  // Always lay the avatars out in 3 columns, sizing each tile to the viewport.
+  // Floor the width so the three tiles + two gaps never exceed the row's content
+  // width — an exact fit is prone to sub-pixel rounding that wraps the third
+  // tile and collapses the grid to 2 columns.
   const gridGap = t.spacing.lg
-  const tileSize = (width - t.spacing.lg * 2 - gridGap * 2) / 3
+  const tileSize = Math.floor((width - t.spacing.lg * 2 - gridGap * 2) / 3)
 
   async function finish(sprite: SpriteId | null) {
     setBusy(true)

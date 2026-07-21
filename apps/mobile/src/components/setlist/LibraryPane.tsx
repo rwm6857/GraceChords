@@ -6,6 +6,7 @@ import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
 import { useKeyboardHeight } from '../../lib/useKeyboardHeight'
+import { songMatchRank } from '../../lib/songSearch'
 import type { Song } from '../../lib/useSongList'
 
 // The tablet Setlist Builder's left pane: a searchable, single-column library
@@ -34,14 +35,13 @@ export default function LibraryPane({
 
   const trimmed = query.trim().toLowerCase()
   const results = useMemo(() => {
-    const base = trimmed
-      ? songs.filter(
-          (s) =>
-            s.title.toLowerCase().includes(trimmed) ||
-            (s.artist ?? '').toLowerCase().includes(trimmed),
-        )
-      : songs
-    return base.slice().sort((a, b) => a.title.localeCompare(b.title))
+    if (!trimmed) return songs.slice().sort((a, b) => a.title.localeCompare(b.title))
+    // Rank title matches above tag-only matches, then alphabetically within each.
+    return songs
+      .map((s) => ({ s, rank: songMatchRank(s, trimmed) }))
+      .filter((x) => x.rank !== null)
+      .sort((a, b) => a.rank! - b.rank! || a.s.title.localeCompare(b.s.title))
+      .map((x) => x.s)
   }, [songs, trimmed])
 
   return (

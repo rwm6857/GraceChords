@@ -24,6 +24,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { chunkRows } from '../lib/gridRows'
 import { useSongList, type Song } from '../lib/useSongList'
+import { songMatchRank } from '../lib/songSearch'
 import { upsertDraft } from '../lib/drafts/draftsStore'
 
 // A list entry is one song (phone, single-column) or a grid row of songs
@@ -162,14 +163,12 @@ export default function SongLibraryScreen() {
   const trimmedQuery = query.trim().toLowerCase()
   const results = useMemo(() => {
     if (!trimmedQuery) return []
+    // Rank title matches above tag-only matches, then alphabetically within each.
     return tagFiltered
-      .filter(
-        (s) =>
-          s.title.toLowerCase().includes(trimmedQuery) ||
-          (s.artist ?? '').toLowerCase().includes(trimmedQuery),
-      )
-      .slice()
-      .sort(byTitle)
+      .map((s) => ({ s, rank: songMatchRank(s, trimmedQuery) }))
+      .filter((x) => x.rank !== null)
+      .sort((a, b) => a.rank! - b.rank! || byTitle(a.s, b.s))
+      .map((x) => x.s)
   }, [tagFiltered, trimmedQuery])
 
   const resultRows: LibraryRow[] = useMemo(
