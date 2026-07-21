@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "patch-package",
     "dev": "npm run dev -w @gracechords/web",
     "build": "npm run build -w @gracechords/web",
     "preview": "npm run preview -w @gracechords/web",
@@ -18,5 +19,9 @@
     "i18n:check": "npm run i18n:check -w @gracechords/web",
     "generate:sitemap": "npm run generate:sitemap -w @gracechords/web",
     "generate:licenses": "npm run generate:licenses -w @gracechords/web"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0"
   }
 }
