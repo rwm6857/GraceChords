@@ -86,7 +86,17 @@
     "agree": "Aceptar y compartir",
     "cancel": "Cancelar",
     "termsLink": "Términos de uso",
-    "errorTitle": "No se pudo guardar tu aceptación"
+    "errorTitle": "No se pudo guardar tu aceptación",
+    "ageHeading": "¿Cuántos años tienes?",
+    "age13Plus": "Tengo 13 años o más",
+    "ageUnder13": "Soy menor de 13 años",
+    "ageUnder13Notice": "Compartir y ver reflexiones de la comunidad no está disponible para menores de 13 años. Aún puedes escribir reflexiones privadas y leer el pasaje de cada día.",
+    "ageUnder13Confirm": "Continuar"
+  },
+  "publicLocked": {
+    "title": "Reflexiones de la comunidad",
+    "body": "Confirma tu edad para ver y compartir reflexiones con la comunidad.",
+    "cta": "Continuar"
   },
   "copyVerses_one": "Copiar {{count}} versículo",
   "copyVerses_other": "Copiar {{count}} versículos",

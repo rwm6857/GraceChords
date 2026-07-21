@@ -86,7 +86,17 @@
     "agree": "Agree & Share",
     "cancel": "Cancel",
     "termsLink": "Terms of Use",
-    "errorTitle": "Couldn’t save your acceptance"
+    "errorTitle": "Couldn’t save your acceptance",
+    "ageHeading": "How old are you?",
+    "age13Plus": "I’m 13 or older",
+    "ageUnder13": "I’m under 13",
+    "ageUnder13Notice": "Sharing and viewing community reflections isn’t available under 13. You can still write private reflections and read each day’s passage.",
+    "ageUnder13Confirm": "Continue"
+  },
+  "publicLocked": {
+    "title": "Community reflections",
+    "body": "Confirm your age to view and share reflections with the community.",
+    "cta": "Continue"
   },
   "copyVerses_one": "Copy {{count}} verse",
   "copyVerses_other": "Copy {{count}} verses",
