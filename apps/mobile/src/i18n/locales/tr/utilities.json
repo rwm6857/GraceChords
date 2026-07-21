@@ -4,14 +4,14 @@
   "sectionTools": "ARAÇLAR",
   "pickTool": "Başlamak için bir araç seçin",
   "tools": {
-    "tuner": "Akort Aleti",
+    "tuner": "Gitar Akort Aleti",
     "metronome": "Tempo / Metronom",
     "pitchPipe": "Nota Düdüğü",
-    "songbook": "Şarkı Kitabı",
+    "songbook": "Şarkı Kitabı Oluşturucu",
     "capo": "Kapo Hesaplayıcı"
   },
   "tuner": {
-    "title": "Akort Aleti",
+    "title": "Gitar Akort Aleti",
     "permissionDenied": "Akort aleti gitarınızı duymak için mikrofon erişimine ihtiyaç duyar. Ses yalnızca bu cihazda analiz edilir — asla kaydedilmez veya bir yere gönderilmez.",
     "enableInSettings": "Ayarlar'dan etkinleştir",
     "inTune": "Akortlu",
@@ -45,7 +45,7 @@
     "holdNote": "Notayı tut"
   },
   "songbook": {
-    "title": "Şarkı Kitabı",
+    "title": "Şarkı Kitabı Oluşturucu",
     "defaultTitle": "Şarkı Kitabı",
     "addSongs": "Şarkı ekle",
     "selectedCount_one": "{{count}} şarkı seçildi",

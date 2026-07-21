@@ -4,14 +4,14 @@
   "sectionTools": "HERRAMIENTAS",
   "pickTool": "Elige una herramienta para empezar",
   "tools": {
-    "tuner": "Afinador",
+    "tuner": "Afinador de guitarra",
     "metronome": "Marca tempo / Metrónomo",
     "pitchPipe": "Diapasón",
-    "songbook": "Cancionero",
+    "songbook": "Creador de cancioneros",
     "capo": "Calculadora de cejilla"
   },
   "tuner": {
-    "title": "Afinador",
+    "title": "Afinador de guitarra",
     "permissionDenied": "El afinador necesita acceso al micrófono para escuchar tu guitarra. El audio se analiza solo en este dispositivo, nunca se graba ni se envía a ningún lugar.",
     "enableInSettings": "Activar en Ajustes",
     "inTune": "Afinado",
@@ -45,7 +45,7 @@
     "holdNote": "Mantener nota"
   },
   "songbook": {
-    "title": "Cancionero",
+    "title": "Creador de cancioneros",
     "defaultTitle": "Cancionero",
     "addSongs": "Añadir canciones",
     "selectedCount_one": "{{count}} canción seleccionada",
