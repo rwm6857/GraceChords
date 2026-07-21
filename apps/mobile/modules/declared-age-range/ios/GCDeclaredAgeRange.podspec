@@ -1,5 +1,9 @@
 Pod::Spec.new do |s|
-  s.name           = 'DeclaredAgeRange'
+  # Pod/clang-module name MUST NOT be 'DeclaredAgeRange' — that is Apple's system
+  # framework. A collision makes `import DeclaredAgeRange` resolve to this pod
+  # instead of Apple's, so `AgeRangeService` is not in scope. Prefixed to stay
+  # distinct; the JS-facing name stays "DeclaredAgeRange" via Name() in the module.
+  s.name           = 'GCDeclaredAgeRange'
   s.version        = '1.0.0'
   s.summary        = 'Bridges Apple’s iOS 26 Declared Age Range API to JS.'
   s.description    = 'Local Expo module calling AgeRangeService for privacy-preserving age assurance.'
