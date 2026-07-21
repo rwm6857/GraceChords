@@ -266,23 +266,29 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     } else Alert.alert(title, msg)
   }
 
+  // The live-session menu: pick which link to share (team/chords vs
+  // participant/lyrics) via the native share sheet, or end the session.
+  function showSessionMenu() {
+    Alert.alert(tx('setlist:session.manageTitle'), undefined, [
+      { text: tx('setlist:session.shareTeam'), onPress: () => { void sessionCtl.reshareChords() } },
+      { text: tx('setlist:session.shareEveryone'), onPress: () => { void sessionCtl.reshareLyrics() } },
+      {
+        text: tx('setlist:session.end'),
+        style: 'destructive',
+        onPress: () => {
+          sessionCtl.end().catch((err) => reportError(tx('setlist:session.endFailed'), err))
+        },
+      },
+      { text: tx('common:cancel'), style: 'cancel' },
+    ])
+  }
+
   // Start / manage the live session from the header. Starting builds the frozen
-  // snapshot from the current entries and opens the native share sheet with the
-  // /s/{code} follower link; managing an active session offers re-share or end.
+  // snapshot from the current entries; both starting and managing surface the
+  // session menu, from which the leader shares a link or ends the session.
   function onSessionButton() {
     if (sessionCtl.session) {
-      Alert.alert(tx('setlist:session.manageTitle'), tx('setlist:session.manageMessage'), [
-        { text: tx('setlist:session.shareTeam'), onPress: () => { void sessionCtl.reshareChords() } },
-        { text: tx('setlist:session.shareEveryone'), onPress: () => { void sessionCtl.reshareLyrics() } },
-        {
-          text: tx('setlist:session.end'),
-          style: 'destructive',
-          onPress: () => {
-            sessionCtl.end().catch((err) => reportError(tx('setlist:session.endFailed'), err))
-          },
-        },
-        { text: tx('common:cancel'), style: 'cancel' },
-      ])
+      showSessionMenu()
       return
     }
     if (!count) {
@@ -291,6 +297,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     }
     sessionCtl
       .start(items.map((it) => ({ songId: it.songId, toKey: it.toKey, song: it.song })))
+      .then(() => showSessionMenu())
       .catch((err) => reportError(tx('setlist:session.startFailed'), err))
   }
 

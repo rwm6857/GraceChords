@@ -76,9 +76,8 @@
     "starting": "Başlatılıyor…",
     "live": "Canlı",
     "manageTitle": "Canlı oturum",
-    "manageMessage": "Takipçiler izliyor. Bir bağlantı paylaşın veya oturumu sonlandırın.",
     "shareTeam": "Ekip bağlantısını paylaş (akorlar)",
-    "shareEveryone": "Herkes için bağlantıyı paylaş (sözler)",
+    "shareEveryone": "Katılımcı bağlantısını paylaş (sözler)",
     "end": "Oturumu sonlandır",
     "startFailed": "Oturum başlatılamadı",
     "endFailed": "Oturum sonlandırılamadı"
