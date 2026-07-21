@@ -8,8 +8,12 @@ export default function SiteDisclaimer(){
   const { pathname, hash } = useLocation()
   const inWorship = (pathname && pathname.startsWith('/worship')) || (hash && hash.includes('/worship'))
   const inReading = (pathname && pathname.startsWith('/reading')) || (hash && hash.includes('/reading'))
+  // Live Session follower (/s/:code) is a standalone full-screen fixed overlay
+  // like Worship Mode; the disclaimer footer would otherwise paint over it.
+  const inSession = (pathname && pathname.startsWith('/s/')) || (hash && hash.includes('/s/'))
   if (inWorship) return null
   if (inReading) return null
+  if (inSession) return null
   if (!isDisclaimerEnabled()) return null
   const year = new Date().getFullYear()
   const base = 2023
