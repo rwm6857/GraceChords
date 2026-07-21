@@ -50,6 +50,11 @@ import {
 
 type Sheet = 'none' | 'translations' | 'settings' | 'date'
 
+// Copy FAB is 56px tall, floated at the same bottom offset as the ScrollView's
+// tab-bar-clearance padding — without extra room the FAB overlaps the last
+// verse instead of floating below it.
+const COPY_FAB_CLEARANCE = 56 + 16
+
 // Stable empty set for passages with no selection (never mutated).
 const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
 
@@ -356,8 +361,9 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
               paddingHorizontal: 18,
               paddingTop: t.spacing.xs,
               // Clear the floating native tab bar (insets.bottom includes its
-              // height under native tabs) so the last verse scrolls fully above it.
-              paddingBottom: insets.bottom + t.spacing.xl,
+              // height under native tabs) so the last verse scrolls fully above
+              // it, plus the copy FAB's own height while a selection is active.
+              paddingBottom: insets.bottom + t.spacing.xl + (selection.size > 0 ? COPY_FAB_CLEARANCE : 0),
             }}
           >
               {settings.layout === 'prose' ? (
