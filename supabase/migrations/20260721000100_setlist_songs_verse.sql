@@ -8,13 +8,40 @@
 --
 -- The existing two-way "exactly one of song_id / personal_song_id" CHECK is
 -- rewritten to a three-way "exactly one of {song_id, personal_song_id,
--- verse_ref}". Assumes the personal-songs migration (20260708000300) is already
--- applied, per the repo's ordered forward-only convention.
+-- verse_ref}".
+--
+-- The personal-songs migration (20260708000300) normally runs first and adds
+-- the `personal_song_id` column, makes `song_id` nullable, and indexes it. But
+-- databases in the wild have hit "column personal_song_id does not exist" here
+-- when that earlier migration was not applied. Rather than hard-depend on it,
+-- this migration re-asserts that setup idempotently below, so it succeeds
+-- regardless of the prior migration's state.
 --
 -- Forward-only + idempotent. Rollback block at the bottom.
 -- =============================================================================
 
 ALTER TABLE public.setlist_songs ADD COLUMN IF NOT EXISTS verse_ref text;
+
+-- Re-assert the personal-songs setup (mirrors 20260708000300) so this migration
+-- is self-contained. All statements are no-ops if that migration already ran.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables
+             WHERE table_schema = 'public' AND table_name = 'personal_songs') THEN
+    ALTER TABLE public.setlist_songs
+      ADD COLUMN IF NOT EXISTS personal_song_id uuid
+        REFERENCES public.personal_songs(id) ON DELETE CASCADE;
+  ELSE
+    -- personal_songs is absent too; still add the column so the three-way CHECK
+    -- can reference it. The FK is added later once personal_songs exists.
+    ALTER TABLE public.setlist_songs ADD COLUMN IF NOT EXISTS personal_song_id uuid;
+  END IF;
+END $$;
+
+ALTER TABLE public.setlist_songs ALTER COLUMN song_id DROP NOT NULL;
+
+CREATE INDEX IF NOT EXISTS setlist_songs_personal_song_id_idx
+  ON public.setlist_songs (personal_song_id);
 
 ALTER TABLE public.setlist_songs DROP CONSTRAINT IF EXISTS setlist_songs_one_ref_chk;
 ALTER TABLE public.setlist_songs
