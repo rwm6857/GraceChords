@@ -4,14 +4,14 @@
   "sectionTools": "TOOLS",
   "pickTool": "Pick a tool to get started",
   "tools": {
-    "tuner": "Tuner",
+    "tuner": "Guitar Tuner",
     "metronome": "Tap Tempo / Metronome",
     "pitchPipe": "Pitch Pipe",
-    "songbook": "Songbook",
+    "songbook": "Songbook Maker",
     "capo": "Capo Calculator"
   },
   "tuner": {
-    "title": "Tuner",
+    "title": "Guitar Tuner",
     "permissionDenied": "The tuner needs microphone access to hear your guitar. Audio is analyzed on this device only — never recorded or sent anywhere.",
     "enableInSettings": "Enable in Settings",
     "inTune": "In tune",
@@ -45,7 +45,7 @@
     "holdNote": "Hold note"
   },
   "songbook": {
-    "title": "Songbook",
+    "title": "Songbook Maker",
     "defaultTitle": "Songbook",
     "addSongs": "Add songs",
     "selectedCount_one": "{{count}} song selected",
