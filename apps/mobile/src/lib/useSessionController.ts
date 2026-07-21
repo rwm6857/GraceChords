@@ -79,9 +79,8 @@ export function useSessionController(setlistId: string) {
         const items = buildSnapshot(entries)
         const row = await createSession(supabase, { setlistId, items })
         setSession({ id: row.id, code: row.code, chordCode: row.chord_code ?? null })
-        // Share the lyric (everyone) link on start; the leader can share the
-        // team/chord link from the manage sheet.
-        await Share.share({ message: buildSessionShareUrl(row.code) }).catch(() => {})
+        // Don't auto-open the share sheet here; the Performer surfaces the
+        // share menu (team / participant link) once the session is live.
       } finally {
         setBusy(false)
       }
