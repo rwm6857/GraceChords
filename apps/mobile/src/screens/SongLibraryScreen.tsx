@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Crypto from 'expo-crypto'
 import { BLANK_SONG_FORM } from '@gracechords/core'
 import Screen from '../components/Screen'
@@ -108,6 +109,7 @@ export default function SongLibraryScreen() {
   const { t: tx } = useTranslation(['song', 'common'])
   const router = useRouter()
   const { songs, loading, error } = useSongList()
+  const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
   const { width, height } = useWindowDimensions()
   // Grid columns: tablet-only (tokens layout.libraryColumns), 1 on phones —
@@ -439,6 +441,9 @@ export default function SongLibraryScreen() {
           sections={[{ key: '__results', title: '', letter: null, data: resultRows }]}
           keyExtractor={keyForRow}
           keyboardShouldPersistTaps="handled"
+          // Clear the floating native tab bar (insets.bottom includes its
+          // height under native tabs) so the last row scrolls fully above it.
+          contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
           renderSectionHeader={() => (
             <View style={{ backgroundColor: t.colors.bg, paddingHorizontal: t.spacing.xl, paddingVertical: 6 }}>
               <Text
@@ -489,7 +494,9 @@ export default function SongLibraryScreen() {
               })
             }, 60)
           }}
-          contentContainerStyle={{ paddingBottom: t.spacing.sm }}
+          // Clear the floating native tab bar (insets.bottom includes its
+          // height under native tabs) so the last row scrolls fully above it.
+          contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
         />
         {showScrubber ? (
           <AlphaScrubber present={presentLetters} onSelect={scrollToLetter} />
