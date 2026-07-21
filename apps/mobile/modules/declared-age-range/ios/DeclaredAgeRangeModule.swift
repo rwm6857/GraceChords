@@ -11,9 +11,11 @@ import DeclaredAgeRange
 //
 // Requires the `com.apple.developer.declared-age-range` entitlement (wired via
 // app.json → ios.entitlements) AND the "Declared Age Range" capability enabled on
-// the App ID in the Apple Developer portal. Verify the exact symbol names in
-// Xcode 26 Quick Help before shipping — this is written from Apple's published
-// docs but has not been compiled here.
+// the App ID in the Apple Developer portal. Symbols verified against the
+// DeclaredAgeRange.framework .swiftinterface in the iOS 26.5 SDK (Xcode 26):
+// AgeRangeService.shared.requestAgeRange(ageGates:_:_:in:) -> Response, with
+// Response.sharing(range:)/.declinedSharing and AgeRange.lowerBound/upperBound (Int?).
+// Not testable on Simulator — the API only resolves on a real device.
 public class DeclaredAgeRangeModule: Module {
   public func definition() -> ModuleDefinition {
     Name("DeclaredAgeRange")
@@ -40,12 +42,16 @@ public class DeclaredAgeRangeModule: Module {
     }
     do {
       let response = try await AgeRangeService.shared.requestAgeRange(
-        ageGates: 13, nil, nil, in: viewController
+        ageGates: 13, in: viewController
       )
       switch response {
       case .sharing(let range):
+        // Apple returns a half-open bracket around the gate: 13+ is [13, nil)
+        // (lowerBound == 13), under-13 is [nil, 13) (upperBound == 13). Use `<= 13`
+        // so the exclusive upper bound of the under-13 bracket still resolves to
+        // "under_13"; the 13+ bracket has upperBound == nil so it never matches here.
         if let lower = range.lowerBound, lower >= 13 { return "over_13" }
-        if let upper = range.upperBound, upper < 13 { return "under_13" }
+        if let upper = range.upperBound, upper <= 13 { return "under_13" }
         return "unknown"
       case .declinedSharing:
         return "unknown"
