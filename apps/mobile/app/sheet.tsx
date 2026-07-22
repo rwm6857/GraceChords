@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { View } from 'react-native'
+import { Stack } from 'expo-router'
 import { notifyFormSheetRouteClosed, useFormSheetContent } from '../src/lib/formSheetHost'
 import { useTheme } from '../src/theme/ThemeProvider'
 
@@ -20,8 +21,17 @@ export default function SheetRoute() {
   // ScrollView expects at most 2 subviews"). Pinning the wrapper keeps the
   // container at exactly one native child.
   return (
-    <View collapsable={false} style={{ backgroundColor: t.colors.surface }}>
-      {content}
-    </View>
+    <>
+      {/* Paint the native sheet's own background with the themed surface color.
+          _layout.tsx sets it to 'transparent' (it can't read the live theme
+          there), which leaves the strip under the home indicator — the region a
+          fitToContents sheet still covers but the content view doesn't paint —
+          showing the OS's default grey. Overriding contentStyle here (theme-
+          aware) fills that strip for every sheet in the app, light and dark. */}
+      <Stack.Screen options={{ contentStyle: { backgroundColor: t.colors.surface } }} />
+      <View collapsable={false} style={{ backgroundColor: t.colors.surface }}>
+        {content}
+      </View>
+    </>
   )
 }
