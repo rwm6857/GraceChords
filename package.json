@@ -20,8 +20,10 @@
     "generate:sitemap": "npm run generate:sitemap -w @gracechords/web",
     "generate:licenses": "npm run generate:licenses -w @gracechords/web"
   },
+  "dependencies": {
+    "patch-package": "^8.0.1"
+  },
   "devDependencies": {
-    "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0"
   }
 }
