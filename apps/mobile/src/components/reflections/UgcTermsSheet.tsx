@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
@@ -36,6 +37,7 @@ export default function UgcTermsSheet(props: UgcProps) {
 function UgcContent({ onClose, onAgreed }: UgcProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
+  const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState(false)
 
   const agree = async () => {
@@ -53,8 +55,14 @@ function UgcContent({ onClose, onAgreed }: UgcProps) {
   return (
     <FormSheetShell title={tx('ugc.title')} actionLabel={tx('ugc.cancel')} onAction={onClose}>
       <ScrollView
-        style={{ maxHeight: 460 }}
-        contentContainerStyle={{ padding: t.spacing.lg, gap: t.spacing.md }}
+        contentContainerStyle={{
+          paddingHorizontal: t.spacing.lg,
+          paddingTop: t.spacing.lg,
+          // Clear the home indicator so the sheet fills to the screen bottom
+          // instead of leaving a gap below the button.
+          paddingBottom: insets.bottom + t.spacing.lg,
+          gap: t.spacing.md,
+        }}
       >
         <Text style={{ fontSize: 15, lineHeight: 22, color: t.colors.sec }}>{UGC_GATE_INTRO}</Text>
         <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>{UGC_GATE_SUBHEAD}</Text>
