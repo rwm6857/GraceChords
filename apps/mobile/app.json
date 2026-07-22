@@ -23,6 +23,10 @@
     },
     "android": {
       "package": "com.gracechords.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E2227"
+      },
       "intentFilters": [
         {
           "action": "VIEW",
@@ -39,6 +43,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withFoojayFix",
       "expo-router",
       [
         "expo-splash-screen",
