@@ -34,8 +34,17 @@ export default function ProfilePage() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [deleting, setDeleting] = useState(false)
+
+  // Whether this account can sign in with an email + password. OAuth-only
+  // accounts (Google / Apple) have no password to confirm, so the delete flow
+  // falls back to a typed confirmation for them.
+  const hasPasswordLogin =
+    (session?.user?.identities || []).some(i => i.provider === 'email') ||
+    (session?.user?.app_metadata?.providers || []).includes('email') ||
+    session?.user?.app_metadata?.provider === 'email'
 
   // Telegram link state
   const [telegramState, setTelegramState] = useState({ linked: false, telegram_user_id: null, telegram_linked_at: null })
@@ -246,15 +255,18 @@ export default function ProfilePage() {
   async function deleteAccount() {
     setDeleteError('')
     setDeleting(true)
-    // Verify password before deletion
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: session.user.email,
-      password: deletePassword,
-    })
-    if (authError) {
-      setDeleteError('Incorrect password. Please try again.')
-      setDeleting(false)
-      return
+    // Verify password before deletion for password accounts. OAuth-only accounts
+    // have no password, so the modal requires typing "DELETE" instead.
+    if (hasPasswordLogin) {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: deletePassword,
+      })
+      if (authError) {
+        setDeleteError('Incorrect password. Please try again.')
+        setDeleting(false)
+        return
+      }
     }
     // Delete account via RPC (SECURITY DEFINER function removes from auth.users + cascades)
     const { error: deleteError } = await supabase.rpc('delete_user')
@@ -453,7 +465,7 @@ export default function ProfilePage() {
           </div>
           <button
             className="gc-btn gc-btn--danger"
-            onClick={() => { setDeletePassword(''); setDeleteError(''); setShowDeleteModal(true) }}
+            onClick={() => { setDeletePassword(''); setDeleteConfirmText(''); setDeleteError(''); setShowDeleteModal(true) }}
             style={{ width: 'fit-content', flexShrink: 0 }}
           >
             Delete account
@@ -470,18 +482,33 @@ export default function ProfilePage() {
               This will permanently delete your account and all your data, including starred songs
               and any contributor requests. <strong style={{ color: 'var(--gc-danger)' }}>This cannot be undone.</strong>
             </p>
-            <div className="gc-form-field">
-              <label htmlFor="deletePassword">Confirm your password</label>
-              <input
-                id="deletePassword"
-                type="password"
-                value={deletePassword}
-                onChange={e => { setDeletePassword(e.target.value); setDeleteError('') }}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                disabled={deleting}
-              />
-            </div>
+            {hasPasswordLogin ? (
+              <div className="gc-form-field">
+                <label htmlFor="deletePassword">Confirm your password</label>
+                <input
+                  id="deletePassword"
+                  type="password"
+                  value={deletePassword}
+                  onChange={e => { setDeletePassword(e.target.value); setDeleteError('') }}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  disabled={deleting}
+                />
+              </div>
+            ) : (
+              <div className="gc-form-field">
+                <label htmlFor="deleteConfirmText">Type DELETE to confirm</label>
+                <input
+                  id="deleteConfirmText"
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={e => { setDeleteConfirmText(e.target.value); setDeleteError('') }}
+                  placeholder="DELETE"
+                  autoComplete="off"
+                  disabled={deleting}
+                />
+              </div>
+            )}
             {deleteError && (
               <p className="gc-auth-error" style={{ margin: 0 }}>{deleteError}</p>
             )}
@@ -489,7 +516,12 @@ export default function ProfilePage() {
               <button
                 className="gc-btn gc-btn--danger"
                 onClick={deleteAccount}
-                disabled={deleting || !deletePassword}
+                disabled={
+                  deleting ||
+                  (hasPasswordLogin
+                    ? !deletePassword
+                    : deleteConfirmText.trim().toUpperCase() !== 'DELETE')
+                }
               >
                 {deleting ? 'Deleting…' : 'Delete my account'}
               </button>
