@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
@@ -100,7 +99,6 @@ function AgeOption({
 function UgcContent({ onClose, onAgreed, onDeclined, seededAgeRange }: UgcProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
-  const insets = useSafeAreaInsets()
   const age = useAgeGate()
   const [busy, setBusy] = useState(false)
   const [picked, setPicked] = useState<AgeRange | null>(null)
@@ -142,9 +140,11 @@ function UgcContent({ onClose, onAgreed, onDeclined, seededAgeRange }: UgcProps)
         contentContainerStyle={{
           paddingHorizontal: t.spacing.lg,
           paddingTop: t.spacing.lg,
-          // Clear the home indicator so the sheet fills to the screen bottom
-          // instead of leaving a gap below the button.
-          paddingBottom: insets.bottom + t.spacing.lg,
+          // Just a small gap below the button — the native formSheet already
+          // extends under the home indicator (that strip is painted surface in
+          // app/sheet.tsx), so re-adding the safe-area inset here would only
+          // double it up as dead white space.
+          paddingBottom: t.spacing.lg,
           gap: t.spacing.md,
         }}
       >
