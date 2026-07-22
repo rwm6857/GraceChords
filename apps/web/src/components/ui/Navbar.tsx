@@ -8,7 +8,6 @@ import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import SpriteAvatar from './SpriteAvatar'
 import SettingsCluster from './SettingsCluster'
-import { useSettings } from '../../hooks/useSettings'
 import '../../styles/auth.css'
 
 export default function Navbar(){
@@ -23,8 +22,6 @@ export default function Navbar(){
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
   const { isLoggedIn, loading: authLoading, session, profile, hasMinRole, role } = useAuth()
-  const { theme } = useSettings()
-  const isDark = theme === 'dark'
   const [userMenuOpen, setUserMenuOpen] = React.useState(false)
   const userMenuRef = React.useRef<HTMLDivElement | null>(null)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
@@ -134,23 +131,11 @@ export default function Navbar(){
     <>
       <nav className="gc-navbar" ref={navRef as any}>
         <div className="gc-navbar__inner">
+        {/* Readable text wordmark instead of an embedded-image logo, so the
+            app name "GraceChords" is present as real text for crawlers and
+            OAuth branding review (matches the app name on the consent screen). */}
         <Link to="/" className="gc-brand" aria-label={t('graceChordsHome')}>
-          {/* Wide logo for tablet/desktop */}
-          <img
-            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
-            alt="GraceChords"
-            className="gc-brand__logo gc-brand__logo--wide"
-            width={240}
-            height={42}
-          />
-          {/* Square logo for mobile */}
-          <img
-            src={isDark ? '/gc-brand-square-dark.svg' : '/gc-brand-square-light.svg'}
-            alt="GraceChords"
-            className="gc-brand__logo gc-brand__logo--square"
-            width={60}
-            height={42}
-          />
+          <span className="gc-brand__wordmark">GraceChords</span>
         </Link>
         {/* Hamburger on mobile/tablet */}
         <button
