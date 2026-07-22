@@ -35,6 +35,7 @@ import {
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 import { hydrateHiddenPosts } from '../src/lib/hiddenPosts'
 import { startAccessibilityFlags } from '../src/lib/accessibilityFlagsService'
+import { applyOrientationLock } from '../src/lib/orientationLock'
 import { useAccessibilityFlags } from '../src/lib/accessibilityFlags'
 
 // Keep the native splash up past first render so we can resolve the persisted
@@ -151,6 +152,10 @@ export default function RootLayout() {
     // is null here) and let the ConfigErrorScreen below take over.
     if (supabaseConfigError) return
     let stopAutoRefresh: (() => void) | undefined
+    // Lock orientation per device class: phones stay portrait, tablets rotate
+    // (unblocks the tablet UI on Android — see orientationLock.ts). Fire-and-
+    // forget; it must not gate the splash.
+    applyOrientationLock()
     // Install the notification foreground handler / Android channel once, before
     // any reminder is (re)scheduled below.
     initReaderReminders()
