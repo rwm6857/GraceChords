@@ -24,6 +24,27 @@ non-negotiables — HIG/UIKit over the mockups, **native design-system icons
 only** (SF Symbols on iOS, Material Symbols on Android — never hand-drawn/SVG),
 and translate the visual rather than porting the HTML/CSS.
 
+## Android design authority (Material Design 3)
+
+On Android, **Material Design 3 is the authority the same way HIG is on iOS**:
+the mockups in `gc-ios-design-reference/` were drawn iOS-first, so wherever they
+and MD3 disagree on Android, **MD3 wins** — don't port an iOS visual
+pixel-for-pixel onto Android when Material has an established pattern for it.
+
+- **Native Material components over hand-rolled equivalents.** Prefer the
+  platform's own patterns — the NativeTabs Material 3 navigation bar, the native
+  `formSheet`/bottom sheet — over bespoke re-implementations. This is already how
+  the tab bar and option sheets behave; keep new surfaces on that path.
+- **Material Symbols, not custom SVGs.** Android icons come from Material Symbols
+  via `SymbolIcon`'s Android branch and the `SF→Material` map in `symbolMap.ts` —
+  never hand-drawn/SVG glyphs. A new icon means adding its SF→Material mapping and
+  re-running the font subset build (see the Icons bullet under Primitives).
+
+This section adds Android-specific authority; it does **not** override settled
+cross-platform rules. Phone layouts stay exactly as designed, and
+`formSheet`-over-popovers still holds — MD3 governs Android's *native idiom*, not
+those decisions.
+
 ## Stack
 
 - **Expo SDK 55** (pinned — not 54, not 56). Bump deliberately with
