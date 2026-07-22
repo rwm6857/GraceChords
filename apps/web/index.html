@@ -6,6 +6,27 @@
     <meta name="robots" content="index,follow" />
     <meta name="description" content="GraceChords provides free worship chord sheets and lyrics for churches, worship teams, and believers." />
     <title>GraceChords</title>
+    <!-- App name in the raw HTML head so crawlers and Google's OAuth branding
+         review read "GraceChords" without executing JS. og:site_name and the
+         WebSite/Organization JSON-LD declare the name explicitly; the React app
+         (react-helmet) refines these per route after mount. -->
+    <meta property="og:site_name" content="GraceChords" />
+    <meta property="og:title" content="GraceChords" />
+    <meta property="application-name" content="GraceChords" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "GraceChords",
+        "alternateName": "GraceChords.com",
+        "url": "https://gracechords.com/",
+        "publisher": {
+          "@type": "Organization",
+          "name": "GraceChords",
+          "url": "https://gracechords.com/"
+        }
+      }
+    </script>
     <!-- Preconnect to Supabase so DNS + TLS happen in parallel with HTML parsing -->
     <link rel="preconnect" href="https://tndnjetevtgohunqpzbi.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://tndnjetevtgohunqpzbi.supabase.co" />

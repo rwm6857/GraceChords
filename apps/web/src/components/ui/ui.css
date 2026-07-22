@@ -69,30 +69,20 @@
     cursor:pointer;
   }
 
-  .gc-brand__logo{
+  /* Text wordmark for the brand/home link. Rendered as real, selectable text
+     (not an image) so the app name is readable by search crawlers and Google's
+     OAuth branding review. */
+  .gc-brand__wordmark{
     display:block;
-    height:100%;
-    -webkit-user-drag:none;
-    -webkit-user-select:none;
-    user-select:none;
-    pointer-events:none;
+    line-height:1;
+    white-space:nowrap;
+    font-size:1.25rem;
   }
 
-  /* Default: square logo on small screens */
-  .gc-brand__logo--square{
-    display:block;
-  }
-  .gc-brand__logo--wide{
-    display:none;
-  }
-
-  /* Tablet/desktop: show wide logo, hide square logo */
+  /* Tablet/desktop: give the wordmark a little more presence */
   @media (min-width: 640px){
-    .gc-brand__logo--wide{
-      display:block;
-    }
-    .gc-brand__logo--square{
-      display:none;
+    .gc-brand__wordmark{
+      font-size:1.4rem;
     }
   }
   .gc-navlinks{ display:flex; gap:var(--space-2); align-items:center; }
