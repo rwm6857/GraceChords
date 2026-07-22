@@ -1,4 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs'
+import { Platform } from 'react-native'
 import { ThemeProvider as NavThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../src/theme/ThemeProvider'
@@ -28,13 +29,29 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 // color scheme) is required to prevent the known iOS 26 dark-mode glass flicker
 // on header buttons when switching tabs. It is aliased so it does not shadow the
 // app's own token ThemeProvider.
+//
+// Android bar tuning (Material 3): `labelVisibilityMode="labeled"` keeps every
+// tab's label visible. The NativeTabs default is `auto`, which — with five tabs
+// (>3) — collapses labels to the selected tab only, leaving the other four as
+// lone icons floating in the 80dp Material bar. That sparse, top-heavy layout is
+// the "lots of blank space / bulky" feel; always-on labels fill the bar so it
+// reads as balanced and intentional, and matches Material 3's own guidance that
+// navigation-bar labels stay visible. `labelVisibilityMode` is an Android-only
+// NativeTabs prop (`@platform android`) — iOS ignores it, so the iOS Liquid-Glass
+// and standard bars are untouched. The small label-size nudge goes through the
+// cross-platform `labelStyle`, so it is gated to Android to leave iOS labels
+// exactly as the system draws them.
 
 export default function TabsLayout() {
   const t = useTheme()
   const { t: tx } = useTranslation('nav')
   return (
     <NavThemeProvider value={t.mode === 'dark' ? DarkTheme : DefaultTheme}>
-      <NativeTabs tintColor={t.colors.accent}>
+      <NativeTabs
+        tintColor={t.colors.accent}
+        labelVisibilityMode="labeled"
+        labelStyle={Platform.OS === 'android' ? { fontSize: 13 } : undefined}
+      >
         <NativeTabs.Trigger name="index">
           <NativeTabs.Trigger.Icon
             sf={{ default: 'house', selected: 'house.fill' }}
