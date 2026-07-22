@@ -147,8 +147,6 @@ function UgcContent({ onClose, onAgreed, onDeclined, seededAgeRange }: UgcProps)
           paddingBottom: insets.bottom + t.spacing.lg,
           gap: t.spacing.md,
         }}
-        style={{ maxHeight: 480 }}
-        contentContainerStyle={{ padding: t.spacing.lg, gap: t.spacing.md }}
       >
         {askAge ? (
           <View style={{ gap: t.spacing.sm }}>
