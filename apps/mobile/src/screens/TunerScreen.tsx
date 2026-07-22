@@ -14,6 +14,7 @@ import Button from '../components/Button'
 import GlassSurface from '../components/GlassSurface'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
+import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 import type { Tokens } from '@gracechords/tokens/native'
 import { STANDARD_TUNING, type TunerString } from '../lib/tuner/notes'
 import { useTuner, type TunerFrame, type TunerReading } from '../lib/tuner/useTuner'
@@ -112,6 +113,7 @@ function StringKey({
 export default function TunerScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
+  const { differentiateWithoutColor } = useAccessibilityFlags()
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
   const [barH, setBarH] = useState(0)
@@ -278,16 +280,24 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                   {reading ? reading.string.name.slice(-1) : ''}
                 </Text>
               </View>
-              <Text
-                style={{
-                  fontSize: 22,
-                  fontWeight: '600',
-                  color: inTune ? t.colors.success : t.colors.ink,
-                  fontVariant: ['tabular-nums'],
-                }}
-              >
-                {centsText}
-              </Text>
+              {/* "In tune" already reads as text; when Differentiate Without
+                  Color is on, add a checkmark so the in-tune state never relies
+                  on the green color alone. */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.xs }}>
+                {inTune && differentiateWithoutColor ? (
+                  <SymbolIcon name="checkmark.circle.fill" size={20} color={t.colors.success} />
+                ) : null}
+                <Text
+                  style={{
+                    fontSize: 22,
+                    fontWeight: '600',
+                    color: inTune ? t.colors.success : t.colors.ink,
+                    fontVariant: ['tabular-nums'],
+                  }}
+                >
+                  {centsText}
+                </Text>
+              </View>
               <Text
                 style={{
                   fontSize: t.typography.rowSubtitle.fontSize,

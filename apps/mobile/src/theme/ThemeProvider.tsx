@@ -3,6 +3,7 @@ import { Appearance, useColorScheme } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { getTokens, lightTokens, type Tokens } from '@gracechords/tokens/native'
 import { resolveThemeMode, useAppDefaults } from '../lib/defaults'
+import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 
 // ThemeProvider is the single source of truth for the app's color scheme. It
 // resolves the user's theme preference (Settings → Appearance, stored in the
@@ -16,6 +17,9 @@ const ThemeContext = createContext<Tokens>(lightTokens)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme()
   const { theme } = useAppDefaults()
+  // Increase Contrast (iOS): merge the contrast-boost overlay over the palette.
+  // Off by default, so vanilla devices get the exact base tokens.
+  const { increaseContrast } = useAccessibilityFlags()
   // Push the preference down to the native color scheme so RN-managed surfaces
   // (keyboard, share/action sheets, alerts) match a forced light/dark override
   // instead of tracking the OS. 'system' clears the override ('unspecified' →
@@ -23,7 +27,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme)
   }, [theme])
-  const tokens = useMemo(() => getTokens(resolveThemeMode(theme, scheme)), [theme, scheme])
+  const tokens = useMemo(
+    () => getTokens(resolveThemeMode(theme, scheme), increaseContrast),
+    [theme, scheme, increaseContrast],
+  )
   return <ThemeContext.Provider value={tokens}>{children}</ThemeContext.Provider>
 }
 
