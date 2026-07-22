@@ -5,9 +5,9 @@
 // (title, buttons, link) DO go through i18n; only this body copy is fixed.
 
 export const UGC_GATE_INTRO =
-  'When you share a reflection, it appears anonymously to other users. Your name, email, and private reflections are never shown.'
+  'Shared reflections appear anonymously. Your name, email, and private reflections are never shown.'
 
-export const UGC_GATE_SUBHEAD = 'Help keep GraceChords a place of encouragement!'
+export const UGC_GATE_SUBHEAD = 'Help keep GraceChords encouraging!'
 
 export const UGC_GATE_RULES: readonly string[] = [
   'Be real: share your own reflection, prayer, or encouragement from the day’s passage.',
@@ -17,10 +17,10 @@ export const UGC_GATE_RULES: readonly string[] = [
 ]
 
 export const UGC_GATE_ENFORCEMENT =
-  'All content is screened and can be reported by other users. Rule-breaking posts are removed and accounts blocked from the feature.'
+  'All posts are screened and can be reported by users. Rule-breakers are removed and blocked.'
 
 // Shown just above the buttons; the "Terms of Use" words are rendered as a link.
 export const UGC_GATE_CONFIRM_PREFIX =
-  'By sharing publicly, you confirm this post is your sole creation and responsibility, and you agree to the rules and our '
+  'By sharing, you confirm this post is your sole creation and responsibility, and you agree to the rules and '
 
 export const TERMS_URL = 'https://gracechords.com/terms'

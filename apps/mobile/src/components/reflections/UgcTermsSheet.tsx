@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
@@ -99,6 +100,7 @@ function AgeOption({
 function UgcContent({ onClose, onAgreed, onDeclined, seededAgeRange }: UgcProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
+  const insets = useSafeAreaInsets()
   const age = useAgeGate()
   const [busy, setBusy] = useState(false)
   const [picked, setPicked] = useState<AgeRange | null>(null)
@@ -137,6 +139,14 @@ function UgcContent({ onClose, onAgreed, onDeclined, seededAgeRange }: UgcProps)
   return (
     <FormSheetShell title={tx('ugc.title')} actionLabel={tx('ugc.cancel')} onAction={onClose}>
       <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: t.spacing.lg,
+          paddingTop: t.spacing.lg,
+          // Clear the home indicator so the sheet fills to the screen bottom
+          // instead of leaving a gap below the button.
+          paddingBottom: insets.bottom + t.spacing.lg,
+          gap: t.spacing.md,
+        }}
         style={{ maxHeight: 480 }}
         contentContainerStyle={{ padding: t.spacing.lg, gap: t.spacing.md }}
       >
