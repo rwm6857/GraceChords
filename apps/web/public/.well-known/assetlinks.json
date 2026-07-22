@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.gracechords.app",
-      "sha256_cert_fingerprints": ["TODO_ANDROID_RELEASE_SHA256_FINGERPRINT"]
+      "sha256_cert_fingerprints": ["E6:4E:8D:A6:4E:C4:6C:12:8B:5D:A2:E4:3E:47:74:5B:9A:73:C4:81:F3:89:EE:97:E8:5F:17:93:FF:92:81:B6"]
     }
   }
 ]
