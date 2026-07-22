@@ -21,6 +21,6 @@ export const UGC_GATE_ENFORCEMENT =
 
 // Shown just above the buttons; the "Terms of Use" words are rendered as a link.
 export const UGC_GATE_CONFIRM_PREFIX =
-  'By sharing, you confirm this post is your sole creation and responsibility, and you agree to the rules and our '
+  'By sharing, you confirm this post is your sole creation and responsibility, and you agree to the rules and '
 
 export const TERMS_URL = 'https://gracechords.com/terms'
