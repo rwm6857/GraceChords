@@ -19,12 +19,17 @@ App ID `J7Y8NYZ48Q.com.gracechords.app`. Claims:
   `packages/core/src/setlists/setcode.js` `decodeSet`. When the app isn't
   installed these paths open the web app as usual (Universal Links fallback).
 
-## `assetlinks.json` (Android — inert scaffold)
-### TODO(android)
-Wired ahead of an Android release but **inert**: `sha256_cert_fingerprints`
-holds a placeholder. No Android app is published, so verification cannot
-succeed yet. When an Android signing key exists, replace
-`TODO_ANDROID_RELEASE_SHA256_FINGERPRINT` with the release key's SHA-256
-fingerprint (e.g. from `keytool -list -v` or the Play Console app-signing page)
-and add the same song paths to `android.intentFilters` in
-`apps/mobile/app.json`.
+## `assetlinks.json` (Android — active)
+Package `com.gracechords.app`. Declares the Digital Asset Links statements
+that let the app claim `https://gracechords.com/...` links (App Links) and
+autofill saved credentials:
+
+- `delegate_permission/common.handle_all_urls` — verified App Links.
+- `delegate_permission/common.get_login_creds` — Credential Manager /
+  Smart Lock login-credential sharing.
+
+`sha256_cert_fingerprints` lists both accepted release-key SHA-256
+fingerprints (e.g. from `keytool -list -v` or the Play Console app-signing
+page); keep them in sync with the keys actually used to sign shipping builds.
+The claimed song/setlist paths must also be present in
+`android.intentFilters` in `apps/mobile/app.json`.

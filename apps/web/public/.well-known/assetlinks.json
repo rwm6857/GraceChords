@@ -1,10 +1,16 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.gracechords.app",
-      "sha256_cert_fingerprints": ["E6:4E:8D:A6:4E:C4:6C:12:8B:5D:A2:E4:3E:47:74:5B:9A:73:C4:81:F3:89:EE:97:E8:5F:17:93:FF:92:81:B6"]
+      "sha256_cert_fingerprints": [
+        "E6:4E:8D:A6:4E:C4:6C:12:8B:5D:A2:E4:3E:47:74:5B:9A:73:C4:81:F3:89:EE:97:E8:5F:17:93:FF:92:81:B6",
+        "8B:C8:78:72:96:1F:08:1B:D0:1E:6B:D4:A7:9F:7E:11:7C:19:E3:66:F8:07:F8:29:1C:37:DD:1D:14:69:5C:A7"
+      ]
     }
   }
 ]
