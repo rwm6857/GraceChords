@@ -9,9 +9,20 @@ JavaScriptCore `JSContext`.
 
 | File | Role |
 |------|------|
-| `entry.mjs` | Bridge entry. Imports the `@gracechords/core/chordpro/index.js` **subpath**, validates arguments, re-exports `transpose`. |
+| `entry.mjs` | Bridge entry. Imports core **subpaths** (never the barrel), validates arguments, exports `transpose` and `parseToJSON`. |
 | `build-core-bundle.mjs` | esbuild build → `GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js` |
-| `verify-bundle.mjs` | Parity harness: bundle vs. the module Metro resolves for `apps/mobile`. |
+| `verify-bundle.mjs` | Parity harness: bundle vs. the core modules `apps/mobile` resolves. |
+
+Exposed to Swift:
+
+| JS | Swift | Core function |
+|----|-------|---------------|
+| `GraceChordsCore.transpose(sym, steps, preferFlat)` | `CoreBridge.transpose(_:steps:preferFlat:)` | `chordpro/index.js` → `transposeSymPrefer` |
+| `GraceChordsCore.parseToJSON(text)` | `CoreBridge.parse(_:) -> SongDoc` | `chordpro/parser.ts` → `parseChordProOrLegacy` |
+
+`parseToJSON` returns the whole `SongDoc` as a JSON string so Swift decodes it in
+one `JSONDecoder` step instead of walking a `JSValue` tree; the Swift mirrors of
+`chordpro/types.ts` live in `Core/SongDoc.swift`.
 
 Swift side: `GraceChords Studio/GraceChords Studio/Core/CoreBridge.swift`.
 
@@ -81,13 +92,27 @@ IIFE that self-assigns is the format that needs no shim.
 `@supabase/supabase-js` and its `fetch`/WebSocket/storage expectations — none of
 which exist in a bare `JSContext`. Always import the narrowest subpath
 (`@gracechords/core/<dir>/<file>`, which the package's `"./*": "./src/*"` exports
-pattern resolves). The current bundle is 2 modules / ~3 KB with no dependencies;
-`verify-bundle.mjs` prints the module list so unexpected growth is visible.
+pattern resolves). The current bundle is 3 modules / ~11 KB with no dependencies;
+`build-core-bundle.mjs` prints the module list so unexpected growth is visible.
+
+## How parity is checked
+
+`verify-bundle.mjs` evaluates the built bundle in a bare `node:vm` context — no
+module loader, `var` lands on the global, the closest analogue to
+`JSContext.evaluateScript` — and compares results against the core modules
+themselves:
+
+- **transpose:** against `@gracechords/core/chordpro/index.js`, imported directly.
+- **parse:** against `chordpro/parser.ts`. Node cannot import that file (its
+  type-only import of `./types` is written as a value import, which Node's
+  type-stripping keeps and then fails to link), so the reference side runs the same
+  source through `esbuild.transform` — the same erasure Metro and Vite perform.
+  Comparison is the full `SongDoc` as JSON, over 12 hand-written cases plus the six
+  real fixtures in `apps/web/src/__tests__/fixtures/chordpro/` (read-only).
 
 ## Adding another core function later
 
-1. Re-export it from `entry.mjs` with argument validation at the boundary.
+1. Export it from `entry.mjs` with argument validation at the boundary.
 2. Add a typed Swift method to `CoreBridge` — no generic "evaluate this string"
    API, so every call site stays checkable.
-3. Add cases to `CASES` in `verify-bundle.mjs` **and** `transposeCases` in
-   `CoreBridgeSpike.swift`.
+3. Add cases to `verify-bundle.mjs` and re-run it.

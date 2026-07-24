@@ -28,6 +28,8 @@ enum CoreBridgeError: Error, LocalizedError {
     case jsException(String)
     /// The call returned something other than the expected type.
     case unexpectedResult(String)
+    /// The JSON the bundle returned did not match the expected Swift model.
+    case decodingFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -47,6 +49,8 @@ enum CoreBridgeError: Error, LocalizedError {
             return "JavaScript error: \(message)"
         case .unexpectedResult(let message):
             return "Unexpected result from the core bundle: \(message)"
+        case .decodingFailed(let message):
+            return "Could not decode the parsed song: \(message)"
         }
     }
 }
@@ -68,6 +72,7 @@ final class CoreBridge {
 
     private let context: JSContext
     private let transposeFunction: JSValue
+    private let parseFunction: JSValue
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -110,15 +115,19 @@ final class CoreBridge {
         guard let namespace = namespaceValue, !namespace.isUndefined, !namespace.isNull else {
             throw CoreBridgeError.missingExport("the \(Self.globalName) global")
         }
-        let functionValue: JSValue? = namespace.objectForKeyedSubscript("transpose")
-        guard let transposeFunction = functionValue, transposeFunction.isObject else {
-            throw CoreBridgeError.missingExport("\(Self.globalName).transpose")
-        }
-
         self.bundleURL = url
         self.context = context
-        self.transposeFunction = transposeFunction
+        self.transposeFunction = try Self.requireFunction(named: "transpose", on: namespace)
+        self.parseFunction = try Self.requireFunction(named: "parseToJSON", on: namespace)
         self.sink = sink
+    }
+
+    private static func requireFunction(named name: String, on namespace: JSValue) throws -> JSValue {
+        let value: JSValue? = namespace.objectForKeyedSubscript(name)
+        guard let function = value, function.isObject else {
+            throw CoreBridgeError.missingExport("\(globalName).\(name)")
+        }
+        return function
     }
 
     /// Transpose a chord symbol through `packages/core`'s `transposeSymPrefer`.
@@ -127,10 +136,8 @@ final class CoreBridge {
     /// does not recognize: `transpose("H7", steps: 2)` returns `"H7"` rather than
     /// throwing. Invalid *arguments* (an empty symbol) do throw.
     func transpose(_ symbol: String, steps: Int, preferFlat: Bool = false) throws -> String {
-        _ = sink.take()
-
-        // Built explicitly rather than relying on Swift→NSNumber bridging, which
-        // could hand `preferFlat` to JS as a number instead of a boolean.
+        // Arguments are built explicitly rather than relying on Swift→NSNumber
+        // bridging, which could hand `preferFlat` to JS as a number, not a boolean.
         let symbolValue: JSValue? = JSValue(object: symbol, in: context)
         let stepsValue: JSValue? = JSValue(double: Double(steps), in: context)
         let preferFlatValue: JSValue? = JSValue(bool: preferFlat, in: context)
@@ -139,23 +146,56 @@ final class CoreBridge {
               let preferFlatArgument = preferFlatValue else {
             throw CoreBridgeError.unexpectedResult("arguments could not be converted to JSValues")
         }
-
-        let returned: JSValue? = transposeFunction.call(
-            withArguments: [symbolArgument, stepsArgument, preferFlatArgument]
+        return try callReturningString(
+            transposeFunction,
+            named: "transpose",
+            arguments: [symbolArgument, stepsArgument, preferFlatArgument]
         )
+    }
+
+    /// Parse a ChordPro body through `packages/core`'s `parseChordProOrLegacy`.
+    ///
+    /// The bundle returns the whole document as JSON, so the nested structure
+    /// decodes in one step instead of being walked node by node as JSValues.
+    /// An empty body is valid and yields a document with no sections.
+    func parse(_ chordpro: String) throws -> SongDoc {
+        let inputValue: JSValue? = JSValue(object: chordpro, in: context)
+        guard let input = inputValue else {
+            throw CoreBridgeError.unexpectedResult("song body could not be converted to a JSValue")
+        }
+        let json = try callReturningString(parseFunction, named: "parseToJSON", arguments: [input])
+
+        guard let data = json.data(using: .utf8) else {
+            throw CoreBridgeError.unexpectedResult("parsed JSON was not valid UTF-8")
+        }
+        do {
+            return try JSONDecoder().decode(SongDoc.self, from: data)
+        } catch {
+            throw CoreBridgeError.decodingFailed("\(error)")
+        }
+    }
+
+    private func callReturningString(
+        _ function: JSValue,
+        named name: String,
+        arguments: [JSValue]
+    ) throws -> String {
+        _ = sink.take()
+
+        let returned: JSValue? = function.call(withArguments: arguments)
 
         if let message = sink.take() {
             throw CoreBridgeError.jsException(message)
         }
         guard let result = returned else {
-            throw CoreBridgeError.unexpectedResult("transpose returned no value")
+            throw CoreBridgeError.unexpectedResult("\(name) returned no value")
         }
         guard result.isString else {
-            throw CoreBridgeError.unexpectedResult("expected a string, got \(result)")
+            throw CoreBridgeError.unexpectedResult("\(name) expected a string, got \(result)")
         }
         let converted: String? = result.toString()
         guard let string = converted else {
-            throw CoreBridgeError.unexpectedResult("result could not be read as a string")
+            throw CoreBridgeError.unexpectedResult("\(name) result could not be read as a string")
         }
         return string
     }
