@@ -5,6 +5,7 @@
 // its fetch/WebSocket/storage expectations — into an engine that has none of
 // them. chordpro/index.js has zero imports, so this bundle stays dependency-free.
 import { transposeSymPrefer } from '@gracechords/core/chordpro/index.js'
+import { parseChordProOrLegacy } from '@gracechords/core/chordpro/parser.ts'
 
 /**
  * Transpose a chord symbol, preserving its original accidental spelling.
@@ -30,6 +31,26 @@ export function transpose(sym, steps, preferFlat = false) {
     throw new TypeError(`transpose: preferFlat must be a boolean, got ${describe(preferFlat)}`)
   }
   return transposeSymPrefer(sym, steps, preferFlat)
+}
+
+/**
+ * Parse ChordPro (or the legacy plain-header dialect) into a SongDoc, returned as
+ * a JSON string.
+ *
+ * Handing Swift a JSON string rather than a live JSValue tree means the whole
+ * nested structure decodes through JSONDecoder in one step, with `undefined`
+ * fields simply absent (→ nil) instead of needing per-node type checks.
+ *
+ * An empty body is legitimate input — it yields a document with no sections.
+ *
+ * @param {string} chordpro
+ * @returns {string} JSON-encoded SongDoc (see packages/core/src/chordpro/types.ts)
+ */
+export function parseToJSON(chordpro) {
+  if (typeof chordpro !== 'string') {
+    throw new TypeError(`parseToJSON: chordpro must be a string, got ${describe(chordpro)}`)
+  }
+  return JSON.stringify(parseChordProOrLegacy(chordpro))
 }
 
 function describe(value) {
