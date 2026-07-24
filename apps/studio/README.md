@@ -23,36 +23,55 @@ merges into its library) are not included — Studio shows the public catalog on
 
 ## First-run setup
 
-Three things are needed before the app will work, and two of them are Xcode
-settings this repo cannot carry for you.
+Only one thing is left to you: the Supabase credentials. The package dependency
+and the sandbox entitlement are both committed now.
 
-**1. Supabase credentials.** Same public-safe values `apps/mobile/.env` uses
+**Supabase credentials.** Same public-safe values `apps/mobile/.env` uses
 (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) — never the
 service-role key. `Config/StudioConfig.swift` looks in this order:
 
 1. Scheme environment variables `SUPABASE_URL` / `SUPABASE_ANON_KEY`
    (Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸ Arguments) — **recommended**, nothing
-   lands in git.
+   lands in git. The scheme lives under `xcuserdata/`, which
+   [`apps/studio/.gitignore`](.gitignore) excludes for exactly this reason.
 2. `Info.plist` keys of the same names.
 3. The fallback constants at the bottom of `StudioConfig.swift`.
 
 Missing config shows a readable "Studio is not configured" screen, not a crash —
 the same choice `apps/mobile/src/lib/supabase.ts` makes and for the same reason.
 
-**2. Outgoing network connections.** The target has `ENABLE_APP_SANDBOX = YES` and
-no network entitlement, so every Supabase request fails until you check
-Signing & Capabilities ▸ App Sandbox ▸ **Outgoing Connections (Client)**.
-Symptom if missed: sign-in hangs or reports a generic network error.
+To run from a terminal instead of Xcode, pass the same two variables to the built
+binary — `StudioConfig` reads the process environment either way:
 
-**3. `supabase-swift`.** Add it as a package dependency (File ▸ Add Package
-Dependencies… → `https://github.com/supabase/supabase-swift`, product `Supabase`)
-and **commit the resulting project changes** — the committed `project.pbxproj` has
-no package references, so the Swift sources here will not compile without it.
+```sh
+SUPABASE_URL=… SUPABASE_ANON_KEY=… \
+  "$(xcodebuild -project "apps/studio/GraceChords Studio/GraceChords Studio.xcodeproj" \
+     -scheme "GraceChords Studio" -showBuildSettings 2>/dev/null \
+     | awk '/ BUILT_PRODUCTS_DIR /{print $3}')/GraceChords Studio.app/Contents/MacOS/GraceChords Studio"
+```
 
-If sign-in fails with a Keychain error (`errSecMissingEntitlement`, OSStatus
--34018), supabase-swift's default Keychain session store is being blocked by the
-sandbox: add the Keychain Sharing capability, or inject a custom
-`AuthLocalStorage` when constructing the client in `Services/AppServices.swift`.
+### Already handled in the committed project
+
+- **`supabase-swift`** is a package dependency of the target
+  (`XCRemoteSwiftPackageReference` → product `Supabase`), pinned by
+  `project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Xcode resolves it
+  on first open; `xcodebuild -resolvePackageDependencies` does it from the CLI.
+- **Outgoing network connections.** `ENABLE_APP_SANDBOX = YES` alone makes every
+  Supabase request fail to even resolve the host (`NSURLErrorDomain -1003`), so
+  both target configurations set `ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES` —
+  the build-setting form of Signing & Capabilities ▸ App Sandbox ▸ Outgoing
+  Connections (Client), which Xcode turns into
+  `com.apple.security.network.client` in the generated entitlements.
+- **Session persistence needs no extra capability.** supabase-swift's default
+  `KeychainLocalStorage` writes a generic-password item with no access group,
+  which a sandboxed, team-signed build is allowed to do. If a future signing
+  change breaks that, the symptom is `errSecMissingEntitlement` (OSStatus
+  -34018) on sign-in; the fixes are the Keychain Sharing capability or a custom
+  `AuthLocalStorage` injected in `Services/AppServices.swift`.
+
+`ObservableObject` and `@Published` need an explicit `import Combine` here: the
+target builds with `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES`, under
+which they are not visible through a transitive import of SwiftUI or Supabase.
 
 ## Architecture
 
