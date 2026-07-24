@@ -12,6 +12,10 @@
 //  persistence and refresh.
 //
 
+// `Combine` is imported explicitly because the target builds with
+// SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY, under which `ObservableObject`
+// and `@Published` are not visible through a transitive import.
+import Combine
 import Foundation
 import Supabase
 
