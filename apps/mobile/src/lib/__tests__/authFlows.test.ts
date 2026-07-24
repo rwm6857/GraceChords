@@ -140,6 +140,7 @@ function googleDeps(overrides: Partial<GoogleDeps> = {}): GoogleDeps {
     signIn: vi.fn().mockResolvedValue({ idToken: 'google-jwt' }),
     isCancelError: (e) => (e as { code?: string })?.code === 'CANCELED',
     isPlayServicesError: (e) => (e as { code?: string })?.code === 'NO_PLAY_SERVICES',
+    isConfigError: (e) => (e as { code?: string })?.code === '10',
     ...overrides,
   }
 }
@@ -186,6 +187,19 @@ describe('googleSignIn', () => {
 
     const result = await googleSignIn(deps)
     expect(result.ok).toBe(false)
+    expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled()
+  })
+
+  it('reports a DEVELOPER_ERROR (code 10) distinctly, not as a generic failure', async () => {
+    const supabase = fakeSupabase()
+    // The Android native module rejects an unregistered SHA-1 / OAuth client
+    // with CommonStatusCodes.DEVELOPER_ERROR ("10") — the account picker shows,
+    // then sign-in fails right after selection.
+    const err = Object.assign(new Error('DEVELOPER_ERROR'), { code: '10' })
+    const deps = googleDeps({ supabase, signIn: vi.fn().mockRejectedValue(err) })
+
+    const result = await googleSignIn(deps)
+    expect(result).toEqual({ ok: false, error: 'errors.googleConfigError' })
     expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled()
   })
 })

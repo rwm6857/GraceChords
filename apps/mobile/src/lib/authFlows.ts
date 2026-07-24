@@ -81,6 +81,11 @@ export type GoogleDeps = {
   signIn: () => Promise<{ idToken: string | null }>
   isCancelError: (e: unknown) => boolean
   isPlayServicesError: (e: unknown) => boolean
+  // True for the native DEVELOPER_ERROR (Android status code 10): the app's
+  // package name + signing SHA-1 are not registered against an Android OAuth
+  // client in the same Google Cloud project as webClientId. The account picker
+  // still appears, then sign-in fails right after selection.
+  isConfigError: (e: unknown) => boolean
 }
 
 export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
@@ -92,6 +97,12 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     if (deps.isCancelError(e)) return { ok: false, canceled: true }
     if (deps.isPlayServicesError(e)) {
       return { ok: false, error: 'errors.googlePlayUnavailable' }
+    }
+    // A misconfigured Android OAuth client (missing SHA-1) surfaces here rather
+    // than as a network/cancel error; report it distinctly so the failure is
+    // diagnosable instead of the generic "please try again".
+    if (deps.isConfigError(e)) {
+      return { ok: false, error: 'errors.googleConfigError' }
     }
     return { ok: false, error: 'errors.googleFailed' }
   }

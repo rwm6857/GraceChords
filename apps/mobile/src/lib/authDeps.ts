@@ -54,5 +54,10 @@ export function makeGoogleDeps(): GoogleDeps {
       (e.code === statusCodes.SIGN_IN_CANCELLED || e.code === statusCodes.IN_PROGRESS),
     isPlayServicesError: (e) =>
       isErrorWithCode(e) && e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE,
+    // DEVELOPER_ERROR is not part of the public `statusCodes`; the Android
+    // native module rejects with the raw CommonStatusCodes.DEVELOPER_ERROR
+    // value ("10"). It means the app's package + signing SHA-1 aren't registered
+    // against an Android OAuth client in webClientId's Google Cloud project.
+    isConfigError: (e) => isErrorWithCode(e) && e.code === '10',
   }
 }

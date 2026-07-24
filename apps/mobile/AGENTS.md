@@ -249,7 +249,14 @@ duplicate logic here and never edit core internals to suit mobile.
   `src/lib/authDeps.ts`. Google client ids come from
   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, and the
   reversed iOS client id must be set in `app.json` → google-signin plugin
-  `iosUrlScheme`. Supabase's Google provider must have **"Skip nonce checks"**
+  `iosUrlScheme`. **Android additionally needs its own "Android"-type OAuth
+  client** (package `com.gracechords.app` + the signing SHA-1) in the same
+  Google Cloud project — its id never appears in code, Google matches the app by
+  package + SHA-1. Without it the account picker shows and then sign-in fails
+  with `DEVELOPER_ERROR` (code 10), which `googleSignIn` maps to
+  `errors.googleConfigError` (register the SHA-1 of every signing key you ship —
+  local debug keystore and the EAS/Play App Signing key). Supabase's Google
+  provider must have **"Skip nonce checks"**
   enabled: iOS embeds a nonce in the id-token that the free google-signin lib
   can't reproduce, so otherwise `signInWithIdToken` rejects it ("Passed nonce and
   nonce in id_token should either both exist or not"). Apple is unaffected — it
@@ -480,6 +487,8 @@ downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
 **"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
 link is an informational alert only), tablet master-detail, EAS Build /
-TestFlight, Android (auth code is cross-platform-safe, but Android OAuth config —
-SHA-1, google-services — is not set up), GraceTracks, and migrating web's
+TestFlight, Android (auth code is cross-platform-safe, but native Google
+sign-in needs an Android-type OAuth client — package + signing SHA-1 — in the
+Google Cloud project; without it the picker shows then fails with
+DEVELOPER_ERROR → `errors.googleConfigError`), GraceTracks, and migrating web's
 `features/readings` onto core's `bible` module.
