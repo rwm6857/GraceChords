@@ -14,80 +14,139 @@
 
 import SwiftUI
 
+/// The live view controls the chart honors.
+///
+/// Transposition and chord spelling are deliberately absent: those are applied
+/// upstream by `CoreBridge.render`, so this view never does music math. What is
+/// left is presentation — mobile's RenderOpts minus the parts core owns.
+struct ChartRenderOptions: Equatable {
+    var showChords = true
+    var showSections = true
+    var fontScale: Double = 1
+    /// Wrap long instrumental rows onto two lines. Mobile sets this only in the
+    /// two-column layout, where a row has half the width.
+    var splitInstrumentals = false
+
+    static let `default` = ChartRenderOptions()
+}
+
+/// Chart body metrics, from apps/mobile's ChordChart.
+///
+/// These are NOT run through `GCTypeScale.macOS` like the chrome ramp is: the
+/// chart is content rather than interface, and a chord chart is read at arm's
+/// length while playing, so it keeps mobile's sizes and the same song reads the
+/// same in both apps. The font-size control scales all of them together.
+enum GCChartMetrics {
+    static let lyricSize: CGFloat = 17
+    static let lineHeight: CGFloat = 24
+    static let chordSize: CGFloat = 14
+    static let commentSize: CGFloat = 14.5
+}
+
 struct ChordChartView: View {
     let doc: SongDoc
+    var options: ChartRenderOptions = .default
+
+    /// The parser re-opens a section after an inline `{instrumental}` directive,
+    /// which can leave an empty trailing copy — line-less sections are skipped so
+    /// no stray duplicate heading renders. Mobile filters the same way.
+    private var sections: [SongSection] {
+        doc.sections.filter { !$0.lines.isEmpty }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.lg) {
-            ForEach(Array(doc.sections.enumerated()), id: \.offset) { _, section in
-                SectionView(section: section)
+        VStack(alignment: .leading, spacing: GCSpacing.md) {
+            ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                ChartSectionView(section: section, options: options)
             }
         }
     }
 }
 
-private struct SectionView: View {
+/// One section. Internal rather than private because the two-column layout renders
+/// sections one at a time, including offscreen for measurement.
+struct ChartSectionView: View {
     let section: SongSection
+    var options: ChartRenderOptions = .default
 
     var body: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.xs) {
-            if let label = section.label, !label.isEmpty {
+        VStack(alignment: .leading, spacing: 2) {
+            if let label = section.label, !label.isEmpty, options.showSections {
                 // `overline` is the ramp's uppercase group label — the rung that
                 // matches this the way `sectionHeader` matches "Key of X".
                 Text(label.uppercased())
                     .gcTextStyle(.overline)
                     .foregroundStyle(GCColor.textAccent)
+                    .padding(.bottom, GCSpacing.xs)
             }
             ForEach(Array(section.lines.enumerated()), id: \.offset) { _, line in
-                LineView(line: line)
+                ChartLineView(line: line, options: options)
             }
         }
     }
 }
 
-private struct LineView: View {
+private struct ChartLineView: View {
     let line: SongLine
+    let options: ChartRenderOptions
 
-    // Chart body sizes are deliberately NOT run through the macOS type scale: the
-    // chart is content, not chrome, and these match apps/mobile's so the same song
-    // reads the same in both apps. Colors do come from the tokens.
-    private static let lyricFont = Font.system(size: 15)
-    private static let chordFont = Font.system(size: 13, weight: .bold, design: .monospaced)
+    private var scale: CGFloat { CGFloat(options.fontScale) }
+    private var lyricFont: Font { .system(size: GCChartMetrics.lyricSize * scale, weight: .medium) }
+    private var chordFont: Font {
+        .system(size: GCChartMetrics.chordSize * scale, weight: .bold, design: .monospaced)
+    }
+    private var lineHeight: CGFloat { (GCChartMetrics.lineHeight * scale).rounded() }
+
+    /// Whether this line draws a chord row. Mirrors mobile's `hasChords`.
+    private var hasChords: Bool { options.showChords && !line.chords.isEmpty }
 
     var body: some View {
         if let instrumental = line.instrumental {
-            let text = ChordChartFormat.instrumentalLine(instrumental)
-            if text.isEmpty {
-                EmptyView()
-            } else {
-                Text(text)
-                    .font(Self.chordFont)
-                    .foregroundStyle(GCColor.textAccent)
+            // A chord-only line has nothing to say in lyrics-only mode.
+            if options.showChords {
+                let rows = ChordChartFormat.instrumentalRows(
+                    instrumental, split: options.splitInstrumentals)
+                if rows.isEmpty {
+                    EmptyView()
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                            Text(row)
+                                .font(chordFont)
+                                .foregroundStyle(GCColor.textAccent)
+                        }
+                    }
+                    .padding(.bottom, 2)
+                }
             }
         } else if let comment = line.comment, !comment.isEmpty {
             Text(comment)
-                .font(.system(size: 14).italic())
+                .font(.system(size: GCChartMetrics.commentSize * scale).italic())
                 .foregroundStyle(GCColor.sec)
-        } else if line.lyrics.isEmpty && line.chords.isEmpty {
-            // A genuinely blank line keeps its vertical space, as on mobile.
-            Text(" ").font(Self.lyricFont)
-        } else if line.chords.isEmpty {
-            Text(line.lyrics)
-                .font(Self.lyricFont)
+        } else if line.lyrics.isEmpty && !hasChords {
+            // A chords-only line vanishes when chords are hidden; a genuinely
+            // blank line keeps its vertical space.
+            if line.chords.isEmpty {
+                Color.clear.frame(height: lineHeight)
+            }
+        } else if !hasChords {
+            Text(line.lyrics.isEmpty ? " " : line.lyrics)
+                .font(lyricFont)
                 .foregroundStyle(GCColor.ink)
         } else {
-            FlowLayout(horizontalSpacing: 5, verticalSpacing: 2) {
+            FlowLayout(horizontalSpacing: GCChartMetrics.lyricSize * scale * 0.28, verticalSpacing: 2) {
                 ForEach(Array(ChordChartFormat.wordCells(for: line).enumerated()), id: \.offset) { _, cell in
                     VStack(alignment: .leading, spacing: 0) {
                         Text(cell.chords.isEmpty ? " " : cell.chords.joined(separator: " "))
-                            .font(Self.chordFont)
+                            .font(chordFont)
                             .foregroundStyle(GCColor.textAccent)
                         Text(cell.text.isEmpty ? " " : cell.text)
-                            .font(Self.lyricFont)
+                            .font(lyricFont)
                             .foregroundStyle(GCColor.ink)
                     }
                 }
             }
+            .padding(.bottom, 2)
         }
     }
 }
@@ -140,26 +199,42 @@ enum ChordChartFormat {
         return cells
     }
 
-    /// Port of formatInstrumental (split: false) in
-    /// packages/core/src/songs/instrumental.js: chords joined with "  //  ", the
-    /// repeat count appended to the last chord, and a bare "xN" when there are no
-    /// chords at all.
-    static func instrumentalLine(_ directive: InstrumentalDirective) -> String {
+    /// Port of `formatInstrumental` in packages/core/src/songs/instrumental.js:
+    /// chords joined with "  //  ", the repeat count appended to the last chord of
+    /// the last row, and a bare "xN" when there are no chords at all.
+    ///
+    /// Returns rows, not a single string, because `split` can wrap a long run onto
+    /// two lines — which the two-column layout needs and the single column does
+    /// not. The symbols are already transposed and spelled by `CoreBridge.render`.
+    static func instrumentalRows(_ directive: InstrumentalDirective, split: Bool = false) -> [String] {
         let chords = directive.chords
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         let repeatCount = (directive.repeatCount ?? 0) > 1 ? directive.repeatCount : nil
 
         guard !chords.isEmpty else {
-            if let repeatCount = repeatCount { return "x\(repeatCount)" }
-            return ""
+            if let repeatCount = repeatCount { return ["x\(repeatCount)"] }
+            return []
         }
 
-        var tokens = chords
-        if let repeatCount = repeatCount, let last = tokens.last {
-            tokens[tokens.count - 1] = "\(last) x\(repeatCount)"
+        let rows = splitRows(chords, split: split)
+        return rows.enumerated().map { index, row in
+            var tokens = row
+            if index == rows.count - 1, let repeatCount = repeatCount, let last = tokens.last {
+                tokens[tokens.count - 1] = "\(last) x\(repeatCount)"
+            }
+            return tokens.joined(separator: "  //  ")
         }
-        return tokens.joined(separator: "  //  ")
+    }
+
+    /// Port of `splitRows`: only splits when asked and there are more than three
+    /// chords, with the extra chord going in the first row.
+    private static func splitRows(_ chords: [String], split: Bool) -> [[String]] {
+        guard split, chords.count > 3 else { return [chords] }
+        let half = Int((Double(chords.count) / 2).rounded(.up))
+        let first = Array(chords[0..<half])
+        let second = Array(chords[half...])
+        return second.isEmpty ? [first] : [first, second]
     }
 
     private static func isWhitespace(_ unit: UInt16) -> Bool {
