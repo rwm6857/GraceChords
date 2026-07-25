@@ -23,13 +23,13 @@ struct TransposeBar: View {
     var onChooseKey: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: GCSpacing.sm) {
+        VStack(spacing: 6) {
             if let capoText = capoText {
                 Text(capoText)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(GCColor.textAccent)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
                     .background(GCColor.accentSoft, in: Capsule())
             }
             pill
@@ -37,16 +37,17 @@ struct TransposeBar: View {
     }
 
     private var pill: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 2) {
             stepButton(systemImage: "chevron.down", label: "Transpose down", action: onDown)
 
             Button {
                 onChooseKey?()
             } label: {
                 Text(keyLabel)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(GCColor.ink)
-                    .frame(minWidth: 48)
+                    .frame(minWidth: 38)
+                    .padding(.vertical, 4)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -58,26 +59,32 @@ struct TransposeBar: View {
 
             stepButton(systemImage: "chevron.up", label: "Transpose up", action: onUp)
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
-        .background(GCColor.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(4)
+        // A floating control over content is what vibrancy is for on macOS: the
+        // chart tints it instead of a flat fill sitting on top of the page. It also
+        // means the bar needs no border to read as a distinct surface.
+        .background(.regularMaterial, in: Capsule())
         .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(GCColor.border, lineWidth: 1)
+            // Hairline for definition where the material meets a light chart.
+            Capsule().strokeBorder(GCColor.border.opacity(0.5), lineWidth: 0.5)
         }
-        .shadow(color: GCColor.ink.opacity(0.18), radius: 14, x: 0, y: 6)
+        // Fixed black, NOT a theme token: `GCColor.ink` is a *foreground* color, so
+        // in dark mode it resolves near-white and the "shadow" became a glow. A
+        // shadow is a shadow in both appearances.
+        .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 2)
     }
 
     private func stepButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(GCColor.accent)
-                .frame(width: 46, height: 44)
-                .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .frame(width: 30, height: 26)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        // `.accessoryBar` gives the hover highlight a Mac user expects from a
+        // floating control, so the buttons need no fill of their own.
+        .buttonStyle(.accessoryBar)
         .help(label)
         .accessibilityLabel(label)
     }
