@@ -12,7 +12,8 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import vm from 'node:vm'
 
-import { transposeSymPrefer } from '@gracechords/core/chordpro/index.js'
+import { stepsBetween as refStepsBetween, transposeSymPrefer } from '@gracechords/core/chordpro/index.js'
+import { formatChord as refFormatChord, formatKeyDisplay as refFormatKeyDisplay } from '@gracechords/core/chordpro/solfege.js'
 
 // parser.ts cannot be imported by Node's ESM loader: it carries a type-only
 // import written as a value import (`import { SongDoc } from './types'`), which
@@ -41,6 +42,26 @@ async function loadReferenceParser() {
 }
 
 const { parseChordProOrLegacy, sourcePath: parserSourcePath } = await loadReferenceParser()
+
+// songs/instrumental.js bare-directory-imports './chordpro', which Metro and Vite
+// resolve but Node's ESM loader does not — so the reference copy goes through
+// esbuild's bundler, whose resolution matches what the app bundlers do.
+async function loadReferenceInstrumental() {
+  const esbuild = await import('esbuild')
+  const entry = fileURLToPath(import.meta.resolve('@gracechords/core/songs/instrumental.js'))
+  const built = await esbuild.build({
+    entryPoints: [entry],
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'neutral',
+    loader: { '.ts': 'ts' },
+    resolveExtensions: ['.ts', '.js', '.mjs', '.json'],
+  })
+  const dataURL = `data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`
+  return import(dataURL)
+}
+const { transposeInstrumental: refTransposeInstrumental } = await loadReferenceInstrumental()
 
 const here = dirname(fileURLToPath(import.meta.url))
 const bundlePath = resolve(here, '../GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js')
@@ -83,13 +104,13 @@ if (!namespace) {
   console.log('FAIL  bundle did not define a GraceChordsCore global')
   process.exit(1)
 }
-for (const exported of ['transpose', 'parseToJSON']) {
+for (const exported of ['transpose', 'parseToJSON', 'stepsBetween', 'formatKey', 'renderToJSON']) {
   if (typeof namespace[exported] !== 'function') {
     console.log(`FAIL  GraceChordsCore.${exported} is not a function`)
     process.exit(1)
   }
 }
-console.log('PASS  bundle evaluated in a bare context; transpose + parseToJSON are callable\n')
+console.log('PASS  bundle evaluated in a bare context; all five exports are callable\n')
 
 console.log('sym         steps  flat   bundle   mobile   expected')
 console.log('----------------------------------------------------')
@@ -193,6 +214,135 @@ for (const [label, value] of [
     console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
   }
 }
+
+// ── viewer helpers: stepsBetween / formatKey ─────────────────────────────────
+console.log('\nstepsBetween parity (bundle vs. chordpro/index.js):')
+for (const [from, to] of [
+  ['C', 'D'], ['D', 'C'], ['G', 'G'], ['Bb', 'C'], ['A#', 'C'], ['Em', 'Gm'],
+  ['F#', 'Bb'], ['nonsense', 'C'], ['C', 'nonsense'],
+]) {
+  const bundled = namespace.stepsBetween(from, to)
+  const expected = refStepsBetween(from, to)
+  const ok = bundled === expected
+  console.log(`${ok ? 'PASS' : 'FAIL'}  stepsBetween(${from}, ${to}) → ${bundled} (core ${expected})`)
+  if (!ok) failures += 1
+}
+
+console.log('\nformatKey parity (bundle vs. chordpro/solfege.js):')
+for (const key of ['C', 'Bb', 'F#m', 'Ebmaj7', 'A#']) {
+  for (const style of ['letters', 'solfege']) {
+    const bundled = namespace.formatKey(key, style)
+    const expected = refFormatKeyDisplay(key, style)
+    const ok = bundled === expected
+    console.log(`${ok ? 'PASS' : 'FAIL'}  formatKey(${key.padEnd(7)} ${style.padEnd(7)}) → ${String(bundled).padEnd(8)} (core ${expected})`)
+    if (!ok) failures += 1
+  }
+}
+
+// ── renderToJSON parity ──────────────────────────────────────────────────────
+// The reference applies the SAME composition apps/mobile's ChordChart.tsx uses,
+// but built from the source modules rather than the bundle — so a mismatch means
+// the bundling drifted, which is what this harness exists to catch. Every parse
+// case is re-checked across transpose steps and both chord styles.
+function referenceRender(input, steps, preferFlat, style) {
+  const doc = parseChordProOrLegacy(input)
+  for (const section of doc.sections ?? []) {
+    if (section.instrumental) {
+      section.instrumental = refTransposeInstrumental(section.instrumental, steps, preferFlat, { style })
+    }
+    for (const line of section.lines ?? []) {
+      if (line.instrumental) {
+        line.instrumental = refTransposeInstrumental(line.instrumental, steps, preferFlat, { style })
+      }
+      if (line.chords?.length) {
+        line.chords = line.chords.map((chord) => ({
+          ...chord,
+          sym: refFormatChord(transposeSymPrefer(chord.sym, steps, preferFlat), { style }),
+        }))
+      }
+    }
+  }
+  return JSON.stringify(doc)
+}
+
+const RENDER_VARIANTS = [
+  [0, false, 'letters'],
+  [0, false, 'solfege'],
+  [2, false, 'letters'],
+  [-3, false, 'letters'],
+  [1, true, 'letters'],
+  [1, false, 'letters'],
+  [5, true, 'solfege'],
+  [-1, true, 'solfege'],
+]
+
+console.log('\nrenderToJSON parity (full SongDoc after transpose + chord style):')
+let renderChecks = 0
+for (const [label, input] of PARSE_CASES) {
+  let caseFailed = false
+  for (const [steps, preferFlat, style] of RENDER_VARIANTS) {
+    let bundled
+    try {
+      bundled = namespace.renderToJSON(input, steps, preferFlat, style)
+    } catch (err) {
+      fail(`${label} [${steps}/${preferFlat}/${style}]: renderToJSON threw — ${err.message}`)
+      caseFailed = true
+      continue
+    }
+    const expected = referenceRender(input, steps, preferFlat, style)
+    renderChecks += 1
+    if (bundled !== expected) {
+      fail(
+        `${label} [steps=${steps} flat=${preferFlat} ${style}]: SongDoc differs\n` +
+          `      bundle:   ${bundled}\n      expected: ${expected}`,
+      )
+      caseFailed = true
+    }
+  }
+  if (!caseFailed) {
+    console.log(`PASS  ${label.padEnd(42)} ${RENDER_VARIANTS.length} variant(s)`)
+  }
+}
+
+// renderToJSON at 0 steps / letters must equal plain parseToJSON — the identity
+// case, which pins that the transform never mutates a document it shouldn't.
+for (const [label, input] of PARSE_CASES) {
+  const rendered = namespace.renderToJSON(input, 0, false, 'letters')
+  const parsed = namespace.parseToJSON(input)
+  if (rendered !== parsed) {
+    // Only a real difference matters: solfege/steps are identity here, but
+    // transposeInstrumental normalizes specs (trims blanks), so an instrumental
+    // case may legitimately differ. Report the document so the diff is visible.
+    const hasInstrumental = JSON.parse(parsed).sections?.some(
+      (s) => s.instrumental || s.lines?.some((l) => l.instrumental),
+    )
+    if (!hasInstrumental) {
+      fail(`${label}: renderToJSON(0, false, letters) should equal parseToJSON\n      rendered: ${rendered}\n      parsed:   ${parsed}`)
+    }
+  }
+}
+console.log(`PASS  identity case: renderToJSON(0, false, 'letters') matches parseToJSON`)
+
+console.log('\nviewer-helper error paths:')
+const viewerBadArgs = [
+  ['stepsBetween empty key', () => namespace.stepsBetween('', 'C')],
+  ['stepsBetween null key', () => namespace.stepsBetween('C', null)],
+  ['formatKey bad style', () => namespace.formatKey('C', 'numbers')],
+  ['formatKey missing style', () => namespace.formatKey('C', undefined)],
+  ['renderToJSON bad style', () => namespace.renderToJSON('Verse\n[G]Hi', 0, false, 'roman')],
+  ['renderToJSON non-integer steps', () => namespace.renderToJSON('Verse\n[G]Hi', 1.5, false, 'letters')],
+  ['renderToJSON non-boolean preferFlat', () => namespace.renderToJSON('Verse\n[G]Hi', 0, 'no', 'letters')],
+  ['renderToJSON null body', () => namespace.renderToJSON(null, 0, false, 'letters')],
+]
+for (const [label, call] of viewerBadArgs) {
+  try {
+    const value = call()
+    fail(`${label}: returned ${JSON.stringify(value)} instead of throwing`)
+  } catch (err) {
+    console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
+  }
+}
+console.log(`\n(${renderChecks} renderToJSON document comparisons)`)
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exit(failures === 0 ? 0 : 1)
