@@ -24,24 +24,29 @@ struct SongLibraryView: View {
     }
 
     private var searchField: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: GCSpacing.sm) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(GCColor.muted)
             TextField("Search titles and tags", text: $model.query)
                 .textFieldStyle(.plain)
+                .gcTextStyle(.body)
             if !model.query.isEmpty {
                 Button {
                     model.query = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(GCColor.muted)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, GCSpacing.md)
+        .padding(.vertical, GCSpacing.sm)
+        // surfaceAlt is the token for recessed surfaces — "search field" is the
+        // example native.ts names for it.
+        .background(GCColor.surfaceAlt, in: .rect(cornerRadius: GCRadius.sm))
+        .padding(GCSpacing.sm)
     }
 
     @ViewBuilder
@@ -50,10 +55,11 @@ struct SongLibraryView: View {
             centered { ProgressView() }
         } else if let errorText = model.errorText {
             centered {
-                VStack(spacing: 10) {
+                VStack(spacing: GCSpacing.sm) {
                     Text(errorText)
+                        .gcTextStyle(.body)
                         .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(GCColor.sec)
                     Button("Try Again") { Task { await model.load() } }
                 }
                 .padding()
@@ -68,7 +74,8 @@ struct SongLibraryView: View {
             .overlay {
                 if model.results.isEmpty {
                     Text(model.songs.isEmpty ? "No songs" : "No matches")
-                        .foregroundStyle(.secondary)
+                        .gcTextStyle(.body)
+                        .foregroundStyle(GCColor.sec)
                 }
             }
         }
@@ -80,28 +87,38 @@ struct SongLibraryView: View {
     }
 }
 
+/// Row text takes its sizes from the token ramp, but deliberately keeps SwiftUI's
+/// semantic foreground styles rather than `GCColor.ink` / `GCColor.sec`: this List
+/// is selectable, and macOS inverts a selected row's text to read against the
+/// accent fill. Only the automatic styles participate in that inversion, so
+/// pinning token colors here would leave dark text on a Signal-blue selection.
+/// Brand color shows up on this screen through the accent (selection, the search
+/// field's recessed surface) instead.
 private struct SongRow: View {
     let song: SongListItem
 
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
+        HStack(alignment: .center, spacing: GCSpacing.sm) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
+                    .gcTextStyle(.rowTitle)
                     .lineLimit(1)
                 if let artist = song.artist, !artist.isEmpty {
                     Text(artist)
-                        .font(.caption)
+                        .gcTextStyle(.rowSubtitle)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
-            Spacer(minLength: 4)
+            Spacer(minLength: GCSpacing.xs)
             VStack(alignment: .trailing, spacing: 2) {
                 if let key = song.defaultKey, !key.isEmpty {
-                    Text(key).font(.caption.weight(.medium))
+                    Text(key).gcTextStyle(.rowKey)
                 }
                 if let timeSignature = song.timeSignature, !timeSignature.isEmpty {
-                    Text(timeSignature).font(.caption2).foregroundStyle(.secondary)
+                    Text(timeSignature)
+                        .gcTextStyle(.rowMeta)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

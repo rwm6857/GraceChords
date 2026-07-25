@@ -15,16 +15,17 @@ struct SignInView: View {
     @State private var password = ""
 
     var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 4) {
+        VStack(spacing: GCSpacing.lg) {
+            VStack(spacing: GCSpacing.xs) {
                 Text("GraceChords Studio")
-                    .font(.title2.weight(.semibold))
+                    .gcTextStyle(.largeTitle)
+                    .foregroundStyle(GCColor.ink)
                 Text("Sign in with your GraceChords account")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .gcTextStyle(.body)
+                    .foregroundStyle(GCColor.sec)
             }
 
-            VStack(spacing: 10) {
+            VStack(spacing: GCSpacing.sm) {
                 TextField("Email", text: $email)
                     .textContentType(.username)
                     .disableAutocorrection(true)
@@ -32,15 +33,13 @@ struct SignInView: View {
                     .textContentType(.password)
             }
             .textFieldStyle(.roundedBorder)
-            .frame(maxWidth: 320)
             .onSubmit(submit)
 
             if let errorText = auth.errorText {
                 Text(errorText)
-                    .font(.callout)
-                    .foregroundStyle(.red)
+                    .gcTextStyle(.body)
+                    .foregroundStyle(GCColor.danger)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: 320)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -54,7 +53,11 @@ struct SignInView: View {
             .keyboardShortcut(.defaultAction)
             .disabled(auth.isWorking || email.isEmpty || password.isEmpty)
         }
-        .padding(32)
+        // MaxWidth.form is the token cap the mobile auth screen uses; the window's
+        // 420pt floor means it rarely binds, but it keeps the column from
+        // stretching when the sign-in view is shown in a resized window.
+        .frame(maxWidth: GCLayout.MaxWidth.form)
+        .padding(GCSpacing.xxl)
         .frame(minWidth: 420, minHeight: 320)
     }
 

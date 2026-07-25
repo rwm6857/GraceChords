@@ -76,6 +76,8 @@ which they are not visible through a transitive import of SwiftUI or Supabase.
 ## Architecture
 
 ```
+Design/DesignTokens.generated.swift  GENERATED palette/spacing/radii/layout/type ramp
+Design/Theme.swift             how those resolve on macOS (dynamic colors, type scale)
 Config/StudioConfig.swift      URL + anon key resolution, config-error text
 Services/AppServices.swift     one SupabaseClient, one SongsRepository, one CoreBridge
 Auth/AuthController.swift      session phase, Keychain-persisted via supabase-swift
@@ -91,6 +93,52 @@ Core/CoreBridge.swift          JSContext wrapper: transpose + parse
 Core/SongDoc.swift             Swift mirrors of chordpro/types.ts
 ContentView.swift              config gate → auth gate → split view
 ```
+
+### Design tokens
+
+Studio uses the **same tokens as `apps/mobile`** — the Signal-blue palette in
+[`packages/tokens/native.ts`](../../packages/tokens/native.ts), not the web's
+warm-brown `tokens.css`. Because Studio is a native target (and deliberately not
+an npm workspace member) it cannot import the TypeScript map, so the values are
+**generated into committed Swift** — an Xcode build never needs node:
+
+```sh
+npm run tokens:swift          # regenerate
+npm run tokens:swift:check    # verify nothing has drifted (also a PR check)
+```
+
+`native.ts` stays the single source of truth. **Never hand-edit
+`Design/DesignTokens.generated.swift` or the `AccentColor` colorset** — change
+`native.ts`, regenerate, commit both. The generator needs Node ≥ 22.18 (it imports
+the `.ts` file directly and relies on built-in type stripping).
+
+What is generated: `GCColor`, `GCGradient`, `GCSpacing`, `GCRadius`, `GCLayout`,
+the `GCTextSpec` ramp, and `Assets.xcassets/AccentColor.colorset` (so AppKit
+chrome gets the brand accent too). `Design/Theme.swift` is hand-written and holds
+no values — only the two macOS translations:
+
+- **Colors resolve through AppKit**, not a SwiftUI `colorScheme` lookup, so each
+  token also carries its Increase-Contrast variant (built from `native.ts`'s
+  `*ContrastBoost` overlays). That reaches the same four combinations the mobile
+  ThemeProvider does, and keeps working inside AppKit-backed surfaces where the
+  SwiftUI environment does not.
+- **The type ramp is scaled by `GCTypeScale.macOS` (0.82).** The shared ramp is
+  iOS-tuned; macOS's system body is 13pt, and per `apps/mobile/AGENTS.md` the
+  platform HIG wins over a pixel-for-pixel port. 0.82 was chosen because it lands
+  `body` on exactly 13pt (largeTitle 27→22, rowTitle 16.5→13.5). Sizes are scaled,
+  *relationships* stay shared.
+
+Two deliberate exceptions:
+
+- **`SongRow` keeps SwiftUI's semantic foreground styles** (`.primary` /
+  `.secondary`) instead of `GCColor.ink` / `GCColor.sec`. The library `List` is
+  selectable and macOS inverts a selected row's text to read against the accent
+  fill — only automatic styles participate, so pinning token colors there would
+  leave dark text on a Signal-blue selection. The row still takes its *sizes* from
+  the ramp.
+- **`ChordChartView`'s lyric/chord sizes are not scaled.** The chart is content,
+  not chrome, and matches `apps/mobile`'s so the same song reads the same in both
+  apps. Its colors do come from the tokens.
 
 ### Data access and RLS
 

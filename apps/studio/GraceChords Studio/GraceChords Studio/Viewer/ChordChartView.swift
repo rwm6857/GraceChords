@@ -18,7 +18,7 @@ struct ChordChartView: View {
     let doc: SongDoc
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: GCSpacing.lg) {
             ForEach(Array(doc.sections.enumerated()), id: \.offset) { _, section in
                 SectionView(section: section)
             }
@@ -30,12 +30,13 @@ private struct SectionView: View {
     let section: SongSection
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: GCSpacing.xs) {
             if let label = section.label, !label.isEmpty {
+                // `overline` is the ramp's uppercase group label — the rung that
+                // matches this the way `sectionHeader` matches "Key of X".
                 Text(label.uppercased())
-                    .font(.caption.weight(.semibold))
-                    .kerning(0.6)
-                    .foregroundStyle(.tint)
+                    .gcTextStyle(.overline)
+                    .foregroundStyle(GCColor.textAccent)
             }
             ForEach(Array(section.lines.enumerated()), id: \.offset) { _, line in
                 LineView(line: line)
@@ -47,6 +48,9 @@ private struct SectionView: View {
 private struct LineView: View {
     let line: SongLine
 
+    // Chart body sizes are deliberately NOT run through the macOS type scale: the
+    // chart is content, not chrome, and these match apps/mobile's so the same song
+    // reads the same in both apps. Colors do come from the tokens.
     private static let lyricFont = Font.system(size: 15)
     private static let chordFont = Font.system(size: 13, weight: .bold, design: .monospaced)
 
@@ -58,26 +62,29 @@ private struct LineView: View {
             } else {
                 Text(text)
                     .font(Self.chordFont)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(GCColor.textAccent)
             }
         } else if let comment = line.comment, !comment.isEmpty {
             Text(comment)
                 .font(.system(size: 14).italic())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(GCColor.sec)
         } else if line.lyrics.isEmpty && line.chords.isEmpty {
             // A genuinely blank line keeps its vertical space, as on mobile.
             Text(" ").font(Self.lyricFont)
         } else if line.chords.isEmpty {
-            Text(line.lyrics).font(Self.lyricFont)
+            Text(line.lyrics)
+                .font(Self.lyricFont)
+                .foregroundStyle(GCColor.ink)
         } else {
             FlowLayout(horizontalSpacing: 5, verticalSpacing: 2) {
                 ForEach(Array(ChordChartFormat.wordCells(for: line).enumerated()), id: \.offset) { _, cell in
                     VStack(alignment: .leading, spacing: 0) {
                         Text(cell.chords.isEmpty ? " " : cell.chords.joined(separator: " "))
                             .font(Self.chordFont)
-                            .foregroundStyle(.tint)
+                            .foregroundStyle(GCColor.textAccent)
                         Text(cell.text.isEmpty ? " " : cell.text)
                             .font(Self.lyricFont)
+                            .foregroundStyle(GCColor.ink)
                     }
                 }
             }

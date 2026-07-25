@@ -27,7 +27,7 @@ struct SongViewerView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: GCSpacing.lg) {
                 if isLoading {
                     ProgressView().frame(maxWidth: .infinity, alignment: .center)
                 } else if let errorText = errorText {
@@ -40,8 +40,8 @@ struct SongViewerView: View {
                     message("Song not found.", retry: false)
                 }
             }
-            .frame(maxWidth: 760, alignment: .leading)
-            .padding(24)
+            .frame(maxWidth: GCLayout.MaxWidth.content, alignment: .leading)
+            .padding(GCSpacing.xl)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .navigationTitle(song?.title ?? "Song")
@@ -62,19 +62,20 @@ struct SongViewerView: View {
 
     @ViewBuilder
     private func header(for song: SongDetail) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: GCSpacing.xs) {
             Text(song.title)
-                .font(.title2.weight(.semibold))
+                .gcTextStyle(.largeTitle)
+                .foregroundStyle(GCColor.ink)
             if let artist = song.artist, !artist.isEmpty {
                 Text(artist)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .gcTextStyle(.rowSubtitle)
+                    .foregroundStyle(GCColor.sec)
             }
             let details = metaDetails(for: song)
             if !details.isEmpty {
                 Text(details.joined(separator: "  •  "))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .gcTextStyle(.rowMeta)
+                    .foregroundStyle(GCColor.muted)
             }
         }
     }
@@ -84,27 +85,30 @@ struct SongViewerView: View {
         if let doc = doc {
             ChordChartView(doc: doc)
         } else if let parseErrorText = parseErrorText {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: GCSpacing.sm) {
                 Text(parseErrorText)
-                    .font(.callout)
-                    .foregroundStyle(.red)
+                    .gcTextStyle(.body)
+                    .foregroundStyle(GCColor.danger)
                     .fixedSize(horizontal: false, vertical: true)
                 // Raw body fallback, as on mobile — better than an empty page.
                 Text(song.chordproContent ?? "")
                     .font(.system(size: 13, design: .monospaced))
+                    .foregroundStyle(GCColor.sec)
                     .textSelection(.enabled)
             }
         } else {
             Text("This song has no chart content yet.")
-                .foregroundStyle(.secondary)
+                .gcTextStyle(.body)
+                .foregroundStyle(GCColor.sec)
         }
     }
 
     @ViewBuilder
     private func message(_ text: String, retry: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: GCSpacing.sm) {
             Text(text)
-                .foregroundStyle(.secondary)
+                .gcTextStyle(.body)
+                .foregroundStyle(GCColor.sec)
                 .fixedSize(horizontal: false, vertical: true)
             if retry {
                 Button("Try Again") { Task { await load() } }

@@ -2,10 +2,15 @@
   "name": "@gracechords/tokens",
   "version": "0.0.0",
   "private": true,
-  "description": "Canonical GraceChords design tokens. Web imports tokens.css; native (React Native) imports the ./native TypeScript token map.",
+  "type": "module",
+  "description": "Canonical GraceChords design tokens. Web imports tokens.css; native (React Native) imports the ./native TypeScript token map; apps/studio (macOS) consumes a committed Swift mirror generated from it.",
   "style": "./tokens.css",
   "exports": {
     "./tokens.css": "./tokens.css",
     "./native": "./native.ts"
+  },
+  "scripts": {
+    "generate:swift": "node generate-swift.mjs",
+    "generate:swift:check": "node generate-swift.mjs --check"
   }
 }

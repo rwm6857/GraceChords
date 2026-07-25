@@ -12,6 +12,11 @@ struct GraceChords_StudioApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // The brand accent, set once at the root so buttons, list
+                // selection, and focus rings all read as Signal blue. The
+                // AccentColor asset — generated from the same tokens — covers the
+                // AppKit chrome the SwiftUI environment does not reach.
+                .tint(GCColor.accent)
         }
         // Opens wide enough for the split view to show both panes; drag narrower
         // than 720pt to exercise the single-pane layout.
