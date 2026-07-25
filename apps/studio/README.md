@@ -16,10 +16,15 @@ monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge a
 |-------|-------|
 | 0 | `packages/core` transpose bundled into JavaScriptCore, called from Swift |
 | 1 | Auth (email/password), Song Library with search, Song Viewer rendering parsed ChordPro |
+| 2 | Design tokens generated into Swift; Viewer and Library brought to iOS/iPadOS parity |
+
+Phase 2 covers the live view controls (transpose bar, key picker, capo hint, view
+options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
+push, and the library's filter & sort, result counts and lettered sections.
 
 Not built yet: setlists, admin/content management, song editing, GraceTracks,
-transpose UI, offline caching. Personal drafts (`personal_songs`, which mobile
-merges into its library) are not included — Studio shows the public catalog only.
+offline caching. Personal drafts (`personal_songs`, which mobile merges into its
+library) are not included — Studio shows the public catalog only.
 
 ## First-run setup
 
@@ -39,6 +44,13 @@ service-role key. `Config/StudioConfig.swift` looks in this order:
 
 Missing config shows a readable "Studio is not configured" screen, not a crash —
 the same choice `apps/mobile/src/lib/supabase.ts` makes and for the same reason.
+
+**Export (optional).** `API_BASE_URL` points at the web app's Pages Functions,
+which render PDF/JPG exports and relay Telegram pushes — the same value
+`apps/mobile/.env` uses for `EXPO_PUBLIC_API_BASE_URL`, and it must be the
+canonical origin rather than a redirecting one (an apex that redirects to `www`
+turns the POST into a GET and the API answers 405). Resolved the same three ways,
+and deliberately optional: without it Export is disabled and nothing else changes.
 
 To run from a terminal instead of Xcode, pass the same two variables to the built
 binary — `StudioConfig` reads the process environment either way:
@@ -78,18 +90,35 @@ which they are not visible through a transitive import of SwiftUI or Supabase.
 ```
 Design/DesignTokens.generated.swift  GENERATED palette/spacing/radii/layout/type ramp
 Design/Theme.swift             how those resolve on macOS (dynamic colors, type scale)
-Config/StudioConfig.swift      URL + anon key resolution, config-error text
+Config/StudioConfig.swift      URL + anon key + API base resolution, config-error text
+Config/StudioDefaults.swift    app-wide prefs (chord style, keep-awake, auto-hide)
+Design/Theme.swift             SwiftUI layer over the generated tokens
+Design/DesignTokens.generated.swift  generated from packages/tokens — do not edit
 Services/AppServices.swift     one SupabaseClient, one SongsRepository, one CoreBridge
 Auth/AuthController.swift      session phase, Keychain-persisted via supabase-swift
 Auth/SignInView.swift          email + password only
 Data/SongsRepository.swift     public.songs queries mirroring core's songsRepo.js
+Data/StarsRepository.swift     user_starred_songs (favorites)
 Data/SongModels.swift          row models (snake_case CodingKeys)
-Library/LibraryViewModel.swift fetch-once + in-memory search, owns selection
-Library/SongLibraryView.swift  search field + list (sidebar and single-pane)
-Viewer/SongViewerView.swift    fetch body → CoreBridge.parse → chart
+Services/ExportService.swift   /api/export/song + /api/telegram/push
+Library/LibraryViewModel.swift fetch-once, search, tag filter, sort, selection
+Library/LibrarySort.swift      grouping/sorting, port of mobile's buildSections
+Library/SongLibraryView.swift  search + filter + sectioned list (sidebar/single-pane)
+Library/FilterSortView.swift   sort list + tag chips
+Viewer/SongViewerModel.swift   fetch, transpose model, view options
+Viewer/SongViewerView.swift    header, chart, toolbar popovers, transpose bar
 Viewer/ChordChartView.swift    section/line rendering, port of mobile's ChordChart
+Viewer/TwoColumnChartView.swift fill-first column partition, port of columnLayout.ts
+Viewer/TransposeBar.swift      floating key-down / key / key-up pill + capo chip
+Viewer/ViewOptionsView.swift   chords, sections, font size, style, accidentals, columns
+Viewer/KeyPickerView.swift     4×3 key grid + ♯/♭ toggle
+Viewer/ExportView.swift        PDF / JPG / share / Telegram
+Viewer/StarButton.swift        favorite toggle (optimistic)
+Viewer/ViewerPrefs.swift       per-song column mode
+Viewer/KeepScreenAwake.swift   display-sleep assertion, scoped to the view
 Viewer/FlowLayout.swift        wrapping row layout for chord-over-word cells
-Core/CoreBridge.swift          JSContext wrapper: transpose + parse
+Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers
+Core/ChordStyle.swift          ChordStyle, Accidental, Capo.fret
 Core/SongDoc.swift             Swift mirrors of chordpro/types.ts
 ContentView.swift              config gate → auth gate → split view
 ```
