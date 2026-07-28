@@ -33,10 +33,20 @@ final class AuthController: ObservableObject {
     @Published private(set) var isWorking = false
     @Published var errorText: String?
 
+    /// The signed-in account's role from `public.users.role`, defaulting to the
+    /// least-privileged value.
+    ///
+    /// Starts at and returns to "user" so no role-gated surface can appear during
+    /// the window between a session being restored and the role being read — the
+    /// gate opening for a moment and then closing would be worse than opening late.
+    @Published private(set) var role = "user"
+
     private let client: SupabaseClient
+    private let users: UserRepository
 
     init(client: SupabaseClient) {
         self.client = client
+        self.users = UserRepository(client: client)
     }
 
     /// Restores any persisted session, then follows auth state for the lifetime of
@@ -45,6 +55,7 @@ final class AuthController: ObservableObject {
         do {
             let session = try await client.auth.session
             apply(session: session)
+            await refreshRole()
         } catch {
             // No stored session, or one that could not be refreshed — either way
             // the answer is the sign-in screen, not an error.
@@ -58,7 +69,12 @@ final class AuthController: ObservableObject {
             if case .signedOut = event {
                 clear()
             } else if let session = session {
+                let wasSignedIn = phase == .signedIn
                 apply(session: session)
+                // A token refresh fires this stream repeatedly for a session that
+                // was already established; re-reading the role each time would be a
+                // query per refresh for an answer that has not changed.
+                if !wasSignedIn { await refreshRole() }
             } else {
                 clear()
             }
@@ -80,6 +96,7 @@ final class AuthController: ObservableObject {
             // not wait on the stream.
             phase = .signedIn
             signedInEmail = trimmedEmail
+            await refreshRole()
         } catch {
             errorText = Self.message(for: error)
         }
@@ -106,7 +123,22 @@ final class AuthController: ObservableObject {
 
     private func clear() {
         signedInEmail = nil
+        role = "user"
         phase = .signedOut
+    }
+
+    /// Read the role for the current session.
+    ///
+    /// Called after the initial session check and after every sign-in, rather than
+    /// lazily when a gated surface is first asked for — the shell needs the answer
+    /// to decide whether that surface exists at all, and one query at sign-in is
+    /// cheaper than making every gate check async.
+    func refreshRole() async {
+        guard phase == .signedIn else {
+            role = "user"
+            return
+        }
+        role = await users.fetchRole()
     }
 
     private static func message(for error: Error) -> String {

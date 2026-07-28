@@ -15,6 +15,7 @@ import Supabase
 final class AppServices {
     let client: SupabaseClient
     let songs: SongsRepository
+    let users: UserRepository
     let export: ExportService
     let bridge: CoreBridge?
     let bridgeErrorText: String?
@@ -26,6 +27,7 @@ final class AppServices {
         )
         self.client = client
         self.songs = SongsRepository(client: client)
+        self.users = UserRepository(client: client)
         self.export = ExportService(client: client, apiBaseURL: config.apiBaseURL)
 
         do {

@@ -9,7 +9,7 @@ JavaScriptCore `JSContext`.
 
 | File | Role |
 |------|------|
-| `entry.mjs` | Bridge entry. Imports core **subpaths** (never the barrel), validates arguments, exports `transpose` and `parseToJSON`. |
+| `entry.mjs` | Bridge entry. Imports core **subpaths** (never the barrel), validates arguments, exports the functions in the table below. |
 | `build-core-bundle.mjs` | esbuild build → `GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js` |
 | `verify-bundle.mjs` | Parity harness: bundle vs. the core modules `apps/mobile` resolves. |
 
@@ -19,6 +19,28 @@ Exposed to Swift:
 |----|-------|---------------|
 | `GraceChordsCore.transpose(sym, steps, preferFlat)` | `CoreBridge.transpose(_:steps:preferFlat:)` | `chordpro/index.js` → `transposeSymPrefer` |
 | `GraceChordsCore.parseToJSON(text)` | `CoreBridge.parse(_:) -> SongDoc` | `chordpro/parser.ts` → `parseChordProOrLegacy` |
+| `GraceChordsCore.renderToJSON(text, steps, preferFlat, style)` | `CoreBridge.render(_:steps:preferFlat:style:)` | composition of the above + `songs/instrumental.js` |
+| `GraceChordsCore.stepsBetween(from, to)` | `CoreBridge.stepsBetween(from:to:)` | `chordpro/index.js` → `stepsBetween` |
+| `GraceChordsCore.formatKey(key, style)` | `CoreBridge.formatKey(_:style:)` | `chordpro/solfege.js` → `formatKeyDisplay` |
+| `GraceChordsCore.lintToJSON(text)` | `CoreBridge.lint(_:) -> [LintWarning]` | `chordpro/lint.ts` → `lintChordPro` |
+| `GraceChordsCore.hasMinRole(role, min)` | `CoreBridge.hasMinRole(_:atLeast:)` | `rbac/roles.js` → `hasMinRole` |
+| `GraceChordsCore.roleOrderJSON()` | *(parity harness only)* | `rbac/roles.js` → `ROLE_ORDER` |
+| `GraceChordsCore.slugify(title)` | `CoreBridge.slugify(_:)` | `songs/slug.ts` → `slugify` |
+
+Adding `lint.ts` and `slug.ts` cost the bundle nothing transitively: `lint.ts`'s only
+runtime import is `./parser`, which was already bundled, and `slug.ts` imports
+nothing. `rbac/roles.js` likewise. The build script prints its module list — eight
+files as of Phase 3 — so a dependency creeping in is visible on every rebuild.
+
+`hasMinRole` and `slugify` are bridged rather than ported for the same reason as the
+parser: both have outputs that must match another client exactly. A Swift copy of
+`ROLE_ORDER` is precisely the thing that outlives a hierarchy change unnoticed
+(`collaborator` was removed from it in 2026-07), and a Swift slug regex that differed
+from core's by one character class would mint URLs no other client produces.
+
+`lintChordPro` returns **warnings only** — every code is prefixed `warn:` and there is
+no severity field. Studio was its first consumer; before Phase 3 the function was
+referenced by one web test and no UI.
 
 `parseToJSON` returns the whole `SongDoc` as a JSON string so Swift decodes it in
 one `JSONDecoder` step instead of walking a `JSValue` tree; the Swift mirrors of
@@ -109,6 +131,22 @@ themselves:
   source through `esbuild.transform` — the same erasure Metro and Vite perform.
   Comparison is the full `SongDoc` as JSON, over 12 hand-written cases plus the six
   real fixtures in `apps/web/src/__tests__/fixtures/chordpro/` (read-only).
+- **lint:** against `chordpro/lint.ts`. Same problem as the parser plus a real
+  extensionless runtime import, so the reference goes through `esbuild.build`
+  (bundling, not just transforming). Comparison is the full `LintWarning[]` as JSON
+  over the parser corpus plus 12 cases written to trip each warning code, and every
+  returned warning is checked for the exact key set `Core/LintWarning.swift` decodes
+  — an added key would otherwise be silently dropped on the Swift side.
+- **lint independence:** lint must return an array for every body the corpus
+  contains, including ones the parser rejects. The editor shows warnings for exactly
+  the bodies most worth reading them on, so lint must not fail alongside the parse.
+- **hasMinRole:** the full role × minimum matrix against `rbac/roles.js`, including
+  roles no longer in the hierarchy (`collaborator`) and the empty string, plus a
+  hardcoded assertion that only editor/admin/owner clear the editor+ gate — so a
+  hierarchy change that promoted `user` fails here rather than in the app.
+- **slugify:** against `songs/slug.ts` over 16 titles including non-ASCII and
+  punctuation-only, plus the contract Swift depends on — an unslugifiable title must
+  return `''` so the caller refuses the insert rather than writing an empty `slug`.
 
 ## Adding another core function later
 

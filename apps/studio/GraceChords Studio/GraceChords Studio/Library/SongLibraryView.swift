@@ -236,9 +236,28 @@ private struct SongRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: GCSpacing.sm) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(song.title)
-                    .gcTextStyle(.rowTitle)
-                    .lineLimit(1)
+                HStack(spacing: GCSpacing.xs) {
+                    Text(song.title)
+                        .gcTextStyle(.rowTitle)
+                        .lineLimit(1)
+                    // Drafts reach this list only for editor+ — the `songs_select`
+                    // policy filters them out for everyone else — so the badge is not
+                    // gated on a role here. It exists because an unbadged draft mixed
+                    // into the catalog looks published, and an editor could reasonably
+                    // think their unfinished song was already live.
+                    if song.isDraft {
+                        Text("DRAFT")
+                            .font(.system(size: 8.5, weight: .bold))
+                            .tracking(0.4)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .strokeBorder(.secondary, lineWidth: 1)
+                            )
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 if let artist = song.artist, !artist.isEmpty {
                     Text(artist)
                         .gcTextStyle(.rowSubtitle)

@@ -29,7 +29,7 @@ enum CoreBridgeError: Error, LocalizedError {
     /// The call returned something other than the expected type.
     case unexpectedResult(String)
     /// The JSON the bundle returned did not match the expected Swift model.
-    case decodingFailed(String)
+    case decodingFailed(type: String, reason: String)
 
     var errorDescription: String? {
         switch self {
@@ -49,8 +49,8 @@ enum CoreBridgeError: Error, LocalizedError {
             return "JavaScript error: \(message)"
         case .unexpectedResult(let message):
             return "Unexpected result from the core bundle: \(message)"
-        case .decodingFailed(let message):
-            return "Could not decode the parsed song: \(message)"
+        case .decodingFailed(let type, let reason):
+            return "Could not decode \(type) from the core bundle: \(reason)"
         }
     }
 }
@@ -76,6 +76,9 @@ final class CoreBridge {
     private let renderFunction: JSValue
     private let stepsBetweenFunction: JSValue
     private let formatKeyFunction: JSValue
+    private let lintFunction: JSValue
+    private let hasMinRoleFunction: JSValue
+    private let slugifyFunction: JSValue
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -125,6 +128,9 @@ final class CoreBridge {
         self.renderFunction = try Self.requireFunction(named: "renderToJSON", on: namespace)
         self.stepsBetweenFunction = try Self.requireFunction(named: "stepsBetween", on: namespace)
         self.formatKeyFunction = try Self.requireFunction(named: "formatKey", on: namespace)
+        self.lintFunction = try Self.requireFunction(named: "lintToJSON", on: namespace)
+        self.hasMinRoleFunction = try Self.requireFunction(named: "hasMinRole", on: namespace)
+        self.slugifyFunction = try Self.requireFunction(named: "slugify", on: namespace)
         self.sink = sink
     }
 
@@ -204,6 +210,48 @@ final class CoreBridge {
         return try callReturningString(formatKeyFunction, named: "formatKey", arguments: arguments)
     }
 
+    /// Lint a ChordPro body through `packages/core`'s `lintChordPro`.
+    ///
+    /// Advisory only. Core emits nothing but `warn:*` codes and has no severity
+    /// field, so there is no "error" to distinguish here — a body so malformed that
+    /// it cannot be parsed at all surfaces through `parse`/`render` throwing
+    /// instead, which the editor presents separately. Consequently lint never
+    /// fails a save; it annotates one.
+    ///
+    /// The raw string is passed through rather than a parsed document because core
+    /// only runs its unbalanced-`{start_of_*}` scan on raw text, so linting the
+    /// editor's buffer catches strictly more than linting its parse would.
+    func lint(_ chordpro: String) throws -> [LintWarning] {
+        let arguments = try jsValues([.string(chordpro)])
+        let json = try callReturningString(lintFunction, named: "lintToJSON", arguments: arguments)
+        return try decodeJSON([LintWarning].self, from: json, describedAs: "lint warnings")
+    }
+
+    /// Role-hierarchy check through `packages/core`'s `hasMinRole`.
+    ///
+    /// Bridged rather than reimplemented because AGENTS.md makes rbac/roles.js the
+    /// one source of truth for gate checks: a Swift copy of ROLE_ORDER is exactly
+    /// what outlives a hierarchy change unnoticed, and `collaborator` was already
+    /// removed from that list once.
+    ///
+    /// Core's tolerance is preserved — an unrecognised role grants nothing, and an
+    /// empty role is read as `user` — so the caller may ask before the role has
+    /// loaded and get the closed answer.
+    func hasMinRole(_ role: String, atLeast minimum: String) throws -> Bool {
+        let arguments = try jsValues([.string(role), .string(minimum)])
+        return try callReturningBool(hasMinRoleFunction, named: "hasMinRole", arguments: arguments)
+    }
+
+    /// Title → URL-safe slug through `packages/core`'s `slugify`.
+    ///
+    /// Returns "" when the title contains no alphanumerics — core's signal that no
+    /// slug can be derived. `songs.slug` is UNIQUE NOT NULL, so a caller that gets
+    /// "" must refuse the write rather than pass it along.
+    func slugify(_ title: String) throws -> String {
+        let arguments = try jsValues([.string(title)])
+        return try callReturningString(slugifyFunction, named: "slugify", arguments: arguments)
+    }
+
     /// Interpolation values for the capo chip, or nil when the chip is hidden.
     ///
     /// Port of `capoChipValues` in apps/mobile/src/lib/capo.ts: the fret is pure
@@ -246,14 +294,44 @@ final class CoreBridge {
     }
 
     private func decodeDoc(from json: String) throws -> SongDoc {
+        try decodeJSON(SongDoc.self, from: json, describedAs: "the parsed song")
+    }
+
+    private func decodeJSON<T: Decodable>(
+        _ type: T.Type,
+        from json: String,
+        describedAs description: String
+    ) throws -> T {
         guard let data = json.data(using: .utf8) else {
-            throw CoreBridgeError.unexpectedResult("parsed JSON was not valid UTF-8")
+            throw CoreBridgeError.unexpectedResult("\(description): JSON was not valid UTF-8")
         }
         do {
-            return try JSONDecoder().decode(SongDoc.self, from: data)
+            return try JSONDecoder().decode(type, from: data)
         } catch {
-            throw CoreBridgeError.decodingFailed("\(error)")
+            throw CoreBridgeError.decodingFailed(type: description, reason: "\(error)")
         }
+    }
+
+    private func callReturningBool(
+        _ function: JSValue,
+        named name: String,
+        arguments: [JSValue]
+    ) throws -> Bool {
+        _ = sink.take()
+        let returned: JSValue? = function.call(withArguments: arguments)
+        if let message = sink.take() {
+            throw CoreBridgeError.jsException(message)
+        }
+        guard let result = returned else {
+            throw CoreBridgeError.unexpectedResult("\(name) returned no value")
+        }
+        // `isBoolean`, not `toBool()`: JSValue happily coerces a string or a number
+        // to a boolean, which would turn a bridge-contract break into a silently
+        // wrong permission answer.
+        guard result.isBoolean else {
+            throw CoreBridgeError.unexpectedResult("\(name) expected a boolean, got \(result)")
+        }
+        return result.toBool()
     }
 
     private func callReturningInt(

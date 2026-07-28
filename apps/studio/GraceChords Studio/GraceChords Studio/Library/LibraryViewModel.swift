@@ -143,6 +143,51 @@ final class LibraryViewModel: ObservableObject {
         isLoading = false
     }
 
+    // MARK: - Local mutations
+
+    /// Fold a saved song into the loaded list in place.
+    ///
+    /// Applied locally rather than by refetching so the sidebar updates the instant
+    /// a save returns, with no second round trip and no scroll-position reset. The
+    /// row that comes back is the row the database actually wrote, so this cannot
+    /// drift from the server the way an optimistic guess could.
+    func upsert(_ saved: SongEditable) {
+        let item = SongListItem(
+            id: saved.id,
+            slug: saved.slug,
+            title: saved.title,
+            artist: saved.artist,
+            defaultKey: saved.defaultKey,
+            timeSignature: saved.timeSignature,
+            tags: saved.tags,
+            tempo: saved.tempo,
+            // The list query selects created_at but the editor's does not. Preserve
+            // whatever the existing row had so a save cannot reorder the
+            // "recently added" sort; a newly inserted row legitimately has none
+            // loaded yet and sorts as unknown until the next full load.
+            createdAt: songs.first(where: { $0.id == saved.id })?.createdAt,
+            status: saved.status
+        )
+        if let index = songs.firstIndex(where: { $0.id == saved.id }) {
+            songs[index] = item
+        } else {
+            songs.append(item)
+        }
+        // Sections and search recompute from `songs`, so re-sorting here is not
+        // needed for display — but keeping the array title-ordered matches what a
+        // reload would produce, so the two paths cannot diverge.
+        songs.sort { $0.title.localizedCompare($1.title) == .orderedAscending }
+    }
+
+    /// Drop a hard-deleted song from the loaded list.
+    func remove(id: String) {
+        guard let index = songs.firstIndex(where: { $0.id == id }) else { return }
+        let removed = songs.remove(at: index)
+        // The Viewer is keyed on slug; leaving it selected would point it at a row
+        // that no longer exists.
+        if selectedSlug == removed.slug { selectedSlug = nil }
+    }
+
     private static func matchRank(_ song: SongListItem, query: String) -> Int? {
         if song.title.lowercased().contains(query) { return 0 }
         for tag in song.tags ?? [] where tag.lowercased().contains(query) { return 1 }
