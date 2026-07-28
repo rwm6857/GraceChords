@@ -1,0 +1,7 @@
+# Per-user Xcode state. Kept out of git because the scheme files under
+# xcuserdata/ hold the SUPABASE_URL / SUPABASE_ANON_KEY run environment variables
+# (see README.md "First-run setup") — the same reason apps/mobile/.env is ignored.
+# Shared, reviewable project state lives in project.pbxproj and
+# project.xcworkspace/xcshareddata/ instead.
+xcuserdata/
+*.xcuserstate

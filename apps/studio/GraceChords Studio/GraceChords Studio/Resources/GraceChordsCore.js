@@ -23,7 +23,10 @@ var GraceChordsCore = (() => {
   // apps/studio/js/entry.mjs
   var entry_exports = {};
   __export(entry_exports, {
+    formatKey: () => formatKey,
     parseToJSON: () => parseToJSON,
+    renderToJSON: () => renderToJSON,
+    stepsBetween: () => stepsBetween2,
     transpose: () => transpose
   });
 
@@ -32,6 +35,21 @@ var GraceChordsCore = (() => {
   var FLAT = { "Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#" };
   function norm(n) {
     return FLAT[n] || n;
+  }
+  function keyRoot(key) {
+    if (!key) return "";
+    const m = String(key).match(/^\s*([A-G][#b]?)/);
+    if (!m) return "";
+    return norm(m[1]);
+  }
+  function stepsBetween(fromKey, toKey) {
+    if (!fromKey || !toKey) return 0;
+    const aRoot = keyRoot(fromKey);
+    const bRoot = keyRoot(toKey);
+    const a = KEYS.indexOf(aRoot);
+    const b = KEYS.indexOf(bRoot);
+    if (a === -1 || b === -1) return 0;
+    return (b - a + 12) % 12;
   }
   function transposeSymPrefer(sym, steps, defaultPreferFlat = false) {
     if (steps === 0) return sym;
@@ -50,6 +68,45 @@ var GraceChordsCore = (() => {
     return outRoot + (rest || "");
   }
   var SHARP_TO_FLAT = { "C#": "Db", "D#": "Eb", "F#": "Gb", "G#": "Ab", "A#": "Bb" };
+
+  // packages/core/src/chordpro/solfege.js
+  var ROOT_TO_SOLFEGE = {
+    C: "Do",
+    D: "Re",
+    E: "Mi",
+    F: "Fa",
+    G: "Sol",
+    A: "La",
+    B: "Si"
+  };
+  function rootToSolfege(rootWithAcc) {
+    const m = String(rootWithAcc || "").match(/^([A-G])([#b]?)$/);
+    if (!m) return rootWithAcc;
+    const [, base, acc] = m;
+    return (ROOT_TO_SOLFEGE[base] || base) + (acc || "");
+  }
+  function symToSolfege(sym) {
+    if (!sym) return sym;
+    const s = String(sym);
+    if (s.includes("/")) {
+      const [r, b] = s.split("/");
+      return symToSolfege(r) + "/" + symToSolfege(b);
+    }
+    const m = s.match(/^([A-G][#b]?)(.*)$/);
+    if (!m) return s;
+    return rootToSolfege(m[1]) + (m[2] || "");
+  }
+  function formatChord(sym, opts = {}) {
+    const style = opts.style || "letters";
+    if (!sym) return sym;
+    if (style === "solfege") return symToSolfege(sym);
+    return String(sym);
+  }
+  function formatKeyDisplay(key, style = "letters") {
+    if (!key) return key;
+    if (style === "solfege") return symToSolfege(key);
+    return String(key);
+  }
 
   // packages/core/src/chordpro/parser.ts
   var RX_LONG_DIR = /^\{(start_of|end_of)_(verse|chorus|bridge|intro|tag|outro)(?::\s*([^}]+))?\}$/i;
@@ -292,7 +349,22 @@ var GraceChordsCore = (() => {
     return doc;
   }
 
+  // packages/core/src/songs/instrumental.js
+  function normalizeSpec(spec) {
+    const chords = Array.isArray(spec?.chords) ? spec.chords.map((ch) => String(ch || "").trim()).filter(Boolean) : [];
+    const repeat = typeof spec?.repeat === "number" && spec.repeat > 1 ? Math.floor(spec.repeat) : void 0;
+    return { chords, repeat };
+  }
+  function transposeInstrumental(spec, steps = 0, preferFlat = false, opts = {}) {
+    const style = opts.style || "letters";
+    const { chords, repeat } = normalizeSpec(spec);
+    const transposed = steps ? chords.map((sym) => transposeSymPrefer(sym, steps, preferFlat)) : chords.slice();
+    const mapped = style === "solfege" ? transposed.map((sym) => formatChord(sym, { style })) : transposed;
+    return { chords: mapped, repeat };
+  }
+
   // apps/studio/js/entry.mjs
+  var STYLES = ["letters", "solfege"];
   function transpose(sym, steps, preferFlat = false) {
     if (typeof sym !== "string" || sym.length === 0) {
       throw new TypeError(`transpose: sym must be a non-empty string, got ${describe(sym)}`);
@@ -310,6 +382,56 @@ var GraceChordsCore = (() => {
       throw new TypeError(`parseToJSON: chordpro must be a string, got ${describe(chordpro)}`);
     }
     return JSON.stringify(parseChordProOrLegacy(chordpro));
+  }
+  function stepsBetween2(fromKey, toKey) {
+    requireString("stepsBetween", "fromKey", fromKey);
+    requireString("stepsBetween", "toKey", toKey);
+    return stepsBetween(fromKey, toKey);
+  }
+  function formatKey(key, style) {
+    requireString("formatKey", "key", key);
+    requireStyle("formatKey", style);
+    return formatKeyDisplay(key, style);
+  }
+  function renderToJSON(chordpro, steps, preferFlat, style) {
+    if (typeof chordpro !== "string") {
+      throw new TypeError(`renderToJSON: chordpro must be a string, got ${describe(chordpro)}`);
+    }
+    if (typeof steps !== "number" || !Number.isInteger(steps)) {
+      throw new TypeError(`renderToJSON: steps must be an integer, got ${describe(steps)}`);
+    }
+    if (typeof preferFlat !== "boolean") {
+      throw new TypeError(`renderToJSON: preferFlat must be a boolean, got ${describe(preferFlat)}`);
+    }
+    requireStyle("renderToJSON", style);
+    const doc = parseChordProOrLegacy(chordpro);
+    for (const section of doc.sections ?? []) {
+      if (section.instrumental) {
+        section.instrumental = transposeInstrumental(section.instrumental, steps, preferFlat, { style });
+      }
+      for (const line of section.lines ?? []) {
+        if (line.instrumental) {
+          line.instrumental = transposeInstrumental(line.instrumental, steps, preferFlat, { style });
+        }
+        if (line.chords?.length) {
+          line.chords = line.chords.map((chord) => ({
+            ...chord,
+            sym: formatChord(transposeSymPrefer(chord.sym, steps, preferFlat), { style })
+          }));
+        }
+      }
+    }
+    return JSON.stringify(doc);
+  }
+  function requireString(fn, name, value) {
+    if (typeof value !== "string" || value.length === 0) {
+      throw new TypeError(`${fn}: ${name} must be a non-empty string, got ${describe(value)}`);
+    }
+  }
+  function requireStyle(fn, style) {
+    if (!STYLES.includes(style)) {
+      throw new TypeError(`${fn}: style must be one of ${STYLES.join("|")}, got ${describe(style)}`);
+    }
   }
   function describe(value) {
     if (value === null) return "null";

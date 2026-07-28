@@ -129,7 +129,8 @@ private struct LibrarySplitView: View {
             .id(slug)
         } else {
             Text("Select a song")
-                .foregroundStyle(.secondary)
+                .gcTextStyle(.body)
+                .foregroundStyle(GCColor.sec)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -146,16 +147,22 @@ private struct ConfigErrorView: View {
     let message: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Studio is not configured", systemImage: "exclamationmark.triangle")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: GCSpacing.md) {
+            Label {
+                Text("Studio is not configured")
+                    .gcTextStyle(.rowTitle)
+                    .foregroundStyle(GCColor.ink)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle")
+                    .foregroundStyle(GCColor.danger)
+            }
             Text(message)
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .gcTextStyle(.body)
+                .foregroundStyle(GCColor.sec)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(28)
+        .padding(GCSpacing.xl)
         .frame(minWidth: 520, minHeight: 300, alignment: .topLeading)
     }
 }

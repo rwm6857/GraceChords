@@ -52,3 +52,28 @@ jobs:
         env:
           VITE_COMMIT_SHA: ${{ github.sha }}
         run: npx vite build
+
+  # apps/studio consumes packages/tokens as a *committed* Swift mirror (an Xcode
+  # build cannot run node), so the only thing keeping it honest is regenerating
+  # and comparing. Separate job because it needs Node 22.18+ for TypeScript type
+  # stripping, and bumping the job above would change what the web checks run on.
+  #
+  # Warn-only to match this file's convention, but unlike lint/test this check is
+  # deterministic and starts green — it is a good candidate to make required.
+  token-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Design tokens match their generated Swift (warn-only)
+        continue-on-error: true
+        # Invoked directly rather than through `npm run tokens:swift:check` so it
+        # needs no install step — the generator has no dependencies and reads
+        # native.ts directly.
+        run: node packages/tokens/generate-swift.mjs --check

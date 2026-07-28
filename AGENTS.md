@@ -27,7 +27,7 @@ This repo is an npm-workspaces monorepo. Platform-agnostic logic lives in
 apps/web/       @gracechords/web     — React + Vite SPA (production site)
 apps/mobile/    @gracechords/mobile  — Expo / React Native iOS app
 packages/core/  @gracechords/core    — shared, DOM-free TS/JS
-packages/tokens/@gracechords/tokens  — design tokens (web CSS + native TS map)
+packages/tokens/@gracechords/tokens  — design tokens (web CSS + native TS map + generated Swift)
 workers/        Cloudflare Workers (deployed independently)
 supabase/       SQL migrations
 ```
@@ -51,11 +51,28 @@ mobile.
 - Mobile consumes core's exports only. If a query/util is missing, add an **additive** export to core — never duplicate logic in an app, and never edit core internals to suit one platform.
 
 ### `packages/tokens` (`@gracechords/tokens`)
-The single home for both platforms' design tokens. Web imports `tokens.css`
+The single home for every platform's design tokens. Web imports `tokens.css`
 (the warm-brown `--gc-*` palette, via `apps/web/src/styles/index.css`); React
 Native imports the typed map from `@gracechords/tokens/native` (`native.ts`, the
 iOS Signal-blue palette). The two palettes are **deliberately different** — don't
-hardcode token values in either app.
+hardcode token values in any app.
+
+- **`apps/studio` (macOS) shares the mobile palette**, not the web one. It is a
+  native SwiftUI target and not an npm workspace member, so it cannot import
+  `native.ts`; instead `generate-swift.mjs` mirrors it into **committed Swift**
+  (`apps/studio/…/Design/DesignTokens.generated.swift` plus the `AccentColor`
+  colorset), so an Xcode build never needs node.
+- `native.ts` remains the single source of truth. **Never hand-edit the generated
+  Swift** — change `native.ts`, then `npm run tokens:swift`, and commit both.
+  `npm run tokens:swift:check` verifies the mirror is current and runs as the
+  `token-drift` PR check. The generator needs Node ≥ 22.18 (it imports the `.ts`
+  directly and relies on built-in type stripping), which is why that CI job pins
+  its own Node version.
+- Platform *translation* of a shared token belongs in the consuming app, not in
+  `native.ts`: Studio scales the iOS type ramp for macOS in `Design/Theme.swift`
+  (`GCTypeScale.macOS`) rather than forking the ramp's values. See
+  [`apps/studio/README.md`](apps/studio/README.md) for that and the two places
+  Studio deliberately keeps SwiftUI's semantic colors instead of tokens.
 
 ## Roles & auth (shared model)
 - Supabase provides auth and data for both apps. The role system is `user → collaborator → editor → admin → owner`, stored in `public.users.role`.

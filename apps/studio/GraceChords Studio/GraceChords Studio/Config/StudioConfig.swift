@@ -28,6 +28,13 @@ import Foundation
 struct StudioConfig {
     let supabaseURL: URL
     let supabaseAnonKey: String
+    /// Base URL of the web app's Pages Functions, which render PDF/JPG exports and
+    /// relay Telegram pushes (`EXPO_PUBLIC_API_BASE_URL` on mobile).
+    ///
+    /// Optional on purpose: everything except Export works without it, so a missing
+    /// value disables that one surface instead of gating the whole app behind a
+    /// second piece of setup.
+    let apiBaseURL: URL?
 
     enum ConfigError: LocalizedError {
         case missingValues([String])
@@ -65,7 +72,16 @@ struct StudioConfig {
         guard let url = URL(string: urlString), url.scheme != nil, url.host != nil else {
             return .failure(.invalidURL(urlString))
         }
-        return .success(StudioConfig(supabaseURL: url, supabaseAnonKey: anonKey))
+
+        // Trailing slash trimmed the way mobile's apiBase() does, so paths append
+        // cleanly. An unparseable value is treated as absent rather than fatal.
+        let apiBase = value(for: "API_BASE_URL", fallback: fallbackAPIBaseURL)
+        let trimmedAPIBase = apiBase.hasSuffix("/") ? String(apiBase.dropLast()) : apiBase
+        let apiBaseURL = trimmedAPIBase.isEmpty ? nil : URL(string: trimmedAPIBase)
+
+        return .success(
+            StudioConfig(supabaseURL: url, supabaseAnonKey: anonKey, apiBaseURL: apiBaseURL)
+        )
     }
 
     private static func value(for name: String, fallback: String) -> String {
@@ -84,4 +100,7 @@ struct StudioConfig {
 
     private static let fallbackSupabaseURL = ""
     private static let fallbackSupabaseAnonKey = ""
+    /// e.g. "https://www.gracechords.com" — the canonical origin, not a
+    /// redirecting one (mobile's apiError has a whole branch about that).
+    private static let fallbackAPIBaseURL = ""
 }

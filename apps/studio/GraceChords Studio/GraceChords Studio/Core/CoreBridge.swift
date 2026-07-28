@@ -73,6 +73,9 @@ final class CoreBridge {
     private let context: JSContext
     private let transposeFunction: JSValue
     private let parseFunction: JSValue
+    private let renderFunction: JSValue
+    private let stepsBetweenFunction: JSValue
+    private let formatKeyFunction: JSValue
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -119,6 +122,9 @@ final class CoreBridge {
         self.context = context
         self.transposeFunction = try Self.requireFunction(named: "transpose", on: namespace)
         self.parseFunction = try Self.requireFunction(named: "parseToJSON", on: namespace)
+        self.renderFunction = try Self.requireFunction(named: "renderToJSON", on: namespace)
+        self.stepsBetweenFunction = try Self.requireFunction(named: "stepsBetween", on: namespace)
+        self.formatKeyFunction = try Self.requireFunction(named: "formatKey", on: namespace)
         self.sink = sink
     }
 
@@ -136,21 +142,12 @@ final class CoreBridge {
     /// does not recognize: `transpose("H7", steps: 2)` returns `"H7"` rather than
     /// throwing. Invalid *arguments* (an empty symbol) do throw.
     func transpose(_ symbol: String, steps: Int, preferFlat: Bool = false) throws -> String {
-        // Arguments are built explicitly rather than relying on Swift→NSNumber
-        // bridging, which could hand `preferFlat` to JS as a number, not a boolean.
-        let symbolValue: JSValue? = JSValue(object: symbol, in: context)
-        let stepsValue: JSValue? = JSValue(double: Double(steps), in: context)
-        let preferFlatValue: JSValue? = JSValue(bool: preferFlat, in: context)
-        guard let symbolArgument = symbolValue,
-              let stepsArgument = stepsValue,
-              let preferFlatArgument = preferFlatValue else {
-            throw CoreBridgeError.unexpectedResult("arguments could not be converted to JSValues")
-        }
-        return try callReturningString(
-            transposeFunction,
-            named: "transpose",
-            arguments: [symbolArgument, stepsArgument, preferFlatArgument]
-        )
+        let arguments = try jsValues([
+            .string(symbol),
+            .number(Double(steps)),
+            .boolean(preferFlat),
+        ])
+        return try callReturningString(transposeFunction, named: "transpose", arguments: arguments)
     }
 
     /// Parse a ChordPro body through `packages/core`'s `parseChordProOrLegacy`.
@@ -159,12 +156,96 @@ final class CoreBridge {
     /// decodes in one step instead of being walked node by node as JSValues.
     /// An empty body is valid and yields a document with no sections.
     func parse(_ chordpro: String) throws -> SongDoc {
-        let inputValue: JSValue? = JSValue(object: chordpro, in: context)
-        guard let input = inputValue else {
-            throw CoreBridgeError.unexpectedResult("song body could not be converted to a JSValue")
-        }
-        let json = try callReturningString(parseFunction, named: "parseToJSON", arguments: [input])
+        let arguments = try jsValues([.string(chordpro)])
+        let json = try callReturningString(parseFunction, named: "parseToJSON", arguments: arguments)
+        return try decodeDoc(from: json)
+    }
 
+    /// Parse a ChordPro body *and* apply the Viewer's transpose and chord-style
+    /// options, in one bridge call.
+    ///
+    /// One call rather than a JSValue round trip per chord: SwiftUI re-renders the
+    /// chart on every option change, and per-symbol calls would put
+    /// JavaScriptCore in the middle of a layout pass hundreds of times per song.
+    /// The mapping itself lives in the JS bridge so it composes core's own
+    /// primitives exactly as apps/mobile's ChordChart does.
+    ///
+    /// `doc.meta.key` comes back untouched — it is the song's *native* key, which
+    /// the caller needs as the transpose origin rather than as a display value.
+    func render(
+        _ chordpro: String,
+        steps: Int,
+        preferFlat: Bool,
+        style: ChordStyle
+    ) throws -> SongDoc {
+        let arguments = try jsValues([
+            .string(chordpro),
+            .number(Double(steps)),
+            .boolean(preferFlat),
+            .string(style.rawValue),
+        ])
+        let json = try callReturningString(renderFunction, named: "renderToJSON", arguments: arguments)
+        return try decodeDoc(from: json)
+    }
+
+    /// Semitones from `fromKey` up to `toKey`, 0–11.
+    ///
+    /// Core answers 0 for keys it does not recognize, which is what lets the
+    /// Viewer seed a transpose before the song's key is known.
+    func stepsBetween(from fromKey: String, to toKey: String) throws -> Int {
+        let arguments = try jsValues([.string(fromKey), .string(toKey)])
+        return try callReturningInt(stepsBetweenFunction, named: "stepsBetween", arguments: arguments)
+    }
+
+    /// A key as it should be displayed — passed through for `.letters`, converted
+    /// to solfège syllables for `.solfege`.
+    func formatKey(_ key: String, style: ChordStyle) throws -> String {
+        let arguments = try jsValues([.string(key), .string(style.rawValue)])
+        return try callReturningString(formatKeyFunction, named: "formatKey", arguments: arguments)
+    }
+
+    /// Interpolation values for the capo chip, or nil when the chip is hidden.
+    ///
+    /// Port of `capoChipValues` in apps/mobile/src/lib/capo.ts: the fret is pure
+    /// Swift, the sounding key and its spelling come from core.
+    func capoChip(
+        delta: Int,
+        displayedKey: String,
+        preferFlat: Bool,
+        style: ChordStyle
+    ) throws -> (fret: Int, key: String)? {
+        guard let fret = Capo.fret(delta: delta), !displayedKey.isEmpty else { return nil }
+        let sounding = try transpose(displayedKey, steps: fret, preferFlat: preferFlat)
+        return (fret, try formatKey(sounding, style: style))
+    }
+
+    // MARK: - Argument plumbing
+
+    /// A Swift value to hand to JavaScript. Arguments are built explicitly rather
+    /// than relying on Swift→NSNumber bridging, which could pass a `Bool` to JS as
+    /// a number instead of a boolean.
+    private enum Argument {
+        case string(String)
+        case number(Double)
+        case boolean(Bool)
+    }
+
+    private func jsValues(_ arguments: [Argument]) throws -> [JSValue] {
+        try arguments.map { argument in
+            let value: JSValue?
+            switch argument {
+            case .string(let string): value = JSValue(object: string, in: context)
+            case .number(let double): value = JSValue(double: double, in: context)
+            case .boolean(let bool): value = JSValue(bool: bool, in: context)
+            }
+            guard let value = value else {
+                throw CoreBridgeError.unexpectedResult("arguments could not be converted to JSValues")
+            }
+            return value
+        }
+    }
+
+    private func decodeDoc(from json: String) throws -> SongDoc {
         guard let data = json.data(using: .utf8) else {
             throw CoreBridgeError.unexpectedResult("parsed JSON was not valid UTF-8")
         }
@@ -173,6 +254,25 @@ final class CoreBridge {
         } catch {
             throw CoreBridgeError.decodingFailed("\(error)")
         }
+    }
+
+    private func callReturningInt(
+        _ function: JSValue,
+        named name: String,
+        arguments: [JSValue]
+    ) throws -> Int {
+        _ = sink.take()
+        let returned: JSValue? = function.call(withArguments: arguments)
+        if let message = sink.take() {
+            throw CoreBridgeError.jsException(message)
+        }
+        guard let result = returned else {
+            throw CoreBridgeError.unexpectedResult("\(name) returned no value")
+        }
+        guard result.isNumber else {
+            throw CoreBridgeError.unexpectedResult("\(name) expected a number, got \(result)")
+        }
+        return Int(result.toInt32())
     }
 
     private func callReturningString(

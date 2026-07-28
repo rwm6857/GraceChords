@@ -16,62 +16,158 @@ monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge a
 |-------|-------|
 | 0 | `packages/core` transpose bundled into JavaScriptCore, called from Swift |
 | 1 | Auth (email/password), Song Library with search, Song Viewer rendering parsed ChordPro |
+| 2 | Design tokens generated into Swift; Viewer and Library brought to iOS/iPadOS parity |
+
+Phase 2 covers the live view controls (transpose bar, key picker, capo hint, view
+options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
+push, and the library's filter & sort, result counts and lettered sections.
 
 Not built yet: setlists, admin/content management, song editing, GraceTracks,
-transpose UI, offline caching. Personal drafts (`personal_songs`, which mobile
-merges into its library) are not included — Studio shows the public catalog only.
+offline caching. Personal drafts (`personal_songs`, which mobile merges into its
+library) are not included — Studio shows the public catalog only.
 
 ## First-run setup
 
-Three things are needed before the app will work, and two of them are Xcode
-settings this repo cannot carry for you.
+Only one thing is left to you: the Supabase credentials. The package dependency
+and the sandbox entitlement are both committed now.
 
-**1. Supabase credentials.** Same public-safe values `apps/mobile/.env` uses
+**Supabase credentials.** Same public-safe values `apps/mobile/.env` uses
 (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) — never the
 service-role key. `Config/StudioConfig.swift` looks in this order:
 
 1. Scheme environment variables `SUPABASE_URL` / `SUPABASE_ANON_KEY`
    (Product ▸ Scheme ▸ Edit Scheme ▸ Run ▸ Arguments) — **recommended**, nothing
-   lands in git.
+   lands in git. The scheme lives under `xcuserdata/`, which
+   [`apps/studio/.gitignore`](.gitignore) excludes for exactly this reason.
 2. `Info.plist` keys of the same names.
 3. The fallback constants at the bottom of `StudioConfig.swift`.
 
 Missing config shows a readable "Studio is not configured" screen, not a crash —
 the same choice `apps/mobile/src/lib/supabase.ts` makes and for the same reason.
 
-**2. Outgoing network connections.** The target has `ENABLE_APP_SANDBOX = YES` and
-no network entitlement, so every Supabase request fails until you check
-Signing & Capabilities ▸ App Sandbox ▸ **Outgoing Connections (Client)**.
-Symptom if missed: sign-in hangs or reports a generic network error.
+**Export (optional).** `API_BASE_URL` points at the web app's Pages Functions,
+which render PDF/JPG exports and relay Telegram pushes — the same value
+`apps/mobile/.env` uses for `EXPO_PUBLIC_API_BASE_URL`, and it must be the
+canonical origin rather than a redirecting one (an apex that redirects to `www`
+turns the POST into a GET and the API answers 405). Resolved the same three ways,
+and deliberately optional: without it Export is disabled and nothing else changes.
 
-**3. `supabase-swift`.** Add it as a package dependency (File ▸ Add Package
-Dependencies… → `https://github.com/supabase/supabase-swift`, product `Supabase`)
-and **commit the resulting project changes** — the committed `project.pbxproj` has
-no package references, so the Swift sources here will not compile without it.
+To run from a terminal instead of Xcode, pass the same two variables to the built
+binary — `StudioConfig` reads the process environment either way:
 
-If sign-in fails with a Keychain error (`errSecMissingEntitlement`, OSStatus
--34018), supabase-swift's default Keychain session store is being blocked by the
-sandbox: add the Keychain Sharing capability, or inject a custom
-`AuthLocalStorage` when constructing the client in `Services/AppServices.swift`.
+```sh
+SUPABASE_URL=… SUPABASE_ANON_KEY=… \
+  "$(xcodebuild -project "apps/studio/GraceChords Studio/GraceChords Studio.xcodeproj" \
+     -scheme "GraceChords Studio" -showBuildSettings 2>/dev/null \
+     | awk '/ BUILT_PRODUCTS_DIR /{print $3}')/GraceChords Studio.app/Contents/MacOS/GraceChords Studio"
+```
+
+### Already handled in the committed project
+
+- **`supabase-swift`** is a package dependency of the target
+  (`XCRemoteSwiftPackageReference` → product `Supabase`), pinned by
+  `project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Xcode resolves it
+  on first open; `xcodebuild -resolvePackageDependencies` does it from the CLI.
+- **Outgoing network connections.** `ENABLE_APP_SANDBOX = YES` alone makes every
+  Supabase request fail to even resolve the host (`NSURLErrorDomain -1003`), so
+  both target configurations set `ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES` —
+  the build-setting form of Signing & Capabilities ▸ App Sandbox ▸ Outgoing
+  Connections (Client), which Xcode turns into
+  `com.apple.security.network.client` in the generated entitlements.
+- **Session persistence needs no extra capability.** supabase-swift's default
+  `KeychainLocalStorage` writes a generic-password item with no access group,
+  which a sandboxed, team-signed build is allowed to do. If a future signing
+  change breaks that, the symptom is `errSecMissingEntitlement` (OSStatus
+  -34018) on sign-in; the fixes are the Keychain Sharing capability or a custom
+  `AuthLocalStorage` injected in `Services/AppServices.swift`.
+
+`ObservableObject` and `@Published` need an explicit `import Combine` here: the
+target builds with `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES`, under
+which they are not visible through a transitive import of SwiftUI or Supabase.
 
 ## Architecture
 
 ```
-Config/StudioConfig.swift      URL + anon key resolution, config-error text
+Design/DesignTokens.generated.swift  GENERATED palette/spacing/radii/layout/type ramp
+Design/Theme.swift             how those resolve on macOS (dynamic colors, type scale)
+Config/StudioConfig.swift      URL + anon key + API base resolution, config-error text
+Config/StudioDefaults.swift    app-wide prefs (chord style, keep-awake, auto-hide)
+Design/Theme.swift             SwiftUI layer over the generated tokens
+Design/DesignTokens.generated.swift  generated from packages/tokens — do not edit
 Services/AppServices.swift     one SupabaseClient, one SongsRepository, one CoreBridge
 Auth/AuthController.swift      session phase, Keychain-persisted via supabase-swift
 Auth/SignInView.swift          email + password only
 Data/SongsRepository.swift     public.songs queries mirroring core's songsRepo.js
+Data/StarsRepository.swift     user_starred_songs (favorites)
 Data/SongModels.swift          row models (snake_case CodingKeys)
-Library/LibraryViewModel.swift fetch-once + in-memory search, owns selection
-Library/SongLibraryView.swift  search field + list (sidebar and single-pane)
-Viewer/SongViewerView.swift    fetch body → CoreBridge.parse → chart
+Services/ExportService.swift   /api/export/song + /api/telegram/push
+Library/LibraryViewModel.swift fetch-once, search, tag filter, sort, selection
+Library/LibrarySort.swift      grouping/sorting, port of mobile's buildSections
+Library/SongLibraryView.swift  search + filter + sectioned list (sidebar/single-pane)
+Library/FilterSortView.swift   sort list + tag chips
+Viewer/SongViewerModel.swift   fetch, transpose model, view options
+Viewer/SongViewerView.swift    header, chart, toolbar popovers, transpose bar
 Viewer/ChordChartView.swift    section/line rendering, port of mobile's ChordChart
+Viewer/TwoColumnChartView.swift fill-first column partition, port of columnLayout.ts
+Viewer/TransposeBar.swift      floating key-down / key / key-up pill + capo chip
+Viewer/ViewOptionsView.swift   chords, sections, font size, style, accidentals, columns
+Viewer/KeyPickerView.swift     4×3 key grid + ♯/♭ toggle
+Viewer/ExportView.swift        PDF / JPG / share / Telegram
+Viewer/StarButton.swift        favorite toggle (optimistic)
+Viewer/ViewerPrefs.swift       per-song column mode
+Viewer/KeepScreenAwake.swift   display-sleep assertion, scoped to the view
 Viewer/FlowLayout.swift        wrapping row layout for chord-over-word cells
-Core/CoreBridge.swift          JSContext wrapper: transpose + parse
+Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers
+Core/ChordStyle.swift          ChordStyle, Accidental, Capo.fret
 Core/SongDoc.swift             Swift mirrors of chordpro/types.ts
 ContentView.swift              config gate → auth gate → split view
 ```
+
+### Design tokens
+
+Studio uses the **same tokens as `apps/mobile`** — the Signal-blue palette in
+[`packages/tokens/native.ts`](../../packages/tokens/native.ts), not the web's
+warm-brown `tokens.css`. Because Studio is a native target (and deliberately not
+an npm workspace member) it cannot import the TypeScript map, so the values are
+**generated into committed Swift** — an Xcode build never needs node:
+
+```sh
+npm run tokens:swift          # regenerate
+npm run tokens:swift:check    # verify nothing has drifted (also a PR check)
+```
+
+`native.ts` stays the single source of truth. **Never hand-edit
+`Design/DesignTokens.generated.swift` or the `AccentColor` colorset** — change
+`native.ts`, regenerate, commit both. The generator needs Node ≥ 22.18 (it imports
+the `.ts` file directly and relies on built-in type stripping).
+
+What is generated: `GCColor`, `GCGradient`, `GCSpacing`, `GCRadius`, `GCLayout`,
+the `GCTextSpec` ramp, and `Assets.xcassets/AccentColor.colorset` (so AppKit
+chrome gets the brand accent too). `Design/Theme.swift` is hand-written and holds
+no values — only the two macOS translations:
+
+- **Colors resolve through AppKit**, not a SwiftUI `colorScheme` lookup, so each
+  token also carries its Increase-Contrast variant (built from `native.ts`'s
+  `*ContrastBoost` overlays). That reaches the same four combinations the mobile
+  ThemeProvider does, and keeps working inside AppKit-backed surfaces where the
+  SwiftUI environment does not.
+- **The type ramp is scaled by `GCTypeScale.macOS` (0.82).** The shared ramp is
+  iOS-tuned; macOS's system body is 13pt, and per `apps/mobile/AGENTS.md` the
+  platform HIG wins over a pixel-for-pixel port. 0.82 was chosen because it lands
+  `body` on exactly 13pt (largeTitle 27→22, rowTitle 16.5→13.5). Sizes are scaled,
+  *relationships* stay shared.
+
+Two deliberate exceptions:
+
+- **`SongRow` keeps SwiftUI's semantic foreground styles** (`.primary` /
+  `.secondary`) instead of `GCColor.ink` / `GCColor.sec`. The library `List` is
+  selectable and macOS inverts a selected row's text to read against the accent
+  fill — only automatic styles participate, so pinning token colors there would
+  leave dark text on a Signal-blue selection. The row still takes its *sizes* from
+  the ramp.
+- **`ChordChartView`'s lyric/chord sizes are not scaled.** The chart is content,
+  not chrome, and matches `apps/mobile`'s so the same song reads the same in both
+  apps. Its colors do come from the tokens.
 
 ### Data access and RLS
 
