@@ -14,6 +14,8 @@ import vm from 'node:vm'
 
 import { stepsBetween as refStepsBetween, transposeSymPrefer } from '@gracechords/core/chordpro/index.js'
 import { formatChord as refFormatChord, formatKeyDisplay as refFormatKeyDisplay } from '@gracechords/core/chordpro/solfege.js'
+// rbac/roles.js is plain .js with no imports, so Node's loader resolves it directly.
+import { hasMinRole as refHasMinRole, ROLE_ORDER as REF_ROLE_ORDER } from '@gracechords/core/rbac/roles.js'
 
 // parser.ts cannot be imported by Node's ESM loader: it carries a type-only
 // import written as a value import (`import { SongDoc } from './types'`), which
@@ -63,6 +65,43 @@ async function loadReferenceInstrumental() {
 }
 const { transposeInstrumental: refTransposeInstrumental } = await loadReferenceInstrumental()
 
+// chordpro/lint.ts has both problems at once: it is TypeScript, and it carries a
+// real runtime import of './parser' written extensionless. Node's loader resolves
+// neither, so the reference copy goes through esbuild's bundler — the same
+// treatment loadReferenceInstrumental gives, and the same resolution Metro and
+// Vite apply to this file in the apps.
+async function loadReferenceLint() {
+  const esbuild = await import('esbuild')
+  const entry = fileURLToPath(import.meta.resolve('@gracechords/core/chordpro/lint.ts'))
+  const built = await esbuild.build({
+    entryPoints: [entry],
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'neutral',
+    loader: { '.ts': 'ts' },
+    resolveExtensions: ['.ts', '.js', '.mjs', '.json'],
+  })
+  const dataURL = `data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`
+  return { module: await import(dataURL), sourcePath: entry }
+}
+const { module: refLintModule, sourcePath: lintSourcePath } = await loadReferenceLint()
+const refLintChordPro = refLintModule.lintChordPro
+
+// songs/slug.ts is TypeScript but imports nothing, so a bare transform is enough
+// — no bundling needed, unlike lint.ts and instrumental.js.
+async function loadReferenceSlug() {
+  const esbuild = await import('esbuild')
+  const sourcePath = fileURLToPath(import.meta.resolve('@gracechords/core/songs/slug.ts'))
+  const { code } = await esbuild.transform(await readFile(sourcePath, 'utf8'), {
+    loader: 'ts',
+    format: 'esm',
+  })
+  const dataURL = `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
+  return import(dataURL)
+}
+const { slugify: refSlugify } = await loadReferenceSlug()
+
 const here = dirname(fileURLToPath(import.meta.url))
 const bundlePath = resolve(here, '../GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js')
 // Real songs the web app's parser tests already cover — read-only.
@@ -104,13 +143,26 @@ if (!namespace) {
   console.log('FAIL  bundle did not define a GraceChordsCore global')
   process.exit(1)
 }
-for (const exported of ['transpose', 'parseToJSON', 'stepsBetween', 'formatKey', 'renderToJSON']) {
+const REQUIRED_EXPORTS = [
+  'transpose',
+  'parseToJSON',
+  'stepsBetween',
+  'formatKey',
+  'renderToJSON',
+  'lintToJSON',
+  'hasMinRole',
+  'roleOrderJSON',
+  'slugify',
+]
+for (const exported of REQUIRED_EXPORTS) {
   if (typeof namespace[exported] !== 'function') {
     console.log(`FAIL  GraceChordsCore.${exported} is not a function`)
     process.exit(1)
   }
 }
-console.log('PASS  bundle evaluated in a bare context; all five exports are callable\n')
+console.log(
+  `PASS  bundle evaluated in a bare context; all ${REQUIRED_EXPORTS.length} exports are callable\n`,
+)
 
 console.log('sym         steps  flat   bundle   mobile   expected')
 console.log('----------------------------------------------------')
@@ -322,6 +374,216 @@ for (const [label, input] of PARSE_CASES) {
   }
 }
 console.log(`PASS  identity case: renderToJSON(0, false, 'letters') matches parseToJSON`)
+
+// ── lint parity ──────────────────────────────────────────────────────────────
+// Whole-array structural equality over the same corpus the parser cases use, plus
+// bodies written specifically to trip each warning code. Both sides run the same
+// code path, so JSON key order matches and string comparison is a deep compare.
+const LINT_CASES = [
+  ...PARSE_CASES,
+  ['lint: missing title and key', 'Verse 1\n[G]Amazing [C]grace'],
+  ['lint: empty section', '{title: T}\n{key: G}\n{soc}\n{eoc}'],
+  ['lint: stray end_of', '{title: T}\n{key: G}\nVerse\n[G]Line\n{end_of_chorus}'],
+  ['lint: unclosed start_of', '{title: T}\n{key: G}\n{start_of_verse}\n[G]Line'],
+  ['lint: mismatched pair', '{start_of_verse}\n[G]Line\n{end_of_chorus}'],
+  ['lint: suspicious chords', '{title: T}\n{key: G}\nVerse\n[H7]Line [Xyz]more [G]ok'],
+  ['lint: long lyric line', `{title: T}\n{key: G}\nVerse\n[G]${'la '.repeat(40)}`],
+  ['lint: adjacent duplicate headers', '{title: T}\n{key: G}\nChorus\n[G]One\nChorus\n[C]Two'],
+  ['lint: nested unbalanced', '{start_of_verse}\n{start_of_chorus}\n[G]Line\n{end_of_verse}'],
+  ['lint: unterminated chord bracket', '{title: T}\n{key: G}\nVerse\n[G]Fine [Cunclosed lyric'],
+  ['lint: only directives', '{title: T}\n{key: G}'],
+  ['lint: whitespace-only body', '   \n\t\n   '],
+]
+
+console.log(`\nlint parity (full LintWarning[], bundle vs. ${relative(process.cwd(), lintSourcePath)}):`)
+for (const [label, input] of LINT_CASES) {
+  let bundled
+  try {
+    bundled = namespace.lintToJSON(input)
+  } catch (err) {
+    fail(`${label}: lintToJSON threw — ${err.message}`)
+    continue
+  }
+  const expected = JSON.stringify(refLintChordPro(input))
+  if (bundled === expected) {
+    const codes = JSON.parse(bundled).map((w) => w.code)
+    const summary = codes.length ? `${codes.length}: ${[...new Set(codes)].join(', ')}` : 'clean'
+    console.log(`PASS  ${label.padEnd(42)} ${summary}`)
+  } else {
+    fail(`${label}: warnings differ\n      bundle:   ${bundled}\n      expected: ${expected}`)
+  }
+}
+
+// Every warning must carry the fields Swift's LintWarning decodes, or the editor
+// would silently drop rows it could not decode.
+console.log('\nlint warning shape (code + message present, indices numeric when present):')
+{
+  let shapeFailures = 0
+  let inspected = 0
+  for (const [label, input] of LINT_CASES) {
+    for (const warning of JSON.parse(namespace.lintToJSON(input))) {
+      inspected += 1
+      const keys = Object.keys(warning)
+      const unexpected = keys.filter((k) => !['code', 'message', 'sectionIndex', 'lineIndex'].includes(k))
+      if (typeof warning.code !== 'string' || !warning.code) {
+        fail(`${label}: warning has no code — ${JSON.stringify(warning)}`); shapeFailures += 1
+      } else if (typeof warning.message !== 'string' || !warning.message) {
+        fail(`${label}: warning has no message — ${JSON.stringify(warning)}`); shapeFailures += 1
+      } else if (unexpected.length) {
+        fail(`${label}: warning has unexpected key(s) ${unexpected.join(', ')} — Swift's LintWarning would ignore them`)
+        shapeFailures += 1
+      } else if (
+        ('sectionIndex' in warning && !Number.isInteger(warning.sectionIndex)) ||
+        ('lineIndex' in warning && !Number.isInteger(warning.lineIndex))
+      ) {
+        fail(`${label}: non-integer index — ${JSON.stringify(warning)}`); shapeFailures += 1
+      }
+    }
+  }
+  if (shapeFailures === 0) console.log(`PASS  ${inspected} warning(s) across ${LINT_CASES.length} case(s) all well-formed`)
+}
+
+// A body that makes the PARSER throw is a separate failure mode from a lint
+// warning, and the editor presents them differently. Nothing in the corpus should
+// throw — if a future parser change makes one throw, the editor's preview must
+// still hold, so it is worth knowing which case it was.
+console.log('\nparse-vs-lint independence (lint must not throw on anything the parser accepts):')
+{
+  let independenceFailures = 0
+  for (const [label, input] of LINT_CASES) {
+    let parseThrew = false
+    try { namespace.parseToJSON(input) } catch { parseThrew = true }
+    try {
+      namespace.lintToJSON(input)
+    } catch (err) {
+      fail(`${label}: parser ${parseThrew ? 'also threw' : 'accepted this body'} but lint threw — ${err.message}`)
+      independenceFailures += 1
+    }
+  }
+  if (independenceFailures === 0) console.log(`PASS  lint returned an array for all ${LINT_CASES.length} case(s)`)
+}
+
+console.log('\nlintToJSON error paths:')
+for (const [label, value] of [
+  ['null input', null],
+  ['missing input', undefined],
+  ['number input', 42],
+  ['array input', []],
+]) {
+  try {
+    namespace.lintToJSON(value)
+    fail(`${label}: returned instead of throwing`)
+  } catch (err) {
+    console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
+  }
+}
+
+// ── rbac parity ──────────────────────────────────────────────────────────────
+// The full matrix, not a spot check: this is the gate that decides whether the
+// Manage section appears at all, so every cell is compared against core.
+console.log('\nhasMinRole parity (bundle vs. rbac/roles.js), full matrix:')
+{
+  const bundledOrder = JSON.parse(namespace.roleOrderJSON())
+  if (JSON.stringify(bundledOrder) !== JSON.stringify(REF_ROLE_ORDER)) {
+    fail(`roleOrderJSON differs: bundle ${JSON.stringify(bundledOrder)} vs core ${JSON.stringify(REF_ROLE_ORDER)}`)
+  } else {
+    console.log(`PASS  ROLE_ORDER matches core: ${bundledOrder.join(' → ')}`)
+  }
+  // Roles the hierarchy no longer contains must not quietly grant anything.
+  const probeRoles = [...REF_ROLE_ORDER, 'collaborator', 'nonsense', '']
+  let matrixFailures = 0
+  for (const userRole of probeRoles) {
+    const row = []
+    for (const minRole of REF_ROLE_ORDER) {
+      const bundled = namespace.hasMinRole(userRole, minRole)
+      const expected = refHasMinRole(userRole, minRole)
+      if (bundled !== expected) {
+        fail(`hasMinRole('${userRole}', '${minRole}') → ${bundled}, core says ${expected}`)
+        matrixFailures += 1
+      }
+      row.push(`${minRole}:${bundled ? 'Y' : 'n'}`)
+    }
+    console.log(`      ${(userRole || "''").padEnd(14)} ${row.join('  ')}`)
+  }
+  if (matrixFailures === 0) {
+    console.log(`PASS  ${probeRoles.length * REF_ROLE_ORDER.length} hasMinRole comparisons match core`)
+  }
+  // The gate Studio actually uses. Hardcoded expectations so a hierarchy change
+  // that silently promotes 'user' to editor fails here rather than in the app.
+  for (const [role, expected] of [['user', false], ['editor', true], ['admin', true], ['owner', true], ['collaborator', false], ['', false]]) {
+    const got = namespace.hasMinRole(role, 'editor')
+    if (got !== expected) fail(`canDirectWrite gate: hasMinRole('${role}', 'editor') → ${got}, expected ${expected}`)
+  }
+  console.log(`PASS  editor+ gate: only editor/admin/owner pass`)
+}
+
+console.log('\nhasMinRole error paths:')
+for (const [label, args] of [
+  ['null userRole', [null, 'editor']],
+  ['number userRole', [3, 'editor']],
+  ['empty minRole', ['owner', '']],
+  ['null minRole', ['owner', null]],
+  ['missing minRole', ['owner', undefined]],
+]) {
+  try {
+    const value = namespace.hasMinRole(...args)
+    fail(`${label}: returned ${JSON.stringify(value)} instead of throwing`)
+  } catch (err) {
+    console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
+  }
+}
+
+// ── slugify parity ───────────────────────────────────────────────────────────
+// The slug becomes the song's public URL, so a divergence here is a broken link
+// on gracechords.com rather than a cosmetic difference.
+console.log('\nslugify parity (bundle vs. songs/slug.ts):')
+{
+  const titles = [
+    'Amazing Grace',
+    '10,000 Reasons (Bless the Lord)',
+    "It Is Well With My Soul",
+    'Holy, Holy, Holy!',
+    '  leading and trailing  ',
+    'Multiple   Spaces',
+    'Hyphen-ated Title',
+    'Ya Rabbi Yasu',
+    'Türkçe Şarkı',           // non-ASCII: every letter is stripped
+    '日本語',                   // fully non-ASCII → '' (no slug derivable)
+    '!!!',                     // punctuation only → ''
+    '',
+    'Song 2',
+    'A',
+    'under_scores_already',
+    'Trailing punctuation...',
+  ]
+  for (const title of titles) {
+    const bundled = namespace.slugify(title)
+    const expected = refSlugify(title)
+    const ok = bundled === expected
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${JSON.stringify(title).padEnd(36)} → ${JSON.stringify(bundled)}`)
+    if (!ok) {
+      fail(`slugify(${JSON.stringify(title)}) → ${JSON.stringify(bundled)}, core says ${JSON.stringify(expected)}`)
+    }
+  }
+  // The contract Swift depends on before writing a row: no alphanumerics means no
+  // slug, and songs.slug is UNIQUE NOT NULL, so the caller must refuse to insert.
+  for (const title of ['', '!!!', '日本語', '   ']) {
+    if (namespace.slugify(title) !== '') {
+      fail(`slugify(${JSON.stringify(title)}) should be '' so callers can refuse the write`)
+    }
+  }
+  console.log(`PASS  unslugifiable titles all yield '' (the "refuse to insert" signal)`)
+}
+
+console.log('\nslugify error paths:')
+for (const [label, value] of [['null title', null], ['number title', 7], ['missing title', undefined]]) {
+  try {
+    const value_ = namespace.slugify(value)
+    fail(`${label}: returned ${JSON.stringify(value_)} instead of throwing`)
+  } catch (err) {
+    console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
+  }
+}
 
 console.log('\nviewer-helper error paths:')
 const viewerBadArgs = [

@@ -47,13 +47,103 @@ private struct SignedInGate: View {
             case .signedOut:
                 SignInView(auth: auth)
             case .signedIn:
-                LibrarySplitView(services: services, auth: auth, library: library)
+                StudioShell(services: services, auth: auth, library: library)
             }
         }
         .task {
             // Restores the Keychain-persisted session, then follows auth state for
             // as long as the window lives.
             await auth.observeAuthState()
+        }
+    }
+}
+
+/// The signed-in app: a section picker plus the selected section's own split view.
+///
+/// The Manage section is revealed by role rather than always present-but-disabled.
+/// A disabled tab advertises a capability the account does not have and invites the
+/// user to go looking for why, where an absent one simply is not part of their app —
+/// which is how apps/web's portal behaves for the same roles.
+///
+/// The gate is a courtesy, not the security boundary. Every write is independently
+/// enforced by the `songs_insert` / `songs_update` / `songs_delete` policies, so a
+/// user who forced this open would gain a UI, not permissions.
+private struct StudioShell: View {
+    let services: AppServices
+    @ObservedObject var auth: AuthController
+    @ObservedObject var library: LibraryViewModel
+
+    private enum Section: String, Hashable, CaseIterable {
+        case library = "Library"
+        case manage = "Manage"
+
+        var symbol: String {
+            switch self {
+            case .library: return "music.note.list"
+            case .manage: return "square.and.pencil"
+            }
+        }
+    }
+
+    @State private var section: Section = .library
+
+    /// editor+ per packages/core's `canDirectWrite`, answered through the bridged
+    /// `hasMinRole` rather than a Swift copy of the hierarchy.
+    ///
+    /// A bridge that failed to load yields false, so the Manage section stays hidden
+    /// — fail closed. That is also the honest answer: without the bridge there is no
+    /// parser, so the editor would have no preview and no slug generation anyway.
+    private var canManage: Bool {
+        guard let bridge = services.bridge else { return false }
+        return (try? bridge.hasMinRole(auth.role, atLeast: "editor")) ?? false
+    }
+
+    var body: some View {
+        Group {
+            switch section {
+            case .library:
+                LibrarySplitView(services: services, auth: auth, library: library)
+            case .manage:
+                ManageSongsView(
+                    services: services,
+                    library: library,
+                    onSessionExpired: { auth.sessionExpired() }
+                )
+            }
+        }
+        .toolbar {
+            if canManage {
+                ToolbarItem(placement: .navigation) {
+                    Picker("Section", selection: $section) {
+                        ForEach(Section.allCases, id: \.self) { section in
+                            Label(section.rawValue, systemImage: section.symbol).tag(section)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .help("Switch between reading the library and editing songs")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    if let email = auth.signedInEmail {
+                        Text(email)
+                    }
+                    if auth.role != "user" {
+                        Text("Role: \(auth.role)")
+                    }
+                    Button("Reload Library") { Task { await library.load() } }
+                    Divider()
+                    Button("Sign Out") { Task { await auth.signOut() } }
+                } label: {
+                    Label("Account", systemImage: "person.crop.circle")
+                }
+            }
+        }
+        // A role that drops below editor mid-session (or a bridge that never loaded)
+        // must not leave the user sitting in a section that no longer exists.
+        .onChange(of: canManage) { _, allowed in
+            if !allowed, section == .manage { section = .library }
         }
     }
 }
@@ -87,22 +177,9 @@ private struct LibrarySplitView: View {
                 detail
             }
             .navigationSplitViewStyle(.balanced)
-            // Attached to the split view, not to the GeometryReader around it, so
-            // the items reach the window toolbar.
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        if let email = auth.signedInEmail {
-                            Text(email)
-                        }
-                        Button("Reload Library") { Task { await library.load() } }
-                        Divider()
-                        Button("Sign Out") { Task { await auth.signOut() } }
-                    } label: {
-                        Label("Account", systemImage: "person.crop.circle")
-                    }
-                }
-            }
+            // The Account menu and the section picker live on StudioShell, which
+            // wraps both sections — otherwise each section would install its own and
+            // they would appear and disappear as the user switched.
             .onAppear { applyLayout(for: geometry.size.width) }
             .onChange(of: geometry.size.width) { _, width in applyLayout(for: width) }
         }

@@ -24,8 +24,12 @@ var GraceChordsCore = (() => {
   var entry_exports = {};
   __export(entry_exports, {
     formatKey: () => formatKey,
+    hasMinRole: () => hasMinRole2,
+    lintToJSON: () => lintToJSON,
     parseToJSON: () => parseToJSON,
     renderToJSON: () => renderToJSON,
+    roleOrderJSON: () => roleOrderJSON,
+    slugify: () => slugify2,
     stepsBetween: () => stepsBetween2,
     transpose: () => transpose
   });
@@ -349,6 +353,68 @@ var GraceChordsCore = (() => {
     return doc;
   }
 
+  // packages/core/src/chordpro/lint.ts
+  var RX_CHORD_VALID = /^[A-G](?:#|b)?(?:(?:maj|min|m|dim|sus|add)?\d*)?(?:\/[A-G](?:#|b)?)?$/;
+  function lintChordPro(rawOrDoc) {
+    const doc = typeof rawOrDoc === "string" ? parseChordProOrLegacy(rawOrDoc) : rawOrDoc;
+    const warnings = [];
+    if (!doc.meta?.title || !doc.meta.title.trim()) {
+      warnings.push({ code: "warn:missing_title", message: "Missing {title}." });
+    }
+    if (!doc.meta?.key || !doc.meta.key.trim()) {
+      warnings.push({ code: "warn:missing_key", message: "Missing {key}." });
+    }
+    doc.sections.forEach((sec, si) => {
+      const lyricLines = sec.lines.filter((ln) => !("comment" in ln));
+      if (lyricLines.length === 0) {
+        warnings.push({ code: "warn:empty_section", message: `Section "${sec.label || sec.kind}" has no lyric lines.`, sectionIndex: si });
+      }
+      lyricLines.forEach((ln, li) => {
+        if ((ln.lyrics || "").length > 90) {
+          warnings.push({ code: "warn:long_line", message: "Very long lyric line may force downsizing.", sectionIndex: si, lineIndex: li });
+        }
+        ;
+        (ln.chords || []).forEach((ch) => {
+          if (!RX_CHORD_VALID.test(ch.sym)) {
+            warnings.push({ code: "warn:unknown_chord", message: `Suspicious chord "${ch.sym}".`, sectionIndex: si, lineIndex: li });
+          }
+        });
+      });
+    });
+    for (let i = 1; i < doc.sections.length; i++) {
+      const a = doc.sections[i - 1];
+      const b = doc.sections[i];
+      if ((a.label || a.kind) === (b.label || b.kind)) {
+        const aLen = a.lines.filter((ln) => !("comment" in ln)).length;
+        const bLen = b.lines.filter((ln) => !("comment" in ln)).length;
+        if (aLen <= 2 && bLen <= 2) {
+          warnings.push({ code: "warn:duplicate_section_header", message: `Adjacent duplicate "${a.label || a.kind}" with very few lines.`, sectionIndex: i });
+        }
+      }
+    }
+    if (typeof rawOrDoc === "string") {
+      const lines = rawOrDoc.split(/\r?\n/);
+      const stack = [];
+      lines.forEach((raw, idx) => {
+        const m = raw.trim().match(/^\{(start_of|end_of)_([^}:]+).*\}$/i);
+        if (m) {
+          const type = m[1].toLowerCase();
+          const kind = m[2].toLowerCase();
+          if (type === "start_of") {
+            stack.push({ kind, lineIndex: idx });
+          } else {
+            const last = stack.pop();
+            if (!last || last.kind !== kind) {
+              warnings.push({ code: "warn:section_mismatch", message: `Stray {end_of_${kind}}`, lineIndex: idx });
+            }
+          }
+        }
+      });
+      stack.forEach((st) => warnings.push({ code: "warn:section_mismatch", message: `Unclosed {start_of_${st.kind}}`, lineIndex: st.lineIndex }));
+    }
+    return warnings;
+  }
+
   // packages/core/src/songs/instrumental.js
   function normalizeSpec(spec) {
     const chords = Array.isArray(spec?.chords) ? spec.chords.map((ch) => String(ch || "").trim()).filter(Boolean) : [];
@@ -361,6 +427,21 @@ var GraceChordsCore = (() => {
     const transposed = steps ? chords.map((sym) => transposeSymPrefer(sym, steps, preferFlat)) : chords.slice();
     const mapped = style === "solfege" ? transposed.map((sym) => formatChord(sym, { style })) : transposed;
     return { chords: mapped, repeat };
+  }
+
+  // packages/core/src/rbac/roles.js
+  var ROLE_ORDER = ["user", "editor", "admin", "owner"];
+  var ROLES_BY_RANK_DESC = [...ROLE_ORDER].reverse();
+  function hasMinRole(userRole, minRole) {
+    const userIdx = ROLE_ORDER.indexOf(userRole || "user");
+    const minIdx = ROLE_ORDER.indexOf(minRole || "user");
+    if (minIdx < 0) return false;
+    return userIdx >= minIdx;
+  }
+
+  // packages/core/src/songs/slug.ts
+  function slugify(title) {
+    return (title || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
   }
 
   // apps/studio/js/entry.mjs
@@ -422,6 +503,28 @@ var GraceChordsCore = (() => {
       }
     }
     return JSON.stringify(doc);
+  }
+  function lintToJSON(chordpro) {
+    if (typeof chordpro !== "string") {
+      throw new TypeError(`lintToJSON: chordpro must be a string, got ${describe(chordpro)}`);
+    }
+    return JSON.stringify(lintChordPro(chordpro));
+  }
+  function hasMinRole2(userRole, minRole) {
+    if (typeof userRole !== "string") {
+      throw new TypeError(`hasMinRole: userRole must be a string, got ${describe(userRole)}`);
+    }
+    requireString("hasMinRole", "minRole", minRole);
+    return hasMinRole(userRole, minRole);
+  }
+  function roleOrderJSON() {
+    return JSON.stringify(ROLE_ORDER);
+  }
+  function slugify2(title) {
+    if (typeof title !== "string") {
+      throw new TypeError(`slugify: title must be a string, got ${describe(title)}`);
+    }
+    return slugify(title);
   }
   function requireString(fn, name, value) {
     if (typeof value !== "string" || value.length === 0) {

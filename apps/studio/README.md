@@ -17,14 +17,20 @@ monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge a
 | 0 | `packages/core` transpose bundled into JavaScriptCore, called from Swift |
 | 1 | Auth (email/password), Song Library with search, Song Viewer rendering parsed ChordPro |
 | 2 | Design tokens generated into Swift; Viewer and Library brought to iOS/iPadOS parity |
+| 3 | Song creation, editing, publishing and deletion in a role-gated Manage section |
 
 Phase 2 covers the live view controls (transpose bar, key picker, capo hint, view
 options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
 push, and the library's filter & sort, result counts and lettered sections.
 
-Not built yet: setlists, admin/content management, song editing, GraceTracks,
-offline caching. Personal drafts (`personal_songs`, which mobile merges into its
-library) are not included — Studio shows the public catalog only.
+Phase 3 adds the editor: a plain-text ChordPro editor with a live preview that
+reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
+delete, and the bridged ChordPro linter. See [Editing songs](#editing-songs).
+
+Not built yet: setlists, admin/content management beyond songs, GraceTracks,
+offline caching, ChordPro syntax highlighting. Personal drafts (`personal_songs`,
+which mobile merges into its library) are not included — Studio reads and writes
+the public catalog only.
 
 ## First-run setup
 
@@ -95,11 +101,13 @@ Config/StudioDefaults.swift    app-wide prefs (chord style, keep-awake, auto-hid
 Design/Theme.swift             SwiftUI layer over the generated tokens
 Design/DesignTokens.generated.swift  generated from packages/tokens — do not edit
 Services/AppServices.swift     one SupabaseClient, one SongsRepository, one CoreBridge
-Auth/AuthController.swift      session phase, Keychain-persisted via supabase-swift
+Auth/AuthController.swift      session phase + role, Keychain-persisted via supabase-swift
 Auth/SignInView.swift          email + password only
-Data/SongsRepository.swift     public.songs queries mirroring core's songsRepo.js
+Data/SongsRepository.swift     public.songs reads and writes, mirroring core's songsRepo.js
+Data/SongWritePayload.swift    insert/update column set + editor_audit_log row
+Data/UserRepository.swift      public.users.role, mirroring core's fetchUserRole
 Data/StarsRepository.swift     user_starred_songs (favorites)
-Data/SongModels.swift          row models (snake_case CodingKeys)
+Data/SongModels.swift          row models (snake_case CodingKeys), SongStatus
 Services/ExportService.swift   /api/export/song + /api/telegram/push
 Library/LibraryViewModel.swift fetch-once, search, tag filter, sort, selection
 Library/LibrarySort.swift      grouping/sorting, port of mobile's buildSections
@@ -117,7 +125,14 @@ Viewer/StarButton.swift        favorite toggle (optimistic)
 Viewer/ViewerPrefs.swift       per-song column mode
 Viewer/KeepScreenAwake.swift   display-sleep assertion, scoped to the view
 Viewer/FlowLayout.swift        wrapping row layout for chord-over-word cells
-Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers
+Manage/ManageSongsView.swift   editor+ section: drafts + published list, owns the editor
+Editor/SongForm.swift          form state + validation, mirrors core's songAuthoring.ts
+Editor/SongEditorModel.swift   debounced preview, lint, save / publish / delete
+Editor/SongEditorView.swift    metadata form, monospaced ChordPro editor, split preview
+Editor/LintWarningsView.swift  the advisory strip under the preview
+Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers,
+                               lint, hasMinRole, slugify
+Core/LintWarning.swift         one finding from core's lint.ts (warnings only)
 Core/ChordStyle.swift          ChordStyle, Accidental, Capo.fret
 Core/SongDoc.swift             Swift mirrors of chordpro/types.ts
 ContentView.swift              config gate → auth gate → split view
@@ -172,10 +187,143 @@ Two deliberate exceptions:
 ### Data access and RLS
 
 Reading the catalog does **not** require a session: `public.songs` carries
-`"Songs are publicly readable"` — `for select using (is_deleted = false)` with no
-role restriction (`supabase/migrations/20260305_songs_migration.sql`). The UI is
-still gated behind sign-in, matching mobile, but that means a library that loads
-while auth is broken indicates a config/network problem, not an auth one.
+`songs_select`, whose published branch has no role restriction
+(`supabase/migrations/20260728000100_songs_status.sql`). The UI is still gated
+behind sign-in, matching mobile, but that means a library that loads while auth is
+broken indicates a config/network problem, not an auth one.
+
+The policy is:
+
+```sql
+USING (is_deleted = false AND (status = 'published' OR public.has_min_role('editor')))
+```
+
+so anon and regular users get published songs, and editor+ additionally gets
+drafts. **Studio never filters on `status` client-side.** An editor's library
+legitimately contains drafts (badged `DRAFT`); everyone else's does not, because
+the policy decided that, not the query. Duplicating the rule in the client is how
+you end up with a filter that disagrees with the policy.
+
+Writes are editor+ via `songs_insert` / `songs_update` / `songs_delete`. The UI
+gate on the Manage section is a courtesy; the database is the enforcement, so a
+non-editor who reached the editor would get a rejected write rather than a
+successful one.
+
+> **Two migrations underpin this, and the first is a security fix.** Before
+> 2026-07-28 the live table had accumulated ten policies across three naming
+> generations, including `songs_select USING (true)`. Permissive policies are OR'd,
+> so that one overrode the others and made every row readable by anyone —
+> soft-deleted rows included. `is_deleted = false` was being enforced only by each
+> query's client-side `.eq()`. `20260728000000_songs_policy_consolidation.sql`
+> replaces all ten with one per command; `20260728000100_songs_status.sql` then adds
+> the column and the draft clause. Both have `.down.sql` counterparts.
+
+### Editing songs
+
+The **Manage** section appears only for editor+ (`packages/core`'s
+`canDirectWrite`), checked through the bridged `hasMinRole` rather than a Swift copy
+of the hierarchy. A role that cannot be read at all resolves to `user`, and a
+bridge that failed to load resolves the gate to `false` — both fail closed.
+
+It is a separate section rather than a mode on the Library/Viewer split for two
+concrete reasons: `SongViewerView` installs `.focusedSceneObject(export)` and owns
+the File ▸ Export menu plus its own toolbar, which an editor mode would contend
+with; and the two surfaces own different state — the Library owns "which song is
+selected for reading", the editor owns "does this song have unsaved changes".
+
+**The preview is always reachable.** Above 680pt of *detail-column* width (the writing
+pane's 360 plus the preview's 320) it sits beside the editor; below that the toolbar
+toggle swaps the two panes instead, opening on the editor — you open an editor to type
+in it. The first cut gated the split on 900pt measured on that same column which, with
+the sidebar taking 240–300 of the window, meant the preview never appeared at an
+ordinary window size. The threshold is now defined as the sum of the two panes'
+minimum widths so it cannot drift above what they actually need.
+
+**The preview is the Viewer's renderer.** `SongEditorModel` calls the same
+`CoreBridge.render` and hands the resulting `SongDoc` to the same `ChordChartView`.
+There is deliberately no editor-specific rendering path, so the preview cannot
+disagree with what a worshipper sees.
+
+**Re-parse is debounced 300 ms** (`SongEditorModel.previewDebounce`), trailing and
+restarted per keystroke, and skipped entirely when the debounced text matches what
+was last parsed. A fast typist's inter-key gap is ~120–150 ms, so a burst of typing
+collapses to one refresh at the end of it. The measured cost of a refresh —
+`renderToJSON` + `lintToJSON` + `JSONDecoder` into `SongDoc` — is **~1.4 ms** on the
+longest song in the live catalog (95 lines) and ~8 ms on one ten times that size, so
+the bridge is not the constraint; SwiftUI's chart layout is the rest. If it ever
+feels sluggish, lower that one constant rather than moving the work off the main
+thread, which would mean a second `JSContext` and a second copy of the parser.
+
+**Validation gates publishing, not saving.** Save needs only a title (`songs.title`
+is NOT NULL and the slug derives from it); Publish enforces core's full
+`validateSongForm` rule — title, key, ≥1 tag — so Studio and the web editor admit the
+same songs to the public catalog. The split exists because the live catalog does not
+satisfy its own create-time rule: **8 published songs have no tags and 5 have no key**,
+and gating Save on the full rule made all of them uneditable — an editor opening one
+to fix a typo would have had to invent a tag before Save would enable. A draft is
+allowed to be incomplete too; that is most of what makes it a draft. The Details
+header shows an amber "Missing details" rather than a red error, and Publish reports
+what is missing instead of being silently disabled.
+
+**Two lint codes are suppressed when the columns supply the value.**
+`warn:missing_title` and `warn:missing_key` are dropped while `title` /
+`default_key` are set (`SongEditorModel.applicable`). `lintChordPro` assumes a
+standalone `.chordpro` file where `{title}` and `{key}` in the body are the only place
+that metadata lives; here it lives in columns, and core's `canonicalizeForm` is
+explicit that it will not inject it into the body. Every one of the 206 songs in the
+catalog therefore tripped both — a panel that is wrong twice about every song is a
+panel nobody reads, and it buried the codes that matter
+(`warn:section_mismatch`, `warn:unknown_chord`). Filtered at the Studio boundary, not
+in core: the module is correct for the input it documents, `apps/web` has a test
+asserting exactly that output, and a row whose column *is* empty still gets the
+warning.
+
+**Typed tags snap to the catalog's spelling.** `songs.tags` is matched
+case-sensitively by the library filter and the web app's tag pages, and the live data
+is Title Case (`Slow`, `Praise`, `Worship`), so typing "worship" must not mint a
+second tag beside "Worship". `SongForm.addTag` reuses an existing tag when one matches
+case-insensitively and otherwise keeps what was typed; the ⋯ button beside the field
+lists the catalog's tags to pick from.
+
+**Saving never changes publication state.** `SongWritePayload` omits `status` on an
+update, so editing a published song and saving keeps it live — silently
+un-publishing on save would pull a song out of every worshipper's library because
+someone fixed a typo, and this design has no review step to put it back. Publication
+moves only via the explicit Publish / Unpublish actions.
+
+**A new song writes no row until the first save.** `songs.slug` is `UNIQUE NOT NULL`
+and core's `slugify` returns `''` for a title with no alphanumerics, so a row cannot
+exist before there is a title — and creating one on "New Song" would leave an empty
+row behind every abandoned attempt. The slug is derived once, on insert, and is
+**never** re-derived when the title changes: it is the song's public URL, and
+re-slugging would break every existing link to it (core's `upsertSong` makes the
+same choice).
+
+**Delete is a hard delete** — a real `DELETE`, not the `is_deleted = true` soft
+delete `apps/web` and `apps/mobile` perform. It therefore cascades:
+`setlist_songs.song_id` and `user_starred_songs.song_id` are both
+`ON DELETE CASCADE`, so the song leaves every personal and team setlist and every
+favourites list with it. The confirmation dialog names those consequences. An
+`editor_audit_log` row is written **before** the delete, because
+`editor_audit_log.song_id` is `ON DELETE SET NULL` — the row survives the cascade
+carrying `song_slug` and `song_title` text, and is the only remaining trace.
+
+**Lint is advisory and never blocks a save.** Every code
+`packages/core/src/chordpro/lint.ts` emits is prefixed `warn:` and the module has no
+severity field, so there is nothing to present as an error. A body the *parser*
+rejects is a separate failure and appears in the preview pane, above the last
+successfully rendered chart rather than replacing it — mid-edit a body is
+transiently unparseable (a half-typed `{start_of_`), and blanking the pane on those
+keystrokes would make the preview unusable.
+
+**Syntax highlighting is not implemented.** SwiftUI's `TextEditor` cannot style
+ranges, so it needs `NSViewRepresentable` over `NSTextView` with a custom
+`NSTextStorage` — which brings attribute runs fighting the undo manager, IME
+marked-text ranges, and re-highlight cost on a long song. That is a self-contained
+piece of work orthogonal to whether saving and publishing are correct, so the editor
+ships monospaced and unhighlighted. Clicking a lint warning to jump to its line
+waits on the same change, and `LintWarning.lineIndex` is inconsistent besides
+(section-relative for most codes, body-relative for `warn:section_mismatch`).
 
 ### Search
 

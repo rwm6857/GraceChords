@@ -75,9 +75,11 @@ hardcode token values in any app.
   Studio deliberately keeps SwiftUI's semantic colors instead of tokens.
 
 ## Roles & auth (shared model)
-- Supabase provides auth and data for both apps. The role system is `user → collaborator → editor → admin → owner`, stored in `public.users.role`.
+- Supabase provides auth and data for both apps. The role system is `user → editor → admin → owner`, stored in `public.users.role`. (`collaborator` was removed in `20260708000000_remove_collaborator_role.sql` — existing collaborators were demoted to `user`, and all authenticated users may now submit songs for review. Note that `hasMinRole()` grants an unrecognised role *nothing*, not even `user`, so a stray `collaborator` value fails closed.)
 - **Single source of truth:** `packages/core/src/rbac/roles.js` exports `ROLE_ORDER`, `ROLES_BY_RANK_DESC`, and `hasMinRole()`. Always use `hasMinRole()` for gate checks; never hardcode role strings in conditionals unless adding a new role. The `workers/pptx-upload/` worker keeps its own copy because it's bundled separately — keep the two in sync if the hierarchy changes.
-- All Supabase tables have row-level security. Test query changes with a non-owner account before shipping.
+- All Supabase tables have row-level security. Test query changes with a non-owner account before shipping. RLS policies are **permissive and OR'd together**, so an overlapping policy widens access rather than narrowing it — adding a restricting clause to one policy does nothing if a broader policy on the same command still exists. Enumerate what is actually live with `select policyname, cmd, qual, with_check from pg_policies where tablename = '<table>'` before editing one.
+- **The remote database is applied by hand, not by `supabase db push`.** `supabase migration list --linked` shows every migration as un-recorded remotely, so `db push` would attempt to replay all of them from scratch (several are destructive — `TRUNCATE`, `DROP TABLE ... CASCADE`). Apply a new migration with `supabase db query --linked -f <file>` or the dashboard SQL editor, and write migrations idempotently (`IF NOT EXISTS`, `DROP POLICY IF EXISTS` before `CREATE POLICY`) because the files have drifted from the live schema more than once.
+- New migrations should ship a `<timestamp>_<name>.down.sql` beside them (convention introduced 2026-07-28). It is not picked up by any tooling — it is applied by hand the same way the up migration is — and its header should state plainly whether the revert is data-lossless or only schema-clean.
 - The **anon** key is safe in both clients; the **service-role** key is server-side only (Node build scripts, Workers, Pages Functions) and must never reach bundled app code.
 
 ## General AI principles

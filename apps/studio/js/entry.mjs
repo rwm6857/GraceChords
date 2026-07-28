@@ -7,7 +7,10 @@
 import { stepsBetween as coreStepsBetween, transposeSymPrefer } from '@gracechords/core/chordpro/index.js'
 import { formatChord, formatKeyDisplay } from '@gracechords/core/chordpro/solfege.js'
 import { parseChordProOrLegacy } from '@gracechords/core/chordpro/parser.ts'
+import { lintChordPro } from '@gracechords/core/chordpro/lint.ts'
 import { transposeInstrumental } from '@gracechords/core/songs/instrumental.js'
+import { hasMinRole as coreHasMinRole, ROLE_ORDER } from '@gracechords/core/rbac/roles.js'
+import { slugify as coreSlugify } from '@gracechords/core/songs/slug.ts'
 
 const STYLES = ['letters', 'solfege']
 
@@ -145,6 +148,85 @@ export function renderToJSON(chordpro, steps, preferFlat, style) {
     }
   }
   return JSON.stringify(doc)
+}
+
+/**
+ * Lint a ChordPro body through `packages/core`'s `lintChordPro`, returned as a
+ * JSON array string.
+ *
+ * Warnings only — every code core emits is `warn:*` and there is no severity
+ * field, because the module is advisory: it flags a missing {key}, an empty
+ * section, an over-long lyric line, a suspicious chord symbol, and unbalanced
+ * {start_of_*}/{end_of_*} pairs. A body the parser cannot handle at all is a
+ * different mechanism entirely — `parseToJSON` throws, and the caller falls back
+ * to raw text — so the editor surfaces the two separately rather than pretending
+ * lint returns errors.
+ *
+ * The string overload is passed through deliberately: core only runs its
+ * unbalanced-directive scan when given raw text, so linting the editor's buffer
+ * catches strictly more than linting an already-parsed document would.
+ *
+ * @param {string} chordpro
+ * @returns {string} JSON-encoded LintWarning[] (see packages/core/src/chordpro/lint.ts)
+ */
+export function lintToJSON(chordpro) {
+  if (typeof chordpro !== 'string') {
+    throw new TypeError(`lintToJSON: chordpro must be a string, got ${describe(chordpro)}`)
+  }
+  return JSON.stringify(lintChordPro(chordpro))
+}
+
+/**
+ * Role-hierarchy check through `packages/core`'s `hasMinRole`.
+ *
+ * Bridged rather than ported to Swift because AGENTS.md makes rbac/roles.js the
+ * single source of truth for gate checks, and a hand-written Swift copy of
+ * ROLE_ORDER is exactly the kind of thing that silently outlives a hierarchy
+ * change — `collaborator` was removed from this list in 2026-07 and the root
+ * AGENTS.md table still has not caught up.
+ *
+ * Core's own tolerance is preserved: an unknown or empty `userRole` is treated as
+ * 'user' rather than rejected, so the caller can ask before the role has loaded.
+ * An unknown `minRole` returns false.
+ *
+ * @param {string} userRole
+ * @param {string} minRole  one of ROLE_ORDER
+ * @returns {boolean}
+ */
+export function hasMinRole(userRole, minRole) {
+  if (typeof userRole !== 'string') {
+    throw new TypeError(`hasMinRole: userRole must be a string, got ${describe(userRole)}`)
+  }
+  requireString('hasMinRole', 'minRole', minRole)
+  return coreHasMinRole(userRole, minRole)
+}
+
+/** The role hierarchy, lowest privilege first, as a JSON array string. */
+export function roleOrderJSON() {
+  return JSON.stringify(ROLE_ORDER)
+}
+
+/**
+ * Title → URL-safe slug through `packages/core`'s `slugify`.
+ *
+ * Bridged rather than reimplemented because the slug is the song's public URL on
+ * gracechords.com: a Swift regex that differed from core's by one character class
+ * would mint Studio-shaped slugs that no other client produces, and the drift
+ * would only show up as a wrong link. Returns '' for a title with no
+ * alphanumerics, which is core's signal that no slug can be derived — the caller
+ * must not write a row in that case (`songs.slug` is UNIQUE NOT NULL).
+ *
+ * Collision resolution stays on the Swift side: core's `deriveUniqueSlug` needs a
+ * Supabase client to probe the table, and this context has no network.
+ *
+ * @param {string} title
+ * @returns {string}
+ */
+export function slugify(title) {
+  if (typeof title !== 'string') {
+    throw new TypeError(`slugify: title must be a string, got ${describe(title)}`)
+  }
+  return coreSlugify(title)
 }
 
 function requireString(fn, name, value) {
