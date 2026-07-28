@@ -69,6 +69,19 @@ final class AuthController: ObservableObject {
             if case .signedOut = event {
                 clear()
             } else if let session = session {
+                // An expired session is not a signed-in state. With
+                // `emitLocalSessionAsInitialSession` (set in AppServices) the SDK
+                // deliberately emits the stored session even when it has expired, and
+                // promises a `tokenRefreshed` — or a `signOut` if the refresh fails —
+                // to follow. So this waits for that verdict instead of showing the
+                // library behind a dead token and bouncing the user out on the first
+                // query that comes back PGRST301.
+                //
+                // Not `clear()`: the common launch case is a stored session an hour
+                // old, and dropping to the sign-in screen for the duration of a
+                // refresh that is about to succeed would flash a login prompt at
+                // someone who is signed in.
+                guard !session.isExpired else { continue }
                 let wasSignedIn = phase == .signedIn
                 apply(session: session)
                 // A token refresh fires this stream repeatedly for a session that
