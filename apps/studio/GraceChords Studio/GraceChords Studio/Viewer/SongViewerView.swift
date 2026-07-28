@@ -29,6 +29,7 @@ struct SongViewerView: View {
     var onSessionExpired: () -> Void
 
     @StateObject private var model: SongViewerModel
+    @StateObject private var export = ExportController()
     @ObservedObject private var defaults: StudioDefaults
     @ObservedObject private var prefs: ViewerPrefs
 
@@ -37,7 +38,7 @@ struct SongViewerView: View {
     @State private var availableWidth: CGFloat = 0
 
     private enum Panel: String, Identifiable {
-        case options, export, key
+        case options, key
         var id: String { rawValue }
     }
 
@@ -85,6 +86,38 @@ struct SongViewerView: View {
                 await model.load()
             }
             .keepScreenAwake(defaults.keepAwake)
+            // Publish the export actions to the menu bar, and keep the song and key
+            // they act on current. Mobile exports at the displayed key only when
+            // transposed; an untouched song exports in its own key.
+            .focusedSceneObject(export)
+            .onChange(of: model.song?.id) { _, _ in syncExport() }
+            .onChange(of: model.steps) { _, _ in syncExport() }
+            .onAppear { syncExport() }
+            .alert(
+                export.alert?.title ?? "",
+                isPresented: Binding(
+                    get: { export.alert != nil },
+                    set: { if !$0 { export.alert = nil } }
+                ),
+                presenting: export.alert
+            ) { alert in
+                if alert.showsTelegramLink {
+                    Button("Open Telegram") {
+                        NSWorkspace.shared.open(ExportService.telegramBotURL)
+                    }
+                }
+                Button("OK", role: .cancel) {}
+            } message: { alert in
+                Text(alert.message)
+            }
+    }
+
+    private func syncExport() {
+        export.update(
+            song: model.song,
+            exportKey: model.steps == 0 ? "" : model.effectiveKey,
+            services: services
+        )
     }
 
     @ViewBuilder
@@ -254,23 +287,22 @@ struct SongViewerView: View {
             }
         }
         ToolbarItem(placement: .primaryAction) {
-            Button { openPanel = .export } label: {
+            // A menu, not a popover: these are four discrete commands, which is
+            // exactly what a Mac menu is for — and it mirrors File ▸ Export item
+            // for item instead of inventing a second vocabulary.
+            Menu {
+                Button("Export as PDF…") { export.save(.pdf) }
+                Button("Export as JPG…") { export.save(.jpg) }
+                Divider()
+                Button("Share…") { export.share() }
+                Button("Send to Telegram") { export.sendToTelegram() }
+            } label: {
                 Label("Export and share", systemImage: "square.and.arrow.up")
             }
-            .help("Export and share")
-            .disabled(model.song == nil)
-            .popover(isPresented: isPresented(.export), arrowEdge: .bottom) {
-                if let song = model.song {
-                    ExportView(
-                        song: song,
-                        // Mobile exports at the displayed key only when transposed;
-                        // an untouched song exports in its own key.
-                        exportKey: model.steps == 0 ? "" : model.keyLabel,
-                        services: services,
-                        onClose: { openPanel = nil }
-                    )
-                }
-            }
+            .help(services.export.isConfigured
+                  ? "Export and share"
+                  : "Export needs API_BASE_URL — see apps/studio/README.md")
+            .disabled(!export.isAvailable || export.isBusy)
         }
     }
 

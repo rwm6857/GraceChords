@@ -41,7 +41,16 @@ struct KeyPickerView: View {
                     .foregroundStyle(GCColor.ink)
                     .lineLimit(2)
                 Spacer(minLength: GCSpacing.sm)
-                AccidentalToggle(value: accidental, onChange: onAccidental)
+                Picker("Accidentals", selection: Binding(get: { accidental }, set: onAccidental)) {
+                    ForEach(Accidental.allCases, id: \.self) { candidate in
+                        Text(candidate.glyph)
+                            .accessibilityLabel(candidate.accessibilityLabel)
+                            .tag(candidate)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
             }
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: GCSpacing.sm), count: 4),
@@ -53,15 +62,10 @@ struct KeyPickerView: View {
 
             if hasOverride, let nativeKey = nativeKey, !nativeKey.isEmpty {
                 Divider()
-                Button {
+                Button("Reset to \(nativeKey)") {
                     onPick(nil)
                     onClose()
-                } label: {
-                    Label("Reset to \(nativeKey)", systemImage: "arrow.uturn.backward")
-                        .gcTextStyle(.body)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(GCColor.accent)
                 .accessibilityLabel("Reset to the original key")
             }
         }
@@ -73,22 +77,18 @@ struct KeyPickerView: View {
     /// still reads as selected — the two spellings are the same pitch.
     private func keyCell(sharpKey: String, label: String) -> some View {
         let selected = currentKey.map { isSameKey($0, sharpKey) } ?? false
+        // `.bordered` / `.borderedProminent` rather than a hand-drawn fill: these
+        // pick up the system's pressed and hover states for free, which a custom
+        // background does not.
         return Button {
             onPick(label)
             onClose()
         } label: {
             Text(label)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(selected ? GCColor.onAccent : GCColor.ink)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(
-                    selected ? GCColor.accent : GCColor.surfaceAlt,
-                    in: RoundedRectangle(cornerRadius: GCRadius.sm, style: .continuous)
-                )
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bordered)
+        .tint(selected ? GCColor.accent : nil)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -107,38 +107,5 @@ struct KeyPickerView: View {
             root += String(accidental)
         }
         return flatToSharp[root] ?? root
-    }
-}
-
-/// Compact two-cell ♯/♭ control. Port of apps/mobile's AccidentalToggle.
-struct AccidentalToggle: View {
-    let value: Accidental
-    var onChange: (Accidental) -> Void
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Accidental.allCases, id: \.self) { candidate in
-                let selected = value == candidate
-                Button {
-                    onChange(candidate)
-                } label: {
-                    Text(candidate.glyph)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(selected ? GCColor.onAccent : GCColor.sec)
-                        .frame(height: 24)
-                        .padding(.horizontal, 12)
-                        .background(
-                            selected ? GCColor.accent : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        )
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(candidate.accessibilityLabel)
-                .accessibilityAddTraits(selected ? [.isSelected] : [])
-            }
-        }
-        .padding(3)
-        .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: GCRadius.sm, style: .continuous))
     }
 }
