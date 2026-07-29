@@ -79,6 +79,12 @@ final class CoreBridge {
     private let lintFunction: JSValue
     private let hasMinRoleFunction: JSValue
     private let slugifyFunction: JSValue
+    private let insertAtCursorFunction: JSValue
+    private let wrapSectionFunction: JSValue
+    private let sectionPresetsFunction: JSValue
+    private let diatonicChordsFunction: JSValue
+    private let chordVariantsFunction: JSValue
+    private let chordTokenFunction: JSValue
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -131,6 +137,12 @@ final class CoreBridge {
         self.lintFunction = try Self.requireFunction(named: "lintToJSON", on: namespace)
         self.hasMinRoleFunction = try Self.requireFunction(named: "hasMinRole", on: namespace)
         self.slugifyFunction = try Self.requireFunction(named: "slugify", on: namespace)
+        self.insertAtCursorFunction = try Self.requireFunction(named: "insertAtCursorJSON", on: namespace)
+        self.wrapSectionFunction = try Self.requireFunction(named: "wrapSectionJSON", on: namespace)
+        self.sectionPresetsFunction = try Self.requireFunction(named: "sectionPresetsJSON", on: namespace)
+        self.diatonicChordsFunction = try Self.requireFunction(named: "diatonicChordsJSON", on: namespace)
+        self.chordVariantsFunction = try Self.requireFunction(named: "chordVariantsJSON", on: namespace)
+        self.chordTokenFunction = try Self.requireFunction(named: "chordToken", on: namespace)
         self.sink = sink
     }
 
@@ -250,6 +262,63 @@ final class CoreBridge {
     func slugify(_ title: String) throws -> String {
         let arguments = try jsValues([.string(title)])
         return try callReturningString(slugifyFunction, named: "slugify", arguments: arguments)
+    }
+
+    // MARK: - Quick insert
+
+    /// Insert `text` at the caret, replacing any selection, through core's
+    /// `insertAtCursor`. Offsets are UTF-16 code units — see String.utf16Offset(of:).
+    func insertAtCursor(in value: String, start: Int, end: Int, text: String) throws -> ChordProEdit {
+        let arguments = try jsValues([
+            .string(value), .number(Double(start)), .number(Double(end)), .string(text),
+        ])
+        let json = try callReturningString(insertAtCursorFunction, named: "insertAtCursorJSON", arguments: arguments)
+        return try decodeJSON(ChordProEdit.self, from: json, describedAs: "the edited text")
+    }
+
+    /// Wrap the selection in a section block through core's `wrapSection`. With an
+    /// empty selection this inserts an empty block with the caret on its content line,
+    /// which is what makes the section buttons useful on a blank song.
+    func wrapSection(
+        in value: String,
+        start: Int,
+        end: Int,
+        directive: String,
+        label: String
+    ) throws -> ChordProEdit {
+        let arguments = try jsValues([
+            .string(value), .number(Double(start)), .number(Double(end)),
+            .string(directive), .string(label),
+        ])
+        let json = try callReturningString(wrapSectionFunction, named: "wrapSectionJSON", arguments: arguments)
+        return try decodeJSON(ChordProEdit.self, from: json, describedAs: "the wrapped text")
+    }
+
+    /// The section buttons, from core, including its rule that Pre-Chorus and
+    /// Interlude are named choruses rather than directives the parser would drop.
+    func sectionPresets() throws -> [SectionPreset] {
+        let json = try callReturningString(sectionPresetsFunction, named: "sectionPresetsJSON", arguments: [])
+        return try decodeJSON([SectionPreset].self, from: json, describedAs: "the section presets")
+    }
+
+    /// The seven diatonic chords for `key`, or nil when core does not recognise it —
+    /// which is the signal to hide the chord bar rather than show a wrong one.
+    func diatonicChords(for key: String) throws -> [DiatonicChord]? {
+        let arguments = try jsValues([.string(key)])
+        let json = try callReturningString(diatonicChordsFunction, named: "diatonicChordsJSON", arguments: arguments)
+        return try decodeJSON([DiatonicChord]?.self, from: json, describedAs: "the diatonic chords")
+    }
+
+    /// Suffixes offered on a chord button — core's CHORD_VARIANTS.
+    func chordVariants() throws -> [String] {
+        let json = try callReturningString(chordVariantsFunction, named: "chordVariantsJSON", arguments: [])
+        return try decodeJSON([String].self, from: json, describedAs: "the chord variants")
+    }
+
+    /// `"G"` → `"[G]"`, through core, so the token shape lives in one place.
+    func chordToken(_ symbol: String) throws -> String {
+        let arguments = try jsValues([.string(symbol)])
+        return try callReturningString(chordTokenFunction, named: "chordToken", arguments: arguments)
     }
 
     /// Interpolation values for the capo chip, or nil when the chip is hidden.

@@ -210,6 +210,48 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
+    // MARK: - Quick insert
+
+    /// The JS bridge, for the quick-insert toolbar. Exposed rather than duplicating a
+    /// services reference in the view.
+    var bridge: CoreBridge? { services.bridge }
+
+    /// Insert `text` over the given UTF-16 range, through core. Returns where the
+    /// caret or selection should land, or nil if the edit could not be applied.
+    func insert(_ text: String, over range: (start: Int, end: Int)) -> ChordProEdit.Selection? {
+        apply { bridge in
+            try bridge.insertAtCursor(in: form.chordproContent, start: range.start, end: range.end, text: text)
+        }
+    }
+
+    /// Wrap the given UTF-16 range in a section block, through core.
+    func wrap(_ preset: SectionPreset, over range: (start: Int, end: Int)) -> ChordProEdit.Selection? {
+        apply { bridge in
+            try bridge.wrapSection(
+                in: form.chordproContent,
+                start: range.start,
+                end: range.end,
+                directive: preset.directive,
+                label: preset.sectionLabel
+            )
+        }
+    }
+
+    private func apply(_ edit: (CoreBridge) throws -> ChordProEdit) -> ChordProEdit.Selection? {
+        guard let bridge = services.bridge else {
+            errorText = services.bridgeErrorText ?? "The ChordPro helpers are unavailable."
+            return nil
+        }
+        do {
+            let result = try edit(bridge)
+            form.chordproContent = result.value
+            return result.selection
+        } catch {
+            errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+            return nil
+        }
+    }
+
     /// Raw lyrics for a body the parser cannot handle — the Viewer's fallback,
     /// reused so an unparseable draft still previews something readable.
     var rawFallbackLines: [String] {

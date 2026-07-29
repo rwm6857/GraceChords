@@ -23,15 +23,21 @@ var GraceChordsCore = (() => {
   // apps/studio/js/entry.mjs
   var entry_exports = {};
   __export(entry_exports, {
+    chordToken: () => chordToken,
+    chordVariantsJSON: () => chordVariantsJSON,
+    diatonicChordsJSON: () => diatonicChordsJSON,
     formatKey: () => formatKey,
     hasMinRole: () => hasMinRole2,
+    insertAtCursorJSON: () => insertAtCursorJSON,
     lintToJSON: () => lintToJSON,
     parseToJSON: () => parseToJSON,
     renderToJSON: () => renderToJSON,
     roleOrderJSON: () => roleOrderJSON,
+    sectionPresetsJSON: () => sectionPresetsJSON,
     slugify: () => slugify2,
     stepsBetween: () => stepsBetween2,
-    transpose: () => transpose
+    transpose: () => transpose,
+    wrapSectionJSON: () => wrapSectionJSON
   });
 
   // packages/core/src/chordpro/index.js
@@ -444,6 +450,107 @@ var GraceChordsCore = (() => {
     return (title || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
   }
 
+  // packages/core/src/chordpro/editing.ts
+  function insertAtCursor(value, selection, text) {
+    const { start, end } = selection;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const next = before + text + after;
+    const pos = start + text.length;
+    return { value: next, selection: { start: pos, end: pos } };
+  }
+  function wrapSection(value, selection, { directive, label }) {
+    const { start, end } = selection;
+    const selected = value.slice(start, end);
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const startDir = `{start_of_${directive}: ${label}}`;
+    const endDir = `{end_of_${directive}}`;
+    if (selected) {
+      const insertion2 = `${startDir}
+${selected}
+${endDir}
+`;
+      const next2 = before + insertion2 + after;
+      return { value: next2, selection: { start, end: start + insertion2.length } };
+    }
+    const insertion = `${startDir}
+
+${endDir}
+`;
+    const next = before + insertion + after;
+    const pos = start + startDir.length + 1;
+    return { value: next, selection: { start: pos, end: pos } };
+  }
+  var CHORD_VARIANTS = ["7", "maj7", "sus2", "sus4"];
+  function chordInsertToken(symbol) {
+    return `[${symbol}]`;
+  }
+  var SECTION_PRESETS = [
+    { label: "Verse", directive: "verse", sectionLabel: "Verse" },
+    { label: "Chorus", directive: "chorus", sectionLabel: "Chorus" },
+    { label: "Bridge", directive: "bridge", sectionLabel: "Bridge" },
+    { label: "Pre-Chorus", directive: "chorus", sectionLabel: "Pre-Chorus" },
+    { label: "Intro", directive: "intro", sectionLabel: "Intro" },
+    { label: "Outro", directive: "outro", sectionLabel: "Outro" },
+    { label: "Tag", directive: "tag", sectionLabel: "Tag" },
+    { label: "Interlude", directive: "chorus", sectionLabel: "Interlude" }
+  ];
+
+  // packages/core/src/chordpro/diatonicChords.js
+  var MAJOR_DIATONIC = {
+    "C": [["C", "I", "C"], ["Dm", "ii", "Dm"], ["Em", "iii", "Em"], ["F", "IV", "F"], ["G", "V", "G"], ["Am", "vi", "Am"], ["Bdim", "vii\xB0", "Bdim"]],
+    "Db": [["Db", "I", "Db"], ["Ebm", "ii", "Ebm"], ["Fm", "iii", "Fm"], ["Gb", "IV", "Gb"], ["Ab", "V", "Ab"], ["Bbm", "vi", "Bbm"], ["Cdim", "vii\xB0", "Cdim"]],
+    "D": [["D", "I", "D"], ["Em", "ii", "Em"], ["F#m", "iii", "F#m"], ["G", "IV", "G"], ["A", "V", "A"], ["Bm", "vi", "Bm"], ["C#dim", "vii\xB0", "C#dim"]],
+    "Eb": [["Eb", "I", "Eb"], ["Fm", "ii", "Fm"], ["Gm", "iii", "Gm"], ["Ab", "IV", "Ab"], ["Bb", "V", "Bb"], ["Cm", "vi", "Cm"], ["Ddim", "vii\xB0", "Ddim"]],
+    "E": [["E", "I", "E"], ["F#m", "ii", "F#m"], ["G#m", "iii", "G#m"], ["A", "IV", "A"], ["B", "V", "B"], ["C#m", "vi", "C#m"], ["D#dim", "vii\xB0", "D#dim"]],
+    "F": [["F", "I", "F"], ["Gm", "ii", "Gm"], ["Am", "iii", "Am"], ["Bb", "IV", "Bb"], ["C", "V", "C"], ["Dm", "vi", "Dm"], ["Edim", "vii\xB0", "Edim"]],
+    "F#": [["F#", "I", "F#"], ["G#m", "ii", "G#m"], ["A#m", "iii", "A#m"], ["B", "IV", "B"], ["C#", "V", "C#"], ["D#m", "vi", "D#m"], ["E#dim", "vii\xB0", "Fdim"]],
+    "G": [["G", "I", "G"], ["Am", "ii", "Am"], ["Bm", "iii", "Bm"], ["C", "IV", "C"], ["D", "V", "D"], ["Em", "vi", "Em"], ["F#dim", "vii\xB0", "F#dim"]],
+    "Ab": [["Ab", "I", "Ab"], ["Bbm", "ii", "Bbm"], ["Cm", "iii", "Cm"], ["Db", "IV", "Db"], ["Eb", "V", "Eb"], ["Fm", "vi", "Fm"], ["Gdim", "vii\xB0", "Gdim"]],
+    "A": [["A", "I", "A"], ["Bm", "ii", "Bm"], ["C#m", "iii", "C#m"], ["D", "IV", "D"], ["E", "V", "E"], ["F#m", "vi", "F#m"], ["G#dim", "vii\xB0", "G#dim"]],
+    "Bb": [["Bb", "I", "Bb"], ["Cm", "ii", "Cm"], ["Dm", "iii", "Dm"], ["Eb", "IV", "Eb"], ["F", "V", "F"], ["Gm", "vi", "Gm"], ["Adim", "vii\xB0", "Adim"]],
+    "B": [["B", "I", "B"], ["C#m", "ii", "C#m"], ["D#m", "iii", "D#m"], ["E", "IV", "E"], ["F#", "V", "F#"], ["G#m", "vi", "G#m"], ["A#dim", "vii\xB0", "A#dim"]]
+  };
+  var MINOR_TO_RELATIVE_MAJOR = {
+    "Am": { major: "C", offset: 5 },
+    "Bbm": { major: "Db", offset: 5 },
+    "Bm": { major: "D", offset: 5 },
+    "Cm": { major: "Eb", offset: 5 },
+    "C#m": { major: "E", offset: 5 },
+    "Dm": { major: "F", offset: 5 },
+    "Ebm": { major: "Gb", offset: 5 },
+    "D#m": { major: "Gb", offset: 5 },
+    "Em": { major: "G", offset: 5 },
+    "Fm": { major: "Ab", offset: 5 },
+    "F#m": { major: "A", offset: 5 },
+    "Gm": { major: "Bb", offset: 5 },
+    "G#m": { major: "B", offset: 5 },
+    "Abm": { major: "B", offset: 5 }
+  };
+  var MINOR_DEGREES = ["i", "ii\xB0", "III", "iv", "v", "VI", "VII"];
+  function getDiatonicChords(key) {
+    if (!key) return null;
+    const isMinor = key.endsWith("m") && key.length > 1;
+    if (isMinor) {
+      const rel = MINOR_TO_RELATIVE_MAJOR[key];
+      if (!rel) return null;
+      const majorChords = MAJOR_DIATONIC[rel.major];
+      if (!majorChords) return null;
+      const rotated = [];
+      for (let i = 0; i < 7; i++) {
+        const srcIndex = (5 + i) % 7;
+        const [symbol, , display] = majorChords[srcIndex];
+        rotated.push({ degree: MINOR_DEGREES[i], symbol, display });
+      }
+      return rotated;
+    }
+    const lookupKey = key === "Gb" ? "F#" : key;
+    const chords = MAJOR_DIATONIC[lookupKey];
+    if (!chords) return null;
+    return chords.map(([symbol, degree, display]) => ({ degree, symbol, display }));
+  }
+
   // apps/studio/js/entry.mjs
   var STYLES = ["letters", "solfege"];
   function transpose(sym, steps, preferFlat = false) {
@@ -525,6 +632,50 @@ var GraceChordsCore = (() => {
       throw new TypeError(`slugify: title must be a string, got ${describe(title)}`);
     }
     return slugify(title);
+  }
+  function insertAtCursorJSON(value, start, end, text) {
+    requireEditArgs("insertAtCursorJSON", value, start, end);
+    if (typeof text !== "string") {
+      throw new TypeError(`insertAtCursorJSON: text must be a string, got ${describe(text)}`);
+    }
+    return JSON.stringify(insertAtCursor(value, { start, end }, text));
+  }
+  function wrapSectionJSON(value, start, end, directive, label) {
+    requireEditArgs("wrapSectionJSON", value, start, end);
+    requireString("wrapSectionJSON", "directive", directive);
+    if (typeof label !== "string") {
+      throw new TypeError(`wrapSectionJSON: label must be a string, got ${describe(label)}`);
+    }
+    return JSON.stringify(wrapSection(value, { start, end }, { directive, label }));
+  }
+  function sectionPresetsJSON() {
+    return JSON.stringify(SECTION_PRESETS);
+  }
+  function diatonicChordsJSON(key) {
+    if (typeof key !== "string") {
+      throw new TypeError(`diatonicChordsJSON: key must be a string, got ${describe(key)}`);
+    }
+    return JSON.stringify(getDiatonicChords(key));
+  }
+  function chordVariantsJSON() {
+    return JSON.stringify(CHORD_VARIANTS);
+  }
+  function chordToken(symbol) {
+    requireString("chordToken", "symbol", symbol);
+    return chordInsertToken(symbol);
+  }
+  function requireEditArgs(fn, value, start, end) {
+    if (typeof value !== "string") {
+      throw new TypeError(`${fn}: value must be a string, got ${describe(value)}`);
+    }
+    for (const [name, n] of [["start", start], ["end", end]]) {
+      if (typeof n !== "number" || !Number.isInteger(n) || n < 0) {
+        throw new TypeError(`${fn}: ${name} must be a non-negative integer, got ${describe(n)}`);
+      }
+    }
+    if (start > end) {
+      throw new TypeError(`${fn}: start (${start}) must not exceed end (${end})`);
+    }
   }
   function requireString(fn, name, value) {
     if (typeof value !== "string" || value.length === 0) {

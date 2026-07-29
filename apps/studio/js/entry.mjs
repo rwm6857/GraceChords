@@ -11,6 +11,14 @@ import { lintChordPro } from '@gracechords/core/chordpro/lint.ts'
 import { transposeInstrumental } from '@gracechords/core/songs/instrumental.js'
 import { hasMinRole as coreHasMinRole, ROLE_ORDER } from '@gracechords/core/rbac/roles.js'
 import { slugify as coreSlugify } from '@gracechords/core/songs/slug.ts'
+import {
+  CHORD_VARIANTS,
+  SECTION_PRESETS,
+  chordInsertToken,
+  insertAtCursor as coreInsertAtCursor,
+  wrapSection as coreWrapSection,
+} from '@gracechords/core/chordpro/editing.ts'
+import { getDiatonicChords } from '@gracechords/core/chordpro/diatonicChords.js'
 
 const STYLES = ['letters', 'solfege']
 
@@ -227,6 +235,86 @@ export function slugify(title) {
     throw new TypeError(`slugify: title must be a string, got ${describe(title)}`)
   }
   return coreSlugify(title)
+}
+
+/**
+ * Insert `text` at the caret, replacing any selection, through core's
+ * `insertAtCursor`. Offsets are UTF-16 code units, which is what a JS string index
+ * is — the Swift side converts, since Swift's native String indices count graphemes
+ * and would disagree on any Turkish or Korean lyric.
+ *
+ * @param {string} value
+ * @param {number} start
+ * @param {number} end
+ * @param {string} text
+ * @returns {string} JSON `{ value, selection: { start, end } }`
+ */
+export function insertAtCursorJSON(value, start, end, text) {
+  requireEditArgs('insertAtCursorJSON', value, start, end)
+  if (typeof text !== 'string') {
+    throw new TypeError(`insertAtCursorJSON: text must be a string, got ${describe(text)}`)
+  }
+  return JSON.stringify(coreInsertAtCursor(value, { start, end }, text))
+}
+
+/**
+ * Wrap the selection in `{start_of_<directive>: <label>}` … `{end_of_<directive>}`
+ * through core's `wrapSection`. With no selection it inserts an empty block and puts
+ * the caret on the blank content line — the behaviour that makes the section buttons
+ * useful before any lyrics exist.
+ *
+ * @returns {string} JSON `{ value, selection: { start, end } }`
+ */
+export function wrapSectionJSON(value, start, end, directive, label) {
+  requireEditArgs('wrapSectionJSON', value, start, end)
+  requireString('wrapSectionJSON', 'directive', directive)
+  if (typeof label !== 'string') {
+    throw new TypeError(`wrapSectionJSON: label must be a string, got ${describe(label)}`)
+  }
+  return JSON.stringify(coreWrapSection(value, { start, end }, { directive, label }))
+}
+
+/**
+ * The section buttons, as JSON. Comes from core so Studio cannot drift from the web
+ * editor on the one non-obvious rule encoded there: the parser only accepts
+ * verse|chorus|bridge|intro|tag|outro, so Pre-Chorus and Interlude are emitted as
+ * NAMED choruses rather than directives the parser would silently drop.
+ */
+export function sectionPresetsJSON() {
+  return JSON.stringify(SECTION_PRESETS)
+}
+
+/** The seven diatonic chords for `key`, as JSON, or `null` for an unknown key. */
+export function diatonicChordsJSON(key) {
+  if (typeof key !== 'string') {
+    throw new TypeError(`diatonicChordsJSON: key must be a string, got ${describe(key)}`)
+  }
+  return JSON.stringify(getDiatonicChords(key))
+}
+
+/** Suffixes offered on a chord button, as JSON — core's CHORD_VARIANTS. */
+export function chordVariantsJSON() {
+  return JSON.stringify(CHORD_VARIANTS)
+}
+
+/** `"G"` → `"[G]"`, through core, so the token shape lives in one place. */
+export function chordToken(symbol) {
+  requireString('chordToken', 'symbol', symbol)
+  return chordInsertToken(symbol)
+}
+
+function requireEditArgs(fn, value, start, end) {
+  if (typeof value !== 'string') {
+    throw new TypeError(`${fn}: value must be a string, got ${describe(value)}`)
+  }
+  for (const [name, n] of [['start', start], ['end', end]]) {
+    if (typeof n !== 'number' || !Number.isInteger(n) || n < 0) {
+      throw new TypeError(`${fn}: ${name} must be a non-negative integer, got ${describe(n)}`)
+    }
+  }
+  if (start > end) {
+    throw new TypeError(`${fn}: start (${start}) must not exceed end (${end})`)
+  }
 }
 
 function requireString(fn, name, value) {

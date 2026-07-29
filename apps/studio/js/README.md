@@ -26,11 +26,24 @@ Exposed to Swift:
 | `GraceChordsCore.hasMinRole(role, min)` | `CoreBridge.hasMinRole(_:atLeast:)` | `rbac/roles.js` → `hasMinRole` |
 | `GraceChordsCore.roleOrderJSON()` | *(parity harness only)* | `rbac/roles.js` → `ROLE_ORDER` |
 | `GraceChordsCore.slugify(title)` | `CoreBridge.slugify(_:)` | `songs/slug.ts` → `slugify` |
+| `GraceChordsCore.insertAtCursorJSON(value, start, end, text)` | `CoreBridge.insertAtCursor(in:start:end:text:)` | `chordpro/editing.ts` → `insertAtCursor` |
+| `GraceChordsCore.wrapSectionJSON(value, start, end, directive, label)` | `CoreBridge.wrapSection(in:start:end:directive:label:)` | `chordpro/editing.ts` → `wrapSection` |
+| `GraceChordsCore.sectionPresetsJSON()` | `CoreBridge.sectionPresets()` | `chordpro/editing.ts` → `SECTION_PRESETS` |
+| `GraceChordsCore.diatonicChordsJSON(key)` | `CoreBridge.diatonicChords(for:)` | `chordpro/diatonicChords.js` → `getDiatonicChords` |
+| `GraceChordsCore.chordVariantsJSON()` | `CoreBridge.chordVariants()` | `chordpro/editing.ts` → `CHORD_VARIANTS` |
+| `GraceChordsCore.chordToken(symbol)` | `CoreBridge.chordToken(_:)` | `chordpro/editing.ts` → `chordInsertToken` |
+
+The editing helpers take and return **UTF-16 offsets**, because that is what a JS
+string index is. Swift's native `String.Index` arithmetic counts *Characters*, so the
+two disagree the moment a lyric leaves ASCII — and the catalog has Turkish and Korean
+songs. `Core/ChordProEditing.swift` does the conversion at the boundary and the parity
+harness covers Turkish, Korean and an emoji surrogate pair specifically.
 
 Adding `lint.ts` and `slug.ts` cost the bundle nothing transitively: `lint.ts`'s only
 runtime import is `./parser`, which was already bundled, and `slug.ts` imports
-nothing. `rbac/roles.js` likewise. The build script prints its module list — eight
-files as of Phase 3 — so a dependency creeping in is visible on every rebuild.
+nothing, and `editing.ts` / `diatonicChords.js` / `rbac/roles.js` likewise. The build
+script prints its module list — **ten** files as of Phase 3 — so a dependency creeping
+in is visible on every rebuild.
 
 `hasMinRole` and `slugify` are bridged rather than ported for the same reason as the
 parser: both have outputs that must match another client exactly. A Swift copy of
@@ -114,7 +127,7 @@ IIFE that self-assigns is the format that needs no shim.
 `@supabase/supabase-js` and its `fetch`/WebSocket/storage expectations — none of
 which exist in a bare `JSContext`. Always import the narrowest subpath
 (`@gracechords/core/<dir>/<file>`, which the package's `"./*": "./src/*"` exports
-pattern resolves). The current bundle is 3 modules / ~11 KB with no dependencies;
+pattern resolves). The current bundle is 10 modules / ~27 KB with no dependencies;
 `build-core-bundle.mjs` prints the module list so unexpected growth is visible.
 
 ## How parity is checked
@@ -144,6 +157,16 @@ themselves:
   roles no longer in the hierarchy (`collaborator`) and the empty string, plus a
   hardcoded assertion that only editor/admin/owner clear the editor+ gate — so a
   hierarchy change that promoted `user` fails here rather than in the app.
+- **editing:** `insertAtCursor` and `wrapSection` against `chordpro/editing.ts`
+  (transform only — it imports nothing). `wrapSection` is compared across **every**
+  core `SECTION_PRESET` × five selection shapes, and each preset's output is then run
+  through `parseToJSON` to assert it yields exactly one section. That last check is the
+  one that matters: the parser only accepts verse|chorus|bridge|intro|tag|outro, so a
+  preset emitting anything else would be silently dropped from the chart rather than
+  erroring, and Pre-Chorus/Interlude are deliberately *named choruses* for that reason.
+- **diatonicChords:** every key in core's `CHROMATIC_KEYS`, plus `Gb`, an unknown key
+  and `''` (both → null). Every chord of every key is additionally tokenised and parsed
+  back, so a button cannot insert a symbol the chart would fail to render.
 - **slugify:** against `songs/slug.ts` over 16 titles including non-ASCII and
   punctuation-only, plus the contract Swift depends on — an unslugifiable title must
   return `''` so the caller refuses the insert rather than writing an empty `slug`.

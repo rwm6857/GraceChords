@@ -261,6 +261,36 @@ the Details header rather than repeated under every field.
 Tempo accepts digits only, filtered as you type: accepting "abc" and silently dropping
 it at save loses input without saying so.
 
+**Quick insert** sits above the ChordPro body: the seven diatonic chords for the
+song's key (labelled with their numerals, so the bar teaches the key as well as saving
+keystrokes), the eight section wrappers, a suffix picker (7 / maj7 / sus2 / sus4) that
+applies to the next chord inserted, and the user's macros.
+
+Every button's *effect* comes from `packages/core/src/chordpro/editing.ts` through the
+bridge, so Studio inserts exactly what the web editor inserts — including core's rule
+that Pre-Chorus and Interlude are emitted as **named choruses**, since the parser only
+accepts verse|chorus|bridge|intro|tag|outro and would silently drop anything else. The
+chord list is core's `getDiatonicChords`, so "the seven chords in this key" has one
+definition rather than a Swift guess at music theory.
+
+Section buttons **wrap the selection** when there is one and insert an empty block with
+the caret on its content line when there is not; the tooltip says which you will get,
+because silently doing the other one is confusing. This needs the caret, which is why
+the body is `TextEditor(text:selection:)` — and the offsets crossing the bridge are
+UTF-16, not Character, counts (see `Core/ChordProEditing.swift`): a JS string index is
+a UTF-16 offset, and the two disagree on any Turkish or Korean lyric.
+
+Both rows use `FlowLayout` rather than `HStack`. Eight section buttons plus a menu do
+not fit one row in a split pane, and an `HStack` answers that by truncating every label
+to "Cho…" / "Brid…" / "Pre-…" — which for a button whose whole job is to be recognised
+at a glance is the difference between useful and decorative.
+
+**Macros** (`Editor/MacroStore.swift`) are user-defined snippets — a house intro, a tag
+with a particular turnaround — saved to `UserDefaults`. Local and per-user on purpose:
+these are personal shorthand rather than catalog content, and putting them in Supabase
+would mean a schema, RLS and a sync story for something whose value is being instant
+and private.
+
 **Tags are a type-ahead over the catalog's own tags**, most-used first, matched on
 prefix then substring, navigable with ↑/↓/Tab and taken with Return; commas split one
 entry into several. The point is spelling discipline rather than convenience —
