@@ -7,11 +7,10 @@
 //
 //  A separate section rather than a mode bolted onto the Library/Viewer split, for
 //  two concrete reasons. The Viewer installs `.focusedSceneObject(export)` and owns
-//  the File ▸ Export menu plus its own toolbar, and an editor mode inside it would
-//  contend for both. And the two surfaces own different state: the Library owns
-//  "which song is selected for reading", while the editor owns "does this song have
-//  unsaved changes" — collapsing them means one view holding both, where a stale
-//  dirty flag can outlive the song it belonged to.
+//  the File ▸ Export menu plus its own toolbar, which an editor mode would contend
+//  with. And the two surfaces own different state: the Library owns "which song is
+//  selected for reading", while the editor owns "does this song have unsaved
+//  changes".
 //
 //  Drafts are listed here because RLS returns them: `songs_select` admits
 //  `status = 'draft'` rows for editor+. Nothing in this file filters on status.
@@ -22,29 +21,17 @@ import SwiftUI
 struct ManageSongsView: View {
     let services: AppServices
     @ObservedObject var library: LibraryViewModel
+    @ObservedObject var session: EditorSession
     var onSessionExpired: () -> Void
 
-    /// nil = nothing open. `.new` = an unsaved blank draft.
-    @State private var openSong: OpenSong?
-    /// The live editor, owned here.
-    ///
-    /// Held in @State rather than built where it is used: a model constructed inside
-    /// `body` would be a NEW model on every re-render, so every keystroke would
-    /// discard the edit that caused the re-render. It is replaced only when
-    /// `openSong` actually changes.
-    @State private var editor: SongEditorModel?
     @State private var query = ""
+    /// Where we are trying to go while the editor has unsaved work. Non-nil means the
+    /// confirmation is up; `nil` target means "close the editor".
+    @State private var pendingNavigation: PendingNavigation?
 
-    private enum OpenSong: Hashable, Identifiable {
-        case new
-        case existing(id: String)
-
-        var id: String {
-            switch self {
-            case .new: return "new"
-            case .existing(let id): return id
-            }
-        }
+    private struct PendingNavigation: Identifiable {
+        let target: EditorSession.Target?
+        var id: String { target?.id ?? "close" }
     }
 
     var body: some View {
@@ -55,6 +42,75 @@ struct ManageSongsView: View {
             detail
         }
         .navigationSplitViewStyle(.balanced)
+        // So File ▸ New Song goes through the same guard as the editor's button.
+        .onAppear { session.requestNew = { requestNavigation(to: .new) } }
+        .confirmationDialog(
+            "Save changes to “\(session.editor?.windowTitle ?? "this song")”?",
+            isPresented: Binding(
+                get: { pendingNavigation != nil },
+                set: { if !$0 { pendingNavigation = nil } }
+            ),
+            presenting: pendingNavigation
+        ) { pending in
+            Button("Save") {
+                Task {
+                    await session.editor?.save()
+                    // Only leave if the save actually landed; otherwise the user stays
+                    // put with the error banner rather than losing the work anyway.
+                    if session.editor?.saveOutcome == .succeeded { go(to: pending.target) }
+                    pendingNavigation = nil
+                }
+            }
+            Button("Discard", role: .destructive) {
+                go(to: pending.target)
+                pendingNavigation = nil
+            }
+            Button("Cancel", role: .cancel) { pendingNavigation = nil }
+        } message: { _ in
+            Text("Your edits have not been saved. Discarding loses them.")
+        }
+    }
+
+    // MARK: - Navigation
+
+    /// Ask before leaving a dirty editor. Every path out of the editor goes through
+    /// here — a different song, a new song, or closing it — so there is one place that
+    /// knows unsaved work exists.
+    func requestNavigation(to target: EditorSession.Target?) {
+        if target == session.target { return }
+        guard session.hasUnsavedChanges else {
+            go(to: target)
+            return
+        }
+        pendingNavigation = PendingNavigation(target: target)
+    }
+
+    private func go(to target: EditorSession.Target?) {
+        guard let target = target else {
+            session.close()
+            return
+        }
+
+        let model: SongEditorModel
+        switch target {
+        case .new:
+            model = SongEditorModel(services: services)
+        case .existing(let id):
+            model = SongEditorModel(services: services, songID: id)
+        }
+        model.onSessionExpired = onSessionExpired
+        model.onSaved = { saved in
+            library.upsert(saved)
+            // A new draft had no row until this save, so the sidebar had nothing
+            // selected. Point at the real row now — without rebuilding the model,
+            // which would throw away the editor the user is still typing in.
+            session.retarget(to: .existing(id: saved.id))
+        }
+        model.onDeleted = { id in
+            library.remove(id: id)
+            session.close()
+        }
+        session.open(target, model: model)
     }
 
     // MARK: - Sidebar
@@ -62,41 +118,29 @@ struct ManageSongsView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             HStack(spacing: GCSpacing.sm) {
-                HStack(spacing: GCSpacing.sm) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(GCColor.muted)
-                    TextField("Search songs…", text: $query)
-                        .textFieldStyle(.plain)
-                        .gcTextStyle(.body)
-                    if !query.isEmpty {
-                        Button {
-                            query = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(GCColor.muted)
-                        }
-                        .buttonStyle(.plain)
+                Image(systemName: "magnifyingglass").foregroundStyle(GCColor.muted)
+                TextField("Search songs…", text: $query)
+                    .textFieldStyle(.plain)
+                    .gcTextStyle(.body)
+                if !query.isEmpty {
+                    Button {
+                        query = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(GCColor.muted)
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
                 }
-                .padding(.horizontal, GCSpacing.sm)
-                .padding(.vertical, 5)
-                .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: GCRadius.sm))
             }
+            .padding(.horizontal, GCSpacing.sm)
+            .padding(.vertical, 5)
+            .background(GCColor.surfaceAlt, in: RoundedRectangle(cornerRadius: GCRadius.sm))
             .padding(GCSpacing.sm)
 
             Divider()
             list
         }
         .navigationTitle("Manage Songs")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    open(.new)
-                } label: {
-                    Label("New Song", systemImage: "plus")
-                }
-                .keyboardShortcut("n", modifiers: .command)
-                .help("Create a new song as a draft")
-            }
-        }
     }
 
     @ViewBuilder
@@ -113,13 +157,13 @@ struct ManageSongsView: View {
         } else {
             List(selection: selectionBinding) {
                 if !drafts.isEmpty {
-                    Section("Drafts (\(drafts.count))") {
+                    Section("Drafts") {
                         ForEach(drafts) { song in
                             ManageRow(song: song).tag(song.id)
                         }
                     }
                 }
-                Section("Published (\(published.count))") {
+                Section("Published") {
                     ForEach(published) { song in
                         ManageRow(song: song).tag(song.id)
                     }
@@ -129,17 +173,17 @@ struct ManageSongsView: View {
         }
     }
 
-    /// The list drives selection by song id, but `openSong` also has a `.new` case
-    /// that no row corresponds to — so a `.new` editor shows no row as selected, and
-    /// picking a row replaces it.
+    /// The list drives selection by song id, but the session also has a `.new` target
+    /// that no row corresponds to — so a new draft shows no row selected, and picking
+    /// a row routes through the unsaved-changes guard.
     private var selectionBinding: Binding<String?> {
         Binding(
             get: {
-                if case .existing(let id) = openSong { return id }
+                if case .existing(let id) = session.target { return id }
                 return nil
             },
             set: { id in
-                if let id = id { open(.existing(id: id)) } else { closeEditor() }
+                requestNavigation(to: id.map { EditorSession.Target.existing(id: $0) })
             }
         )
     }
@@ -169,62 +213,34 @@ struct ManageSongsView: View {
 
     @ViewBuilder
     private var detail: some View {
-        if let editor = editor, let openSong = openSong {
-            SongEditorView(model: editor, knownTags: library.availableTags, onClose: closeEditor)
-                // Keyed on the open song so switching songs rebuilds the view's own
-                // @State (pending-tag text, dialog flags) rather than carrying the
-                // previous song's over.
-                .id(openSong.id)
+        if let editor = session.editor, let target = session.target {
+            SongEditorView(
+                model: editor,
+                knownTags: library.tagsByFrequency,
+                onNewSong: { requestNavigation(to: .new) }
+            )
+            // Keyed on the open song so switching songs rebuilds the view's own
+            // @State (dialog flags, the accidental override) rather than carrying the
+            // previous song's over.
+            .id(target.id)
         } else {
-            VStack(spacing: GCSpacing.sm) {
+            VStack(spacing: GCSpacing.md) {
                 Text("Select a song to edit")
                     .gcTextStyle(.body)
                     .foregroundStyle(GCColor.sec)
-                Button("New Song") { open(.new) }
+                Button {
+                    requestNavigation(to: .new)
+                } label: {
+                    Label("New Song", systemImage: "doc.badge.plus")
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
-
-    /// Open a song, replacing any editor already open.
-    ///
-    /// Building the model here rather than in `body` is what keeps an in-progress
-    /// edit alive across re-renders. Re-opening the song that is already open is a
-    /// no-op, so clicking the selected row does not silently discard edits.
-    private func open(_ song: OpenSong) {
-        guard song != openSong else { return }
-        openSong = song
-
-        let model: SongEditorModel
-        switch song {
-        case .new:
-            model = SongEditorModel(services: services)
-        case .existing(let id):
-            model = SongEditorModel(services: services, songID: id)
-        }
-        model.onSessionExpired = onSessionExpired
-        model.onSaved = { saved in
-            library.upsert(saved)
-            // A new draft had no row until this save, so the sidebar had nothing
-            // selected. Point at the real row now — without rebuilding the model,
-            // which would throw away the editor the user is still typing in.
-            openSong = .existing(id: saved.id)
-        }
-        model.onDeleted = { id in
-            library.remove(id: id)
-            closeEditor()
-        }
-        editor = model
-    }
-
-    private func closeEditor() {
-        openSong = nil
-        editor = nil
-    }
 }
 
 /// A Manage sidebar row. Unlike the Library's SongRow this one shows publication
-/// state, because in this section it is the most important thing about a song.
+/// state through its section, so the row itself stays quiet.
 private struct ManageRow: View {
     let song: SongListItem
 

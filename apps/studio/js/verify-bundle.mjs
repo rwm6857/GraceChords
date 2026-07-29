@@ -102,6 +102,20 @@ async function loadReferenceSlug() {
 }
 const { slugify: refSlugify } = await loadReferenceSlug()
 
+// chordpro/editing.ts is TypeScript with no imports; diatonicChords.js is plain JS.
+async function loadReferenceEditing() {
+  const esbuild = await import('esbuild')
+  const sourcePath = fileURLToPath(import.meta.resolve('@gracechords/core/chordpro/editing.ts'))
+  const { code } = await esbuild.transform(await readFile(sourcePath, 'utf8'), {
+    loader: 'ts',
+    format: 'esm',
+  })
+  const dataURL = `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
+  return import(dataURL)
+}
+const refEditing = await loadReferenceEditing()
+const { getDiatonicChords: refDiatonic } = await import('@gracechords/core/chordpro/diatonicChords.js')
+
 const here = dirname(fileURLToPath(import.meta.url))
 const bundlePath = resolve(here, '../GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js')
 // Real songs the web app's parser tests already cover — read-only.
@@ -153,6 +167,12 @@ const REQUIRED_EXPORTS = [
   'hasMinRole',
   'roleOrderJSON',
   'slugify',
+  'insertAtCursorJSON',
+  'wrapSectionJSON',
+  'sectionPresetsJSON',
+  'diatonicChordsJSON',
+  'chordVariantsJSON',
+  'chordToken',
 ]
 for (const exported of REQUIRED_EXPORTS) {
   if (typeof namespace[exported] !== 'function') {
@@ -582,6 +602,131 @@ for (const [label, value] of [['null title', null], ['number title', 7], ['missi
     fail(`${label}: returned ${JSON.stringify(value_)} instead of throwing`)
   } catch (err) {
     console.log(`PASS  ${label} → ${err.constructor.name}: ${err.message}`)
+  }
+}
+
+// ── editing parity ───────────────────────────────────────────────────────────
+// These drive the quick-insert toolbar. A divergence here means Studio inserts
+// different text than the web editor for the same button, which is the whole thing
+// bridging this module was meant to prevent.
+console.log('\ninsertAtCursor parity (bundle vs. chordpro/editing.ts):')
+{
+  const cases = [
+    ['empty body, caret at 0', '', 0, 0, '[G]'],
+    ['caret mid-line', 'Amazing grace', 8, 8, '[C]'],
+    ['replace a selection', 'Amazing grace', 0, 7, '[G]Sweet'],
+    ['caret at end', 'line', 4, 4, '\n[D]'],
+    ['multi-line body', 'a\nb\nc', 2, 3, 'X'],
+    ['non-ASCII before caret', 'Türkçe şarkı', 12, 12, '[Am]'],   // UTF-16 offsets
+    ['korean body', '주 예수', 3, 3, '[G]'],
+    ['emoji body', 'a🎵b', 4, 4, '[C]'],                          // surrogate pair
+    ['insert empty string', 'abc', 1, 1, ''],
+  ]
+  for (const [label, value, start, end, text] of cases) {
+    const bundled = JSON.parse(namespace.insertAtCursorJSON(value, start, end, text))
+    const expected = refEditing.insertAtCursor(value, { start, end }, text)
+    const ok = JSON.stringify(bundled) === JSON.stringify(expected)
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${label.padEnd(28)} → ${JSON.stringify(bundled.value)} @${bundled.selection.start}`)
+    if (!ok) fail(`insertAtCursor ${label}: ${JSON.stringify(bundled)} vs ${JSON.stringify(expected)}`)
+  }
+}
+
+console.log('\nwrapSection parity, over every core SECTION_PRESET:')
+{
+  const bodies = [
+    ['no selection', 'existing line', 0, 0],
+    ['selection of one line', 'Amazing grace', 0, 13],
+    ['selection of two lines', 'one\ntwo\nthree', 0, 7],
+    ['selection mid-body', 'a\nb\nc', 2, 3],
+    ['non-ASCII selection', 'Türkçe şarkı', 0, 12],
+  ]
+  let checks = 0
+  for (const preset of refEditing.SECTION_PRESETS) {
+    for (const [label, value, start, end] of bodies) {
+      const bundled = JSON.parse(
+        namespace.wrapSectionJSON(value, start, end, preset.directive, preset.sectionLabel),
+      )
+      const expected = refEditing.wrapSection(value, { start, end }, {
+        directive: preset.directive,
+        label: preset.sectionLabel,
+      })
+      checks += 1
+      if (JSON.stringify(bundled) !== JSON.stringify(expected)) {
+        fail(`wrapSection ${preset.label}/${label}: ${JSON.stringify(bundled)} vs ${JSON.stringify(expected)}`)
+      }
+    }
+  }
+  console.log(`PASS  ${checks} wrapSection comparisons across ${refEditing.SECTION_PRESETS.length} presets`)
+
+  // The rule worth pinning: the parser only accepts these six environments, so a
+  // preset emitting anything else would be silently dropped from the chart.
+  const allowed = ['verse', 'chorus', 'bridge', 'intro', 'tag', 'outro']
+  const presets = JSON.parse(namespace.sectionPresetsJSON())
+  if (JSON.stringify(presets) !== JSON.stringify(refEditing.SECTION_PRESETS)) {
+    fail('sectionPresetsJSON differs from core SECTION_PRESETS')
+  } else {
+    console.log(`PASS  sectionPresetsJSON matches core (${presets.length} presets)`)
+  }
+  for (const preset of presets) {
+    if (!allowed.includes(preset.directive)) {
+      fail(`preset "${preset.label}" emits {start_of_${preset.directive}}, which the parser drops`)
+    }
+    // And each preset's output must actually parse back into one section.
+    const wrapped = JSON.parse(namespace.wrapSectionJSON('lyric', 0, 5, preset.directive, preset.sectionLabel))
+    const doc = JSON.parse(namespace.parseToJSON(wrapped.value))
+    if (doc.sections.length !== 1) {
+      fail(`preset "${preset.label}" produced ${doc.sections.length} sections, expected 1`)
+    }
+  }
+  console.log('PASS  every preset emits a parser-supported environment and round-trips to one section')
+}
+
+console.log('\ndiatonicChords parity (bundle vs. chordpro/diatonicChords.js):')
+{
+  const { CHROMATIC_KEYS } = await import('@gracechords/core/chordpro/diatonicChords.js')
+  let mismatches = 0
+  for (const key of [...CHROMATIC_KEYS, 'Gb', 'nonsense', '']) {
+    const bundled = JSON.parse(namespace.diatonicChordsJSON(key))
+    const expected = refDiatonic(key) ?? null
+    if (JSON.stringify(bundled) !== JSON.stringify(expected)) {
+      fail(`diatonicChords(${JSON.stringify(key)}) differs`)
+      mismatches += 1
+    }
+  }
+  console.log(`${mismatches === 0 ? 'PASS' : 'FAIL'}  ${CHROMATIC_KEYS.length + 3} keys match core (unknown keys → null)`)
+
+  // Every chord a button can insert must survive the transposer, or the preview
+  // would show a chord the chart cannot render.
+  let badSymbols = 0
+  for (const key of CHROMATIC_KEYS) {
+    for (const chord of JSON.parse(namespace.diatonicChordsJSON(key)) ?? []) {
+      const token = namespace.chordToken(chord.symbol)
+      if (token !== `[${chord.symbol}]`) { fail(`chordToken(${chord.symbol}) → ${token}`); badSymbols += 1 }
+      const doc = JSON.parse(namespace.parseToJSON(`Verse\n${token}word`))
+      const parsed = doc.sections[0]?.lines[0]?.chords?.[0]?.sym
+      if (parsed !== chord.symbol) { fail(`${key}: ${token} parsed as ${parsed}`); badSymbols += 1 }
+    }
+  }
+  console.log(`${badSymbols === 0 ? 'PASS' : 'FAIL'}  every diatonic chord in every key tokenises and parses back identically`)
+}
+
+console.log('\nediting error paths:')
+for (const [label, call] of [
+  ['insert non-string value', () => namespace.insertAtCursorJSON(null, 0, 0, 'x')],
+  ['insert negative start', () => namespace.insertAtCursorJSON('a', -1, 0, 'x')],
+  ['insert start > end', () => namespace.insertAtCursorJSON('abc', 2, 1, 'x')],
+  ['insert non-integer offset', () => namespace.insertAtCursorJSON('abc', 0.5, 1, 'x')],
+  ['insert non-string text', () => namespace.insertAtCursorJSON('abc', 0, 0, 42)],
+  ['wrap empty directive', () => namespace.wrapSectionJSON('abc', 0, 1, '', 'Verse')],
+  ['wrap non-string label', () => namespace.wrapSectionJSON('abc', 0, 1, 'verse', null)],
+  ['diatonic non-string key', () => namespace.diatonicChordsJSON(null)],
+  ['chordToken empty', () => namespace.chordToken('')],
+]) {
+  try {
+    const value = call()
+    fail(`${label}: returned ${JSON.stringify(value)} instead of throwing`)
+  } catch (err) {
+    console.log(`PASS  ${label} → ${err.constructor.name}`)
   }
 }
 

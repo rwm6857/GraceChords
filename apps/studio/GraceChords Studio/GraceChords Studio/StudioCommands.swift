@@ -67,3 +67,84 @@ struct AppearanceCommands: Commands {
         }
     }
 }
+
+/// View ▸ Library / Manage, and View ▸ Show Preview.
+///
+/// A Mac app is expected to let the menu bar reach anywhere the toolbar can. Section
+/// switching lives in View because it changes what the window is showing rather than
+/// what the document contains — the same reasoning that puts Appearance there.
+struct NavigationCommands: Commands {
+    @FocusedObject private var navigation: ShellNavigation?
+    @FocusedObject private var session: EditorSession?
+
+    var body: some Commands {
+        CommandGroup(before: .toolbar) {
+            Button("Library") { navigation?.section = .library }
+                .keyboardShortcut("1", modifiers: .command)
+                .disabled(navigation == nil)
+
+            Button("Manage Songs") { navigation?.section = .manage }
+                .keyboardShortcut("2", modifiers: .command)
+                // Disabled rather than hidden here: a menu whose items appear and
+                // disappear is harder to learn than one where an item is greyed out.
+                .disabled(!(navigation?.canManage ?? false))
+
+            Divider()
+        }
+    }
+}
+
+/// File ▸ New Song / Save / Publish, acting on the song open in the editor.
+///
+/// `@FocusedObject` on `EditorSession` rather than on the model directly, because the
+/// session outlives any one song: the menu stays wired up while the user switches
+/// between songs, and goes inert when the editor closes.
+struct EditorCommands: Commands {
+    @FocusedObject private var session: EditorSession?
+
+    private var editor: SongEditorModel? { session?.editor }
+
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            // No shortcut here: ⌘N is bound on the toolbar button, and declaring it
+            // twice makes AppKit pick one arbitrarily.
+            Button("New Song") { session?.requestNew?() }
+                .disabled(session?.requestNew == nil)
+        }
+
+        // Verse / Chorus / Bridge get key equivalents because they are most of the
+        // typing in a chord chart. The modifier is ⌃⌘ rather than plain ⌃ or ⌥, both of
+        // which are already taken inside a text view:
+        //
+        //   ⌃B / ⌃V are NSTextView's emacs bindings (moveBackward / pageDown), so
+        //   binding them would break cursor movement in the body.
+        //   ⌥C types "ç" — which Turkish lyrics need, and this catalog has Turkish
+        //   songs. ⌥V and ⌥B are √ and ∫.
+        //
+        // ⇧⌘V is Paste and Match Style in text apps, so ⌃⌘ is what is left that is both
+        // free and conventional for app-specific verbs.
+        CommandGroup(after: .pasteboard) {
+            Divider()
+            Group {
+                Button("Wrap as Verse") { editor?.wrapSection(labeled: "Verse") }
+                    .keyboardShortcut("v", modifiers: [.control, .command])
+                Button("Wrap as Chorus") { editor?.wrapSection(labeled: "Chorus") }
+                    .keyboardShortcut("c", modifiers: [.control, .command])
+                Button("Wrap as Bridge") { editor?.wrapSection(labeled: "Bridge") }
+                    .keyboardShortcut("b", modifiers: [.control, .command])
+            }
+            .disabled(editor == nil)
+        }
+
+        CommandGroup(replacing: .saveItem) {
+            Button("Save") { Task { await editor?.save() } }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!(editor?.form.isSavable ?? false) || (editor?.isSaving ?? true))
+
+            Button("Publish…") { Task { await editor?.publish() } }
+                .disabled(editor == nil || (editor?.isNew ?? true) || editor?.status == .published)
+
+            Divider()
+        }
+    }
+}

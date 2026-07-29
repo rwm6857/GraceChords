@@ -28,6 +28,8 @@ struct GraceChords_StudioApp: App {
         .defaultSize(width: 1100, height: 760)
         .commands {
             ExportCommands()
+            NavigationCommands()
+            EditorCommands()
             AppearanceCommands(defaults: defaults)
         }
     }

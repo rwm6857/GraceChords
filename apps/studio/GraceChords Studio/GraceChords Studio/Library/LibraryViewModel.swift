@@ -41,6 +41,26 @@ final class LibraryViewModel: ObservableObject {
         Set(songs.flatMap { $0.tags ?? [] }).sorted()
     }
 
+    /// Every tag, most-used first, ties broken alphabetically.
+    ///
+    /// The editor's tag field suggests in this order, so the tags the catalog actually
+    /// uses are the ones within reach. Alphabetical order would put "Advent" above
+    /// "Worship" and quietly encourage inventing near-duplicates of the common ones —
+    /// which is how the live data ended up with both "Contemporary" and
+    /// "Contemporrary".
+    var tagsByFrequency: [String] {
+        var counts: [String: Int] = [:]
+        for song in songs {
+            for tag in song.tags ?? [] { counts[tag, default: 0] += 1 }
+        }
+        return counts
+            .sorted { left, right in
+                if left.value != right.value { return left.value > right.value }
+                return left.key.localizedCompare(right.key) == .orderedAscending
+            }
+            .map(\.key)
+    }
+
     /// The catalog with the tag filter applied. Search and grouping both work from
     /// here, so a tag filter narrows results as well as sections — mobile's order
     /// of operations.

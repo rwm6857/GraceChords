@@ -73,19 +73,10 @@ private struct StudioShell: View {
     @ObservedObject var auth: AuthController
     @ObservedObject var library: LibraryViewModel
 
-    private enum Section: String, Hashable, CaseIterable {
-        case library = "Library"
-        case manage = "Manage"
-
-        var symbol: String {
-            switch self {
-            case .library: return "music.note.list"
-            case .manage: return "square.and.pencil"
-            }
-        }
-    }
-
-    @State private var section: Section = .library
+    @StateObject private var navigation = ShellNavigation()
+    @StateObject private var session = EditorSession()
+    /// Set when a section switch is blocked by unsaved work in the editor.
+    @State private var blockedSection: ShellNavigation.Section?
 
     /// editor+ per packages/core's `canDirectWrite`, answered through the bridged
     /// `hasMinRole` rather than a Swift copy of the hierarchy.
@@ -100,31 +91,23 @@ private struct StudioShell: View {
 
     var body: some View {
         Group {
-            switch section {
+            switch navigation.section {
             case .library:
                 LibrarySplitView(services: services, auth: auth, library: library)
             case .manage:
                 ManageSongsView(
                     services: services,
                     library: library,
+                    session: session,
                     onSessionExpired: { auth.sessionExpired() }
                 )
             }
         }
         .toolbar {
-            if canManage {
-                ToolbarItem(placement: .navigation) {
-                    Picker("Section", selection: $section) {
-                        ForEach(Section.allCases, id: \.self) { section in
-                            Label(section.rawValue, systemImage: section.symbol).tag(section)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .help("Switch between reading the library and editing songs")
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
+            // Leading, beside the sidebar, rather than trailing across the window: it
+            // is about who you are signed in as, which belongs with the sidebar it
+            // scopes, and it fills the slot the dead "+" used to occupy.
+            ToolbarItem(placement: .navigation) {
                 Menu {
                     if let email = auth.signedInEmail {
                         Text(email)
@@ -138,13 +121,78 @@ private struct StudioShell: View {
                 } label: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
+                .help(auth.signedInEmail ?? "Account")
+            }
+            if canManage {
+                ToolbarItem(placement: .navigation) {
+                    Picker("Section", selection: guardedSection) {
+                        ForEach(ShellNavigation.Section.allCases) { section in
+                            Label(section.rawValue, systemImage: section.symbol).tag(section)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .help("Switch between reading the library and editing songs")
+                }
             }
         }
-        // A role that drops below editor mid-session (or a bridge that never loaded)
-        // must not leave the user sitting in a section that no longer exists.
+        // Published so the View menu can gate its Manage item on the same answer.
+        .onAppear { navigation.canManage = canManage }
         .onChange(of: canManage) { _, allowed in
-            if !allowed, section == .manage { section = .library }
+            navigation.canManage = allowed
+            // A role that drops below editor mid-session (or a bridge that never
+            // loaded) must not leave the user sitting in a section that no longer
+            // exists.
+            if !allowed, navigation.section == .manage { navigation.section = .library }
         }
+        .focusedSceneObject(navigation)
+        .focusedSceneObject(session)
+        // Leaving Manage is leaving the editor, so it asks the same question the
+        // sidebar does rather than discarding the work silently.
+        .confirmationDialog(
+            "Save changes to “\(session.editor?.windowTitle ?? "this song")”?",
+            isPresented: Binding(
+                get: { blockedSection != nil },
+                set: { if !$0 { blockedSection = nil } }
+            ),
+            presenting: blockedSection
+        ) { destination in
+            Button("Save") {
+                Task {
+                    await session.editor?.save()
+                    if session.editor?.saveOutcome == .succeeded {
+                        session.close()
+                        navigation.section = destination
+                    }
+                    blockedSection = nil
+                }
+            }
+            Button("Discard", role: .destructive) {
+                session.close()
+                navigation.section = destination
+                blockedSection = nil
+            }
+            Button("Cancel", role: .cancel) { blockedSection = nil }
+        } message: { _ in
+            Text("Your edits have not been saved. Discarding loses them.")
+        }
+    }
+
+    /// Section changes route through the unsaved-changes check. Without this,
+    /// clicking "Library" mid-edit threw the edit away with no prompt.
+    private var guardedSection: Binding<ShellNavigation.Section> {
+        Binding(
+            get: { navigation.section },
+            set: { next in
+                guard next != navigation.section else { return }
+                if navigation.section == .manage, session.hasUnsavedChanges {
+                    blockedSection = next
+                } else {
+                    if navigation.section == .manage { session.close() }
+                    navigation.section = next
+                }
+            }
+        )
     }
 }
 

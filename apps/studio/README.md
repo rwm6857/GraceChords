@@ -25,7 +25,8 @@ push, and the library's filter & sort, result counts and lettered sections.
 
 Phase 3 adds the editor: a plain-text ChordPro editor with a live preview that
 reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
-delete, and the bridged ChordPro linter. See [Editing songs](#editing-songs).
+delete, and the bridged ChordPro linter (bridged and parity-checked; not currently
+surfaced in the UI). See [Editing songs](#editing-songs).
 
 Not built yet: setlists, admin/content management beyond songs, GraceTracks,
 offline caching, ChordPro syntax highlighting. Personal drafts (`personal_songs`,
@@ -127,9 +128,11 @@ Viewer/KeepScreenAwake.swift   display-sleep assertion, scoped to the view
 Viewer/FlowLayout.swift        wrapping row layout for chord-over-word cells
 Manage/ManageSongsView.swift   editor+ section: drafts + published list, owns the editor
 Editor/SongForm.swift          form state + validation, mirrors core's songAuthoring.ts
-Editor/SongEditorModel.swift   debounced preview, lint, save / publish / delete
+Editor/SongEditorModel.swift   debounced preview, save / publish / delete, outcomes
 Editor/SongEditorView.swift    metadata form, monospaced ChordPro editor, split preview
-Editor/LintWarningsView.swift  the advisory strip under the preview
+Editor/TagField.swift           tag entry with a type-ahead over the catalog's tags
+Manage/EditorSession.swift      what is open in the editor, shared with the shell
+Navigation/ShellNavigation.swift  which section is showing, reachable from the View menu
 Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers,
                                lint, hasMinRole, slugify
 Core/LintWarning.swift         one finding from core's lint.ts (warnings only)
@@ -239,6 +242,72 @@ the sidebar taking 240–300 of the window, meant the preview never appeared at 
 ordinary window size. The threshold is now defined as the sum of the two panes'
 minimum widths so it cannot drift above what they actually need.
 
+**The metadata form is a four-column `Grid`**, so the proportions are declared
+rather than eyeballed: Title and Artist take two columns each; Key takes two (with the
+♯/♭ toggle that decides which spellings the picker offers, majors and minors in
+labelled sections); Time and Tempo one each; Tags three and Language one. Grid keeps
+the columns aligned down the whole form, which is what stops it reading as a pile of
+differently-sized boxes. The form stops growing at 680pt — text fields stretched
+across a wide window put a title's first and last characters a screen apart, which is
+harder to read, not easier, so past that the space goes to the ChordPro body and the
+preview instead. It carries no fixed height either: every attempt at one reserved
+space the form did not use and left a dead band above the ChordPro divider.
+
+Validation text is terse for the same reason — the label names the field and the
+asterisk's colour says whether it blocks saving (red) or only publishing (amber), so
+the message is just "Required", and what publishing still needs is summarised once in
+the Details header rather than repeated under every field.
+
+Tempo accepts digits only, filtered as you type: accepting "abc" and silently dropping
+it at save loses input without saying so.
+
+**Quick insert** sits above the ChordPro body: the seven diatonic chords for the
+song's key (labelled with their numerals, so the bar teaches the key as well as saving
+keystrokes), the eight section wrappers, a suffix picker (7 / maj7 / sus2 / sus4) that
+applies to the next chord inserted, and the user's macros.
+
+Every button's *effect* comes from `packages/core/src/chordpro/editing.ts` through the
+bridge, so Studio inserts exactly what the web editor inserts — including core's rule
+that Pre-Chorus and Interlude are emitted as **named choruses**, since the parser only
+accepts verse|chorus|bridge|intro|tag|outro and would silently drop anything else. The
+chord list is core's `getDiatonicChords`, so "the seven chords in this key" has one
+definition rather than a Swift guess at music theory.
+
+**Verse, Chorus and Bridge have key equivalents** — ⌃⌘V / ⌃⌘C / ⌃⌘B — in Edit, since
+those three are most of the typing in a chart. The modifier is ⌃⌘ rather than plain ⌃
+or ⌥ because both of those are already spoken for inside a text view: ⌃B and ⌃V are
+`NSTextView`'s emacs bindings (`moveBackward` / `pageDown`), so binding them would
+break cursor movement in the body, and ⌥C types `ç` — which Turkish lyrics need, and
+the catalog has Turkish songs (⌥V and ⌥B are √ and ∫). ⇧⌘V is Paste and Match Style,
+which leaves ⌃⌘ as the free, conventional space for app-specific verbs. The tooltips
+name the shortcut, from the same lookup the commands use, so the two cannot drift.
+
+Section buttons **wrap the selection** when there is one and insert an empty block with
+the caret on its content line when there is not; the tooltip says which you will get,
+because silently doing the other one is confusing. This needs the caret, which is why
+the body is `TextEditor(text:selection:)` — and the offsets crossing the bridge are
+UTF-16, not Character, counts (see `Core/ChordProEditing.swift`): a JS string index is
+a UTF-16 offset, and the two disagree on any Turkish or Korean lyric.
+
+Both rows use `FlowLayout` rather than `HStack`. Eight section buttons plus a menu do
+not fit one row in a split pane, and an `HStack` answers that by truncating every label
+to "Cho…" / "Brid…" / "Pre-…" — which for a button whose whole job is to be recognised
+at a glance is the difference between useful and decorative.
+
+**Macros** (`Editor/MacroStore.swift`) are user-defined snippets — a house intro, a tag
+with a particular turnaround — saved to `UserDefaults`. Local and per-user on purpose:
+these are personal shorthand rather than catalog content, and putting them in Supabase
+would mean a schema, RLS and a sync story for something whose value is being instant
+and private.
+
+**Tags are a type-ahead over the catalog's own tags**, most-used first, matched on
+prefix then substring, navigable with ↑/↓/Tab and taken with Return; commas split one
+entry into several. The point is spelling discipline rather than convenience —
+`songs.tags` is matched case-sensitively, so a tag typed slightly differently becomes a
+second near-empty category, and the live data already shows the cost
+("Contemporrary" beside "Contemporary", a tag that is just "."). Suggesting the
+existing spelling makes reusing it easier than inventing a new one.
+
 **The preview is the Viewer's renderer.** `SongEditorModel` calls the same
 `CoreBridge.render` and hands the resulting `SongDoc` to the same `ChordChartView`.
 There is deliberately no editor-specific rendering path, so the preview cannot
@@ -291,6 +360,24 @@ un-publishing on save would pull a song out of every worshipper's library becaus
 someone fixed a typo, and this design has no review step to put it back. Publication
 moves only via the explicit Publish / Unpublish actions.
 
+**The toolbar is icons with a transient outcome badge**, not words plus a status
+chip. Save (`square.and.arrow.down`, ⌘S) and Publish (`icloud.and.arrow.up`) each
+report how they went on themselves — a green check or a red cross in the corner,
+cleared by the next edit — so the verdict appears on the control that was pressed and
+no permanent chrome has to carry it. Delete is a `trash` button with its confirmation.
+Preview toggles with ⌘P. There is deliberately no separate "Save Draft": Save means
+save, and whether the row is a draft or live is the row's business, not the button's.
+
+**Leaving a dirty editor always asks.** The back button is gone; every way out —
+picking another song, starting a new one, or switching to Library — routes through one
+guard that offers Save / Discard / Cancel. That is why the open editor lives in
+`EditorSession` (Manage/EditorSession.swift) rather than in `ManageSongsView`'s private
+state: the shell has to be able to ask "would leaving now lose work?" before it
+switches sections, and with the model private to the Manage view it could not, so
+switching to Library discarded unsaved edits silently. **Local autosave is not
+implemented** — the guard is the reliable half, and a draft cache that survives
+quitting is its own piece of work.
+
 **A new song writes no row until the first save.** `songs.slug` is `UNIQUE NOT NULL`
 and core's `slugify` returns `''` for a title with no alphanumerics, so a row cannot
 exist before there is a title — and creating one on "New Song" would leave an empty
@@ -308,13 +395,17 @@ favourites list with it. The confirmation dialog names those consequences. An
 `editor_audit_log.song_id` is `ON DELETE SET NULL` — the row survives the cascade
 carrying `song_slug` and `song_title` text, and is the only remaining trace.
 
-**Lint is advisory and never blocks a save.** Every code
-`packages/core/src/chordpro/lint.ts` emits is prefixed `warn:` and the module has no
-severity field, so there is nothing to present as an error. A body the *parser*
-rejects is a separate failure and appears in the preview pane, above the last
-successfully rendered chart rather than replacing it — mid-edit a body is
-transiently unparseable (a half-typed `{start_of_`), and blanking the pane on those
-keystrokes would make the preview unusable.
+**Lint is bridged but not currently surfaced.** `CoreBridge.lint` and its parity
+checks remain (see `apps/studio/js/README.md`), but the warnings strip was removed as
+visual clutter: with `warn:missing_title` and `warn:missing_key` suppressed there was
+usually nothing left to show, and a panel that says "no warnings" on every song is a
+panel that earns no space. Re-surfacing it is a few lines against
+`model.rawWarnings` if that changes.
+
+A body the *parser* rejects is a different failure and still appears in the preview
+pane, above the last successfully rendered chart rather than replacing it — mid-edit a
+body is transiently unparseable (a half-typed `{start_of_`), and blanking the pane on
+those keystrokes would make the preview unusable.
 
 **Syntax highlighting is not implemented.** SwiftUI's `TextEditor` cannot style
 ranges, so it needs `NSViewRepresentable` over `NSTextView` with a custom

@@ -21,6 +21,10 @@
 // SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY.
 import Combine
 import Foundation
+// SwiftUI for `TextSelection`. The caret lives here rather than in the view because
+// the menu bar's Insert commands have to act on it, and a menu cannot reach a view's
+// private @State.
+import SwiftUI
 
 @MainActor
 final class SongEditorModel: ObservableObject {
@@ -40,6 +44,10 @@ final class SongEditorModel: ObservableObject {
     @Published var form: SongForm {
         didSet {
             guard form != oldValue else { return }
+            // Any edit makes the last save's verdict stale — the file on the server
+            // no longer matches what is on screen.
+            saveOutcome = .idle
+            publishOutcome = .idle
             // Only a body change needs the bridge; editing the tempo field must not
             // re-parse the chart.
             if form.chordproContent != oldValue.chordproContent {
@@ -72,16 +80,19 @@ final class SongEditorModel: ObservableObject {
     /// Set when the body could not be parsed at all. Distinct from `warnings` —
     /// this is the parser throwing, not an advisory finding.
     @Published private(set) var previewErrorText: String?
-    /// Everything core reported, before the not-applicable codes are dropped.
-    @Published private(set) var rawWarnings: [LintWarning] = []
-
-    /// The warnings actually worth showing. Derived rather than stored so that
-    /// clearing the title restores `warn:missing_title` immediately — the filter
-    /// depends on form fields that do not trigger a re-lint, and re-running the
-    /// bridge just to re-apply a predicate would be wasteful.
-    var warnings: [LintWarning] { Self.applicable(rawWarnings, given: form) }
     @Published var showsPreview = true
-    @Published var showsWarnings = true
+
+    /// Where the caret is in the ChordPro body, bound by the editor's TextEditor.
+    @Published var selection: TextSelection?
+
+    /// How the last Save or Publish went, for the badge on its toolbar button.
+    ///
+    /// Transient by design: both reset to `.idle` on the next edit and on load, so
+    /// the badge reports the outcome of an action just taken rather than becoming a
+    /// second, stale status indicator.
+    enum ActionOutcome: Equatable { case idle, succeeded, failed }
+    @Published private(set) var saveOutcome: ActionOutcome = .idle
+    @Published private(set) var publishOutcome: ActionOutcome = .idle
 
     // MARK: - Work state
 
@@ -186,15 +197,6 @@ final class SongEditorModel: ObservableObject {
         guard body != lastRenderedBody else { return }
         lastRenderedBody = body
 
-        // Lint first and independently of the render. A body the parser rejects is
-        // exactly the body whose warnings are most worth reading, so the warning
-        // list must not be collateral damage of a parse failure.
-        do {
-            rawWarnings = try bridge.lint(body)
-        } catch {
-            rawWarnings = []
-        }
-
         guard !body.isEmpty else {
             previewDoc = nil
             previewErrorText = nil
@@ -215,28 +217,83 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
-    /// Drop the warnings that cannot apply to a GraceChords row.
+    // MARK: - Quick insert
+
+    /// The JS bridge, for the quick-insert toolbar. Exposed rather than duplicating a
+    /// services reference in the view.
+    var bridge: CoreBridge? { services.bridge }
+
+    /// UTF-16 range of the current selection, defaulting to the end of the body.
     ///
-    /// `lintChordPro` was written for standalone `.chordpro` files, where `{title}`
-    /// and `{key}` directives in the body are the only place that metadata lives. In
-    /// this database they live in the `title` and `default_key` COLUMNS instead, and
-    /// core's own `canonicalizeForm` is explicit that it will not inject them into the
-    /// body. The result is that `warn:missing_title` and `warn:missing_key` fire on
-    /// every single one of the 206 songs in the catalog — a panel that is wrong twice
-    /// about every song is a panel nobody reads, and it would bury the warnings that
-    /// do matter (`warn:section_mismatch`, `warn:unknown_chord`).
-    ///
-    /// Filtered here rather than in core: the module's behaviour is correct for the
-    /// input it documents, `apps/web` has a test asserting exactly this output, and a
-    /// row whose column IS empty still gets the warning — which is the case where it
-    /// is telling the truth.
-    static func applicable(_ warnings: [LintWarning], given form: SongForm) -> [LintWarning] {
-        warnings.filter { warning in
-            switch warning.code {
-            case "warn:missing_title": return form.title.trimmed.isEmpty
-            case "warn:missing_key": return form.defaultKey.trimmed.isEmpty
-            default: return true
-            }
+    /// Appending when there is no caret yet is the useful default: the toolbar is most
+    /// often used on a body written top to bottom, and inserting at offset 0 would push
+    /// new sections above everything already typed.
+    var selectionRange: (start: Int, end: Int) {
+        guard let selection = selection else {
+            let end = form.chordproContent.utf16.count
+            return (end, end)
+        }
+        return selection.utf16Range(in: form.chordproContent)
+    }
+
+    var hasSelection: Bool {
+        let range = selectionRange
+        return range.end > range.start
+    }
+
+    var selectedText: String {
+        let text = form.chordproContent
+        let range = selectionRange
+        guard range.end > range.start else { return "" }
+        let lower = text.index(fromUTF16Offset: range.start)
+        let upper = text.index(fromUTF16Offset: range.end)
+        guard lower <= upper else { return "" }
+        return String(text[lower..<upper])
+    }
+
+    /// Insert `text` at the caret, replacing any selection, through core.
+    func insert(_ text: String) {
+        let range = selectionRange
+        apply { bridge in
+            try bridge.insertAtCursor(in: form.chordproContent, start: range.start, end: range.end, text: text)
+        }
+    }
+
+    /// Wrap the selection in a section block, through core.
+    func wrap(_ preset: SectionPreset) {
+        let range = selectionRange
+        apply { bridge in
+            try bridge.wrapSection(
+                in: form.chordproContent,
+                start: range.start,
+                end: range.end,
+                directive: preset.directive,
+                label: preset.sectionLabel
+            )
+        }
+    }
+
+    /// Wrap using the core preset with this label — how the menu-bar commands reach
+    /// the same code path the toolbar buttons use, without duplicating the preset list.
+    func wrapSection(labeled label: String) {
+        guard let preset = (try? services.bridge?.sectionPresets())??
+            .first(where: { $0.label == label }) else { return }
+        wrap(preset)
+    }
+
+    private func apply(_ edit: (CoreBridge) throws -> ChordProEdit) {
+        guard let bridge = services.bridge else {
+            errorText = services.bridgeErrorText ?? "The ChordPro helpers are unavailable."
+            return
+        }
+        do {
+            let result = try edit(bridge)
+            form.chordproContent = result.value
+            // Against the NEW body — the offsets core returned index into that, not the
+            // text the range was read from.
+            selection = TextSelection.spanning(result.selection, in: form.chordproContent)
+        } catch {
+            errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
         }
     }
 

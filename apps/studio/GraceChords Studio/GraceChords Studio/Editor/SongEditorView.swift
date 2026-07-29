@@ -4,11 +4,6 @@
 //
 //  One song being written: metadata form, plain-text ChordPro editor, live preview.
 //
-//  Layout is a horizontal split — editor left, preview right — with the preview
-//  toggleable rather than permanent. On a 13" display the metadata form plus two
-//  panes is genuinely cramped, and while writing a verse the preview is often not
-//  what you want the width for.
-//
 //  The preview is `ChordChartView`, the SAME view the Song Viewer draws, fed the
 //  same `SongDoc` from the same bridged parser. There is deliberately no
 //  editor-specific renderer: a preview that could disagree with the Viewer would be
@@ -21,19 +16,23 @@
 //  undo manager, IME marked-text ranges, re-highlight cost on a long song) and is
 //  orthogonal to whether saving and publishing work. See apps/studio/README.md.
 //
+//  Toolbar verbs are icons with a transient outcome badge rather than words plus a
+//  status chip. Save and Publish each report how they went on themselves — green
+//  check or red cross, cleared by the next edit — which is the thing the user
+//  actually wants to know after pressing them, and it costs no permanent chrome.
+//
 
 import SwiftUI
 
 struct SongEditorView: View {
     @ObservedObject var model: SongEditorModel
-    /// Tags already in the catalog, so a typed tag snaps to their spelling instead of
-    /// minting a case-variant duplicate. See `SongForm.addTag`.
+    /// Catalog tags, most-used first, for the tag field's type-ahead.
     var knownTags: [String] = []
-    var onClose: () -> Void
+    /// Start a new blank song. Routed up because only the Manage section knows how to
+    /// replace the open editor (and how to guard unsaved changes first).
+    var onNewSong: () -> Void
 
-    @State private var pendingTag = ""
     @State private var showsDeleteConfirmation = false
-    @State private var showsDiscardConfirmation = false
     @State private var showsDetails = true
     /// In a pane too narrow to split, the preview replaces the editor rather than
     /// sitting beside it. Separate from `model.showsPreview` because the sensible
@@ -46,12 +45,16 @@ struct SongEditorView: View {
     /// the panes actually need and strand the preview.
     ///
     /// Measured on the DETAIL COLUMN, not the window: with the sidebar taking
-    /// 240–300 this pane is that much narrower than the window around it, which is
-    /// why the first cut's 900 meant the preview never appeared at an ordinary window
-    /// size. A 1000pt window with the sidebar at its 240 minimum leaves ~740 here.
+    /// 240–300 this pane is that much narrower than the window around it.
     private static let writingMinimumWidth: CGFloat = 360
     private static let previewMinimumWidth: CGFloat = 320
     private static let splitMinimumWidth: CGFloat = writingMinimumWidth + previewMinimumWidth
+
+    /// The form stops growing here. Text fields stretched across a 1400pt window put
+    /// the title's first character and its last a screen apart, which is harder to
+    /// read than a column, not easier — so past this width the form stays put and the
+    /// space goes to the ChordPro body and the preview.
+    private static let formMaximumWidth: CGFloat = 680
 
     @State private var availableWidth: CGFloat = 0
 
@@ -64,7 +67,6 @@ struct SongEditorView: View {
         return narrowShowsPreview ? .previewOnly : .editorOnly
     }
 
-    /// Whether the preview is on screen at all, in either layout.
     private var isPreviewVisible: Bool { paneLayout != .editorOnly }
 
     var body: some View {
@@ -85,12 +87,6 @@ struct SongEditorView: View {
             } message: {
                 Text(model.deleteConfirmationMessage)
             }
-            .alert("Discard unsaved changes?", isPresented: $showsDiscardConfirmation) {
-                Button("Keep Editing", role: .cancel) {}
-                Button("Discard", role: .destructive) { onClose() }
-            } message: {
-                Text("Your edits to “\(model.windowTitle)” have not been saved. Closing the editor loses them.")
-            }
     }
 
     @ViewBuilder
@@ -102,7 +98,6 @@ struct SongEditorView: View {
             // shown as a banner over a working editor.
             VStack(alignment: .leading, spacing: GCSpacing.sm) {
                 Text(errorText).gcTextStyle(.body).foregroundStyle(GCColor.sec)
-                Button("Back to Songs") { onClose() }
             }
             .padding(GCSpacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -132,46 +127,34 @@ struct SongEditorView: View {
         }
     }
 
-    // MARK: - Banners
+    // MARK: - Banner
 
+    /// Only errors get a banner now. A success no longer needs one: the toolbar badge
+    /// says the save worked, right where the click happened.
     @ViewBuilder
     private var statusBanner: some View {
         if let errorText = model.errorText {
-            banner(errorText, icon: "exclamationmark.triangle.fill", tint: GCColor.danger) {
-                model.errorText = nil
+            HStack(spacing: GCSpacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(GCColor.danger)
+                Text(errorText)
+                    .gcTextStyle(.rowMeta)
+                    .foregroundStyle(GCColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button {
+                    model.errorText = nil
+                } label: {
+                    Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(GCColor.muted)
+                .accessibilityLabel("Dismiss")
             }
-        } else if let statusMessage = model.statusMessage {
-            banner(statusMessage, icon: "checkmark.circle.fill", tint: GCColor.success) {
-                model.statusMessage = nil
-            }
+            .padding(.horizontal, GCSpacing.md)
+            .padding(.vertical, GCSpacing.sm)
+            .background(GCColor.surfaceAlt)
+            .overlay(alignment: .bottom) { Divider() }
         }
-    }
-
-    private func banner(
-        _ text: String,
-        icon: String,
-        tint: Color,
-        dismiss: @escaping () -> Void
-    ) -> some View {
-        HStack(spacing: GCSpacing.sm) {
-            Image(systemName: icon).foregroundStyle(tint)
-            Text(text)
-                .gcTextStyle(.rowMeta)
-                .foregroundStyle(GCColor.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer()
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(GCColor.muted)
-        }
-        .padding(.horizontal, GCSpacing.md)
-        .padding(.vertical, GCSpacing.sm)
-        .background(GCColor.surfaceAlt)
-        .overlay(alignment: .bottom) { Divider() }
     }
 
     // MARK: - Writing pane
@@ -181,11 +164,16 @@ struct SongEditorView: View {
             detailsHeader
             if showsDetails {
                 Divider()
-                // Sized to its content, not to a fixed height. The first cut pinned
-                // this to 320pt, which left a band of dead space under the last row
-                // on every song and took it away from the editor.
+                // No ScrollView and no height cap: four rows cannot realistically
+                // overflow, and every fixed height tried here reserved space the form
+                // did not use, leaving a dead band above the ChordPro divider and
+                // taking it from the body. Collapsing Details is the escape hatch on a
+                // short window.
                 metadataForm
                     .padding(.horizontal, GCSpacing.lg)
+                    // A little air under the header — the first cut had the Title label
+                    // almost touching it.
+                    .padding(.top, GCSpacing.lg)
                     .padding(.bottom, GCSpacing.lg)
             }
             Divider()
@@ -194,9 +182,6 @@ struct SongEditorView: View {
         .frame(minWidth: Self.writingMinimumWidth)
     }
 
-    /// Collapsible header for the metadata form. Collapsed, it summarises what is
-    /// hidden — a bare chevron over nothing would make the user open it to remember
-    /// whether the key was set.
     private var detailsHeader: some View {
         Button {
             showsDetails.toggle()
@@ -206,23 +191,21 @@ struct SongEditorView: View {
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(GCColor.muted)
                 Text("Details").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
-                if !showsDetails {
+                if !showsDetails, !collapsedSummary.isEmpty {
                     Text(collapsedSummary)
                         .gcTextStyle(.overline)
                         .foregroundStyle(GCColor.muted)
                         .lineLimit(1)
                 }
                 Spacer()
+                // One summary of what publishing still needs, instead of repeating
+                // "required to publish" under each field. Amber, not red: saving is
+                // not blocked, and 8 songs already in the catalog are in this state.
                 if !model.form.isPublishable {
-                    // Amber, not red, and worded as a publish precondition — because
-                    // saving is not blocked by it. 8 songs already in the catalog have
-                    // no tags; the editor must not present those as broken.
-                    Label(
-                        model.status == .published ? "Missing details" : "Not ready to publish",
-                        systemImage: "exclamationmark.circle"
-                    )
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.star)
+                    Text("Needs \(model.form.missingForPublish.formattedList) to publish")
+                        .gcTextStyle(.overline)
+                        .foregroundStyle(GCColor.star)
+                        .lineLimit(1)
                 }
             }
             .padding(.horizontal, GCSpacing.md)
@@ -235,41 +218,53 @@ struct SongEditorView: View {
 
     private var collapsedSummary: String {
         var parts: [String] = []
-        if !model.form.defaultKey.isEmpty { parts.append("Key of \(model.form.defaultKey)") }
+        if !model.form.defaultKey.isEmpty { parts.append(model.form.defaultKey) }
         if let tempo = model.form.tempoValue { parts.append("\(tempo) bpm") }
         if !model.form.tags.isEmpty { parts.append(model.form.tags.joined(separator: ", ")) }
         return parts.isEmpty ? "" : "— " + parts.joined(separator: " · ")
     }
 
+    // MARK: - Metadata form
+
+    /// A four-column `Grid`, so the proportions are declared rather than guessed:
+    /// Title and Artist take two columns each, Key two with Time and Tempo one each,
+    /// Tags three with Language one. Grid keeps the columns aligned down the form,
+    /// which is what stops it reading as a pile of differently-sized boxes.
     private var metadataForm: some View {
-        VStack(alignment: .leading, spacing: GCSpacing.md) {
-            HStack(alignment: .top, spacing: GCSpacing.md) {
+        Grid(alignment: .topLeading, horizontalSpacing: GCSpacing.md, verticalSpacing: GCSpacing.md) {
+            GridRow {
                 field("Title", requirement: .toSave, error: model.form.errors.title) {
                     TextField("Song title", text: $model.form.title)
                 }
-                field("Artist", error: nil) {
+                .gridCellColumns(2)
+                field("Artist") {
                     TextField("Optional", text: $model.form.artist)
                 }
+                .gridCellColumns(2)
             }
-            HStack(alignment: .top, spacing: GCSpacing.md) {
-                field("Key", requirement: .toPublish, error: model.form.errors.defaultKey) {
-                    Picker("", selection: $model.form.defaultKey) {
-                        Text("Choose…").tag("")
-                        ForEach(SongForm.keys, id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
-                }
-                field("Time", error: nil) {
+            GridRow {
+                keyField.gridCellColumns(2)
+                field("Time") {
                     Picker("", selection: $model.form.timeSignature) {
                         Text("None").tag("")
                         ForEach(SongForm.timeSignatures, id: \.self) { Text($0).tag($0) }
                     }
                     .labelsHidden()
                 }
-                field("Tempo", error: nil) {
+                field("Tempo") {
                     TextField("BPM", text: $model.form.tempo)
+                        .onChange(of: model.form.tempo) { _, new in
+                            let clean = SongForm.sanitizedTempo(new)
+                            if clean != new { model.form.tempo = clean }
+                        }
                 }
-                field("Language", error: nil) {
+            }
+            GridRow {
+                field("Tags", requirement: .toPublish, error: model.form.errors.tags) {
+                    TagField(tags: $model.form.tags, knownTags: knownTags)
+                }
+                .gridCellColumns(3)
+                field("Language") {
                     Picker("", selection: $model.form.language) {
                         Text("None").tag("")
                         ForEach(SongForm.languages, id: \.self) { Text($0).tag($0) }
@@ -277,25 +272,74 @@ struct SongEditorView: View {
                     .labelsHidden()
                 }
             }
-            tagsField
-            HStack(alignment: .top, spacing: GCSpacing.md) {
-                field("YouTube", error: nil, warning: youtubeWarning) {
+            GridRow {
+                field("YouTube", warning: youtubeWarning) {
                     TextField("URL or video ID", text: $model.form.youtubeID)
                         .onSubmit(normalizeYouTube)
                 }
-                field("Country", error: nil) {
+                .gridCellColumns(2)
+                field("Country") {
                     TextField("Optional", text: $model.form.country)
                 }
+                .gridCellColumns(2)
             }
         }
         .textFieldStyle(.roundedBorder)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: Self.formMaximumWidth, alignment: .leading)
+    }
+
+    /// Key plus the ♯/♭ toggle that decides which spellings the picker offers. Both
+    /// live in one cell because they are one decision: Eb and D# are the same key,
+    /// and the toggle re-spells the current selection rather than clearing it.
+    private var keyField: some View {
+        field("Key", requirement: .toPublish, error: model.form.errors.defaultKey) {
+            HStack(spacing: GCSpacing.sm) {
+                Picker("", selection: $model.form.defaultKey) {
+                    Text("Choose…").tag("")
+                    Section("Major") {
+                        ForEach(SongForm.majorKeys(accidental), id: \.self) { Text($0).tag($0) }
+                    }
+                    Section("Minor") {
+                        ForEach(SongForm.minorKeys(accidental), id: \.self) { Text($0).tag($0) }
+                    }
+                }
+                .labelsHidden()
+
+                Picker("", selection: accidentalBinding) {
+                    ForEach(SongForm.Accidental.allCases) { Text($0.symbol).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                .help("Show keys as sharps or flats")
+            }
+        }
+    }
+
+    /// Seeded from the key already chosen, so a song in Eb opens on ♭.
+    private var accidental: SongForm.Accidental {
+        accidentalOverride ?? SongForm.accidental(of: model.form.defaultKey)
+    }
+
+    @State private var accidentalOverride: SongForm.Accidental?
+
+    private var accidentalBinding: Binding<SongForm.Accidental> {
+        Binding(
+            get: { accidental },
+            set: { next in
+                accidentalOverride = next
+                // Carry the selection across the flip instead of dropping it.
+                if let respelled = SongForm.respelled(model.form.defaultKey, as: next) {
+                    model.form.defaultKey = respelled
+                }
+            }
+        )
     }
 
     private var youtubeWarning: String? {
         let raw = model.form.youtubeID.trimmed
         guard !raw.isEmpty else { return nil }
-        return SongForm.normalizeYouTube(raw).valid ? nil : "Not a recognised YouTube URL or ID"
+        return SongForm.normalizeYouTube(raw).valid ? nil : "Not a YouTube URL or ID"
     }
 
     private func normalizeYouTube() {
@@ -303,68 +347,9 @@ struct SongEditorView: View {
         if result.valid { model.form.youtubeID = result.id }
     }
 
-    private var tagsField: some View {
-        field("Tags", requirement: .toPublish, error: model.form.errors.tags) {
-            VStack(alignment: .leading, spacing: GCSpacing.sm) {
-                HStack(spacing: GCSpacing.sm) {
-                    TextField("Add a tag and press Return", text: $pendingTag)
-                        .onSubmit(commitTag)
-                    Button("Add", action: commitTag)
-                        .disabled(pendingTag.trimmed.isEmpty)
-                    if !suggestedTags.isEmpty {
-                        Menu {
-                            ForEach(suggestedTags, id: \.self) { tag in
-                                Button(tag) { model.form.addTag(tag, knownTags: knownTags) }
-                            }
-                        } label: {
-                            Image(systemName: "list.bullet")
-                        }
-                        .menuStyle(.borderlessButton)
-                        .frame(width: 28)
-                        .help("Add an existing tag from the catalog")
-                    }
-                }
-                if !model.form.tags.isEmpty {
-                    FlowLayout(horizontalSpacing: GCSpacing.xs, verticalSpacing: GCSpacing.xs) {
-                        ForEach(model.form.tags, id: \.self) { tag in
-                            HStack(spacing: 4) {
-                                Text(tag).gcTextStyle(.rowMeta)
-                                Button {
-                                    model.form.removeTag(tag)
-                                } label: {
-                                    Image(systemName: "xmark").font(.system(size: 8, weight: .bold))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .padding(.horizontal, GCSpacing.sm)
-                            .padding(.vertical, 3)
-                            .background(GCColor.accentSoft, in: Capsule())
-                            .foregroundStyle(GCColor.textAccent)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func commitTag() {
-        model.form.addTag(pendingTag, knownTags: knownTags)
-        pendingTag = ""
-    }
-
-    /// Catalog tags not already on this song, most common first as supplied.
-    /// Picking from here is how a tag stays spelled the way the rest of the catalog
-    /// spells it.
-    private var suggestedTags: [String] {
-        knownTags.filter { candidate in
-            !model.form.tags.contains { $0.caseInsensitiveCompare(candidate) == .orderedSame }
-        }
-    }
-
     /// How badly a field is needed. Distinguished because Save and Publish have
     /// different bars: only the title blocks a save, while the key and tags block
-    /// only publication — so showing all three as equally red errors would say the
-    /// editor is stuck when it is not.
+    /// only publication.
     private enum FieldRequirement {
         case optional
         /// Blocks saving. Red.
@@ -385,26 +370,27 @@ struct SongEditorView: View {
     private func field<Content: View>(
         _ label: String,
         requirement: FieldRequirement = .optional,
-        error: String?,
+        error: String? = nil,
         warning: String? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 2) {
                 Text(label).gcTextStyle(.overline).foregroundStyle(GCColor.sec)
                 if let marker = requirement.marker {
                     Text("*").gcTextStyle(.overline).foregroundStyle(marker)
                 }
+                if let error = error {
+                    Text(error)
+                        .gcTextStyle(.overline)
+                        .foregroundStyle(requirement.marker ?? GCColor.danger)
+                } else if let warning = warning {
+                    Text(warning).gcTextStyle(.overline).foregroundStyle(GCColor.star)
+                }
             }
             content()
-            if let error = error {
-                Text(requirement == .toPublish ? "\(error) to publish" : error)
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(requirement.marker ?? GCColor.danger)
-            } else if let warning = warning {
-                Text(warning).gcTextStyle(.overline).foregroundStyle(GCColor.star)
-            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - ChordPro editor
@@ -414,14 +400,25 @@ struct SongEditorView: View {
             HStack(spacing: GCSpacing.sm) {
                 Text("ChordPro").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
                 Spacer()
-                Text("\(model.form.chordproContent.count) characters")
-                    .gcTextStyle(.overline)
-                    .foregroundStyle(GCColor.muted)
+                if !model.form.chordproContent.isEmpty {
+                    Text("\(model.form.chordproContent.count) characters")
+                        .gcTextStyle(.overline)
+                        .foregroundStyle(GCColor.muted)
+                }
             }
             .padding(.horizontal, GCSpacing.md)
             .padding(.vertical, GCSpacing.sm)
 
-            TextEditor(text: $model.form.chordproContent)
+            ChordProToolbar(
+                key: model.form.defaultKey,
+                hasSelection: model.hasSelection,
+                bridge: model.bridge,
+                onInsert: model.insert,
+                onWrap: model.wrap,
+                macroSource: { model.selectedText.isEmpty ? model.form.chordproContent : model.selectedText }
+            )
+
+            TextEditor(text: $model.form.chordproContent, selection: $model.selection)
                 .font(.system(size: 12.5, weight: .regular, design: .monospaced))
                 .lineSpacing(2)
                 // Spelling and autocorrect fight ChordPro constantly: {sov} and
@@ -441,12 +438,12 @@ struct SongEditorView: View {
         VStack(spacing: 0) {
             HStack(spacing: GCSpacing.sm) {
                 Text("Preview").gcTextStyle(.overline).foregroundStyle(GCColor.sec)
+                Spacer()
                 if !model.form.defaultKey.isEmpty {
-                    Text("Key of \(model.form.defaultKey)")
+                    Text(model.form.defaultKey)
                         .gcTextStyle(.overline)
                         .foregroundStyle(GCColor.textAccent)
                 }
-                Spacer()
             }
             .padding(.horizontal, GCSpacing.md)
             .padding(.vertical, GCSpacing.sm)
@@ -458,8 +455,6 @@ struct SongEditorView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .background(GCColor.bg)
-
-            LintWarningsView(warnings: model.warnings, isExpanded: $model.showsWarnings)
         }
         .frame(minWidth: Self.previewMinimumWidth)
     }
@@ -475,7 +470,7 @@ struct SongEditorView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(GCColor.star)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Cannot draw the chart for this text yet")
+                        Text("Cannot draw this chart yet")
                             .gcTextStyle(.rowMeta)
                             .foregroundStyle(GCColor.ink)
                         Text(parseError)
@@ -489,19 +484,11 @@ struct SongEditorView: View {
             }
 
             if let doc = model.previewDoc {
-                ChordChartView(
-                    doc: doc,
-                    options: ChartRenderOptions(
-                        showChords: true,
-                        showSections: true,
-                        fontScale: 1.0,
-                        splitInstrumentals: false
-                    )
-                )
+                ChordChartView(doc: doc, options: .default)
             } else if model.form.chordproContent.trimmed.isEmpty {
                 VStack(alignment: .leading, spacing: GCSpacing.xs) {
                     Text("Nothing to preview yet").gcTextStyle(.body).foregroundStyle(GCColor.ink)
-                    Text("Start typing ChordPro on the left and the chart appears here.")
+                    Text("Type ChordPro on the left and the chart appears here.")
                         .gcTextStyle(.rowMeta).foregroundStyle(GCColor.muted)
                 }
             } else {
@@ -524,99 +511,131 @@ struct SongEditorView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
-            Button {
-                if model.isDirty { showsDiscardConfirmation = true } else { onClose() }
-            } label: {
-                Label("Songs", systemImage: "chevron.left")
+            Button(action: onNewSong) {
+                // Not `square.and.pencil` — that is the Manage section's own icon in
+                // the picker immediately to the right, and two identical glyphs side by
+                // side read as the same control twice. A doc-with-plus badge says "make
+                // a new one" rather than "edit".
+                Label("New Song", systemImage: "doc.badge.plus")
             }
-            .help("Back to Songs")
+            .keyboardShortcut("n", modifiers: .command)
+            .help("New song (⌘N)")
         }
 
-        // The toggle is always present, in both layouts. It was previously gated on
-        // there being room for a split, which meant the preview — the whole point of
-        // the editor — was simply unreachable in any window that was not very wide.
         ToolbarItem(placement: .primaryAction) {
             Button {
                 if isWide { model.showsPreview.toggle() } else { narrowShowsPreview.toggle() }
             } label: {
-                Label(
-                    "Preview",
-                    systemImage: isWide
-                        ? (isPreviewVisible ? "sidebar.right" : "sidebar.squares.right")
-                        : (isPreviewVisible ? "pencil" : "eye")
-                )
+                Label("Preview", systemImage: isPreviewVisible ? "sidebar.right" : "sidebar.squares.right")
             }
+            .keyboardShortcut("p", modifiers: .command)
             .help(previewToggleHelp)
             .foregroundStyle(isPreviewVisible ? GCColor.accent : GCColor.sec)
-        }
-
-        ToolbarItem(placement: .primaryAction) {
-            statusPill
         }
 
         ToolbarItem(placement: .primaryAction) {
             Button {
                 Task { await model.save() }
             } label: {
-                Text(model.status == .published ? "Save" : "Save Draft")
+                badged("square.and.arrow.down", outcome: model.saveOutcome)
             }
             .keyboardShortcut("s", modifiers: .command)
             .disabled(!model.form.isSavable || model.isSaving)
-            .help(model.form.isSavable ? "Save this song" : "Give this song a title first")
+            .help(model.form.isSavable ? "Save (⌘S)" : "Give this song a title first")
+            .accessibilityLabel("Save")
         }
 
         ToolbarItem(placement: .primaryAction) {
-            Menu {
-                if model.status == .draft {
-                    Button("Publish…") { Task { await model.publish() } }
-                        // Not disabled on incompleteness — the action reports what is
-                        // missing. A silently disabled Publish with no explanation is
-                        // how you get someone hunting for the reason.
-                        .disabled(model.isNew || model.isDirty)
-                } else {
-                    Button("Unpublish") { Task { await model.unpublish() } }
-                }
-                Divider()
-                Button("Delete Song…", role: .destructive) {
-                    showsDeleteConfirmation = true
-                }
-                .disabled(model.isNew)
+            Button {
+                Task { await model.publish() }
             } label: {
-                Label("More", systemImage: "ellipsis.circle")
+                badged(
+                    model.publishOutcome == .succeeded ? "checkmark.icloud" : "icloud.and.arrow.up",
+                    outcome: model.publishOutcome == .succeeded ? .idle : model.publishOutcome
+                )
             }
-            .disabled(model.isSaving)
+            .disabled(model.isNew || model.isSaving || model.status == .published)
+            .help(publishHelp)
+            .accessibilityLabel("Publish")
         }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button(role: .destructive) {
+                showsDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            .disabled(model.isNew || model.isSaving)
+            .help("Delete this song permanently")
+        }
+
+        if model.status == .published {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button("Unpublish") { Task { await model.unpublish() } }
+                } label: {
+                    Label("More", systemImage: "ellipsis.circle")
+                }
+                .disabled(model.isSaving)
+            }
+        }
+    }
+
+    /// An icon with a small success/failure badge in its corner. The badge is the
+    /// whole reason these buttons are icons: it puts the verdict on the control that
+    /// was just pressed, so no separate status chip has to exist to carry it.
+    private func badged(_ systemImage: String, outcome: SongEditorModel.ActionOutcome) -> some View {
+        Image(systemName: systemImage)
+            .overlay(alignment: .bottomTrailing) {
+                switch outcome {
+                case .idle:
+                    EmptyView()
+                case .succeeded:
+                    badge("checkmark.circle.fill", tint: GCColor.success)
+                case .failed:
+                    badge("xmark.circle.fill", tint: GCColor.danger)
+                }
+            }
+    }
+
+    private func badge(_ systemImage: String, tint: Color) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 8, weight: .bold))
+            .foregroundStyle(tint)
+            // A ring in the toolbar's own colour so the badge reads against whatever
+            // the icon behind it is doing.
+            .background(Circle().fill(GCColor.surface).frame(width: 9, height: 9))
+            .offset(x: 3, y: 2)
     }
 
     private var previewToggleHelp: String {
         if isWide {
-            return isPreviewVisible ? "Hide the preview" : "Show the preview beside the editor"
+            return isPreviewVisible ? "Hide the preview (⌘P)" : "Show the preview (⌘P)"
         }
-        // Named explicitly, because in a narrow pane the two swap rather than one
-        // appearing next to the other, and a button that says "Show preview" while
-        // hiding what you were typing needs to say so.
         return isPreviewVisible
-            ? "Back to the editor — the pane is too narrow to show both"
-            : "Show the preview instead of the editor — the pane is too narrow for both"
+            ? "Back to the editor (⌘P) — too narrow to show both"
+            : "Show the preview (⌘P) — too narrow to show both"
     }
 
-    private var statusPill: some View {
-        HStack(spacing: GCSpacing.xs) {
-            Circle()
-                .fill(model.status == .published ? GCColor.success : GCColor.star)
-                .frame(width: 6, height: 6)
-            Text(model.isNew ? "New draft" : (model.status == .published ? "Published" : "Draft"))
-                .gcTextStyle(.overline)
-                .foregroundStyle(GCColor.sec)
+    private var publishHelp: String {
+        if model.status == .published { return "Already published" }
+        if model.isNew { return "Save this song before publishing it" }
+        if !model.form.isPublishable {
+            return "Needs \(model.form.missingForPublish.formattedList) before publishing"
         }
-        .padding(.horizontal, GCSpacing.sm)
-        .padding(.vertical, 3)
-        .background(GCColor.surfaceAlt, in: Capsule())
-        .help(
-            model.status == .published
-                ? "This song is live in the public library. Saving an edit keeps it live."
-                : "This song is a draft. Only editors can see it until you publish it."
-        )
+        return "Publish — make this song live in the public library"
     }
 }
 
+extension Array where Element == String {
+    /// "a key", "a key and a tag", "a title, a key and a tag" — for one readable
+    /// sentence about what is missing instead of a list of per-field errors.
+    var formattedList: String {
+        switch count {
+        case 0: return ""
+        case 1: return self[0]
+        case 2: return "\(self[0]) and \(self[1])"
+        default: return dropLast().joined(separator: ", ") + " and " + self[count - 1]
+        }
+    }
+}

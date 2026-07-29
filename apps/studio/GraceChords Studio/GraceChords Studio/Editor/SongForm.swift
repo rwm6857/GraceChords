@@ -27,7 +27,8 @@ struct SongForm: Equatable {
     var artist = ""
     var defaultKey = ""
     /// Held as text, not Int, so the field can be empty and a half-typed number
-    /// does not snap back while the user is typing.
+    /// does not snap back while the user is typing. Non-digits are rejected as they
+    /// are typed — see `sanitizedTempo`.
     var tempo = ""
     var timeSignature = ""
     var country = ""
@@ -42,16 +43,63 @@ struct SongForm: Equatable {
     /// Core's `LANGUAGE_OPTIONS`, minus its leading '' — an empty selection is
     /// modelled by the picker's own "None" tag instead.
     static let languages = ["English", "Turkish", "Spanish", "Arabic", "Korean", "Other"]
-    /// The keys the picker offers, matching the chart's letter spellings.
-    static let keys = [
-        "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb",
-        "G", "G#", "Ab", "A", "A#", "Bb", "B",
-    ]
+
+    // MARK: - Keys
+
+    /// Whether a key is written with sharps or flats. Not song data — it only
+    /// decides which spellings the picker offers, since Eb and D# are the same key
+    /// and a musician thinks in one or the other.
+    enum Accidental: String, CaseIterable, Identifiable {
+        case sharp, flat
+        var id: String { rawValue }
+        var symbol: String { self == .sharp ? "♯" : "♭" }
+    }
+
+    /// Majors, chromatic from C, in the requested spelling.
+    static func majorKeys(_ accidental: Accidental) -> [String] {
+        accidental == .sharp
+            ? ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+            : ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+    }
+
+    /// Minors, chromatic from A — the relative-minor order a musician scans.
+    static func minorKeys(_ accidental: Accidental) -> [String] {
+        accidental == .sharp
+            ? ["Am", "A#m", "Bm", "Cm", "C#m", "Dm", "D#m", "Em", "Fm", "F#m", "Gm", "G#m"]
+            : ["Am", "Bbm", "Bm", "Cm", "Dbm", "Dm", "Ebm", "Em", "Fm", "Gbm", "Gm", "Abm"]
+    }
+
+    /// The accidental a key is already written in, so opening a song in Eb does not
+    /// show a picker full of sharps with nothing selected.
+    static func accidental(of key: String) -> Accidental {
+        key.contains("b") && key != "B" && !key.hasPrefix("Bm") ? .flat : .sharp
+    }
+
+    /// The same key spelled the other way, so flipping the toggle keeps the current
+    /// selection rather than clearing it. Nil when there is no equivalent (a natural
+    /// key is spelled identically in both).
+    static func respelled(_ key: String, as accidental: Accidental) -> String? {
+        guard !key.isEmpty else { return nil }
+        let isMinor = key.hasSuffix("m")
+        let from = isMinor ? minorKeys(accidental == .sharp ? .flat : .sharp) : majorKeys(accidental == .sharp ? .flat : .sharp)
+        let to = isMinor ? minorKeys(accidental) : majorKeys(accidental)
+        guard let index = from.firstIndex(of: key) else { return nil }
+        return to[index]
+    }
+
+    // MARK: - Tempo
 
     var tempoValue: Int? {
         let trimmed = tempo.trimmed
         guard !trimmed.isEmpty, let value = Int(trimmed), value > 0 else { return nil }
         return value
+    }
+
+    /// Digits only, capped at four characters. Applied as the user types so a tempo
+    /// field cannot hold "abc" and silently save nothing — the alternative (accept
+    /// anything, drop it at save) loses input without saying so.
+    static func sanitizedTempo(_ raw: String) -> String {
+        String(raw.filter(\.isNumber).prefix(4))
     }
 
     // MARK: - Validation (port of core's validateSongForm)
@@ -64,11 +112,15 @@ struct SongForm: Equatable {
         var isEmpty: Bool { title == nil && defaultKey == nil && tags == nil }
     }
 
+    /// Terse on purpose. The field label already names the field and the asterisk's
+    /// colour already says whether it blocks saving or only publishing, so spelling
+    /// out "Key is required to publish" beneath a narrow field just wrapped onto two
+    /// lines and said the same thing three times.
     var errors: Errors {
         var errors = Errors()
-        if title.trimmed.isEmpty { errors.title = "Title is required" }
-        if defaultKey.isEmpty { errors.defaultKey = "Key is required" }
-        if tags.isEmpty { errors.tags = "At least one tag is required" }
+        if title.trimmed.isEmpty { errors.title = "Required" }
+        if defaultKey.isEmpty { errors.defaultKey = "Required" }
+        if tags.isEmpty { errors.tags = "Required" }
         return errors
     }
 
@@ -87,6 +139,16 @@ struct SongForm: Equatable {
     /// Title is the one field that cannot be deferred: `songs.title` is NOT NULL, and
     /// the slug for a new row is derived from it.
     var isSavable: Bool { !title.trimmed.isEmpty }
+
+    /// What is still missing before this song could go live, for the one summary the
+    /// editor shows instead of repeating itself per field.
+    var missingForPublish: [String] {
+        var missing: [String] = []
+        if errors.title != nil { missing.append("title") }
+        if errors.defaultKey != nil { missing.append("key") }
+        if errors.tags != nil { missing.append("a tag") }
+        return missing
+    }
 
     // MARK: - Mapping
 
@@ -119,16 +181,22 @@ struct SongForm: Equatable {
     /// is right on its own: typing "worship" must not mint a second tag alongside
     /// "Worship" and split the filter, but a genuinely new tag has to keep the
     /// casing the user chose. Hence snap-if-known, keep-as-typed otherwise.
-    ///
-    /// Pass `knownTags` from `LibraryViewModel.availableTags`. With none supplied the
-    /// input is kept verbatim, which is the safe direction — a tag that duplicates an
-    /// existing one by case is fixable, a silently rewritten one is not.
-    mutating func addTag(_ raw: String, knownTags: [String] = []) {
+    @discardableResult
+    mutating func addTag(_ raw: String, knownTags: [String] = []) -> Bool {
         let typed = raw.trimmed
-        guard !typed.isEmpty else { return }
+        guard !typed.isEmpty else { return false }
         let tag = knownTags.first { $0.caseInsensitiveCompare(typed) == .orderedSame } ?? typed
-        guard !tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return }
+        guard !tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return false }
         tags.append(tag)
+        return true
+    }
+
+    /// Add every tag in a comma-separated string. Pasting "Slow, Praise, Hymn"
+    /// should land three tags, not one tag with commas in it.
+    mutating func addTags(commaSeparated raw: String, knownTags: [String] = []) {
+        for piece in raw.split(separator: ",") {
+            addTag(String(piece), knownTags: knownTags)
+        }
     }
 
     mutating func removeTag(_ tag: String) {
@@ -150,8 +218,7 @@ struct SongForm: Equatable {
         for pattern in [#"[?&]v=([a-zA-Z0-9_-]{11})"#, #"youtu\.be/([a-zA-Z0-9_-]{11})"#, #"shorts/([a-zA-Z0-9_-]{11})"#] {
             if let range = trimmed.range(of: pattern, options: .regularExpression) {
                 let match = String(trimmed[range])
-                let id = String(match.suffix(11))
-                return (id, true)
+                return (String(match.suffix(11)), true)
             }
         }
         return (trimmed, false)
