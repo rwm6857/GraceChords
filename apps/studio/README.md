@@ -340,3 +340,44 @@ hidden (`.detailOnly`) and the detail column renders either the library or the
 viewer, with a manual back button in the viewer's toolbar. It stays one view
 hierarchy at both sizes, so crossing the threshold never resets search text,
 selection, or scroll position (all held in `LibraryViewModel`).
+
+### The NSTableView reentrancy warning at launch
+
+Every launch logs one line:
+
+```
+WARNING: Application performed a reentrant operation in its NSTableView delegate.
+This warning will become an assert in the future.
+```
+
+**It is cosmetic, it predates the editor, and it is not worth chasing.** Recorded
+here so nobody re-runs the investigation.
+
+It was bisected by controlled experiment — each candidate removed in isolation, the
+app relaunched, and the warning counted. Ruled out individually:
+
+| Removed | Warning |
+|---|---|
+| `SongLibraryView`'s `onGeometryChange` width mutation | still there |
+| `applyLayout`'s split-visibility mutation (zero-width guard) | still there |
+| `List(selection:)` binding | still there |
+| `Section` + header wrapper | still there |
+| `SongRow` (replaced with plain `Text`) | still there |
+| **206 rows → ~26 rows, structure byte-identical** | **gone** |
+
+So the trigger is **row count**, not anything our code does wrong: it is SwiftUI's
+`List`/`NSTableView` bridging materialising a large sectioned list into a sidebar in
+one pass. The only fix available to us would be to stop handing SwiftUI the whole
+catalog at once — paging or chunking the sidebar — which would put macOS selection,
+keyboard navigation, the A–Z index and search at risk to silence a log line. Not a
+trade worth making.
+
+Two things that investigation also settled, worth not re-deriving:
+
+- `applyLayout` receives exactly one width at launch (**1257**, never 0), so a
+  `width > 0` guard against a zero first pass is dead code. A `GeometryReader` here
+  does not report 0 before its first real layout.
+- "Will become an assert in the future" is AppKit's standard deprecation phrasing. If
+  a future macOS does make it fatal it will affect a great many SwiftUI apps at once,
+  and the remedy will be whatever Apple's guidance is then — not a bespoke
+  restructuring now.
