@@ -231,7 +231,7 @@ struct ManageSongsView: View {
                 Button {
                     requestNavigation(to: .new)
                 } label: {
-                    Label("New Song", systemImage: "square.and.pencil")
+                    Label("New Song", systemImage: "doc.badge.plus")
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -503,7 +503,11 @@ struct SongEditorView: View {
     private var toolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
             Button(action: onNewSong) {
-                Label("New Song", systemImage: "square.and.pencil")
+                // Not `square.and.pencil` — that is the Manage section's own icon in
+                // the picker immediately to the right, and two identical glyphs side by
+                // side read as the same control twice. A doc-with-plus badge says "make
+                // a new one" rather than "edit".
+                Label("New Song", systemImage: "doc.badge.plus")
             }
             .keyboardShortcut("n", modifiers: .command)
             .help("New song (⌘N)")
