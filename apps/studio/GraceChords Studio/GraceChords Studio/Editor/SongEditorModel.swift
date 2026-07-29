@@ -21,6 +21,10 @@
 // SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY.
 import Combine
 import Foundation
+// SwiftUI for `TextSelection`. The caret lives here rather than in the view because
+// the menu bar's Insert commands have to act on it, and a menu cannot reach a view's
+// private @State.
+import SwiftUI
 
 @MainActor
 final class SongEditorModel: ObservableObject {
@@ -77,6 +81,9 @@ final class SongEditorModel: ObservableObject {
     /// this is the parser throwing, not an advisory finding.
     @Published private(set) var previewErrorText: String?
     @Published var showsPreview = true
+
+    /// Where the caret is in the ChordPro body, bound by the editor's TextEditor.
+    @Published var selection: TextSelection?
 
     /// How the last Save or Publish went, for the badge on its toolbar button.
     ///
@@ -216,16 +223,45 @@ final class SongEditorModel: ObservableObject {
     /// services reference in the view.
     var bridge: CoreBridge? { services.bridge }
 
-    /// Insert `text` over the given UTF-16 range, through core. Returns where the
-    /// caret or selection should land, or nil if the edit could not be applied.
-    func insert(_ text: String, over range: (start: Int, end: Int)) -> ChordProEdit.Selection? {
+    /// UTF-16 range of the current selection, defaulting to the end of the body.
+    ///
+    /// Appending when there is no caret yet is the useful default: the toolbar is most
+    /// often used on a body written top to bottom, and inserting at offset 0 would push
+    /// new sections above everything already typed.
+    var selectionRange: (start: Int, end: Int) {
+        guard let selection = selection else {
+            let end = form.chordproContent.utf16.count
+            return (end, end)
+        }
+        return selection.utf16Range(in: form.chordproContent)
+    }
+
+    var hasSelection: Bool {
+        let range = selectionRange
+        return range.end > range.start
+    }
+
+    var selectedText: String {
+        let text = form.chordproContent
+        let range = selectionRange
+        guard range.end > range.start else { return "" }
+        let lower = text.index(fromUTF16Offset: range.start)
+        let upper = text.index(fromUTF16Offset: range.end)
+        guard lower <= upper else { return "" }
+        return String(text[lower..<upper])
+    }
+
+    /// Insert `text` at the caret, replacing any selection, through core.
+    func insert(_ text: String) {
+        let range = selectionRange
         apply { bridge in
             try bridge.insertAtCursor(in: form.chordproContent, start: range.start, end: range.end, text: text)
         }
     }
 
-    /// Wrap the given UTF-16 range in a section block, through core.
-    func wrap(_ preset: SectionPreset, over range: (start: Int, end: Int)) -> ChordProEdit.Selection? {
+    /// Wrap the selection in a section block, through core.
+    func wrap(_ preset: SectionPreset) {
+        let range = selectionRange
         apply { bridge in
             try bridge.wrapSection(
                 in: form.chordproContent,
@@ -237,18 +273,27 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
-    private func apply(_ edit: (CoreBridge) throws -> ChordProEdit) -> ChordProEdit.Selection? {
+    /// Wrap using the core preset with this label — how the menu-bar commands reach
+    /// the same code path the toolbar buttons use, without duplicating the preset list.
+    func wrapSection(labeled label: String) {
+        guard let preset = (try? services.bridge?.sectionPresets())??
+            .first(where: { $0.label == label }) else { return }
+        wrap(preset)
+    }
+
+    private func apply(_ edit: (CoreBridge) throws -> ChordProEdit) {
         guard let bridge = services.bridge else {
             errorText = services.bridgeErrorText ?? "The ChordPro helpers are unavailable."
-            return nil
+            return
         }
         do {
             let result = try edit(bridge)
             form.chordproContent = result.value
-            return result.selection
+            // Against the NEW body — the offsets core returned index into that, not the
+            // text the range was read from.
+            selection = TextSelection.spanning(result.selection, in: form.chordproContent)
         } catch {
             errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
-            return nil
         }
     }
 

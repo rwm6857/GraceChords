@@ -273,6 +273,15 @@ accepts verse|chorus|bridge|intro|tag|outro and would silently drop anything els
 chord list is core's `getDiatonicChords`, so "the seven chords in this key" has one
 definition rather than a Swift guess at music theory.
 
+**Verse, Chorus and Bridge have key equivalents** — ⌃⌘V / ⌃⌘C / ⌃⌘B — in Edit, since
+those three are most of the typing in a chart. The modifier is ⌃⌘ rather than plain ⌃
+or ⌥ because both of those are already spoken for inside a text view: ⌃B and ⌃V are
+`NSTextView`'s emacs bindings (`moveBackward` / `pageDown`), so binding them would
+break cursor movement in the body, and ⌥C types `ç` — which Turkish lyrics need, and
+the catalog has Turkish songs (⌥V and ⌥B are √ and ∫). ⇧⌘V is Paste and Match Style,
+which leaves ⌃⌘ as the free, conventional space for app-specific verbs. The tooltips
+name the shortcut, from the same lookup the commands use, so the two cannot drift.
+
 Section buttons **wrap the selection** when there is one and insert an empty block with
 the caret on its content line when there is not; the tooltip says which you will get,
 because silently doing the other one is confusing. This needs the caret, which is why

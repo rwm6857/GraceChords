@@ -57,9 +57,6 @@ struct SongEditorView: View {
     private static let formMaximumWidth: CGFloat = 680
 
     @State private var availableWidth: CGFloat = 0
-    /// Where the caret is in the ChordPro body. Needed so the quick-insert toolbar can
-    /// insert at the caret and wrap what is selected, rather than only appending.
-    @State private var selection: TextSelection?
 
     private enum PaneLayout { case editorOnly, previewOnly, split }
 
@@ -414,14 +411,14 @@ struct SongEditorView: View {
 
             ChordProToolbar(
                 key: model.form.defaultKey,
-                hasSelection: hasSelection,
+                hasSelection: model.hasSelection,
                 bridge: model.bridge,
-                onInsert: applyInsert,
-                onWrap: applyWrap,
-                macroSource: { selectedText.isEmpty ? model.form.chordproContent : selectedText }
+                onInsert: model.insert,
+                onWrap: model.wrap,
+                macroSource: { model.selectedText.isEmpty ? model.form.chordproContent : model.selectedText }
             )
 
-            TextEditor(text: $model.form.chordproContent, selection: $selection)
+            TextEditor(text: $model.form.chordproContent, selection: $model.selection)
                 .font(.system(size: 12.5, weight: .regular, design: .monospaced))
                 .lineSpacing(2)
                 // Spelling and autocorrect fight ChordPro constantly: {sov} and
@@ -433,49 +430,6 @@ struct SongEditorView: View {
                 .background(GCColor.bg)
                 .frame(minHeight: 200)
         }
-    }
-
-    // MARK: - Quick insert
-
-    /// UTF-16 range of the current selection, defaulting to the end of the body.
-    ///
-    /// Appending when there is no caret yet is the useful default: the toolbar is most
-    /// often used on a body being written top to bottom, and inserting at offset 0
-    /// would push new sections above everything already typed.
-    private var selectionRange: (start: Int, end: Int) {
-        let text = model.form.chordproContent
-        guard let selection = selection else {
-            let end = text.utf16.count
-            return (end, end)
-        }
-        return selection.utf16Range(in: text)
-    }
-
-    private var hasSelection: Bool {
-        let range = selectionRange
-        return range.end > range.start
-    }
-
-    private var selectedText: String {
-        let text = model.form.chordproContent
-        let range = selectionRange
-        guard range.end > range.start else { return "" }
-        let lower = text.index(fromUTF16Offset: range.start)
-        let upper = text.index(fromUTF16Offset: range.end)
-        guard lower <= upper else { return "" }
-        return String(text[lower..<upper])
-    }
-
-    private func applyInsert(_ text: String) {
-        guard let next = model.insert(text, over: selectionRange) else { return }
-        // Against the NEW body — the offsets core returned index into that, not the
-        // text the range was read from.
-        selection = TextSelection.spanning(next, in: model.form.chordproContent)
-    }
-
-    private func applyWrap(_ preset: SectionPreset) {
-        guard let next = model.wrap(preset, over: selectionRange) else { return }
-        selection = TextSelection.spanning(next, in: model.form.chordproContent)
     }
 
     // MARK: - Preview pane

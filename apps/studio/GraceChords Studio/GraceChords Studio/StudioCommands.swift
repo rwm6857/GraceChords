@@ -112,6 +112,30 @@ struct EditorCommands: Commands {
                 .disabled(session?.requestNew == nil)
         }
 
+        // Verse / Chorus / Bridge get key equivalents because they are most of the
+        // typing in a chord chart. The modifier is ⌃⌘ rather than plain ⌃ or ⌥, both of
+        // which are already taken inside a text view:
+        //
+        //   ⌃B / ⌃V are NSTextView's emacs bindings (moveBackward / pageDown), so
+        //   binding them would break cursor movement in the body.
+        //   ⌥C types "ç" — which Turkish lyrics need, and this catalog has Turkish
+        //   songs. ⌥V and ⌥B are √ and ∫.
+        //
+        // ⇧⌘V is Paste and Match Style in text apps, so ⌃⌘ is what is left that is both
+        // free and conventional for app-specific verbs.
+        CommandGroup(after: .pasteboard) {
+            Divider()
+            Group {
+                Button("Wrap as Verse") { editor?.wrapSection(labeled: "Verse") }
+                    .keyboardShortcut("v", modifiers: [.control, .command])
+                Button("Wrap as Chorus") { editor?.wrapSection(labeled: "Chorus") }
+                    .keyboardShortcut("c", modifiers: [.control, .command])
+                Button("Wrap as Bridge") { editor?.wrapSection(labeled: "Bridge") }
+                    .keyboardShortcut("b", modifiers: [.control, .command])
+            }
+            .disabled(editor == nil)
+        }
+
         CommandGroup(replacing: .saveItem) {
             Button("Save") { Task { await editor?.save() } }
                 .keyboardShortcut("s", modifiers: .command)

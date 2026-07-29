@@ -152,10 +152,18 @@ struct ChordProToolbar: View {
     /// whether anything is selected — and silently doing the other one is confusing.
     private func sectionHelp(_ preset: SectionPreset) -> String {
         let directive = "{start_of_\(preset.directive): \(preset.sectionLabel)}"
-        return hasSelection
+        let action = hasSelection
             ? "Wrap the selected lines in \(directive)"
             : "Insert an empty \(directive) block"
+        // Shown here as well as in the Edit menu — a shortcut nobody finds is a
+        // shortcut nobody uses.
+        guard let shortcut = Self.shortcuts[preset.label] else { return action }
+        return "\(action)  (\(shortcut))"
     }
+
+    /// Key equivalents declared in EditorCommands. Kept as a lookup rather than a
+    /// hardcoded string per button so the tooltip cannot drift from the real binding.
+    private static let shortcuts = ["Verse": "⌃⌘V", "Chorus": "⌃⌘C", "Bridge": "⌃⌘B"]
 
     private var macroMenu: some View {
         Menu {
