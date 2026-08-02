@@ -5,12 +5,22 @@
       {
         "appIDs": ["J7Y8NYZ48Q.com.gracechords.app"],
         "components": [
+          { "/": "/", "comment": "Home -> home tab" },
+          { "/": "/songs", "comment": "Song library -> songs tab" },
           { "/": "/song/*", "comment": "Song detail -> viewer/[slug]" },
           { "/": "/songs/*", "comment": "Song detail alias -> viewer/[slug]" },
+          { "/": "/setlist", "comment": "Setlist builder -> setlists tab" },
           { "/": "/setlist/*", "comment": "Shared setlist (slug list) -> setlist import preview" },
           { "/": "/set/*", "comment": "Shared setlist (compact code) -> setlist import preview" },
+          { "/": "/worship", "comment": "Worship mode -> setlists tab" },
           { "/": "/worship/*", "comment": "Shared worship set -> setlist import preview" },
-          { "/": "/s/*", "comment": "Live session follower -> session/[code]" }
+          { "/": "/s/*", "comment": "Live session follower -> session/[code]" },
+          { "/": "/reading", "comment": "Daily Bible reading -> daily tab" },
+          { "/": "/songbook", "comment": "Songbook builder -> songbook" },
+          { "/": "/about", "comment": "About -> about" },
+          { "/": "/profile", "comment": "Profile -> settings (the app has no /profile route)" },
+          { "/": "/posts", "comment": "Blog index - no app parallel -> home tab" },
+          { "/": "/posts/*", "comment": "Blog post - no app parallel -> home tab" }
         ]
       }
     ]
