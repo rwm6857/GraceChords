@@ -8,7 +8,6 @@
   "streakDays_one": "racha de {{count}} día",
   "streakDays_other": "racha de {{count}} días",
   "landingReadingHeader": "Lectura del {{date}} · M'Cheyne",
-  "landingReadCta": "Leer los pasajes de hoy",
   "backToLanding": "Volver a Palabra del día",
   "reflection": {
     "landingHeader": "Tu reflexión",
