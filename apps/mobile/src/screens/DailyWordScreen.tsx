@@ -38,6 +38,7 @@ import {
   useBibleTranslationPref,
 } from '../lib/bibleTranslationPref'
 import { markReadToday, streakDateKey } from '../lib/readingStreak'
+import { resolveInitialPassageIndex } from '../lib/readerPassage'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
@@ -77,7 +78,14 @@ function chipLabel(passage: Passage) {
 // true only when the Reader was PUSHED from the landing (app/daily/reader.tsx);
 // as the Daily Word tab root (reader-direct mode) it is false and the layout is
 // unchanged from before the landing existed.
-export default function DailyWordScreen({ showBackToLanding = false }: { showBackToLanding?: boolean } = {}) {
+//
+// `initialPassageId` is a core `passageId()` naming which of today's readings to
+// open on — set when a specific reading was tapped on the landing. An unknown or
+// missing id falls back to the day's first passage.
+export default function DailyWordScreen({
+  showBackToLanding = false,
+  initialPassageId,
+}: { showBackToLanding?: boolean; initialPassageId?: string } = {}) {
   const t = useTheme()
   const router = useRouter()
   const { t: tx, i18n } = useTranslation('reader')
@@ -87,7 +95,12 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   const { translations, groups, defaultTranslationId } = useBibleTranslations()
 
   const [date, setDate] = useState(() => new Date())
-  const [passageIndex, setPassageIndex] = useState(0)
+  const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
+  // Seeded synchronously (not in an effect) so a passage tapped on the landing
+  // is the FIRST chapter fetched — no flash of the day's first reading.
+  const [passageIndex, setPassageIndex] = useState(() =>
+    resolveInitialPassageIndex(passages, initialPassageId),
+  )
   // The user's explicit, persisted translation pick ('' = none yet).
   const storedTranslationId = useBibleTranslationPref()
   // Highlights persist per passage (keyed by passageId), stored to disk and
@@ -102,7 +115,6 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   // Copy FAB press feedback: 0 = resting, 1 = pressed (scale-down + dim).
   const fabPress = useRef(new Animated.Value(0)).current
 
-  const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
   const currentPassage: Passage | null = passages[passageIndex] || passages[0] || null
 
   // Resolve the active translation: a stored pick always wins; with no prior
@@ -135,8 +147,14 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   }, [chapter, currentPassage])
 
   // A new day starts on its first passage. Highlights are keyed by passage, so
-  // they survive date/chapter switches without being cleared here.
+  // they survive date/chapter switches without being cleared here. The mount run
+  // is skipped so it can't stomp on the `initialPassageId` seed above.
+  const dateSettled = useRef(false)
   useEffect(() => {
+    if (!dateSettled.current) {
+      dateSettled.current = true
+      return
+    }
     setPassageIndex(0)
   }, [date])
 

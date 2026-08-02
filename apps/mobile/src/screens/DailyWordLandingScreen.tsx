@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } fr
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { formatPassageLabel } from '@gracechords/core'
+import { formatPassageLabel, passageId, type Passage } from '@gracechords/core'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
 import Button from '../components/Button'
@@ -98,7 +98,12 @@ export default function DailyWordLandingScreen() {
     }, [refresh]),
   )
 
-  const openReader = () => router.push('/daily/reader')
+  // Open the Reader ON the tapped reading. The passage travels as core's
+  // `passageId()` rather than a list index, so the Reader resolves it against
+  // its own copy of the day's plan (and falls back to the first passage if it
+  // can't match) instead of trusting two lists to stay in the same order.
+  const openReader = (passage: Passage) =>
+    router.push({ pathname: '/daily/reader', params: { passage: passageId(passage) } })
 
   const onDelete = () => {
     Alert.alert(tx('reflection.deleteTitle'), tx('reflection.deleteMessage'), [
@@ -195,7 +200,7 @@ export default function DailyWordLandingScreen() {
             {passages.map((p, i) => (
               <Pressable
                 key={`${p.bookNumber}-${p.chapter}-${i}`}
-                onPress={openReader}
+                onPress={() => openReader(p)}
                 accessibilityRole="button"
                 accessibilityLabel={formatPassageLabel(p)}
                 style={({ pressed }) => ({
@@ -245,13 +250,9 @@ export default function DailyWordLandingScreen() {
           </Card>
         )}
 
-        {passages.length > 0 ? (
-          <Button
-            title={tx('landingReadCta')}
-            onPress={openReader}
-            style={{ marginTop: t.spacing.md }}
-          />
-        ) : null}
+        {/* No "Read today's passages" CTA below the list: each row now opens the
+            Reader on its own chapter, so a button that could only ever open the
+            first one duplicated the list without adding a destination. */}
 
         {/* Shared Reflections — anonymous community feed (flag-gated, above the
             user's own reflection per the design decision). Under-13 users see

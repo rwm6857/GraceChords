@@ -8,7 +8,6 @@
   "streakDays_one": "{{count}}일 연속",
   "streakDays_other": "{{count}}일 연속",
   "landingReadingHeader": "{{date}} 읽기 · 맥체인",
-  "landingReadCta": "오늘의 본문 읽기",
   "backToLanding": "오늘의 말씀으로 돌아가기",
   "reflection": {
     "landingHeader": "나의 묵상",
