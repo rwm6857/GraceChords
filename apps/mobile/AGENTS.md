@@ -223,10 +223,20 @@ duplicate logic here and never edit core internals to suit mobile.
   `choose-icon` is reachable both with and without a session (post-signup step —
   email confirmation may still be pending).
 - **Deep links / Universal Links.** iOS Universal Links are wired via
-  `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`) +
-  `app/+native-intent.tsx` `redirectSystemPath`, and the AASA file lives in the
-  **web** repo at `apps/web/public/.well-known/apple-app-site-association`.
-  Handled paths:
+  `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`);
+  Android App Links via `android.intentFilters` in `app.json`. Which paths each
+  platform claims lives in the **web** repo — the AASA file at
+  `apps/web/public/.well-known/apple-app-site-association` and `assetlinks.json`
+  beside it. **`apps/web/public/.well-known/README.md` holds the canonical claim
+  table**; those three files plus `app.json` must agree. Paths are enumerated,
+  never wildcarded across the domain, because Android has no exclusion
+  mechanism — auth (`/login`, `/auth/callback`, `/reset-password`, …), the
+  admin/editor portal, and the legal pages the app links *out* to are
+  deliberately unclaimed.
+  - **The mapping is `src/lib/deepLinks.ts`** (`resolveDeepLinkPath`, pure and
+    unit-tested — one case per claim-table row). `app/+native-intent.tsx` is a
+    thin `redirectSystemPath` wrapper over it. Add a claim in three places at
+    once: AASA, `android.intentFilters`, and `deepLinks.ts` (+ a test).
   - `/song/:id`, `/songs/:id` (id == slug) → `/viewer/:slug` (the app has no
     `/song` route).
   - Shared setlists `/setlist/<slugs>?toKeys=`, `/set/<CODE>`, and the
@@ -236,10 +246,20 @@ duplicate logic here and never edit core internals to suit mobile.
     split for the slug-list form; slugs resolve against the shared catalog, misses
     are dropped with a warning, and "Save to my setlists" creates a normal setlist
     row (default name "Imported setlist"). Shared links never carry a title.
-  Changing `associatedDomains` / `intentFilters` needs a **fresh native build**
-  (prebuild + EAS), not an OTA. **TODO(android)** — `android.intentFilters` are
-  wired but dormant until an Android signing key exists and its SHA-256 lands in
-  the web `assetlinks.json`.
+  - `/s/:code` → `/session/:code`. Index/landing pages map to their tab
+    (`/` → home, `/songs`, `/setlist` → `/setlists`, `/reading` → `/daily`), and
+    web-only pages with no counterpart (the blog) resolve to the home tab rather
+    than dead-ending. Anything unrecognised passes through unchanged, which is
+    what keeps `gracechords://` links working.
+  - **Build impact differs per platform.** Editing `associatedDomains` or
+    `intentFilters` needs a **fresh native build** (prebuild + EAS), not an OTA.
+    But adding a *path* is only an AASA edit on iOS — no new build, just a web
+    deploy (devices cache the AASA, so expect refresh lag). Android compiles its
+    filters into `AndroidManifest.xml`, so a path change there **does** need a
+    rebuild.
+  - **Known gap:** a deep link is lost when signed out. `app/_layout.tsx` treats
+    only the `session` segment as public, so any other inbound link redirects to
+    `/login` and the destination is discarded rather than resumed after sign-in.
 - **Auth flows.** Email/password plus native Google
   (`@react-native-google-signin/google-signin`) and Apple
   (`expo-apple-authentication`, iOS-only button) via

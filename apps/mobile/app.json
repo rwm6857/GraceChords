@@ -32,11 +32,23 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
+            { "scheme": "https", "host": "gracechords.com", "path": "/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPattern": "/*" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songs" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/setlist" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/setlist/" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/set/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" }
+            { "scheme": "https", "host": "gracechords.com", "path": "/worship" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/s/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/reading" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songbook" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/about" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/profile" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/posts" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
