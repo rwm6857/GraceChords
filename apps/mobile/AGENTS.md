@@ -454,6 +454,30 @@ duplicate logic here and never edit core internals to suit mobile.
   Settings, so they reset on relaunch. **Follow-up:** `apps/web`'s
   `features/readings` + `utils/bible` still hold their own copy of this logic;
   migrate web onto core's `bible` module to remove the duplication.
+  - **Swipe between chapters** is `src/components/reader/ChapterSwipe.tsx`
+    (Reanimated + RNGH), modelled on the Bible app's reader: the page **tracks
+    the finger**, a chevron pill slides in from the edge you pull away from and
+    **illuminates** (accent fill) once the commit threshold is crossed, crossing
+    it fires **one** light haptic (re-arming if you drag back under), and release
+    past it carries the page off and commits — short of it, it springs back. At
+    the first/last reading the drag rubber-bands against a short stop with no
+    pill and no haptic. The neighbouring chapter is not rendered during the drag;
+    the commit plays as carry-off → new content in from the opposite edge, and
+    that entrance is replayed for **every** content change (`contentKey`), which
+    is what makes chip taps and translation switches fade too. The pills are
+    geometric, not semantic — the right-edge pill always carries
+    `chevron.right`, which reads as forward in LTR and back in RTL — and they
+    are decorative (`pointerEvents="none"`, hidden from assistive tech): the
+    chapter chips above the reading are the accessible navigation.
+    - **The drag math is `src/lib/readerSwipe.ts`** — threshold, over-drag
+      slowing, the end-of-list rubber band, flick-to-commit — pure worklets, so
+      the *feel* is unit-tested with `npm run test`. Tune the numbers there, not
+      in the component; the component keeps only animation timings. Don't wrap
+      the pills in `GlassSurface`: their opacity animates to 0, which the glass
+      material can't survive (see the note under Primitives).
+    - `DailyWordScreen` prefetches the chapters on either side of the current
+      one so a committed swipe lands on text, not a spinner (`prefetchToday`
+      only warms today in the *default* translation).
 - **Offline downloads** (`src/lib/downloads/`, reached from Settings →
   `OfflineDownloadsScreen`) let users save a **whole Bible translation** for
   offline reading — every chapter is enumerated up front from core's
