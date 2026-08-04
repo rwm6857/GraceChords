@@ -225,7 +225,12 @@ duplicate logic here and never edit core internals to suit mobile.
 - **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
   session (redirect to `/login` when signed out, into the tabs when signed in) and
   holds the native splash (`expo-splash-screen`) until the session resolves *and*
-  the correct screen is mounted, so nothing flashes on first open. Session persists
+  the correct screen is mounted, so nothing flashes on first open. The hold then
+  hands off to `src/components/SplashOverlay.tsx` — a view drawn pixel-identical to
+  the native splash (transparent `assets/splash-icon*.png` mark at `imageWidth`,
+  system-appearance background) that zooms the mark out and cross-fades to reveal
+  the app, honours Reduce Motion, and owns the **only** `hideAsync()` call on the
+  normal launch path (`ConfigErrorScreen` still lifts it directly). Session persists
   via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
   `choose-icon` is reachable both with and without a session (post-signup step —
   email confirmation may still be pending).
