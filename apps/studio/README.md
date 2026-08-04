@@ -416,6 +416,82 @@ ships monospaced and unhighlighted. Clicking a lint warning to jump to its line
 waits on the same change, and `LintWarning.lineIndex` is inconsistent besides
 (section-relative for most codes, body-relative for `warn:section_mismatch`).
 
+### Importing a PDF
+
+Drop a text-based chord sheet on the editor's import sheet (⇧⌘I, the toolbar's
+`document.badge.arrow.down`, or File ▸ Import from PDF) and its title, key, artist,
+sections, lyrics and inline chords land in the form as unsaved work.
+
+The split is: **extraction is native, every judgement is core's.**
+`Import/PDFTextExtractor.swift` produces positioned text — words with rects, lines
+with fonts, per-page column assignments — and hands it over the bridge as JSON to
+`packages/core/src/songs/pdfImport.ts`, which decides what is a chord line, where a
+section starts and which syllable a chord belongs to. Those heuristics are pure
+string and geometry math with no platform in them, Studio has no test target, and
+the web editor could feed the same function from pdf.js later; they are covered by
+`apps/web/src/__tests__/pdfImport*.test.js`, whose fixtures are chord sheets written
+as ASCII art and converted to geometry.
+
+**`PDFPage.characterBounds(at:)` is deliberately not the geometry source.** It has
+regressed twice — [FB14843671](https://developer.apple.com/forums/thread/762788) is
+still open, and [FB12951475](https://developer.apple.com/forums/thread/735598) hit
+`characterIndex(at:)` in shipping iOS 17 with "accuracy worsening further down the
+page" — and it fails *silently*, returning plausible rects from the wrong row, which
+for a chord sheet means chords landing confidently in the wrong place. Line and word
+geometry come from `PDFSelection` instead. Per-character bounds is used only to
+resolve a mid-word chord split inside a word already located, is measured only for
+words long enough to be eligible, and every rect is checked against its enclosing
+word before it is trusted — so a bad measurement costs precision, never correctness.
+
+**The bias everywhere is refuse-and-warn over guess.** A chord line may only pair
+with lyrics in the same column whose x-range overlaps it by half; failing that it
+stays on its own line, spacing intact, with a warning. A block opening a column or a
+page continues the section it was torn from rather than starting a new one, which
+keeps a straddling verse in one piece at the cost of a genuine break that lands
+exactly on the boundary — named in a warning, not silent. A page whose columns cannot
+be read has pairing switched off wholesale. A chord line standing above its lyrics is
+obvious and one keystroke to fix; a chord silently stamped on the wrong line is
+neither.
+
+There is **no review step** — the result goes into the editor, which is where it
+would be edited anyway. What the importer was unsure about appears in the editor's
+status banner, and below a confidence threshold the banner offers **Copy
+Diagnostics**: the complete extraction JSON, which
+`node "apps/studio/js/pdf-draft.mjs" <file>.json` replays through the heuristics
+without Xcode. That is the loop for tuning against a chart that came out wrong.
+
+**Fragments are the thing real charts do that nothing else prepares you for.** A
+PraiseCharts or OnSong PDF does not store a lyric line as one text run — it emits a
+separate positioned run under each chord, and `selectionsByLine()` hands each of those
+back as its own "line" (43 of 77 lines on one chart, 78 of 129 on another). So words
+are collected page-wide and regrouped into visual lines by baseline here, not taken
+from PDFKit's line model. Before that, no chord line had a lyric line beneath it to
+pair with and every chart imported with 45–80 unpaired chord lines.
+
+Because a full-width credits or footer line fills the gutter in any horizontal
+measurement, **columns are found by clustering where body lines start** rather than by
+looking for a gap in an x-projection profile. A line is cut in two only when it has no
+word in the gutter itself; a wide line that merely reaches across it stays whole. Gap
+*width* alone is not sufficient, and getting that wrong cut one chart's title in half.
+
+Five rules were tried, disproved against real PDFs, and are documented at their sites
+so they are not re-added:
+
+- a median-based stanza-gap threshold — chord-sheet pitches form two clusters, so the
+  median lands in the valley between them;
+- dropping lines repeated across pages — a chart whose every line sits under an `A`
+  loses one chord per section, silently, since the lyrics survive;
+- splitting a section at every vertical gap — real charts space stanzas generously, so
+  this turned one eight-line verse into three sections with invented labels. Once a
+  heading has been seen, only a heading starts a section;
+- letting this file decide what is a header or footer — on a real chart the key and
+  tempo share a line with the publisher's URL, so dropping it as furniture threw the
+  song's key away before core could read it. Core strips furniture from the body; this
+  file only keeps it out of the column evidence, and removes nothing but text far
+  smaller than the body (fingering diagrams);
+- requiring a gutter to run most of the way down the page — a right column often holds
+  one short section and occupies only the top third.
+
 ### Search
 
 Client-side over the already-loaded list, ranked exactly as

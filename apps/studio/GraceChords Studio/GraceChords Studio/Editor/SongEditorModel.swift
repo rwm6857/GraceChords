@@ -17,6 +17,8 @@
 //  the run loop.
 //
 
+// AppKit for NSPasteboard — the import banner's Copy Diagnostics.
+import AppKit
 // Combine is imported explicitly because the target builds with
 // SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY.
 import Combine
@@ -100,6 +102,37 @@ final class SongEditorModel: ObservableObject {
     @Published private(set) var isSaving = false
     @Published var errorText: String?
     @Published var statusMessage: String?
+
+    // MARK: - PDF import
+
+    @Published var showsImportSheet = false
+    @Published private(set) var isImporting = false
+    @Published private(set) var importingFilename: String?
+    /// Failures stay in the sheet, not the editor's banner: the user is still standing
+    /// at the dropzone and the useful next move is to drop a different file.
+    @Published var importError: String?
+    /// A draft waiting on "replace the current text?". Non-nil drives the confirmation.
+    @Published var pendingImport: SongDraft?
+    /// What the last import did and what to check, for the editor's banner.
+    @Published var importSummary: String?
+    @Published private(set) var importConfidence: Int?
+    /// The extraction behind the last import, kept only so its JSON can be copied out
+    /// when the result needs tuning. Cleared with the banner.
+    private var lastImportDiagnostics: PDFExtraction?
+
+    /// Below the confidence bar the banner offers the diagnostics as well as the
+    /// summary — that is the pair that makes a bad import fixable rather than
+    /// mysterious.
+    var importNeedsAttention: Bool {
+        guard let confidence = importConfidence else { return false }
+        return confidence < SongDraft.lowConfidence
+    }
+
+    func dismissImportSummary() {
+        importSummary = nil
+        importConfidence = nil
+        lastImportDiagnostics = nil
+    }
 
     private let services: AppServices
     private var refreshTask: Task<Void, Never>?
@@ -301,6 +334,135 @@ final class SongEditorModel: ObservableObject {
     /// reused so an unparseable draft still previews something readable.
     var rawFallbackLines: [String] {
         SongViewerModel.rawFallbackLines(from: form.chordproContent)
+    }
+
+    // MARK: - PDF import
+
+    /// Read a chord-sheet PDF and put it in the form.
+    ///
+    /// Extraction runs off the main thread — PDFKit's thread safety is undocumented,
+    /// so it gets one detached task rather than a shared queue — and the bridge call
+    /// happens back on the main actor, because CoreBridge is not thread-safe.
+    ///
+    /// A body that already has text in it is not replaced without asking: the import
+    /// has no review step, so this is the one point where a confirmation is worth its
+    /// cost. `pendingImport` holds the draft while the editor asks.
+    func importPDF(from url: URL) {
+        start(named: url.lastPathComponent) { try PDFTextExtractor.extract(from: url) }
+    }
+
+    /// Import bytes already read on the app's behalf — the drag-and-drop path.
+    ///
+    /// A file URL taken off the dragging pasteboard carries no sandbox grant, so the
+    /// drop handler fetches the bytes through the item provider and passes them here
+    /// rather than a URL this process is not allowed to open.
+    func importPDF(data: Data, filename: String) {
+        start(named: filename) { try PDFTextExtractor.extract(from: data) }
+    }
+
+    private func start(named filename: String, _ read: @escaping @Sendable () throws -> PDFExtraction) {
+        guard !isImporting else { return }
+        isImporting = true
+        importError = nil
+        importingFilename = filename
+
+        Task { [weak self] in
+            let outcome: Result<PDFExtraction, Error>
+            do {
+                // Detached, because this Task would otherwise inherit the model's
+                // MainActor isolation and read the whole document on the main thread.
+                outcome = .success(try await Task.detached(priority: .userInitiated, operation: read).value)
+            } catch {
+                outcome = .failure(error)
+            }
+            self?.finishImport(outcome)
+        }
+    }
+
+    private func finishImport(_ outcome: Result<PDFExtraction, Error>) {
+        isImporting = false
+        importingFilename = nil
+
+        guard let bridge = services.bridge else {
+            importError = services.bridgeErrorText ?? "The ChordPro helpers are unavailable, so the PDF cannot be converted."
+            return
+        }
+
+        do {
+            let extraction = try outcome.get()
+            let draft = try bridge.pdfDraft(from: extraction)
+            lastImportDiagnostics = extraction
+            showsImportSheet = false
+            if form.chordproContent.trimmed.isEmpty {
+                apply(draft)
+            } else {
+                pendingImport = draft
+            }
+        } catch {
+            importError = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+        }
+    }
+
+    /// Take the draft the user confirmed replacing their text with.
+    func confirmPendingImport() {
+        guard let draft = pendingImport else { return }
+        pendingImport = nil
+        apply(draft)
+    }
+
+    func discardPendingImport() {
+        pendingImport = nil
+        lastImportDiagnostics = nil
+    }
+
+    func cancelImport() {
+        showsImportSheet = false
+        importError = nil
+    }
+
+    func reportImportFailure(_ message: String) {
+        isImporting = false
+        importingFilename = nil
+        importError = message
+    }
+
+    /// The extraction JSON behind the last import, for the banner's Copy Diagnostics.
+    ///
+    /// This is the whole input to `packages/core`'s `buildSongDraft`, so pasting it
+    /// into `node apps/studio/js/pdf-draft.mjs` reproduces the result exactly — which
+    /// is how the heuristics get tuned against a chart that came out wrong.
+    func copyImportDiagnostics() {
+        guard let extraction = lastImportDiagnostics else { return }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(extraction), let json = String(data: data, encoding: .utf8) else {
+            errorText = "The diagnostics could not be encoded."
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(json, forType: .string)
+        statusMessage = "Diagnostics copied."
+    }
+
+    /// One `form` mutation, so the `didSet` above fires once: badges reset and a
+    /// single preview refresh is scheduled rather than one per field.
+    ///
+    /// `savedForm` is deliberately left alone, which makes `isDirty` true — an import
+    /// is unsaved work, exactly as the web editor treats one, and nothing has been
+    /// written to Supabase.
+    private func apply(_ draft: SongDraft) {
+        var next = form
+        if let title = draft.title, !title.isEmpty { next.title = title }
+        if let key = draft.key, !key.isEmpty { next.defaultKey = key }
+        if let artist = draft.artist, !artist.isEmpty { next.artist = artist }
+        if let tempo = draft.tempo, !tempo.isEmpty { next.tempo = tempo }
+        if let time = draft.timeSignature, !time.isEmpty { next.timeSignature = time }
+        next.chordproContent = draft.chordpro
+        form = next
+
+        importSummary = draft.summary
+        importConfidence = draft.confidence
+        errorText = nil
     }
 
     // MARK: - Saving

@@ -29,6 +29,8 @@ export * from './songs/songsRepo'
 // Shared song-authoring form model + slug helpers (web + mobile editors)
 export * from './songs/songAuthoring'
 export * from './songs/slug'
+// Positioned chord-sheet text → ChordPro draft (Studio's PDF import; extractor-agnostic)
+export * from './songs/pdfImport'
 // Personal-song CRUD, editor direct-write, and suggestion submit/review
 export * from './songs/personalSongsRepo'
 export * from './songs/songsWriteRepo'

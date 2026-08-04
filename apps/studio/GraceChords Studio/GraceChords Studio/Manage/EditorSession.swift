@@ -45,6 +45,11 @@ final class EditorSession: ObservableObject {
     /// instead of a second, unguarded one.
     var requestNew: (() -> Void)?
 
+    /// Open the PDF import sheet, opening a new song first if the editor is closed.
+    /// Set by the Manage section for the same reason `requestNew` is: File ▸ Import
+    /// from PDF must not be a second path into the editor that skips the guard.
+    var requestImport: (() -> Void)?
+
     func open(_ target: Target, model: SongEditorModel) {
         self.target = target
         self.editor = model

@@ -19,6 +19,7 @@ import {
   wrapSection as coreWrapSection,
 } from '@gracechords/core/chordpro/editing.ts'
 import { getDiatonicChords } from '@gracechords/core/chordpro/diatonicChords.js'
+import { buildSongDraft } from '@gracechords/core/songs/pdfImport.ts'
 
 const STYLES = ['letters', 'solfege']
 
@@ -301,6 +302,41 @@ export function chordVariantsJSON() {
 export function chordToken(symbol) {
   requireString('chordToken', 'symbol', symbol)
   return chordInsertToken(symbol)
+}
+
+/**
+ * Positioned chord-sheet text → a song draft, as JSON.
+ *
+ * Studio extracts the geometry natively with PDFKit and hands it over as JSON
+ * rather than as a JSValue tree, for the same reason `parseToJSON` does: the whole
+ * nested structure crosses in one step and decodes through JSONDecoder. The
+ * heuristics live in core rather than Swift because they are pure string and
+ * geometry math with no platform in them, Studio has no test target to cover them
+ * with, and a web importer feeding pdf.js output into the same function would get
+ * byte-identical drafts.
+ *
+ * The argument is a JSON *string*, not an object: a JSValue tree built from a Swift
+ * dictionary arrives with numbers boxed inconsistently across SDKs, and the
+ * document is a few thousand rects for a long chart — one parse is cheaper and has
+ * one failure mode instead of a per-node one.
+ *
+ * @param {string} extractionJSON  JSON-encoded ExtractedDocument
+ * @returns {string} JSON-encoded SongDraft (see packages/core/src/songs/pdfImport.ts)
+ */
+export function pdfDraftJSON(extractionJSON) {
+  if (typeof extractionJSON !== 'string' || extractionJSON.length === 0) {
+    throw new TypeError(`pdfDraftJSON: extractionJSON must be a non-empty string, got ${describe(extractionJSON)}`)
+  }
+  let doc
+  try {
+    doc = JSON.parse(extractionJSON)
+  } catch (err) {
+    throw new TypeError(`pdfDraftJSON: extractionJSON is not valid JSON — ${err.message}`)
+  }
+  if (!doc || typeof doc !== 'object' || !Array.isArray(doc.lines) || !Array.isArray(doc.pages)) {
+    throw new TypeError('pdfDraftJSON: extractionJSON must decode to { lines: [], pages: [] }')
+  }
+  return JSON.stringify(buildSongDraft(doc))
 }
 
 function requireEditArgs(fn, value, start, end) {

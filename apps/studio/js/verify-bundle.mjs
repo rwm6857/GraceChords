@@ -173,6 +173,7 @@ const REQUIRED_EXPORTS = [
   'diatonicChordsJSON',
   'chordVariantsJSON',
   'chordToken',
+  'pdfDraftJSON',
 ]
 for (const exported of REQUIRED_EXPORTS) {
   if (typeof namespace[exported] !== 'function') {
@@ -727,6 +728,77 @@ for (const [label, call] of [
     fail(`${label}: returned ${JSON.stringify(value)} instead of throwing`)
   } catch (err) {
     console.log(`PASS  ${label} → ${err.constructor.name}`)
+  }
+}
+
+// ── pdfDraftJSON ─────────────────────────────────────────────────────────────
+// Behaviour is covered by vitest against packages/core directly
+// (apps/web/src/__tests__/pdfImport*.test.js). What matters HERE is only that the
+// module survived bundling into a bare JSC-shaped context — every draft it can
+// produce must still parse back through the bundle's own parser, which is the one
+// invariant Studio depends on and cannot check at runtime.
+{
+  const chart = {
+    pages: [{ index: 0, width: 612, height: 792, columnCount: 1, layoutTrusted: true }],
+    diagnostics: [],
+    lines: [
+      { text: 'Amazing Grace', words: [{ text: 'Amazing', x: 0, y: 0, w: 42, h: 18, start: 0, end: 7 }, { text: 'Grace', x: 48, y: 0, w: 30, h: 18, start: 8, end: 13 }], x: 0, y: 0, w: 78, h: 18, fontSize: 18, isBold: true, page: 0, column: null, startsBlock: true },
+      { text: '(Key of G)', words: [{ text: '(Key', x: 0, y: 28, w: 24, h: 10, start: 0, end: 4 }, { text: 'of', x: 30, y: 28, w: 12, h: 10, start: 5, end: 7 }, { text: 'G)', x: 48, y: 28, w: 12, h: 10, start: 8, end: 10 }], x: 0, y: 28, w: 60, h: 10, fontSize: 10, isBold: false, page: 0, column: null, startsBlock: false },
+      { text: 'Verse 1', words: [{ text: 'Verse', x: 0, y: 56, w: 30, h: 10, start: 0, end: 5 }, { text: '1', x: 36, y: 56, w: 6, h: 10, start: 6, end: 7 }], x: 0, y: 56, w: 42, h: 10, fontSize: 10, isBold: false, page: 0, column: 0, startsBlock: false },
+      { text: 'G       C', words: [{ text: 'G', x: 0, y: 70, w: 6, h: 10, start: 0, end: 1 }, { text: 'C', x: 48, y: 70, w: 6, h: 10, start: 8, end: 9 }], x: 0, y: 70, w: 54, h: 10, fontSize: 10, isBold: false, page: 0, column: 0, startsBlock: false },
+      { text: 'Amazing grace how sweet', words: [{ text: 'Amazing', x: 0, y: 84, w: 42, h: 10, start: 0, end: 7, charX: [0, 6, 12, 18, 24, 30, 36] }, { text: 'grace', x: 48, y: 84, w: 30, h: 10, start: 8, end: 13, charX: [48, 54, 60, 66, 72] }, { text: 'how', x: 84, y: 84, w: 18, h: 10, start: 14, end: 17 }, { text: 'sweet', x: 108, y: 84, w: 30, h: 10, start: 18, end: 23 }], x: 0, y: 84, w: 138, h: 10, fontSize: 10, isBold: false, page: 0, column: 0, startsBlock: false },
+    ],
+  }
+
+  console.log('\npdfDraftJSON (bundled module produces a draft the bundle can parse back):')
+  let draft
+  try {
+    draft = JSON.parse(namespace.pdfDraftJSON(JSON.stringify(chart)))
+  } catch (err) {
+    fail(`pdfDraftJSON threw on a well-formed chart — ${err.message}`)
+  }
+  if (draft) {
+    const checks = [
+      ['title', draft.title === 'Amazing Grace', draft.title],
+      ['key', draft.key === 'G', draft.key],
+      ['section directive', draft.chordpro.includes('{start_of_verse: Verse 1}'), draft.chordpro],
+      ['inline chords', /\[G\]Amazing \[C\]grace/.test(draft.chordpro), draft.chordpro],
+      ['confidence in range', draft.confidence >= 0 && draft.confidence <= 100, draft.confidence],
+    ]
+    for (const [label, ok, actual] of checks) {
+      if (ok) console.log(`PASS  ${label}`)
+      else fail(`pdfDraftJSON ${label}: got ${JSON.stringify(actual)}`)
+    }
+    // The invariant Studio relies on: whatever the importer emits, the parser reads.
+    const reparsed = JSON.parse(namespace.parseToJSON(draft.chordpro))
+    const ok = reparsed.sections.length === 1 && reparsed.sections[0].label === 'Verse 1'
+    if (ok) console.log('PASS  the draft round-trips through the bundle\'s own parser')
+    else fail(`pdfDraftJSON draft did not round-trip: ${JSON.stringify(reparsed.sections)}`)
+  }
+
+  console.log('\npdfDraftJSON error paths:')
+  for (const [label, call] of [
+    ['null input', () => namespace.pdfDraftJSON(null)],
+    ['empty string', () => namespace.pdfDraftJSON('')],
+    ['not JSON', () => namespace.pdfDraftJSON('{lines:')],
+    ['object input', () => namespace.pdfDraftJSON({ lines: [], pages: [] })],
+    ['JSON without lines', () => namespace.pdfDraftJSON('{"pages":[]}')],
+    ['JSON without pages', () => namespace.pdfDraftJSON('{"lines":[]}')],
+  ]) {
+    try {
+      const value = call()
+      fail(`${label}: returned ${JSON.stringify(value)} instead of throwing`)
+    } catch (err) {
+      console.log(`PASS  ${label} → ${err.constructor.name}`)
+    }
+  }
+  // An empty but well-formed document is legitimate input — a PDF with no text
+  // rejects earlier, in Swift, so this must not throw.
+  try {
+    const empty = JSON.parse(namespace.pdfDraftJSON('{"lines":[],"pages":[]}'))
+    console.log(`PASS  empty document → confidence ${empty.confidence}, ${empty.warnings.length} warning(s)`)
+  } catch (err) {
+    fail(`empty document threw — ${err.message}`)
   }
 }
 

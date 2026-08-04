@@ -43,7 +43,18 @@ struct ManageSongsView: View {
         }
         .navigationSplitViewStyle(.balanced)
         // So File ▸ New Song goes through the same guard as the editor's button.
-        .onAppear { session.requestNew = { requestNavigation(to: .new) } }
+        .onAppear {
+            session.requestNew = { requestNavigation(to: .new) }
+            session.requestImport = {
+                // With an editor already open the sheet goes on it — the import's own
+                // "replace the song text?" confirmation covers a body with typing in
+                // it, so there is nothing for this guard to add. With none open, a new
+                // draft is not dirty, so `go` runs synchronously and the editor exists
+                // by the next line.
+                if session.editor == nil { requestNavigation(to: .new) }
+                session.editor?.showsImportSheet = true
+            }
+        }
         .confirmationDialog(
             "Save changes to “\(session.editor?.windowTitle ?? "this song")”?",
             isPresented: Binding(
