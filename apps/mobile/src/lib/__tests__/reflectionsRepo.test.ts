@@ -68,12 +68,16 @@ describe('reflectionsRepo', () => {
     })
   })
 
-  it('fetchReflections returns ALL own reflections (private + public) newest first', async () => {
+  it('fetchReflections filters to the caller’s own PRIVATE reflections, newest first', async () => {
     const { client, recorded } = fakeClient({ data: [] })
     await fetchReflections(client as never)
     expect(recorded.table).toBe('reflections')
-    // Phase 2B: the journal shows both kinds, so no visibility filter here.
-    expect(recorded.calls).not.toContainEqual(['eq', '"visibility"', '"private"'])
+    // Regression guard (App Review Guideline 1.2). RLS SELECT policies are
+    // PERMISSIVE and therefore OR'd: with a public-feed read policy installed,
+    // an unfiltered select returns the caller's own rows PLUS every other
+    // user's public rows, leaking strangers' text into the private journal.
+    // The query must scope itself rather than trusting the policy set.
+    expect(recorded.calls).toContainEqual(['eq', '"visibility"', '"private"'])
     expect(recorded.calls).toContainEqual(['order', '"reflection_date"', '{"ascending":false}'])
   })
 

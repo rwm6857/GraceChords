@@ -143,41 +143,18 @@ export default function ReflectionJournalScreen() {
                       <Text style={{ fontSize: 15.5, fontWeight: '600', color: t.colors.ink }}>
                         {dateLabel}
                       </Text>
-                      {r.visibility === 'public' ? (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 4,
-                            backgroundColor: t.colors.accentSoft,
-                            borderRadius: 6,
-                            paddingHorizontal: 7,
-                            paddingVertical: 2,
-                          }}
-                        >
-                          <SymbolIcon name="person.2.fill" size={10} color={t.colors.textAccent} />
-                          <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.textAccent }}>
-                            {tx('journal.sharedLabel')}
-                          </Text>
-                          <SymbolIcon name="heart.fill" size={9} color={t.colors.danger} />
-                          <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.textAccent }}>
-                            {r.heart_count ?? 0}
-                          </Text>
-                        </View>
-                      ) : (
-                        <View
-                          style={{
-                            backgroundColor: t.colors.surfaceAlt,
-                            borderRadius: 6,
-                            paddingHorizontal: 7,
-                            paddingVertical: 2,
-                          }}
-                        >
-                          <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.muted }}>
-                            {tx('journal.privateLabel')}
-                          </Text>
-                        </View>
-                      )}
+                      <View
+                        style={{
+                          backgroundColor: t.colors.surfaceAlt,
+                          borderRadius: 6,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.muted }}>
+                          {tx('journal.privateLabel')}
+                        </Text>
+                      </View>
                     </View>
                     {passages ? (
                       <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 2 }} numberOfLines={1}>
@@ -214,30 +191,27 @@ export default function ReflectionJournalScreen() {
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        justifyContent: r.visibility === 'private' ? 'space-between' : 'flex-end',
+                        justifyContent: 'space-between',
                         marginTop: t.spacing.md,
                       }}
                     >
-                      {/* Only private reflections are editable — public posts are immutable. */}
-                      {r.visibility === 'private' ? (
-                        <Pressable
-                          onPress={() =>
-                            router.push({
-                              pathname: '/daily/reflection',
-                              params: { editId: r.id, initialBody: r.body, date: r.reflection_date },
-                            })
-                          }
-                          accessibilityRole="button"
-                          accessibilityLabel={tx('reflection.edit')}
-                          hitSlop={8}
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
-                        >
-                          <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
-                          <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
-                            {tx('reflection.edit')}
-                          </Text>
-                        </Pressable>
-                      ) : null}
+                      <Pressable
+                        onPress={() =>
+                          router.push({
+                            pathname: '/daily/reflection',
+                            params: { editId: r.id, initialBody: r.body, date: r.reflection_date },
+                          })
+                        }
+                        accessibilityRole="button"
+                        accessibilityLabel={tx('reflection.edit')}
+                        hitSlop={8}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+                      >
+                        <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                          {tx('reflection.edit')}
+                        </Text>
+                      </Pressable>
                       <Pressable
                         onPress={() => onDelete(r.id)}
                         accessibilityRole="button"
