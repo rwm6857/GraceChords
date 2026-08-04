@@ -62,7 +62,9 @@ those decisions.
   transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
   (export + share sheet), `@react-native-google-signin/google-signin` +
   `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
-  offline downloads), `expo-build-properties` (`useFrameworks: static`,
+  offline downloads), `@react-native-community/datetimepicker` (the platform's own
+  time picker behind the Daily Word reminder — pinned **exactly** at the
+  SDK-bundled version, `8.6.0`), `expo-build-properties` (`useFrameworks: static`,
   required by google-signin), and `expo-dev-client` (dev launcher — see the
   device note under Commands). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
@@ -346,8 +348,18 @@ duplicate logic here and never edit core internals to suit mobile.
   the foreground handler, and the tap→`/daily` deep link). Enabling requests
   notification permission (iOS shows the system prompt then) and only
   persists/schedules on grant, steering the user to system Settings on denial.
-  The time is set via a custom stepper sheet (`ReminderTimeSheet` — RN
-  primitives, no extra native picker dep, like `DatePickerSheet`). The app root
+  The time is set with the **platform's own time picker**
+  (`ReminderTimeSheet`, on `@react-native-community/datetimepicker`) — never a
+  hand-rolled stepper: iOS renders the UIDatePicker wheels (`display="spinner"`,
+  `themeVariant` from the resolved theme so a forced light/dark override is
+  honored) inside the usual native `formSheet` and commits the draft on **Done**;
+  Android opens the native clock dialog imperatively (`DateTimePickerAndroid.open`,
+  no form sheet) and commits only on its OK. Its `design: 'material'` (MD3) mode is
+  deliberately NOT used — that requires a `Theme.Material3.*` `styles.xml`, which
+  under CNG would mean a config plugin. 12- vs 24-hour presentation follows the
+  **app language** (`usesTwentyFourHourClock` in `readerReminder.ts`, same Intl
+  resolution as `formatReminderTime`), so the picker and the Settings row always
+  agree. The app root
   hydrates the preference at splash and reconciles the OS schedule on launch.
 - **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
   (`system`/`light`/`dark`) and `chordStyle` (`letters`/`solfege`), **device-local
@@ -493,6 +505,11 @@ duplicate logic here and never edit core internals to suit mobile.
   backoff, and are **local-only** to delete (never touches Supabase). `getPassage`
   in `bibleSource.ts` reads a downloaded chapter before falling back to R2.
   Staleness compares the stored translations `version` against the live manifest.
+  Its footer copy covers translations only — do NOT re-add the design
+  reference's "daily devotionals from The Gospel Coalition stream over the
+  network" sentence (`[UI] Offline Downloads.dc.html` still carries it): that
+  devotional feed was dropped and never shipped, so the line described a
+  feature users can't find.
 
 ## Internationalization (i18n)
 

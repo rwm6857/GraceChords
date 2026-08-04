@@ -376,7 +376,6 @@ export default function SettingsScreen() {
           />
           <ListRow
             title={tx('reminder.dailyReminder')}
-            subtitle={tx('reminder.dailyReminderDesc')}
             leading={<RowIcon name="bell" t={t} />}
             trailing={
               <Switch
@@ -399,7 +398,6 @@ export default function SettingsScreen() {
           ) : null}
           <ListRow
             title={tx('readingStreak.title')}
-            subtitle={tx('readingStreak.description')}
             leading={<RowIcon name="flame.fill" t={t} />}
             isLast
             trailing={

@@ -291,12 +291,17 @@ export default function OfflineDownloadsScreen() {
         {/* Options */}
         {sectionLabel(tx('sections.options'))}
         <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md, paddingHorizontal: t.spacing.lg, minHeight: 54 }}>
+          {/* Same rowStyle as every other row on this screen — its vertical
+              padding is what keeps the native switch centered (a bare
+              minHeight can't grow, so a taller iOS switch rode up against the
+              card's clipped top edge). */}
+          <View style={rowStyle(true)}>
             <Text style={{ flex: 1, fontSize: 16, color: t.colors.ink }}>{tx('wifiOnly')}</Text>
             <Switch
               value={wifiOnly}
               onValueChange={setWifiOnly}
-              trackColor={{ true: t.colors.accent, false: t.colors.surfaceAlt }}
+              trackColor={{ true: t.colors.accent }}
+              accessibilityLabel={tx('wifiOnly')}
             />
           </View>
         </Card>

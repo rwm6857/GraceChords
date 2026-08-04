@@ -19,7 +19,7 @@
   "deleteDownload": "İndirmeyi sil",
   "download": "{{name}} indir",
   "wifiOnly": "Yalnızca Wi-Fi ile indir",
-  "footer": "İndirilen çeviriler bağlantı olmadan okunabilir. The Gospel Coalition'ın günlük adanmışlıkları ağ üzerinden akışla gelir ve çevrimdışı saklanmaz.",
+  "footer": "İndirilen çeviriler bağlantı olmadan okunabilir.",
   "back": "Ayarlar",
   "backToSettings": "Ayarlara dön",
   "alerts": {

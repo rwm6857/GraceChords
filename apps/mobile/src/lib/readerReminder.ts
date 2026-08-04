@@ -116,6 +116,24 @@ export function formatReminderTime(hour: number, minute: number, locale?: string
   }
 }
 
+/**
+ * Whether `locale` writes times on a 24-hour clock. Drives the native time
+ * picker's presentation (`is24Hour` on Android) so it matches what
+ * `formatReminderTime` renders in the Settings row. Probed by formatting 13:00
+ * and looking for "13" rather than reading `resolvedOptions().hour12`, which
+ * isn't reliably populated across RN's Intl backends.
+ */
+export function usesTwentyFourHourClock(locale?: string): boolean {
+  try {
+    const formatted = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(
+      new Date(2000, 0, 1, 13, 0),
+    )
+    return formatted.includes('13')
+  } catch {
+    return false
+  }
+}
+
 // --- OS scheduling reconciliation (dependency-injected, testable) -----------
 
 export type ReminderContent = { title: string; body: string }
