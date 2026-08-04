@@ -19,7 +19,7 @@
   "deleteDownload": "다운로드 삭제",
   "download": "{{name}} 다운로드",
   "wifiOnly": "Wi-Fi에서만 다운로드",
-  "footer": "다운로드한 번역본은 연결 없이도 읽을 수 있습니다. The Gospel Coalition의 매일 묵상은 네트워크로 스트리밍되며 오프라인에 저장되지 않습니다.",
+  "footer": "다운로드한 번역본은 연결 없이도 읽을 수 있습니다.",
   "back": "설정",
   "backToSettings": "설정으로 돌아가기",
   "alerts": {

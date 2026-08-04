@@ -11,7 +11,6 @@
   },
   "reminder": {
     "dailyReminder": "Recordatorio de Palabra diaria",
-    "dailyReminderDesc": "Un aviso diario para abrir la lectura de hoy.",
     "time": "Hora del recordatorio",
     "timeSheetTitle": "Hora del recordatorio",
     "permissionDeniedTitle": "Las notificaciones están desactivadas",
@@ -22,8 +21,7 @@
     "channelName": "Recordatorios de Palabra diaria"
   },
   "readingStreak": {
-    "title": "Racha de lectura",
-    "description": "Cuenta los días consecutivos que abres la lectura de hoy."
+    "title": "Racha de lectura"
   },
   "appearance": "Apariencia",
   "appearanceOptions": {

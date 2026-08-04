@@ -19,7 +19,7 @@
   "deleteDownload": "Eliminar descarga",
   "download": "Descargar {{name}}",
   "wifiOnly": "Descargar solo con Wi-Fi",
-  "footer": "Las traducciones descargadas se pueden leer sin conexión. Los devocionales diarios de The Gospel Coalition se transmiten por la red y no se guardan sin conexión.",
+  "footer": "Las traducciones descargadas se pueden leer sin conexión.",
   "back": "Ajustes",
   "backToSettings": "Volver a Ajustes",
   "alerts": {

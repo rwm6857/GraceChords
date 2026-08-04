@@ -481,6 +481,11 @@ duplicate logic here and never edit core internals to suit mobile.
   backoff, and are **local-only** to delete (never touches Supabase). `getPassage`
   in `bibleSource.ts` reads a downloaded chapter before falling back to R2.
   Staleness compares the stored translations `version` against the live manifest.
+  Its footer copy covers translations only — do NOT re-add the design
+  reference's "daily devotionals from The Gospel Coalition stream over the
+  network" sentence (`[UI] Offline Downloads.dc.html` still carries it): that
+  devotional feed was dropped and never shipped, so the line described a
+  feature users can't find.
 
 ## Internationalization (i18n)
 
