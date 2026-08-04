@@ -20,3 +20,8 @@ node_modules/
 # Native build cruft / logs
 *.log
 *.tsbuildinfo
+
+# Upstream Material Symbols variable font + codepoints, downloaded on demand by
+# scripts/build-symbol-fonts.py. Only the generated subsets in assets/fonts are
+# committed.
+.cache/

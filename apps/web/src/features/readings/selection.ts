@@ -20,8 +20,11 @@ export function formatReference(passage: Passage, verses: number[]){
   return `${passage.book} ${passage.chapter}:${body}`
 }
 
+// Book names are always spelled in full, exactly as BOOKS in verseRef lists
+// them -- "Psalms 1", never "Ps 1". Abbreviating only a couple of books reads as
+// a bug next to the 64 that stay full-length.
 export function formatPassageLabel(passage: Passage){
-  const book = shortBook(passage.book)
+  const book = passage.book
   if (!passage.range) return `${book} ${passage.chapter}`
   const { start, end } = passage.range
   if (end === null) return `${book} ${passage.chapter}:${start}-`
@@ -72,8 +75,3 @@ function compressRuns(verses: number[]){
   return runs
 }
 
-function shortBook(book: string){
-  if (book === 'Psalms') return 'Ps'
-  if (book === 'Song of Solomon') return 'Song'
-  return book
-}

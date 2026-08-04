@@ -17,6 +17,7 @@ import {
   resolveBibleTranslationSelection,
   sortedVerses,
   buildCopyText,
+  formatPassageLabel,
   isVerseInRange,
   passageId,
   type BibleTranslation,
@@ -63,15 +64,6 @@ function formatDateLabel(d: Date, locale: string) {
   const now = new Date()
   const base = d.toLocaleDateString(locale, { month: 'long', day: 'numeric' })
   return d.getFullYear() === now.getFullYear() ? base : `${base}, ${d.getFullYear()}`
-}
-
-function chipLabel(passage: Passage) {
-  const head = `${passage.book} ${passage.chapter}`
-  if (!passage.range) return head
-  const { start, end } = passage.range
-  if (end === null) return `${head}:${start}-`
-  if (start === end) return `${head}:${start}`
-  return `${head}:${start}-${end}`
 }
 
 // `showBackToLanding` renders a back chevron to the Daily Word landing. It is
@@ -263,7 +255,7 @@ export default function DailyWordScreen({
         </View>
       ) : null}
 
-      {/* Control bar: translation · date · Aa */}
+      {/* Control bar: translation · date · text options */}
       <View
         style={{
           flexDirection: 'row',
@@ -304,10 +296,10 @@ export default function DailyWordScreen({
             onPress={() => setSheet('settings')}
             accessibilityRole="button"
             accessibilityLabel={tx('readerSettings')}
-            style={[controlButton, { paddingHorizontal: 12 }]}
+            hitSlop={8}
+            style={controlButton}
           >
-            <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.accent }}>A</Text>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: t.colors.accent, marginLeft: -3 }}>a</Text>
+            <SymbolIcon name="textformat" size={18} color={t.colors.accent} weight="medium" />
           </Pressable>
         </View>
       </View>
@@ -348,7 +340,7 @@ export default function DailyWordScreen({
                     color: active ? t.colors.textAccent : t.colors.sec,
                   }}
                 >
-                  {chipLabel(p)}
+                  {formatPassageLabel(p)}
                 </Text>
               </Pressable>
             )
