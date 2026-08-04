@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -13,17 +13,14 @@ import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { currentStreak, useReadingStreak } from '../lib/readingStreak'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { useTodayReflection } from '../lib/useReflections'
-import { usePublicReflectionsEnabled } from '../lib/usePublicReflections'
-import { useAgeGate, type AgeRange } from '../lib/ageGate'
-import { requestDeclaredAgeRange } from '../lib/declaredAgeRange'
-import SharedReflectionsFeed from '../components/reflections/SharedReflectionsFeed'
-import PublicComposeSlot from '../components/reflections/PublicComposeSlot'
-import UgcTermsSheet from '../components/reflections/UgcTermsSheet'
 
 // The Daily Word landing hub (design: [UI] Daily Word Landing). Reached as the
 // Daily Word tab root when the "Daily Word opens" preference is "Landing page"
 // (the default). Leads with today's M'Cheyne reading and the signed-in user's
 // own private reflection, routing onward to the Reader.
+//
+// Reflections are PRIVATE-ONLY: there is no community feed, no public compose,
+// and no path by which one user's reflection reaches another user.
 //
 // NOTE: the design's devotional hero card + long-read page are intentionally
 // omitted this phase — the public-domain devotional content pipeline does not
@@ -63,32 +60,6 @@ export default function DailyWordLandingScreen() {
   const streakCount = currentStreak(streak, today)
 
   const { reflection, loading, refresh, remove } = useTodayReflection()
-  // Kill-switch: the community feed + public compose only render when the flag is
-  // on. When off (or not yet resolved), the private experience below is unchanged.
-  const { enabled: publicEnabled, ready: publicReady } = usePublicReflectionsEnabled()
-  // Age assurance: the public section (view + share) is kept from under-13 users.
-  // It shows only once the user is known to be 13+. When their age isn't known
-  // yet, an unlock card takes the feed's place; the private experience is never
-  // gated.
-  const age = useAgeGate()
-  const showPublic = publicReady && publicEnabled && age.ready && age.isThirteenPlus
-  const showAgeUnlock = publicReady && publicEnabled && age.ready && age.range == null
-  const [ugcVisible, setUgcVisible] = useState(false)
-  const [seededAge, setSeededAge] = useState<AgeRange | undefined>(undefined)
-
-  // User-initiated unlock: try Apple's Declared Age Range API first (real age
-  // assurance, no birthdate). A confident "under 13" hides the section with no
-  // popup; otherwise open the age + terms gate (seeded with 13+ when the API
-  // confirmed it, else asking the user to self-declare).
-  const beginAgeUnlock = useCallback(async () => {
-    const result = await requestDeclaredAgeRange()
-    if (result === 'under_13') {
-      await age.record('under_13', 'declared_api')
-      return
-    }
-    setSeededAge(result === 'over_13' ? '13_plus' : undefined)
-    setUgcVisible(true)
-  }, [age])
 
   // Re-read the reflection when the landing regains focus so a just-composed or
   // just-deleted entry (on the pushed compose/journal screens) shows correctly.
@@ -254,30 +225,6 @@ export default function DailyWordLandingScreen() {
             Reader on its own chapter, so a button that could only ever open the
             first one duplicated the list without adding a destination. */}
 
-        {/* Shared Reflections — anonymous community feed (flag-gated, above the
-            user's own reflection per the design decision). Under-13 users see
-            neither the feed nor the compose slot; a user whose age isn't known
-            yet gets a one-time unlock card in the feed's place. */}
-        {showPublic ? (
-          <SharedReflectionsFeed />
-        ) : showAgeUnlock ? (
-          <Card style={{ marginTop: t.spacing.xl }}>
-            <View style={{ padding: t.spacing.lg, gap: t.spacing.sm }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: t.colors.ink }}>
-                {tx('publicLocked.title')}
-              </Text>
-              <Text style={{ fontSize: 13.5, lineHeight: 20, color: t.colors.sec }}>
-                {tx('publicLocked.body')}
-              </Text>
-              <Button
-                title={tx('publicLocked.cta')}
-                onPress={() => void beginAgeUnlock()}
-                style={{ marginTop: t.spacing.xs }}
-              />
-            </View>
-          </Card>
-        ) : null}
-
         {/* Your reflection */}
         <Text
           style={{
@@ -401,10 +348,6 @@ export default function DailyWordLandingScreen() {
           </Pressable>
         )}
 
-        {/* Share a reflection — public compose slot (flag-gated), below the
-            private reflection. Shows a compose CTA or the user's own public post. */}
-        {showPublic ? <PublicComposeSlot /> : null}
-
         <Pressable
           onPress={() => router.push('/daily/journal')}
           accessibilityRole="button"
@@ -424,22 +367,6 @@ export default function DailyWordLandingScreen() {
           <SymbolIcon name="chevron.right" size={12} color={t.colors.accent} weight="semibold" />
         </Pressable>
       </ScrollView>
-
-      {/* Age + terms unlock gate for the public section. Refreshing the age gate
-          on close lets showPublic / showAgeUnlock recompute immediately. */}
-      <UgcTermsSheet
-        visible={ugcVisible}
-        seededAgeRange={seededAge}
-        onClose={() => setUgcVisible(false)}
-        onAgreed={() => {
-          setUgcVisible(false)
-          void age.refresh()
-        }}
-        onDeclined={() => {
-          setUgcVisible(false)
-          void age.refresh()
-        }}
-      />
     </Screen>
   )
 }

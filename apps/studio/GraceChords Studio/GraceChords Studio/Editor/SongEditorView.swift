@@ -87,6 +87,25 @@ struct SongEditorView: View {
             } message: {
                 Text(model.deleteConfirmationMessage)
             }
+            .sheet(isPresented: $model.showsImportSheet) {
+                PDFImportSheet(model: model)
+            }
+            // The import has no review step, so this is the one place it asks: the
+            // body already has text and is about to be replaced wholesale. An empty
+            // editor imports with no prompt.
+            .confirmationDialog(
+                "Replace the song text with the imported PDF?",
+                isPresented: Binding(
+                    get: { model.pendingImport != nil },
+                    set: { if !$0 { model.discardPendingImport() } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Replace", role: .destructive) { model.confirmPendingImport() }
+                Button("Cancel", role: .cancel) { model.discardPendingImport() }
+            } message: {
+                Text("What you have typed will be replaced. This is not saved to the server either way.")
+            }
     }
 
     @ViewBuilder
@@ -125,14 +144,21 @@ struct SongEditorView: View {
                 previewPane
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Banner
 
     /// Only errors get a banner now. A success no longer needs one: the toolbar badge
     /// says the save worked, right where the click happened.
+    ///
+    /// An import is the exception. It has no review step by design, so its summary and
+    /// its caveats — no key found, a section break that may be missing at a page
+    /// boundary, chords that had to snap to a word start — have to land somewhere, and
+    /// here is where they do not block typing.
     @ViewBuilder
     private var statusBanner: some View {
+        importBanner
         if let errorText = model.errorText {
             HStack(spacing: GCSpacing.sm) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(GCColor.danger)
@@ -143,6 +169,42 @@ struct SongEditorView: View {
                 Spacer()
                 Button {
                     model.errorText = nil
+                } label: {
+                    Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(GCColor.muted)
+                .accessibilityLabel("Dismiss")
+            }
+            .padding(.horizontal, GCSpacing.md)
+            .padding(.vertical, GCSpacing.sm)
+            .background(GCColor.surfaceAlt)
+            .overlay(alignment: .bottom) { Divider() }
+        }
+    }
+
+    @ViewBuilder
+    private var importBanner: some View {
+        if let summary = model.importSummary {
+            HStack(alignment: .top, spacing: GCSpacing.sm) {
+                Image(systemName: model.importNeedsAttention ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                    .foregroundStyle(model.importNeedsAttention ? GCColor.accent : GCColor.success)
+                Text(summary)
+                    .gcTextStyle(.rowMeta)
+                    .foregroundStyle(GCColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                // Offered only when the result is worth investigating. The JSON it
+                // copies is the complete input to core's buildSongDraft, so
+                // `node apps/studio/js/pdf-draft.mjs` reproduces this exact result —
+                // which is how a chart that came out wrong gets the heuristics fixed.
+                if model.importNeedsAttention {
+                    Button("Copy Diagnostics") { model.copyImportDiagnostics() }
+                        .buttonStyle(.link)
+                        .gcTextStyle(.rowMeta)
+                }
+                Button {
+                    model.dismissImportSummary()
                 } label: {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                 }
@@ -179,7 +241,7 @@ struct SongEditorView: View {
             Divider()
             chordproEditor
         }
-        .frame(minWidth: Self.writingMinimumWidth)
+        .frame(minWidth: Self.writingMinimumWidth, maxHeight: .infinity)
     }
 
     private var detailsHeader: some View {
@@ -428,8 +490,16 @@ struct SongEditorView: View {
                 .disableAutocorrection(true)
                 .scrollContentBackground(.hidden)
                 .background(GCColor.bg)
-                .frame(minHeight: 200)
+                // `maxHeight: .infinity` is not cosmetic. A TextEditor's IDEAL height
+                // is its content height, and with only a minimum declared that ideal
+                // propagates up through the pane and the split view to the window,
+                // which then grows to fit the whole song instead of letting the editor
+                // scroll — a 60-line import stretched the window taller than the
+                // screen. Declaring the editor flexible makes the proposed height come
+                // from the window instead, which is what makes it scroll.
+                .frame(minHeight: 200, maxHeight: .infinity)
         }
+        .frame(maxHeight: .infinity)
     }
 
     // MARK: - Preview pane
@@ -456,7 +526,7 @@ struct SongEditorView: View {
             }
             .background(GCColor.bg)
         }
-        .frame(minWidth: Self.previewMinimumWidth)
+        .frame(minWidth: Self.previewMinimumWidth, maxHeight: .infinity)
     }
 
     @ViewBuilder
@@ -520,6 +590,24 @@ struct SongEditorView: View {
             }
             .keyboardShortcut("n", modifiers: .command)
             .help("New song (⌘N)")
+        }
+
+        ToolbarItem(placement: .navigation) {
+            Button {
+                model.showsImportSheet = true
+            } label: {
+                // An arrow into a document: content coming IN. Distinct from Save's
+                // `square.and.arrow.down` and the Viewer's export arrow, both of which
+                // are about content going out.
+                //
+                // Verified against CoreGlyphs' name_availability.plist, not guessed:
+                // `document.badge.arrow.down` reads perfectly plausibly and does not
+                // exist, and an unknown name is a runtime fault with a blank toolbar
+                // button, not a build error.
+                Label("Import from PDF", systemImage: "arrow.down.document")
+            }
+            .disabled(model.isImporting)
+            .help("Import a chord sheet from a PDF (⇧⌘I)")
         }
 
         ToolbarItem(placement: .primaryAction) {

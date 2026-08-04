@@ -110,6 +110,13 @@ struct EditorCommands: Commands {
             // twice makes AppKit pick one arbitrarily.
             Button("New Song") { session?.requestNew?() }
                 .disabled(session?.requestNew == nil)
+
+            // ⇧⌘I rather than ⌘I: ⌘I is italics in a text view, which the ChordPro
+            // body is. Bound here and nowhere else — the editor's toolbar button
+            // carries no key equivalent, so AppKit has nothing to choose between.
+            Button("Import from PDF…") { session?.requestImport?() }
+                .keyboardShortcut("i", modifiers: [.shift, .command])
+                .disabled(session?.requestImport == nil)
         }
 
         // Verse / Chorus / Bridge get key equivalents because they are most of the

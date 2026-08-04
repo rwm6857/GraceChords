@@ -33,7 +33,6 @@ import {
   syncReaderReminderOnLaunch,
 } from '../src/lib/readerReminderService'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
-import { hydrateHiddenPosts } from '../src/lib/hiddenPosts'
 import { startAccessibilityFlags } from '../src/lib/accessibilityFlagsService'
 import { applyOrientationLock } from '../src/lib/orientationLock'
 import { useAccessibilityFlags } from '../src/lib/accessibilityFlags'
@@ -181,7 +180,6 @@ export default function RootLayout() {
       hydrateReaderReminder(AsyncStorage),
       hydrateViewerPrefs(AsyncStorage),
       hydrateBibleTranslationPref(AsyncStorage),
-      hydrateHiddenPosts(AsyncStorage),
       // Load the Material Symbols subset fonts before the splash lifts so
       // Android never paints a missing glyph on first frame. iOS renders icons
       // through SF Symbols natively (SymbolIcon), so there is nothing to load

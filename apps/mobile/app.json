@@ -14,9 +14,6 @@
       "supportsTablet": true,
       "usesAppleSignIn": true,
       "associatedDomains": ["applinks:gracechords.com"],
-      "entitlements": {
-        "com.apple.developer.declared-age-range": true
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

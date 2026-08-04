@@ -85,6 +85,7 @@ final class CoreBridge {
     private let diatonicChordsFunction: JSValue
     private let chordVariantsFunction: JSValue
     private let chordTokenFunction: JSValue
+    private let pdfDraftFunction: JSValue
     private let sink: ExceptionSink
 
     /// Path of the bundle that was actually loaded — used by the spike's
@@ -143,6 +144,7 @@ final class CoreBridge {
         self.diatonicChordsFunction = try Self.requireFunction(named: "diatonicChordsJSON", on: namespace)
         self.chordVariantsFunction = try Self.requireFunction(named: "chordVariantsJSON", on: namespace)
         self.chordTokenFunction = try Self.requireFunction(named: "chordToken", on: namespace)
+        self.pdfDraftFunction = try Self.requireFunction(named: "pdfDraftJSON", on: namespace)
         self.sink = sink
     }
 
@@ -319,6 +321,38 @@ final class CoreBridge {
     func chordToken(_ symbol: String) throws -> String {
         let arguments = try jsValues([.string(symbol)])
         return try callReturningString(chordTokenFunction, named: "chordToken", arguments: arguments)
+    }
+
+    // MARK: - PDF import
+
+    /// Positioned chord-sheet text → a song draft, through core's `buildSongDraft`.
+    ///
+    /// Extraction is native (PDFKit has no counterpart in JavaScriptCore) but the
+    /// heuristics are not: classifying a line, matching a chord's x to a syllable and
+    /// inferring stanza breaks are pure string and geometry math with no platform in
+    /// them. They live in core because Studio has no test target to cover them with,
+    /// and because a web importer feeding pdf.js output through the same function
+    /// would produce byte-identical drafts.
+    ///
+    /// One JSON string crosses rather than a JSValue tree: a long chart is a few
+    /// thousand rects, and a per-node conversion would mean thousands of bridge
+    /// crossings and a nullability question at each one.
+    ///
+    /// Call on the main thread like every other bridge call — do the extraction on a
+    /// background queue and hop back for this.
+    func pdfDraft(from document: PDFExtraction) throws -> SongDraft {
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(document)
+        } catch {
+            throw CoreBridgeError.unexpectedResult("the extracted text could not be encoded: \(error)")
+        }
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw CoreBridgeError.unexpectedResult("the extracted text was not valid UTF-8")
+        }
+        let arguments = try jsValues([.string(json)])
+        let result = try callReturningString(pdfDraftFunction, named: "pdfDraftJSON", arguments: arguments)
+        return try decodeJSON(SongDraft.self, from: result, describedAs: "the imported song")
     }
 
     /// Interpolation values for the capo chip, or nil when the chip is hidden.

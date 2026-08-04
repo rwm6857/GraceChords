@@ -3,22 +3,25 @@
 // Client-injected counterpart to the mobile hook at
 // apps/mobile/src/lib/useReflections.ts — callers inject the Supabase client
 // created via createGcSupabase() (like setlistsRepo/songsRepo). Errors throw;
-// callers catch. createReflection always writes visibility = 'private'; public
-// posts are created only by the service-role submit path (never a client insert).
-// Private reflections are editable (updateReflection, RLS-scoped to the owner's
-// own private rows); public posts stay immutable. All private read/write queries
-// touch only the caller's own rows (RLS scopes them to auth.uid()).
+// callers catch.
+//
+// Reflections are PRIVATE-ONLY. createReflection hard-codes visibility =
+// 'private', updateReflection is scoped to the owner's own private rows, and
+// every read filters visibility = 'private' explicitly rather than relying on
+// RLS alone — see the note on fetchReflections.
 
 const REFLECTION_COLUMNS =
-  'id, user_id, reflection_date, content_key, visibility, body, created_at, heart_count'
-
-// Public feed columns — NO user_id or any author-identifying field. The public
-// feed is anonymous; the row's owner must never reach the client payload.
-const PUBLIC_FEED_COLUMNS = 'id, body, heart_count'
+  'id, user_id, reflection_date, content_key, visibility, body, created_at'
 
 /**
- * Fetch ALL of the current user's own reflections (private + public), newest day
- * first, for the journal. RLS (own_select) restricts the result to the caller.
+ * Fetch the current user's own reflections, newest day first, for the journal.
+ *
+ * The `.eq('visibility', 'private')` filter is load-bearing and must stay. RLS
+ * SELECT policies are PERMISSIVE and therefore OR'd together: while a
+ * public-feed read policy exists on this table, an unfiltered select returns
+ * the caller's own rows PLUS every other user's public rows, which would put
+ * strangers' text in the user's private journal. Filtering here means the
+ * journal is correct regardless of which policies are installed.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @returns {Promise<import('./types').Reflection[]>}
@@ -27,6 +30,7 @@ export async function fetchReflections(client) {
   const { data, error } = await client
     .from('reflections')
     .select(REFLECTION_COLUMNS)
+    .eq('visibility', 'private')
     .order('reflection_date', { ascending: false })
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -121,119 +125,4 @@ export async function deleteReflection(client, id) {
 /** True when an error is the one-reflection-per-day unique-index violation. */
 export function isDuplicateReflectionError(err) {
   return err?.code === '23505' || String(err?.message || '').includes('reflections_one_per_day')
-}
-
-// ── Public reflections (Phase 2B) ────────────────────────────────────────────
-// Public rows are WRITTEN only by the service-role submit endpoint after
-// moderation (there is no client public-insert policy). These functions cover
-// the client READ + hearts paths, all gated by RLS (today-only, flag-on, not
-// removed, not banned).
-
-/**
- * Today's anonymous public feed. Selects ONLY id/body/heart_count — never
- * user_id — so no author identity reaches the client. The public_feed_read RLS
- * policy already restricts to today / public / not-removed / not-banned /
- * feature-on, so no client-side date or removal filtering is needed.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @returns {Promise<import('./types').PublicReflection[]>}
- */
-export async function fetchPublicFeed(client) {
-  const { data, error } = await client
-    .from('reflections')
-    .select(PUBLIC_FEED_COLUMNS)
-    .eq('visibility', 'public')
-    .order('heart_count', { ascending: false })
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data || []
-}
-
-/**
- * The caller's OWN public post for a day (or null). Scoped to the caller's uid
- * so it returns only their row; used to identify their post in the feed (to
- * disable self-heart) and to show it in the "Share a reflection" slot.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @param {string} uid
- * @param {string} dateKey  YYYY-MM-DD
- * @returns {Promise<import('./types').PublicReflection|null>}
- */
-export async function fetchMyPublicPost(client, uid, dateKey) {
-  const { data, error } = await client
-    .from('reflections')
-    .select(PUBLIC_FEED_COLUMNS)
-    .eq('visibility', 'public')
-    .eq('user_id', uid)
-    .eq('reflection_date', dateKey)
-    .maybeSingle()
-  if (error) throw error
-  return data || null
-}
-
-/**
- * Which of the given reflection ids the caller has hearted. hearts_select_own
- * returns only the caller's own heart rows, so other hearters are never exposed.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @param {string[]} reflectionIds
- * @returns {Promise<string[]>}
- */
-export async function fetchMyHeartedIds(client, reflectionIds) {
-  if (!reflectionIds || reflectionIds.length === 0) return []
-  const { data, error } = await client
-    .from('reflection_hearts')
-    .select('reflection_id')
-    .in('reflection_id', reflectionIds)
-  if (error) throw error
-  return (data || []).map((r) => r.reflection_id)
-}
-
-/**
- * Heart a post (idempotent). RLS (hearts_insert_own) blocks self-hearts and
- * non-visible posts; the heart_count trigger keeps the denormalized count.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @param {string} uid
- * @param {string} reflectionId
- */
-export async function heartReflection(client, uid, reflectionId) {
-  const { error } = await client
-    .from('reflection_hearts')
-    .upsert({ reflection_id: reflectionId, user_id: uid }, { onConflict: 'reflection_id,user_id' })
-  if (error) throw error
-}
-
-/**
- * Remove the caller's heart from a post.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @param {string} uid
- * @param {string} reflectionId
- */
-export async function unheartReflection(client, uid, reflectionId) {
-  const { error } = await client
-    .from('reflection_hearts')
-    .delete()
-    .eq('reflection_id', reflectionId)
-    .eq('user_id', uid)
-  if (error) throw error
-}
-
-/**
- * Read the public_reflections kill switch. flags_select_all makes this readable
- * by any client; the DB still enforces the flag independently on every write/
- * read path, so this only drives whether the UI renders the feature.
- *
- * @param {import('@supabase/supabase-js').SupabaseClient} client
- * @returns {Promise<boolean>}
- */
-export async function fetchPublicReflectionsEnabled(client) {
-  const { data, error } = await client
-    .from('feature_flags')
-    .select('enabled')
-    .eq('key', 'public_reflections')
-    .maybeSingle()
-  if (error) throw error
-  return !!data?.enabled
 }
