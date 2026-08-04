@@ -1,8 +1,12 @@
-// AUTO-GENERATED companion data for SymbolIcon's Android (Material Symbols) path.
-// Regenerate by re-running the font build script if the icon vocabulary changes.
+// Companion data for SymbolIcon's Android (Material Symbols) path.
 // Each SF Symbol name used anywhere in the app maps to a Material Symbols glyph;
 // `filled` selects the Filled face (assets/fonts/MaterialSymbolsFilled.ttf) over
 // the Outlined one. Codepoints index the subset fonts bundled in assets/fonts.
+//
+// SF_TO_MATERIAL below is hand-maintained — add new icons there.
+// MATERIAL_CODEPOINTS is AUTO-GENERATED: after editing SF_TO_MATERIAL, run
+// `python3 scripts/build-symbol-fonts.py` to rebuild the subset fonts and
+// regenerate the codepoints, then commit the .ttf files alongside this file.
 
 export type MaterialGlyph = { md: string; filled: boolean }
 
@@ -58,6 +62,7 @@ export const MATERIAL_CODEPOINTS: Record<string, number> = {
   share: 0xe80d,
   star: 0xf09a,
   sync: 0xe627,
+  text_format: 0xe165,
   touch_app: 0xe913,
   unfold_more: 0xe5d7,
   visibility: 0xe8f4,
@@ -126,6 +131,7 @@ export const SF_TO_MATERIAL: Record<string, MaterialGlyph> = {
   'square.and.pencil': { md: 'edit_square', filled: false },
   'star': { md: 'star', filled: false },
   'star.fill': { md: 'star', filled: true },
+  'textformat': { md: 'text_format', filled: false },
   'trash': { md: 'delete', filled: false },
   'tuningfork': { md: 'graphic_eq', filled: false },
   'wifi.slash': { md: 'wifi_off', filled: false },

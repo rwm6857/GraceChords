@@ -38,7 +38,7 @@ pixel-for-pixel onto Android when Material has an established pattern for it.
 - **Material Symbols, not custom SVGs.** Android icons come from Material Symbols
   via `SymbolIcon`'s Android branch and the `SF→Material` map in `symbolMap.ts` —
   never hand-drawn/SVG glyphs. A new icon means adding its SF→Material mapping and
-  re-running the font subset build (see the Icons bullet under Primitives).
+  re-running `scripts/build-symbol-fonts.py` (see the Icons bullet under Primitives).
 
 This section adds Android-specific authority; it does **not** override settled
 cross-platform rules. Phone layouts stay exactly as designed, and
@@ -191,9 +191,14 @@ duplicate logic here and never edit core internals to suit mobile.
   glyph via `src/components/symbolMap.ts` and renders it from the subset fonts in
   `assets/fonts/` (`MaterialSymbolsOutlined`/`MaterialSymbolsFilled`, registered
   in `app/_layout.tsx`). **When you introduce a new icon, add its SF→Material
-  mapping to `symbolMap.ts` and re-run the font subset build** so the Android
-  glyph exists — an unmapped name renders a fallback and warns in dev. Pass the
-  optional `md` prop only to override an ambiguous auto-mapping (iOS ignores it).
+  mapping to `SF_TO_MATERIAL` in `symbolMap.ts`, then run
+  `python3 scripts/build-symbol-fonts.py`** (needs `pip install fonttools`) so the
+  Android glyph exists — an unmapped name renders a fallback and warns in dev. That
+  script pins two static instances of the upstream Material Symbols variable font
+  (FILL=0/1), subsets them to just the glyphs `SF_TO_MATERIAL` names, and
+  regenerates the `MATERIAL_CODEPOINTS` block; commit the two `.ttf` files with it.
+  Pass the optional `md` prop only to override an ambiguous auto-mapping (iOS
+  ignores it).
   The tab bar (`app/(tabs)/_layout.tsx`) is separate — it uses
   `NativeTabs.Trigger.Icon` with explicit `sf`/`md`, but follows the same
   SF→Material naming convention.
