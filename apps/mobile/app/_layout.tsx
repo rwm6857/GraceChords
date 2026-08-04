@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Platform, ScrollView, Text, View } from 'react-native'
 import * as Font from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
@@ -36,6 +36,7 @@ import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
 import { startAccessibilityFlags } from '../src/lib/accessibilityFlagsService'
 import { applyOrientationLock } from '../src/lib/orientationLock'
 import { useAccessibilityFlags } from '../src/lib/accessibilityFlags'
+import SplashOverlay from '../src/components/SplashOverlay'
 
 // Keep the native splash up past first render so we can resolve the persisted
 // session and route to the right screen before anything is shown — the app is
@@ -47,7 +48,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 // auto-refresh, and gate routes on the auth session using the standard
 // expo-router pattern — redirect to /login when signed out, and into the tabs
 // once a session exists.
-function useProtectedRoute(session: Session | null, ready: boolean) {
+function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff: () => void) {
   const segments = useSegments()
   const router = useRouter()
 
@@ -68,26 +69,30 @@ function useProtectedRoute(session: Session | null, ready: boolean) {
     }
   }, [session, ready, segments, router])
 
-  // Hide the splash only once the session is resolved AND the visible route
+  // Lift the splash only once the session is resolved AND the visible route
   // matches the auth state, so the native splash covers the redirect frame and
-  // no wrong screen flashes. Fall back to hiding on `ready` so a stuck route can
+  // no wrong screen flashes. Fall back to lifting on `ready` so a stuck route can
   // never leave the splash up forever.
+  //
+  // `beginHandoff` mounts SplashOverlay, which calls hideAsync() itself once it
+  // has painted over the native splash — see SplashOverlay.tsx. It is one-way, so
+  // the repeat calls this effect makes as routes change are no-ops.
   useEffect(() => {
     if (!ready) return
     const seg = segments[0] as string | undefined
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
     const isPublic = seg === 'session'
     const settled = session ? seg !== 'login' : (inAuthFlow || isPublic)
-    if (settled) SplashScreen.hideAsync().catch(() => {})
-  }, [session, ready, segments])
+    if (settled) beginHandoff()
+  }, [session, ready, segments, beginHandoff])
 
   // Safety net: if routing never "settles" for some reason, don't leave the
   // splash up indefinitely once the session has resolved.
   useEffect(() => {
     if (!ready) return
-    const id = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 2000)
+    const id = setTimeout(beginHandoff, 2000)
     return () => clearTimeout(id)
-  }, [ready])
+  }, [ready, beginHandoff])
 }
 
 // Shown instead of the app when required public config is missing (e.g. a
@@ -141,6 +146,17 @@ function ConfigErrorScreen({ message }: { message: string }) {
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
+  // Drives the native-splash → app handoff, one way only: 'held' (native splash
+  // still up) → 'handoff' (SplashOverlay mounted; it lifts the native splash and
+  // animates itself away) → 'done'. The gate below can call beginHandoff again on
+  // later navigations — 'done' must swallow those so the overlay can't reappear
+  // over a running app.
+  const [splashPhase, setSplashPhase] = useState<'held' | 'handoff' | 'done'>('held')
+  const beginHandoff = useCallback(
+    () => setSplashPhase((phase) => (phase === 'held' ? 'handoff' : phase)),
+    [],
+  )
+  const endHandoff = useCallback(() => setSplashPhase('done'), [])
   const router = useRouter()
   const { t: tx } = useTranslation(['setlist', 'common'])
   const resumeChecked = useRef(false)
@@ -269,7 +285,7 @@ export default function RootLayout() {
     })
   }, [router])
 
-  useProtectedRoute(session, ready)
+  useProtectedRoute(session, ready, beginHandoff)
 
   if (supabaseConfigError) {
     return <ConfigErrorScreen message={supabaseConfigError} />
@@ -320,6 +336,9 @@ export default function RootLayout() {
               }}
             />
           </Stack>
+          {/* Last sibling so it covers every route: the native splash hands off
+              to this, then it zooms the mark out over the mounted app. */}
+          {splashPhase === 'handoff' && <SplashOverlay onDone={endHandoff} />}
         </SafeAreaProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
