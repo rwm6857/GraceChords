@@ -74,6 +74,7 @@ export const ICON_MAP = {
   'square.and.pencil':               { concept: 'Compose/edit',     lucide: 'SquarePen',     web: 'ComposeIcon' },
   'star':                            { concept: 'Favorites',        lucide: 'Star',          web: 'StarIcon' },
   'star.fill':                       { concept: 'Favorite marker',  lucide: 'Star',          web: 'StarIcon' },
+  'textformat':                      { concept: 'Reader text options', lucide: 'ALargeSmall', web: 'TextFormatIcon' },
   'trash':                           { concept: 'Delete',           lucide: 'Trash2',        web: 'TrashIcon' },
   'tuningfork':                      { concept: 'Tuner',            lucide: 'AudioLines',    web: 'TunerIcon' }, // FLAG: no tuning fork in Lucide; AudioLines ≈ Material graphic_eq. Relies on label.
   'wifi.slash':                      { concept: 'Offline',          lucide: 'WifiOff',       web: 'WifiOffIcon' },

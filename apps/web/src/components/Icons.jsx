@@ -73,6 +73,7 @@ import {
   Share,
   SquarePen,
   Star,
+  ALargeSmall,
   AudioLines,
   WifiOff,
   Wrench,
@@ -169,6 +170,7 @@ export const HelpIcon = wrap(CircleHelp) // SF: questionmark.circle
 export const ShareIcon = wrap(Share) // SF: square.and.arrow.up (Share, not Share2)
 export const ComposeIcon = wrap(SquarePen) // SF: square.and.pencil
 export const StarIcon = wrap(Star) // SF: star, star.fill
+export const TextFormatIcon = wrap(ALargeSmall) // SF: textformat
 export const TunerIcon = wrap(AudioLines) // SF: tuningfork — compromise, no tuning fork in Lucide (see iconMap.js)
 export const WifiOffIcon = wrap(WifiOff) // SF: wifi.slash
 export const UtilitiesIcon = wrap(Wrench) // SF: wrench.and.screwdriver, .fill
