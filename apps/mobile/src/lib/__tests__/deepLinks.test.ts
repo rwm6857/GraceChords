@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveDeepLinkPath } from '../deepLinks'
+import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../deepLinks'
 
 const WEB = 'https://gracechords.com'
 
@@ -99,5 +99,40 @@ describe('resolveDeepLinkPath', () => {
     it('leaves an unrecognised custom-scheme link untouched', () => {
       expect(resolveDeepLinkPath('gracechords://daily')).toBe('gracechords://daily')
     })
+  })
+})
+
+describe('deepLinkStackRouteKey', () => {
+  it.each([
+    ['/viewer/amazing-grace', 'viewer/[slug]'],
+    ['/setlist/import?code=ABC123', 'setlist/import'],
+    ['/setlist/import?ids=one,two&toKeys=G', 'setlist/import'],
+    ['/session/XYZ', 'session/[code]'],
+  ])('keys %s as %s', (target, key) => {
+    expect(deepLinkStackRouteKey(target)).toBe(key)
+  })
+
+  it('keys two different songs the same, so the second link replaces the first', () => {
+    expect(deepLinkStackRouteKey('/viewer/one')).toBe(deepLinkStackRouteKey('/viewer/two'))
+  })
+
+  it.each(['/', '/songs', '/setlists', '/daily', '/songbook', '/about', '/settings'])(
+    'returns null for the tab or single-instance target %s',
+    (target) => {
+      expect(deepLinkStackRouteKey(target)).toBeNull()
+    },
+  )
+
+  it('returns null for a passthrough URL', () => {
+    expect(deepLinkStackRouteKey('https://gracechords.com/admin')).toBeNull()
+  })
+
+  // The reason the key is the whole route and not just the first segment: an inbound
+  // /setlist/<x> resolves to the import preview, never to the in-app setlist/[id], so
+  // a shared-set link arriving while the user sits on their own setlist still pushes.
+  it('never keys an inbound setlist link as the in-app setlist detail route', () => {
+    const target = resolveDeepLinkPath('https://gracechords.com/setlist/one,two')
+    expect(target).toBe('/setlist/import?ids=one,two')
+    expect(deepLinkStackRouteKey(target)).toBe('setlist/import')
   })
 })

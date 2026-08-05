@@ -95,3 +95,22 @@ export function resolveDeepLinkPath(path: string): string {
     return path
   }
 }
+
+// Expo Router route key for the stack routes an inbound link can land on, or null for
+// everything else. app/+native-intent.tsx compares this against the currently focused
+// route (topRoute.ts): when a link targets the route that is already on top, it
+// replaces instead of pushing a second copy, so a run of shared links cannot grow the
+// stack without bound.
+//
+// Keyed on the whole route rather than the first segment on purpose: setlist/[id] and
+// setlist/import share segment 0, and a shared-set link arriving while the user is on
+// an in-app setlist/[id] must still push, so back returns to the setlist.
+//
+// Tab targets ('/', '/songs', '/daily', …) and unrecognised passthrough paths return
+// null: navigating to a tab does not stack, so they keep their normal behaviour.
+export function deepLinkStackRouteKey(target: string): string | null {
+  if (target.startsWith('/viewer/')) return 'viewer/[slug]'
+  if (target.startsWith('/setlist/import')) return 'setlist/import'
+  if (target.startsWith('/session/')) return 'session/[code]'
+  return null
+}
