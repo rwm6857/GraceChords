@@ -57,19 +57,67 @@ export function silenceInvalidRefreshTokenLogs(
   }
 }
 
-// Resolve the persisted session at launch. getSession() already refreshes an
-// expired token internally and returns { session: null, error } when the stored
-// refresh token is dead — but it leaves the caller to react. If we hit a dead
-// token we purge the local session so (a) the app routes cleanly to /login and
-// (b) the AppState auto-refresh tick has nothing to refresh, so it can never log
-// the "Invalid Refresh Token: Refresh Token Not Found" error on launch. scope
-// 'local' only clears the device — no network round-trip against a token the
-// server has already forgotten.
-export async function resolveInitialSession(auth: BootAuth): Promise<Session | null> {
-  const { data, error } = await auth.getSession()
-  if (error && isInvalidRefreshTokenError(error)) {
-    await auth.signOut({ scope: 'local' }).catch(() => {})
+// Cap on the boot session read. getSession() refreshes over the network whenever
+// the access token expires within auth-js's EXPIRY_MARGIN_MS (90 s), so with a 1 h
+// token TTL any cold launch more than ~59 min after the last refresh makes a round
+// trip here — inside the native-splash hold, with no timeout of its own. On a
+// hanging (rather than refusing) network that request does not fail fast: it waits
+// out iOS's URLSession timeout, up to 60 s, which presents as "the app does not
+// launch". 2.5 s is well above a healthy refresh (~0.2–0.6 s) and well below
+// anything a user reads as a failure to launch.
+export const INITIAL_SESSION_TIMEOUT_MS = 2500
+
+const TIMED_OUT = Symbol('gc.initialSessionTimeout')
+
+// Resolve the persisted session at launch, within a bounded time.
+//
+// A race, not a catch: getSession() RESOLVES with { session: null, error } on a
+// network failure, so a rejection handler would never run — and a hanging socket
+// never settles at all, so there is nothing to catch.
+//
+// On timeout we degrade to signed out. That is not a new state: an offline cold
+// launch with a stale access token already resolves null today (the refresh fails,
+// the error is not a dead-token error, and data.session is null). The in-flight
+// getSession() is NOT cancelled — when it finally settles, auth-js emits
+// TOKEN_REFRESHED on success or SIGNED_OUT after the local purge below, and the
+// onAuthStateChange subscription in app/_layout.tsx adopts the corrected state. So
+// a slow-but-working network self-heals into the app rather than sticking on /login.
+export async function resolveInitialSession(
+  auth: BootAuth,
+  timeoutMs: number = INITIAL_SESSION_TIMEOUT_MS,
+): Promise<Session | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(TIMED_OUT), timeoutMs)
+  })
+  try {
+    const result = await Promise.race([readPersistedSession(auth), deadline])
+    return result === TIMED_OUT ? null : result
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// getSession() already refreshes an expired token internally and returns
+// { session: null, error } when the stored refresh token is dead — but it leaves the
+// caller to react. If we hit a dead token we purge the local session so (a) the app
+// routes cleanly to /login and (b) the AppState auto-refresh tick has nothing to
+// refresh, so it can never log the "Invalid Refresh Token: Refresh Token Not Found"
+// error on launch. scope 'local' only clears the device — no network round-trip
+// against a token the server has already forgotten.
+//
+// Wrapped so a throw (lock acquisition, storage adapter) resolves null rather than
+// rejecting: this promise is a member of the hydration Promise.all that gates the
+// splash, and a rejection there would leave `ready` false forever.
+async function readPersistedSession(auth: BootAuth): Promise<Session | null> {
+  try {
+    const { data, error } = await auth.getSession()
+    if (error && isInvalidRefreshTokenError(error)) {
+      await auth.signOut({ scope: 'local' }).catch(() => {})
+      return null
+    }
+    return data.session ?? null
+  } catch {
     return null
   }
-  return data.session ?? null
 }

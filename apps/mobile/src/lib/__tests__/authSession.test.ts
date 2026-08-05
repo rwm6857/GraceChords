@@ -183,4 +183,33 @@ describe('resolveInitialSession', () => {
 
     await expect(resolveInitialSession(auth)).resolves.toBeNull()
   })
+
+  // The launch path this bounds: getSession() refreshes over the network when the
+  // access token is near expiry, and a hanging (rather than refusing) network leaves
+  // it pending for as long as URLSession allows — with the native splash still up.
+  it('resolves null once the timeout elapses if getSession never settles', async () => {
+    const auth = fakeAuth({ getSession: vi.fn().mockReturnValue(new Promise(() => {})) })
+
+    await expect(resolveInitialSession(auth, 5)).resolves.toBeNull()
+  })
+
+  it('prefers a fast resolve over the timeout', async () => {
+    const session = { user: { id: 'u1' } }
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
+    })
+
+    await expect(resolveInitialSession(auth, 5000)).resolves.toBe(session)
+  })
+
+  // A rejection here would be a member of the hydration Promise.all rejecting, which
+  // leaves `ready` false and the splash up forever.
+  it('resolves null instead of rejecting when getSession throws', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockRejectedValue(new Error('navigator lock timeout')),
+    })
+
+    await expect(resolveInitialSession(auth)).resolves.toBeNull()
+    expect(auth.signOut).not.toHaveBeenCalled()
+  })
 })

@@ -33,6 +33,7 @@ import {
   syncReaderReminderOnLaunch,
 } from '../src/lib/readerReminderService'
 import { hydrateViewerPrefs } from '../src/lib/viewerPrefs'
+import { setFocusedRouteKey } from '../src/lib/topRoute'
 import { startAccessibilityFlags } from '../src/lib/accessibilityFlagsService'
 import { applyOrientationLock } from '../src/lib/orientationLock'
 import { useAccessibilityFlags } from '../src/lib/accessibilityFlags'
@@ -87,12 +88,23 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
   }, [session, ready, segments, beginHandoff])
 
   // Safety net: if routing never "settles" for some reason, don't leave the
-  // splash up indefinitely once the session has resolved.
+  // splash up indefinitely once the session has resolved. Note this can only arm
+  // once `ready` is true, so it rescues a stuck ROUTE, never a stuck hydration —
+  // the hydration bound lives in resolveInitialSession's timeout instead. It has
+  // to stay gated this way: lifting the splash before the session is known would
+  // paint Home (or a deep-linked screen) before the gate above can redirect.
   useEffect(() => {
     if (!ready) return
     const id = setTimeout(beginHandoff, 2000)
     return () => clearTimeout(id)
   }, [ready, beginHandoff])
+
+  // Mirror the focused route for app/+native-intent.tsx, which runs outside React
+  // and needs to know whether an inbound deep link would stack a second copy of
+  // the route already on screen. See src/lib/topRoute.ts.
+  useEffect(() => {
+    setFocusedRouteKey(segments.length ? segments.join('/') : null)
+  }, [segments])
 }
 
 // Shown instead of the app when required public config is missing (e.g. a
@@ -200,11 +212,14 @@ export default function RootLayout() {
       // Android never paints a missing glyph on first frame. iOS renders icons
       // through SF Symbols natively (SymbolIcon), so there is nothing to load
       // there — skip it to keep the iOS launch path byte-for-byte unchanged.
+      // Swallow a load failure: every other member of this Promise.all already
+      // resolves to a default on error, and this is the only one that can reject.
+      // A missing glyph is a far better outcome than a splash held forever.
       Platform.OS === 'android'
         ? Font.loadAsync({
             MaterialSymbolsOutlined: require('../assets/fonts/MaterialSymbolsOutlined.ttf'),
             MaterialSymbolsFilled: require('../assets/fonts/MaterialSymbolsFilled.ttf'),
-          })
+          }).catch(() => {})
         : Promise.resolve(),
       // Resolve the initial accessibility-flag query before the splash lifts so
       // the contrast overlay (if enabled) is applied on first paint — no flash.

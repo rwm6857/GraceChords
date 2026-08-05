@@ -98,7 +98,7 @@ root) in order. Key tables:
 - `public.user_starred_songs` — per-user song stars
 - `public.saved_sets` — cloud-saved setlists for logged-in users
 - `public.collaborator_requests` — queue for users requesting collaborator access
-- `public.reflections` — per-user Daily Word reflections (private journal + anonymous public posts); moderation adds `reflection_hearts`, `reports`, `banned_users`, and a `feature_flags` kill switch. Public rows are written only by the service-role `submit` Pages Function after moderation.
+- `public.reflections` — per-user Daily Word reflections, a **private journal only**. The anonymous public-posts feature was removed under App Review Guideline 1.2 (PR 469 for the clients, migration `20260805000000_retire_public_reflections_age_gate.sql` for the backend: kill switch off, `public_feed_read` policy dropped). Its moderation tables — `reflection_hearts`, `reports`, `banned_users`, `feature_flags` — are retained but inert, because the still-deployed `submit`/`report` Pages Functions read them and should refuse cleanly rather than error.
 
 Every table has row-level security — test query changes with a `user`-role account.
 
