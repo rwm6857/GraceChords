@@ -424,40 +424,27 @@ duplicate logic here and never edit core internals to suit mobile.
   in both USING and WITH CHECK, so a public post can never be edited and an edit
   can't flip a private row to public); `updateReflection` in core drives it, and
   the composer's edit mode (`editId`/`initialBody`/`date` params) + the landing/
-  journal "Edit" actions reach it. Public posts stay immutable. Queries live in
+  journal "Edit" actions reach it. Queries live in
   core (`reflections/reflectionsRepo.js`); mobile hooks are
-  `useTodayReflection`/`useReflectionList` (both expose `update`). The
-  `visibility` column carries public "Shared Reflections" too.
-  **Phase 2A (backend + moderation)** is server-side — the `feature_flags` kill
-  switch (`public_reflections`, **enabled** by migration
-  `20260719000300_enable_public_reflections.sql`; flip the row to `false` in the
-  Supabase dashboard to take the feature back down), `banned_users`, `reports`,
-  `reflection_hearts`, soft-delete columns, the moderated submit/report Pages
-  Functions, and the Telegram report alert (see `apps/web/AGENTS.md` → "Public
-  reflections moderation"). **Phase 2B (client surfaces)** is the landing's
-  **Shared Reflections** feature, gated on `usePublicReflectionsEnabled()` so it
-  stays dark until an admin flips the flag (private reflection + journal are
-  untouched when off): an anonymous today-only feed (`SharedReflectionsFeed`;
-  the feed query selects **only** `id/body/heart_count` — never `user_id`),
-  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked; a
-  user is **never served their own post** back in the feed — they read it, with
-  its live heart count, in the "Share a reflection" slot), the **unified
-  composer** (`ReflectionComposeScreen`, one `app/daily/reflection.tsx` route)
-  with a **Private/Shared toggle** — selecting Shared posts through the moderated
-  `/api/reflections/submit` (`reflectionsApi.ts`) behind the UGC gate + an
-  explicit confirm, so nothing goes public without a deliberate action; the
-  landing/journal pass `visibility=public` to preset the toggle. The Apple-1.2
-  **UGC gate**
-  (`UgcTermsSheet` + `accept_ugc_terms()` RPC → `users.ugc_accepted_at`,
-  migration `20260719000200_ugc_acceptance.sql`; gate copy in `ugcTerms.ts`,
-  full terms in web `terms-of-use.md`), report + local **hide** (`hiddenPosts.ts`,
-  device-local), and the journal now listing public + private with heart counts.
-  Public reflections are **never** a client insert — only the service-role submit
-  endpoint writes them. The
+  `useTodayReflection`/`useReflectionList` (both expose `update`).
+  **Reflections are private-only. The public "Shared Reflections" feature is
+  gone** — App Review rejected 1.0.0 (11) under Guideline 1.2 (anonymous
+  user-generated content). PR 469 deleted every client surface (the feed, the
+  Private/Shared toggle, hearts, report/hide, the UGC terms gate and its
+  `accept_ugc_terms()` call) and narrowed core's `ReflectionVisibility` to
+  `'private'`, so reintroducing a public write is a type error. Migration
+  `20260805000000_retire_public_reflections_age_gate.sql` retired the backend:
+  `public_reflections` flag **off** and the `public_feed_read` policy **dropped**.
+  The moderation tables and the `submit`/`report` Pages Functions still exist but
+  are inert — see `apps/web/AGENTS.md` → "Public reflections moderation
+  (backend — RETIRED)" for why they were kept. The `visibility` column and the
+  `own_update_private` policy's `visibility='private'` clauses remain as the
+  belt-and-braces that keep a public row from ever being written or edited from a
+  client. Do not build a public-content surface here without reopening the
+  Guideline 1.2 question first. The
   landing's **devotional** hero card + long-read page from the design are
-  **dropped** (no public-domain content pipeline was ever built); the landing's
-  lead slot — above today's reading — is reserved for the **Phase-2 public
-  reflections feed**, which will take the devotional's place there.
+  **dropped** (no public-domain content pipeline was ever built), and the landing's
+  lead slot — above today's reading — is now unused.
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),
