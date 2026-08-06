@@ -9,8 +9,9 @@ import { useTheme } from '../../theme/ThemeProvider'
 
 // Date picker for browsing the reading plan (today + other days). Mirrors the
 // [UI] Daily Word floating calendar: a month grid with prev/next navigation and
-// a Today shortcut. Built on RN primitives — no extra native date-picker dep.
-// Presented via the native formSheet route (src/lib/formSheetHost.ts).
+// a Today shortcut. Deliberately the designed month grid rather than the native
+// date picker the reminder-time sheet uses — the design calls for this browsing
+// affordance. Presented via the native formSheet route (src/lib/formSheetHost.ts).
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()

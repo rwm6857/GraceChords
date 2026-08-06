@@ -1,0 +1,129 @@
+-- =============================================================================
+-- GraceChords: narrow public.users grants to what the clients actually use
+-- (2026-08-06)
+--
+-- THIS IS THE MIGRATION TO WATCH. Every other file in this series is a no-op, a
+-- removal of dead objects, or a constraint that affects zero rows. This one
+-- changes what a live client is permitted to do, and its blast radius includes
+-- the shipped iOS binary, which cannot be updated for days.
+--
+-- Live state grants all seven table privileges to anon AND authenticated —
+-- Supabase's default-privilege bootstrap, never narrowed. The table-wide UPDATE
+-- grant is what made the role escalation reachable: users_update's
+-- USING (id = auth.uid()) constrains WHICH ROW is updated, never WHICH COLUMNS
+-- change, so any authenticated user could PATCH their own role to 'owner'.
+-- guard_users_role_change() closed that by hand; this closes it again at the
+-- privilege layer, one level down, and makes every column added in future
+-- non-updatable by default — it fails closed rather than open.
+--
+-- Derived from a complete call-site audit of apps/mobile, apps/web, apps/studio,
+-- packages/core, workers/ and apps/web/functions/. Everything `authenticated`
+-- writes under RLS is display_name and preferences:
+--
+--   apps/web/src/pages/SignupPage.jsx:81    display_name, preferences
+--   apps/web/src/pages/ProfilePage.jsx:121  display_name, preferences
+--   apps/web/src/hooks/useLocale.jsx:58     preferences
+--   apps/mobile/src/lib/profile.ts:31       preferences   <-- the shipped binary
+--
+-- Deliberately NOT granted to authenticated, with the reason for each:
+--
+--   role                  written only by update_user_role(), SECURITY DEFINER,
+--                         which executes as the function owner and is unaffected
+--                         by grants to authenticated.
+--   telegram_user_id      written only by apps/web/functions/api/telegram/link.js
+--   telegram_linked_at    (lines 156 and 196) using SUPABASE_SERVICE_ROLE_KEY,
+--                         which bypasses these grants entirely. service_role
+--                         keeps its blanket privileges below.
+--   updated_at            written by the set_updated_at BEFORE trigger. Column
+--                         privileges are checked against the columns named in the
+--                         statement's SET list, NOT against columns a trigger
+--                         modifies, so the trigger is unaffected. This is the one
+--                         non-obvious case and it is safe.
+--   id                    never written by any client after row creation.
+--   created_at            never written by any client; both default to now().
+--   account_created_at
+--
+-- anon loses UPDATE entirely. That is a behavioural no-op: for anon auth.uid() is
+-- NULL, so users_update's qual is already unsatisfiable and no anon UPDATE has
+-- ever succeeded.
+--
+-- SELECT AND INSERT GRANTS ARE DELIBERATELY UNTOUCHED. Do not narrow SELECT by
+-- analogy in a later pass: apps/web/src/hooks/useAuth.jsx:68 issues select('*'),
+-- which PostgREST expands to every column, so a column-level SELECT grant would
+-- break the web profile fetch outright — and because useAuth.jsx:85 falls back to
+-- `profile?.role || 'user'`, all 52 accounts would silently degrade to plain user
+-- rather than showing an error.
+--
+-- Reversible in one statement group. See the paired down migration.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Privileges PostgREST can never issue.
+--
+-- Confirmed rather than assumed. PostgREST's entire surface is GET/POST/PATCH/
+-- DELETE mapped onto SELECT/INSERT/UPDATE/DELETE. It emits no DDL, so no request
+-- it can construct reaches TRUNCATE, adds a foreign key (REFERENCES), or creates
+-- a trigger (TRIGGER). Exercising any of them needs a raw SQL connection, which
+-- anon and authenticated do not have. These three are Supabase default-privilege
+-- artifacts and revoking them is hygiene with no behaviour change.
+--
+-- TRUNCATE is worth calling out separately: it is equally unreachable, but it is
+-- the one of the three with a genuinely destructive payload, so removing it has
+-- real defence-in-depth value rather than being purely cosmetic.
+-- ---------------------------------------------------------------------------
+REVOKE TRUNCATE, REFERENCES, TRIGGER ON TABLE public.users FROM anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 2. DELETE.
+--
+-- No client issues DELETE on public.users — verified across web, mobile, studio,
+-- workers and Pages Functions. There is no .delete() on a users reference and no
+-- REST DELETE against /rest/v1/users anywhere; the only REST DELETE in a Worker
+-- is workers/session-cleanup/index.js:27, against `sessions`.
+--
+-- Account deletion flows through delete_user() and admin_delete_user(), which
+-- DELETE FROM auth.users and rely on users_id_fkey ON DELETE CASCADE. Referential
+-- integrity actions are performed by the system and bypass both grants and RLS,
+-- so this revoke does not affect them.
+--
+-- The users_delete policy (owner-only) stays in place as defence in depth.
+-- Without the underlying grant it is simply unreachable.
+-- ---------------------------------------------------------------------------
+REVOKE DELETE ON TABLE public.users FROM anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 3. Table-wide UPDATE out, column-level UPDATE in.
+--
+-- Order matters: the REVOKE must precede the GRANT, or the column grant would be
+-- subsumed by the table-wide one and the narrowing would silently do nothing.
+-- ---------------------------------------------------------------------------
+REVOKE UPDATE ON TABLE public.users FROM anon, authenticated;
+
+GRANT UPDATE (display_name, preferences) ON TABLE public.users TO authenticated;
+
+-- =============================================================================
+-- POST-APPLY CHECK — run this before touching the app:
+--
+--   SELECT grantee, column_name, privilege_type
+--   FROM information_schema.column_privileges
+--   WHERE table_schema='public' AND table_name='users'
+--     AND grantee IN ('anon','authenticated') AND privilege_type='UPDATE'
+--   ORDER BY grantee, column_name;
+--
+-- Expected: exactly two rows, both `authenticated` — display_name and
+-- preferences. Anything else, or any anon row, means this did not apply cleanly.
+--
+-- Then verify the escalation is closed at both layers. As a plain user:
+--   supabase.from('users').update({role:'admin'}).eq('id', <own id>)
+-- Before this migration that failed inside guard_users_role_change() with
+-- 'role can only be changed via update_user_role()'. After it the failure comes
+-- earlier, at the privilege layer, with:
+--
+--   ERROR:  permission denied for table users        (SQLSTATE 42501)
+--
+-- Note the message says TABLE, not "column role", even though the missing
+-- privilege is column-level — Postgres does not name the offending column here.
+-- Verified against PostgreSQL 16. The same message appears for any non-granted
+-- column, e.g. an attempt to write telegram_user_id, so treat 42501 on this table
+-- as "wrote a column outside the grant" rather than as evidence about which one.
+-- =============================================================================

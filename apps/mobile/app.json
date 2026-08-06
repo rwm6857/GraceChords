@@ -16,6 +16,42 @@
       "associatedDomains": ["applinks:gracechords.com"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -29,11 +65,23 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
+            { "scheme": "https", "host": "gracechords.com", "path": "/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPattern": "/*" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songs" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/song/" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/songs/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/setlist" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/setlist/" },
             { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/set/" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" }
+            { "scheme": "https", "host": "gracechords.com", "path": "/worship" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/worship/" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/s/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/reading" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/songbook" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/about" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/profile" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/posts" },
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
@@ -45,11 +93,11 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icon.png",
-          "imageWidth": 180,
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
           "backgroundColor": "#F5F7F9",
           "dark": {
-            "image": "./assets/icon.png",
+            "image": "./assets/splash-icon-dark.png",
             "backgroundColor": "#14171A"
           }
         }
@@ -83,7 +131,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "GraceChords uses your photo library only so you can pick a cover image for a songbook PDF you export."
+          "photosPermission": "GraceChords uses your photo library only so you can pick a cover image for a songbook PDF you export.",
+          "cameraPermission": false
         }
       ]
     ],

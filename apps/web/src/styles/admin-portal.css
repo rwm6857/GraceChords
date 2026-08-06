@@ -119,17 +119,6 @@
   border-color: color-mix(in srgb, #3dbdab 32%, var(--gc-separator));
 }
 
-.gc-role-pill--collaborator {
-  background: color-mix(in srgb, #3a6abf 12%, var(--gc-surface-1));
-  color: #3a6abf;
-  border: 1px solid color-mix(in srgb, #3a6abf 28%, var(--gc-separator));
-}
-[data-theme="dark"] .gc-role-pill--collaborator {
-  background: color-mix(in srgb, #5580d9 14%, var(--gc-surface-1));
-  color: #6a96e8;
-  border-color: color-mix(in srgb, #6a96e8 32%, var(--gc-separator));
-}
-
 .gc-role-pill--user {
   background: color-mix(in srgb, var(--gc-text-secondary) 10%, var(--gc-surface-1));
   color: var(--gc-text-secondary);

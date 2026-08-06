@@ -1,10 +1,9 @@
-The Admin Portal (`/admin`) is a role-restricted dashboard for managing users and access requests. It requires the **admin** or **owner** role — see [[Roles-and-Access]].
+The Admin Portal (`/admin`) is a role-restricted dashboard for managing users and roles. It requires the **admin** or **owner** role — see [[Roles-and-Access]].
 
 ## At a glance
 - View and manage all registered users
 - Promote or demote user roles (within your own role's limits)
 - Delete user accounts (owner only)
-- Review and approve/deny collaborator access requests
 - Role permission matrix reference
 
 ## User Management Table
@@ -21,22 +20,15 @@ Displays all users with:
 Select a new role from the dropdown in the Actions column. Changes take effect immediately.
 
 Promotion limits:
-- **Admins** can promote up to **editor** and can promote any user to **collaborator**.
-- Only **owners** can promote to **admin** or change an owner's role.
-- You cannot change your own role.
+- **Admins** can promote up to **editor**.
+- Only **owners** can promote to **admin**.
+- **Nobody** can promote anyone to **owner** — the dropdown does not offer it, and
+  `update_user_role()` rejects it. The single owner is set by direct SQL.
+- You cannot change your own role. This is enforced by the database, not just the UI.
 
 ### Deleting accounts
 
-The **Delete** button is visible only to owners. A confirmation dialog is shown before deletion. Deleted accounts remove the user from `public.users` (cascades to starred songs and collaborator requests).
-
-## Pending Collaborator Requests
-
-Shows users who have submitted a request for collaborator access from their Profile page. Each entry displays:
-- User display name and email
-- Request date
-
-**Approve** → sets the user's role to `collaborator`.
-**Deny** → marks the request as denied and leaves the user's role unchanged.
+The **Delete** button is visible only to owners. A confirmation dialog is shown before deletion. Deleting removes the row from `auth.users`, which cascades to `public.users` and everything that references it (starred songs, setlists, reflections).
 
 ## Role Permission Matrix
 

@@ -57,7 +57,7 @@ Workers are deployed separately from Pages using Wrangler.
 Handles PPTX file uploads and deletes for song slide decks.
 
 **Endpoints**:
-- `POST /upload` — Upload a `.pptx` file (≤ 20 MB). Requires Collaborator+ role.
+- `POST /upload` — Upload a `.pptx` file (≤ 20 MB). Requires Editor+ role.
 - `DELETE /delete` — Delete a `.pptx` file. Requires Editor+ role.
 
 **Security**:

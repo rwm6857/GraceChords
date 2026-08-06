@@ -9,6 +9,7 @@ import {
   setReminderEnabled,
   setReminderTime,
   syncReminder,
+  usesTwentyFourHourClock,
   type NotificationBackend,
   type ReminderContent,
 } from '../readerReminder'
@@ -81,6 +82,18 @@ describe('formatReminderTime', () => {
   it('formats morning and evening times in en-US', () => {
     expect(formatReminderTime(8, 0, 'en-US')).toBe('8:00 AM')
     expect(formatReminderTime(20, 5, 'en-US')).toBe('8:05 PM')
+  })
+})
+
+describe('usesTwentyFourHourClock', () => {
+  it('is false for a 12-hour locale and true for a 24-hour one', () => {
+    expect(usesTwentyFourHourClock('en-US')).toBe(false)
+    expect(usesTwentyFourHourClock('tr')).toBe(true)
+    expect(usesTwentyFourHourClock('de-DE')).toBe(true)
+  })
+
+  it('falls back to 12-hour on an invalid locale', () => {
+    expect(usesTwentyFourHourClock('not a locale')).toBe(false)
   })
 })
 

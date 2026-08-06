@@ -1,66 +1,45 @@
 // Remaps inbound deep-link / Universal Link paths to Expo Router routes.
 //
-// Songs: the web has /song/:id and /songs/:id (id == song slug), but the app's
-// song screen is viewer/[slug], so those paths are rewritten.
+// Native-only file; Expo Router ignores it on web. redirectSystemPath runs for
+// every externally-launched link, on both cold start (initial === true) and warm
+// start (initial === false).
 //
-// Shared setlists: the web shares a set as an ephemeral link the app can't route
-// to directly, so both forms are remapped to the import-preview screen
-// (setlist/import), which decodes + previews + saves a copy:
-//   - slug list:   /setlist/<slugs>?toKeys=  and  /worship/<slugs>?toKeys=
-//   - compact code: /set/<CODE>              and  /worship/set/<CODE>
-// /worship/* is imported as a plain setlist (we materialize a saved copy). The
-// app's own /setlist/<uuid> and /setlist/import routes are left untouched.
-//
-// Anything unrecognised is passed through unchanged. Native-only file; Expo
-// Router ignores it on web. redirectSystemPath runs for every externally-launched
-// link, on both cold start (initial === true) and warm start (initial === false).
+// The mapping itself lives in src/lib/deepLinks.ts so it stays RN-free and unit
+// tested; this file is only the router hook.
 
-// Raw (still-encoded) query value — keep per-item encoding intact so the import
-// parser can split on comma then decode each item (mirrors the web parser).
-function rawParam(search: string, key: string): string {
-  const m = new RegExp(`[?&]${key}=([^&]*)`).exec(search || '')
-  return m ? m[1] : ''
-}
+import { router } from 'expo-router'
+import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../src/lib/deepLinks'
+import { getFocusedRouteKey } from '../src/lib/topRoute'
 
-export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
-  try {
-    const url = new URL(path, 'https://gracechords.com')
-    const seg = url.pathname.split('/').filter(Boolean)
+export function redirectSystemPath({
+  path,
+  initial,
+}: {
+  path: string
+  initial: boolean
+}): string | null {
+  const target = resolveDeepLinkPath(path)
 
-    // /song/:id or /songs/:id -> /viewer/:id  (bare /songs falls through to the tab)
-    if ((seg[0] === 'song' || seg[0] === 'songs') && seg[1]) {
-      const slug = decodeURIComponent(seg.slice(1).join('/'))
-      return `/viewer/${encodeURIComponent(slug)}`
-    }
-
-    // /s/:code -> native live-session follower (session/[code]). Also handles the
-    // gracechords://s/:code custom-scheme link the web "open in app" banner uses.
-    if (seg[0] === 's' && seg[1]) {
-      return `/session/${encodeURIComponent(seg[1])}`
-    }
-
-    // Compact code form -> import preview.
-    if (seg[0] === 'set' && seg[1]) {
-      return `/setlist/import?code=${encodeURIComponent(seg[1])}`
-    }
-    if (seg[0] === 'worship' && seg[1] === 'set' && seg[2]) {
-      return `/setlist/import?code=${encodeURIComponent(seg[2])}`
-    }
-
-    // Slug-list form -> import preview. seg[1] is the comma-joined, per-item
-    // URI-encoded slug list; forward it and the raw toKeys value verbatim.
-    // Skip the app's own routes (/setlist/import, /setlist/<uuid> personal sets).
-    if (seg[0] === 'setlist' && seg[1] && seg[1] !== 'import') {
-      const toKeys = rawParam(url.search, 'toKeys')
-      return `/setlist/import?ids=${seg[1]}${toKeys ? `&toKeys=${toKeys}` : ''}`
-    }
-    if (seg[0] === 'worship' && seg[1]) {
-      const toKeys = rawParam(url.search, 'toKeys')
-      return `/setlist/import?ids=${seg[1]}${toKeys ? `&toKeys=${toKeys}` : ''}`
-    }
-
-    return path
-  } catch {
-    return path
+  // Expo Router pushes for every inbound link, so a run of shared links stacked one
+  // detail screen per tap — measured at ~6–8 MB each, with the process jettisoned at
+  // ~251 MB after 15 viewer pushes (new PID, no crash report: a resource kill). That
+  // is reachable by tapping several shared song links in sequence, which is exactly
+  // what a reviewer verifying Universal Links does. When the link targets the route
+  // that is already focused, replace it instead of stacking another copy.
+  //
+  // Returning null tells Expo Router we handled the navigation ourselves: it only
+  // dispatches for a truthy return (the `if (href)` guard in expo-router's
+  // link/linking.ts subscribe(), and the same guard in getLinkingConfig's
+  // getInitialURL).
+  //
+  // `initial` is a cold start, where the stack cannot already hold the target, so it
+  // keeps the plain push. In-app navigation never reaches this file at all, so every
+  // router.push to a viewer or a setlist is untouched.
+  const key = deepLinkStackRouteKey(target)
+  if (!initial && key !== null && key === getFocusedRouteKey()) {
+    router.replace(target as Parameters<typeof router.replace>[0])
+    return null
   }
+
+  return target
 }

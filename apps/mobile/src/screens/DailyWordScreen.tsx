@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Animated,
-  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -28,17 +27,19 @@ import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
 import GlassSurface from '../components/GlassSurface'
 import EmptyState from '../components/EmptyState'
+import ChapterSwipe from '../components/reader/ChapterSwipe'
 import ReaderSettingsSheet from '../components/reader/ReaderSettingsSheet'
 import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
 import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
-import { expandReadings, getPlanForDate } from '../lib/bibleSource'
+import { expandReadings, getPassage, getPlanForDate } from '../lib/bibleSource'
 import {
   defaultTranslationForLocale,
   setBibleTranslationPref,
   useBibleTranslationPref,
 } from '../lib/bibleTranslationPref'
 import { markReadToday, streakDateKey } from '../lib/readingStreak'
+import { resolveInitialPassageIndex } from '../lib/readerPassage'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
@@ -69,7 +70,14 @@ function formatDateLabel(d: Date, locale: string) {
 // true only when the Reader was PUSHED from the landing (app/daily/reader.tsx);
 // as the Daily Word tab root (reader-direct mode) it is false and the layout is
 // unchanged from before the landing existed.
-export default function DailyWordScreen({ showBackToLanding = false }: { showBackToLanding?: boolean } = {}) {
+//
+// `initialPassageId` is a core `passageId()` naming which of today's readings to
+// open on — set when a specific reading was tapped on the landing. An unknown or
+// missing id falls back to the day's first passage.
+export default function DailyWordScreen({
+  showBackToLanding = false,
+  initialPassageId,
+}: { showBackToLanding?: boolean; initialPassageId?: string } = {}) {
   const t = useTheme()
   const router = useRouter()
   const { t: tx, i18n } = useTranslation('reader')
@@ -79,7 +87,12 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   const { translations, groups, defaultTranslationId } = useBibleTranslations()
 
   const [date, setDate] = useState(() => new Date())
-  const [passageIndex, setPassageIndex] = useState(0)
+  const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
+  // Seeded synchronously (not in an effect) so a passage tapped on the landing
+  // is the FIRST chapter fetched — no flash of the day's first reading.
+  const [passageIndex, setPassageIndex] = useState(() =>
+    resolveInitialPassageIndex(passages, initialPassageId),
+  )
   // The user's explicit, persisted translation pick ('' = none yet).
   const storedTranslationId = useBibleTranslationPref()
   // Highlights persist per passage (keyed by passageId), stored to disk and
@@ -90,11 +103,9 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   const [sheet, setSheet] = useState<Sheet>('none')
   const [reloadToken, setReloadToken] = useState(0)
 
-  const fade = useRef(new Animated.Value(1)).current
   // Copy FAB press feedback: 0 = resting, 1 = pressed (scale-down + dim).
   const fabPress = useRef(new Animated.Value(0)).current
 
-  const passages = useMemo(() => expandReadings(getPlanForDate(date).readings), [date])
   const currentPassage: Passage | null = passages[passageIndex] || passages[0] || null
 
   // Resolve the active translation: a stored pick always wins; with no prior
@@ -127,8 +138,14 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   }, [chapter, currentPassage])
 
   // A new day starts on its first passage. Highlights are keyed by passage, so
-  // they survive date/chapter switches without being cleared here.
+  // they survive date/chapter switches without being cleared here. The mount run
+  // is skipped so it can't stomp on the `initialPassageId` seed above.
+  const dateSettled = useRef(false)
   useEffect(() => {
+    if (!dateSettled.current) {
+      dateSettled.current = true
+      return
+    }
     setPassageIndex(0)
   }, [date])
 
@@ -139,38 +156,40 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
     if (chapter && streakDateKey(date) === streakDateKey(new Date())) markReadToday()
   }, [chapter, date])
 
-  // Fade the reading region in whenever new chapter content arrives (chapter
-  // switch, translation switch, or first load). The Animated.View is persistent
-  // (wraps every state), so the animation never targets an unmounted node.
+  const changePassage = useCallback(
+    (next: number) => {
+      if (next < 0 || next >= passages.length) return
+      setPassageIndex((current) => (next === current ? current : next))
+    },
+    [passages.length],
+  )
+  const goNext = useCallback(() => changePassage(passageIndex + 1), [changePassage, passageIndex])
+  const goPrev = useCallback(() => changePassage(passageIndex - 1), [changePassage, passageIndex])
+
+  // Warm the chapters on either side so a committed swipe lands on real text
+  // instead of a spinner. `prefetchToday` only covers today in the DEFAULT
+  // translation; this covers whatever date/translation is actually open. Cached
+  // and in-flight chapters de-dupe inside `getPassage`, so this is cheap.
   useEffect(() => {
-    if (!chapter) return
-    fade.setValue(0)
-    Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: true }).start()
-  }, [chapter, fade])
+    if (!selectedTranslation) return
+    for (const neighbour of [passages[passageIndex - 1], passages[passageIndex + 1]]) {
+      if (neighbour) getPassage({ passage: neighbour, translation: selectedTranslation }).catch(() => {})
+    }
+  }, [passages, passageIndex, selectedTranslation])
 
-  function changePassage(next: number) {
-    if (next < 0 || next >= passages.length || next === passageIndex) return
-    setPassageIndex(next)
-  }
-
-  const pan = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
-      onPanResponderRelease: (_e, g) => {
-        if (Math.abs(g.dx) < 50) return
-        const forward = g.dx < 0 ? 1 : -1
-        const dir = rtlRef.current ? -forward : forward
-        changePassageRef.current(indexRef.current + dir)
-      },
-    })
-  ).current
-  // Keep the PanResponder (created once) reading current values.
-  const rtlRef = useRef(rtl)
-  rtlRef.current = rtl
-  const indexRef = useRef(passageIndex)
-  indexRef.current = passageIndex
-  const changePassageRef = useRef(changePassage)
-  changePassageRef.current = changePassage
+  // Identifies exactly what the reading area is showing: the passage, the
+  // translation, and which of the four branches below is rendered. ChapterSwipe
+  // replays its entrance on every change, so each distinct view arrives with an
+  // animation (a settled one never re-animates) — this is what makes a chapter
+  // land with a fade whether it came from a swipe, a chip, or a first load.
+  const view = loading
+    ? 'loading'
+    : error
+      ? 'error'
+      : versesInScope.length === 0
+        ? 'empty'
+        : 'verses'
+  const contentKey = `${passageKey}|${selectedTranslation?.id ?? ''}|${view}`
 
   // Copy only the current chapter's selected verses; leave the highlights in
   // place so they persist through the day.
@@ -198,6 +217,56 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
   function toggle(num: number) {
     toggleVerse(passageKey, num)
   }
+
+  // Copy FAB — appears while a selection exists (no count badge). Handed to
+  // ChapterSwipe as its overlay so it stays put while the reading slides.
+  const copyFab =
+    selection.size > 0 ? (
+      <Animated.View
+        style={{
+          position: 'absolute',
+          bottom: insets.bottom + t.spacing.xl,
+          [rtl ? 'left' : 'right']: t.spacing.lg,
+          opacity: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] }),
+          transform: [
+            { scale: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }) },
+          ],
+        }}
+      >
+        <Pressable
+          onPress={onCopy}
+          onPressIn={() =>
+            Animated.timing(fabPress, { toValue: 1, duration: 90, useNativeDriver: true }).start()
+          }
+          onPressOut={() => Animated.spring(fabPress, { toValue: 0, useNativeDriver: true }).start()}
+          accessibilityRole="button"
+          accessibilityLabel={tx('copyVerses', { count: selection.size })}
+          style={{ borderRadius: t.radii.pill }}
+        >
+          {/* Liquid Glass on iOS 26 (accent-tinted); solid accent fill on
+              iOS < 26 and Android via GlassSurface's fallback. */}
+          <GlassSurface
+            isInteractive
+            glassTint={t.colors.accent}
+            fallbackColor={t.colors.accent}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: t.radii.pill,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: t.colors.accent,
+              shadowOpacity: 0.45,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+            }}
+          >
+            <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
+          </GlassSurface>
+        </Pressable>
+      </Animated.View>
+    ) : null
 
   const controlButton = {
     flexDirection: 'row' as const,
@@ -330,9 +399,21 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
         </ScrollView>
       </View>
 
-      {/* Reading area — one persistent Animated.View wraps every state so the
-          fade never targets an unmounted node. */}
-      <Animated.View style={{ flex: 1, opacity: fade }} {...pan.panHandlers}>
+      {/* Reading area. ChapterSwipe owns the horizontal drag (page tracks the
+          finger, edge chevron arms at the threshold, release commits) and the
+          entrance animation for every content change. Its moving layer wraps
+          every state, so an animation never targets an unmounted node; the copy
+          FAB goes in `overlay`, outside that layer, so it neither slides nor
+          fades with the reading. */}
+      <ChapterSwipe
+        contentKey={contentKey}
+        canGoNext={passageIndex < passages.length - 1}
+        canGoPrev={passageIndex > 0}
+        onGoNext={goNext}
+        onGoPrev={goPrev}
+        rtl={rtl}
+        overlay={copyFab}
+      >
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={t.colors.accent} />
@@ -414,57 +495,7 @@ export default function DailyWordScreen({ showBackToLanding = false }: { showBac
               )}
           </ScrollView>
         )}
-
-        {/* Copy FAB — appears while a selection exists (no count badge). */}
-        {selection.size > 0 ? (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              bottom: insets.bottom + t.spacing.xl,
-              [rtl ? 'left' : 'right']: t.spacing.lg,
-              opacity: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] }),
-              transform: [
-                { scale: fabPress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.9] }) },
-              ],
-            }}
-          >
-            <Pressable
-              onPress={onCopy}
-              onPressIn={() =>
-                Animated.timing(fabPress, { toValue: 1, duration: 90, useNativeDriver: true }).start()
-              }
-              onPressOut={() =>
-                Animated.spring(fabPress, { toValue: 0, useNativeDriver: true }).start()
-              }
-              accessibilityRole="button"
-              accessibilityLabel={tx('copyVerses', { count: selection.size })}
-              style={{ borderRadius: t.radii.pill }}
-            >
-              {/* Liquid Glass on iOS 26 (accent-tinted); solid accent fill on
-                  iOS < 26 and Android via GlassSurface's fallback. */}
-              <GlassSurface
-                isInteractive
-                glassTint={t.colors.accent}
-                fallbackColor={t.colors.accent}
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: t.radii.pill,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: t.colors.accent,
-                  shadowOpacity: 0.45,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: 8,
-                }}
-              >
-                <SymbolIcon name="doc.on.doc" size={23} color={t.colors.onAccent} />
-              </GlassSurface>
-            </Pressable>
-          </Animated.View>
-        ) : null}
-      </Animated.View>
+      </ChapterSwipe>
 
       <TranslationPickerSheet
         visible={sheet === 'translations'}

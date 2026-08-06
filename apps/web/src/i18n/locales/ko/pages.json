@@ -113,7 +113,6 @@
     "failedCopy": "링크 복사에 실패했습니다",
     "signInToSaveToast": "셋리스트를 저장하려면 로그인하세요.",
     "limitReached": "셋 {{limit}}개 한도에 도달했습니다.",
-    "limitReachedCollab": "{{limit}}개 한도에 도달했습니다. 더 저장하려면 협력자 권한을 요청하세요.",
     "manageTitle": "셋리스트 한도에 도달했습니다",
     "manageDesc": "{{limit}}개 중 {{count}}개의 셋리스트를 저장했습니다. 삭제할 항목을 선택한 뒤(오래된 순) 다시 저장하세요.",
     "manageSelectedCount": "{{count}}개 선택됨",

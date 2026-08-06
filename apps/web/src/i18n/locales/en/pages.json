@@ -113,7 +113,6 @@
     "failedCopy": "Failed to copy link",
     "signInToSaveToast": "Sign in to save setlists.",
     "limitReached": "You've reached your {{limit}} set limit.",
-    "limitReachedCollab": "Limit of {{limit}} reached. Request collaborator access to save more.",
     "manageTitle": "Setlist limit reached",
     "manageDesc": "You've saved {{count}} of your {{limit}} setlists. Select some to delete (oldest first), then save again.",
     "manageSelectedCount": "{{count}} selected",

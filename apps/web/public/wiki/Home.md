@@ -8,7 +8,7 @@ full-screen worship mode, and daily Bible readings.
 - **Web** (React + Vite) and **iOS** (Expo / React Native) apps share a common core in an npm-workspaces monorepo
 - Songs stored in Supabase — searchable, translatable, and star-able
 - Setlist and songbook builders output PDF/PPTX bundles
-- Role-based access: user → collaborator → editor → admin → owner
+- Role-based access: user → editor → admin → owner
 
 ## User Guide
 - [[Song-Library]] — search, filters, translations, deep search

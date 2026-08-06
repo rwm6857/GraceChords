@@ -1,0 +1,50 @@
+-- =============================================================================
+-- GraceChords: retire UGC terms acceptance (2026-08-06)
+--
+-- PR 469 removed the anonymous public-reflections clients (App Review Guideline
+-- 1.2), and 20260805000000 retired the backend — the kill switch, the public feed
+-- policy and the age gate. That migration DELIBERATELY RETAINED
+-- users.ugc_accepted_at and accept_ugc_terms(), on the grounds that dropping
+-- retained pieces would turn deployed endpoints into 502s. That reasoning applied
+-- to feature_flags, banned_users and reports, which functions/api/reflections/*
+-- still read. It does not apply to these two: nothing reads or calls either.
+--
+-- Verified across mobile, web, studio, core and workers. Repo-wide the only hits
+-- are three migration files and two prose docs. There is no generated
+-- database.types.ts, no hand-written User/Profile interface, and no Swift
+-- Codable that declares the column. The single select('*') on this table
+-- (apps/web/src/hooks/useAuth.jsx:68) assigns the row untyped and every consumer
+-- reads only role, display_name and preferences, so a missing key is undefined
+-- and never read.
+--
+-- THE FUNCTION AND THE COLUMN MUST GO TOGETHER.
+--
+-- Postgres does not dependency-track plpgsql bodies, so dropping the column alone
+-- would leave accept_ugc_terms() in place — still SECURITY DEFINER, still EXECUTE
+-- granted to authenticated — and failing at call time with
+-- `column "ugc_accepted_at" does not exist` instead of failing at migration time.
+-- The rollback documented at 20260719000200:36-41 already pairs them; this
+-- follows it.
+--
+-- Frozen-client note: build 11 shipped .rpc('accept_ugc_terms') and a read of the
+-- column, from apps/mobile/src/lib/ugc.ts (deleted in f225993). Build 11 was
+-- REJECTED by App Review, so it never went public — TestFlight only — and its
+-- read failed soft (`if (error || !data) return false`). The shipped 1.0.0 (12)
+-- binary touches neither. Worst case for a build-11 tester is the terms sheet
+-- appearing and its Accept button erroring; the private journal is unaffected.
+--
+-- Forward-only + idempotent. WARNING: NOT data-lossless — see the down migration.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. The function first, so the column drop cannot leave it dangling.
+-- ---------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.accept_ugc_terms();
+
+-- ---------------------------------------------------------------------------
+-- 2. The column.
+--
+-- Worth running before this, purely to know what is being discarded:
+--   SELECT count(*) FROM public.users WHERE ugc_accepted_at IS NOT NULL;
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.users DROP COLUMN IF EXISTS ugc_accepted_at;

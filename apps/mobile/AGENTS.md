@@ -62,7 +62,9 @@ those decisions.
   transpose gestures), `expo-file-system` / `expo-sharing` / `expo-clipboard`
   (export + share sheet), `@react-native-google-signin/google-signin` +
   `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
-  offline downloads), `expo-build-properties` (`useFrameworks: static`,
+  offline downloads), `@react-native-community/datetimepicker` (the platform's own
+  time picker behind the Daily Word reminder — pinned **exactly** at the
+  SDK-bundled version, `8.6.0`), `expo-build-properties` (`useFrameworks: static`,
   required by google-signin), and `expo-dev-client` (dev launcher — see the
   device note under Commands). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
@@ -223,15 +225,30 @@ duplicate logic here and never edit core internals to suit mobile.
 - **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
   session (redirect to `/login` when signed out, into the tabs when signed in) and
   holds the native splash (`expo-splash-screen`) until the session resolves *and*
-  the correct screen is mounted, so nothing flashes on first open. Session persists
+  the correct screen is mounted, so nothing flashes on first open. The hold then
+  hands off to `src/components/SplashOverlay.tsx` — a view drawn pixel-identical to
+  the native splash (transparent `assets/splash-icon*.png` mark at `imageWidth`,
+  system-appearance background) that zooms the mark out and cross-fades to reveal
+  the app, honours Reduce Motion, and owns the **only** `hideAsync()` call on the
+  normal launch path (`ConfigErrorScreen` still lifts it directly). Session persists
   via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
   `choose-icon` is reachable both with and without a session (post-signup step —
   email confirmation may still be pending).
 - **Deep links / Universal Links.** iOS Universal Links are wired via
-  `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`) +
-  `app/+native-intent.tsx` `redirectSystemPath`, and the AASA file lives in the
-  **web** repo at `apps/web/public/.well-known/apple-app-site-association`.
-  Handled paths:
+  `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`);
+  Android App Links via `android.intentFilters` in `app.json`. Which paths each
+  platform claims lives in the **web** repo — the AASA file at
+  `apps/web/public/.well-known/apple-app-site-association` and `assetlinks.json`
+  beside it. **`apps/web/public/.well-known/README.md` holds the canonical claim
+  table**; those three files plus `app.json` must agree. Paths are enumerated,
+  never wildcarded across the domain, because Android has no exclusion
+  mechanism — auth (`/login`, `/auth/callback`, `/reset-password`, …), the
+  admin/editor portal, and the legal pages the app links *out* to are
+  deliberately unclaimed.
+  - **The mapping is `src/lib/deepLinks.ts`** (`resolveDeepLinkPath`, pure and
+    unit-tested — one case per claim-table row). `app/+native-intent.tsx` is a
+    thin `redirectSystemPath` wrapper over it. Add a claim in three places at
+    once: AASA, `android.intentFilters`, and `deepLinks.ts` (+ a test).
   - `/song/:id`, `/songs/:id` (id == slug) → `/viewer/:slug` (the app has no
     `/song` route).
   - Shared setlists `/setlist/<slugs>?toKeys=`, `/set/<CODE>`, and the
@@ -241,10 +258,20 @@ duplicate logic here and never edit core internals to suit mobile.
     split for the slug-list form; slugs resolve against the shared catalog, misses
     are dropped with a warning, and "Save to my setlists" creates a normal setlist
     row (default name "Imported setlist"). Shared links never carry a title.
-  Changing `associatedDomains` / `intentFilters` needs a **fresh native build**
-  (prebuild + EAS), not an OTA. **TODO(android)** — `android.intentFilters` are
-  wired but dormant until an Android signing key exists and its SHA-256 lands in
-  the web `assetlinks.json`.
+  - `/s/:code` → `/session/:code`. Index/landing pages map to their tab
+    (`/` → home, `/songs`, `/setlist` → `/setlists`, `/reading` → `/daily`), and
+    web-only pages with no counterpart (the blog) resolve to the home tab rather
+    than dead-ending. Anything unrecognised passes through unchanged, which is
+    what keeps `gracechords://` links working.
+  - **Build impact differs per platform.** Editing `associatedDomains` or
+    `intentFilters` needs a **fresh native build** (prebuild + EAS), not an OTA.
+    But adding a *path* is only an AASA edit on iOS — no new build, just a web
+    deploy (devices cache the AASA, so expect refresh lag). Android compiles its
+    filters into `AndroidManifest.xml`, so a path change there **does** need a
+    rebuild.
+  - **Known gap:** a deep link is lost when signed out. `app/_layout.tsx` treats
+    only the `session` segment as public, so any other inbound link redirects to
+    `/login` and the destination is discarded rather than resumed after sign-in.
 - **Auth flows.** Email/password plus native Google
   (`@react-native-google-signin/google-signin`) and Apple
   (`expo-apple-authentication`, iOS-only button) via
@@ -326,8 +353,18 @@ duplicate logic here and never edit core internals to suit mobile.
   the foreground handler, and the tap→`/daily` deep link). Enabling requests
   notification permission (iOS shows the system prompt then) and only
   persists/schedules on grant, steering the user to system Settings on denial.
-  The time is set via a custom stepper sheet (`ReminderTimeSheet` — RN
-  primitives, no extra native picker dep, like `DatePickerSheet`). The app root
+  The time is set with the **platform's own time picker**
+  (`ReminderTimeSheet`, on `@react-native-community/datetimepicker`) — never a
+  hand-rolled stepper: iOS renders the UIDatePicker wheels (`display="spinner"`,
+  `themeVariant` from the resolved theme so a forced light/dark override is
+  honored) inside the usual native `formSheet` and commits the draft on **Done**;
+  Android opens the native clock dialog imperatively (`DateTimePickerAndroid.open`,
+  no form sheet) and commits only on its OK. Its `design: 'material'` (MD3) mode is
+  deliberately NOT used — that requires a `Theme.Material3.*` `styles.xml`, which
+  under CNG would mean a config plugin. 12- vs 24-hour presentation follows the
+  **app language** (`usesTwentyFourHourClock` in `readerReminder.ts`, same Intl
+  resolution as `formatReminderTime`), so the picker and the Settings row always
+  agree. The app root
   hydrates the preference at splash and reconciles the OS schedule on launch.
 - **App-wide defaults** live in `src/lib/defaults.ts` — `theme`
   (`system`/`light`/`dark`) and `chordStyle` (`letters`/`solfege`), **device-local
@@ -387,40 +424,27 @@ duplicate logic here and never edit core internals to suit mobile.
   in both USING and WITH CHECK, so a public post can never be edited and an edit
   can't flip a private row to public); `updateReflection` in core drives it, and
   the composer's edit mode (`editId`/`initialBody`/`date` params) + the landing/
-  journal "Edit" actions reach it. Public posts stay immutable. Queries live in
+  journal "Edit" actions reach it. Queries live in
   core (`reflections/reflectionsRepo.js`); mobile hooks are
-  `useTodayReflection`/`useReflectionList` (both expose `update`). The
-  `visibility` column carries public "Shared Reflections" too.
-  **Phase 2A (backend + moderation)** is server-side — the `feature_flags` kill
-  switch (`public_reflections`, **enabled** by migration
-  `20260719000300_enable_public_reflections.sql`; flip the row to `false` in the
-  Supabase dashboard to take the feature back down), `banned_users`, `reports`,
-  `reflection_hearts`, soft-delete columns, the moderated submit/report Pages
-  Functions, and the Telegram report alert (see `apps/web/AGENTS.md` → "Public
-  reflections moderation"). **Phase 2B (client surfaces)** is the landing's
-  **Shared Reflections** feature, gated on `usePublicReflectionsEnabled()` so it
-  stays dark until an admin flips the flag (private reflection + journal are
-  untouched when off): an anonymous today-only feed (`SharedReflectionsFeed`;
-  the feed query selects **only** `id/body/heart_count` — never `user_id`),
-  optimistic hearts (`usePublicFeed`/`reflection_hearts`, self-heart blocked; a
-  user is **never served their own post** back in the feed — they read it, with
-  its live heart count, in the "Share a reflection" slot), the **unified
-  composer** (`ReflectionComposeScreen`, one `app/daily/reflection.tsx` route)
-  with a **Private/Shared toggle** — selecting Shared posts through the moderated
-  `/api/reflections/submit` (`reflectionsApi.ts`) behind the UGC gate + an
-  explicit confirm, so nothing goes public without a deliberate action; the
-  landing/journal pass `visibility=public` to preset the toggle. The Apple-1.2
-  **UGC gate**
-  (`UgcTermsSheet` + `accept_ugc_terms()` RPC → `users.ugc_accepted_at`,
-  migration `20260719000200_ugc_acceptance.sql`; gate copy in `ugcTerms.ts`,
-  full terms in web `terms-of-use.md`), report + local **hide** (`hiddenPosts.ts`,
-  device-local), and the journal now listing public + private with heart counts.
-  Public reflections are **never** a client insert — only the service-role submit
-  endpoint writes them. The
+  `useTodayReflection`/`useReflectionList` (both expose `update`).
+  **Reflections are private-only. The public "Shared Reflections" feature is
+  gone** — App Review rejected 1.0.0 (11) under Guideline 1.2 (anonymous
+  user-generated content). PR 469 deleted every client surface (the feed, the
+  Private/Shared toggle, hearts, report/hide, the UGC terms gate and its
+  `accept_ugc_terms()` call) and narrowed core's `ReflectionVisibility` to
+  `'private'`, so reintroducing a public write is a type error. Migration
+  `20260805000000_retire_public_reflections_age_gate.sql` retired the backend:
+  `public_reflections` flag **off** and the `public_feed_read` policy **dropped**.
+  The moderation tables and the `submit`/`report` Pages Functions still exist but
+  are inert — see `apps/web/AGENTS.md` → "Public reflections moderation
+  (backend — RETIRED)" for why they were kept. The `visibility` column and the
+  `own_update_private` policy's `visibility='private'` clauses remain as the
+  belt-and-braces that keep a public row from ever being written or edited from a
+  client. Do not build a public-content surface here without reopening the
+  Guideline 1.2 question first. The
   landing's **devotional** hero card + long-read page from the design are
-  **dropped** (no public-domain content pipeline was ever built); the landing's
-  lead slot — above today's reading — is reserved for the **Phase-2 public
-  reflections feed**, which will take the devotional's place there.
+  **dropped** (no public-domain content pipeline was ever built), and the landing's
+  lead slot — above today's reading — is now unused.
 - **Daily Word / Reader** reads the day's M'Cheyne passages from Cloudflare R2.
   Shared, DOM-free logic (plan lookup, reading expansion, translation manifest,
   RTL, chapter/copy helpers) lives in core's `bible` module (`@gracechords/core`),
@@ -434,6 +458,30 @@ duplicate logic here and never edit core internals to suit mobile.
   Settings, so they reset on relaunch. **Follow-up:** `apps/web`'s
   `features/readings` + `utils/bible` still hold their own copy of this logic;
   migrate web onto core's `bible` module to remove the duplication.
+  - **Swipe between chapters** is `src/components/reader/ChapterSwipe.tsx`
+    (Reanimated + RNGH), modelled on the Bible app's reader: the page **tracks
+    the finger**, a chevron pill slides in from the edge you pull away from and
+    **illuminates** (accent fill) once the commit threshold is crossed, crossing
+    it fires **one** light haptic (re-arming if you drag back under), and release
+    past it carries the page off and commits — short of it, it springs back. At
+    the first/last reading the drag rubber-bands against a short stop with no
+    pill and no haptic. The neighbouring chapter is not rendered during the drag;
+    the commit plays as carry-off → new content in from the opposite edge, and
+    that entrance is replayed for **every** content change (`contentKey`), which
+    is what makes chip taps and translation switches fade too. The pills are
+    geometric, not semantic — the right-edge pill always carries
+    `chevron.right`, which reads as forward in LTR and back in RTL — and they
+    are decorative (`pointerEvents="none"`, hidden from assistive tech): the
+    chapter chips above the reading are the accessible navigation.
+    - **The drag math is `src/lib/readerSwipe.ts`** — threshold, over-drag
+      slowing, the end-of-list rubber band, flick-to-commit — pure worklets, so
+      the *feel* is unit-tested with `npm run test`. Tune the numbers there, not
+      in the component; the component keeps only animation timings. Don't wrap
+      the pills in `GlassSurface`: their opacity animates to 0, which the glass
+      material can't survive (see the note under Primitives).
+    - `DailyWordScreen` prefetches the chapters on either side of the current
+      one so a committed swipe lands on text, not a spinner (`prefetchToday`
+      only warms today in the *default* translation).
 - **Offline downloads** (`src/lib/downloads/`, reached from Settings →
   `OfflineDownloadsScreen`) let users save a **whole Bible translation** for
   offline reading — every chapter is enumerated up front from core's
@@ -449,6 +497,11 @@ duplicate logic here and never edit core internals to suit mobile.
   backoff, and are **local-only** to delete (never touches Supabase). `getPassage`
   in `bibleSource.ts` reads a downloaded chapter before falling back to R2.
   Staleness compares the stored translations `version` against the live manifest.
+  Its footer copy covers translations only — do NOT re-add the design
+  reference's "daily devotionals from The Gospel Coalition stream over the
+  network" sentence (`[UI] Offline Downloads.dc.html` still carries it): that
+  devotional feed was dropped and never shipped, so the line described a
+  feature users can't find.
 
 ## Internationalization (i18n)
 

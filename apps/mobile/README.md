@@ -24,10 +24,13 @@ core worship-team flows all ship:
 - a **Daily Word** — a landing hub (default) leading to the **M'Cheyne Reader**
   (translation picker, reader settings, day-scoped highlights, and **offline
   downloads** — save a whole Bible translation and read offline-first). The
-  landing carries a private **reflection** journal (one per day, no-edit), an
-  opt-in **reading streak**, and — behind an admin **kill switch** — an
-  anonymous, moderated **Shared Reflections** feed (public compose gated by a
-  one-time UGC-terms acceptance, hearts, report + local hide). A Settings toggle
+  landing carries a private **reflection** journal (one per day, no-edit) and an
+  opt-in **reading streak**. (An anonymous, moderated **Shared Reflections** feed
+  once shipped behind a kill switch; PR 469 removed every client surface for App
+  Review Guideline 1.2, and the backend was retired in
+  `20260805000000_retire_public_reflections_age_gate.sql` and
+  `20260806000400_retire_ugc_acceptance.sql`. Reflections are private-only —
+  `ReflectionVisibility` is the literal type `'private'`.) A Settings toggle
   can bypass the landing straight to the Reader,
 - **auth** with email/password plus native **Google** and **Apple** sign-in, a
   post-signup sprite avatar picker, and an **authenticated-only** route gate,

@@ -19,7 +19,7 @@
   "deleteDownload": "Delete download",
   "download": "Download {{name}}",
   "wifiOnly": "Download over Wi-Fi only",
-  "footer": "Downloaded translations stay readable with no connection. Daily devotionals from The Gospel Coalition stream over the network and aren't stored offline.",
+  "footer": "Downloaded translations stay readable with no connection.",
   "back": "Settings",
   "backToSettings": "Back to Settings",
   "alerts": {

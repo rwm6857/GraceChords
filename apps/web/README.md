@@ -17,8 +17,8 @@ development conventions, see [`AGENTS.md`](AGENTS.md) in this directory.
 - **Songbook builder** — predefined song groups with a table of contents and optional cover.
 - **Daily Word** — M'Cheyne Bible reading plan with local scripture text, verse selection, and copy.
 - **Resources** — blog-style posts with search, tags, and a rich-text admin editor.
-- **Admin & Editor portals** — user/role management, collaborator request review, and content editing.
-- **Roles** — user → collaborator → editor → admin → owner, enforced by `RoleGuard`.
+- **Admin & Editor portals** — user/role management and content editing.
+- **Roles** — user → editor → admin → owner, enforced by `RoleGuard`.
 - **Offline support** — a service worker caches core assets; cache is busted per deploy.
 - **Theming & i18n** — light/dark toggle, keyboard shortcuts (`c`, `[`, `]`), and multi-language UI (en, tr, ar, es).
 
@@ -92,13 +92,12 @@ VITE_CONTACT_EMAIL=you@example.com
 Apply the migrations under [`supabase/migrations/`](../../supabase/migrations/) (repo
 root) in order. Key tables:
 
-- `public.users` — profiles with a `role` column (`user`, `collaborator`, `editor`, `admin`, `owner`)
+- `public.users` — profiles with a `role` column (`user`, `editor`, `admin`, `owner`)
 - `public.songs` — full song catalog (ChordPro content, metadata, star counts)
 - `public.posts` — blog-style resources (title, slug, rich content, tags, status, author)
 - `public.user_starred_songs` — per-user song stars
 - `public.saved_sets` — cloud-saved setlists for logged-in users
-- `public.collaborator_requests` — queue for users requesting collaborator access
-- `public.reflections` — per-user Daily Word reflections (private journal + anonymous public posts); moderation adds `reflection_hearts`, `reports`, `banned_users`, and a `feature_flags` kill switch. Public rows are written only by the service-role `submit` Pages Function after moderation.
+- `public.reflections` — per-user Daily Word reflections, a **private journal only**. The anonymous public-posts feature was removed under App Review Guideline 1.2 (PR 469 for the clients, migration `20260805000000_retire_public_reflections_age_gate.sql` for the backend: kill switch off, `public_feed_read` policy dropped). Its moderation tables — `reflection_hearts`, `reports`, `banned_users`, `feature_flags` — are retained but inert, because the still-deployed `submit`/`report` Pages Functions read them and should refuse cleanly rather than error.
 
 Every table has row-level security — test query changes with a `user`-role account.
 

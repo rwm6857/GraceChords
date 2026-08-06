@@ -26,11 +26,6 @@ export default function ProfilePage() {
   const [starredItems, setStarredItems] = useState([])
   const [starsLoading, setStarsLoading] = useState(true)
 
-  const [pendingRequest, setPendingRequest] = useState(false)
-  const [contributorRequestsEnabled, setContributorRequestsEnabled] = useState(false)
-  const [showRequestModal, setShowRequestModal] = useState(false)
-  const [requestNote, setRequestNote] = useState('')
-  const [submittingRequest, setSubmittingRequest] = useState(false)
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
@@ -76,7 +71,7 @@ export default function ProfilePage() {
     }
   }, [profile])
 
-  // Fetch stars + contributor request status
+  // Fetch starred songs
   useEffect(() => {
     if (!session) return
     let cancelled = false
@@ -92,25 +87,6 @@ export default function ProfilePage() {
         if (error) console.error('[ProfilePage] Failed to load starred songs:', error)
         setStarredItems(data || [])
         setStarsLoading(false)
-      })
-
-    Promise.all([
-      supabase.from('system_settings').select('contributor_requests_enabled').single(),
-      supabase
-        .from('contributor_requests')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .eq('status', 'pending')
-        .maybeSingle(),
-    ])
-      .then(([settingsRes, requestRes]) => {
-        if (cancelled) return
-        setContributorRequestsEnabled(settingsRes.data?.contributor_requests_enabled ?? false)
-        setPendingRequest(!!requestRes.data)
-      })
-      .catch(err => {
-        if (cancelled) return
-        console.error('[ProfilePage] Failed to load contributor request status:', err)
       })
 
     return () => { cancelled = true }
@@ -147,23 +123,6 @@ export default function ProfilePage() {
       showToast('Could not remove star. Please try again.')
       if (removed) setStarredItems(prev => [...prev, removed]) // revert on error
     }
-  }
-
-  async function submitContributorRequest() {
-    setSubmittingRequest(true)
-    const { error } = await supabase.from('contributor_requests').insert({
-      user_id: session.user.id,
-      note: requestNote || null,
-      status: 'pending',
-    })
-    if (error) showToast('Failed to submit request.')
-    else {
-      setPendingRequest(true)
-      setShowRequestModal(false)
-      setRequestNote('')
-      showToast('Contributor request submitted.')
-    }
-    setSubmittingRequest(false)
   }
 
   async function signOut() {
@@ -289,7 +248,6 @@ export default function ProfilePage() {
 
   const currentSprite = sprite || 'music-note'
   const roleBadge = role !== 'user' ? role : null
-  const showContributorRequestBtn = !roleBadge && contributorRequestsEnabled && !pendingRequest
 
   return (
     <div className="container">
@@ -434,20 +392,6 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-        {showContributorRequestBtn && (
-          <button
-            className="gc-btn gc-btn--secondary"
-            onClick={() => setShowRequestModal(true)}
-            style={{ width: 'fit-content' }}
-          >
-            Request Contributor Access
-          </button>
-        )}
-        {pendingRequest && !roleBadge && (
-          <button className="gc-btn gc-btn--secondary" disabled style={{ width: 'fit-content' }}>
-            Request pending
-          </button>
-        )}
         <button
           className="gc-btn gc-btn--ghost"
           onClick={signOut}
@@ -479,8 +423,8 @@ export default function ProfilePage() {
           <div className="gc-modal" onClick={e => e.stopPropagation()}>
             <h2>Delete account</h2>
             <p style={{ margin: 0, color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
-              This will permanently delete your account and all your data, including starred songs
-              and any contributor requests. <strong style={{ color: 'var(--gc-danger)' }}>This cannot be undone.</strong>
+              This will permanently delete your account and all your data, including starred songs,
+              setlists and reflections. <strong style={{ color: 'var(--gc-danger)' }}>This cannot be undone.</strong>
             </p>
             {hasPasswordLogin ? (
               <div className="gc-form-field">
@@ -537,42 +481,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Contributor request modal */}
-      {showRequestModal && (
-        <div className="gc-modal-overlay" onClick={() => setShowRequestModal(false)}>
-          <div className="gc-modal" onClick={e => e.stopPropagation()}>
-            <h2>Request Contributor Access</h2>
-            <p style={{ margin: 0, color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
-              Contributors can submit songs and content to GraceChords.
-            </p>
-            <div className="gc-form-field">
-              <label htmlFor="requestNote">Why do you want to contribute? (optional)</label>
-              <textarea
-                id="requestNote"
-                value={requestNote}
-                onChange={e => setRequestNote(e.target.value)}
-                rows={4}
-                placeholder="Tell us a bit about yourself…"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="gc-btn gc-btn--primary"
-                onClick={submitContributorRequest}
-                disabled={submittingRequest}
-              >
-                {submittingRequest ? 'Submitting…' : 'Submit request'}
-              </button>
-              <button
-                className="gc-btn gc-btn--ghost"
-                onClick={() => setShowRequestModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

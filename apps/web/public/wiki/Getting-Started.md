@@ -51,7 +51,7 @@ Apply all migrations under `supabase/migrations/` in order. Key tables:
 - `public.users` — user profiles with `role`
 - `public.songs` — ChordPro song catalog
 - `public.posts` — blog-style posts
-- `public.user_starred_songs`, `public.saved_sets`, `public.collaborator_requests`
+- `public.user_starred_songs`, `public.saved_sets`
 
 ## Build for production
 ```bash

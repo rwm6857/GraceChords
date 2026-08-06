@@ -1,4 +1,36 @@
 -- =============================================================================
+-- ⚠ HISTORICAL — ALREADY APPLIED AND ALREADY REVERTED. DO NOT RE-APPLY. ⚠
+--
+-- Applied to production 2026-07-21. Fully reverted by
+-- 20260805000000_retire_public_reflections_age_gate.sql on 2026-08-05, which runs
+-- the rollback documented at the bottom of this file verbatim.
+--
+-- Confirmed against the live database on 2026-08-06, not inferred from the
+-- migration history. public.users carries dropped-column tombstones at attnum
+-- 13, 14 and 15 — immediately after ugc_accepted_at (attnum 12, added by
+-- 20260719000200). Those three are age_range, age_attested_at and age_source.
+-- Postgres keeps a dropped column's attnum forever, so their presence proves the
+-- columns once existed, which proves this migration ran. Verify with:
+--
+--   SELECT attnum, attname, attisdropped FROM pg_attribute
+--   WHERE attrelid='public.users'::regclass AND attnum > 0 ORDER BY attnum;
+--
+-- The absence of age_range and record_age_range() from the live schema is
+-- therefore evidence of the 2026-08-05 revert, NOT evidence that this file was
+-- never applied.
+--
+-- This file is kept rather than deleted because
+-- 20260805000000_retire_public_reflections_age_gate.down.sql:32 cites it by line
+-- range ("Verbatim from 20260721000200_age_range.sql:21-64") as the provenance
+-- for the columns it restores. Deleting it would dangle that reference.
+--
+-- Re-applying this file would recreate the age-gate columns and
+-- record_age_range() with EXECUTE granted to authenticated, contradicting
+-- PrivacyInfo.xcprivacy in build 12, which declares no age-range collection.
+-- Nothing in any client has read or written these since PR 469.
+-- =============================================================================
+
+-- =============================================================================
 -- GraceChords: age assurance for Shared Reflections (2026-07-21)
 --
 -- Records the user's self-declared / OS-declared age RANGE so the client can keep

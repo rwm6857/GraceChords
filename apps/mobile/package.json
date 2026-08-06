@@ -18,6 +18,7 @@
     "@gracechords/core": "*",
     "@gracechords/tokens": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-navigation/native": "^7.1.33",
     "@supabase/supabase-js": "^2.98.0",

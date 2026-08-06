@@ -11,15 +11,8 @@
   },
   "reminder": {
     "dailyReminder": "Recordatorio de Palabra diaria",
-    "dailyReminderDesc": "Un aviso diario para abrir la lectura de hoy.",
     "time": "Hora del recordatorio",
     "timeSheetTitle": "Hora del recordatorio",
-    "hour": "Hora",
-    "minute": "Minuto",
-    "increaseHour": "Aumentar la hora",
-    "decreaseHour": "Disminuir la hora",
-    "increaseMinute": "Aumentar los minutos",
-    "decreaseMinute": "Disminuir los minutos",
     "permissionDeniedTitle": "Las notificaciones están desactivadas",
     "permissionDeniedMessage": "Activa las notificaciones de GraceChords en los Ajustes de tu dispositivo para recibir recordatorios de lectura diaria.",
     "openSettings": "Abrir Ajustes",
@@ -28,8 +21,7 @@
     "channelName": "Recordatorios de Palabra diaria"
   },
   "readingStreak": {
-    "title": "Racha de lectura",
-    "description": "Cuenta los días consecutivos que abres la lectura de hoy."
+    "title": "Racha de lectura"
   },
   "appearance": "Apariencia",
   "appearanceOptions": {
