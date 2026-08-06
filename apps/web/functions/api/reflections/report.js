@@ -48,6 +48,26 @@ export async function onRequest(context) {
   const reason =
     typeof payload?.reason === 'string' ? payload.reason.slice(0, 500).trim() || null : null
 
+  // Kill switch, matching submit.js. Reporting only makes sense for public
+  // reflections, and there are none: 20260805000000 turned the
+  // public_reflections flag off and dropped the public_feed_read policy, and PR
+  // 469 removed every client surface that could have shown a report button.
+  //
+  // Without this gate the endpoint stayed open to any signed-in account, and
+  // because it never verifies that reflection_id refers to a real (or public)
+  // row, an arbitrary UUID would still insert a `reports` row via the service
+  // role AND fire a Telegram alert into the admin dev channel. That is a spam
+  // vector into a human's notifications, reachable by anyone who can sign up.
+  // Cloudflare Pages routes by file, so this endpoint answers whether or not a
+  // client calls it.
+  const flagResp = await supabaseRest(
+    env,
+    'feature_flags?select=enabled&key=eq.public_reflections&limit=1',
+  )
+  if (!flagResp.ok) return jsonError(`Flag check failed: ${flagResp.status}`, 502)
+  const flagRows = await flagResp.json().catch(() => [])
+  if (!flagRows?.[0]?.enabled) return jsonError('public_reflections_disabled', 403)
+
   // Record the report (service role).
   const insertResp = await supabaseRest(env, 'reports', {
     method: 'POST',

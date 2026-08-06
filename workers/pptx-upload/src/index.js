@@ -12,12 +12,16 @@
  */
 
 // Role hierarchy: lowest privilege → highest. Mirror of `ROLE_ORDER` in
-// `src/lib/roles.js`; this worker is bundled separately so the constant
-// can't be imported. Keep the two in sync if the hierarchy changes.
+// `packages/core/src/rbac/roles.js`; this worker is bundled separately so the
+// constant can't be imported. Keep the two in sync if the hierarchy changes.
 const ROLE_HIERARCHY = ['user', 'editor', 'admin', 'owner']
 
 function isAtLeast(userRole, minRole) {
-  return ROLE_HIERARCHY.indexOf(userRole) >= ROLE_HIERARCHY.indexOf(minRole)
+  const minIdx = ROLE_HIERARCHY.indexOf(minRole)
+  // An unrecognised minRole must not fail open. Without this, indexOf returns -1
+  // for both operands and `-1 >= -1` grants access to everyone.
+  if (minIdx < 0) return false
+  return ROLE_HIERARCHY.indexOf(userRole) >= minIdx
 }
 
 // ---- Base64url helpers (Web Standard, no Node built-ins) ----
@@ -141,11 +145,11 @@ async function verifyAndGetRole(request, env) {
     return { error: 401, msg: 'Token missing sub claim' }
   }
 
-  // Fetch global_role from Supabase
+  // Fetch the caller's role from Supabase
   let userRow
   try {
     const resp = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/users?select=global_role&id=eq.${encodeURIComponent(userId)}`,
+      `${env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${encodeURIComponent(userId)}&limit=1`,
       {
         headers: {
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -153,6 +157,17 @@ async function verifyAndGetRole(request, env) {
         },
       },
     )
+    // Check the transport before the payload. Previously this went straight to
+    // Array.isArray(), so a PostgREST error body — which is a JSON *object*, not
+    // an array — fell through to 'User not found' and every upload 403'd with
+    // what looked like an authorization decision. That masked a schema error
+    // (this query used to select a `global_role` column that no longer exists)
+    // for as long as it took someone to read the source.
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      console.error('[pptx-upload] role lookup failed:', resp.status, detail)
+      return { error: 500, msg: 'Failed to fetch user role' }
+    }
     const rows = await resp.json()
     if (!Array.isArray(rows) || rows.length === 0) {
       return { error: 403, msg: 'User not found' }
@@ -162,7 +177,7 @@ async function verifyAndGetRole(request, env) {
     return { error: 500, msg: 'Failed to fetch user role' }
   }
 
-  return { role: userRow.global_role || 'user', userId }
+  return { role: userRow.role || 'user', userId }
 }
 
 // ---- Rate limiting ----

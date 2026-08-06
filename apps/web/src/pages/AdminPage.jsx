@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { showToast } from '../utils/app/toast'
@@ -13,7 +12,11 @@ function formatTime(date) {
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
 
-const ALL_ROLES = ROLES_BY_RANK_DESC
+// Roles this page can assign, highest first. Deliberately NOT ROLES_BY_RANK_DESC:
+// 'owner' is excluded because update_user_role() rejects it outright ("Invalid
+// role: owner"). There is exactly one owner and it is set by direct SQL only, so
+// offering it here produced a dropdown entry that always threw.
+const ASSIGNABLE_ROLES = ROLES_BY_RANK_DESC.filter(r => r !== 'owner')
 
 function RolePill({ role }) {
   return (
@@ -48,7 +51,7 @@ const MATRIX_ROWS = [
 ]
 
 export default function AdminPage() {
-  const { session, role: currentRole, isOwner } = useAuth()
+  const { session, isOwner } = useAuth()
   const [users, setUsers] = useState([])
   const [usersLoading, setUsersLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -84,9 +87,12 @@ export default function AdminPage() {
     setRefreshing(false)
   }, [loadUsers])
 
-  function getAvailableRoles(targetRole) {
-    if (isOwner) return ALL_ROLES
-    // Admins can set editor or user only
+  // Mirrors update_user_role()'s server-side rules exactly: an owner may assign
+  // admin, editor or user; an admin may assign editor or user. Nobody may assign
+  // owner. Keep these in step — the RPC is the authority and will throw if this
+  // list ever offers something it rejects.
+  function getAvailableRoles() {
+    if (isOwner) return ASSIGNABLE_ROLES
     return ['editor', 'user']
   }
 
@@ -117,7 +123,7 @@ export default function AdminPage() {
       showToast(`Failed to delete user: ${error.message}`)
       console.error('[AdminPage] handleDeleteUser:', error)
     } else {
-      showToast(`${deleteTarget.display_name || deleteTarget.email || 'User'} deleted.`)
+      showToast(`${deleteTarget.display_name || 'User'} deleted.`)
       setUsers(prev => prev.filter(u => u.id !== deleteTarget.id))
     }
     setDeleting(false)
@@ -132,7 +138,7 @@ export default function AdminPage() {
 
       <h1>Admin Portal</h1>
       <p className="gc-portal-page__subtitle">
-        Manage users, roles, and pending access requests.
+        Manage users and roles.
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginBottom: 'var(--gc-space-4)' }}>
         <Button
@@ -140,7 +146,7 @@ export default function AdminPage() {
           variant="secondary"
           loading={refreshing}
           onClick={handleRefresh}
-          aria-label="Refresh users and pending requests"
+          aria-label="Refresh users"
         >
           Refresh
         </Button>
@@ -175,7 +181,7 @@ export default function AdminPage() {
                   const isSelf = user.id === currentUserId
                   const isTargetOwner = user.role === 'owner'
                   const canChangeRole = !isSelf && (!isTargetOwner || isOwner)
-                  const availableRoles = getAvailableRoles(user.role)
+                  const availableRoles = getAvailableRoles()
                   const isChanging = !!changingRole[user.id]
                   const isExpanded = expandedUserId === user.id
 
@@ -186,7 +192,7 @@ export default function AdminPage() {
                         value={user.role || 'user'}
                         disabled={!canChangeRole || isChanging}
                         onChange={e => handleRoleChange(user.id, e.target.value)}
-                        aria-label={`Change role for ${user.display_name || user.email}`}
+                        aria-label={`Change role for ${user.display_name || 'user'}`}
                       >
                         {availableRoles.map(r => (
                           <option key={r} value={r}>
@@ -292,7 +298,7 @@ export default function AdminPage() {
             <h3>Delete account</h3>
             <p>
               Permanently delete{' '}
-              <strong>{deleteTarget.display_name || deleteTarget.email || 'this user'}</strong>
+              <strong>{deleteTarget.display_name || 'this user'}</strong>
               ? This cannot be undone. All their data will be removed.
             </p>
             <div className="gc-confirm-dialog__actions">

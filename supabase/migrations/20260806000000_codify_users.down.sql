@@ -1,0 +1,66 @@
+-- =============================================================================
+-- DOWN migration for 20260806000000_codify_users.sql
+--
+-- INTENTIONALLY INERT. Running this file against production does nothing, and
+-- that is correct.
+--
+-- The up migration is a codification: it reproduces state that already exists, so
+-- against prod it changes nothing and its revert must change nothing. Reverting a
+-- no-op is a no-op. This is the one down migration in the repo that is inert by
+-- design rather than by symmetry.
+--
+-- DO NOT "fix" this file by making it drop the table. public.users holds every
+-- account in the product, and users_id_fkey cascades from auth.users, so a
+-- DROP TABLE here would destroy live user data and take out everything that
+-- FK-references it. The teardown below is commented out and is for a scratch
+-- database only — never for a database with accounts in it.
+--
+-- If what you actually want is to undo one of the CHANGES made by the later
+-- migrations in this series, run that migration's own down file:
+--
+--   20260806000100_drop_contributor_invite_deadcode.down.sql
+--   20260806000200_users_policy_consolidation.down.sql
+--   20260806000300_users_role_check_drop_collaborator.down.sql
+--   20260806000400_retire_ugc_acceptance.down.sql
+--   20260806000500_users_grant_hardening.down.sql
+--
+-- Schema-clean and data-lossless, trivially, because it does nothing.
+-- =============================================================================
+
+-- No statements. See above.
+
+-- =============================================================================
+-- FRESH-DATABASE TEARDOWN — commented out deliberately.
+--
+-- Only uncomment on a scratch database that has no real accounts, where
+-- 20260806000000 genuinely created these objects from nothing.
+--
+--   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+--   DROP TRIGGER IF EXISTS guard_users_role     ON public.users;
+--   DROP TRIGGER IF EXISTS set_updated_at       ON public.users;
+--
+--   DROP POLICY IF EXISTS "users_delete"                     ON public.users;
+--   DROP POLICY IF EXISTS "Users can update their own profile" ON public.users;
+--   DROP POLICY IF EXISTS "users_update"                     ON public.users;
+--   DROP POLICY IF EXISTS "Admins can view all users"        ON public.users;
+--   DROP POLICY IF EXISTS "Users can read their own profile" ON public.users;
+--   DROP POLICY IF EXISTS "users_select"                     ON public.users;
+--
+--   DROP FUNCTION IF EXISTS public.delete_user();
+--   DROP FUNCTION IF EXISTS public.admin_delete_user(uuid);
+--   DROP FUNCTION IF EXISTS public.update_user_role(uuid, text);
+--   DROP FUNCTION IF EXISTS public.handle_new_user();
+--   DROP FUNCTION IF EXISTS public.guard_users_role_change();
+--   DROP FUNCTION IF EXISTS public.set_updated_at();
+--   DROP FUNCTION IF EXISTS public.has_min_role(text);
+--   DROP FUNCTION IF EXISTS public.get_user_role();
+--
+--   DROP INDEX IF EXISTS public.idx_users_telegram_user_id;
+--
+--   DROP TABLE IF EXISTS public.users;   -- <-- destroys every account
+--
+-- Note the function drops will fail if other objects still depend on them:
+-- has_min_role() and get_user_role() are called by policies on several other
+-- tables (songs, song_suggestions, setlists, teams, …). On a real teardown those
+-- tables go first. That dependency is another reason this file stays inert.
+-- =============================================================================

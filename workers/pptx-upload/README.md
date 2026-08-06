@@ -4,7 +4,7 @@ Handles PPTX file uploads and deletions for GraceChords songs. Files are stored 
 
 ## Endpoints
 
-- `POST /upload` — Upload a PPTX. Requires Collaborator+ role.
+- `POST /upload` — Upload a PPTX. Requires Editor+ role.
 - `DELETE /delete` — Delete a PPTX. Requires Editor+ role.
 
 ## Setup

@@ -14,26 +14,16 @@ export default function AuthCallbackPage() {
         return
       }
 
-      // A Supabase DB trigger (handle_new_user) fires on every auth.users INSERT,
-      // including OAuth sign-ups, and creates the public.users row automatically.
-      // The upsert below is a safety net: if the trigger is absent or hasn't run
-      // yet, it creates the row; if the row already exists, ignoreDuplicates
-      // makes it a no-op so existing data is never overwritten.
-      const { error: upsertError } = await supabase.from('users').upsert(
-        {
-          id: session.user.id,
-          email: session.user.email,
-          display_name: session.user.user_metadata?.full_name ?? session.user.email,
-          role: 'user',
-        },
-        { onConflict: 'id', ignoreDuplicates: true }
-      )
-
-      if (upsertError) {
-        // Non-fatal: the user is authenticated; log and proceed.
-        console.error('AuthCallback: failed to ensure user row:', upsertError)
-      }
-
+      // The public.users row is created by the handle_new_user() trigger on
+      // auth.users, which fires on every INSERT including OAuth sign-ups.
+      //
+      // There used to be a client-side upsert here as a "safety net". It never
+      // worked and could not have: it wrote an `email` column that public.users
+      // does not have (so PostgREST rejected every call with PGRST204), and even
+      // with a valid payload the table has no INSERT policy, so RLS would have
+      // refused the row. It logged an error on every OAuth sign-in and was
+      // removed rather than repaired — a fallback that cannot run is worse than
+      // none, because it reads like provisioning is covered when it isn't.
       navigate('/', { replace: true })
     }
 

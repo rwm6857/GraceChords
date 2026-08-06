@@ -49,7 +49,6 @@ content associated with it, including:
 - Your **starred songs**
 - Your **setlists**, key preferences, view settings, and reading-plan progress
 - Any **reflections** you have saved
-- Any **contributor-access requests** you have submitted
 - Any **linked Telegram account** connection
 
 Deletion cascades across our systems so that no personal profile or content

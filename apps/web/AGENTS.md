@@ -17,7 +17,7 @@ Paths in this file are relative to `apps/web/` unless prefixed. `src/` means
   - `src/components/` — reusable cross-route UI. `components/auth/RoleGuard.jsx` gates routes by minimum role.
   - `src/components/ui/layout-kit/` — reusable UI primitives (`gc-*` classes).
   - `src/components/ui/mobile/` — mobile-responsive primitives for the **web** UI (`MobileActionSheet`, `MobileDock`, `MobilePaneTabs`, `MobileSheet`). Distinct from the native app.
-  - `src/hooks/useAuth.jsx` — auth context: `session`, `user`, `profile`, `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`, `isCollaborator`.
+  - `src/hooks/useAuth.jsx` — auth context: `session`, `user`, `profile`, `role`, `hasMinRole(minRole)`, `isOwner`, `isAdmin`, `isEditorRole`.
   - `src/lib/supabase.js` — the **web** Supabase client (thin wrapper over `@gracechords/core`'s `createGcSupabase`, injecting Vite env + `cookieStorage`). Import this singleton everywhere; never create a second client.
   - `src/utils/` — pure utilities grouped by domain (`app`, `network`, `songs`, `setlists`, `media`, `content`, `archive`, `chordpro`, `pdf`, `pdf_mvp`).
   - `src/utils/chordpro/` — re-export **shims**; the real parser/serializer/normalization live in `../../packages/core/src/chordpro/`. `disclaimer.ts` stays here (depends on web config).

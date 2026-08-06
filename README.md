@@ -67,7 +67,7 @@ env) see **[apps/mobile/README.md](apps/mobile/README.md)**.
 
 | Service | Role |
 |---------|------|
-| **Supabase** | Auth + Postgres — song catalog, users/roles, posts, starred songs, saved sets, collaborator requests. Row-level security on every table. |
+| **Supabase** | Auth + Postgres — song catalog, users/roles, posts, starred songs, saved sets. Row-level security on every table. |
 | **Cloudflare Pages** | Hosts the web SPA. Builds from the `apps/web` root directory to `apps/web/dist/` on every push to `main`. |
 | **Cloudflare Pages Functions** | Server-side proxies at `apps/web/functions/` (`bible/`, `pptx/`, `api/`) that avoid CORS for R2 assets. |
 | **Cloudflare R2** (`gracechords-bible`) | Stores PPTX slide decks (`pptx/`) and Bible chapter JSON (`bible/`). |
@@ -80,7 +80,7 @@ page and in [`apps/web/AGENTS.md`](apps/web/AGENTS.md).
 
 ## Roles & access
 
-GraceChords uses five roles: **user → collaborator → editor → admin → owner**.
+GraceChords uses four roles: **user → editor → admin → owner**.
 The hierarchy is defined once in `packages/core/src/rbac/roles.js` and enforced
 via `hasMinRole()`. See [Roles & Access](../../wiki/Roles-and-Access) for the
 permission matrix and the admin/editor portals.

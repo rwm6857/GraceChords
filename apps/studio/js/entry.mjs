@@ -191,12 +191,12 @@ export function lintToJSON(chordpro) {
  * Bridged rather than ported to Swift because AGENTS.md makes rbac/roles.js the
  * single source of truth for gate checks, and a hand-written Swift copy of
  * ROLE_ORDER is exactly the kind of thing that silently outlives a hierarchy
- * change — `collaborator` was removed from this list in 2026-07 and the root
- * AGENTS.md table still has not caught up.
+ * change — `collaborator` was removed from this list in 2026-07.
  *
- * Core's own tolerance is preserved: an unknown or empty `userRole` is treated as
- * 'user' rather than rejected, so the caller can ask before the role has loaded.
- * An unknown `minRole` returns false.
+ * Core's own behaviour is preserved, and the two cases differ: an EMPTY
+ * `userRole` is read as 'user', so the caller can ask before the role has
+ * loaded; an UNKNOWN one grants nothing at all, not even user-level, because
+ * indexOf returns -1. An unknown `minRole` returns false.
  *
  * @param {string} userRole
  * @param {string} minRole  one of ROLE_ORDER
