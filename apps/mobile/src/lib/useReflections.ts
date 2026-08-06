@@ -9,7 +9,7 @@ import {
   type Reflection,
 } from '@gracechords/core'
 import { supabase } from './supabase'
-import { reportLoadFailure } from './errors'
+import { reportFailure } from './errors'
 
 // i18n key for the user-facing failure — never the raw error. See errors.ts.
 const LOAD_ERROR_KEY = 'errors:load.reflection'
@@ -51,7 +51,7 @@ export function useTodayReflection(dateKey: string = reflectionDateKey(new Date(
       setReflection(row)
       setError(null)
     } catch (err: unknown) {
-      if (reportLoadFailure('useTodayReflection', err)) setError(LOAD_ERROR_KEY)
+      if (reportFailure('useTodayReflection', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }
@@ -110,7 +110,7 @@ export function useReflectionList() {
       setReflections(rows)
       setError(null)
     } catch (err: unknown) {
-      if (reportLoadFailure('useReflectionList', err)) setError(LOAD_ERROR_KEY)
+      if (reportFailure('useReflectionList', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }

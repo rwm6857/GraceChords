@@ -14,7 +14,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage, errMessage } from '../lib/errors'
 
 // The Setlists tab: every personal setlist (newest-edited first), a New set
 // action, and tap-to-open into the builder.
@@ -67,7 +67,7 @@ export default function SetlistsScreen() {
         await refresh()
         setPruneOpen(true)
       } else {
-        Alert.alert(tx('alerts.couldNotCreate'), errMessage(err))
+        Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('Setlists.create', err, tx))
       }
     } finally {
       setCreating(false)
@@ -78,7 +78,7 @@ export default function SetlistsScreen() {
     try {
       await remove(item.id)
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotDelete'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotDelete'), actionFailureMessage('Setlists.delete', err, tx))
       refresh()
     }
   }

@@ -175,7 +175,7 @@ describe('classification through a Supabase query', () => {
   })
 
   it('never classifies a timeout as a user-initiated abort', () => {
-    // reportLoadFailure checks isAbortError FIRST and stays silent when it is
+    // reportFailure checks isAbortError FIRST and stays silent when it is
     // true, so a timeout leaking into that branch would hide a real failure.
     const err = new RequestTimeoutError(14000)
     expect(isAbortError(err)).toBe(false)

@@ -16,7 +16,7 @@ import SongbookOptionsSheet from '../components/songbook/SongbookOptionsSheet'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSongList, type Song } from '../lib/useSongList'
 import { exportSongbook } from '../lib/exportSong'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage } from '../lib/errors'
 
 // Utilities tool: build a songbook PDF. Pick songs (reusing the setlist
 // AddSongsModal), optionally name it / add a cover image / toggle a numbered
@@ -87,7 +87,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
       setCoverImageDataUrl(dataUrl)
       setCoverName(asset.fileName || tx('songbook.coverLabel'))
     } catch (err: unknown) {
-      Alert.alert(tx('songbook.pickCoverErrorTitle'), errMessage(err))
+      Alert.alert(tx('songbook.pickCoverErrorTitle'), actionFailureMessage('SongbookBuilder.pickCover', err, tx))
     }
   }, [tx])
 
@@ -108,7 +108,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
       })
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
-      Alert.alert(tx('export:alerts.exportFailedTitle'), errMessage(err))
+      Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SongbookBuilder.export', err, tx))
     }
   }, [selectedSongs, title, subtitle, includeTOC, coverImageDataUrl, tx])
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { reportLoadFailure } from './errors'
+import { reportFailure } from './errors'
 import type { Song } from './useSongList'
 
 // The fields the Home "Starred songs" rows need. A subset of the full Song.
@@ -14,7 +14,7 @@ const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
 // i18n key for the user-facing failure. Deliberately generic: never surface raw
 // Supabase/Postgres error text to the UI (that once leaked `column
 // user_starred_songs.created_at does not exist`). The real error is logged for
-// debugging by reportLoadFailure. Was a hardcoded English string until 1.0.1 —
+// debugging by reportFailure. Was a hardcoded English string until 1.0.1 —
 // it showed untranslated in es/ko/tr.
 const LOAD_ERROR_KEY = 'errors:load.starred'
 
@@ -89,7 +89,7 @@ export function useStarredSongs() {
       } catch (err: unknown) {
         // Logs the real error for debugging and returns false for a deliberate
         // cancellation, which must not surface as a failure.
-        if (reportLoadFailure('useStarredSongs', err) && alive) setError(LOAD_ERROR_KEY)
+        if (reportFailure('useStarredSongs', err) && alive) setError(LOAD_ERROR_KEY)
       } finally {
         if (alive) setLoading(false)
       }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchSongList, fetchPersonalSongs } from '@gracechords/core'
 import { supabase } from './supabase'
-import { reportLoadFailure } from './errors'
+import { reportFailure } from './errors'
 
 // i18n key for the user-facing failure. The hook owns it because the hook knows
 // which surface it feeds; the screen renders it through its own `t`. Never the
@@ -100,7 +100,7 @@ export function useSongList() {
         setError(null)
       })
       .catch((err: unknown) => {
-        if (reportLoadFailure('useSongList', err) && alive) setError(LOAD_ERROR_KEY)
+        if (reportFailure('useSongList', err) && alive) setError(LOAD_ERROR_KEY)
       })
       .finally(() => {
         if (alive) setLoading(false)

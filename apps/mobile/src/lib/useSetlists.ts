@@ -7,7 +7,7 @@ import {
 } from '@gracechords/core'
 import { supabase } from './supabase'
 import { getCurrentUserSnapshot } from './currentUser'
-import { reportLoadFailure } from './errors'
+import { reportFailure } from './errors'
 
 // i18n key for the user-facing failure — never the raw error. See errors.ts.
 const LOAD_ERROR_KEY = 'errors:load.setlists'
@@ -60,7 +60,7 @@ export function useSetlists() {
       )
       setError(null)
     } catch (err: unknown) {
-      if (reportLoadFailure('useSetlists', err)) setError(LOAD_ERROR_KEY)
+      if (reportFailure('useSetlists', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }

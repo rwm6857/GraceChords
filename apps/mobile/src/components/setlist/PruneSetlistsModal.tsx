@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import ListRow from '../ListRow'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
-import { errMessage } from '../../lib/errors'
+import { actionFailureMessage } from '../../lib/errors'
 import type { SetlistRow } from '../../lib/useSetlists'
 
 // Shown when the user hits their per-role personal setlist cap. Lists every
@@ -62,7 +62,7 @@ export default function PruneSetlistsModal({
       setSelected(new Set())
       onClose()
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotDeleteMany'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotDeleteMany'), actionFailureMessage('PruneSetlists.deleteMany', err, tx))
     } finally {
       setBusy(false)
     }

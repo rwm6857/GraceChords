@@ -8,7 +8,7 @@ import {
   updateSetlist,
 } from '@gracechords/core'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { failureDetailKey, saveFailureKey } from './errors'
 import { useSongList, type Song } from './useSongList'
 
 // The song metadata a row needs to render (no chart body / tags). Comes from
@@ -109,7 +109,12 @@ export function useSetlistBuilder(setlistId: string) {
       })
       setError(null)
     } catch (err: unknown) {
-      setError(errMessage(err))
+      // A SAVE failure, not a load failure — the distinction matters here because
+      // the user is mid-edit and needs to know their work is not persisted. The
+      // debounced save retries on the next edit (and on flushSave), so the copy
+      // says "haven't been saved" rather than offering a button. An i18n key, not
+      // raw error text: the builder renders this line directly.
+      setError(saveFailureKey('useSetlistBuilder.save', err))
     } finally {
       inFlight.current = false
       if (trailing.current) {
@@ -170,7 +175,7 @@ export function useSetlistBuilder(setlistId: string) {
         })
         .catch((err: unknown) => {
           if (alive) {
-            setError(errMessage(err))
+            setError(failureDetailKey('useSetlistBuilder.load', err))
             setLoading(false)
           }
         })

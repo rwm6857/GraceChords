@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useFocusEffect } from 'expo-router'
 import { fetchLastSetSummary, summarizeSet } from '@gracechords/core'
 import { supabase } from './supabase'
-import { reportLoadFailure } from './errors'
+import { reportFailure } from './errors'
 
 // Summary of the user's most recently edited setlist for Home's "Last set"
 // card (replaces the getLastSet() stub that lived in recents.ts).
@@ -62,7 +62,7 @@ export function useLastSet() {
         // rather than as a silent lie. Before 1.0.1 Home discarded `error`
         // entirely, so a failure rendered nothing at all — indistinguishable
         // from "no setlists yet", with no way to retry.
-        if (reportLoadFailure('useLastSet', err) && alive) setError(LOAD_ERROR_KEY)
+        if (reportFailure('useLastSet', err) && alive) setError(LOAD_ERROR_KEY)
       })
       .finally(() => {
         if (alive) setLoading(false)

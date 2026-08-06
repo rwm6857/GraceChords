@@ -22,7 +22,7 @@ import {
   reflectionDateKey,
   useTodayReflection,
 } from '../lib/useReflections'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage } from '../lib/errors'
 
 // The reflection composer. A full pushed screen (not a formSheet) to give the
 // up-to-2000-char editor room and a comfortable keyboard. It covers two flows
@@ -121,7 +121,7 @@ export default function ReflectionComposeScreen() {
       router.back()
     } catch (err: unknown) {
       setSaving(false)
-      Alert.alert(tx('reflection.editErrorTitle'), errMessage(err))
+      Alert.alert(tx('reflection.editErrorTitle'), actionFailureMessage('ReflectionCompose.edit', err, tx))
     }
   }
 
@@ -144,7 +144,7 @@ export default function ReflectionComposeScreen() {
         ])
         return
       }
-      Alert.alert(tx('reflection.saveErrorTitle'), errMessage(err))
+      Alert.alert(tx('reflection.saveErrorTitle'), actionFailureMessage('ReflectionCompose.save', err, tx))
     }
   }
 

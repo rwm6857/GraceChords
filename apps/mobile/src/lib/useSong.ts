@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchSongBySlug, fetchPersonalSongById } from '@gracechords/core'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { failureDetailKey } from './errors'
 
 // Shape of a single song row as the Viewer needs it: the Library metadata plus
 // the renderable ChordPro body (which the list query deliberately omits).
@@ -70,7 +70,10 @@ export function useSong(slug: string | undefined) {
         }
       })
       .catch((err: unknown) => {
-        if (alive) setError(errMessage(err))
+        // An i18n KEY, not raw error text. The Viewer renders this as the detail
+        // line under its localized "Couldn't load song" heading, so raw Supabase
+        // text (or a request-deadline message) used to land in front of the user.
+        if (alive) setError(failureDetailKey('useSong', err))
       })
       .finally(() => {
         if (alive) setLoading(false)
@@ -106,7 +109,7 @@ export function usePersonalSong(id: string | undefined) {
         }
       })
       .catch((err: unknown) => {
-        if (alive) setError(errMessage(err))
+        if (alive) setError(failureDetailKey('usePersonalSong', err))
       })
       .finally(() => {
         if (alive) setLoading(false)

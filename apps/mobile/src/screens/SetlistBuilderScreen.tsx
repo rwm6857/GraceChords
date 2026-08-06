@@ -40,7 +40,7 @@ import { exportSetlist } from '../lib/exportSong'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage } from '../lib/errors'
 
 const TOAST_MS = 1900
 
@@ -51,7 +51,7 @@ const TOAST_MS = 1900
 // setlist key via the existing initialKey param.
 export default function SetlistBuilderScreen({ setlistId }: { setlistId: string }) {
   const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export'])
+  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export', 'errors'])
   const router = useRouter()
   const isTablet = useIsTabletWidth()
   const {
@@ -168,7 +168,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
             await deleteSet()
             router.back()
           } catch (err: unknown) {
-            Alert.alert(tx('alerts.couldNotDelete'), errMessage(err))
+            Alert.alert(tx('alerts.couldNotDelete'), actionFailureMessage('SetlistBuilder.delete', err, tx))
           }
         },
       },
@@ -181,7 +181,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     const id = uuidv4()
     router.replace(`/setlist/${id}`)
     createSetlist(supabase, { id }).catch((err: unknown) => {
-      Alert.alert(tx('alerts.couldNotCreate'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('SetlistBuilder.create', err, tx))
     })
   }
 
@@ -194,7 +194,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       await Clipboard.setStringAsync(buildSetlistShareUrl(items))
       showToast(tx('toasts.setLinkCopied'))
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotCopyLink'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotCopyLink'), actionFailureMessage('SetlistBuilder.copyLink', err, tx))
     }
   }
 
@@ -211,7 +211,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       )
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
-      Alert.alert(tx('export:alerts.exportFailedTitle'), errMessage(err))
+      Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SetlistBuilder.export', err, tx))
     }
   }
 
@@ -230,7 +230,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       }
       showToast(tx('toasts.sentToTelegram'))
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotSendSet'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotSendSet'), actionFailureMessage('SetlistBuilder.sendTelegram', err, tx))
     }
   }
 
@@ -409,7 +409,9 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                 color: t.colors.danger,
               }}
             >
-              {error}
+              {/* An i18n key from useSetlistBuilder — a save failure and a load
+                  failure say different things — never raw error text. */}
+              {tx(error)}
             </Text>
           ) : null}
           {items.length === 0 ? (

@@ -2,6 +2,8 @@
   "_meta": { "reviewer": "", "reviewedAt": "" },
   "couldntLoadSong": "Couldn't load song",
   "songNotFound": "This song could not be found.",
+  "tryAgain": "Something went wrong. Please try again.",
+  "saveFailed": "Your latest changes haven't been saved. Check your connection and try again.",
   "load": {
     "songs": "Can't load songs",
     "setlists": "Can't load your sets",
