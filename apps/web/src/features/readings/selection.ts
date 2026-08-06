@@ -74,4 +74,3 @@ function compressRuns(verses: number[]){
   }
   return runs
 }
-
