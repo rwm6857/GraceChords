@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { reportLoadFailure } from './errors'
 import type { Song } from './useSongList'
 
 // The fields the Home "Starred songs" rows need. A subset of the full Song.
@@ -11,11 +11,12 @@ export type StarredSong = Pick<
 
 const SONG_COLUMNS = 'id, slug, title, artist, default_key, time_signature'
 
-// User-facing fallback shown in the Home section if the read fails. Deliberately
-// generic: never surface raw Supabase/Postgres error text to the UI (that once
-// leaked `column user_starred_songs.created_at does not exist`). The real error is
-// logged for debugging.
-const LOAD_ERROR = 'Couldn’t load your starred songs.'
+// i18n key for the user-facing failure. Deliberately generic: never surface raw
+// Supabase/Postgres error text to the UI (that once leaked `column
+// user_starred_songs.created_at does not exist`). The real error is logged for
+// debugging by reportLoadFailure. Was a hardcoded English string until 1.0.1 —
+// it showed untranslated in es/ko/tr.
+const LOAD_ERROR_KEY = 'errors:load.starred'
 
 // Read the current user's starred songs. Two steps rather than a PostgREST embed
 // (`songs!inner(...)`): first the star rows (newest first), then the songs by id.
@@ -29,8 +30,14 @@ export function useStarredSongs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  // Extracted from the mount effect so the Home card can offer a Retry. Before
+  // 1.0.1 a failed read stayed failed until the app relaunched: the effect had
+  // `[]` deps, Home has no RefreshControl, and Home's focus effect only bumps a
+  // tick for the local recents cache.
+  const load = useCallback(() => {
     let alive = true
+    setLoading(true)
+    setError(null)
     ;(async () => {
       try {
         const { data: sessionData } = await supabase.auth.getSession()
@@ -80,9 +87,9 @@ export function useStarredSongs() {
           setError(null)
         }
       } catch (err: unknown) {
-        // Log the real error for debugging; show a generic message to the user.
-        console.error('[useStarredSongs] Failed to load starred songs:', errMessage(err))
-        if (alive) setError(LOAD_ERROR)
+        // Logs the real error for debugging and returns false for a deliberate
+        // cancellation, which must not surface as a failure.
+        if (reportLoadFailure('useStarredSongs', err) && alive) setError(LOAD_ERROR_KEY)
       } finally {
         if (alive) setLoading(false)
       }
@@ -92,5 +99,7 @@ export function useStarredSongs() {
     }
   }, [])
 
-  return { songs, loading, error }
+  useEffect(() => load(), [load])
+
+  return { songs, loading, error, reload: load }
 }

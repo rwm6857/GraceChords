@@ -1,5 +1,13 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
   "couldntLoadSong": "Couldn't load song",
-  "songNotFound": "This song could not be found."
+  "songNotFound": "This song could not be found.",
+  "load": {
+    "songs": "Can't load songs",
+    "setlists": "Can't load your sets",
+    "starred": "Can't load starred songs",
+    "lastSet": "Can't load your last set",
+    "reflection": "Can't load your reflection",
+    "hint": "Check your connection and try again."
+  }
 }

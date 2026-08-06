@@ -17,6 +17,7 @@ import Screen from '../components/Screen'
 import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
+import EmptyState from '../components/EmptyState'
 import AlphaScrubber from '../components/AlphaScrubber'
 import FilterSortSheet, { type SortDir, type SortKey } from '../components/FilterSortSheet'
 import { songBadge } from '../components/PersonalChip'
@@ -107,9 +108,9 @@ function buildSections(songs: Song[], sortKey: SortKey, sortDir: SortDir, tx: Tr
 
 export default function SongLibraryScreen() {
   const t = useTheme()
-  const { t: tx } = useTranslation(['song', 'common'])
+  const { t: tx } = useTranslation(['song', 'common', 'errors'])
   const router = useRouter()
-  const { songs, loading, error } = useSongList()
+  const { songs, loading, error, reload } = useSongList()
   const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
   const { width, height } = useWindowDimensions()
@@ -429,7 +430,20 @@ export default function SongLibraryScreen() {
         </View>
       )
     }
-    if (error) return centeredMessage(error)
+    // `error` is an i18n key, not raw error text — the hook picks it and logs the
+    // real failure (see useSongList / errors.ts). `reload` already existed here
+    // and had no caller; the Retry is what it was written for.
+    if (error) {
+      return (
+        <EmptyState
+          icon="wifi.slash"
+          title={tx(error)}
+          subtitle={tx('errors:load.hint')}
+          actionLabel={tx('common:retry')}
+          onAction={reload}
+        />
+      )
+    }
     if (songs.length === 0) return centeredMessage(tx('library.empty'))
 
     if (searchActive) {

@@ -20,7 +20,7 @@ import { errMessage } from '../lib/errors'
 // action, and tap-to-open into the builder.
 export default function SetlistsScreen() {
   const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['setlist', 'common'])
+  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'errors'])
   const router = useRouter()
   const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } =
     useSetlists()
@@ -94,13 +94,18 @@ export default function SetlistsScreen() {
     if (loading) {
       return <LoadingSkeleton label={tx('syncing')} />
     }
+    // `error` is an i18n key, not raw error text (see useSetlists / errors.ts).
+    // The RefreshControl below only exists on the populated list, so before 1.0.1
+    // this branch had no way forward at all even though `refresh` was in scope.
     if (error) {
       return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, textAlign: 'center' }}>
-            {error}
-          </Text>
-        </View>
+        <EmptyState
+          icon="wifi.slash"
+          title={tx(error)}
+          subtitle={tx('errors:load.hint')}
+          actionLabel={tx('common:retry')}
+          onAction={() => void refresh()}
+        />
       )
     }
     if (setlists.length === 0) {

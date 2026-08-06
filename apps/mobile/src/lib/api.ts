@@ -1,9 +1,15 @@
 import { supabase } from './supabase'
+import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
 
 // Shared client for the web app's Pages Functions API (/api/export/song,
 // /api/telegram/push).
 
 const base = process.env.EXPO_PUBLIC_API_BASE_URL
+
+// Export and Telegram pushes are foreground work — the user tapped a button and
+// is waiting on a sheet or a toast. Without a bound these ran to the ~60 s
+// platform default with nothing but a spinner.
+const budgetedFetch = withRequestBudget(fetch, () => FOREGROUND_MS)
 
 export function apiBase(): string {
   if (!base) {
@@ -30,11 +36,11 @@ export async function apiPost(path: string, body: unknown): Promise<Response> {
   }
   const payload = JSON.stringify(body)
 
-  let res = await fetch(`${apiBase()}${path}`, { method: 'POST', headers, body: payload })
+  let res = await budgetedFetch(`${apiBase()}${path}`, { method: 'POST', headers, body: payload })
   if (res.status === 405 && res.url) {
     const finalOrigin = new URL(res.url).origin
     if (finalOrigin !== new URL(apiBase()).origin) {
-      res = await fetch(`${finalOrigin}${path}`, { method: 'POST', headers, body: payload })
+      res = await budgetedFetch(`${finalOrigin}${path}`, { method: 'POST', headers, body: payload })
     }
   }
   return res

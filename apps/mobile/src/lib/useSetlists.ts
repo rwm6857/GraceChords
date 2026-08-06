@@ -6,7 +6,11 @@ import {
   personalSetlistLimit,
 } from '@gracechords/core'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { getCurrentUserSnapshot } from './currentUser'
+import { reportLoadFailure } from './errors'
+
+// i18n key for the user-facing failure — never the raw error. See errors.ts.
+const LOAD_ERROR_KEY = 'errors:load.setlists'
 
 // A setlist row as the Setlists tab needs it: metadata plus a song count
 // (flattened from the PostgREST `setlist_songs(count)` relationship embed).
@@ -56,7 +60,7 @@ export function useSetlists() {
       )
       setError(null)
     } catch (err: unknown) {
-      setError(errMessage(err))
+      if (reportLoadFailure('useSetlists', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }
@@ -109,8 +113,11 @@ export function useSetlists() {
 // fails — the DB trigger remains the real gate, so a lenient default only risks
 // one extra blocked insert, never an over-cap save.
 async function fetchUserLimit(): Promise<number> {
-  const { data: userData } = await supabase.auth.getUser()
-  const userId = userData?.user?.id
+  // The id comes from the shared session-backed store rather than
+  // auth.getUser(), which is a round trip to /auth/v1/user on every Setlists
+  // focus. The ROLE is still read from the DB below — that is the authoritative
+  // bit; the id is just a key.
+  const userId = getCurrentUserSnapshot().user?.id
   if (!userId) return personalSetlistLimit('user')
   const { data, error } = await supabase
     .from('users')

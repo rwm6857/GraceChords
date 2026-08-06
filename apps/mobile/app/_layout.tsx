@@ -18,7 +18,9 @@ import {
   supabaseConfigError,
 } from '../src/lib/supabase'
 import { resolveInitialSession } from '../src/lib/authSession'
+import { setCurrentUserFromSession } from '../src/lib/currentUser'
 import { flushPendingSprite } from '../src/lib/profile'
+import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { prefetchToday } from '../src/lib/bibleSource'
@@ -191,23 +193,36 @@ export default function RootLayout() {
     // below so the first paint already reflects any enabled setting; `stop`
     // removes the OS listeners on unmount.
     const a11y = startAccessibilityFlags()
-    // Load app-wide defaults (theme/chord style) before the splash lifts so the
-    // resolved theme is applied on first paint — no light→dark flash. Runs in
-    // parallel with the session read; both must resolve before `ready`.
-    // Hydrate device-local stores (defaults, download manifest, recent-song
-    // history) alongside the session read. They must resolve before `ready` so
-    // the first paint has the resolved theme, offline reads know what's
-    // downloaded, and Home's "Continue" card can render synchronously.
+    // Hydrate the device-local stores (defaults, download manifest, recent-song
+    // history, …) alongside the session read. They must all resolve before
+    // `ready` so the first paint has the resolved theme (no light→dark flash),
+    // offline reads know what's downloaded, and Home's "Continue" card can render
+    // synchronously.
+    //
+    // Start the session read FIRST so it still overlaps the storage work below.
+    // primeLaunchStorage awaits a multiGet before any store hydrates, and if the
+    // session read were nested behind it the two would serialise and cold launch
+    // would regress — the whole point of batching is to be no slower.
+    const sessionRead = resolveInitialSession(supabase.auth)
+    // One AsyncStorage round trip for all 12 launch keys instead of 12 separate
+    // getItem calls. The stores themselves are untouched: they receive a
+    // KVStorage that answers from the batch, so every missing/null/malformed
+    // fallback is byte-for-byte what it was. See launchStorage.ts.
+    const hydrated = primeLaunchStorage(AsyncStorage).then((store) =>
+      Promise.all([
+        hydrateDefaults(store),
+        hydrateDownloads(store),
+        hydrateDrafts(store),
+        hydrateRecents(store),
+        hydrateReadingStreak(store),
+        hydrateReaderReminder(store),
+        hydrateViewerPrefs(store),
+        hydrateBibleTranslationPref(store),
+      ]),
+    )
     Promise.all([
-      resolveInitialSession(supabase.auth),
-      hydrateDefaults(AsyncStorage),
-      hydrateDownloads(AsyncStorage),
-      hydrateDrafts(AsyncStorage),
-      hydrateRecents(AsyncStorage),
-      hydrateReadingStreak(AsyncStorage),
-      hydrateReaderReminder(AsyncStorage),
-      hydrateViewerPrefs(AsyncStorage),
-      hydrateBibleTranslationPref(AsyncStorage),
+      sessionRead,
+      hydrated,
       // Load the Material Symbols subset fonts before the splash lifts so
       // Android never paints a missing glyph on first frame. iOS renders icons
       // through SF Symbols natively (SymbolIcon), so there is nothing to load
@@ -224,24 +239,38 @@ export default function RootLayout() {
       // Resolve the initial accessibility-flag query before the splash lifts so
       // the contrast overlay (if enabled) is applied on first paint — no flash.
       a11y.ready,
-    ]).then(([session, defaults]) => {
-      // Apply the stored language pick (null = follow device) while the splash
-      // is still up, so a non-device language never flashes on first paint.
-      applyLanguagePreference(defaults.language)
-      setSession(session)
-      setReady(true)
-      // Reconcile the OS-scheduled Daily Word reminder with the stored
-      // preference now that it (and the language) are loaded. Best-effort.
-      void syncReaderReminderOnLaunch()
-      // Start AppState-driven token auto-refresh only AFTER the persisted
-      // session is resolved. resolveInitialSession has already purged any
-      // stale/revoked refresh token from storage, so the immediate refresh tick
-      // can't fire against a dead token and log "Invalid Refresh Token: Refresh
-      // Token Not Found" on launch.
-      stopAutoRefresh = registerAuthAutoRefresh()
-    })
+    ])
+      .then(([session, [defaults]]) => {
+        // Apply the stored language pick (null = follow device) while the splash
+        // is still up, so a non-device language never flashes on first paint.
+        applyLanguagePreference(defaults.language)
+        setSession(session)
+        // Publish the resolved user to the shared store BEFORE `ready` flips, so
+        // any screen that mounts already sees a resolved auth state. This is the
+        // only source of user identity in the app — see src/lib/currentUser.ts.
+        setCurrentUserFromSession(session)
+        setReady(true)
+        // Reconcile the OS-scheduled Daily Word reminder with the stored
+        // preference now that it (and the language) are loaded. Best-effort.
+        void syncReaderReminderOnLaunch()
+        // Start AppState-driven token auto-refresh only AFTER the persisted
+        // session is resolved. resolveInitialSession has already purged any
+        // stale/revoked refresh token from storage, so the immediate refresh tick
+        // can't fire against a dead token and log "Invalid Refresh Token: Refresh
+        // Token Not Found" on launch.
+        stopAutoRefresh = registerAuthAutoRefresh()
+      })
+      // Every member above already resolves to a default on failure, so this is
+      // a backstop rather than a live failure path — but it was the one
+      // unprotected join in the launch path, and a rejection here would leave
+      // `ready` false forever. The 2 s route safety net below cannot help: it is
+      // gated on `if (!ready) return`, so it never arms. Same reasoning as build
+      // 12's Font.loadAsync().catch — lifting the splash into a signed-out app
+      // with default preferences beats holding it indefinitely.
+      .catch(() => setReady(true))
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next)
+      setCurrentUserFromSession(next)
       // A sprite picked before the session existed (email-confirmation flow,
       // or a transient write failure) is flushed on sign-in. Fire-and-forget:
       // a preference must never block auth.

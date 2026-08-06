@@ -37,7 +37,7 @@ function ordinal(n: number): string {
 export default function DailyWordLandingScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { t: tx, i18n } = useTranslation(['reader', 'home'])
+  const { t: tx, i18n } = useTranslation(['reader', 'home', 'common', 'errors'])
   const insets = useSafeAreaInsets()
   const { source: spriteSource } = useProfileSprite()
 
@@ -59,7 +59,7 @@ export default function DailyWordLandingScreen() {
   const streak = useReadingStreak()
   const streakCount = currentStreak(streak, today)
 
-  const { reflection, loading, refresh, remove } = useTodayReflection()
+  const { reflection, loading, error, refresh, remove } = useTodayReflection()
 
   // Re-read the reflection when the landing regains focus so a just-composed or
   // just-deleted entry (on the pushed compose/journal screens) shows correctly.
@@ -244,6 +244,22 @@ export default function DailyWordLandingScreen() {
           <View style={{ paddingVertical: t.spacing.xl, alignItems: 'center' }}>
             <ActivityIndicator color={t.colors.accent} />
           </View>
+        ) : error ? (
+          // Before 1.0.1 there was no error branch here: the hook returned
+          // `error` and the screen never read it, so a failed read fell through
+          // to the compose CTA below — telling the user they hadn't written
+          // today when in fact we could not tell. Tapping it then attempted a
+          // second same-day write, which the DB rejects (DuplicateReflectionError).
+          // `error` is an i18n key from the hook, never raw error text.
+          <Card style={{ alignItems: 'flex-start', gap: t.spacing.sm }}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>
+              {tx(error)}
+            </Text>
+            <Text style={{ fontSize: 13, lineHeight: 19, color: t.colors.sec }}>
+              {tx('errors:load.hint')}
+            </Text>
+            <Button title={tx('common:retry')} onPress={() => void refresh()} fullWidth={false} />
+          </Card>
         ) : reflection ? (
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <Text

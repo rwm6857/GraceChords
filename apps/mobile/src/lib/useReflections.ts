@@ -9,7 +9,10 @@ import {
   type Reflection,
 } from '@gracechords/core'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { reportLoadFailure } from './errors'
+
+// i18n key for the user-facing failure — never the raw error. See errors.ts.
+const LOAD_ERROR_KEY = 'errors:load.reflection'
 
 // Private per-user reflections for the Daily Word landing + journal. Same plain
 // loading/error/data pattern as useSetlists — no React Query. All reads/writes
@@ -48,7 +51,7 @@ export function useTodayReflection(dateKey: string = reflectionDateKey(new Date(
       setReflection(row)
       setError(null)
     } catch (err: unknown) {
-      setError(errMessage(err))
+      if (reportLoadFailure('useTodayReflection', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }
@@ -107,7 +110,7 @@ export function useReflectionList() {
       setReflections(rows)
       setError(null)
     } catch (err: unknown) {
-      setError(errMessage(err))
+      if (reportLoadFailure('useReflectionList', err)) setError(LOAD_ERROR_KEY)
     } finally {
       setLoading(false)
     }

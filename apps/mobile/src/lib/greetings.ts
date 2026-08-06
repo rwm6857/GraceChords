@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { supabase } from './supabase'
 
 // The greeting PHRASES live in the home locale namespace
 // (src/i18n/locales/<lng>/home.json — greeting.* and the editable subGreetings
@@ -40,17 +38,4 @@ export function getDisplayName(user: User | null): string | null {
   const email = user?.email
   if (email) return email.split('@')[0]
   return null
-}
-
-/** Track the current auth user (for the greeting). Mirrors the root auth wiring. */
-export function useCurrentUser(): User | null {
-  const [user, setUser] = useState<User | null>(null)
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null))
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-    return () => sub.subscription.unsubscribe()
-  }, [])
-  return user
 }

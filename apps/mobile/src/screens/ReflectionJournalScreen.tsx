@@ -26,7 +26,7 @@ function dateFromKey(key: string): Date {
 export default function ReflectionJournalScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { t: tx, i18n } = useTranslation('reader')
+  const { t: tx, i18n } = useTranslation(['reader', 'common', 'errors'])
   const insets = useSafeAreaInsets()
   const { reflections, loading, error, refresh, remove } = useReflectionList()
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -92,11 +92,15 @@ export default function ReflectionJournalScreen() {
           <ActivityIndicator color={t.colors.accent} />
         </View>
       ) : error ? (
+        // `error` is an i18n key from the hook. This branch used to borrow the
+        // READER's copy — "Can't load today's reading", with a subtitle about
+        // downloading a Bible translation for offline use — on a screen that
+        // lists reflections. Neither sentence was true here.
         <EmptyState
           icon="wifi.slash"
-          title={tx('error.title')}
-          subtitle={tx('error.subtitle')}
-          actionLabel={tx('error.retry')}
+          title={tx(error)}
+          subtitle={tx('errors:load.hint')}
+          actionLabel={tx('common:retry')}
           onAction={() => void refresh()}
         />
       ) : reflections.length === 0 ? (

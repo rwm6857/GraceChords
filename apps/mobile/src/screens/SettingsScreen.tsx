@@ -14,7 +14,7 @@ import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 import type { Tokens } from '@gracechords/tokens/native'
 import { supabase } from '../lib/supabase'
-import { useCurrentUser } from '../lib/greetings'
+import { useCurrentUser } from '../lib/currentUser'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import {
   setDefaultChordStyle,

@@ -1,5 +1,13 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "couldntLoadSong": "No se pudo cargar la canción",
-  "songNotFound": "No se pudo encontrar esta canción."
+  "songNotFound": "No se pudo encontrar esta canción.",
+  "load": {
+    "songs": "No se pueden cargar las canciones",
+    "setlists": "No se pueden cargar tus repertorios",
+    "starred": "No se pueden cargar las canciones favoritas",
+    "lastSet": "No se puede cargar tu último repertorio",
+    "reflection": "No se puede cargar tu reflexión",
+    "hint": "Comprueba tu conexión e inténtalo de nuevo."
+  }
 }
