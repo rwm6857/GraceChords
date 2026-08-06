@@ -327,7 +327,7 @@ export default function SettingsScreen() {
                 </Text>
               ) : null}
             </View>
-            <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
+            <SymbolIcon name="chevron.right" size={14} color={t.colors.sec} />
           </Pressable>
         </Card>
 
@@ -482,7 +482,7 @@ export default function SettingsScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:home')}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:home')}</Text>
         </Pressable>
       </GlassSurface>
 

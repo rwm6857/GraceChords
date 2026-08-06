@@ -44,7 +44,7 @@ export default function RecentSongsCard() {
       </Text>
 
       {recents.length === 0 ? (
-        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
           {tx('recentSongsCard.empty')}
         </Text>
       ) : (

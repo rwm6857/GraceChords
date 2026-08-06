@@ -134,9 +134,9 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>{label}</Text>
-        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.muted }}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={{ fontSize: 11.5, color: t.colors.sec }}>{subtitle}</Text> : null}
       </View>
-      <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} />
+      <SymbolIcon name="chevron.right" size={14} color={t.colors.sec} />
     </Pressable>
   )
 

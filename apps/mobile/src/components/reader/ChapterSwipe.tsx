@@ -13,6 +13,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
+import { useAccessibilityFlags } from '../../lib/accessibilityFlags'
 import {
   dragTravel,
   isForwardDrag,
@@ -106,12 +107,28 @@ export default function ChapterSwipe({
   const { width } = useWindowDimensions()
   const threshold = swipeThreshold(width)
 
+  // Reduce Motion: the finger-tracking drag itself is DELIBERATELY untouched —
+  // direct manipulation is not animation, and both the HIG and WCAG 2.3.3 exempt
+  // it, so suppressing it would break the gesture rather than calm it. What goes
+  // is the motion that plays on its own: the carry-off, the slide-in, and the
+  // spring-back. A cross-fade stays, which is the HIG-preferred reduced-motion
+  // transition. Mirrors LoadingSkeleton / autoHideChrome / SplashOverlay.
+  const { reduceMotion } = useAccessibilityFlags()
+
   const dx = useSharedValue(0)
   const pageOpacity = useSharedValue(1)
   /** 1 while a commit is carrying the page off — further drags are ignored. */
   const locked = useSharedValue(0)
   /** Latch so the threshold haptic fires once per crossing, not per frame. */
   const armed = useSharedValue(0)
+  // The gesture callbacks are worklets and cannot read the flag store (a plain JS
+  // closure over module state), so mirror it into a shared value. Done this way
+  // rather than by capturing the boolean so it stays correct even if `pan` is
+  // ever wrapped in a useMemo that forgets the dependency.
+  const noMotion = useSharedValue(reduceMotion)
+  useEffect(() => {
+    noMotion.value = reduceMotion
+  }, [reduceMotion, noMotion])
 
   // Which edge the next content should enter from: +1 = from the right (a
   // forward swipe carried the old page off to the left), -1 = from the left,
@@ -129,12 +146,17 @@ export default function ChapterSwipe({
     (from: number) => {
       locked.value = 0
       armed.value = 0
-      dx.value = from * ENTRY_OFFSET
+      // Reduce Motion: land the new content in place — no offset, no slide.
+      const slide = Boolean(from) && !reduceMotion
+      dx.value = slide ? from * ENTRY_OFFSET : 0
       pageOpacity.value = 0
-      if (from) dx.value = withTiming(0, { duration: ENTRY_MS, easing: EASE_OUT })
+      if (slide) dx.value = withTiming(0, { duration: ENTRY_MS, easing: EASE_OUT })
+      // NOT gated on reduceMotion, and it must never be: pageOpacity was just
+      // hard-set to 0 on the line above, for every content change. Skipping this
+      // fade would leave the reading permanently invisible rather than unanimated.
       pageOpacity.value = withTiming(1, { duration: ENTRY_FADE_MS })
     },
-    [dx, pageOpacity, locked, armed],
+    [dx, pageOpacity, locked, armed, reduceMotion],
   )
 
   // Committed: record which edge the replacement comes in from, then advance.
@@ -199,6 +221,17 @@ export default function ChapterSwipe({
         shouldCommitSwipe(travelled, e.velocityX, threshold)
       ) {
         locked.value = 1
+        if (noMotion.value) {
+          // Reduce Motion: cut straight to the commit. The chapter change lives in
+          // the completion callback of the carry-off below, so this branch MUST
+          // still call advance() — dropping the animation without it would leave
+          // the reader on the same passage, silently. Same shape, same fix as
+          // SplashOverlay's reduced-motion branch: run the callback synchronously.
+          dx.value = 0
+          pageOpacity.value = 0
+          runOnJS(advance)(forward)
+          return
+        }
         const exitTo = (dx.value < 0 ? -1 : 1) * width * EXIT_FRACTION
         pageOpacity.value = withTiming(0, { duration: EXIT_FADE_MS })
         dx.value = withTiming(exitTo, { duration: EXIT_MS, easing: EASE_OUT }, (finished) => {
@@ -206,14 +239,16 @@ export default function ChapterSwipe({
         })
         return
       }
-      dx.value = withTiming(0, { duration: RETURN_MS, easing: EASE_OUT })
+      // Released without committing: put the page back. Instantly under Reduce
+      // Motion — it is undoing a finger drag, so there is nothing to animate.
+      dx.value = withTiming(0, { duration: noMotion.value ? 0 : RETURN_MS, easing: EASE_OUT })
     })
     // A cancelled gesture (system pan-out, another handler winning) still has to
     // drop the haptic latch and put the page back.
     .onFinalize((_e, success) => {
       armed.value = 0
       if (!success && !locked.value) {
-        dx.value = withTiming(0, { duration: RETURN_MS, easing: EASE_OUT })
+        dx.value = withTiming(0, { duration: noMotion.value ? 0 : RETURN_MS, easing: EASE_OUT })
       }
     })
 
@@ -312,7 +347,7 @@ function EdgePill({
           <SymbolIcon
             name={side === 'right' ? 'chevron.right' : 'chevron.left'}
             size={19}
-            color={t.colors.muted}
+            color={t.colors.sec}
             weight="semibold"
           />
         </View>

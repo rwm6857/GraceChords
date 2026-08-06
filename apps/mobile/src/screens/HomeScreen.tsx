@@ -84,7 +84,7 @@ export default function HomeScreen() {
   function cardError(messageKey: string, onRetry: () => void) {
     return (
       <View style={{ marginTop: t.spacing.md, alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+        <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
           {tx(messageKey)}
         </Text>
         <Pressable
@@ -246,7 +246,7 @@ export default function HomeScreen() {
       ) : starredError ? (
         cardError(starredError, reloadStarred)
       ) : starred.length === 0 ? (
-        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
           {tx('starredCard.empty')}
         </Text>
       ) : (
@@ -302,7 +302,7 @@ export default function HomeScreen() {
                     </Text>
                   ) : null}
                   {s.time_signature ? (
-                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
+                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                       {s.time_signature}
                     </Text>
                   ) : null}
@@ -445,7 +445,7 @@ export default function HomeScreen() {
                       </Text>
                     ) : null}
                     {songMeta(continueSong, tx) ? (
-                      <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 3 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 3 }}>
                         {songMeta(continueSong, tx)}
                       </Text>
                     ) : null}

@@ -152,7 +152,7 @@ export default function UtilitiesScreen() {
               }}
             >
               <SymbolIcon name="wrench.and.screwdriver" size={34} color={t.colors.muted} />
-              <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+              <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
                 {tx('pickTool')}
               </Text>
             </View>

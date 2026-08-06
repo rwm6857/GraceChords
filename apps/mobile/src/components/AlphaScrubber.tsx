@@ -105,7 +105,7 @@ export default function AlphaScrubber({
                   fontWeight: '600',
                   lineHeight: 15,
                   textAlign: 'center',
-                  color: active ? t.colors.accent : t.colors.off,
+                  color: active ? t.colors.textAccent : t.colors.off,
                 }}
               >
                 {letter}

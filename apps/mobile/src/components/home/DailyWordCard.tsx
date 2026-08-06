@@ -72,7 +72,7 @@ export default function DailyWordCard() {
           ))}
         </View>
       ) : (
-        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
           {tx('dailyWordCard.empty')}
         </Text>
       )}

@@ -172,7 +172,7 @@ export default function ReflectionComposeScreen() {
           hitSlop={8}
           style={{ flex: 1 }}
         >
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>
             {tx('reflection.cancel')}
           </Text>
         </Pressable>
@@ -186,7 +186,7 @@ export default function ReflectionComposeScreen() {
                 style={{
                   fontSize: 16,
                   fontWeight: '700',
-                  color: canAct ? t.colors.accent : t.colors.muted,
+                  color: canAct ? t.colors.textAccent : t.colors.muted,
                 }}
               >
                 {actionLabel}
@@ -210,14 +210,14 @@ export default function ReflectionComposeScreen() {
         >
           <Text style={{ fontSize: 13, fontWeight: '600', color: t.colors.sec }}>{dateLabel}</Text>
           {passages ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 2 }}>{passages}</Text>
+            <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 2 }}>{passages}</Text>
           ) : null}
 
           <TextInput
             value={body}
             onChangeText={setBody}
             placeholder={tx('reflection.placeholder')}
-            placeholderTextColor={t.colors.muted}
+            placeholderTextColor={t.colors.sec}
             multiline
             autoFocus
             textAlignVertical="top"
@@ -232,7 +232,7 @@ export default function ReflectionComposeScreen() {
             }}
           />
 
-          <Text style={{ marginTop: t.spacing.sm, fontSize: 12, color: t.colors.muted, textAlign: 'right' }}>
+          <Text style={{ marginTop: t.spacing.sm, fontSize: 12, color: t.colors.sec, textAlign: 'right' }}>
             {tx('reflection.charCount', { count: body.length, max: MAX_BODY })}
           </Text>
         </ScrollView>

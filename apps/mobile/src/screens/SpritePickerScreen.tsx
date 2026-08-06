@@ -197,7 +197,7 @@ export default function SpritePickerScreen() {
             hitSlop={4}
             style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.muted }}>
+            <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.sec }}>
               {tx('spritePicker.skipForNow')}
             </Text>
           </Pressable>

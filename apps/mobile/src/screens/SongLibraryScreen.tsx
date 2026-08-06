@@ -357,14 +357,14 @@ export default function SongLibraryScreen() {
               height: 44,
             }}
           >
-            <SymbolIcon name="magnifyingglass" size={18} color={t.colors.muted} />
+            <SymbolIcon name="magnifyingglass" size={18} color={t.colors.sec} />
             <TextInput
               ref={inputRef}
               value={query}
               onChangeText={setQuery}
               onFocus={() => setSearchActive(true)}
               placeholder={tx('library.searchPlaceholder')}
-              placeholderTextColor={t.colors.muted}
+              placeholderTextColor={t.colors.sec}
               returnKeyType="search"
               autoCorrect={false}
               style={{ flex: 1, fontSize: 16, color: t.colors.ink, padding: 0 }}
@@ -415,7 +415,7 @@ export default function SongLibraryScreen() {
   function centeredMessage(message: string) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
-        <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, textAlign: 'center' }}>
+        <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec, textAlign: 'center' }}>
           {message}
         </Text>
       </View>
@@ -465,7 +465,7 @@ export default function SongLibraryScreen() {
                   fontWeight: t.typography.overline.fontWeight,
                   letterSpacing: t.typography.overline.letterSpacing,
                   textTransform: 'uppercase',
-                  color: t.colors.muted,
+                  color: t.colors.sec,
                 }}
               >
                 {tx('library.results', { count: results.length })}

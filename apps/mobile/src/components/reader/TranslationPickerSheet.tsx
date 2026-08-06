@@ -50,7 +50,7 @@ function TranslationPickerContent({ onClose, groups, selectedId, onSelect }: Tra
                 fontWeight: '700',
                 letterSpacing: 0.7,
                 textTransform: 'uppercase',
-                color: t.colors.muted,
+                color: t.colors.sec,
                 paddingHorizontal: t.spacing.lg,
                 paddingTop: t.spacing.md,
                 paddingBottom: t.spacing.xs,

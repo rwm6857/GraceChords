@@ -124,7 +124,7 @@ export default function AboutScreen() {
             marginTop: t.spacing.xl,
             textAlign: 'center',
             fontSize: 12.5,
-            color: t.colors.muted,
+            color: t.colors.sec,
           }}
         >
           {tx('common:copyright', { range: copyrightRange() })}
@@ -156,7 +156,7 @@ export default function AboutScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('common:settings')}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('common:settings')}</Text>
         </Pressable>
       </GlassSurface>
     </Screen>

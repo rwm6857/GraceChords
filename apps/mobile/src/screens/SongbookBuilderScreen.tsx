@@ -131,7 +131,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
         <SectionHeader label={tx('songbook.selectedCount', { count: selectedSongs.length })} />
 
         {selectedSongs.length === 0 ? (
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted, paddingHorizontal: t.spacing.xs }}>
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec, paddingHorizontal: t.spacing.xs }}>
             {tx('songbook.noneSelected')}
           </Text>
         ) : (
@@ -235,7 +235,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2, width: 90 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('songbook.title')}</Text>
@@ -244,7 +244,7 @@ export default function SongbookBuilderScreen({ embedded }: { embedded?: boolean
 
       {loading && songs.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
             {tx('common:loading')}
           </Text>
         </View>

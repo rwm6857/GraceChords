@@ -101,7 +101,7 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
           {WEEKDAYS.map((d, i) => (
             <Text
               key={i}
-              style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '600', color: t.colors.muted }}
+              style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '600', color: t.colors.sec }}
             >
               {d}
             </Text>

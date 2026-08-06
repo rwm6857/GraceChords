@@ -88,12 +88,12 @@ export default function TextField({
           borderColor: focused ? t.colors.accent : t.colors.border,
         }}
       >
-        <SymbolIcon name={icon} size={18} color={t.colors.muted} />
+        <SymbolIcon name={icon} size={18} color={t.colors.sec} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={t.colors.muted}
+          placeholderTextColor={t.colors.sec}
           secureTextEntry={secureTextEntry && !revealed}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -117,12 +117,12 @@ export default function TextField({
             accessibilityLabel={revealed ? tx('hidePassword') : tx('showPassword')}
             hitSlop={8}
           >
-            <SymbolIcon name={revealed ? 'eye.slash' : 'eye'} size={18} color={t.colors.muted} />
+            <SymbolIcon name={revealed ? 'eye.slash' : 'eye'} size={18} color={t.colors.sec} />
           </Pressable>
         ) : null}
       </View>
       {helperText ? (
-        <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: t.spacing.xs + 2 }}>
+        <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: t.spacing.xs + 2 }}>
           {helperText}
         </Text>
       ) : null}

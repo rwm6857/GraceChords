@@ -34,7 +34,7 @@ export function PendingBadge() {
         borderColor: t.colors.border,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '700', color: t.colors.muted }}>Pending</Text>
+      <Text style={{ fontSize: 11, fontWeight: '700', color: t.colors.sec }}>Pending</Text>
     </View>
   )
 }

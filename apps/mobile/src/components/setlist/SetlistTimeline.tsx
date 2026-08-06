@@ -175,7 +175,7 @@ const Row = memo(function Row({
                   justifyContent: 'center',
                 }}
               >
-                <SymbolIcon name="line.3.horizontal" size={17} color={t.colors.muted} />
+                <SymbolIcon name="line.3.horizontal" size={17} color={t.colors.sec} />
               </View>
             </GestureDetector>
 

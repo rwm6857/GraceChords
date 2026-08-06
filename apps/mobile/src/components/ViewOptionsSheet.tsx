@@ -32,7 +32,7 @@ function OverlineLabel({ children, first }: { children: string; first?: boolean 
         fontWeight: t.typography.overline.fontWeight,
         letterSpacing: t.typography.overline.letterSpacing,
         textTransform: 'uppercase',
-        color: t.colors.muted,
+        color: t.colors.sec,
         marginTop: first ? 0 : t.spacing.xl,
         marginBottom: t.spacing.sm,
       }}

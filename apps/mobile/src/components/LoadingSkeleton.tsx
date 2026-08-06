@@ -58,7 +58,7 @@ export default function LoadingSkeleton({ label }: { label?: string }) {
     <View style={{ paddingHorizontal: t.spacing.xl, paddingTop: t.spacing.md }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: t.spacing.lg }}>
         <ActivityIndicator size="small" color={t.colors.accent} />
-        <Text style={{ fontSize: 13, color: t.colors.muted }}>{displayLabel}</Text>
+        <Text style={{ fontSize: 13, color: t.colors.sec }}>{displayLabel}</Text>
       </View>
 
       {ROWS.map((row, i) => (

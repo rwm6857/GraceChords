@@ -114,7 +114,7 @@ export default function PruneSetlistsModal({
             paddingHorizontal: t.spacing.lg,
             paddingBottom: t.spacing.sm,
             fontSize: t.typography.body.fontSize,
-            color: t.colors.muted,
+            color: t.colors.sec,
           }}
         >
           {tx('prune.message', { count: setlists.length, limit })}

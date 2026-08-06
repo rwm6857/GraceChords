@@ -265,7 +265,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     return (
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
             {tx('builder.notFound')}
           </Text>
         </View>
@@ -330,7 +330,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     fontWeight: t.typography.overline.fontWeight,
                     letterSpacing: t.typography.overline.letterSpacing,
                     textTransform: 'uppercase',
-                    color: t.colors.muted,
+                    color: t.colors.sec,
                   }}
                 >
                   {tx('builder.setName')}
@@ -367,7 +367,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     accessibilityLabel={tx('builder.clearSetName')}
                     hitSlop={8}
                   >
-                    <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.muted} />
+                    <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.sec} />
                   </Pressable>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -386,13 +386,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                   >
                     {name}
                   </Text>
-                  <SymbolIcon name="pencil" size={15} color={t.colors.muted} />
+                  <SymbolIcon name="pencil" size={15} color={t.colors.sec} />
                 </View>
                 <Text style={{ marginTop: 6, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                   {metaLine}
                 </Text>
                 {edited ? (
-                  <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
+                  <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                     {tx('builder.lastEdited', { time: edited })}
                   </Text>
                 ) : null}
@@ -419,7 +419,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
               <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
                 {tx('builder.noSongs')}
               </Text>
-              <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+              <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
                 {isTablet ? tx('builder.addHintTablet') : tx('builder.addHintPhone')}
               </Text>
             </View>

@@ -114,7 +114,7 @@ export default function OfflineDownloadsScreen() {
         fontWeight: '600',
         letterSpacing: 0.6,
         textTransform: 'uppercase',
-        color: t.colors.muted,
+        color: t.colors.sec,
         paddingHorizontal: t.spacing.lg,
         paddingBottom: 7,
         marginTop: t.spacing.xl,
@@ -166,7 +166,7 @@ export default function OfflineDownloadsScreen() {
           >
             <View style={{ height: '100%', width: `${usagePct}%`, backgroundColor: t.colors.accent, borderRadius: t.radii.pill }} />
           </View>
-          <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 9 }}>
+          <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 9 }}>
             {tx('downloadedCount', { count: downloadedList.length, total: translations.length })}
           </Text>
         </Card>
@@ -190,7 +190,7 @@ export default function OfflineDownloadsScreen() {
                       >
                         <View style={{ height: '100%', width: `${pct}%`, backgroundColor: t.colors.accent, borderRadius: t.radii.pill }} />
                       </View>
-                      <Text style={{ fontSize: 12, color: t.colors.muted, marginTop: 6 }}>{tx('percent', { value: pct })}</Text>
+                      <Text style={{ fontSize: 12, color: t.colors.sec, marginTop: 6 }}>{tx('percent', { value: pct })}</Text>
                     </View>
                     <Pressable
                       onPress={() => handleCancel(tr.id)}
@@ -229,7 +229,7 @@ export default function OfflineDownloadsScreen() {
                       <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '500', color: t.colors.ink }}>
                         {r.name}
                       </Text>
-                      <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 1 }}>
+                      <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 1 }}>
                         {stale
                           ? tx('translationMetaStale', { language: r.language, size: formatMB(r.sizeBytes, tx) })
                           : tx('translationMeta', { language: r.language, size: formatMB(r.sizeBytes, tx) })}
@@ -279,7 +279,7 @@ export default function OfflineDownloadsScreen() {
                     <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '500', color: t.colors.ink }}>
                       {tr.name}
                     </Text>
-                    <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 1 }}>{tr.language}</Text>
+                    <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 1 }}>{tr.language}</Text>
                   </View>
                   <SymbolIcon name="arrow.down.circle" size={23} color={t.colors.accent} />
                 </Pressable>
@@ -305,7 +305,7 @@ export default function OfflineDownloadsScreen() {
             />
           </View>
         </Card>
-        <Text style={{ fontSize: 12.5, lineHeight: 19, color: t.colors.muted, paddingHorizontal: t.spacing.lg, paddingTop: 8 }}>
+        <Text style={{ fontSize: 12.5, lineHeight: 19, color: t.colors.sec, paddingHorizontal: t.spacing.lg, paddingTop: 8 }}>
           {tx('footer')}
         </Text>
       </ScrollView>
@@ -335,7 +335,7 @@ export default function OfflineDownloadsScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('back')}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('back')}</Text>
         </Pressable>
       </GlassSurface>
     </Screen>

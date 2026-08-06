@@ -182,7 +182,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
                 fontSize: t.typography.overline.fontSize,
                 fontWeight: t.typography.overline.fontWeight,
                 letterSpacing: t.typography.overline.letterSpacing,
-                color: t.colors.muted,
+                color: t.colors.sec,
               }}
             >
               {tx('metronome.bpm')}
@@ -295,7 +295,7 @@ export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('metronome.title')}</Text>
