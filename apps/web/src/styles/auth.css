@@ -402,7 +402,7 @@
   color: var(--gc-primary);
 }
 
-/* ===== Contributor request modal ===== */
+/* ===== Modal (delete account, and any future confirm dialog) ===== */
 .gc-modal-overlay {
   position: fixed;
   inset: 0;

@@ -510,8 +510,11 @@ console.log('\nhasMinRole parity (bundle vs. rbac/roles.js), full matrix:')
   } else {
     console.log(`PASS  ROLE_ORDER matches core: ${bundledOrder.join(' → ')}`)
   }
-  // Roles the hierarchy no longer contains must not quietly grant anything.
-  const probeRoles = [...REF_ROLE_ORDER, 'collaborator', 'nonsense', '']
+  // Roles outside the hierarchy must not quietly grant anything. Keep BOTH a
+  // non-empty unknown and the empty string: they take different branches —
+  // '' is coerced to 'user' (index 0), an unknown lands on indexOf -1, which is
+  // below every role and grants nothing at all.
+  const probeRoles = [...REF_ROLE_ORDER, 'nonsense', '']
   let matrixFailures = 0
   for (const userRole of probeRoles) {
     const row = []
@@ -531,7 +534,7 @@ console.log('\nhasMinRole parity (bundle vs. rbac/roles.js), full matrix:')
   }
   // The gate Studio actually uses. Hardcoded expectations so a hierarchy change
   // that silently promotes 'user' to editor fails here rather than in the app.
-  for (const [role, expected] of [['user', false], ['editor', true], ['admin', true], ['owner', true], ['collaborator', false], ['', false]]) {
+  for (const [role, expected] of [['user', false], ['editor', true], ['admin', true], ['owner', true], ['nonsense', false], ['', false]]) {
     const got = namespace.hasMinRole(role, 'editor')
     if (got !== expected) fail(`canDirectWrite gate: hasMinRole('${role}', 'editor') → ${got}, expected ${expected}`)
   }

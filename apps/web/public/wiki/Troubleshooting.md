@@ -17,7 +17,7 @@ Solve common issues when running or using GraceChords.
 
 **Upload fails**
 - Ensure `VITE_PPTX_WORKER_URL` is set to the deployed Worker URL.
-- Confirm you have at least Collaborator role.
+- Confirm you have at least Editor role.
 - Check the Worker logs in the Cloudflare dashboard for JWT or CORS errors.
 
 **Download PPTX button missing**

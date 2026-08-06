@@ -63,7 +63,7 @@ the typed map from `@gracechords/tokens/native`.
 
 ## `supabase/`
 SQL migrations applied in order — `users`, `songs`, `posts`, `user_starred_songs`,
-`saved_sets`, `collaborator_requests`. Every table has row-level security.
+`saved_sets`. Every table has row-level security.
 
 ## `workers/`
 Standalone Cloudflare Workers, each deployed with `wrangler deploy`:

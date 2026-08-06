@@ -154,9 +154,11 @@ themselves:
   contains, including ones the parser rejects. The editor shows warnings for exactly
   the bodies most worth reading them on, so lint must not fail alongside the parse.
 - **hasMinRole:** the full role × minimum matrix against `rbac/roles.js`, including
-  roles no longer in the hierarchy (`collaborator`) and the empty string, plus a
-  hardcoded assertion that only editor/admin/owner clear the editor+ gate — so a
-  hierarchy change that promoted `user` fails here rather than in the app.
+  a role outside the hierarchy (`nonsense`) and the empty string, plus a hardcoded
+  assertion that only editor/admin/owner clear the editor+ gate — so a hierarchy
+  change that promoted `user` fails here rather than in the app. Keep both probes:
+  the empty string is coerced to `user`, while an unknown role lands below every
+  role and grants nothing, so they exercise different branches.
 - **editing:** `insertAtCursor` and `wrapSection` against `chordpro/editing.ts`
   (transform only — it imports nothing). `wrapSection` is compared across **every**
   core `SECTION_PRESET` × five selection shapes, and each preset's output is then run

@@ -113,7 +113,6 @@
     "failedCopy": "Bağlantı kopyalanamadı",
     "signInToSaveToast": "Set listelerini kaydetmek için oturum açın.",
     "limitReached": "{{limit}} set sınırına ulaştınız.",
-    "limitReachedCollab": "{{limit}} sınırına ulaşıldı. Daha fazlasını kaydetmek için katılımcı erişimi isteyin.",
     "manageTitle": "Set listesi sınırına ulaşıldı",
     "manageDesc": "{{limit}} set listenizden {{count}} tanesini kaydettiniz. Silmek için bazılarını seçin (önce en eskiler) ve tekrar kaydedin.",
     "manageSelectedCount": "{{count}} seçildi",

@@ -25,7 +25,7 @@ When signed in, sets are saved to Supabase (`saved_sets` table) and sync across 
 
 When not signed in, sets fall back to `localStorage`.
 
-Set limits: accounts must be collaborator-eligible (7+ days old) to save more than the default guest limit. See [[Roles-and-Access]].
+Set limits: users can save 30 personal setlists; editors and admins 50; the owner is uncapped. See [[Roles-and-Access]].
 
 ## Translation behavior
 - Setlist add/search uses the same translation grouping model as Song Library.

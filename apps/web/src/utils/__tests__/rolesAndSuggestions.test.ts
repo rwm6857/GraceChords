@@ -6,9 +6,24 @@ import {
   submitSongSuggestion,
 } from '@gracechords/core'
 
-describe('role hierarchy (collaborator removed)', () => {
-  it('no longer includes collaborator', () => {
+describe('role hierarchy', () => {
+  it('is exactly user → editor → admin → owner', () => {
     expect(ROLE_ORDER).toEqual(['user', 'editor', 'admin', 'owner'])
+  })
+  it('fails closed for a role outside the hierarchy', () => {
+    // A retired or misspelled role must grant nothing at all — not even
+    // user-level. indexOf returns -1, which ranks below every real role.
+    // 'collaborator' was a real role until 20260708000000 and is the realistic
+    // instance of this class; users_role_check now rejects the value outright.
+    for (const stray of ['collaborator', 'nonsense']) {
+      expect(hasMinRole(stray, 'user')).toBe(false)
+      expect(hasMinRole(stray, 'editor')).toBe(false)
+      expect(canDirectWrite(stray)).toBe(false)
+    }
+  })
+  it('treats an empty role as user, unlike an unknown one', () => {
+    expect(hasMinRole('', 'user')).toBe(true)
+    expect(hasMinRole('', 'editor')).toBe(false)
   })
   it('canDirectWrite is editor+', () => {
     expect(canDirectWrite('user')).toBe(false)
