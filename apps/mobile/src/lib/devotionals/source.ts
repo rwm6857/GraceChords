@@ -1,84 +1,145 @@
-import { parseMonthFile } from '@gracechords/core/devotional/manifest'
+import { parseManifest, parseMonthFile } from '@gracechords/core/devotional/manifest'
 import { monthOfDayKey } from '@gracechords/core/devotional/dayKey'
 import { selectDay } from '@gracechords/core/devotional/selection'
-import type { DayEntry, MonthFile } from '@gracechords/core/devotional/types'
-import { loadBundledMonth } from './months'
-import { monthRelPath } from './paths'
+import type { DayEntry, Manifest, MonthFile } from '@gracechords/core/devotional/types'
+import { manifestRelPath, monthRelPath, tmpRelPath } from './paths'
+import { readCachedText, writeCachedTextAtomic } from './cacheStore'
+import { fetchManifest, fetchMonth } from './remote'
 
 // Read seam for devotional content.
 //
-// READ ORDER: cached month file if present → bundled month file. NEVER a network
-// round trip. Sync (R2) is a strictly background concern and lives in sync.ts;
-// nothing here fetches, and rendering never waits on it.
+// There is NO bundled baseline: content is fetched from R2 and cached, so it can
+// be changed remotely without shipping a binary. The cache is therefore the only
+// local source, and the trade-off is that a fresh install has nothing until a
+// fetch lands.
 //
-// The bundled read is synchronous, which is what lets the first paint show real
-// content with no spinner. A cached month can only be read asynchronously —
-// expo-file-system's File API has no synchronous text read — so the cache is
-// applied as a second step: render bundled immediately, then swap in the cached
-// copy if one exists. `readDayCached()` exposes that, and `readDay()` is the
-// synchronous baseline. A day's content therefore never blocks on I/O; the worst
-// case is one extra render when a newer cached month is available.
+// What that costs, and what it must not cost:
+//
+//   * Rendering NEVER waits on the network. A cache miss resolves to null
+//     immediately; the fetch happens behind it and the caller re-renders when it
+//     lands. There is no spinner — an absent card is honest, a spinner over
+//     content that may not exist is not.
+//   * Every failure is silent. Offline, timeout, bad JSON, hash mismatch: the
+//     slot stays empty. The devotional is supplementary and must never disturb
+//     the readings.
+//   * A cached month is served without any network call at all, so the common
+//     case after first launch is a pure local read.
 
-/** Memoized parsed months, so a month is validated once per app session. */
-const memo = new Map<string, MonthFile | null>()
+/** Parsed months, memoized so a month is validated once per session. */
+const monthMemo = new Map<string, MonthFile>()
+/** In-flight month fetches, so two cards on one day don't fetch twice. */
+const inFlight = new Map<string, Promise<MonthFile | null>>()
+let manifestMemo: Manifest | null = null
 
-function parse(payload: unknown, monthKey: string): MonthFile | null {
-  const parsed = parseMonthFile(payload)
-  if (!parsed) {
-    if (__DEV__ && payload) console.warn(`[devotionals] month ${monthKey} failed validation`)
-    return null
-  }
-  return parsed
-}
+// ── Cache reads ─────────────────────────────────────────────────────────────
 
-/** The bundled month, parsed and memoized. Synchronous. */
-export function readBundledMonth(monthKey: string): MonthFile | null {
-  const hit = memo.get(monthKey)
-  if (hit !== undefined) return hit
-  const parsed = parse(loadBundledMonth(monthKey), monthKey)
-  memo.set(monthKey, parsed)
-  return parsed
-}
-
-/**
- * A day's devotionals from bundled content. Synchronous, allocation-cheap, and
- * safe to call during render.
- *
- * Returns null only when the month itself is unreadable. A day with no
- * devotional returns an entry with `state: 'open'` — the artifact carries every
- * day key precisely so a lookup never misses.
- */
-export function readDay(dayKey: string): DayEntry | null {
-  return selectDay(readBundledMonth(monthOfDayKey(dayKey)), dayKey)
-}
-
-/**
- * A day's devotionals preferring the cached (synced) month over the bundled one.
- *
- * Resolves to null when nothing beats what `readDay` already returned, so a
- * caller can skip a re-render. Any failure — no cache, unreadable file, invalid
- * payload — resolves null and is silent: the bundled baseline is always a valid
- * answer, so a cache problem must never surface to the user.
- */
-export async function readDayCached(dayKey: string): Promise<DayEntry | null> {
-  const monthKey = monthOfDayKey(dayKey)
+/** The cached month, or null. No network. */
+export async function readCachedMonth(monthKey: string): Promise<MonthFile | null> {
+  const hit = monthMemo.get(monthKey)
+  if (hit) return hit
+  const text = await readCachedText(monthRelPath(monthKey))
+  if (!text) return null
   try {
-    // Loaded lazily so expo-file-system stays out of the synchronous read path
-    // (and out of unit tests, which exercise readDay without a native module).
-    const { readCachedMonthText } = await import('./cacheStore')
-    const text = await readCachedMonthText(monthRelPath(monthKey))
-    if (!text) return null
-    const parsed = parse(JSON.parse(text) as unknown, monthKey)
+    const parsed = parseMonthFile(JSON.parse(text) as unknown)
     if (!parsed) return null
-    memo.set(monthKey, parsed)
-    return selectDay(parsed, dayKey)
+    monthMemo.set(monthKey, parsed)
+    return parsed
   } catch {
     return null
   }
 }
 
-/** Drop memoized months so a freshly synced file is picked up. */
-export function invalidateMonthCache(monthKey?: string): void {
-  if (monthKey) memo.delete(monthKey)
-  else memo.clear()
+/**
+ * The cached manifest, or null. Cached so the device knows a month's remote path
+ * (which embeds the content version) even when offline.
+ */
+export async function readCachedManifest(): Promise<Manifest | null> {
+  if (manifestMemo) return manifestMemo
+  const text = await readCachedText(manifestRelPath())
+  if (!text) return null
+  try {
+    manifestMemo = parseManifest(JSON.parse(text) as unknown)
+    return manifestMemo
+  } catch {
+    return null
+  }
+}
+
+// ── Writes ──────────────────────────────────────────────────────────────────
+
+export async function cacheManifest(manifest: Manifest, text: string): Promise<boolean> {
+  const ok = await writeCachedTextAtomic(tmpRelPath('manifest.json'), manifestRelPath(), text)
+  if (ok) manifestMemo = manifest
+  return ok
+}
+
+export async function cacheMonth(monthKey: string, month: MonthFile, text: string): Promise<boolean> {
+  const ok = await writeCachedTextAtomic(tmpRelPath(`${monthKey}.json`), monthRelPath(monthKey), text)
+  if (ok) monthMemo.set(monthKey, month)
+  return ok
+}
+
+// ── Fetch-on-demand ─────────────────────────────────────────────────────────
+
+/**
+ * Ensure one month is on disk, fetching it if absent. Resolves to the month or
+ * null. Callers must not block rendering on this.
+ *
+ * Deduplicated per month: a two-devotional day rendering two cards triggers one
+ * fetch, not two.
+ */
+export function ensureMonth(monthKey: string): Promise<MonthFile | null> {
+  const existing = inFlight.get(monthKey)
+  if (existing) return existing
+
+  const work = (async () => {
+    const cached = await readCachedMonth(monthKey)
+    if (cached) return cached
+
+    // Need the manifest for the month's versioned path and its expected hash.
+    let manifest = await readCachedManifest()
+    if (!manifest) {
+      const fetched = await fetchManifest()
+      if (!fetched) return null
+      await cacheManifest(fetched.manifest, fetched.text)
+      manifest = fetched.manifest
+    }
+
+    const entry = manifest.months[monthKey]
+    if (!entry) return null
+
+    const got = await fetchMonth(entry.file, entry.hash)
+    if (!got) return null
+    await cacheMonth(monthKey, got.month, got.text)
+    return got.month
+  })()
+    .catch(() => null)
+    .finally(() => { inFlight.delete(monthKey) })
+
+  inFlight.set(monthKey, work)
+  return work
+}
+
+// ── Day lookup ──────────────────────────────────────────────────────────────
+
+/**
+ * A day's devotionals from cache only. Null when the month is not cached yet.
+ *
+ * Returns an entry with `state: 'open'` for a day that legitimately has no
+ * devotional — the artifact carries every day key so a lookup never misses, which
+ * is what lets a caller tell "nothing for today" from "not downloaded yet".
+ */
+export async function readDay(dayKey: string): Promise<DayEntry | null> {
+  return selectDay(await readCachedMonth(monthOfDayKey(dayKey)), dayKey)
+}
+
+/** A day's devotionals, fetching the month first if it is not cached. */
+export async function ensureDay(dayKey: string): Promise<DayEntry | null> {
+  return selectDay(await ensureMonth(monthOfDayKey(dayKey)), dayKey)
+}
+
+/** Drop memoized content so a freshly synced file is picked up. */
+export function invalidateMemo(): void {
+  monthMemo.clear()
+  manifestMemo = null
 }
