@@ -8,6 +8,7 @@ import Screen from '../components/Screen'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import SymbolIcon from '../components/SymbolIcon'
+import DevotionalSection from '../components/devotional/DevotionalSection'
 import { useTheme } from '../theme/ThemeProvider'
 import { expandReadings, getPlanForDate } from '../lib/bibleSource'
 import { currentStreak, useReadingStreak } from '../lib/readingStreak'
@@ -22,10 +23,11 @@ import { useTodayReflection } from '../lib/useReflections'
 // Reflections are PRIVATE-ONLY: there is no community feed, no public compose,
 // and no path by which one user's reflection reaches another user.
 //
-// NOTE: the design's devotional hero card + long-read page are intentionally
-// omitted this phase — the public-domain devotional content pipeline does not
-// exist yet. The layout is kept forward-compatible so the devotional slots in
-// above the reading section when that content lands.
+// The devotional sits between the chapter list and the reflection, matched to the
+// day by scripture (see src/components/devotional/DevotionalSection.tsx). That is
+// the order the page reads in: what to read, what someone else wrote on it, then
+// what you write yourself. It lives here rather than on Home because it is
+// commentary on these readings; on Home the open-day placeholder was just noise.
 
 // English ordinal suffix for a day-of-month (1 → "1st", 22 → "22nd").
 function ordinal(n: number): string {
@@ -224,6 +226,12 @@ export default function DailyWordLandingScreen() {
         {/* No "Read today's passages" CTA below the list: each row now opens the
             Reader on its own chapter, so a button that could only ever open the
             first one duplicated the list without adding a destination. */}
+
+        {/* Today's devotional(s) — after the chapters and before the reflection,
+            which is the order the page reads in: what to read, what someone else
+            wrote on it, then what you write yourself. Renders nothing at all
+            while the month is still downloading; see DevotionalSection. */}
+        <DevotionalSection />
 
         {/* Your reflection */}
         <Text

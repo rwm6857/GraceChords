@@ -30,8 +30,8 @@ import {
   stepsBetween,
   transposeSymPrefer,
 } from '@gracechords/core'
-import ChordChart, { type ChordStyle } from '../components/ChordChart'
-import TwoColumnChart from '../components/TwoColumnChart'
+import { type ChordStyle } from '../components/ChordChart'
+import AutoFitChart from '../components/AutoFitChart'
 import VerseChart from '../components/VerseChart'
 import HeaderIconButton from '../components/HeaderIconButton'
 import Screen from '../components/Screen'
@@ -52,8 +52,7 @@ import { prefetchSong, useSong, usePersonalSong } from '../lib/useSong'
 import { useAutoHideChrome, useAutoHidePref } from '../lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../lib/defaults'
 import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
-import { useIsTabletWidth } from '../lib/useIsTabletWidth'
-import { setColumnMode, useColumnMode } from '../lib/viewerPrefs'
+import { useChartAutoFit } from '../lib/useChartAutoFit'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { useSessionController } from '../lib/useSessionController'
@@ -134,7 +133,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // View options — session-ephemeral.
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
-  const [fontScale, setFontScale] = useState(1)
   // Chord style initializes from the app-wide default (read-on-open); in-session
   // changes stay local — no write-back to the global default.
   const [chordStyle, setChordStyle] = useState<ChordStyle>(() => getDefaultsSnapshot().chordStyle)
@@ -148,14 +146,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const [sheet, setSheet] = useState<null | 'options' | 'share'>(null)
   // Floating-overlay header height → chart top inset (edge-to-edge).
   const [headerH, setHeaderH] = useState(0)
-  // Two-column mode: tablet widths only, persisted PER SONG (the current
-  // entry's song), exactly as in the Song Viewer. One song at a time — the
-  // columns split the current song's sections, never tile multiple songs.
-  const isTablet = useIsTabletWidth()
-  const currentSlug = entry?.song.slug
-  const columnMode = useColumnMode(currentSlug)
   const [chartAreaH, setChartAreaH] = useState(0)
-  const twoColumns = isTablet && columnMode === 'double'
 
   const nativeKey = doc?.meta?.key || entry?.song.default_key || ''
   const targetKey = entryKeys[index] || nativeKey
@@ -194,6 +185,18 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   const { visible: chromeVisible, opacity: chromeOpacity, reveal } = useAutoHideChrome(
     autoHide && sheet === null && songReady,
   )
+
+  // Column ceiling + auto-fit font, shared with the Song Viewer. Both are
+  // session-wide here, not per song: the whole point is that a set plays
+  // through without the layout changing under the performer.
+  const autoFit = useChartAutoFit({
+    chartAreaH,
+    headerH,
+    horizontalPadding: t.spacing.lg,
+    columnGap: t.spacing.lg,
+    topGap: t.spacing.sm,
+    chromeVisible,
+  })
 
   // Slide transition between songs (reanimated).
   const slideX = useSharedValue(0)
@@ -546,7 +549,7 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 paddingHorizontal: t.spacing.lg,
-                paddingTop: headerH + t.spacing.sm,
+                paddingTop: autoFit.paddingTop,
                 paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
               }}
             >
@@ -580,32 +583,23 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                   paddingHorizontal: t.spacing.lg,
-                  paddingTop: headerH + t.spacing.sm,
+                  paddingTop: autoFit.paddingTop,
                   paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
                 }}
               >
-                {twoColumns ? (
-                  <TwoColumnChart
-                    doc={doc}
-                    steps={steps}
-                    preferFlat={preferFlat}
-                    showChords={showChords}
-                    showSections={showSections}
-                    fontScale={fontScale}
-                    chordStyle={chordStyle}
-                    viewportHeight={Math.max(0, chartAreaH - headerH - t.spacing.sm)}
-                  />
-                ) : (
-                  <ChordChart
-                    doc={doc}
-                    steps={steps}
-                    preferFlat={preferFlat}
-                    showChords={showChords}
-                    showSections={showSections}
-                    fontScale={fontScale}
-                    chordStyle={chordStyle}
-                  />
-                )}
+                <AutoFitChart
+                  doc={doc}
+                  steps={steps}
+                  preferFlat={preferFlat}
+                  showChords={showChords}
+                  showSections={showSections}
+                  fontScale={autoFit.fontScale}
+                  chordStyle={chordStyle}
+                  maxColumns={autoFit.columns}
+                  viewportHeight={autoFit.viewportHeight}
+                  viewportHeightChromeHidden={autoFit.viewportHeightChromeHidden}
+                  onPlan={autoFit.onPlan}
+                />
               </ScrollView>
             ) : (
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl, paddingTop: headerH }}>
@@ -678,16 +672,16 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         onShowChords={setShowChords}
         showSections={showSections}
         onShowSections={setShowSections}
-        fontScale={fontScale}
-        onFontScale={setFontScale}
+        fontScale={autoFit.effectiveFontScale}
+        fontAuto={autoFit.fontAuto}
+        onFontScale={autoFit.onFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
         accidental={accidental}
         onAccidental={setAccidentalManual}
-        columnMode={isTablet && currentSlug ? columnMode : undefined}
-        onColumnMode={
-          isTablet && currentSlug ? (m) => setColumnMode(currentSlug, m) : undefined
-        }
+        columns={autoFit.maxColumns > 1 ? autoFit.columns : undefined}
+        onColumns={autoFit.maxColumns > 1 ? autoFit.setColumns : undefined}
+        maxColumns={autoFit.maxColumns}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
         keepAwake={keepAwake}

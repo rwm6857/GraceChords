@@ -1,0 +1,736 @@
+key,slot,book,chapter,verse
+01-01-AM,AM,Joshua,5,12
+01-02-AM,AM,Colossians,4,2
+01-03-AM,AM,Isaiah,49,8
+01-04-AM,AM,2 Peter,3,18
+01-05-AM,AM,Genesis,1,4
+01-06-AM,AM,1 Peter,5,7
+01-07-AM,AM,Philippians,1,21
+01-08-AM,AM,Exodus,28,38
+01-09-AM,AM,Jeremiah,31,33
+01-10-AM,AM,2 Timothy,4,8
+01-11-AM,AM,Luke,8,13
+01-12-AM,AM,1 Corinthians,3,23
+01-13-AM,AM,1 Kings,22,48
+01-14-AM,AM,Isaiah,63,1
+01-15-AM,AM,2 Samuel,7,25
+01-16-AM,AM,Isaiah,41,14
+01-17-AM,AM,Revelation,14,1
+01-18-AM,AM,Hebrews,4,9
+01-19-AM,AM,Song of Solomon,3,1
+01-20-AM,AM,Genesis,4,2
+01-21-AM,AM,Romans,11,26
+01-22-AM,AM,Ezekiel,15,2
+01-23-AM,AM,Psalms,89,19
+01-24-AM,AM,Psalms,91,3
+01-25-AM,AM,Isaiah,63,7
+01-26-AM,AM,Matthew,6,26
+01-27-AM,AM,John,1,16
+01-28-AM,AM,Colossians,1,28
+01-29-AM,AM,2 Corinthians,4,18
+01-30-AM,AM,2 Samuel,5,24
+01-31-AM,AM,Jeremiah,23,6
+01-01-PM,PM,Song of Solomon,1,4
+01-02-PM,PM,Isaiah,41,1
+01-03-PM,PM,Luke,3,4
+01-04-PM,PM,Genesis,42,8
+01-05-PM,PM,Genesis,1,4
+01-06-PM,PM,Ezekiel,33,22
+01-07-PM,PM,Song of Solomon,4,12
+01-08-PM,PM,Song of Solomon,1,2
+01-09-PM,PM,Psalms,100,2
+01-10-PM,PM,Job,19,26
+01-11-PM,PM,Luke,22,32
+01-12-PM,PM,Job,36,2
+01-13-PM,PM,2 Kings,6,9
+01-14-PM,PM,Matthew,14,30
+01-15-PM,PM,Psalms,109,4
+01-16-PM,PM,Daniel,9,26
+01-17-PM,PM,2 Samuel,11,2
+01-18-PM,PM,Luke,24,27
+01-19-PM,PM,Luke,24,45
+01-20-PM,PM,Psalms,119,37
+01-21-PM,PM,Judges,15,18
+01-22-PM,PM,Job,1,9
+01-23-PM,PM,Song of Solomon,1,4
+01-24-PM,PM,Luke,10,40
+01-25-PM,PM,Romans,3,31
+01-26-PM,PM,Luke,2,18
+01-27-PM,PM,Luke,2,19
+01-28-PM,PM,Luke,2,20
+01-29-PM,PM,Genesis,8,11
+01-30-PM,PM,Ephesians,1,11
+01-31-PM,PM,2 Samuel,18,23
+02-01-AM,AM,Psalms,138,5
+02-02-AM,AM,Hebrews,9,22
+02-03-AM,AM,Romans,8,12
+02-04-AM,AM,Hosea,3,1
+02-05-AM,AM,1 John,4,14
+02-06-AM,AM,Ephesians,6,18
+02-07-AM,AM,Micah,2,10
+02-08-AM,AM,Matthew,1,21
+02-09-AM,AM,2 Samuel,5,23
+02-10-AM,AM,Philippians,4,12
+02-11-AM,AM,Acts,4,13
+02-12-AM,AM,2 Corinthians,1,5
+02-13-AM,AM,1 John,3,1
+02-14-AM,AM,2 Kings,25,30
+02-15-AM,AM,2 Peter,3,18
+02-16-AM,AM,Philippians,4,11
+02-17-AM,AM,Genesis,25,11
+02-18-AM,AM,Job,10,2
+02-19-AM,AM,Ezekiel,36,37
+02-20-AM,AM,2 Corinthians,7,6
+02-21-AM,AM,Hebrews,13,5
+02-22-AM,AM,Genesis,49,24
+02-23-AM,AM,Hebrews,13,5
+02-24-AM,AM,Ezekiel,34,26
+02-25-AM,AM,Matthew,3,7
+02-26-AM,AM,Jonah,2,9
+02-27-AM,AM,Psalms,91,9
+02-28-AM,AM,Psalms,62,5
+02-29-AM,AM,Jeremiah,31,3
+02-01-PM,PM,2 Samuel,1,26
+02-02-PM,PM,1 Chronicles,4,22
+02-03-PM,PM,Song of Solomon,1,7
+02-04-PM,PM,Joshua,20,3
+02-05-PM,PM,Matthew,11,25
+02-06-PM,PM,James,5,16
+02-07-PM,PM,Revelation,11,12
+02-08-PM,PM,Matthew,1,21
+02-09-PM,PM,Luke,11,4
+02-10-PM,PM,Isaiah,44,22
+02-11-PM,PM,Revelation,2,4
+02-12-PM,PM,John,14,16
+02-13-PM,PM,Romans,8,1
+02-14-PM,PM,Luke,8,47
+02-15-PM,PM,Psalms,45,8
+02-16-PM,PM,Nehemiah,9,20
+02-17-PM,PM,Ezekiel,35,10
+02-18-PM,PM,Luke,15,18
+02-19-PM,PM,John,1,41
+02-20-PM,PM,Matthew,4,1
+02-21-PM,PM,Acts,8,30
+02-22-PM,PM,Nahum,1,3
+02-23-PM,PM,Mark,10,21
+02-24-PM,PM,Zechariah,1,12
+02-25-PM,PM,Jonah,1,3
+02-26-PM,PM,Leviticus,13,13
+02-27-PM,PM,Micah,5,2
+02-28-PM,PM,1 Kings,17,16
+02-29-PM,PM,1 Corinthians,2,12
+03-01-AM,AM,Song of Solomon,4,16
+03-02-AM,AM,1 Samuel,13,20
+03-03-AM,AM,Isaiah,48,10
+03-04-AM,AM,2 Corinthians,12,9
+03-05-AM,AM,1 Thessalonians,5,6
+03-06-AM,AM,John,3,7
+03-07-AM,AM,Mark,11,22
+03-08-AM,AM,Acts,14,22
+03-09-AM,AM,Song of Solomon,5,16
+03-10-AM,AM,Psalms,30,6
+03-11-AM,AM,Romans,7,13
+03-12-AM,AM,Matthew,5,43
+03-13-AM,AM,2 Kings,7,3
+03-14-AM,AM,1 Corinthians,10,12
+03-15-AM,AM,2 Timothy,2,1
+03-16-AM,AM,Psalms,39,12
+03-17-AM,AM,Galatians,2,10
+03-18-AM,AM,Galatians,3,26
+03-19-AM,AM,Romans,4,20
+03-20-AM,AM,Song of Solomon,2,8
+03-21-AM,AM,John,16,32
+03-22-AM,AM,Matthew,26,39
+03-23-AM,AM,Luke,22,44
+03-24-AM,AM,Hebrews,5,7
+03-25-AM,AM,Luke,22,48
+03-26-AM,AM,John,18,8
+03-27-AM,AM,Matthew,26,56
+03-28-AM,AM,Ephesians,3,19
+03-29-AM,AM,Hebrews,5,8
+03-30-AM,AM,Isaiah,53,12
+03-31-AM,AM,Isaiah,53,5
+03-01-PM,PM,1 Peter,2,7
+03-02-PM,PM,Ephesians,3,8
+03-03-PM,PM,Matthew,3,16
+03-04-PM,PM,Psalms,36,8
+03-05-PM,PM,Psalms,35,3
+03-06-PM,PM,Proverbs,18,12
+03-07-PM,PM,Psalms,118,8
+03-08-PM,PM,Genesis,35,18
+03-09-PM,PM,John,15,4
+03-10-PM,PM,Job,14,1
+03-11-PM,PM,Isaiah,62,12
+03-12-PM,PM,1 Samuel,30,13
+03-13-PM,PM,Genesis,8,9
+03-14-PM,PM,Psalms,39,1
+03-15-PM,PM,2 Chronicles,31,21
+03-16-PM,PM,Psalms,19,13
+03-17-PM,PM,Matthew,5,9
+03-18-PM,PM,John,15,9
+03-19-PM,PM,Ruth,2,14
+03-20-PM,PM,Ephesians,5,25
+03-21-PM,PM,Job,38,31
+03-22-PM,PM,John,17,24
+03-23-PM,PM,Luke,19,40
+03-24-PM,PM,Luke,10,21
+03-25-PM,PM,John,3,13
+03-26-PM,PM,Mark,8,38
+03-27-PM,PM,Matthew,15,27
+03-28-PM,PM,Ezekiel,20,41
+03-29-PM,PM,Song of Solomon,5,6
+03-30-PM,PM,Lamentations,3,40
+03-31-PM,PM,2 Samuel,21,10
+04-01-AM,AM,Song of Solomon,1,2
+04-02-AM,AM,Matthew,27,14
+04-03-AM,AM,John,19,16
+04-04-AM,AM,2 Corinthians,5,21
+04-05-AM,AM,Luke,23,26
+04-06-AM,AM,Hebrews,13,13
+04-07-AM,AM,Psalms,4,2
+04-08-AM,AM,Luke,23,31
+04-09-AM,AM,Luke,23,27
+04-10-AM,AM,Luke,23,33
+04-11-AM,AM,Psalms,22,14
+04-12-AM,AM,Psalms,22,14
+04-13-AM,AM,Song of Solomon,1,13
+04-14-AM,AM,Psalms,22,7
+04-15-AM,AM,Psalms,22,1
+04-16-AM,AM,1 Peter,1,19
+04-17-AM,AM,Hebrews,12,24
+04-18-AM,AM,Joshua,2,21
+04-19-AM,AM,Matthew,27,51
+04-20-AM,AM,Hebrews,2,14
+04-21-AM,AM,Job,19,25
+04-22-AM,AM,Acts,5,31
+04-23-AM,AM,Romans,8,37
+04-24-AM,AM,Nehemiah,9,38
+04-25-AM,AM,Song of Solomon,2,10
+04-26-AM,AM,1 Corinthians,11,24
+04-27-AM,AM,Psalms,67,6
+04-28-AM,AM,Psalms,119,49
+04-29-AM,AM,Jeremiah,17,17
+04-30-AM,AM,Numbers,14,2
+04-01-PM,PM,Hosea,10,12
+04-02-PM,PM,Isaiah,53,10
+04-03-PM,PM,Isaiah,53,6
+04-04-PM,PM,Isaiah,2,3
+04-05-PM,PM,Proverbs,15,33
+04-06-PM,PM,Psalms,118,12
+04-07-PM,PM,Psalms,51,14
+04-08-PM,PM,Psalms,23,4
+04-09-PM,PM,Psalms,18,35
+04-10-PM,PM,Acts,27,23
+04-11-PM,PM,Psalms,25,18
+04-12-PM,PM,Nehemiah,3,15
+04-13-PM,PM,Leviticus,1,4
+04-14-PM,PM,Isaiah,3,10
+04-15-PM,PM,Psalms,28,9
+04-16-PM,PM,Exodus,17,12
+04-17-PM,PM,John,12,21
+04-18-PM,PM,Genesis,32,12
+04-19-PM,PM,Revelation,3,14
+04-20-PM,PM,1 Samuel,18,17
+04-21-PM,PM,Romans,8,34
+04-22-PM,PM,Psalms,91,5
+04-23-PM,PM,Revelation,5,6
+04-24-PM,PM,Song of Solomon,2,12
+04-25-PM,PM,Revelation,3,20
+04-26-PM,PM,Revelation,16,15
+04-27-PM,PM,Psalms,10,16
+04-28-PM,PM,Ezekiel,3,7
+04-29-PM,PM,Psalms,149,4
+04-30-PM,PM,Psalms,139,17
+05-01-AM,AM,Song of Solomon,5,13
+05-02-AM,AM,John,17,15
+05-03-AM,AM,John,16,33
+05-04-AM,AM,Jeremiah,16,20
+05-05-AM,AM,2 Corinthians,6,16
+05-06-AM,AM,1 John,4,13
+05-07-AM,AM,Matthew,12,15
+05-08-AM,AM,1 John,5,13
+05-09-AM,AM,Ephesians,1,3
+05-10-AM,AM,1 Corinthians,15,20
+05-11-AM,AM,Matthew,28,20
+05-12-AM,AM,John,14,21
+05-13-AM,AM,Psalms,30,5
+05-14-AM,AM,Romans,8,17
+05-15-AM,AM,Acts,13,39
+05-16-AM,AM,1 Timothy,6,17
+05-17-AM,AM,1 John,2,6
+05-18-AM,AM,Colossians,2,9
+05-19-AM,AM,Ecclesiastes,10,7
+05-20-AM,AM,Psalms,17,7
+05-21-AM,AM,1 Peter,2,3
+05-22-AM,AM,Psalms,107,7
+05-23-AM,AM,Psalms,138,8
+05-24-AM,AM,Psalms,66,20
+05-25-AM,AM,Psalms,38,21
+05-26-AM,AM,Psalms,55,22
+05-27-AM,AM,2 Samuel,9,13
+05-28-AM,AM,Romans,8,30
+05-29-AM,AM,Psalms,45,7
+05-30-AM,AM,Song of Solomon,2,15
+05-31-AM,AM,2 Samuel,15,23
+05-01-PM,PM,Song of Solomon,2,1
+05-02-PM,PM,Hebrews,11,13
+05-03-PM,PM,Psalms,46,1
+05-04-PM,PM,1 Peter,1,23
+05-05-PM,PM,Proverbs,16,20
+05-06-PM,PM,Job,14,14
+05-07-PM,PM,John,5,8
+05-08-PM,PM,Job,22,21
+05-09-PM,PM,Song of Solomon,7,11
+05-10-PM,PM,John,1,14
+05-11-PM,PM,Joshua,1,7
+05-12-PM,PM,Genesis,46,3
+05-13-PM,PM,Psalms,119,57
+05-14-PM,PM,Isaiah,40,11
+05-15-PM,PM,Hebrews,12,23
+05-16-PM,PM,2 Kings,3,16
+05-17-PM,PM,Isaiah,41,9
+05-18-PM,PM,Hebrews,12,11
+05-19-PM,PM,1 Kings,19,4
+05-20-PM,PM,Hosea,11,4
+05-21-PM,PM,Genesis,42,2
+05-22-PM,PM,Song of Solomon,1,16
+05-23-PM,PM,Isaiah,43,24
+05-24-PM,PM,Philippians,1,27
+05-25-PM,PM,Luke,24,33
+05-26-PM,PM,Acts,14,22
+05-27-PM,PM,2 Samuel,9,8
+05-28-PM,PM,Lamentations,3,21
+05-29-PM,PM,Joshua,6,26
+05-30-PM,PM,Romans,6,6
+05-31-PM,PM,Psalms,103,3
+06-01-AM,AM,Genesis,1,5
+06-02-AM,AM,Galatians,5,17
+06-03-AM,AM,1 Chronicles,4,23
+06-04-AM,AM,Titus,3,4
+06-05-AM,AM,Genesis,7,16
+06-06-AM,AM,Job,40,4
+06-07-AM,AM,Psalms,97,10
+06-08-AM,AM,1 Chronicles,5,22
+06-09-AM,AM,Psalms,126,3
+06-10-AM,AM,Romans,14,8
+06-11-AM,AM,1 John,4,19
+06-12-AM,AM,Daniel,5,27
+06-13-AM,AM,Revelation,22,17
+06-14-AM,AM,Psalms,37,4
+06-15-AM,AM,Genesis,21,6
+06-16-AM,AM,John,10,28
+06-17-AM,AM,Psalms,12,1
+06-18-AM,AM,Isaiah,54,5
+06-19-AM,AM,Acts,2,4
+06-20-AM,AM,Amos,9,9
+06-21-AM,AM,Psalms,45,2
+06-22-AM,AM,Zechariah,6,13
+06-23-AM,AM,Hosea,7,8
+06-24-AM,AM,Luke,11,27
+06-25-AM,AM,Isaiah,40,9
+06-26-AM,AM,Isaiah,14,10
+06-27-AM,AM,Exodus,8,28
+06-28-AM,AM,Hebrews,12,2
+06-29-AM,AM,1 Thessalonians,4,14
+06-30-AM,AM,John,17,22
+06-01-PM,PM,Isaiah,51,3
+06-02-PM,PM,Matthew,19,16
+06-03-PM,PM,Philippians,2,8
+06-04-PM,PM,1 Timothy,3,16
+06-05-PM,PM,1 John,4,8
+06-06-PM,PM,2 Corinthians,11,22
+06-07-PM,PM,Revelation,3,19
+06-08-PM,PM,Numbers,11,23
+06-09-PM,PM,John,5,39
+06-10-PM,PM,John,5,39
+06-11-PM,PM,Psalms,76,3
+06-12-PM,PM,2 Timothy,1,9
+06-13-PM,PM,Proverbs,30,8
+06-14-PM,PM,Daniel,9,8
+06-15-PM,PM,Revelation,3,7
+06-16-PM,PM,Psalms,27,1
+06-17-PM,PM,Numbers,21,17
+06-18-PM,PM,Song of Solomon,5,1
+06-19-PM,PM,Song of Solomon,2,16
+06-20-PM,PM,Mark,1,18
+06-21-PM,PM,2 Timothy,2,19
+06-22-PM,PM,Hebrews,12,27
+06-23-PM,PM,Romans,8,23
+06-24-PM,PM,Daniel,3,16
+06-25-PM,PM,Genesis,8,9
+06-26-PM,PM,2 Peter,1,4
+06-27-PM,PM,1 Corinthians,7,20
+06-28-PM,PM,Exodus,7,12
+06-29-PM,PM,2 Chronicles,32,31
+06-30-PM,PM,Jeremiah,32,17
+07-01-AM,AM,Zechariah,14,8
+07-02-AM,AM,Psalms,33,21
+07-03-AM,AM,Genesis,41,4
+07-04-AM,AM,John,17,17
+07-05-AM,AM,Romans,1,7
+07-06-AM,AM,Proverbs,1,33
+07-07-AM,AM,1 Thessalonians,5,25
+07-08-AM,AM,Judges,16,6
+07-09-AM,AM,Psalms,103,2
+07-10-AM,AM,Ephesians,2,19
+07-11-AM,AM,1 Peter,5,10
+07-12-AM,AM,Jude,1,1
+07-12-AM,AM,1 Corinthians,1,2
+07-12-AM,AM,1 Peter,1,2
+07-13-AM,AM,Jonah,4,9
+07-14-AM,AM,Exodus,20,25
+07-15-AM,AM,Leviticus,6,13
+07-16-AM,AM,Exodus,16,21
+07-17-AM,AM,1 Thessalonians,1,4
+07-18-AM,AM,Numbers,2,31
+07-19-AM,AM,Deuteronomy,5,24
+07-20-AM,AM,Ephesians,1,14
+07-21-AM,AM,Isaiah,37,22
+07-22-AM,AM,Jeremiah,3,14
+07-23-AM,AM,Obadiah,1,11
+07-24-AM,AM,Exodus,14,13
+07-25-AM,AM,Genesis,39,12
+07-26-AM,AM,2 Peter,1,5
+07-27-AM,AM,2 Peter,1,4
+07-28-AM,AM,Psalms,73,22
+07-29-AM,AM,Psalms,73,23
+07-30-AM,AM,Mark,14,72
+07-31-AM,AM,John,17,23
+07-01-PM,PM,Genesis,3,8
+07-02-PM,PM,Psalms,28,1
+07-03-PM,PM,2 Timothy,2,12
+07-04-PM,PM,Psalms,24,4
+07-05-PM,PM,Isaiah,26,4
+07-06-PM,PM,Job,13,23
+07-07-PM,PM,Ezekiel,16,6
+07-08-PM,PM,Psalms,25,5
+07-09-PM,PM,Genesis,1,4
+07-10-PM,PM,Genesis,1,5
+07-11-PM,PM,Joel,1,3
+07-12-PM,PM,2 Timothy,4,18
+07-13-PM,PM,Psalms,56,9
+07-14-PM,PM,Matthew,28,1
+07-15-PM,PM,Mark,16,9
+07-16-PM,PM,Psalms,102,13
+07-17-PM,PM,1 Kings,18,40
+07-18-PM,PM,Joel,2,8
+07-19-PM,PM,Matthew,12,20
+07-20-PM,PM,Jeremiah,2,18
+07-21-PM,PM,Psalms,42,9
+07-22-PM,PM,John,19,5
+07-23-PM,PM,1 John,1,7
+07-24-PM,PM,Joel,2,11
+07-25-PM,PM,Hosea,5,15
+07-26-PM,PM,Psalms,113,8
+07-27-PM,PM,Romans,8,33
+07-28-PM,PM,Acts,10,38
+07-29-PM,PM,John,6,37
+07-30-PM,PM,John,6,37
+07-31-PM,PM,1 Chronicles,9,33
+08-01-AM,AM,Ruth,2,2
+08-02-AM,AM,Ephesians,1,11
+08-03-AM,AM,Revelation,21,23
+08-04-AM,AM,Daniel,11,32
+08-05-AM,AM,Romans,8,28
+08-06-AM,AM,Isaiah,21,11
+08-07-AM,AM,Song of Solomon,1,4
+08-08-AM,AM,Isaiah,59,5
+08-09-AM,AM,Revelation,21,23
+08-10-AM,AM,Colossians,3,4
+08-11-AM,AM,Job,29,2
+08-12-AM,AM,Psalms,97,1
+08-13-AM,AM,Psalms,104,16
+08-14-AM,AM,Psalms,92,4
+08-15-AM,AM,Genesis,24,63
+08-16-AM,AM,Psalms,29,2
+08-17-AM,AM,Psalms,52,8
+08-18-AM,AM,Jeremiah,51,51
+08-19-AM,AM,Micah,5,4
+08-20-AM,AM,2 Samuel,23,1
+08-21-AM,AM,Proverbs,11,25
+08-22-AM,AM,Song of Solomon,5,8
+08-23-AM,AM,Isaiah,65,19
+08-24-AM,AM,Micah,2,13
+08-25-AM,AM,Song of Solomon,2,3
+08-26-AM,AM,Psalms,111,9
+08-27-AM,AM,Numbers,14,11
+08-28-AM,AM,Exodus,25,6
+08-29-AM,AM,Psalms,51,1
+08-30-AM,AM,Psalms,27,14
+08-31-AM,AM,Isaiah,51,5
+08-01-PM,PM,Psalms,65,11
+08-02-PM,PM,Ruth,2,17
+08-03-PM,PM,Luke,8,42
+08-04-PM,PM,Haggai,2,17
+08-05-PM,PM,Numbers,32,6
+08-06-PM,PM,Psalms,72,19
+08-07-PM,PM,1 Thessalonians,2,18
+08-08-PM,PM,Mark,9,23
+08-09-PM,PM,Mark,16,9
+08-10-PM,PM,Matthew,9,6
+08-11-PM,PM,2 Thessalonians,2,16
+08-12-PM,PM,Genesis,9,14
+08-13-PM,PM,Genesis,9,15
+08-14-PM,PM,Exodus,3,7
+08-15-PM,PM,Ezekiel,36,26
+08-16-PM,PM,Romans,8,23
+08-17-PM,PM,John,11,4
+08-18-PM,PM,Mark,15,23
+08-19-PM,PM,Psalms,31,4
+08-20-PM,PM,Nehemiah,3,8
+08-21-PM,PM,Isaiah,45,19
+08-22-PM,PM,Ephesians,3,8
+08-23-PM,PM,Ephesians,3,17
+08-24-PM,PM,Exodus,22,6
+08-25-PM,PM,Acts,8,37
+08-26-PM,PM,Mark,9,15
+08-27-PM,PM,Psalms,31,5
+08-28-PM,PM,Isaiah,54,1
+08-29-PM,PM,Numbers,6,4
+08-30-PM,PM,Jeremiah,17,14
+08-30-PM,PM,Isaiah,57,18
+08-31-PM,PM,1 John,1,7
+09-01-AM,AM,Psalms,73,24
+09-02-AM,AM,Mark,1,30
+09-03-AM,AM,Song of Solomon,1,7
+09-04-AM,AM,Mark,1,41
+09-05-AM,AM,Psalms,120,5
+09-06-AM,AM,Philippians,2,15
+09-07-AM,AM,Mark,2,4
+09-08-AM,AM,Hosea,14,8
+09-09-AM,AM,Jeremiah,33,3
+09-10-AM,AM,Mark,3,13
+09-11-AM,AM,2 Corinthians,6,17
+09-12-AM,AM,Nahum,1,2
+09-13-AM,AM,Psalms,84,6
+09-14-AM,AM,Mark,4,36
+09-15-AM,AM,Psalms,112,7
+09-16-AM,AM,2 Peter,1,4
+09-17-AM,AM,Mark,9,19
+09-18-AM,AM,Galatians,5,25
+09-19-AM,AM,Galatians,5,1
+09-20-AM,AM,Judges,7,20
+09-21-AM,AM,Jeremiah,32,41
+09-22-AM,AM,Psalms,149,2
+09-23-AM,AM,Ephesians,1,6
+09-24-AM,AM,Ezra,8,22
+09-25-AM,AM,Romans,3,26
+09-26-AM,AM,Zechariah,1,8
+09-27-AM,AM,Deuteronomy,33,29
+09-28-AM,AM,Psalms,33,13
+09-29-AM,AM,Leviticus,13,13
+09-30-AM,AM,Psalms,66,2
+09-01-PM,PM,Psalms,62,8
+09-02-PM,PM,John,4,48
+09-03-PM,PM,Psalms,11,5
+09-04-PM,PM,Leviticus,19,36
+09-05-PM,PM,Job,38,16
+09-06-PM,PM,Galatians,5,18
+09-07-PM,PM,Jeremiah,49,23
+09-08-PM,PM,Ephesians,1,19
+09-09-PM,PM,Revelation,4,4
+09-10-PM,PM,Habakkuk,1,8
+09-11-PM,PM,Psalms,5,8
+09-12-PM,PM,Psalms,101,1
+09-13-PM,PM,Luke,15,2
+09-14-PM,PM,Psalms,32,5
+09-15-PM,PM,Psalms,148,14
+09-16-PM,PM,Job,7,12
+09-17-PM,PM,Deuteronomy,1,38
+09-18-PM,PM,John,10,27
+09-19-PM,PM,1 Samuel,1,27
+09-20-PM,PM,Ecclesiastes,11,6
+09-21-PM,PM,Psalms,26,9
+09-22-PM,PM,Psalms,61,2
+09-23-PM,PM,Mark,9,23
+09-24-PM,PM,Song of Solomon,5,2
+09-25-PM,PM,1 Corinthians,1,30
+09-26-PM,PM,Zechariah,11,2
+09-27-PM,PM,Song of Solomon,5,4
+09-28-PM,PM,1 Kings,18,43
+09-29-PM,PM,Song of Solomon,3,4
+09-30-PM,PM,Ecclesiastes,9,4
+10-01-AM,AM,Song of Solomon,7,13
+10-02-AM,AM,Colossians,1,5
+10-03-AM,AM,Hebrews,1,14
+10-04-AM,AM,Zechariah,14,7
+10-05-AM,AM,1 Kings,19,8
+10-06-AM,AM,John,4,14
+10-07-AM,AM,Numbers,11,11
+10-08-AM,AM,Luke,5,4
+10-09-AM,AM,Jude,1,24
+10-10-AM,AM,Jude,1,24
+10-11-AM,AM,Lamentations,3,41
+10-12-AM,AM,Psalms,119,15
+10-13-AM,AM,2 Corinthians,7,10
+10-14-AM,AM,Philippians,3,8
+10-15-AM,AM,Malachi,3,2
+10-16-AM,AM,John,21,12
+10-17-AM,AM,1 Samuel,27,1
+10-18-AM,AM,Psalms,65,11
+10-19-AM,AM,1 Corinthians,3,1
+10-20-AM,AM,Ephesians,4,15
+10-21-AM,AM,2 Corinthians,5,14
+10-22-AM,AM,Hosea,14,4
+10-23-AM,AM,John,6,67
+10-24-AM,AM,Psalms,104,16
+10-25-AM,AM,2 John,1,2
+10-26-AM,AM,Haggai,1,9
+10-27-AM,AM,2 Timothy,2,11
+10-28-AM,AM,John,15,19
+10-29-AM,AM,Matthew,6,9
+10-30-AM,AM,Psalms,9,1
+10-31-AM,AM,Psalms,51,10
+10-01-PM,PM,Psalms,84,11
+10-02-PM,PM,Daniel,10,11
+10-03-PM,PM,Hebrews,2,18
+10-04-PM,PM,1 John,2,1
+10-05-PM,PM,Mark,16,16
+10-06-PM,PM,Numbers,12,1
+10-07-PM,PM,Isaiah,36,5
+10-08-PM,PM,Jude,1,20
+10-09-PM,PM,Matthew,15,23
+10-10-PM,PM,Jeremiah,15,21
+10-11-PM,PM,Romans,8,30
+10-12-PM,PM,John,14,26
+10-13-PM,PM,Song of Solomon,8,6
+10-14-PM,PM,Romans,12,2
+10-15-PM,PM,Exodus,34,20
+10-16-PM,PM,Psalms,36,9
+10-17-PM,PM,Isaiah,40,11
+10-18-PM,PM,1 Samuel,15,22
+10-19-PM,PM,Job,35,10
+10-20-PM,PM,Isaiah,43,6
+10-21-PM,PM,Luke,24,38
+10-22-PM,PM,John,16,15
+10-23-PM,PM,Luke,22,46
+10-24-PM,PM,John,13,5
+10-25-PM,PM,Ruth,2,3
+10-26-PM,PM,Ecclesiastes,1,7
+10-27-PM,PM,Isaiah,64,6
+10-28-PM,PM,Song of Solomon,5,11
+10-29-PM,PM,Luke,24,16
+10-30-PM,PM,Song of Solomon,8,13
+10-31-PM,PM,Hosea,13,5
+11-01-AM,AM,Philemon,1,2
+11-02-AM,AM,Malachi,3,6
+11-03-AM,AM,Acts,9,11
+11-04-AM,AM,2 Corinthians,12,9
+11-05-AM,AM,Isaiah,54,17
+11-06-AM,AM,Isaiah,44,3
+11-07-AM,AM,Isaiah,49,16
+11-08-AM,AM,Colossians,2,6
+11-09-AM,AM,Colossians,2,6
+11-10-AM,AM,Deuteronomy,33,27
+11-11-AM,AM,Deuteronomy,33,27
+11-12-AM,AM,1 Peter,1,7
+11-13-AM,AM,John,15,4
+11-14-AM,AM,Zephaniah,1,5
+11-15-AM,AM,Deuteronomy,32,9
+11-16-AM,AM,Lamentations,3,24
+11-17-AM,AM,Romans,11,36
+11-18-AM,AM,Song of Solomon,4,12
+11-19-AM,AM,Titus,3,9
+11-20-AM,AM,Lamentations,3,58
+11-21-AM,AM,Ephesians,4,30
+11-22-AM,AM,Hosea,12,12
+11-23-AM,AM,1 John,1,6
+11-24-AM,AM,Isaiah,33,21
+11-25-AM,AM,Luke,4,18
+11-26-AM,AM,Ecclesiastes,9,10
+11-27-AM,AM,Zechariah,3,1
+11-28-AM,AM,3 John,1,3
+11-29-AM,AM,Leviticus,19,16
+11-30-AM,AM,2 Chronicles,25,9
+11-01-PM,PM,Matthew,24,39
+11-02-PM,PM,Psalms,119,53
+11-03-PM,PM,2 Chronicles,30,27
+11-04-PM,PM,Psalms,36,9
+11-05-PM,PM,Psalms,100,4
+11-06-PM,PM,Hebrews,9,20
+11-07-PM,PM,Acts,1,8
+11-08-PM,PM,Mark,14,14
+11-09-PM,PM,Isaiah,33,16
+11-10-PM,PM,Matthew,10,25
+11-11-PM,PM,Psalms,47,4
+11-12-PM,PM,Luke,6,12
+11-13-PM,PM,Luke,18,1
+11-14-PM,PM,Genesis,29,26
+11-15-PM,PM,Psalms,68,28
+11-16-PM,PM,Isaiah,33,17
+11-17-PM,PM,Ecclesiastes,10,9
+11-18-PM,PM,Psalms,93,2
+11-19-PM,PM,Job,23,3
+11-20-PM,PM,Proverbs,30,26
+11-21-PM,PM,John,12,2
+11-22-PM,PM,Philippians,3,10
+11-23-PM,PM,Isaiah,40,9
+11-24-PM,PM,Proverbs,24,33
+11-25-PM,PM,Romans,9,15
+11-26-PM,PM,Zechariah,4,10
+11-27-PM,PM,Ephesians,1,7
+11-28-PM,PM,Esther,10,3
+11-29-PM,PM,Exodus,35,8
+11-30-PM,PM,Revelation,12,7
+12-01-AM,AM,Psalms,74,17
+12-02-AM,AM,Song of Solomon,4,7
+12-03-AM,AM,Song of Solomon,4,7
+12-04-AM,AM,Acts,18,10
+12-05-AM,AM,Matthew,7,7
+12-06-AM,AM,1 Corinthians,15,48
+12-07-AM,AM,1 Corinthians,1,28
+12-08-AM,AM,Revelation,3,4
+12-09-AM,AM,Isaiah,30,18
+12-10-AM,AM,1 Thessalonians,4,17
+12-11-AM,AM,1 Thessalonians,5,24
+12-12-AM,AM,Habakkuk,3,6
+12-13-AM,AM,Ezra,7,22
+12-14-AM,AM,Psalms,84,7
+12-15-AM,AM,Ruth,1,14
+12-16-AM,AM,Matthew,11,28
+12-17-AM,AM,Jeremiah,2,2
+12-18-AM,AM,Joel,2,13
+12-19-AM,AM,Proverbs,16,33
+12-20-AM,AM,Jeremiah,31,3
+12-21-AM,AM,2 Samuel,23,5
+12-22-AM,AM,Isaiah,41,10
+12-23-AM,AM,Luke,14,10
+12-24-AM,AM,2 Corinthians,8,9
+12-25-AM,AM,Isaiah,7,14
+12-26-AM,AM,1 Corinthians,15,45
+12-27-AM,AM,Job,8,11
+12-28-AM,AM,Galatians,2,20
+12-29-AM,AM,1 Samuel,7,12
+12-30-AM,AM,Ecclesiastes,7,8
+12-31-AM,AM,John,7,37
+12-01-PM,PM,Psalms,107,8
+12-02-PM,PM,Ecclesiastes,1,14
+12-03-PM,PM,Psalms,24,8
+12-04-PM,PM,Romans,8,23
+12-05-PM,PM,Zechariah,1,20
+12-06-PM,PM,Revelation,1,13
+12-07-PM,PM,1 Corinthians,9,22
+12-08-PM,PM,Psalms,68,10
+12-09-PM,PM,Isaiah,32,18
+12-10-PM,PM,Acts,16,14
+12-11-PM,PM,Colossians,3,24
+12-12-PM,PM,Hosea,5,7
+12-13-PM,PM,Isaiah,54,12
+12-14-PM,PM,Galatians,2,20
+12-15-PM,PM,Isaiah,54,11
+12-16-PM,PM,Isaiah,48,8
+12-17-PM,PM,John,10,9
+12-18-PM,PM,Proverbs,27,23
+12-19-PM,PM,Revelation,21,1
+12-20-PM,PM,Matthew,20,8
+12-21-PM,PM,Ezekiel,16,10
+12-22-PM,PM,Deuteronomy,32,5
+12-23-PM,PM,Psalms,74,16
+12-24-PM,PM,Isaiah,40,5
+12-25-PM,PM,Job,1,5
+12-26-PM,PM,Matthew,28,20
+12-27-PM,PM,Isaiah,58,11
+12-28-PM,PM,Matthew,10,34
+12-29-PM,PM,Matthew,22,42
+12-30-PM,PM,2 Samuel,2,26
+12-31-PM,PM,Jeremiah,8,20

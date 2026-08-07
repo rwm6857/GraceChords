@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "reviewer": "",
+    "reviewedAt": "",
+    "needsReview": true
+  },
+  "card": {
+    "label": "Devocional",
+    "open": "Abrir devocional sobre {{reference}}"
+  },
+  "placeholder": {
+    "none": "No hay devocional para las lecturas de hoy."
+  },
+  "screen": {
+    "back": "Atrás",
+    "attribution": "{{author}} · {{sourceWork}}",
+    "alsoToday": "También hoy"
+  },
+  "notFound": {
+    "title": "Devocional no encontrado",
+    "body": "Este devocional no está disponible. Puede haber cambiado de lugar o el enlace ya no es válido."
+  }
+}

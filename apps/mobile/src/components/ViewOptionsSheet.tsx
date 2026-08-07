@@ -5,7 +5,7 @@ import FormSheetShell from './FormSheetShell'
 import SegmentedPill from './SegmentedPill'
 import AccidentalToggle, { type Accidental } from './AccidentalToggle'
 import type { ChordStyle } from './ChordChart'
-import type { ColumnMode } from '../lib/viewerPrefs'
+import type { ColumnCount } from '../lib/columnCapacity'
 import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -49,17 +49,22 @@ type ViewOptionsProps = {
   onShowChords: (v: boolean) => void
   showSections: boolean
   onShowSections: (v: boolean) => void
+  /** The scale currently in effect — auto-fit's pick, or the user's own. */
   fontScale: number
+  /** True while auto-fit owns the size; the first A−/A+ tap hands it over. */
+  fontAuto?: boolean
   onFontScale: (v: number) => void
   chordStyle: ChordStyle
   onChordStyle: (v: ChordStyle) => void
   // Accidental spelling (session-scoped). Optional — rendered only when wired.
   accidental?: Accidental
   onAccidental?: (v: Accidental) => void
-  // Column layout (persisted per song). Optional — the screens wire it only at
-  // tablet widths, so phones never see the toggle.
-  columnMode?: ColumnMode
-  onColumnMode?: (v: ColumnMode) => void
+  // Column ceiling (global preference). Optional — the screens wire it only
+  // where more than one column is possible, so phones never see the toggle.
+  columns?: ColumnCount
+  onColumns?: (v: ColumnCount) => void
+  /** How many columns this device/viewport can carry (2 or 3). */
+  maxColumns?: ColumnCount
   // Optional "hide controls when idle" toggle — rendered only when the screen
   // wires it (Song Viewer + Setlist Performer).
   autoHide?: boolean
@@ -82,13 +87,15 @@ function ViewOptionsContent({
   showSections,
   onShowSections,
   fontScale,
+  fontAuto,
   onFontScale,
   chordStyle,
   onChordStyle,
   accidental,
   onAccidental,
-  columnMode,
-  onColumnMode,
+  columns,
+  onColumns,
+  maxColumns,
   autoHide,
   onAutoHide,
   keepAwake,
@@ -187,7 +194,9 @@ function ViewOptionsContent({
                 color: t.colors.sec,
               }}
             >
-              {Math.round(fontScale * 100)}%
+              {fontAuto
+                ? tx('viewOptions.autoFontSize', { percent: Math.round(fontScale * 100) })
+                : `${Math.round(fontScale * 100)}%`}
             </Text>
             <Pressable
               onPress={() => stepFont(1)}
@@ -244,9 +253,11 @@ function ViewOptionsContent({
           </View>
         ) : null}
 
-        {/* Columns — tablet-only 1 │ 2 layout toggle, persisted per song.
-            Rendered only when the screen wires it. */}
-        {onColumnMode && columnMode ? (
+        {/* Columns — tablet-only layout ceiling, a global preference. The
+            options run 1..maxColumns (2 on an iPad mini, 3 on larger tablets).
+            It is a CEILING: auto-fit uses fewer columns when fewer give bigger
+            text. Rendered only when the screen wires it. */}
+        {onColumns && columns ? (
           <View
             style={{
               flexDirection: 'row',
@@ -256,13 +267,12 @@ function ViewOptionsContent({
             }}
           >
             <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.columns')}</Text>
-            <SegmentedPill<ColumnMode>
-              options={[
-                { value: 'single', label: '1' },
-                { value: 'double', label: '2' },
-              ]}
-              value={columnMode}
-              onChange={onColumnMode}
+            <SegmentedPill<ColumnCount>
+              options={([1, 2, 3] as ColumnCount[])
+                .filter((n) => n <= (maxColumns ?? 2))
+                .map((n) => ({ value: n, label: String(n) }))}
+              value={Math.min(columns, maxColumns ?? 2) as ColumnCount}
+              onChange={onColumns}
             />
           </View>
         ) : null}

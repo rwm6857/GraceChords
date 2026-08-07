@@ -29,6 +29,7 @@ import { hydrateDrafts } from '../src/lib/drafts/draftsStore'
 import { hydrateRecents } from '../src/lib/recents'
 import { hydrateReadingStreak } from '../src/lib/readingStreak'
 import { hydrateReaderReminder } from '../src/lib/readerReminder'
+import { syncDevotionals } from '../src/lib/devotionals/sync'
 import {
   addReminderResponseListener,
   initReaderReminders,
@@ -188,6 +189,12 @@ export default function RootLayout() {
     // Install the notification foreground handler / Android channel once, before
     // any reminder is (re)scheduled below.
     initReaderReminders()
+    // Check R2 for changed devotional months. Fire-and-forget and deliberately
+    // NOT part of the Promise.all below: it must never gate the splash, and a
+    // failure is invisible. Self-throttled to at most once a day, so this costs
+    // nothing on a normal launch. Today's content is fetched on demand by the
+    // devotional read path, not here.
+    void syncDevotionals()
     // Begin tracking the OS accessibility settings (Reduce Motion / Increase
     // Contrast / Differentiate Without Color). `ready` joins the splash hold
     // below so the first paint already reflects any enabled setting; `stop`
@@ -356,6 +363,7 @@ export default function RootLayout() {
             <Stack.Screen name="daily/reader" />
             <Stack.Screen name="daily/journal" />
             <Stack.Screen name="daily/reflection" />
+            <Stack.Screen name="devotional/[date]/[slug]" />
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />

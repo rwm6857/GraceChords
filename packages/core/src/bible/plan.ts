@@ -56,22 +56,33 @@ export function addDays(date: Date, delta: number){
   return next
 }
 
-function dayOfYear(date: Date){
-  const start = new Date(date.getFullYear(), 0, 1)
-  const diff = date.getTime() - start.getTime()
-  return Math.floor(diff / (1000 * 60 * 60 * 24))
+/**
+ * Resolve a date to the MMDD key the 365-day plan actually holds.
+ *
+ * The only date the plan has no entry for is February 29, which repeats
+ * February 28. Repeating the preceding day (rather than the old
+ * `dayOfYear % 365` fallback, which landed on March 1 and so showed March 1's
+ * readings twice in a row) keeps the plan's sequence intact and — critically —
+ * lets the devotional artifact resolve the SAME key from the SAME date. Any
+ * other resolution would let the readings and the devotional matched to those
+ * readings drift apart on the leap day.
+ */
+export function resolvePlanMmdd(date: Date): string {
+  const mmdd = mmddFromDate(date)
+  if (planByMmdd.has(mmdd)) return mmdd
+  return mmdd === '0229' ? '0228' : mmdd
 }
 
 export function getPlanForDate(date: Date){
-  const mmdd = mmddFromDate(date)
+  const mmdd = resolvePlanMmdd(date)
   const direct = planByMmdd.get(mmdd)
   if (direct){
     return { mmdd, readings: direct.entry.readings, index: direct.index }
   }
-  // Fallback for dates not in the MMDD table (e.g. leap day).
-  const idx = dayOfYear(date) % PLAN.length
-  const entry = PLAN[idx]
-  return { mmdd: entry.mmdd, readings: entry.readings, index: idx }
+  // Unreachable for any real Date: every MMDD except 0229 is in the table and
+  // 0229 clamps above. Kept so a malformed key degrades instead of throwing.
+  const entry = PLAN[0]
+  return { mmdd: entry.mmdd, readings: entry.readings, index: 0 }
 }
 
 export function expandReadings(readings: RawPlanReading[]): Passage[] {

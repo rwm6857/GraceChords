@@ -1,0 +1,5771 @@
+{
+  "01-01": {
+    "state": "two",
+    "devotionals": [
+      "02-08-PM",
+      "07-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-08-PM",
+        "reference": "Matthew 1:21",
+        "chapter": "Matthew 1"
+      },
+      {
+        "devotional": "07-10-PM",
+        "reference": "Genesis 1:5",
+        "chapter": "Genesis 1"
+      }
+    ]
+  },
+  "01-02": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "01-03": {
+    "state": "two",
+    "devotionals": [
+      "02-25-AM",
+      "07-01-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-25-AM",
+        "reference": "Matthew 3:7",
+        "chapter": "Matthew 3"
+      },
+      {
+        "devotional": "07-01-PM",
+        "reference": "Genesis 3:8",
+        "chapter": "Genesis 3"
+      }
+    ]
+  },
+  "01-04": {
+    "state": "two",
+    "devotionals": [
+      "01-20-AM",
+      "02-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-20-AM",
+        "reference": "Genesis 4:2",
+        "chapter": "Genesis 4"
+      },
+      {
+        "devotional": "02-20-PM",
+        "reference": "Matthew 4:1",
+        "chapter": "Matthew 4"
+      }
+    ]
+  },
+  "01-05": {
+    "state": "two",
+    "devotionals": [
+      "03-12-AM",
+      "04-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-12-AM",
+        "reference": "Matthew 5:43",
+        "chapter": "Matthew 5"
+      },
+      {
+        "devotional": "04-22-AM",
+        "reference": "Acts 5:31",
+        "chapter": "Acts 5"
+      }
+    ]
+  },
+  "01-06": {
+    "state": "one",
+    "devotionals": [
+      "10-29-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-29-AM",
+        "reference": "Matthew 6:9",
+        "chapter": "Matthew 6"
+      }
+    ]
+  },
+  "01-07": {
+    "state": "two",
+    "devotionals": [
+      "06-05-AM",
+      "12-13-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-05-AM",
+        "reference": "Genesis 7:16",
+        "chapter": "Genesis 7"
+      },
+      {
+        "devotional": "12-13-AM",
+        "reference": "Ezra 7:22",
+        "chapter": "Ezra 7"
+      }
+    ]
+  },
+  "01-08": {
+    "state": "two",
+    "devotionals": [
+      "06-25-PM",
+      "09-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-25-PM",
+        "reference": "Genesis 8:9",
+        "chapter": "Genesis 8"
+      },
+      {
+        "devotional": "09-24-AM",
+        "reference": "Ezra 8:22",
+        "chapter": "Ezra 8"
+      }
+    ]
+  },
+  "01-09": {
+    "state": "two",
+    "devotionals": [
+      "08-12-PM",
+      "08-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-12-PM",
+        "reference": "Genesis 9:14",
+        "chapter": "Genesis 9"
+      },
+      {
+        "devotional": "08-13-PM",
+        "reference": "Genesis 9:15",
+        "chapter": "Genesis 9"
+      }
+    ]
+  },
+  "01-10": {
+    "state": "one",
+    "devotionals": [
+      "11-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-10-PM",
+        "reference": "Matthew 10:25",
+        "chapter": "Matthew 10"
+      }
+    ]
+  },
+  "01-11": {
+    "state": "one",
+    "devotionals": [
+      "02-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-05-PM",
+        "reference": "Matthew 11:25",
+        "chapter": "Matthew 11"
+      }
+    ]
+  },
+  "01-12": {
+    "state": "one",
+    "devotionals": [
+      "07-19-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-19-PM",
+        "reference": "Matthew 12:20",
+        "chapter": "Matthew 12"
+      }
+    ]
+  },
+  "01-13": {
+    "state": "two",
+    "devotionals": [
+      "04-12-PM",
+      "08-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-12-PM",
+        "reference": "Nehemiah 3:15",
+        "chapter": "Nehemiah 3"
+      },
+      {
+        "devotional": "08-20-PM",
+        "reference": "Nehemiah 3:8",
+        "chapter": "Nehemiah 3"
+      }
+    ]
+  },
+  "01-14": {
+    "state": "one",
+    "devotionals": [
+      "05-26-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-26-PM",
+        "reference": "Acts 14:22",
+        "chapter": "Acts 14"
+      }
+    ]
+  },
+  "01-15": {
+    "state": "one",
+    "devotionals": [
+      "03-27-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-27-PM",
+        "reference": "Matthew 15:27",
+        "chapter": "Matthew 15"
+      }
+    ]
+  },
+  "01-16": {
+    "state": "one",
+    "devotionals": [
+      "12-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-10-PM",
+        "reference": "Acts 16:14",
+        "chapter": "Acts 16"
+      }
+    ]
+  },
+  "01-17": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "01-18": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "01-19": {
+    "state": "two",
+    "devotionals": [
+      "02-16-PM",
+      "04-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-16-PM",
+        "reference": "Nehemiah 9:20",
+        "chapter": "Nehemiah 9"
+      },
+      {
+        "devotional": "04-24-AM",
+        "reference": "Nehemiah 9:38",
+        "chapter": "Nehemiah 9"
+      }
+    ]
+  },
+  "01-20": {
+    "state": "one",
+    "devotionals": [
+      "06-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-15-AM",
+        "reference": "Genesis 21:6",
+        "chapter": "Genesis 21"
+      }
+    ]
+  },
+  "01-21": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "01-22": {
+    "state": "one",
+    "devotionals": [
+      "12-29-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-29-PM",
+        "reference": "Matthew 22:42",
+        "chapter": "Matthew 22"
+      }
+    ]
+  },
+  "01-23": {
+    "state": "one",
+    "devotionals": [
+      "08-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-15-AM",
+        "reference": "Genesis 24:63",
+        "chapter": "Genesis 24"
+      }
+    ]
+  },
+  "01-24": {
+    "state": "two",
+    "devotionals": [
+      "02-17-AM",
+      "11-01-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-17-AM",
+        "reference": "Genesis 25:11",
+        "chapter": "Genesis 25"
+      },
+      {
+        "devotional": "11-01-PM",
+        "reference": "Matthew 24:39",
+        "chapter": "Matthew 24"
+      }
+    ]
+  },
+  "01-25": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "01-26": {
+    "state": "one",
+    "devotionals": [
+      "03-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-22-AM",
+        "reference": "Matthew 26:39",
+        "chapter": "Matthew 26"
+      }
+    ]
+  },
+  "01-27": {
+    "state": "two",
+    "devotionals": [
+      "04-02-AM",
+      "04-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-02-AM",
+        "reference": "Matthew 27:14",
+        "chapter": "Matthew 27"
+      },
+      {
+        "devotional": "04-10-PM",
+        "reference": "Acts 27:23",
+        "chapter": "Acts 27"
+      }
+    ]
+  },
+  "01-28": {
+    "state": "two",
+    "devotionals": [
+      "05-11-AM",
+      "11-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-11-AM",
+        "reference": "Matthew 28:20",
+        "chapter": "Matthew 28"
+      },
+      {
+        "devotional": "11-14-PM",
+        "reference": "Genesis 29:26",
+        "chapter": "Genesis 29"
+      }
+    ]
+  },
+  "01-29": {
+    "state": "two",
+    "devotionals": [
+      "06-20-PM",
+      "09-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-20-PM",
+        "reference": "Mark 1:18",
+        "chapter": "Mark 1"
+      },
+      {
+        "devotional": "09-04-AM",
+        "reference": "Mark 1:41",
+        "chapter": "Mark 1"
+      }
+    ]
+  },
+  "01-30": {
+    "state": "one",
+    "devotionals": [
+      "09-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-07-AM",
+        "reference": "Mark 2:4",
+        "chapter": "Mark 2"
+      }
+    ]
+  },
+  "01-31": {
+    "state": "two",
+    "devotionals": [
+      "01-25-PM",
+      "04-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-25-PM",
+        "reference": "Romans 3:31",
+        "chapter": "Romans 3"
+      },
+      {
+        "devotional": "04-18-PM",
+        "reference": "Genesis 32:12",
+        "chapter": "Genesis 32"
+      }
+    ]
+  },
+  "02-01": {
+    "state": "one",
+    "devotionals": [
+      "11-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-28-PM",
+        "reference": "Esther 10:3",
+        "chapter": "Esther 10"
+      }
+    ]
+  },
+  "02-02": {
+    "state": "one",
+    "devotionals": [
+      "01-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-22-PM",
+        "reference": "Job 1:9",
+        "chapter": "Job 1"
+      }
+    ]
+  },
+  "02-03": {
+    "state": "two",
+    "devotionals": [
+      "03-08-PM",
+      "05-30-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-08-PM",
+        "reference": "Genesis 35:18",
+        "chapter": "Genesis 35"
+      },
+      {
+        "devotional": "05-30-PM",
+        "reference": "Romans 6:6",
+        "chapter": "Romans 6"
+      }
+    ]
+  },
+  "02-04": {
+    "state": "one",
+    "devotionals": [
+      "03-11-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-11-AM",
+        "reference": "Romans 7:13",
+        "chapter": "Romans 7"
+      }
+    ]
+  },
+  "02-05": {
+    "state": "two",
+    "devotionals": [
+      "08-16-PM",
+      "10-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-16-PM",
+        "reference": "Romans 8:23",
+        "chapter": "Romans 8"
+      },
+      {
+        "devotional": "10-11-PM",
+        "reference": "Romans 8:30",
+        "chapter": "Romans 8"
+      }
+    ]
+  },
+  "02-06": {
+    "state": "two",
+    "devotionals": [
+      "07-25-AM",
+      "09-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-25-AM",
+        "reference": "Genesis 39:12",
+        "chapter": "Genesis 39"
+      },
+      {
+        "devotional": "09-17-AM",
+        "reference": "Mark 9:19",
+        "chapter": "Mark 9"
+      }
+    ]
+  },
+  "02-07": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-08": {
+    "state": "two",
+    "devotionals": [
+      "07-03-AM",
+      "09-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-03-AM",
+        "reference": "Genesis 41:4",
+        "chapter": "Genesis 41"
+      },
+      {
+        "devotional": "09-16-PM",
+        "reference": "Job 7:12",
+        "chapter": "Job 7"
+      }
+    ]
+  },
+  "02-09": {
+    "state": "two",
+    "devotionals": [
+      "05-21-PM",
+      "12-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-21-PM",
+        "reference": "Genesis 42:2",
+        "chapter": "Genesis 42"
+      },
+      {
+        "devotional": "12-27-AM",
+        "reference": "Job 8:11",
+        "chapter": "Job 8"
+      }
+    ]
+  },
+  "02-10": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-11": {
+    "state": "two",
+    "devotionals": [
+      "02-18-AM",
+      "07-30-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-18-AM",
+        "reference": "Job 10:2",
+        "chapter": "Job 10"
+      },
+      {
+        "devotional": "07-30-AM",
+        "reference": "Mark 14:72",
+        "chapter": "Mark 14"
+      }
+    ]
+  },
+  "02-12": {
+    "state": "one",
+    "devotionals": [
+      "08-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-18-PM",
+        "reference": "Mark 15:23",
+        "chapter": "Mark 15"
+      }
+    ]
+  },
+  "02-13": {
+    "state": "two",
+    "devotionals": [
+      "05-12-PM",
+      "10-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-12-PM",
+        "reference": "Genesis 46:3,4",
+        "chapter": "Genesis 46"
+      },
+      {
+        "devotional": "10-05-PM",
+        "reference": "Mark 16:16",
+        "chapter": "Mark 16"
+      }
+    ]
+  },
+  "02-14": {
+    "state": "two",
+    "devotionals": [
+      "07-06-PM",
+      "09-25-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-06-PM",
+        "reference": "Job 13:23",
+        "chapter": "Job 13"
+      },
+      {
+        "devotional": "09-25-PM",
+        "reference": "1 Corinthians 1:30",
+        "chapter": "1 Corinthians 1"
+      }
+    ]
+  },
+  "02-15": {
+    "state": "two",
+    "devotionals": [
+      "03-10-PM",
+      "05-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-10-PM",
+        "reference": "Job 14:1",
+        "chapter": "Job 14"
+      },
+      {
+        "devotional": "05-06-PM",
+        "reference": "Job 14:14",
+        "chapter": "Job 14"
+      }
+    ]
+  },
+  "02-16": {
+    "state": "two",
+    "devotionals": [
+      "01-27-PM",
+      "02-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-27-PM",
+        "reference": "Luke 2:19",
+        "chapter": "Luke 2"
+      },
+      {
+        "devotional": "02-22-AM",
+        "reference": "Genesis 49:24",
+        "chapter": "Genesis 49"
+      }
+    ]
+  },
+  "02-17": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-18": {
+    "state": "one",
+    "devotionals": [
+      "11-25-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-25-AM",
+        "reference": "Luke 4.18",
+        "chapter": "Luke 4"
+      }
+    ]
+  },
+  "02-19": {
+    "state": "two",
+    "devotionals": [
+      "01-10-PM",
+      "04-21-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-10-PM",
+        "reference": "Job 19:26",
+        "chapter": "Job 19"
+      },
+      {
+        "devotional": "04-21-AM",
+        "reference": "Job 19:25",
+        "chapter": "Job 19"
+      }
+    ]
+  },
+  "02-20": {
+    "state": "one",
+    "devotionals": [
+      "08-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-14-PM",
+        "reference": "Exodus 3:7",
+        "chapter": "Exodus 3"
+      }
+    ]
+  },
+  "02-21": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-22": {
+    "state": "two",
+    "devotionals": [
+      "05-08-PM",
+      "08-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-08-PM",
+        "reference": "Job 22:21",
+        "chapter": "Job 22"
+      },
+      {
+        "devotional": "08-03-PM",
+        "reference": "Luke 8:42",
+        "chapter": "Luke 8"
+      }
+    ]
+  },
+  "02-23": {
+    "state": "two",
+    "devotionals": [
+      "03-14-AM",
+      "11-19-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-14-AM",
+        "reference": "1 Corinthians 10:12",
+        "chapter": "1 Corinthians 10"
+      },
+      {
+        "devotional": "11-19-PM",
+        "reference": "Job 23:3",
+        "chapter": "Job 23"
+      }
+    ]
+  },
+  "02-24": {
+    "state": "two",
+    "devotionals": [
+      "01-24-PM",
+      "06-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-24-PM",
+        "reference": "Luke 10:40",
+        "chapter": "Luke 10"
+      },
+      {
+        "devotional": "06-28-PM",
+        "reference": "Exodus 7:12",
+        "chapter": "Exodus 7"
+      }
+    ]
+  },
+  "02-25": {
+    "state": "two",
+    "devotionals": [
+      "02-09-PM",
+      "06-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-09-PM",
+        "reference": "Luke 11:4",
+        "chapter": "Luke 11"
+      },
+      {
+        "devotional": "06-27-AM",
+        "reference": "Exodus 8:28",
+        "chapter": "Exodus 8"
+      }
+    ]
+  },
+  "02-26": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-27": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "02-28": {
+    "state": "two",
+    "devotionals": [
+      "08-11-AM",
+      "12-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-11-AM",
+        "reference": "Job 29:2",
+        "chapter": "Job 29"
+      },
+      {
+        "devotional": "12-06-AM",
+        "reference": "1 Corinthians 15:48",
+        "chapter": "1 Corinthians 15"
+      }
+    ]
+  },
+  "03-01": {
+    "state": "one",
+    "devotionals": [
+      "02-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-18-PM",
+        "reference": "Luke 15:18",
+        "chapter": "Luke 15"
+      }
+    ]
+  },
+  "03-02": {
+    "state": "one",
+    "devotionals": [
+      "02-12-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-12-AM",
+        "reference": "2 Corinthians 1:5",
+        "chapter": "2 Corinthians 1"
+      }
+    ]
+  },
+  "03-03": {
+    "state": "one",
+    "devotionals": [
+      "07-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-24-AM",
+        "reference": "Exodus 14:13",
+        "chapter": "Exodus 14"
+      }
+    ]
+  },
+  "03-04": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "03-05": {
+    "state": "two",
+    "devotionals": [
+      "01-29-AM",
+      "07-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-29-AM",
+        "reference": "2 Corinthians 4:18",
+        "chapter": "2 Corinthians 4"
+      },
+      {
+        "devotional": "07-16-AM",
+        "reference": "Exodus 16:21",
+        "chapter": "Exodus 16"
+      }
+    ]
+  },
+  "03-06": {
+    "state": "two",
+    "devotionals": [
+      "04-16-PM",
+      "10-19-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-16-PM",
+        "reference": "Exodus 17:12",
+        "chapter": "Exodus 17"
+      },
+      {
+        "devotional": "10-19-PM",
+        "reference": "Job 35:10",
+        "chapter": "Job 35"
+      }
+    ]
+  },
+  "03-07": {
+    "state": "two",
+    "devotionals": [
+      "01-12-PM",
+      "09-11-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-12-PM",
+        "reference": "Job 36:2",
+        "chapter": "Job 36"
+      },
+      {
+        "devotional": "09-11-AM",
+        "reference": "2 Corinthians 6:17",
+        "chapter": "2 Corinthians 6"
+      }
+    ]
+  },
+  "03-08": {
+    "state": "two",
+    "devotionals": [
+      "02-20-AM",
+      "10-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-20-AM",
+        "reference": "2 Corinthians 7:6",
+        "chapter": "2 Corinthians 7"
+      },
+      {
+        "devotional": "10-23-PM",
+        "reference": "Luke 22:46",
+        "chapter": "Luke 22"
+      }
+    ]
+  },
+  "03-09": {
+    "state": "two",
+    "devotionals": [
+      "07-14-AM",
+      "09-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-14-AM",
+        "reference": "Exodus 20:25",
+        "chapter": "Exodus 20"
+      },
+      {
+        "devotional": "09-05-PM",
+        "reference": "Job 38:16",
+        "chapter": "Job 38"
+      }
+    ]
+  },
+  "03-10": {
+    "state": "two",
+    "devotionals": [
+      "01-19-PM",
+      "10-29-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-19-PM",
+        "reference": "Luke 24:45",
+        "chapter": "Luke 24"
+      },
+      {
+        "devotional": "10-29-PM",
+        "reference": "Luke 24:16",
+        "chapter": "Luke 24"
+      }
+    ]
+  },
+  "03-11": {
+    "state": "two",
+    "devotionals": [
+      "06-06-AM",
+      "08-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-06-AM",
+        "reference": "Job 40:4",
+        "chapter": "Job 40"
+      },
+      {
+        "devotional": "08-24-PM",
+        "reference": "Exodus 22:6",
+        "chapter": "Exodus 22"
+      }
+    ]
+  },
+  "03-12": {
+    "state": "one",
+    "devotionals": [
+      "06-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-06-PM",
+        "reference": "2 Corinthians 11:22",
+        "chapter": "2 Corinthians 11"
+      }
+    ]
+  },
+  "03-13": {
+    "state": "two",
+    "devotionals": [
+      "03-25-PM",
+      "11-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-25-PM",
+        "reference": "John 3:13",
+        "chapter": "John 3"
+      },
+      {
+        "devotional": "11-04-AM",
+        "reference": "2 Corinthians 12:9",
+        "chapter": "2 Corinthians 12"
+      }
+    ]
+  },
+  "03-14": {
+    "state": "two",
+    "devotionals": [
+      "08-28-AM",
+      "10-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-28-AM",
+        "reference": "Exodus 25:6",
+        "chapter": "Exodus 25"
+      },
+      {
+        "devotional": "10-06-AM",
+        "reference": "John 4:14",
+        "chapter": "John 4"
+      }
+    ]
+  },
+  "03-15": {
+    "state": "one",
+    "devotionals": [
+      "06-09-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-09-PM",
+        "reference": "John 5:39",
+        "chapter": "John 5"
+      }
+    ]
+  },
+  "03-16": {
+    "state": "two",
+    "devotionals": [
+      "07-30-PM",
+      "12-28-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-30-PM",
+        "reference": "John 6:37",
+        "chapter": "John 6"
+      },
+      {
+        "devotional": "12-28-AM",
+        "reference": "Galatians 2:20",
+        "chapter": "Galatians 2"
+      }
+    ]
+  },
+  "03-17": {
+    "state": "two",
+    "devotionals": [
+      "01-08-AM",
+      "03-18-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-08-AM",
+        "reference": "Exodus 28:38",
+        "chapter": "Exodus 28"
+      },
+      {
+        "devotional": "03-18-AM",
+        "reference": "Galatians 3:26",
+        "chapter": "Galatians 3"
+      }
+    ]
+  },
+  "03-18": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "03-19": {
+    "state": "two",
+    "devotionals": [
+      "06-02-AM",
+      "09-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-02-AM",
+        "reference": "Galatians 5:17",
+        "chapter": "Galatians 5"
+      },
+      {
+        "devotional": "09-19-AM",
+        "reference": "Galatians 5:1",
+        "chapter": "Galatians 5"
+      }
+    ]
+  },
+  "03-20": {
+    "state": "two",
+    "devotionals": [
+      "06-16-AM",
+      "09-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-16-AM",
+        "reference": "John 10:28",
+        "chapter": "John 10"
+      },
+      {
+        "devotional": "09-18-PM",
+        "reference": "John 10:27",
+        "chapter": "John 10"
+      }
+    ]
+  },
+  "03-21": {
+    "state": "two",
+    "devotionals": [
+      "08-17-PM",
+      "11-27-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-17-PM",
+        "reference": "John 11:4",
+        "chapter": "John 11"
+      },
+      {
+        "devotional": "11-27-PM",
+        "reference": "Ephesians 1:7",
+        "chapter": "Ephesians 1"
+      }
+    ]
+  },
+  "03-22": {
+    "state": "one",
+    "devotionals": [
+      "04-17-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-17-PM",
+        "reference": "John 12:21",
+        "chapter": "John 12"
+      }
+    ]
+  },
+  "03-23": {
+    "state": "two",
+    "devotionals": [
+      "08-22-PM",
+      "10-15-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-22-PM",
+        "reference": "Ephesians 3:8",
+        "chapter": "Ephesians 3"
+      },
+      {
+        "devotional": "10-15-PM",
+        "reference": "Exodus 34:20",
+        "chapter": "Exodus 34"
+      }
+    ]
+  },
+  "03-24": {
+    "state": "two",
+    "devotionals": [
+      "08-21-AM",
+      "11-29-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-21-AM",
+        "reference": "Proverbs 11:25",
+        "chapter": "Proverbs 11"
+      },
+      {
+        "devotional": "11-29-PM",
+        "reference": "Exodus 35:8",
+        "chapter": "Exodus 35"
+      }
+    ]
+  },
+  "03-25": {
+    "state": "two",
+    "devotionals": [
+      "03-18-PM",
+      "11-13-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-18-PM",
+        "reference": "John 15:9",
+        "chapter": "John 15"
+      },
+      {
+        "devotional": "11-13-AM",
+        "reference": "John 15:4",
+        "chapter": "John 15"
+      }
+    ]
+  },
+  "03-26": {
+    "state": "two",
+    "devotionals": [
+      "03-21-AM",
+      "05-03-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-21-AM",
+        "reference": "John 16:32",
+        "chapter": "John 16"
+      },
+      {
+        "devotional": "05-03-AM",
+        "reference": "John 16:33",
+        "chapter": "John 16"
+      }
+    ]
+  },
+  "03-27": {
+    "state": "two",
+    "devotionals": [
+      "01-07-AM",
+      "07-31-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-07-AM",
+        "reference": "Philippians 1:21",
+        "chapter": "Philippians 1"
+      },
+      {
+        "devotional": "07-31-AM",
+        "reference": "John 17:23",
+        "chapter": "John 17"
+      }
+    ]
+  },
+  "03-28": {
+    "state": "two",
+    "devotionals": [
+      "04-05-PM",
+      "09-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-05-PM",
+        "reference": "Proverbs 15:33",
+        "chapter": "Proverbs 15"
+      },
+      {
+        "devotional": "09-06-AM",
+        "reference": "Philippians 2:15",
+        "chapter": "Philippians 2"
+      }
+    ]
+  },
+  "03-29": {
+    "state": "two",
+    "devotionals": [
+      "05-05-PM",
+      "12-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-05-PM",
+        "reference": "Proverbs 16:20",
+        "chapter": "Proverbs 16"
+      },
+      {
+        "devotional": "12-19-AM",
+        "reference": "Proverbs 16:33",
+        "chapter": "Proverbs 16"
+      }
+    ]
+  },
+  "03-30": {
+    "state": "two",
+    "devotionals": [
+      "02-10-AM",
+      "04-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-10-AM",
+        "reference": "Philippians 4:12",
+        "chapter": "Philippians 4"
+      },
+      {
+        "devotional": "04-13-PM",
+        "reference": "Leviticus 1:4",
+        "chapter": "Leviticus 1"
+      }
+    ]
+  },
+  "03-31": {
+    "state": "two",
+    "devotionals": [
+      "01-28-AM",
+      "03-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-28-AM",
+        "reference": "Colossians 1:28",
+        "chapter": "Colossians 1"
+      },
+      {
+        "devotional": "03-06-PM",
+        "reference": "Proverbs 18:12",
+        "chapter": "Proverbs 18"
+      }
+    ]
+  },
+  "04-01": {
+    "state": "two",
+    "devotionals": [
+      "05-18-AM",
+      "11-09-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-18-AM",
+        "reference": "Colossians 2:9, 10",
+        "chapter": "Colossians 2"
+      },
+      {
+        "devotional": "11-09-AM",
+        "reference": "Colossians 2:6",
+        "chapter": "Colossians 2"
+      }
+    ]
+  },
+  "04-02": {
+    "state": "one",
+    "devotionals": [
+      "08-10-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-10-AM",
+        "reference": "Colossians 3:4",
+        "chapter": "Colossians 3"
+      }
+    ]
+  },
+  "04-03": {
+    "state": "one",
+    "devotionals": [
+      "07-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-15-AM",
+        "reference": "Leviticus 6:13",
+        "chapter": "Leviticus 6"
+      }
+    ]
+  },
+  "04-04": {
+    "state": "one",
+    "devotionals": [
+      "07-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-17-AM",
+        "reference": "1 Thessalonians 1:4",
+        "chapter": "1 Thessalonians 1"
+      }
+    ]
+  },
+  "04-05": {
+    "state": "two",
+    "devotionals": [
+      "08-07-PM",
+      "10-30-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-07-PM",
+        "reference": "1 Thessalonians 2:18",
+        "chapter": "1 Thessalonians 2"
+      },
+      {
+        "devotional": "10-30-AM",
+        "reference": "Psalm 9:1",
+        "chapter": "Psalms 9"
+      }
+    ]
+  },
+  "04-06": {
+    "state": "two",
+    "devotionals": [
+      "04-27-PM",
+      "11-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-27-PM",
+        "reference": "Psalm 10:16",
+        "chapter": "Psalms 10"
+      },
+      {
+        "devotional": "11-24-PM",
+        "reference": "Proverbs 24:33, 34",
+        "chapter": "Proverbs 24"
+      }
+    ]
+  },
+  "04-07": {
+    "state": "two",
+    "devotionals": [
+      "06-29-AM",
+      "12-10-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-29-AM",
+        "reference": "1 Thessalonians 4:14",
+        "chapter": "1 Thessalonians 4"
+      },
+      {
+        "devotional": "12-10-AM",
+        "reference": "1 Thessalonians 4:17",
+        "chapter": "1 Thessalonians 4"
+      }
+    ]
+  },
+  "04-08": {
+    "state": "two",
+    "devotionals": [
+      "03-05-AM",
+      "07-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-05-AM",
+        "reference": "1 Thessalonians 5:6",
+        "chapter": "1 Thessalonians 5"
+      },
+      {
+        "devotional": "07-07-AM",
+        "reference": "1 Thessalonians 5:25",
+        "chapter": "1 Thessalonians 5"
+      }
+    ]
+  },
+  "04-09": {
+    "state": "two",
+    "devotionals": [
+      "09-29-AM",
+      "12-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-29-AM",
+        "reference": "Leviticus 13:13",
+        "chapter": "Leviticus 13"
+      },
+      {
+        "devotional": "12-18-PM",
+        "reference": "Proverbs 27:23",
+        "chapter": "Proverbs 27"
+      }
+    ]
+  },
+  "04-10": {
+    "state": "one",
+    "devotionals": [
+      "08-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-11-PM",
+        "reference": "2 Thessalonians 2:16",
+        "chapter": "2 Thessalonians 2"
+      }
+    ]
+  },
+  "04-11": {
+    "state": "one",
+    "devotionals": [
+      "04-09-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-09-PM",
+        "reference": "Psalm 18:35",
+        "chapter": "Psalms 18"
+      }
+    ]
+  },
+  "04-12": {
+    "state": "two",
+    "devotionals": [
+      "06-13-PM",
+      "11-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-13-PM",
+        "reference": "Proverbs 30:8",
+        "chapter": "Proverbs 30"
+      },
+      {
+        "devotional": "11-20-PM",
+        "reference": "Proverbs 30:26",
+        "chapter": "Proverbs 30"
+      }
+    ]
+  },
+  "04-13": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "04-14": {
+    "state": "two",
+    "devotionals": [
+      "06-04-PM",
+      "12-02-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-04-PM",
+        "reference": "1 Timothy 3:16",
+        "chapter": "1 Timothy 3"
+      },
+      {
+        "devotional": "12-02-PM",
+        "reference": "Ecclesiastes 1:14",
+        "chapter": "Ecclesiastes 1"
+      }
+    ]
+  },
+  "04-15": {
+    "state": "two",
+    "devotionals": [
+      "11-29-AM",
+      "12-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-29-AM",
+        "reference": "Leviticus 19:16, 17",
+        "chapter": "Leviticus 19"
+      },
+      {
+        "devotional": "12-03-PM",
+        "reference": "Psalm 24:8",
+        "chapter": "Psalms 24"
+      }
+    ]
+  },
+  "04-16": {
+    "state": "one",
+    "devotionals": [
+      "07-08-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-08-PM",
+        "reference": "Psalm 25:5",
+        "chapter": "Psalms 25"
+      }
+    ]
+  },
+  "04-17": {
+    "state": "two",
+    "devotionals": [
+      "06-16-PM",
+      "08-30-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-16-PM",
+        "reference": "Psalm 27:1",
+        "chapter": "Psalms 27"
+      },
+      {
+        "devotional": "08-30-AM",
+        "reference": "Psalm 27:14",
+        "chapter": "Psalms 27"
+      }
+    ]
+  },
+  "04-18": {
+    "state": "two",
+    "devotionals": [
+      "04-15-PM",
+      "08-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-15-PM",
+        "reference": "Psalm 28:9",
+        "chapter": "Psalms 28"
+      },
+      {
+        "devotional": "08-16-AM",
+        "reference": "Psalm 29:2",
+        "chapter": "Psalms 29"
+      }
+    ]
+  },
+  "04-19": {
+    "state": "two",
+    "devotionals": [
+      "05-13-AM",
+      "07-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-13-AM",
+        "reference": "Psalm 30:5",
+        "chapter": "Psalms 30"
+      },
+      {
+        "devotional": "07-03-PM",
+        "reference": "2 Timothy 2:12",
+        "chapter": "2 Timothy 2"
+      }
+    ]
+  },
+  "04-20": {
+    "state": "two",
+    "devotionals": [
+      "08-19-PM",
+      "12-30-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-19-PM",
+        "reference": "Psalm 31:4",
+        "chapter": "Psalms 31"
+      },
+      {
+        "devotional": "12-30-AM",
+        "reference": "Ecclesiastes 7:8",
+        "chapter": "Ecclesiastes 7"
+      }
+    ]
+  },
+  "04-21": {
+    "state": "two",
+    "devotionals": [
+      "01-10-AM",
+      "07-12-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-10-AM",
+        "reference": "2 Timothy 4:8",
+        "chapter": "2 Timothy 4"
+      },
+      {
+        "devotional": "07-12-PM",
+        "reference": "2 Timothy 4:18",
+        "chapter": "2 Timothy 4"
+      }
+    ]
+  },
+  "04-22": {
+    "state": "two",
+    "devotionals": [
+      "09-30-PM",
+      "11-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-30-PM",
+        "reference": "Ecclesiastes 9:4",
+        "chapter": "Ecclesiastes 9"
+      },
+      {
+        "devotional": "11-26-AM",
+        "reference": "Ecclesiastes 9:10",
+        "chapter": "Ecclesiastes 9"
+      }
+    ]
+  },
+  "04-23": {
+    "state": "two",
+    "devotionals": [
+      "05-19-AM",
+      "11-17-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-19-AM",
+        "reference": "Ecclesiastes 10:7",
+        "chapter": "Ecclesiastes 10"
+      },
+      {
+        "devotional": "11-17-PM",
+        "reference": "Ecclesiastes 10:9",
+        "chapter": "Ecclesiastes 10"
+      }
+    ]
+  },
+  "04-24": {
+    "state": "two",
+    "devotionals": [
+      "06-04-AM",
+      "09-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-04-AM",
+        "reference": "Titus 3:4",
+        "chapter": "Titus 3"
+      },
+      {
+        "devotional": "09-20-PM",
+        "reference": "Ecclesiastes 11:6",
+        "chapter": "Ecclesiastes 11"
+      }
+    ]
+  },
+  "04-25": {
+    "state": "two",
+    "devotionals": [
+      "07-18-AM",
+      "10-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-18-AM",
+        "reference": "Numbers 2:31",
+        "chapter": "Numbers 2"
+      },
+      {
+        "devotional": "10-16-PM",
+        "reference": "Psalm 36:9",
+        "chapter": "Psalms 36"
+      }
+    ]
+  },
+  "04-26": {
+    "state": "two",
+    "devotionals": [
+      "09-03-AM",
+      "10-03-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-03-AM",
+        "reference": "Song of Solomon 1:7",
+        "chapter": "Song of Solomon 1"
+      },
+      {
+        "devotional": "10-03-AM",
+        "reference": "Hebrews 1:14",
+        "chapter": "Hebrews 1"
+      }
+    ]
+  },
+  "04-27": {
+    "state": "two",
+    "devotionals": [
+      "08-25-AM",
+      "10-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-25-AM",
+        "reference": "Song of Solomon 2:3",
+        "chapter": "Song of Solomon 2"
+      },
+      {
+        "devotional": "10-03-PM",
+        "reference": "Hebrews 2:18",
+        "chapter": "Hebrews 2"
+      }
+    ]
+  },
+  "04-28": {
+    "state": "two",
+    "devotionals": [
+      "03-16-AM",
+      "09-29-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-16-AM",
+        "reference": "Psalm 39:12",
+        "chapter": "Psalms 39"
+      },
+      {
+        "devotional": "09-29-PM",
+        "reference": "Song of Solomon 3:4",
+        "chapter": "Song of Solomon 3"
+      }
+    ]
+  },
+  "04-29": {
+    "state": "two",
+    "devotionals": [
+      "08-29-PM",
+      "12-03-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-29-PM",
+        "reference": "Numbers 6:4",
+        "chapter": "Numbers 6"
+      },
+      {
+        "devotional": "12-03-AM",
+        "reference": "Song of Solomon 4:7",
+        "chapter": "Song of Solomon 4"
+      }
+    ]
+  },
+  "04-30": {
+    "state": "two",
+    "devotionals": [
+      "03-29-AM",
+      "10-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-29-AM",
+        "reference": "Hebrews 5:8",
+        "chapter": "Hebrews 5"
+      },
+      {
+        "devotional": "10-28-PM",
+        "reference": "Song of Solomon 5:11",
+        "chapter": "Song of Solomon 5"
+      }
+    ]
+  },
+  "05-01": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "05-02": {
+    "state": "two",
+    "devotionals": [
+      "05-29-AM",
+      "10-01-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-29-AM",
+        "reference": "Psalm 45:7",
+        "chapter": "Psalms 45"
+      },
+      {
+        "devotional": "10-01-AM",
+        "reference": "Song of Solomon 7:13",
+        "chapter": "Song of Solomon 7"
+      }
+    ]
+  },
+  "05-03": {
+    "state": "two",
+    "devotionals": [
+      "05-03-PM",
+      "10-30-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-03-PM",
+        "reference": "Psalm 46:1",
+        "chapter": "Psalms 46"
+      },
+      {
+        "devotional": "10-30-PM",
+        "reference": "Song of Solomon 8:13",
+        "chapter": "Song of Solomon 8"
+      }
+    ]
+  },
+  "05-04": {
+    "state": "two",
+    "devotionals": [
+      "02-02-AM",
+      "10-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-02-AM",
+        "reference": "Hebrews 9:22",
+        "chapter": "Hebrews 9"
+      },
+      {
+        "devotional": "10-07-AM",
+        "reference": "Numbers 11:11",
+        "chapter": "Numbers 11"
+      }
+    ]
+  },
+  "05-05": {
+    "state": "two",
+    "devotionals": [
+      "04-04-PM",
+      "10-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-04-PM",
+        "reference": "Isaiah 2:3",
+        "chapter": "Isaiah 2"
+      },
+      {
+        "devotional": "10-06-PM",
+        "reference": "Numbers 12:1",
+        "chapter": "Numbers 12"
+      }
+    ]
+  },
+  "05-06": {
+    "state": "two",
+    "devotionals": [
+      "04-14-PM",
+      "08-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-14-PM",
+        "reference": "Isaiah 3:10",
+        "chapter": "Isaiah 3"
+      },
+      {
+        "devotional": "08-27-AM",
+        "reference": "Numbers 14:11",
+        "chapter": "Numbers 14"
+      }
+    ]
+  },
+  "05-07": {
+    "state": "two",
+    "devotionals": [
+      "06-28-AM",
+      "08-29-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-28-AM",
+        "reference": "Hebrews 12:2",
+        "chapter": "Hebrews 12"
+      },
+      {
+        "devotional": "08-29-AM",
+        "reference": "Psalm 51:1",
+        "chapter": "Psalms 51"
+      }
+    ]
+  },
+  "05-08": {
+    "state": "two",
+    "devotionals": [
+      "02-23-AM",
+      "08-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-23-AM",
+        "reference": "Hebrews 13:5",
+        "chapter": "Hebrews 13"
+      },
+      {
+        "devotional": "08-17-AM",
+        "reference": "Psalm 52:8",
+        "chapter": "Psalms 52"
+      }
+    ]
+  },
+  "05-09": {
+    "state": "one",
+    "devotionals": [
+      "12-25-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-25-AM",
+        "reference": "Isaiah 7:14",
+        "chapter": "Isaiah 7"
+      }
+    ]
+  },
+  "05-10": {
+    "state": "one",
+    "devotionals": [
+      "07-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-13-PM",
+        "reference": "Psalm 56:9",
+        "chapter": "Psalms 56"
+      }
+    ]
+  },
+  "05-11": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "05-12": {
+    "state": "one",
+    "devotionals": [
+      "06-17-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-17-PM",
+        "reference": "Numbers 21:17",
+        "chapter": "Numbers 21"
+      }
+    ]
+  },
+  "05-13": {
+    "state": "one",
+    "devotionals": [
+      "02-28-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-28-AM",
+        "reference": "Psalm 62:5",
+        "chapter": "Psalms 62"
+      }
+    ]
+  },
+  "05-14": {
+    "state": "two",
+    "devotionals": [
+      "05-04-PM",
+      "10-18-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-04-PM",
+        "reference": "1 Peter 1:23",
+        "chapter": "1 Peter 1"
+      },
+      {
+        "devotional": "10-18-AM",
+        "reference": "Psalm 65:11",
+        "chapter": "Psalms 65"
+      }
+    ]
+  },
+  "05-15": {
+    "state": "two",
+    "devotionals": [
+      "05-24-AM",
+      "06-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-24-AM",
+        "reference": "Psalm 66:20",
+        "chapter": "Psalms 66"
+      },
+      {
+        "devotional": "06-26-AM",
+        "reference": "Isaiah 14:10",
+        "chapter": "Isaiah 14"
+      }
+    ]
+  },
+  "05-16": {
+    "state": "one",
+    "devotionals": [
+      "11-15-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-15-PM",
+        "reference": "Psalm 68:28",
+        "chapter": "Psalms 68"
+      }
+    ]
+  },
+  "05-17": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "05-18": {
+    "state": "one",
+    "devotionals": [
+      "01-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-06-AM",
+        "reference": "1 Peter 5:7",
+        "chapter": "1 Peter 5"
+      }
+    ]
+  },
+  "05-19": {
+    "state": "one",
+    "devotionals": [
+      "07-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-27-AM",
+        "reference": "2 Peter 1:4",
+        "chapter": "2 Peter 1"
+      }
+    ]
+  },
+  "05-20": {
+    "state": "two",
+    "devotionals": [
+      "07-29-AM",
+      "08-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-29-AM",
+        "reference": "Psalm 73:23",
+        "chapter": "Psalms 73"
+      },
+      {
+        "devotional": "08-06-AM",
+        "reference": "Isaiah 21:11",
+        "chapter": "Isaiah 21"
+      }
+    ]
+  },
+  "05-21": {
+    "state": "two",
+    "devotionals": [
+      "01-04-AM",
+      "12-01-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-04-AM",
+        "reference": "2 Peter 3:18",
+        "chapter": "2 Peter 3"
+      },
+      {
+        "devotional": "12-01-AM",
+        "reference": "Psalm 74:17",
+        "chapter": "Psalms 74"
+      }
+    ]
+  },
+  "05-22": {
+    "state": "one",
+    "devotionals": [
+      "08-31-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-31-PM",
+        "reference": "1 John 1:7",
+        "chapter": "1 John 1"
+      }
+    ]
+  },
+  "05-23": {
+    "state": "two",
+    "devotionals": [
+      "05-17-AM",
+      "08-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-17-AM",
+        "reference": "1 John 2:6",
+        "chapter": "1 John 2"
+      },
+      {
+        "devotional": "08-05-PM",
+        "reference": "Numbers 32:6",
+        "chapter": "Numbers 32"
+      }
+    ]
+  },
+  "05-24": {
+    "state": "one",
+    "devotionals": [
+      "02-13-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-13-AM",
+        "reference": "1 John 3:1,2",
+        "chapter": "1 John 3"
+      }
+    ]
+  },
+  "05-25": {
+    "state": "two",
+    "devotionals": [
+      "06-11-AM",
+      "07-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-11-AM",
+        "reference": "1 John 4:19",
+        "chapter": "1 John 4"
+      },
+      {
+        "devotional": "07-05-PM",
+        "reference": "Isaiah 26:4",
+        "chapter": "Isaiah 26"
+      }
+    ]
+  },
+  "05-26": {
+    "state": "one",
+    "devotionals": [
+      "05-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-08-AM",
+        "reference": "1 John 5:13",
+        "chapter": "1 John 5"
+      }
+    ]
+  },
+  "05-27": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "05-28": {
+    "state": "one",
+    "devotionals": [
+      "09-17-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-17-PM",
+        "reference": "Deuteronomy 1:38",
+        "chapter": "Deuteronomy 1"
+      }
+    ]
+  },
+  "05-29": {
+    "state": "two",
+    "devotionals": [
+      "07-12-AM",
+      "12-09-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-12-AM",
+        "reference": "Jude 1 / 1 Corinthians 1:2 / 1 Peter 1:2",
+        "chapter": "Jude 1"
+      },
+      {
+        "devotional": "12-09-AM",
+        "reference": "Isaiah 30:18",
+        "chapter": "Isaiah 30"
+      }
+    ]
+  },
+  "05-30": {
+    "state": "one",
+    "devotionals": [
+      "12-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-06-PM",
+        "reference": "Revelation 1:13",
+        "chapter": "Revelation 1"
+      }
+    ]
+  },
+  "05-31": {
+    "state": "two",
+    "devotionals": [
+      "02-11-PM",
+      "12-09-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-11-PM",
+        "reference": "Revelation 2:4",
+        "chapter": "Revelation 2"
+      },
+      {
+        "devotional": "12-09-PM",
+        "reference": "Isaiah 32:18",
+        "chapter": "Isaiah 32"
+      }
+    ]
+  },
+  "06-01": {
+    "state": "two",
+    "devotionals": [
+      "07-19-AM",
+      "11-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-19-AM",
+        "reference": "Deuteronomy 5:24",
+        "chapter": "Deuteronomy 5"
+      },
+      {
+        "devotional": "11-16-PM",
+        "reference": "Isaiah 33:17",
+        "chapter": "Isaiah 33"
+      }
+    ]
+  },
+  "06-02": {
+    "state": "one",
+    "devotionals": [
+      "01-23-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-23-AM",
+        "reference": "Psalm 89:19",
+        "chapter": "Psalms 89"
+      }
+    ]
+  },
+  "06-03": {
+    "state": "one",
+    "devotionals": [
+      "04-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-23-PM",
+        "reference": "Revelation 5:6",
+        "chapter": "Revelation 5"
+      }
+    ]
+  },
+  "06-04": {
+    "state": "two",
+    "devotionals": [
+      "02-27-AM",
+      "10-07-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-27-AM",
+        "reference": "Psalm 91:9",
+        "chapter": "Psalms 91"
+      },
+      {
+        "devotional": "10-07-PM",
+        "reference": "Isaiah 36:5",
+        "chapter": "Isaiah 36"
+      }
+    ]
+  },
+  "06-05": {
+    "state": "two",
+    "devotionals": [
+      "07-21-AM",
+      "08-14-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-21-AM",
+        "reference": "Isaiah 37:22",
+        "chapter": "Isaiah 37"
+      },
+      {
+        "devotional": "08-14-AM",
+        "reference": "Psalm 92:4",
+        "chapter": "Psalms 92"
+      }
+    ]
+  },
+  "06-06": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "06-07": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "06-08": {
+    "state": "two",
+    "devotionals": [
+      "08-12-AM",
+      "12-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-12-AM",
+        "reference": "Psalm 97:1",
+        "chapter": "Psalms 97"
+      },
+      {
+        "devotional": "12-24-PM",
+        "reference": "Isaiah 40:5",
+        "chapter": "Isaiah 40"
+      }
+    ]
+  },
+  "06-09": {
+    "state": "two",
+    "devotionals": [
+      "09-12-PM",
+      "12-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-12-PM",
+        "reference": "Psalm 101:1",
+        "chapter": "Psalms 101"
+      },
+      {
+        "devotional": "12-22-AM",
+        "reference": "Isaiah 41:10",
+        "chapter": "Isaiah 41"
+      }
+    ]
+  },
+  "06-10": {
+    "state": "one",
+    "devotionals": [
+      "07-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-16-PM",
+        "reference": "Psalm 102:13, 14",
+        "chapter": "Psalms 102"
+      }
+    ]
+  },
+  "06-11": {
+    "state": "two",
+    "devotionals": [
+      "05-31-PM",
+      "10-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-31-PM",
+        "reference": "Psalm 103:3",
+        "chapter": "Psalms 103"
+      },
+      {
+        "devotional": "10-20-PM",
+        "reference": "Isaiah 43:6",
+        "chapter": "Isaiah 43"
+      }
+    ]
+  },
+  "06-12": {
+    "state": "two",
+    "devotionals": [
+      "08-13-AM",
+      "11-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-13-AM",
+        "reference": "Psalm 104:16",
+        "chapter": "Psalms 104"
+      },
+      {
+        "devotional": "11-06-AM",
+        "reference": "Isaiah 44:3",
+        "chapter": "Isaiah 44"
+      }
+    ]
+  },
+  "06-13": {
+    "state": "one",
+    "devotionals": [
+      "08-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-21-PM",
+        "reference": "Isaiah 45:19",
+        "chapter": "Isaiah 45"
+      }
+    ]
+  },
+  "06-14": {
+    "state": "one",
+    "devotionals": [
+      "04-26-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-26-PM",
+        "reference": "Revelation 16:15",
+        "chapter": "Revelation 16"
+      }
+    ]
+  },
+  "06-15": {
+    "state": "one",
+    "devotionals": [
+      "05-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-22-AM",
+        "reference": "Psalm 107:7",
+        "chapter": "Psalms 107"
+      }
+    ]
+  },
+  "06-16": {
+    "state": "two",
+    "devotionals": [
+      "01-15-PM",
+      "12-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-15-PM",
+        "reference": "Psalm 109:4",
+        "chapter": "Psalms 109"
+      },
+      {
+        "devotional": "12-16-PM",
+        "reference": "Isaiah 48:8",
+        "chapter": "Isaiah 48"
+      }
+    ]
+  },
+  "06-17": {
+    "state": "two",
+    "devotionals": [
+      "01-03-AM",
+      "11-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-03-AM",
+        "reference": "Isaiah 49:8",
+        "chapter": "Isaiah 49"
+      },
+      {
+        "devotional": "11-07-AM",
+        "reference": "Isaiah 49:16",
+        "chapter": "Isaiah 49"
+      }
+    ]
+  },
+  "06-18": {
+    "state": "one",
+    "devotionals": [
+      "07-26-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-26-PM",
+        "reference": "Psalm 113:8",
+        "chapter": "Psalms 113"
+      }
+    ]
+  },
+  "06-19": {
+    "state": "two",
+    "devotionals": [
+      "08-09-AM",
+      "08-31-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-09-AM",
+        "reference": "Revelation 21:23",
+        "chapter": "Revelation 21"
+      },
+      {
+        "devotional": "08-31-AM",
+        "reference": "Isaiah 51:5",
+        "chapter": "Isaiah 51"
+      }
+    ]
+  },
+  "06-20": {
+    "state": "one",
+    "devotionals": [
+      "06-13-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-13-AM",
+        "reference": "Revelation 22:17",
+        "chapter": "Revelation 22"
+      }
+    ]
+  },
+  "06-21": {
+    "state": "two",
+    "devotionals": [
+      "04-03-PM",
+      "04-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-03-PM",
+        "reference": "Isaiah 53:6",
+        "chapter": "Isaiah 53"
+      },
+      {
+        "devotional": "04-06-PM",
+        "reference": "Psalm 118:12",
+        "chapter": "Psalms 118"
+      }
+    ]
+  },
+  "06-22": {
+    "state": "two",
+    "devotionals": [
+      "10-12-AM",
+      "12-15-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-12-AM",
+        "reference": "Psalm 119:15",
+        "chapter": "Psalms 119"
+      },
+      {
+        "devotional": "12-15-PM",
+        "reference": "Isaiah 54:11",
+        "chapter": "Isaiah 54"
+      }
+    ]
+  },
+  "06-23": {
+    "state": "one",
+    "devotionals": [
+      "03-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-03-PM",
+        "reference": "Matthew 3:16",
+        "chapter": "Matthew 3"
+      }
+    ]
+  },
+  "06-24": {
+    "state": "one",
+    "devotionals": [
+      "05-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-13-PM",
+        "reference": "Psalm 119:57",
+        "chapter": "Psalms 119"
+      }
+    ]
+  },
+  "06-25": {
+    "state": "two",
+    "devotionals": [
+      "03-17-PM",
+      "08-30-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-17-PM",
+        "reference": "Matthew 5:9",
+        "chapter": "Matthew 5"
+      },
+      {
+        "devotional": "08-30-PM",
+        "reference": "Jeremiah 17:14 / Isaiah 57:18",
+        "chapter": "Isaiah 57"
+      }
+    ]
+  },
+  "06-26": {
+    "state": "two",
+    "devotionals": [
+      "01-26-AM",
+      "12-27-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-26-AM",
+        "reference": "Matthew 6:26",
+        "chapter": "Matthew 6"
+      },
+      {
+        "devotional": "12-27-PM",
+        "reference": "Isaiah 58:11",
+        "chapter": "Isaiah 58"
+      }
+    ]
+  },
+  "06-27": {
+    "state": "two",
+    "devotionals": [
+      "12-05-AM",
+      "12-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-05-AM",
+        "reference": "Matthew 7:7",
+        "chapter": "Matthew 7"
+      },
+      {
+        "devotional": "12-22-PM",
+        "reference": "Deuteronomy 32:5",
+        "chapter": "Deuteronomy 32"
+      }
+    ]
+  },
+  "06-28": {
+    "state": "two",
+    "devotionals": [
+      "09-27-AM",
+      "11-11-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-27-AM",
+        "reference": "Deuteronomy 33:29",
+        "chapter": "Deuteronomy 33"
+      },
+      {
+        "devotional": "11-11-AM",
+        "reference": "Deuteronomy 33:27",
+        "chapter": "Deuteronomy 33"
+      }
+    ]
+  },
+  "06-29": {
+    "state": "two",
+    "devotionals": [
+      "05-11-PM",
+      "08-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-11-PM",
+        "reference": "Joshua 1:7",
+        "chapter": "Joshua 1"
+      },
+      {
+        "devotional": "08-10-PM",
+        "reference": "Matthew 9:6",
+        "chapter": "Matthew 9"
+      }
+    ]
+  },
+  "06-30": {
+    "state": "two",
+    "devotionals": [
+      "04-18-AM",
+      "12-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-18-AM",
+        "reference": "Joshua 2:21",
+        "chapter": "Joshua 2"
+      },
+      {
+        "devotional": "12-28-PM",
+        "reference": "Matthew 10:34",
+        "chapter": "Matthew 10"
+      }
+    ]
+  },
+  "07-01": {
+    "state": "two",
+    "devotionals": [
+      "01-25-AM",
+      "12-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-25-AM",
+        "reference": "Isaiah 63:7",
+        "chapter": "Isaiah 63"
+      },
+      {
+        "devotional": "12-16-AM",
+        "reference": "Matthew 11:28",
+        "chapter": "Matthew 11"
+      }
+    ]
+  },
+  "07-02": {
+    "state": "two",
+    "devotionals": [
+      "05-07-AM",
+      "10-27-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-07-AM",
+        "reference": "Matthew 12:15",
+        "chapter": "Matthew 12"
+      },
+      {
+        "devotional": "10-27-PM",
+        "reference": "Isaiah 64:6",
+        "chapter": "Isaiah 64"
+      }
+    ]
+  },
+  "07-03": {
+    "state": "one",
+    "devotionals": [
+      "08-23-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-23-AM",
+        "reference": "Isaiah 65:19",
+        "chapter": "Isaiah 65"
+      }
+    ]
+  },
+  "07-04": {
+    "state": "two",
+    "devotionals": [
+      "01-14-PM",
+      "05-29-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-14-PM",
+        "reference": "Matthew 14:30",
+        "chapter": "Matthew 14"
+      },
+      {
+        "devotional": "05-29-PM",
+        "reference": "Joshua 6:26",
+        "chapter": "Joshua 6"
+      }
+    ]
+  },
+  "07-05": {
+    "state": "two",
+    "devotionals": [
+      "02-01-AM",
+      "10-09-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-01-AM",
+        "reference": "Psalm 138:5",
+        "chapter": "Psalms 138"
+      },
+      {
+        "devotional": "10-09-PM",
+        "reference": "Matthew 15:23",
+        "chapter": "Matthew 15"
+      }
+    ]
+  },
+  "07-06": {
+    "state": "two",
+    "devotionals": [
+      "07-20-PM",
+      "12-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-20-PM",
+        "reference": "Jeremiah 2:18",
+        "chapter": "Jeremiah 2"
+      },
+      {
+        "devotional": "12-17-AM",
+        "reference": "Jeremiah 2:2",
+        "chapter": "Jeremiah 2"
+      }
+    ]
+  },
+  "07-07": {
+    "state": "one",
+    "devotionals": [
+      "07-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-22-AM",
+        "reference": "Jeremiah 3:14",
+        "chapter": "Jeremiah 3"
+      }
+    ]
+  },
+  "07-08": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "07-09": {
+    "state": "one",
+    "devotionals": [
+      "06-02-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-02-PM",
+        "reference": "Matthew 19:16",
+        "chapter": "Matthew 19"
+      }
+    ]
+  },
+  "07-10": {
+    "state": "one",
+    "devotionals": [
+      "12-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-20-PM",
+        "reference": "Matthew 20:8",
+        "chapter": "Matthew 20"
+      }
+    ]
+  },
+  "07-11": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "07-12": {
+    "state": "one",
+    "devotionals": [
+      "09-15-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-15-PM",
+        "reference": "Psalm 148:14",
+        "chapter": "Psalms 148"
+      }
+    ]
+  },
+  "07-13": {
+    "state": "one",
+    "devotionals": [
+      "09-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-22-AM",
+        "reference": "Psalm 149:2",
+        "chapter": "Psalms 149"
+      }
+    ]
+  },
+  "07-14": {
+    "state": "two",
+    "devotionals": [
+      "02-04-PM",
+      "11-07-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-04-PM",
+        "reference": "Joshua 20:3",
+        "chapter": "Joshua 20"
+      },
+      {
+        "devotional": "11-07-PM",
+        "reference": "Acts 1:8",
+        "chapter": "Acts 1"
+      }
+    ]
+  },
+  "07-15": {
+    "state": "one",
+    "devotionals": [
+      "06-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-19-AM",
+        "reference": "Acts 2:4",
+        "chapter": "Acts 2"
+      }
+    ]
+  },
+  "07-16": {
+    "state": "one",
+    "devotionals": [
+      "03-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-27-AM",
+        "reference": "Matthew 26:56",
+        "chapter": "Matthew 26"
+      }
+    ]
+  },
+  "07-17": {
+    "state": "two",
+    "devotionals": [
+      "02-11-AM",
+      "04-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-11-AM",
+        "reference": "Acts 4:13",
+        "chapter": "Acts 4"
+      },
+      {
+        "devotional": "04-19-AM",
+        "reference": "Matthew 27:51",
+        "chapter": "Matthew 27"
+      }
+    ]
+  },
+  "07-18": {
+    "state": "two",
+    "devotionals": [
+      "07-14-PM",
+      "12-26-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-14-PM",
+        "reference": "Matthew 28:1",
+        "chapter": "Matthew 28"
+      },
+      {
+        "devotional": "12-26-PM",
+        "reference": "Matthew 28:20",
+        "chapter": "Matthew 28"
+      }
+    ]
+  },
+  "07-19": {
+    "state": "two",
+    "devotionals": [
+      "09-02-AM",
+      "10-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-02-AM",
+        "reference": "Mark 1:30",
+        "chapter": "Mark 1"
+      },
+      {
+        "devotional": "10-10-PM",
+        "reference": "Jeremiah 15:21",
+        "chapter": "Jeremiah 15"
+      }
+    ]
+  },
+  "07-20": {
+    "state": "one",
+    "devotionals": [
+      "05-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-04-AM",
+        "reference": "Jeremiah 16:20",
+        "chapter": "Jeremiah 16"
+      }
+    ]
+  },
+  "07-21": {
+    "state": "two",
+    "devotionals": [
+      "08-25-PM",
+      "09-10-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-25-PM",
+        "reference": "Acts 8:37",
+        "chapter": "Acts 8"
+      },
+      {
+        "devotional": "09-10-AM",
+        "reference": "Mark 3:13",
+        "chapter": "Mark 3"
+      }
+    ]
+  },
+  "07-22": {
+    "state": "two",
+    "devotionals": [
+      "09-14-AM",
+      "11-03-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-14-AM",
+        "reference": "Mark 4:36",
+        "chapter": "Mark 4"
+      },
+      {
+        "devotional": "11-03-AM",
+        "reference": "Acts 9:11",
+        "chapter": "Acts 9"
+      }
+    ]
+  },
+  "07-23": {
+    "state": "one",
+    "devotionals": [
+      "07-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-28-PM",
+        "reference": "Acts 10:38",
+        "chapter": "Acts 10"
+      }
+    ]
+  },
+  "07-24": {
+    "state": "one",
+    "devotionals": [
+      "09-20-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-20-AM",
+        "reference": "Judges 7:20",
+        "chapter": "Judges 7"
+      }
+    ]
+  },
+  "07-25": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "07-26": {
+    "state": "two",
+    "devotionals": [
+      "03-26-PM",
+      "05-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-26-PM",
+        "reference": "Mark 8:38",
+        "chapter": "Mark 8"
+      },
+      {
+        "devotional": "05-15-AM",
+        "reference": "Acts 13:39",
+        "chapter": "Acts 13"
+      }
+    ]
+  },
+  "07-27": {
+    "state": "two",
+    "devotionals": [
+      "03-08-AM",
+      "09-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-08-AM",
+        "reference": "Acts 14:22",
+        "chapter": "Acts 14"
+      },
+      {
+        "devotional": "09-23-PM",
+        "reference": "Mark 9:23",
+        "chapter": "Mark 9"
+      }
+    ]
+  },
+  "07-28": {
+    "state": "one",
+    "devotionals": [
+      "02-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-23-PM",
+        "reference": "Mark 10:21",
+        "chapter": "Mark 10"
+      }
+    ]
+  },
+  "07-29": {
+    "state": "one",
+    "devotionals": [
+      "03-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-07-AM",
+        "reference": "Mark 11:22",
+        "chapter": "Mark 11"
+      }
+    ]
+  },
+  "07-30": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "07-31": {
+    "state": "one",
+    "devotionals": [
+      "12-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-04-AM",
+        "reference": "Acts 18:10",
+        "chapter": "Acts 18"
+      }
+    ]
+  },
+  "08-01": {
+    "state": "two",
+    "devotionals": [
+      "01-21-PM",
+      "11-08-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-21-PM",
+        "reference": "Judges 15:18",
+        "chapter": "Judges 15"
+      },
+      {
+        "devotional": "11-08-PM",
+        "reference": "Mark 14:14",
+        "chapter": "Mark 14"
+      }
+    ]
+  },
+  "08-02": {
+    "state": "one",
+    "devotionals": [
+      "07-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-08-AM",
+        "reference": "Judges 16:6",
+        "chapter": "Judges 16"
+      }
+    ]
+  },
+  "08-03": {
+    "state": "two",
+    "devotionals": [
+      "08-09-PM",
+      "12-20-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-09-PM",
+        "reference": "Mark 16:9",
+        "chapter": "Mark 16"
+      },
+      {
+        "devotional": "12-20-AM",
+        "reference": "Jeremiah 31:3",
+        "chapter": "Jeremiah 31"
+      }
+    ]
+  },
+  "08-04": {
+    "state": "two",
+    "devotionals": [
+      "06-30-PM",
+      "09-21-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-30-PM",
+        "reference": "Jeremiah 32:17",
+        "chapter": "Jeremiah 32"
+      },
+      {
+        "devotional": "09-21-AM",
+        "reference": "Jeremiah 32:41",
+        "chapter": "Jeremiah 32"
+      }
+    ]
+  },
+  "08-05": {
+    "state": "two",
+    "devotionals": [
+      "04-07-AM",
+      "09-09-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-07-AM",
+        "reference": "Psalm 4:2",
+        "chapter": "Psalms 4"
+      },
+      {
+        "devotional": "09-09-AM",
+        "reference": "Jeremiah 33:3",
+        "chapter": "Jeremiah 33"
+      }
+    ]
+  },
+  "08-06": {
+    "state": "one",
+    "devotionals": [
+      "09-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-11-PM",
+        "reference": "Psalms 5:8",
+        "chapter": "Psalms 5"
+      }
+    ]
+  },
+  "08-07": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "08-08": {
+    "state": "one",
+    "devotionals": [
+      "12-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-15-AM",
+        "reference": "Ruth 1:14",
+        "chapter": "Ruth 1"
+      }
+    ]
+  },
+  "08-09": {
+    "state": "two",
+    "devotionals": [
+      "08-02-PM",
+      "10-25-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-02-PM",
+        "reference": "Ruth 2:17",
+        "chapter": "Ruth 2"
+      },
+      {
+        "devotional": "10-25-PM",
+        "reference": "Ruth 2:3",
+        "chapter": "Ruth 2"
+      }
+    ]
+  },
+  "08-10": {
+    "state": "two",
+    "devotionals": [
+      "06-17-AM",
+      "09-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-17-AM",
+        "reference": "Psalm 12:1",
+        "chapter": "Psalms 12"
+      },
+      {
+        "devotional": "09-03-PM",
+        "reference": "Psalm 11:5",
+        "chapter": "Psalms 11"
+      }
+    ]
+  },
+  "08-11": {
+    "state": "two",
+    "devotionals": [
+      "07-05-AM",
+      "09-19-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-05-AM",
+        "reference": "Romans 1:7",
+        "chapter": "Romans 1"
+      },
+      {
+        "devotional": "09-19-PM",
+        "reference": "1 Samuel 1:27",
+        "chapter": "1 Samuel 1"
+      }
+    ]
+  },
+  "08-12": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "08-13": {
+    "state": "two",
+    "devotionals": [
+      "05-20-AM",
+      "09-25-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-20-AM",
+        "reference": "Psalm 17:7",
+        "chapter": "Psalms 17"
+      },
+      {
+        "devotional": "09-25-AM",
+        "reference": "Romans 3:26",
+        "chapter": "Romans 3"
+      }
+    ]
+  },
+  "08-14": {
+    "state": "one",
+    "devotionals": [
+      "03-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-19-AM",
+        "reference": "Romans 4:20",
+        "chapter": "Romans 4"
+      }
+    ]
+  },
+  "08-15": {
+    "state": "one",
+    "devotionals": [
+      "03-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-16-PM",
+        "reference": "Psalm 19:13",
+        "chapter": "Psalms 19"
+      }
+    ]
+  },
+  "08-16": {
+    "state": "one",
+    "devotionals": [
+      "12-29-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-29-AM",
+        "reference": "1 Samuel 7:12",
+        "chapter": "1 Samuel 7"
+      }
+    ]
+  },
+  "08-17": {
+    "state": "two",
+    "devotionals": [
+      "04-14-AM",
+      "04-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-14-AM",
+        "reference": "Psalm 22:7",
+        "chapter": "Psalms 22"
+      },
+      {
+        "devotional": "04-15-AM",
+        "reference": "Psalm 22:1",
+        "chapter": "Psalms 22"
+      }
+    ]
+  },
+  "08-18": {
+    "state": "two",
+    "devotionals": [
+      "07-04-PM",
+      "12-04-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-04-PM",
+        "reference": "Psalm 24:4",
+        "chapter": "Psalms 24"
+      },
+      {
+        "devotional": "12-04-PM",
+        "reference": "Romans 8:23",
+        "chapter": "Romans 8"
+      }
+    ]
+  },
+  "08-19": {
+    "state": "two",
+    "devotionals": [
+      "04-11-PM",
+      "11-25-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-11-PM",
+        "reference": "Psalm 25:18",
+        "chapter": "Psalms 25"
+      },
+      {
+        "devotional": "11-25-PM",
+        "reference": "Romans 9:15",
+        "chapter": "Romans 9"
+      }
+    ]
+  },
+  "08-20": {
+    "state": "two",
+    "devotionals": [
+      "09-07-PM",
+      "09-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-07-PM",
+        "reference": "Jeremiah 49:23",
+        "chapter": "Jeremiah 49"
+      },
+      {
+        "devotional": "09-21-PM",
+        "reference": "Psalm 26:9",
+        "chapter": "Psalms 26"
+      }
+    ]
+  },
+  "08-21": {
+    "state": "two",
+    "devotionals": [
+      "07-02-PM",
+      "11-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-02-PM",
+        "reference": "Psalm 28:1",
+        "chapter": "Psalms 28"
+      },
+      {
+        "devotional": "11-17-AM",
+        "reference": "Romans 11:36",
+        "chapter": "Romans 11"
+      }
+    ]
+  },
+  "08-22": {
+    "state": "two",
+    "devotionals": [
+      "08-18-AM",
+      "10-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-18-AM",
+        "reference": "Jeremiah 51:51",
+        "chapter": "Jeremiah 51"
+      },
+      {
+        "devotional": "10-14-PM",
+        "reference": "Romans 12:2",
+        "chapter": "Romans 12"
+      }
+    ]
+  },
+  "08-23": {
+    "state": "two",
+    "devotionals": [
+      "08-27-PM",
+      "10-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-27-PM",
+        "reference": "Psalm 31:5",
+        "chapter": "Psalms 31"
+      },
+      {
+        "devotional": "10-18-PM",
+        "reference": "1 Samuel 15:22",
+        "chapter": "1 Samuel 15"
+      }
+    ]
+  },
+  "08-24": {
+    "state": "two",
+    "devotionals": [
+      "06-10-AM",
+      "09-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-10-AM",
+        "reference": "Romans 14:8",
+        "chapter": "Romans 14"
+      },
+      {
+        "devotional": "09-14-PM",
+        "reference": "Psalm 32:5",
+        "chapter": "Psalms 32"
+      }
+    ]
+  },
+  "08-25": {
+    "state": "two",
+    "devotionals": [
+      "07-02-AM",
+      "09-28-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-02-AM",
+        "reference": "Psalm 33:21",
+        "chapter": "Psalms 33"
+      },
+      {
+        "devotional": "09-28-AM",
+        "reference": "Psalm 33:13",
+        "chapter": "Psalms 33"
+      }
+    ]
+  },
+  "08-26": {
+    "state": "two",
+    "devotionals": [
+      "04-20-PM",
+      "11-20-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-20-PM",
+        "reference": "1 Samuel 18:17",
+        "chapter": "1 Samuel 18"
+      },
+      {
+        "devotional": "11-20-AM",
+        "reference": "Lamentations 3:58",
+        "chapter": "Lamentations 3"
+      }
+    ]
+  },
+  "08-27": {
+    "state": "two",
+    "devotionals": [
+      "03-05-PM",
+      "12-07-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-05-PM",
+        "reference": "Psalm 35:3",
+        "chapter": "Psalms 35"
+      },
+      {
+        "devotional": "12-07-AM",
+        "reference": "1 Corinthians 1:28",
+        "chapter": "1 Corinthians 1"
+      }
+    ]
+  },
+  "08-28": {
+    "state": "two",
+    "devotionals": [
+      "03-04-PM",
+      "11-04-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-04-PM",
+        "reference": "Psalm 36:8",
+        "chapter": "Psalms 36"
+      },
+      {
+        "devotional": "11-04-PM",
+        "reference": "Psalm 36:9",
+        "chapter": "Psalms 36"
+      }
+    ]
+  },
+  "08-29": {
+    "state": "two",
+    "devotionals": [
+      "06-14-AM",
+      "10-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-14-AM",
+        "reference": "Psalm 37:4",
+        "chapter": "Psalms 37"
+      },
+      {
+        "devotional": "10-19-AM",
+        "reference": "1 Corinthians 3:1",
+        "chapter": "1 Corinthians 3"
+      }
+    ]
+  },
+  "08-30": {
+    "state": "one",
+    "devotionals": [
+      "05-25-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-25-AM",
+        "reference": "Psalm 38:21",
+        "chapter": "Psalms 38"
+      }
+    ]
+  },
+  "08-31": {
+    "state": "two",
+    "devotionals": [
+      "03-14-PM",
+      "04-28-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-14-PM",
+        "reference": "Psalm 39:1",
+        "chapter": "Psalms 39"
+      },
+      {
+        "devotional": "04-28-PM",
+        "reference": "Ezekiel 3:7",
+        "chapter": "Ezekiel 3"
+      }
+    ]
+  },
+  "09-01": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "09-02": {
+    "state": "two",
+    "devotionals": [
+      "06-27-PM",
+      "07-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-27-PM",
+        "reference": "1 Corinthians 7:20",
+        "chapter": "1 Corinthians 7"
+      },
+      {
+        "devotional": "07-21-PM",
+        "reference": "Psalm 42:9",
+        "chapter": "Psalms 42"
+      }
+    ]
+  },
+  "09-03": {
+    "state": "one",
+    "devotionals": [
+      "10-17-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-17-AM",
+        "reference": "1 Samuel 27:1",
+        "chapter": "1 Samuel 27"
+      }
+    ]
+  },
+  "09-04": {
+    "state": "two",
+    "devotionals": [
+      "06-21-AM",
+      "12-07-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-21-AM",
+        "reference": "Psalm 45:2",
+        "chapter": "Psalms 45"
+      },
+      {
+        "devotional": "12-07-PM",
+        "reference": "1 Corinthians 9:22",
+        "chapter": "1 Corinthians 9"
+      }
+    ]
+  },
+  "09-05": {
+    "state": "two",
+    "devotionals": [
+      "03-12-PM",
+      "11-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-12-PM",
+        "reference": "1 Samuel 30:13",
+        "chapter": "1 Samuel 30"
+      },
+      {
+        "devotional": "11-11-PM",
+        "reference": "Psalm 47:4",
+        "chapter": "Psalms 47"
+      }
+    ]
+  },
+  "09-06": {
+    "state": "one",
+    "devotionals": [
+      "04-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-26-AM",
+        "reference": "1 Corinthians 11:24",
+        "chapter": "1 Corinthians 11"
+      }
+    ]
+  },
+  "09-07": {
+    "state": "one",
+    "devotionals": [
+      "02-01-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-01-PM",
+        "reference": "2 Samuel 1:26",
+        "chapter": "2 Samuel 1"
+      }
+    ]
+  },
+  "09-08": {
+    "state": "one",
+    "devotionals": [
+      "12-30-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-30-PM",
+        "reference": "2 Samuel 2:26",
+        "chapter": "2 Samuel 2"
+      }
+    ]
+  },
+  "09-09": {
+    "state": "two",
+    "devotionals": [
+      "04-07-PM",
+      "10-31-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-07-PM",
+        "reference": "Psalm 51:14",
+        "chapter": "Psalms 51"
+      },
+      {
+        "devotional": "10-31-AM",
+        "reference": "Psalm 51:10",
+        "chapter": "Psalms 51"
+      }
+    ]
+  },
+  "09-10": {
+    "state": "two",
+    "devotionals": [
+      "02-09-AM",
+      "12-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-09-AM",
+        "reference": "2 Samuel 5:23",
+        "chapter": "2 Samuel 5"
+      },
+      {
+        "devotional": "12-26-AM",
+        "reference": "1 Corinthians 15:45",
+        "chapter": "1 Corinthians 15"
+      }
+    ]
+  },
+  "09-11": {
+    "state": "one",
+    "devotionals": [
+      "05-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-26-AM",
+        "reference": "Psalm 55:22",
+        "chapter": "Psalms 55"
+      }
+    ]
+  },
+  "09-12": {
+    "state": "two",
+    "devotionals": [
+      "01-15-AM",
+      "01-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-15-AM",
+        "reference": "2 Samuel 7:25",
+        "chapter": "2 Samuel 7"
+      },
+      {
+        "devotional": "01-22-AM",
+        "reference": "Ezekiel 15:2",
+        "chapter": "Ezekiel 15"
+      }
+    ]
+  },
+  "09-13": {
+    "state": "two",
+    "devotionals": [
+      "05-27-PM",
+      "12-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-27-PM",
+        "reference": "2 Samuel 9:8",
+        "chapter": "2 Samuel 9"
+      },
+      {
+        "devotional": "12-21-PM",
+        "reference": "Ezekiel 16:10",
+        "chapter": "Ezekiel 16"
+      }
+    ]
+  },
+  "09-14": {
+    "state": "one",
+    "devotionals": [
+      "09-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-22-PM",
+        "reference": "Psalm 61:2",
+        "chapter": "Psalms 61"
+      }
+    ]
+  },
+  "09-15": {
+    "state": "two",
+    "devotionals": [
+      "01-17-PM",
+      "09-01-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-17-PM",
+        "reference": "2 Samuel 11:2",
+        "chapter": "2 Samuel 11"
+      },
+      {
+        "devotional": "09-01-PM",
+        "reference": "Psalm 62:8",
+        "chapter": "Psalms 62"
+      }
+    ]
+  },
+  "09-16": {
+    "state": "two",
+    "devotionals": [
+      "08-01-PM",
+      "10-21-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-01-PM",
+        "reference": "Psalm 65:11",
+        "chapter": "Psalms 65"
+      },
+      {
+        "devotional": "10-21-AM",
+        "reference": "2 Corinthians 5:14",
+        "chapter": "2 Corinthians 5"
+      }
+    ]
+  },
+  "09-17": {
+    "state": "two",
+    "devotionals": [
+      "05-05-AM",
+      "09-30-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-05-AM",
+        "reference": "2 Corinthians 6:16",
+        "chapter": "2 Corinthians 6"
+      },
+      {
+        "devotional": "09-30-AM",
+        "reference": "Psalm 66:2",
+        "chapter": "Psalms 66"
+      }
+    ]
+  },
+  "09-18": {
+    "state": "two",
+    "devotionals": [
+      "10-13-AM",
+      "12-08-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-13-AM",
+        "reference": "2 Corinthians 7:10",
+        "chapter": "2 Corinthians 7"
+      },
+      {
+        "devotional": "12-08-PM",
+        "reference": "Psalm 68:10",
+        "chapter": "Psalms 68"
+      }
+    ]
+  },
+  "09-19": {
+    "state": "two",
+    "devotionals": [
+      "05-31-AM",
+      "12-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-31-AM",
+        "reference": "2 Samuel 15:23",
+        "chapter": "2 Samuel 15"
+      },
+      {
+        "devotional": "12-24-AM",
+        "reference": "2 Corinthians 8:9",
+        "chapter": "2 Corinthians 8"
+      }
+    ]
+  },
+  "09-20": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "09-21": {
+    "state": "one",
+    "devotionals": [
+      "08-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-06-PM",
+        "reference": "Psalm 72:19",
+        "chapter": "Psalms 72"
+      }
+    ]
+  },
+  "09-22": {
+    "state": "two",
+    "devotionals": [
+      "01-31-PM",
+      "09-01-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-31-PM",
+        "reference": "2 Samuel 18:23",
+        "chapter": "2 Samuel 18"
+      },
+      {
+        "devotional": "09-01-AM",
+        "reference": "Psalm 73:24",
+        "chapter": "Psalms 73"
+      }
+    ]
+  },
+  "09-23": {
+    "state": "two",
+    "devotionals": [
+      "03-04-AM",
+      "12-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-04-AM",
+        "reference": "2 Corinthians 12:9",
+        "chapter": "2 Corinthians 12"
+      },
+      {
+        "devotional": "12-23-PM",
+        "reference": "Psalm 74:16",
+        "chapter": "Psalms 74"
+      }
+    ]
+  },
+  "09-24": {
+    "state": "one",
+    "devotionals": [
+      "06-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-11-PM",
+        "reference": "Psalm 76:3",
+        "chapter": "Psalms 76"
+      }
+    ]
+  },
+  "09-25": {
+    "state": "one",
+    "devotionals": [
+      "03-31-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-31-PM",
+        "reference": "2 Samuel 21:10",
+        "chapter": "2 Samuel 21"
+      }
+    ]
+  },
+  "09-26": {
+    "state": "two",
+    "devotionals": [
+      "03-17-AM",
+      "12-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-17-AM",
+        "reference": "Galatians 2:10",
+        "chapter": "Galatians 2"
+      },
+      {
+        "devotional": "12-14-PM",
+        "reference": "Galatians 2:20",
+        "chapter": "Galatians 2"
+      }
+    ]
+  },
+  "09-27": {
+    "state": "two",
+    "devotionals": [
+      "08-20-AM",
+      "12-21-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-20-AM",
+        "reference": "2 Samuel 23:1",
+        "chapter": "2 Samuel 23"
+      },
+      {
+        "devotional": "12-21-AM",
+        "reference": "2 Samuel 23:5",
+        "chapter": "2 Samuel 23"
+      }
+    ]
+  },
+  "09-28": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "09-29": {
+    "state": "two",
+    "devotionals": [
+      "09-06-PM",
+      "09-18-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-06-PM",
+        "reference": "Galatians 5:18",
+        "chapter": "Galatians 5"
+      },
+      {
+        "devotional": "09-18-AM",
+        "reference": "Galatians 5:25",
+        "chapter": "Galatians 5"
+      }
+    ]
+  },
+  "09-30": {
+    "state": "one",
+    "devotionals": [
+      "01-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-06-PM",
+        "reference": "Ezekiel 33:22",
+        "chapter": "Ezekiel 33"
+      }
+    ]
+  },
+  "10-01": {
+    "state": "two",
+    "devotionals": [
+      "09-08-PM",
+      "12-14-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-08-PM",
+        "reference": "Ephesians 1:19, 20",
+        "chapter": "Ephesians 1"
+      },
+      {
+        "devotional": "12-14-AM",
+        "reference": "Psalm 84:7",
+        "chapter": "Psalms 84"
+      }
+    ]
+  },
+  "10-02": {
+    "state": "two",
+    "devotionals": [
+      "02-17-PM",
+      "07-10-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-17-PM",
+        "reference": "Ezekiel 35:10",
+        "chapter": "Ezekiel 35"
+      },
+      {
+        "devotional": "07-10-AM",
+        "reference": "Ephesians 2:19",
+        "chapter": "Ephesians 2"
+      }
+    ]
+  },
+  "10-03": {
+    "state": "two",
+    "devotionals": [
+      "08-15-PM",
+      "08-23-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-15-PM",
+        "reference": "Ezekiel 36:26",
+        "chapter": "Ezekiel 36"
+      },
+      {
+        "devotional": "08-23-PM",
+        "reference": "Ephesians 3:17",
+        "chapter": "Ephesians 3"
+      }
+    ]
+  },
+  "10-04": {
+    "state": "two",
+    "devotionals": [
+      "10-20-AM",
+      "11-21-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-20-AM",
+        "reference": "Ephesians 4:15",
+        "chapter": "Ephesians 4"
+      },
+      {
+        "devotional": "11-21-AM",
+        "reference": "Ephesians 4:30",
+        "chapter": "Ephesians 4"
+      }
+    ]
+  },
+  "10-05": {
+    "state": "one",
+    "devotionals": [
+      "03-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-20-PM",
+        "reference": "Ephesians 5:25",
+        "chapter": "Ephesians 5"
+      }
+    ]
+  },
+  "10-06": {
+    "state": "one",
+    "devotionals": [
+      "02-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-06-AM",
+        "reference": "Ephesians 6:18",
+        "chapter": "Ephesians 6"
+      }
+    ]
+  },
+  "10-07": {
+    "state": "two",
+    "devotionals": [
+      "04-22-PM",
+      "05-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-22-PM",
+        "reference": "Psalm 91:5",
+        "chapter": "Psalms 91"
+      },
+      {
+        "devotional": "05-24-PM",
+        "reference": "Philippians 1:27",
+        "chapter": "Philippians 1"
+      }
+    ]
+  },
+  "10-08": {
+    "state": "two",
+    "devotionals": [
+      "06-03-PM",
+      "11-18-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-03-PM",
+        "reference": "Philippians 2:8",
+        "chapter": "Philippians 2"
+      },
+      {
+        "devotional": "11-18-PM",
+        "reference": "Psalm 93:2",
+        "chapter": "Psalms 93"
+      }
+    ]
+  },
+  "10-09": {
+    "state": "two",
+    "devotionals": [
+      "10-14-AM",
+      "11-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-14-AM",
+        "reference": "Philippians 3:8",
+        "chapter": "Philippians 3"
+      },
+      {
+        "devotional": "11-22-PM",
+        "reference": "Philippians 3:10",
+        "chapter": "Philippians 3"
+      }
+    ]
+  },
+  "10-10": {
+    "state": "one",
+    "devotionals": [
+      "02-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-16-AM",
+        "reference": "Philippians 4:11",
+        "chapter": "Philippians 4"
+      }
+    ]
+  },
+  "10-11": {
+    "state": "two",
+    "devotionals": [
+      "06-07-AM",
+      "10-02-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-07-AM",
+        "reference": "Psalm 97:10",
+        "chapter": "Psalms 97"
+      },
+      {
+        "devotional": "10-02-AM",
+        "reference": "Colossians 1:5",
+        "chapter": "Colossians 1"
+      }
+    ]
+  },
+  "10-12": {
+    "state": "two",
+    "devotionals": [
+      "11-05-PM",
+      "11-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-05-PM",
+        "reference": "Psalm 100:4",
+        "chapter": "Psalms 100"
+      },
+      {
+        "devotional": "11-08-AM",
+        "reference": "Colossians 2:6",
+        "chapter": "Colossians 2"
+      }
+    ]
+  },
+  "10-13": {
+    "state": "one",
+    "devotionals": [
+      "12-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "12-11-PM",
+        "reference": "Colossians 3:24",
+        "chapter": "Colossians 3"
+      }
+    ]
+  },
+  "10-14": {
+    "state": "two",
+    "devotionals": [
+      "02-28-PM",
+      "07-09-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-28-PM",
+        "reference": "1 Kings 17:16",
+        "chapter": "1 Kings 17"
+      },
+      {
+        "devotional": "07-09-AM",
+        "reference": "Psalm 103:2",
+        "chapter": "Psalms 103"
+      }
+    ]
+  },
+  "10-15": {
+    "state": "two",
+    "devotionals": [
+      "09-28-PM",
+      "10-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-28-PM",
+        "reference": "1 Kings 18:43",
+        "chapter": "1 Kings 18"
+      },
+      {
+        "devotional": "10-24-AM",
+        "reference": "Psalm 104:16",
+        "chapter": "Psalms 104"
+      }
+    ]
+  },
+  "10-16": {
+    "state": "two",
+    "devotionals": [
+      "05-19-PM",
+      "10-05-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-19-PM",
+        "reference": "1 Kings 19:4",
+        "chapter": "1 Kings 19"
+      },
+      {
+        "devotional": "10-05-AM",
+        "reference": "1 Kings 19:8",
+        "chapter": "1 Kings 19"
+      }
+    ]
+  },
+  "10-17": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "10-18": {
+    "state": "two",
+    "devotionals": [
+      "06-24-PM",
+      "12-01-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-24-PM",
+        "reference": "Daniel 3:16, 18",
+        "chapter": "Daniel 3"
+      },
+      {
+        "devotional": "12-01-PM",
+        "reference": "Psalm 107:8",
+        "chapter": "Psalms 107"
+      }
+    ]
+  },
+  "10-19": {
+    "state": "two",
+    "devotionals": [
+      "01-13-AM",
+      "12-11-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-13-AM",
+        "reference": "1 Kings 22:48",
+        "chapter": "1 Kings 22"
+      },
+      {
+        "devotional": "12-11-AM",
+        "reference": "1 Thessalonians 5:24",
+        "chapter": "1 Thessalonians 5"
+      }
+    ]
+  },
+  "10-20": {
+    "state": "two",
+    "devotionals": [
+      "06-12-AM",
+      "08-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-12-AM",
+        "reference": "Daniel 5:27",
+        "chapter": "Daniel 5"
+      },
+      {
+        "devotional": "08-26-AM",
+        "reference": "Psalms 111:9",
+        "chapter": "Psalms 111"
+      }
+    ]
+  },
+  "10-21": {
+    "state": "one",
+    "devotionals": [
+      "09-15-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-15-AM",
+        "reference": "Psalm 112:7",
+        "chapter": "Psalms 112"
+      }
+    ]
+  },
+  "10-22": {
+    "state": "one",
+    "devotionals": [
+      "05-16-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-16-PM",
+        "reference": "2 Kings 3:16,17",
+        "chapter": "2 Kings 3"
+      }
+    ]
+  },
+  "10-23": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "10-24": {
+    "state": "two",
+    "devotionals": [
+      "03-07-PM",
+      "06-14-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-07-PM",
+        "reference": "Psalm 118:8",
+        "chapter": "Psalms 118"
+      },
+      {
+        "devotional": "06-14-PM",
+        "reference": "Daniel 9:8",
+        "chapter": "Daniel 9"
+      }
+    ]
+  },
+  "10-25": {
+    "state": "two",
+    "devotionals": [
+      "01-13-PM",
+      "10-02-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-13-PM",
+        "reference": "2 Kings 6:9",
+        "chapter": "2 Kings 6"
+      },
+      {
+        "devotional": "10-02-PM",
+        "reference": "Daniel 10:11",
+        "chapter": "Daniel 10"
+      }
+    ]
+  },
+  "10-26": {
+    "state": "two",
+    "devotionals": [
+      "01-20-PM",
+      "08-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-20-PM",
+        "reference": "Psalm 119:37",
+        "chapter": "Psalms 119"
+      },
+      {
+        "devotional": "08-04-AM",
+        "reference": "Daniel 11:32",
+        "chapter": "Daniel 11"
+      }
+    ]
+  },
+  "10-27": {
+    "state": "two",
+    "devotionals": [
+      "04-28-AM",
+      "11-02-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-28-AM",
+        "reference": "Psalm 119:49",
+        "chapter": "Psalms 119"
+      },
+      {
+        "devotional": "11-02-PM",
+        "reference": "Psalm 119:53",
+        "chapter": "Psalms 119"
+      }
+    ]
+  },
+  "10-28": {
+    "state": "one",
+    "devotionals": [
+      "05-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-16-AM",
+        "reference": "1 Timothy 6:17",
+        "chapter": "1 Timothy 6"
+      }
+    ]
+  },
+  "10-29": {
+    "state": "one",
+    "devotionals": [
+      "06-12-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-12-PM",
+        "reference": "2 Timothy 1:9",
+        "chapter": "2 Timothy 1"
+      }
+    ]
+  },
+  "10-30": {
+    "state": "two",
+    "devotionals": [
+      "02-04-AM",
+      "10-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-04-AM",
+        "reference": "Hosea 3:1",
+        "chapter": "Hosea 3"
+      },
+      {
+        "devotional": "10-27-AM",
+        "reference": "2 Timothy 2:11",
+        "chapter": "2 Timothy 2"
+      }
+    ]
+  },
+  "10-31": {
+    "state": "two",
+    "devotionals": [
+      "07-25-PM",
+      "12-12-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-25-PM",
+        "reference": "Hosea 5:15",
+        "chapter": "Hosea 5"
+      },
+      {
+        "devotional": "12-12-PM",
+        "reference": "Hosea 5:7",
+        "chapter": "Hosea 5"
+      }
+    ]
+  },
+  "11-01": {
+    "state": "two",
+    "devotionals": [
+      "06-23-AM",
+      "09-05-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-23-AM",
+        "reference": "Hosea 7:8",
+        "chapter": "Hosea 7"
+      },
+      {
+        "devotional": "09-05-AM",
+        "reference": "Psalm 120:5",
+        "chapter": "Psalms 120"
+      }
+    ]
+  },
+  "11-02": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "11-03": {
+    "state": "one",
+    "devotionals": [
+      "06-09-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-09-AM",
+        "reference": "Psalm 126:3",
+        "chapter": "Psalms 126"
+      }
+    ]
+  },
+  "11-04": {
+    "state": "one",
+    "devotionals": [
+      "11-19-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-19-AM",
+        "reference": "Titus 3:9",
+        "chapter": "Titus 3"
+      }
+    ]
+  },
+  "11-05": {
+    "state": "one",
+    "devotionals": [
+      "05-20-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-20-PM",
+        "reference": "Hosea 11:4",
+        "chapter": "Hosea 11"
+      }
+    ]
+  },
+  "11-06": {
+    "state": "one",
+    "devotionals": [
+      "11-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-22-AM",
+        "reference": "Hosea 12:12",
+        "chapter": "Hosea 12"
+      }
+    ]
+  },
+  "11-07": {
+    "state": "two",
+    "devotionals": [
+      "05-23-AM",
+      "10-31-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-23-AM",
+        "reference": "Psalm 138:8",
+        "chapter": "Psalms 138"
+      },
+      {
+        "devotional": "10-31-PM",
+        "reference": "Hosea 13:5",
+        "chapter": "Hosea 13"
+      }
+    ]
+  },
+  "11-08": {
+    "state": "two",
+    "devotionals": [
+      "04-30-PM",
+      "10-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-30-PM",
+        "reference": "Psalm 139:17",
+        "chapter": "Psalms 139"
+      },
+      {
+        "devotional": "10-22-AM",
+        "reference": "Hosea 14:4",
+        "chapter": "Hosea 14"
+      }
+    ]
+  },
+  "11-09": {
+    "state": "two",
+    "devotionals": [
+      "01-18-AM",
+      "07-11-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-18-AM",
+        "reference": "Hebrews 4:9",
+        "chapter": "Hebrews 4"
+      },
+      {
+        "devotional": "07-11-PM",
+        "reference": "Joel 1:3",
+        "chapter": "Joel 1"
+      }
+    ]
+  },
+  "11-10": {
+    "state": "two",
+    "devotionals": [
+      "03-24-AM",
+      "12-18-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-24-AM",
+        "reference": "Hebrews 5:7",
+        "chapter": "Hebrews 5"
+      },
+      {
+        "devotional": "12-18-AM",
+        "reference": "Joel 2:13",
+        "chapter": "Joel 2"
+      }
+    ]
+  },
+  "11-11": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "11-12": {
+    "state": "one",
+    "devotionals": [
+      "02-14-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-14-AM",
+        "reference": "2 Kings 25:30",
+        "chapter": "2 Kings 25"
+      }
+    ]
+  },
+  "11-13": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "11-14": {
+    "state": "two",
+    "devotionals": [
+      "06-03-AM",
+      "11-06-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-03-AM",
+        "reference": "1 Chronicles 4:23",
+        "chapter": "1 Chronicles 4"
+      },
+      {
+        "devotional": "11-06-PM",
+        "reference": "Hebrews 9:20",
+        "chapter": "Hebrews 9"
+      }
+    ]
+  },
+  "11-15": {
+    "state": "two",
+    "devotionals": [
+      "04-29-PM",
+      "06-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-29-PM",
+        "reference": "Psalm 149:4",
+        "chapter": "Psalms 149"
+      },
+      {
+        "devotional": "06-08-AM",
+        "reference": "1 Chronicles 5:22",
+        "chapter": "1 Chronicles 5"
+      }
+    ]
+  },
+  "11-16": {
+    "state": "one",
+    "devotionals": [
+      "05-02-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-02-PM",
+        "reference": "Hebrews 11:13",
+        "chapter": "Hebrews 11"
+      }
+    ]
+  },
+  "11-17": {
+    "state": "two",
+    "devotionals": [
+      "06-22-PM",
+      "07-31-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-22-PM",
+        "reference": "Hebrews 12:27",
+        "chapter": "Hebrews 12"
+      },
+      {
+        "devotional": "07-31-PM",
+        "reference": "1 Chronicles 9:33",
+        "chapter": "1 Chronicles 9"
+      }
+    ]
+  },
+  "11-18": {
+    "state": "two",
+    "devotionals": [
+      "01-28-PM",
+      "04-06-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-28-PM",
+        "reference": "Luke 2:20",
+        "chapter": "Luke 2"
+      },
+      {
+        "devotional": "04-06-AM",
+        "reference": "Hebrews 13:13",
+        "chapter": "Hebrews 13"
+      }
+    ]
+  },
+  "11-19": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "11-20": {
+    "state": "one",
+    "devotionals": [
+      "06-20-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-20-AM",
+        "reference": "Amos 9:9",
+        "chapter": "Amos 9"
+      }
+    ]
+  },
+  "11-21": {
+    "state": "one",
+    "devotionals": [
+      "10-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-08-AM",
+        "reference": "Luke 5:4",
+        "chapter": "Luke 5"
+      }
+    ]
+  },
+  "11-22": {
+    "state": "two",
+    "devotionals": [
+      "02-25-PM",
+      "11-12-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-25-PM",
+        "reference": "Jonah 1:3",
+        "chapter": "Jonah 1"
+      },
+      {
+        "devotional": "11-12-PM",
+        "reference": "Luke 6:12",
+        "chapter": "Luke 6"
+      }
+    ]
+  },
+  "11-23": {
+    "state": "two",
+    "devotionals": [
+      "02-06-PM",
+      "02-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-06-PM",
+        "reference": "James 5:16",
+        "chapter": "James 5"
+      },
+      {
+        "devotional": "02-26-AM",
+        "reference": "Jonah 2:9",
+        "chapter": "Jonah 2"
+      }
+    ]
+  },
+  "11-24": {
+    "state": "two",
+    "devotionals": [
+      "02-14-PM",
+      "11-12-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-14-PM",
+        "reference": "Luke 8:47",
+        "chapter": "Luke 8"
+      },
+      {
+        "devotional": "11-12-AM",
+        "reference": "1 Peter 1:7",
+        "chapter": "1 Peter 1"
+      }
+    ]
+  },
+  "11-25": {
+    "state": "two",
+    "devotionals": [
+      "05-21-AM",
+      "07-13-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-21-AM",
+        "reference": "1 Peter 2:3",
+        "chapter": "1 Peter 2"
+      },
+      {
+        "devotional": "07-13-AM",
+        "reference": "Jonah 4:9",
+        "chapter": "Jonah 4"
+      }
+    ]
+  },
+  "11-26": {
+    "state": "one",
+    "devotionals": [
+      "03-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-24-PM",
+        "reference": "Luke 10:21",
+        "chapter": "Luke 10"
+      }
+    ]
+  },
+  "11-27": {
+    "state": "two",
+    "devotionals": [
+      "06-24-AM",
+      "08-24-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-24-AM",
+        "reference": "Luke 11:27, 28",
+        "chapter": "Luke 11"
+      },
+      {
+        "devotional": "08-24-AM",
+        "reference": "Micah 2:13",
+        "chapter": "Micah 2"
+      }
+    ]
+  },
+  "11-28": {
+    "state": "one",
+    "devotionals": [
+      "07-11-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-11-AM",
+        "reference": "1 Peter 5:10",
+        "chapter": "1 Peter 5"
+      }
+    ]
+  },
+  "11-29": {
+    "state": "two",
+    "devotionals": [
+      "07-26-AM",
+      "09-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-26-AM",
+        "reference": "2 Peter 1:5, 6",
+        "chapter": "2 Peter 1"
+      },
+      {
+        "devotional": "09-16-AM",
+        "reference": "2 Peter 1:4",
+        "chapter": "2 Peter 1"
+      }
+    ]
+  },
+  "11-30": {
+    "state": "two",
+    "devotionals": [
+      "08-19-AM",
+      "12-23-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-19-AM",
+        "reference": "Micah 5:4",
+        "chapter": "Micah 5"
+      },
+      {
+        "devotional": "12-23-AM",
+        "reference": "Luke 14:10",
+        "chapter": "Luke 14"
+      }
+    ]
+  },
+  "12-01": {
+    "state": "two",
+    "devotionals": [
+      "02-15-AM",
+      "09-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-15-AM",
+        "reference": "2 Peter 3:18",
+        "chapter": "2 Peter 3"
+      },
+      {
+        "devotional": "09-13-PM",
+        "reference": "Luke 15:2",
+        "chapter": "Luke 15"
+      }
+    ]
+  },
+  "12-02": {
+    "state": "two",
+    "devotionals": [
+      "07-23-PM",
+      "11-23-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-23-PM",
+        "reference": "1 John 1:7",
+        "chapter": "1 John 1"
+      },
+      {
+        "devotional": "11-23-AM",
+        "reference": "1 John 1:6",
+        "chapter": "1 John 1"
+      }
+    ]
+  },
+  "12-03": {
+    "state": "two",
+    "devotionals": [
+      "09-12-AM",
+      "10-04-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-12-AM",
+        "reference": "Nahum 1:2",
+        "chapter": "Nahum 1"
+      },
+      {
+        "devotional": "10-04-PM",
+        "reference": "1 John 2:1",
+        "chapter": "1 John 2"
+      }
+    ]
+  },
+  "12-04": {
+    "state": "one",
+    "devotionals": [
+      "11-13-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-13-PM",
+        "reference": "Luke 18:1",
+        "chapter": "Luke 18"
+      }
+    ]
+  },
+  "12-05": {
+    "state": "two",
+    "devotionals": [
+      "03-23-PM",
+      "06-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-23-PM",
+        "reference": "Luke 19:40",
+        "chapter": "Luke 19"
+      },
+      {
+        "devotional": "06-05-PM",
+        "reference": "1 John 4:8",
+        "chapter": "1 John 4"
+      }
+    ]
+  },
+  "12-06": {
+    "state": "one",
+    "devotionals": [
+      "09-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-10-PM",
+        "reference": "Habakkuk 1:8",
+        "chapter": "Habakkuk 1"
+      }
+    ]
+  },
+  "12-07": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "12-08": {
+    "state": "two",
+    "devotionals": [
+      "03-25-AM",
+      "12-12-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-25-AM",
+        "reference": "Luke 22:48",
+        "chapter": "Luke 22"
+      },
+      {
+        "devotional": "12-12-AM",
+        "reference": "Habakkuk 3:6",
+        "chapter": "Habakkuk 3"
+      }
+    ]
+  },
+  "12-09": {
+    "state": "two",
+    "devotionals": [
+      "04-10-AM",
+      "11-14-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-10-AM",
+        "reference": "Luke 23:33",
+        "chapter": "Luke 23"
+      },
+      {
+        "devotional": "11-14-AM",
+        "reference": "Zephaniah 1:5",
+        "chapter": "Zephaniah 1"
+      }
+    ]
+  },
+  "12-10": {
+    "state": "two",
+    "devotionals": [
+      "05-25-PM",
+      "10-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-25-PM",
+        "reference": "Luke 24:33,35",
+        "chapter": "Luke 24"
+      },
+      {
+        "devotional": "10-21-PM",
+        "reference": "Luke 24:38",
+        "chapter": "Luke 24"
+      }
+    ]
+  },
+  "12-11": {
+    "state": "two",
+    "devotionals": [
+      "02-19-PM",
+      "05-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-19-PM",
+        "reference": "John 1:41",
+        "chapter": "John 1"
+      },
+      {
+        "devotional": "05-10-PM",
+        "reference": "John 1:14",
+        "chapter": "John 1"
+      }
+    ]
+  },
+  "12-12": {
+    "state": "two",
+    "devotionals": [
+      "10-26-AM",
+      "12-08-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-26-AM",
+        "reference": "Haggai 1:9",
+        "chapter": "Haggai 1"
+      },
+      {
+        "devotional": "12-08-AM",
+        "reference": "Revelation 3:4",
+        "chapter": "Revelation 3"
+      }
+    ]
+  },
+  "12-13": {
+    "state": "two",
+    "devotionals": [
+      "08-04-PM",
+      "09-09-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "08-04-PM",
+        "reference": "Haggai 2:17",
+        "chapter": "Haggai 2"
+      },
+      {
+        "devotional": "09-09-PM",
+        "reference": "Revelation 4:4",
+        "chapter": "Revelation 4"
+      }
+    ]
+  },
+  "12-14": {
+    "state": "two",
+    "devotionals": [
+      "09-02-PM",
+      "12-05-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-02-PM",
+        "reference": "John 4:48",
+        "chapter": "John 4"
+      },
+      {
+        "devotional": "12-05-PM",
+        "reference": "Zechariah 1:20",
+        "chapter": "Zechariah 1"
+      }
+    ]
+  },
+  "12-15": {
+    "state": "two",
+    "devotionals": [
+      "05-07-PM",
+      "06-10-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "05-07-PM",
+        "reference": "John 5:8",
+        "chapter": "John 5"
+      },
+      {
+        "devotional": "06-10-PM",
+        "reference": "John 5:39",
+        "chapter": "John 5"
+      }
+    ]
+  },
+  "12-16": {
+    "state": "two",
+    "devotionals": [
+      "10-23-AM",
+      "11-27-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-23-AM",
+        "reference": "John 6:67",
+        "chapter": "John 6"
+      },
+      {
+        "devotional": "11-27-AM",
+        "reference": "Zechariah 3:1",
+        "chapter": "Zechariah 3"
+      }
+    ]
+  },
+  "12-17": {
+    "state": "one",
+    "devotionals": [
+      "11-26-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-26-PM",
+        "reference": "Zechariah 4:10",
+        "chapter": "Zechariah 4"
+      }
+    ]
+  },
+  "12-18": {
+    "state": "open",
+    "devotionals": [],
+    "matches": []
+  },
+  "12-19": {
+    "state": "one",
+    "devotionals": [
+      "06-22-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "06-22-AM",
+        "reference": "Zechariah 6:13",
+        "chapter": "Zechariah 6"
+      }
+    ]
+  },
+  "12-20": {
+    "state": "two",
+    "devotionals": [
+      "02-07-PM",
+      "12-17-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "02-07-PM",
+        "reference": "Revelation 11:12",
+        "chapter": "Revelation 11"
+      },
+      {
+        "devotional": "12-17-PM",
+        "reference": "John 10:9",
+        "chapter": "John 10"
+      }
+    ]
+  },
+  "12-21": {
+    "state": "two",
+    "devotionals": [
+      "11-30-AM",
+      "11-30-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-30-AM",
+        "reference": "2 Chronicles 25:9",
+        "chapter": "2 Chronicles 25"
+      },
+      {
+        "devotional": "11-30-PM",
+        "reference": "Revelation 12:7",
+        "chapter": "Revelation 12"
+      }
+    ]
+  },
+  "12-22": {
+    "state": "one",
+    "devotionals": [
+      "11-21-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-21-PM",
+        "reference": "John 12:2",
+        "chapter": "John 12"
+      }
+    ]
+  },
+  "12-23": {
+    "state": "two",
+    "devotionals": [
+      "01-17-AM",
+      "10-24-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "01-17-AM",
+        "reference": "Revelation 14:1",
+        "chapter": "Revelation 14"
+      },
+      {
+        "devotional": "10-24-PM",
+        "reference": "John 13:5",
+        "chapter": "John 13"
+      }
+    ]
+  },
+  "12-24": {
+    "state": "two",
+    "devotionals": [
+      "09-26-PM",
+      "10-12-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "09-26-PM",
+        "reference": "Zechariah 11:2",
+        "chapter": "Zechariah 11"
+      },
+      {
+        "devotional": "10-12-PM",
+        "reference": "John 14:26",
+        "chapter": "John 14"
+      }
+    ]
+  },
+  "12-25": {
+    "state": "two",
+    "devotionals": [
+      "10-28-AM",
+      "11-03-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-28-AM",
+        "reference": "John 15:19",
+        "chapter": "John 15"
+      },
+      {
+        "devotional": "11-03-PM",
+        "reference": "2 Chronicles 30:27",
+        "chapter": "2 Chronicles 30"
+      }
+    ]
+  },
+  "12-26": {
+    "state": "two",
+    "devotionals": [
+      "03-15-PM",
+      "10-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-15-PM",
+        "reference": "2 Chronicles 31:21",
+        "chapter": "2 Chronicles 31"
+      },
+      {
+        "devotional": "10-22-PM",
+        "reference": "John 16:15",
+        "chapter": "John 16"
+      }
+    ]
+  },
+  "12-27": {
+    "state": "two",
+    "devotionals": [
+      "07-04-AM",
+      "10-04-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "07-04-AM",
+        "reference": "John 17:17",
+        "chapter": "John 17"
+      },
+      {
+        "devotional": "10-04-AM",
+        "reference": "Zechariah 14:7",
+        "chapter": "Zechariah 14"
+      }
+    ]
+  },
+  "12-28": {
+    "state": "one",
+    "devotionals": [
+      "03-26-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "03-26-AM",
+        "reference": "John 18:8",
+        "chapter": "John 18"
+      }
+    ]
+  },
+  "12-29": {
+    "state": "two",
+    "devotionals": [
+      "04-03-AM",
+      "07-22-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "04-03-AM",
+        "reference": "John 19:16",
+        "chapter": "John 19"
+      },
+      {
+        "devotional": "07-22-PM",
+        "reference": "John 19:5",
+        "chapter": "John 19"
+      }
+    ]
+  },
+  "12-30": {
+    "state": "two",
+    "devotionals": [
+      "11-02-AM",
+      "12-19-PM"
+    ],
+    "matches": [
+      {
+        "devotional": "11-02-AM",
+        "reference": "Malachi 3:6",
+        "chapter": "Malachi 3"
+      },
+      {
+        "devotional": "12-19-PM",
+        "reference": "Revelation 21:1",
+        "chapter": "Revelation 21"
+      }
+    ]
+  },
+  "12-31": {
+    "state": "one",
+    "devotionals": [
+      "10-16-AM"
+    ],
+    "matches": [
+      {
+        "devotional": "10-16-AM",
+        "reference": "John 21:12",
+        "chapter": "John 21"
+      }
+    ]
+  }
+}

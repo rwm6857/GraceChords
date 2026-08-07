@@ -7,13 +7,13 @@ import { useTheme } from '../theme/ThemeProvider'
 // content-hugging cells and an accent-filled selected cell — it does NOT
 // stretch full width. Full-width segmented controls are reserved for
 // view-switchers (e.g. "This song / Whole set").
-export type SegmentedPillOption<T extends string> = {
+export type SegmentedPillOption<T extends string | number> = {
   value: T
   label: string
   labelFontFamily?: string
 }
 
-export default function SegmentedPill<T extends string>({
+export default function SegmentedPill<T extends string | number>({
   options,
   value,
   onChange,

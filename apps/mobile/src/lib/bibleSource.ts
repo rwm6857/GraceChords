@@ -33,13 +33,12 @@ import {
 //   <base>/<dataRoot>/<bookNumber>/<chapter>.json         — one chapter, keyed
 //                                                           by book NUMBER (1–66)
 
-const DEFAULT_R2_PUBLIC_URL = 'https://assets.gracechords.com'
-
-/** Base URL for R2 Bible assets. Overridable via EXPO_PUBLIC_R2_PUBLIC_URL. */
-export function r2Base(): string {
-  const raw = process.env.EXPO_PUBLIC_R2_PUBLIC_URL || DEFAULT_R2_PUBLIC_URL
-  return raw.replace(/\/+$/, '')
-}
+// The base URL now lives in ./r2 so the devotional layer can use the same one
+// without importing this module (which pulls the core barrel, and with it
+// Supabase). Imported for local use and re-exported so existing callers of
+// `bibleSource.r2Base` are unaffected.
+import { r2Base } from './r2'
+export { r2Base }
 
 // Re-export the plan/reading helpers so screens depend on this seam, not core
 // directly — keeps the "where does a day's reading come from" question in one

@@ -42,6 +42,7 @@
     "fontSize": "Font size",
     "smallerFont": "Smaller font",
     "largerFont": "Larger font",
+    "autoFontSize": "Auto · {{percent}}%",
     "chordStyle": "Chord style",
     "letters": "Letters",
     "solfege": "Solfège",

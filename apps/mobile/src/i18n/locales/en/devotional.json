@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reviewer": "",
+    "reviewedAt": ""
+  },
+  "card": {
+    "label": "Devotional",
+    "open": "Open devotional on {{reference}}"
+  },
+  "placeholder": {
+    "none": "No devotional for today's readings."
+  },
+  "screen": {
+    "back": "Back",
+    "attribution": "{{author}} · {{sourceWork}}",
+    "alsoToday": "Also today"
+  },
+  "notFound": {
+    "title": "Devotional not found",
+    "body": "This devotional isn't available. It may have moved, or the link may be out of date."
+  }
+}
