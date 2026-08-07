@@ -202,7 +202,7 @@ export default function AuthScreen() {
           {/* Divider */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md }}>
             <View style={{ flex: 1, height: 1, backgroundColor: t.colors.border }} />
-            <Text style={{ fontSize: 12.5, color: t.colors.muted }}>{tx('orContinueWith')}</Text>
+            <Text style={{ fontSize: 12.5, color: t.colors.sec }}>{tx('orContinueWith')}</Text>
             <View style={{ flex: 1, height: 1, backgroundColor: t.colors.border }} />
           </View>
 
@@ -252,7 +252,7 @@ export default function AuthScreen() {
           </View>
 
           {isSignup ? (
-            <Text style={{ fontSize: 12.5, color: t.colors.muted, textAlign: 'center' }}>
+            <Text style={{ fontSize: 12.5, color: t.colors.sec, textAlign: 'center' }}>
               {tx('terms.prefix')}
               <Text style={{ color: t.colors.textAccent }}>{tx('terms.terms')}</Text>
               {tx('terms.and')}

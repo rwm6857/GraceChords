@@ -62,7 +62,7 @@ function MeterTicks({ radius, t }: { radius: number; t: Tokens }) {
 }
 
 function holdColor(reading: TunerReading | null, t: Tokens): string {
-  if (!reading) return t.colors.muted
+  if (!reading) return t.colors.sec
   if (reading.hold === 'inTune') return t.colors.success
   if (reading.hold === 'settling') return t.colors.accent
   return t.colors.ink
@@ -243,7 +243,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                     left: 0,
                     bottom: 0,
                     fontSize: 20,
-                    color: t.colors.muted,
+                    color: t.colors.sec,
                   }}
                 >
                   ♭
@@ -254,7 +254,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                     right: 0,
                     bottom: 0,
                     fontSize: 20,
-                    color: t.colors.muted,
+                    color: t.colors.sec,
                   }}
                 >
                   ♯
@@ -276,7 +276,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                 >
                   {reading ? reading.string.label : '–'}
                 </Text>
-                <Text style={{ fontSize: 28, fontWeight: '600', color: t.colors.muted }}>
+                <Text style={{ fontSize: 28, fontWeight: '600', color: t.colors.sec }}>
                   {reading ? reading.string.name.slice(-1) : ''}
                 </Text>
               </View>
@@ -337,7 +337,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
                 marginTop: t.spacing.md,
                 textAlign: 'center',
                 fontSize: t.typography.rowMeta.fontSize,
-                color: t.colors.muted,
+                color: t.colors.sec,
               }}
             >
               {lockedString ? tx('tuner.autoModeOff') : tx('tuner.autoModeOn')}
@@ -376,7 +376,7 @@ export default function TunerScreen({ embedded }: { embedded?: boolean }) {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('tuner.title')}</Text>

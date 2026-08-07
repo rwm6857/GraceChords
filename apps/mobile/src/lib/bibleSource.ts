@@ -15,6 +15,13 @@ import {
 // avoid an import cycle.
 import { readLocalChapter } from './downloads/resolver'
 import { getDownloadsSnapshot } from './downloads/manifest'
+import {
+  BACKGROUND_MS,
+  FOREGROUND_MS,
+  withDeadline,
+  withRequestBudget,
+  type FetchFn,
+} from './requestBudget'
 
 // Source seam for Daily Word passage content. Today it reads from the
 // Cloudflare R2 bucket that also serves the web app's Bible JSON; the accessor
@@ -40,13 +47,50 @@ export function r2Base(): string {
 export { getPlanForDate, expandReadings }
 export type { BibleTranslation, ChapterData, Passage }
 
+// A chapter read the reader is waiting on. This budget is used even when the
+// launch prefetch started the request, because getPassage de-dupes in flight —
+// a reader that joins a prefetch's promise must not inherit a shorter deadline.
+const chapterFetch = withRequestBudget(fetch, () => FOREGROUND_MS)
+
+// The manifest is only ever needed before a chapter, never on its own, and it
+// has a built-in ESV fallback — so it yields sockets rather than holding them.
+const manifestFetch = withRequestBudget(fetch, () => BACKGROUND_MS)
+
 // ── Translation manifest (memoized for the app's lifetime) ──────────────────
 let translationsPromise: Promise<TranslationsResult> | null = null
 
-/** Load and normalize the translation manifest from the active source (once). */
+/**
+ * Load and normalize the translation manifest from the active source (once).
+ *
+ * A SUCCESS is memoized for the app's lifetime (the manifest is effectively
+ * immutable); a FAILURE is not. fetchBibleTranslations never rejects — it
+ * swallows everything and returns the built-in ESV-only fallback — so without
+ * this the first bad network call would pin the translation picker to ESV until
+ * the next launch, and the reader's Retry button only re-fetches the chapter,
+ * never the manifest. Bounding the request made that outcome arrive sooner,
+ * which is what surfaced it. `loaded` is set by the probe below because the
+ * fallback is otherwise indistinguishable from a real one-translation manifest.
+ */
 export function getTranslations(): Promise<TranslationsResult> {
   if (!translationsPromise) {
-    translationsPromise = fetchBibleTranslations(r2Base()).then(withDownloadedTranslations)
+    let loaded = true
+    const probe = (async (input, init) => {
+      try {
+        const res = await manifestFetch(input, init)
+        if (!res.ok) loaded = false
+        return res
+      } catch (err) {
+        loaded = false
+        throw err
+      }
+    }) as FetchFn
+    const attempt = fetchBibleTranslations(r2Base(), probe)
+      .then(withDownloadedTranslations)
+      .then((result) => {
+        if (!loaded && translationsPromise === attempt) translationsPromise = null
+        return result
+      })
+    translationsPromise = attempt
   }
   return translationsPromise
 }
@@ -130,6 +174,12 @@ const fetchRemoteChapter = ({ passage, translation }: PassageQuery): Promise<Cha
     dataRoot: translation.dataRoot,
     bookNumber: passage.bookNumber,
     chapter: passage.chapter,
+    // No `signal` here on purpose: this request is shared through the in-flight
+    // map in getPassage, so a caller-owned AbortController would cancel a fetch
+    // another subscriber is still waiting on. The deadline lives inside
+    // chapterFetch instead, where it belongs to the request rather than to any
+    // one caller. Callers drop results with a cooperative `alive` flag.
+    fetchImpl: chapterFetch,
   })
 
 /**
@@ -182,7 +232,19 @@ export async function prefetchToday(): Promise<void> {
     const translation = translations.find((x) => x.id === id) || translations[0]
     if (!translation) return
     const passages = expandReadings(getPlanForDate(today).readings)
-    await Promise.all(passages.map((passage) => getPassage({ passage, translation }).catch(() => {})))
+    // Stop WAITING at the background budget, but do not cancel: the underlying
+    // chapter requests are shared with the reader through getPassage's in-flight
+    // map, so they keep their own (longer) budget and still warm the cache if
+    // they land. This only bounds how long the launch-time warm-up stays
+    // pending — it is already fire-and-forget from app/_layout.tsx and never
+    // gated the splash.
+    await withDeadline(
+      Promise.all(
+        passages.map((passage) => getPassage({ passage, translation }).catch(() => {})),
+      ).then(() => undefined),
+      BACKGROUND_MS,
+      undefined,
+    )
   } catch {
     // best-effort warm-up
   }

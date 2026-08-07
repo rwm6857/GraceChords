@@ -25,7 +25,7 @@ export default function Placeholder({ title }: { title: string }) {
         </Text>
       </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+        <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
           {tx('comingSoon')}
         </Text>
       </View>

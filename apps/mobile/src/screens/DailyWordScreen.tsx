@@ -204,7 +204,7 @@ export default function DailyWordScreen({
   const fontSize = readerFontSize(settings.pt)
   const lineHeight = readerLineHeight(settings.pt, settings.lineSpacing)
   const fontFamily = settings.typeface === 'serif' ? 'Georgia' : undefined
-  const numStyle = { fontSize: Math.round(fontSize * 0.72), fontWeight: '700' as const, color: t.colors.accent }
+  const numStyle = { fontSize: Math.round(fontSize * 0.72), fontWeight: '700' as const, color: t.colors.textAccent }
   const readingBase = {
     fontSize,
     lineHeight,
@@ -299,7 +299,7 @@ export default function DailyWordScreen({
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>
               {tx('landingTitle')}
             </Text>
           </Pressable>
@@ -326,7 +326,7 @@ export default function DailyWordScreen({
             <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
               {translationLabel}
             </Text>
-            <SymbolIcon name="chevron.down" size={11} color={t.colors.muted} weight="semibold" />
+            <SymbolIcon name="chevron.down" size={11} color={t.colors.sec} weight="semibold" />
           </Pressable>
         </View>
 
@@ -336,7 +336,7 @@ export default function DailyWordScreen({
           accessibilityLabel={tx('chooseDate')}
           style={controlButton}
         >
-          <SymbolIcon name="calendar" size={15} color={t.colors.muted} />
+          <SymbolIcon name="calendar" size={15} color={t.colors.sec} />
           <Text style={{ fontSize: 14, fontWeight: '600', letterSpacing: -0.2, color: t.colors.ink }}>
             {formatDateLabel(date, i18n.language)}
           </Text>

@@ -104,7 +104,7 @@ function SongbookOptionsContent({
             <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>
               {tx('songbook.tocLabel')}
             </Text>
-            <Text style={{ fontSize: 11.5, color: t.colors.muted, marginTop: 2 }}>
+            <Text style={{ fontSize: 11.5, color: t.colors.sec, marginTop: 2 }}>
               {tx('songbook.tocHint')}
             </Text>
           </View>
@@ -158,7 +158,7 @@ function SongbookOptionsContent({
                 accessibilityLabel={tx('songbook.removeCover')}
                 hitSlop={8}
               >
-                <SymbolIcon name="trash" size={16} color={t.colors.muted} />
+                <SymbolIcon name="trash" size={16} color={t.colors.sec} />
               </Pressable>
             </View>
           ) : (
@@ -193,7 +193,7 @@ function SongbookOptionsContent({
                 <Text style={{ fontSize: 14.5, fontWeight: '600', color: t.colors.ink }}>
                   {tx('songbook.addCover')}
                 </Text>
-                <Text style={{ fontSize: 11.5, color: t.colors.muted }}>{tx('songbook.coverHint')}</Text>
+                <Text style={{ fontSize: 11.5, color: t.colors.sec }}>{tx('songbook.coverHint')}</Text>
               </View>
             </Pressable>
           )}

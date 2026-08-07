@@ -78,7 +78,7 @@ export default function AddVerseModal({
               value={ref}
               onChangeText={(v) => { setRef(v); if (error) setError(null) }}
               placeholder={tx('setlist:verse.placeholder')}
-              placeholderTextColor={t.colors.muted}
+              placeholderTextColor={t.colors.sec}
               autoFocus
               autoCapitalize="words"
               returnKeyType="done"

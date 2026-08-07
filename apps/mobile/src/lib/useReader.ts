@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getCachedPassage, getPassage, type BibleTranslation, type ChapterData, type Passage } from './bibleSource'
-import { errMessage } from './errors'
+import { failureDetailKey } from './errors'
 
 // Session-ephemeral reader typography preferences. Per the Daily Word spec these
 // "could also live in Profile → reader preferences," but they are not tied to
@@ -80,7 +80,13 @@ export function usePassageChapter(
         if (alive) setState({ chapter, loading: false, error: null })
       })
       .catch((err: unknown) => {
-        if (alive) setState({ chapter: null, loading: false, error: errMessage(err) })
+        // The reader renders its own localized copy and only reads this for
+        // truthiness, so the value was never shown — but it held raw error text,
+        // which made it a trap for anyone who later decided to render it, and
+        // nothing logged reader failures at all. An i18n key closes both.
+        if (alive) {
+          setState({ chapter: null, loading: false, error: failureDetailKey('usePassageChapter', err) })
+        }
       })
 
     return () => {

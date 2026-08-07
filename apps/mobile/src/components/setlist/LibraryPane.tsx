@@ -61,12 +61,12 @@ export default function LibraryPane({
             height: 44,
           }}
         >
-          <SymbolIcon name="magnifyingglass" size={18} color={t.colors.muted} />
+          <SymbolIcon name="magnifyingglass" size={18} color={t.colors.sec} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder={tx('libraryPane.searchPlaceholder')}
-            placeholderTextColor={t.colors.muted}
+            placeholderTextColor={t.colors.sec}
             returnKeyType="search"
             autoCorrect={false}
             accessibilityLabel={tx('libraryPane.searchLibrary')}
@@ -79,7 +79,7 @@ export default function LibraryPane({
               accessibilityLabel={tx('addSongs.clearSearch')}
               hitSlop={8}
             >
-              <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.muted} />
+              <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.sec} />
             </Pressable>
           ) : null}
         </View>
@@ -98,7 +98,7 @@ export default function LibraryPane({
               <Text
                 style={{
                   fontSize: t.typography.body.fontSize,
-                  color: t.colors.muted,
+                  color: t.colors.sec,
                   textAlign: 'center',
                 }}
               >

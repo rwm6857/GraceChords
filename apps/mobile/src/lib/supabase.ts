@@ -4,6 +4,7 @@ import { AppState } from 'react-native'
 import { createGcSupabase } from '@gracechords/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { silenceInvalidRefreshTokenLogs } from './authSession'
+import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -34,10 +35,37 @@ if (!supabaseConfigError) {
   silenceInvalidRefreshTokenLogs()
 }
 
+// Which requests this client bounds, and which it deliberately does not.
+//
+// The TOKEN REFRESH is left on the platform default on purpose. Build 12 races
+// the boot getSession() against GATE_MS and degrades to signed out, then depends
+// on that same in-flight refresh SETTLING later so the onAuthStateChange
+// subscription in app/_layout.tsx can adopt the corrected session — see
+// authSession.ts. A deadline on that request would compete with the race and
+// close the self-heal window, and nobody is waiting on it: the splash lifted at
+// 2.5 s. (Verified in @supabase/auth-js that an aborted fetch becomes
+// AuthRetryableFetchError, which _callRefreshToken explicitly does NOT treat as
+// grounds for _removeSession — so this exclusion is defence in depth, not the
+// thing standing between a live user and being signed out.)
+//
+// Everything else is bounded: sign-in and sign-up (grant_type=password /
+// id_token hit the same /auth/v1/token path), getUser, and every PostgREST
+// query and mutation. Those all have someone watching a spinner.
+function supabaseRequestBudget(requestUrl: string): number | null {
+  if (requestUrl.includes('grant_type=refresh_token')) return null
+  return FOREGROUND_MS
+}
+
 // Consume the SAME core factory the web app uses. We inject AsyncStorage as the
 // native session store; persistSession + autoRefreshToken default to true in
 // the factory. detectSessionInUrl is irrelevant on native (no URL redirect),
 // so turn it off — the factory defaults it to true for the web.
+//
+// `global.fetch` is the one seam that reaches every request the client makes:
+// supabase-js hands it to GoTrue, PostgREST, storage and functions alike, so a
+// single wrapper bounds ~40 query sites plus all of auth without touching any of
+// them. Per-call .abortSignal() would have to be threaded through every call
+// site and would still miss GoTrue entirely.
 //
 // When config is missing we skip client creation (createClient itself throws on
 // an undefined url) and export a null client. The app root short-circuits to the
@@ -50,6 +78,9 @@ export const supabase: SupabaseClient = supabaseConfigError
       storage: AsyncStorage,
       auth: {
         detectSessionInUrl: false,
+      },
+      global: {
+        fetch: withRequestBudget(fetch, supabaseRequestBudget),
       },
     })
 

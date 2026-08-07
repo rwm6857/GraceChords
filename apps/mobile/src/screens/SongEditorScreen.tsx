@@ -117,7 +117,7 @@ export default function SongEditorScreen() {
         }}
       >
         <Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8}>
-          <Text style={{ fontSize: 16, color: t.colors.accent }}>Cancel</Text>
+          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>Cancel</Text>
         </Pressable>
         <Text style={{ fontSize: 16, fontWeight: '700', color: t.colors.ink }}>
           {form.title || 'New Song'}
@@ -127,7 +127,7 @@ export default function SongEditorScreen() {
           accessibilityRole="button"
           hitSlop={8}
         >
-          <Text style={{ fontSize: 16, color: t.colors.accent }}>
+          <Text style={{ fontSize: 16, color: t.colors.textAccent }}>
             {mode === 'edit' ? 'Preview' : 'Edit'}
           </Text>
         </Pressable>
@@ -138,7 +138,7 @@ export default function SongEditorScreen() {
           {previewDoc ? (
             <ChordChart doc={previewDoc} steps={0} preferFlat={false} />
           ) : (
-            <Text style={{ color: t.colors.muted }}>Nothing to preview yet.</Text>
+            <Text style={{ color: t.colors.sec }}>Nothing to preview yet.</Text>
           )}
         </ScrollView>
       ) : (
@@ -255,7 +255,7 @@ export default function SongEditorScreen() {
                 </View>
               </ScrollView>
             ) : (
-              <Text style={{ fontSize: 12.5, color: t.colors.muted, marginBottom: 8 }}>
+              <Text style={{ fontSize: 12.5, color: t.colors.sec, marginBottom: 8 }}>
                 Set a key to enable quick chords.
               </Text>
             )}
@@ -267,7 +267,7 @@ export default function SongEditorScreen() {
               selection={selection}
               multiline
               placeholder={'{start_of_verse: Verse 1}\n[G]Amazing [D]grace\n{end_of_verse}'}
-              placeholderTextColor={t.colors.muted}
+              placeholderTextColor={t.colors.sec}
               autoCapitalize="none"
               autoCorrect={false}
               style={{
@@ -321,7 +321,7 @@ function PlainInput(props: React.ComponentProps<typeof TextInput>) {
   const t = useTheme()
   return (
     <TextInput
-      placeholderTextColor={t.colors.muted}
+      placeholderTextColor={t.colors.sec}
       {...props}
       style={{
         height: 48,

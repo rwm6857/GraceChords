@@ -113,7 +113,7 @@ export default function ListRow({
               style={{
                 marginTop: 2,
                 fontSize: t.typography.rowMeta.fontSize,
-                color: t.colors.muted,
+                color: t.colors.sec,
               }}
             >
               {trailingBottom}
@@ -137,7 +137,7 @@ export default function ListRow({
 
       {trailing}
 
-      {chevron ? <SymbolIcon name="chevron.right" size={14} color={t.colors.muted} /> : null}
+      {chevron ? <SymbolIcon name="chevron.right" size={14} color={t.colors.sec} /> : null}
     </Pressable>
   )
 }

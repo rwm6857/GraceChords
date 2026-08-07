@@ -206,7 +206,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.center}>
           <ActivityIndicator color={t.colors.accent} />
-          <Text style={{ marginTop: t.spacing.md, color: t.colors.muted }}>
+          <Text style={{ marginTop: t.spacing.md, color: t.colors.sec }}>
             {tx('setlist:sessionFollower.joining')}
           </Text>
         </View>
@@ -221,7 +221,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
           <Text style={{ fontSize: 20, fontWeight: '700', color: t.colors.ink, marginBottom: 8 }}>
             {tx('setlist:sessionFollower.notFoundTitle')}
           </Text>
-          <Text style={{ color: t.colors.muted, textAlign: 'center', marginBottom: 18 }}>
+          <Text style={{ color: t.colors.sec, textAlign: 'center', marginBottom: 18 }}>
             {tx('setlist:sessionFollower.notFoundBody')}
           </Text>
           <Pressable onPress={goHome} style={pillStyle(t)}>
@@ -241,7 +241,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
           <Text style={{ fontSize: 22, fontWeight: '700', color: t.colors.ink, marginBottom: 10, textAlign: 'center' }}>
             {tx('setlist:sessionFollower.endedTitle')}
           </Text>
-          <Text style={{ color: t.colors.muted, marginBottom: 18 }}>
+          <Text style={{ color: t.colors.sec, marginBottom: 18 }}>
             {tx('setlist:sessionFollower.endedBody')}
           </Text>
           <Pressable onPress={goHome} style={pillStyle(t)}>
@@ -271,6 +271,26 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         <Pressable onPress={goHome} hitSlop={8} accessibilityRole="button" accessibilityLabel={tx('setlist:sessionFollower.home')}>
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
         </Pressable>
+        {/* The one deliberately hardcoded colour in the app, kept as an explained
+            exception rather than forced into the palette:
+
+            • It is theme-INVARIANT on purpose — a "live" indicator that reads the
+              same in light and dark. Every token in ThemeColors is a light/dark
+              pair, so a token whose two values were identical would assert a theme
+              relationship that does not exist here.
+            • It is not `danger`. That token means destructive (delete, error) and
+              is used as such across a dozen surfaces; "broadcasting" is not
+              "destructive", and the palette has no rose family to borrow from.
+            • One call site. Adding a token would mean editing packages/tokens —
+              shared with apps/web — and regenerating the committed Swift mirror
+              for apps/studio (npm run tokens:swift, guarded by :check in CI), for
+              an 8pt dot neither app would use.
+
+            Decorative: the localized "LIVE" text beside it carries the meaning, so
+            VoiceOver correctly skips this bare View and WCAG 1.4.11 does not apply.
+            Note apps/web draws the same dot at 9px (SessionViewerPage.jsx) — the
+            hand-copied literal has already drifted, which is the argument for a
+            real token if this ever gains a second use here. */}
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#e0245e' }} />
         <Text style={{ fontWeight: '800', letterSpacing: 0.4, color: t.colors.ink }}>
           {tx('setlist:sessionFollower.live')}
@@ -303,14 +323,14 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
             <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
               {displayedItem.title || ''}
             </Text>
-            <Text style={{ color: t.colors.muted }}>{tx('setlist:sessionFollower.unavailable')}</Text>
+            <Text style={{ color: t.colors.sec }}>{tx('setlist:sessionFollower.unavailable')}</Text>
           </View>
         ) : doc ? (
           <ChordChart doc={doc} steps={steps} preferFlat={preferFlat} showChords={showChords} />
         ) : (
           <View style={styles.center}>
             <ActivityIndicator color={t.colors.accent} />
-            <Text style={{ marginTop: t.spacing.md, color: t.colors.muted }}>
+            <Text style={{ marginTop: t.spacing.md, color: t.colors.sec }}>
               {tx('setlist:sessionFollower.loadingSong')}
             </Text>
           </View>

@@ -1,5 +1,15 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "couldntLoadSong": "찬양곡을 불러올 수 없음",
-  "songNotFound": "이 찬양곡을 찾을 수 없습니다."
+  "songNotFound": "이 찬양곡을 찾을 수 없습니다.",
+  "tryAgain": "문제가 발생했습니다. 다시 시도해 주세요.",
+  "saveFailed": "최근 변경 사항이 저장되지 않았습니다. 연결을 확인한 후 다시 시도하세요.",
+  "load": {
+    "songs": "찬양곡을 불러올 수 없습니다",
+    "setlists": "셋리스트를 불러올 수 없습니다",
+    "starred": "즐겨찾기 찬양곡을 불러올 수 없습니다",
+    "lastSet": "최근 셋리스트를 불러올 수 없습니다",
+    "reflection": "묵상을 불러올 수 없습니다",
+    "hint": "연결을 확인한 후 다시 시도하세요."
+  }
 }

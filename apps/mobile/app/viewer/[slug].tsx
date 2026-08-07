@@ -388,7 +388,10 @@ export default function ViewerScreen() {
             {tx('errors:couldntLoadSong')}
           </Text>
           <Text style={{ marginTop: t.spacing.sm, fontSize: 13.5, color: t.colors.muted, textAlign: 'center' }}>
-            {error || tx('errors:songNotFound')}
+            {/* `error` is an i18n key from useSong, never raw error text. A
+                missing row is not an error (useSong resolves it to song === null),
+                so the no-error branch is the not-found case. */}
+            {error ? tx(error) : tx('errors:songNotFound')}
           </Text>
         </View>
       ) : doc ? (

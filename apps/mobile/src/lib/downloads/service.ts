@@ -6,10 +6,13 @@ import { downloadBibleTranslation } from './downloader'
 import { getDownloadsSnapshot, removeDownload, upsertDownload } from './manifest'
 import { translationDirRel } from './paths'
 import type { AbortToken, BibleDownload, DownloadProgress } from './types'
+import { FOREGROUND_MS, withRequestBudget } from '../requestBudget'
 
 // App-facing download controller. Wires the pure downloader/manifest to the real
 // device: expo-file-system blobs, the global fetch, and expo-network for the
 // "Wi-Fi only" preference. Kept thin — all logic lives in the pure modules.
+
+const chapterFetch = withRequestBudget(fetch, () => FOREGROUND_MS)
 
 export class WifiRequiredError extends Error {
   constructor() {
@@ -45,7 +48,12 @@ export async function startBibleDownload(
   const { version } = await getTranslations()
   const record = await downloadBibleTranslation(translation, version, r2Base(), {
     blobStore: expoBlobStore,
-    fetchImpl: (url) => fetch(url),
+    // Bounded per chapter, so a single stalled request cannot freeze a
+    // 1189-chapter download behind a stopped progress bar. downloadBibleTranslation
+    // already retries transient failures with backoff, so a stall now becomes a
+    // retry rather than a hang; a user cancel still arrives via `signal`
+    // (AbortToken) and is reported as a cancellation, not a timeout.
+    fetchImpl: (url) => chapterFetch(url),
     onProgress: opts.onProgress,
     signal: opts.signal,
   })

@@ -40,7 +40,7 @@ import { exportSetlist } from '../lib/exportSong'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage } from '../lib/errors'
 
 const TOAST_MS = 1900
 
@@ -51,7 +51,7 @@ const TOAST_MS = 1900
 // setlist key via the existing initialKey param.
 export default function SetlistBuilderScreen({ setlistId }: { setlistId: string }) {
   const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export'])
+  const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export', 'errors'])
   const router = useRouter()
   const isTablet = useIsTabletWidth()
   const {
@@ -168,7 +168,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
             await deleteSet()
             router.back()
           } catch (err: unknown) {
-            Alert.alert(tx('alerts.couldNotDelete'), errMessage(err))
+            Alert.alert(tx('alerts.couldNotDelete'), actionFailureMessage('SetlistBuilder.delete', err, tx))
           }
         },
       },
@@ -181,7 +181,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     const id = uuidv4()
     router.replace(`/setlist/${id}`)
     createSetlist(supabase, { id }).catch((err: unknown) => {
-      Alert.alert(tx('alerts.couldNotCreate'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('SetlistBuilder.create', err, tx))
     })
   }
 
@@ -194,7 +194,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       await Clipboard.setStringAsync(buildSetlistShareUrl(items))
       showToast(tx('toasts.setLinkCopied'))
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotCopyLink'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotCopyLink'), actionFailureMessage('SetlistBuilder.copyLink', err, tx))
     }
   }
 
@@ -211,7 +211,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       )
       await Sharing.shareAsync(uri)
     } catch (err: unknown) {
-      Alert.alert(tx('export:alerts.exportFailedTitle'), errMessage(err))
+      Alert.alert(tx('export:alerts.exportFailedTitle'), actionFailureMessage('SetlistBuilder.export', err, tx))
     }
   }
 
@@ -230,7 +230,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
       }
       showToast(tx('toasts.sentToTelegram'))
     } catch (err: unknown) {
-      Alert.alert(tx('alerts.couldNotSendSet'), errMessage(err))
+      Alert.alert(tx('alerts.couldNotSendSet'), actionFailureMessage('SetlistBuilder.sendTelegram', err, tx))
     }
   }
 
@@ -265,7 +265,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     return (
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: t.spacing.xl }}>
-          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+          <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
             {tx('builder.notFound')}
           </Text>
         </View>
@@ -330,7 +330,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     fontWeight: t.typography.overline.fontWeight,
                     letterSpacing: t.typography.overline.letterSpacing,
                     textTransform: 'uppercase',
-                    color: t.colors.muted,
+                    color: t.colors.sec,
                   }}
                 >
                   {tx('builder.setName')}
@@ -367,7 +367,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                     accessibilityLabel={tx('builder.clearSetName')}
                     hitSlop={8}
                   >
-                    <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.muted} />
+                    <SymbolIcon name="xmark.circle.fill" size={18} color={t.colors.sec} />
                   </Pressable>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -386,13 +386,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                   >
                     {name}
                   </Text>
-                  <SymbolIcon name="pencil" size={15} color={t.colors.muted} />
+                  <SymbolIcon name="pencil" size={15} color={t.colors.sec} />
                 </View>
                 <Text style={{ marginTop: 6, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                   {metaLine}
                 </Text>
                 {edited ? (
-                  <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
+                  <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                     {tx('builder.lastEdited', { time: edited })}
                   </Text>
                 ) : null}
@@ -409,7 +409,9 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
                 color: t.colors.danger,
               }}
             >
-              {error}
+              {/* An i18n key from useSetlistBuilder — a save failure and a load
+                  failure say different things — never raw error text. */}
+              {tx(error)}
             </Text>
           ) : null}
           {items.length === 0 ? (
@@ -417,7 +419,7 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
               <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.ink }}>
                 {tx('builder.noSongs')}
               </Text>
-              <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+              <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
                 {isTablet ? tx('builder.addHintTablet') : tx('builder.addHintPhone')}
               </Text>
             </View>

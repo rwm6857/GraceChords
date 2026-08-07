@@ -19,12 +19,8 @@ import DailyWordCard from '../components/home/DailyWordCard'
 import RecentSongsCard from '../components/home/RecentSongsCard'
 import { cardStyle } from '../components/home/cardStyle'
 import { useTheme } from '../theme/ThemeProvider'
-import {
-  getDisplayName,
-  pickSubGreetingIndex,
-  timeGreetingKey,
-  useCurrentUser,
-} from '../lib/greetings'
+import { getDisplayName, pickSubGreetingIndex, timeGreetingKey } from '../lib/greetings'
+import { useCurrentUser } from '../lib/currentUser'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { getRecentlyOpened } from '../lib/recents'
@@ -46,13 +42,18 @@ function songMeta(song: Song, tx: Translator): string {
 
 export default function HomeScreen() {
   const t = useTheme()
-  const { t: tx } = useTranslation(['home', 'common'])
+  const { t: tx } = useTranslation(['home', 'common', 'errors'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
   const user = useCurrentUser()
   const { source: spriteSource } = useProfileSprite()
-  const { songs: starred, loading: starredLoading, error: starredError } = useStarredSongs()
+  const {
+    songs: starred,
+    loading: starredLoading,
+    error: starredError,
+    reload: reloadStarred,
+  } = useStarredSongs()
 
   const greeting = tx('greeting.hello', {
     greeting: tx(timeGreetingKey()),
@@ -74,7 +75,37 @@ export default function HomeScreen() {
     }, []),
   )
   const continueSong = getRecentlyOpened()[0] ?? null
-  const { lastSet } = useLastSet()
+  const { lastSet, error: lastSetError, retry: retryLastSet } = useLastSet()
+
+  // Inline failure line for a dashboard card: the localized reason plus a text
+  // Retry. Deliberately NOT the full-screen EmptyState — these live inside a
+  // card, and the happy-path card layout must stay untouched. `messageKey` is an
+  // i18n key supplied by the hook (see errors.ts); raw error text is never shown.
+  function cardError(messageKey: string, onRetry: () => void) {
+    return (
+      <View style={{ marginTop: t.spacing.md, alignItems: 'flex-start' }}>
+        <Text style={{ fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
+          {tx(messageKey)}
+        </Text>
+        <Pressable
+          onPress={onRetry}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={({ pressed }) => ({ paddingVertical: 6, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text
+            style={{
+              fontSize: t.typography.rowSubtitle.fontSize,
+              fontWeight: '600',
+              color: t.colors.textAccent,
+            }}
+          >
+            {tx('common:retry')}
+          </Text>
+        </Pressable>
+      </View>
+    )
+  }
 
   function onAvatar() {
     router.push('/settings')
@@ -170,6 +201,27 @@ export default function HomeScreen() {
         </Pressable>
       </View>
     </View>
+  ) : lastSetError ? (
+    // Before 1.0.1 this branch did not exist: HomeScreen discarded useLastSet's
+    // `error`, so a failed read rendered NOTHING — visually identical to "no
+    // setlists yet" and to still-loading, with no retry and no pull-to-refresh on
+    // Home. A request deadline would otherwise have turned a hang into exactly
+    // that blank space. Loading and genuinely-empty still render nothing, as
+    // before.
+    <View style={cardStyle(t)}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 0.7,
+          textTransform: 'uppercase',
+          color: t.colors.textAccent,
+        }}
+      >
+        {tx('lastSet.label')}
+      </Text>
+      {cardError(lastSetError, retryLastSet)}
+    </View>
   ) : null
 
   const starredCard = (
@@ -192,11 +244,9 @@ export default function HomeScreen() {
       {starredLoading ? (
         <ActivityIndicator color={t.colors.accent} style={{ marginTop: t.spacing.md }} />
       ) : starredError ? (
-        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
-          {starredError}
-        </Text>
+        cardError(starredError, reloadStarred)
       ) : starred.length === 0 ? (
-        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.muted }}>
+        <Text style={{ marginTop: t.spacing.md, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>
           {tx('starredCard.empty')}
         </Text>
       ) : (
@@ -252,7 +302,7 @@ export default function HomeScreen() {
                     </Text>
                   ) : null}
                   {s.time_signature ? (
-                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.muted }}>
+                    <Text style={{ marginTop: 2, fontSize: t.typography.rowMeta.fontSize, color: t.colors.sec }}>
                       {s.time_signature}
                     </Text>
                   ) : null}
@@ -395,7 +445,7 @@ export default function HomeScreen() {
                       </Text>
                     ) : null}
                     {songMeta(continueSong, tx) ? (
-                      <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 3 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 3 }}>
                         {songMeta(continueSong, tx)}
                       </Text>
                     ) : null}

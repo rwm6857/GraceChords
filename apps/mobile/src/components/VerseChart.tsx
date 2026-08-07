@@ -54,7 +54,7 @@ export default function VerseChart({ verseRef }: { verseRef: string }) {
 
   if (failed) {
     return (
-      <Text style={{ color: t.colors.muted, textAlign: 'center', marginTop: t.spacing.xl }}>
+      <Text style={{ color: t.colors.sec, textAlign: 'center', marginTop: t.spacing.xl }}>
         —
       </Text>
     )
@@ -71,7 +71,7 @@ export default function VerseChart({ verseRef }: { verseRef: string }) {
     <View style={{ gap: 10, maxWidth: 760, alignSelf: 'center', width: '100%' }}>
       {lines.map((ln, i) => (
         <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-          <Text style={{ minWidth: ln.showChapter ? 46 : 28, textAlign: 'right', color: t.colors.muted, fontWeight: '600' }}>
+          <Text style={{ minWidth: ln.showChapter ? 46 : 28, textAlign: 'right', color: t.colors.sec, fontWeight: '600' }}>
             {ln.showChapter ? `${ln.chapter}:${ln.number}` : `${ln.number}`}
           </Text>
           <Text style={{ flex: 1, color: t.colors.ink, fontSize: 18, lineHeight: 26 }}>{ln.text}</Text>

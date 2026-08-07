@@ -183,7 +183,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
                 fontSize: 52,
                 fontWeight: '700',
                 letterSpacing: -1,
-                color: activeNote ? t.colors.accent : t.colors.muted,
+                color: activeNote ? t.colors.accent : t.colors.sec,
                 fontVariant: ['tabular-nums'],
               }}
             >
@@ -240,7 +240,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
                 fontSize: t.typography.overline.fontSize,
                 fontWeight: t.typography.overline.fontWeight,
                 letterSpacing: t.typography.overline.letterSpacing,
-                color: t.colors.muted,
+                color: t.colors.sec,
               }}
             >
               {tx('pitchPipe.octave')}
@@ -314,7 +314,7 @@ export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('pitchPipe.title')}</Text>

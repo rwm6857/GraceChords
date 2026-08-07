@@ -83,7 +83,7 @@ function FilterSortContent({
             fontWeight: t.typography.overline.fontWeight,
             letterSpacing: t.typography.overline.letterSpacing,
             textTransform: 'uppercase',
-            color: t.colors.muted,
+            color: t.colors.sec,
             paddingBottom: t.spacing.sm,
           }}
         >
@@ -132,7 +132,7 @@ function FilterSortContent({
                 fontWeight: t.typography.overline.fontWeight,
                 letterSpacing: t.typography.overline.letterSpacing,
                 textTransform: 'uppercase',
-                color: t.colors.muted,
+                color: t.colors.sec,
                 paddingBottom: t.spacing.md,
                 marginTop: t.spacing.xl,
               }}

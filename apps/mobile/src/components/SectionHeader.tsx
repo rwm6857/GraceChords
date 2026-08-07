@@ -21,7 +21,7 @@ export default function SectionHeader({ label }: { label: string }) {
           fontSize: t.typography.sectionHeader.fontSize,
           fontWeight: t.typography.sectionHeader.fontWeight,
           letterSpacing: t.typography.sectionHeader.letterSpacing,
-          color: t.colors.muted,
+          color: t.colors.sec,
         }}
       >
         {label}

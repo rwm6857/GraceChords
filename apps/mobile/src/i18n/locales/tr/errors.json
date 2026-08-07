@@ -1,5 +1,15 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "couldntLoadSong": "İlahi yüklenemedi",
-  "songNotFound": "Bu ilahi bulunamadı."
+  "songNotFound": "Bu ilahi bulunamadı.",
+  "tryAgain": "Bir şeyler ters gitti. Tekrar deneyin.",
+  "saveFailed": "Son değişiklikleriniz kaydedilmedi. Bağlantınızı kontrol edip tekrar deneyin.",
+  "load": {
+    "songs": "İlahiler yüklenemiyor",
+    "setlists": "Set listeleri yüklenemiyor",
+    "starred": "Yıldızlı ilahiler yüklenemiyor",
+    "lastSet": "Son set yüklenemiyor",
+    "reflection": "Düşünceniz yüklenemiyor",
+    "hint": "Bağlantınızı kontrol edip tekrar deneyin."
+  }
 }

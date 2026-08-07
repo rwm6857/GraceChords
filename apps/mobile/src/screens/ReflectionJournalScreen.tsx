@@ -26,7 +26,7 @@ function dateFromKey(key: string): Date {
 export default function ReflectionJournalScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { t: tx, i18n } = useTranslation('reader')
+  const { t: tx, i18n } = useTranslation(['reader', 'common', 'errors'])
   const insets = useSafeAreaInsets()
   const { reflections, loading, error, refresh, remove } = useReflectionList()
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -77,7 +77,7 @@ export default function ReflectionJournalScreen() {
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2, flex: 1 }}
         >
           <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>
+          <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>
             {tx('landingTitle')}
           </Text>
         </Pressable>
@@ -92,11 +92,15 @@ export default function ReflectionJournalScreen() {
           <ActivityIndicator color={t.colors.accent} />
         </View>
       ) : error ? (
+        // `error` is an i18n key from the hook. This branch used to borrow the
+        // READER's copy — "Can't load today's reading", with a subtitle about
+        // downloading a Bible translation for offline use — on a screen that
+        // lists reflections. Neither sentence was true here.
         <EmptyState
           icon="wifi.slash"
-          title={tx('error.title')}
-          subtitle={tx('error.subtitle')}
-          actionLabel={tx('error.retry')}
+          title={tx(error)}
+          subtitle={tx('errors:load.hint')}
+          actionLabel={tx('common:retry')}
           onAction={() => void refresh()}
         />
       ) : reflections.length === 0 ? (
@@ -151,13 +155,13 @@ export default function ReflectionJournalScreen() {
                           paddingVertical: 2,
                         }}
                       >
-                        <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.muted }}>
+                        <Text style={{ fontSize: 10.5, fontWeight: '700', color: t.colors.sec }}>
                           {tx('journal.privateLabel')}
                         </Text>
                       </View>
                     </View>
                     {passages ? (
-                      <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 2 }} numberOfLines={1}>
+                      <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 2 }} numberOfLines={1}>
                         {passages}
                       </Text>
                     ) : null}
@@ -170,7 +174,7 @@ export default function ReflectionJournalScreen() {
                   <SymbolIcon
                     name={isOpen ? 'chevron.up' : 'chevron.down'}
                     size={13}
-                    color={t.colors.muted}
+                    color={t.colors.sec}
                   />
                 </Pressable>
 
@@ -208,7 +212,7 @@ export default function ReflectionJournalScreen() {
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
                       >
                         <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.textAccent }}>
                           {tx('reflection.edit')}
                         </Text>
                       </Pressable>

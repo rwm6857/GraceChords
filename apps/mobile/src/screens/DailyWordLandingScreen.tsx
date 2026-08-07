@@ -37,7 +37,7 @@ function ordinal(n: number): string {
 export default function DailyWordLandingScreen() {
   const t = useTheme()
   const router = useRouter()
-  const { t: tx, i18n } = useTranslation(['reader', 'home'])
+  const { t: tx, i18n } = useTranslation(['reader', 'home', 'common', 'errors'])
   const insets = useSafeAreaInsets()
   const { source: spriteSource } = useProfileSprite()
 
@@ -59,7 +59,7 @@ export default function DailyWordLandingScreen() {
   const streak = useReadingStreak()
   const streakCount = currentStreak(streak, today)
 
-  const { reflection, loading, refresh, remove } = useTodayReflection()
+  const { reflection, loading, error, refresh, remove } = useTodayReflection()
 
   // Re-read the reflection when the landing regains focus so a just-composed or
   // just-deleted entry (on the pushed compose/journal screens) shows correctly.
@@ -159,7 +159,7 @@ export default function DailyWordLandingScreen() {
             fontWeight: '700',
             letterSpacing: 0.9,
             textTransform: 'uppercase',
-            color: t.colors.muted,
+            color: t.colors.sec,
             marginTop: t.spacing.xl,
             marginBottom: t.spacing.md,
           }}
@@ -202,7 +202,7 @@ export default function DailyWordLandingScreen() {
                 >
                   {formatPassageLabel(p)}
                 </Text>
-                <SymbolIcon name="chevron.right" size={13} color={t.colors.muted} />
+                <SymbolIcon name="chevron.right" size={13} color={t.colors.sec} />
               </Pressable>
             ))}
           </Card>
@@ -213,7 +213,7 @@ export default function DailyWordLandingScreen() {
                 paddingVertical: 16,
                 paddingHorizontal: t.spacing.lg,
                 fontSize: t.typography.rowSubtitle.fontSize,
-                color: t.colors.muted,
+                color: t.colors.sec,
               }}
             >
               {tx('empty.subtitle')}
@@ -232,7 +232,7 @@ export default function DailyWordLandingScreen() {
             fontWeight: '700',
             letterSpacing: 0.9,
             textTransform: 'uppercase',
-            color: t.colors.muted,
+            color: t.colors.sec,
             marginTop: t.spacing.xl,
             marginBottom: t.spacing.md,
           }}
@@ -244,6 +244,22 @@ export default function DailyWordLandingScreen() {
           <View style={{ paddingVertical: t.spacing.xl, alignItems: 'center' }}>
             <ActivityIndicator color={t.colors.accent} />
           </View>
+        ) : error ? (
+          // Before 1.0.1 there was no error branch here: the hook returned
+          // `error` and the screen never read it, so a failed read fell through
+          // to the compose CTA below — telling the user they hadn't written
+          // today when in fact we could not tell. Tapping it then attempted a
+          // second same-day write, which the DB rejects (DuplicateReflectionError).
+          // `error` is an i18n key from the hook, never raw error text.
+          <Card style={{ alignItems: 'flex-start', gap: t.spacing.sm }}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>
+              {tx(error)}
+            </Text>
+            <Text style={{ fontSize: 13, lineHeight: 19, color: t.colors.sec }}>
+              {tx('errors:load.hint')}
+            </Text>
+            <Button title={tx('common:retry')} onPress={() => void refresh()} fullWidth={false} />
+          </Card>
         ) : reflection ? (
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <Text
@@ -288,7 +304,7 @@ export default function DailyWordLandingScreen() {
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
               >
                 <SymbolIcon name="square.and.pencil" size={14} color={t.colors.accent} />
-                <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.textAccent }}>
                   {tx('reflection.edit')}
                 </Text>
               </Pressable>
@@ -340,11 +356,11 @@ export default function DailyWordLandingScreen() {
               <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>
                 {tx('reflection.composeCta')}
               </Text>
-              <Text style={{ fontSize: 12.5, color: t.colors.muted, marginTop: 1 }}>
+              <Text style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 1 }}>
                 {tx('reflection.composeHint')}
               </Text>
             </View>
-            <SymbolIcon name="chevron.right" size={13} color={t.colors.muted} />
+            <SymbolIcon name="chevron.right" size={13} color={t.colors.sec} />
           </Pressable>
         )}
 
@@ -361,7 +377,7 @@ export default function DailyWordLandingScreen() {
             paddingVertical: t.spacing.xs,
           }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.accent }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: t.colors.textAccent }}>
             {tx('reflection.viewAll')}
           </Text>
           <SymbolIcon name="chevron.right" size={12} color={t.colors.accent} weight="semibold" />

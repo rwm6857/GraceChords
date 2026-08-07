@@ -79,7 +79,7 @@ export default function CapoCalculatorScreen({ embedded }: { embedded?: boolean 
               fontSize: 44,
               fontWeight: '700',
               letterSpacing: -0.5,
-              color: fret === 0 ? t.colors.muted : t.colors.accent,
+              color: fret === 0 ? t.colors.sec : t.colors.accent,
             }}
           >
             {fret === 0 ? tx('capo.resultNone') : tx('capo.result', { fret })}
@@ -88,7 +88,7 @@ export default function CapoCalculatorScreen({ embedded }: { embedded?: boolean 
             style={{
               marginTop: t.spacing.xs,
               fontSize: t.typography.body.fontSize,
-              color: t.colors.muted,
+              color: t.colors.sec,
               textAlign: 'center',
             }}
           >
@@ -139,7 +139,7 @@ export default function CapoCalculatorScreen({ embedded }: { embedded?: boolean 
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
           >
             <SymbolIcon name="chevron.left" size={22} color={t.colors.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.accent }}>{tx('nav:utilities')}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '500', color: t.colors.textAccent }}>{tx('nav:utilities')}</Text>
           </Pressable>
         )}
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>{tx('capo.title')}</Text>

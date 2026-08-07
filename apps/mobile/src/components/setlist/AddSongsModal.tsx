@@ -82,19 +82,19 @@ export default function AddSongsModal({
               height: 44,
             }}
           >
-            <SymbolIcon name="magnifyingglass" size={18} color={t.colors.muted} />
+            <SymbolIcon name="magnifyingglass" size={18} color={t.colors.sec} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder={tx('addSongs.searchPlaceholder')}
-              placeholderTextColor={t.colors.muted}
+              placeholderTextColor={t.colors.sec}
               returnKeyType="search"
               autoCorrect={false}
               style={{ flex: 1, fontSize: 16, color: t.colors.ink, padding: 0 }}
             />
             {query ? (
               <Pressable onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel={tx('addSongs.clearSearch')} hitSlop={8}>
-                <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.muted} />
+                <SymbolIcon name="xmark.circle.fill" size={17} color={t.colors.sec} />
               </Pressable>
             ) : null}
           </View>
@@ -108,7 +108,7 @@ export default function AddSongsModal({
           keyboardDismissMode="interactive"
           ListEmptyComponent={
             <View style={{ alignItems: 'center', padding: t.spacing.xl }}>
-              <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.muted }}>
+              <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
                 {trimmed ? tx('addSongs.noMatches', { query: query.trim() }) : tx('addSongs.emptyLibrary')}
               </Text>
             </View>

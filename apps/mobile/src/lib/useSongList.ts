@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchSongList, fetchPersonalSongs } from '@gracechords/core'
 import { supabase } from './supabase'
-import { errMessage } from './errors'
+import { reportFailure } from './errors'
+
+// i18n key for the user-facing failure. The hook owns it because the hook knows
+// which surface it feeds; the screen renders it through its own `t`. Never the
+// raw error — see errors.ts.
+const LOAD_ERROR_KEY = 'errors:load.songs'
 
 // Shape of a song row as the Library needs it. The base fetchSongList selects
 // only id/slug/title/artist/default_key, so we widen the column list to also
@@ -95,7 +100,7 @@ export function useSongList() {
         setError(null)
       })
       .catch((err: unknown) => {
-        if (alive) setError(errMessage(err))
+        if (reportFailure('useSongList', err) && alive) setError(LOAD_ERROR_KEY)
       })
       .finally(() => {
         if (alive) setLoading(false)

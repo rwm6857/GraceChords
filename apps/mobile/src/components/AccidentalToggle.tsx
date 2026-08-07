@@ -32,12 +32,20 @@ export default function AccidentalToggle({
 
   const cell = (v: Accidental, glyph: string, label: string) => {
     const selected = value === v
+    const first = v === 'sharp'
     return (
       <Pressable
         onPress={() => onChange(v)}
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ selected }}
+        // 44pt touch target without changing the rendered 33 × 30 cell. Per-edge,
+        // not a scalar, for the same reason as SegmentedPill: the two cells are
+        // flush siblings with a 0pt gap, so symmetric slop would overlap the
+        // neighbour's visible bounds and make a near-boundary tap ambiguous.
+        // Interior edge gets zero; the outer edges carry the 12pt (33 + 12 = 45),
+        // and there is no interactive sibling outward — just the row's label.
+        hitSlop={{ top: 7, bottom: 7, left: first ? 12 : 0, right: first ? 0 : 12 }}
         style={{
           flexDirection: 'row',
           alignItems: 'center',

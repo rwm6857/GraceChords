@@ -58,7 +58,7 @@ function OverlineLabel({ children, first }: { children: string; first?: boolean 
         fontWeight: t.typography.overline.fontWeight,
         letterSpacing: t.typography.overline.letterSpacing,
         textTransform: 'uppercase',
-        color: t.colors.muted,
+        color: t.colors.sec,
         marginTop: first ? 0 : t.spacing.xl,
         marginBottom: t.spacing.sm,
       }}
@@ -122,7 +122,7 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
             <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.ink }}>−</Text>
           </Pressable>
           <Text
-            style={{ minWidth: 44, textAlign: 'center', fontSize: 14, fontWeight: '600', color: t.colors.muted }}
+            style={{ minWidth: 44, textAlign: 'center', fontSize: 14, fontWeight: '600', color: t.colors.sec }}
           >
             {tx('settings.pt', { pt: settings.pt })}
           </Text>

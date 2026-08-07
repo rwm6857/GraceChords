@@ -3,6 +3,7 @@
 // injected dep, like authFlows.ts. Type-only supabase imports erase at compile
 // time.
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import { GATE_MS } from './requestBudget'
 
 type BootAuth = Pick<SupabaseClient['auth'], 'getSession' | 'signOut'>
 
@@ -65,7 +66,10 @@ export function silenceInvalidRefreshTokenLogs(
 // out iOS's URLSession timeout, up to 60 s, which presents as "the app does not
 // launch". 2.5 s is well above a healthy refresh (~0.2–0.6 s) and well below
 // anything a user reads as a failure to launch.
-export const INITIAL_SESSION_TIMEOUT_MS = 2500
+//
+// The value now comes from requestBudget.ts (as GATE_MS) so the app's whole
+// timeout budget reads in one place. Same number, same semantics as build 12.
+export const INITIAL_SESSION_TIMEOUT_MS = GATE_MS
 
 const TIMED_OUT = Symbol('gc.initialSessionTimeout')
 

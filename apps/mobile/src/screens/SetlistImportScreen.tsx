@@ -19,7 +19,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useSongList } from '../lib/useSongList'
 import { supabase } from '../lib/supabase'
 import { uuidv4 } from '../lib/uuid'
-import { errMessage } from '../lib/errors'
+import { actionFailureMessage } from '../lib/errors'
 import {
   buildMissingWarning,
   buildSavePayload,
@@ -92,7 +92,7 @@ export default function SetlistImportScreen({
       router.replace(`/setlist/${id}`)
     } catch (err: unknown) {
       setSaving(false)
-      Alert.alert(tx('import.couldNotImportAlert'), errMessage(err))
+      Alert.alert(tx('import.couldNotImportAlert'), actionFailureMessage('SetlistImport.import', err, tx))
     }
   }
 
