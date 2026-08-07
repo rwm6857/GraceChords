@@ -3,7 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // Subpath imports into core, e.g. '@gracechords/core/devotional/dayKey'.
+      // Metro and Vitest honour core's exports map ("./*": "./src/*"); tsc under
+      // expo's moduleResolution does not, so it needs this mapping. Only the
+      // subpath pattern is mapped — the bare barrel '@gracechords/core' does not
+      // match '/*' and keeps resolving through node_modules as before.
+      "@gracechords/core/*": ["../../packages/core/src/*"]
     }
   },
   "include": [
