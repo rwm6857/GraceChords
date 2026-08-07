@@ -79,6 +79,8 @@ import {
   Wrench,
   X,
   FileMusic,
+  Apple,
+  QrCode,
 } from 'lucide-react'
 
 const DEFAULT_SIZE = 18
@@ -176,3 +178,5 @@ export const WifiOffIcon = wrap(WifiOff) // SF: wifi.slash
 export const UtilitiesIcon = wrap(Wrench) // SF: wrench.and.screwdriver, .fill
 export const CloseIcon = wrap(X) // SF: xmark
 export const SongsIcon = wrap(FileMusic) // SF: music.pages, music.pages.fill
+export const AppleIcon = wrap(Apple) // web-only (App Store / iOS platform mark)
+export const QrCodeIcon = wrap(QrCode) // web-only

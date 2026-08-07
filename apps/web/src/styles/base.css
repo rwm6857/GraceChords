@@ -1356,3 +1356,160 @@ button.tool-card{
   border:0;
   display:block;
 }
+
+/* ===== Announcement strip ===== */
+/* Sits above the sticky navbar in App.jsx's Layout and is deliberately not
+   sticky itself, so it scrolls away and .gc-navbar keeps its top:0 anchor. */
+/* A primary-tinted surface rather than a solid --gc-primary fill: white on
+   #1F84C9 is 4.04:1 and on #4EA6E6 only 2.65:1, both short of AA for 14px
+   body text. The tint keeps --gc-text's contrast and reads as Signal Blue in
+   both themes. color-mix matches the --gc-selection-bg pattern in tokens.css. */
+.gc-announce{
+  background: color-mix(in srgb, var(--gc-primary) 12%, var(--gc-surface-1));
+  color: var(--gc-text);
+  border-bottom: 1px solid color-mix(in srgb, var(--gc-primary) 30%, var(--gc-separator));
+}
+.gc-announce__inner{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--gc-font-sub);
+  line-height: var(--gc-lh-sub);
+}
+.gc-announce__content{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+.gc-announce__message{
+  margin: 0;
+}
+.gc-announce__cta,
+.gc-announce__cta:link,
+.gc-announce__cta:visited{
+  color: var(--gc-text-accent);
+  -webkit-text-fill-color: var(--gc-text-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.gc-announce__dismiss{
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--gc-control-h);
+  min-height: var(--gc-control-h);
+  padding: var(--gc-btn-icon-pad);
+  border: 0;
+  background: transparent;
+  color: var(--gc-text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.gc-announce__dismiss:hover{
+  background: color-mix(in srgb, var(--gc-primary) 18%, transparent);
+  color: var(--gc-text);
+}
+.gc-announce__cta:focus-visible,
+.gc-announce__dismiss:focus-visible{
+  outline: var(--gc-focus-size) solid var(--gc-focus);
+  outline-offset: var(--gc-focus-offset);
+}
+@media (max-width: 640px){
+  .gc-announce__content{
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* ===== Download page ===== */
+.gc-download__lede{
+  color: var(--gc-text-secondary);
+  max-width: 60ch;
+}
+.gc-download__platforms{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+}
+.gc-download__card{
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--gc-shadow-1);
+}
+.gc-download__card--pending{
+  background: var(--gc-surface-2);
+  box-shadow: none;
+}
+.gc-download__cardTitle{
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--gc-font-h2);
+  font-weight: var(--gc-weight-h2);
+  line-height: var(--gc-lh-h2);
+}
+.gc-download__cardBody{
+  margin: 0 0 var(--space-4);
+  color: var(--gc-text-secondary);
+}
+.gc-download__card--pending .gc-download__cardTitle,
+.gc-download__card--pending .gc-download__cardBody{
+  color: var(--gc-text-tertiary);
+}
+.gc-download__badgeLink{
+  display: inline-block;
+  border-radius: var(--radius-sm);
+}
+.gc-download__badgeLink:focus-visible{
+  outline: var(--gc-focus-size) solid var(--gc-focus);
+  outline-offset: var(--gc-focus-offset);
+}
+/* Apple's badge is black artwork; a hairline keeps its edge readable against
+   the dark-theme surface without modifying the badge itself. */
+.gc-download__badge{
+  display: block;
+  height: 40px;
+  width: auto;
+  border-radius: 6px;
+}
+[data-theme="dark"] .gc-download__badge{
+  box-shadow: 0 0 0 1px var(--gc-separator);
+}
+.gc-download__pendingChip{
+  display: inline-block;
+  margin: 0;
+  padding: var(--gc-btn-pad-y-sm) var(--gc-btn-pad-x-sm);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-3);
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-btn-font-size-sm);
+}
+.gc-download__qr{
+  margin-bottom: var(--space-6);
+}
+/* The generated SVG carries its own white field and a 2-module quiet zone, so
+   the element needs no background of its own — tinting or inverting a QR costs
+   scannability. overflow:hidden lets the radius clip that white field. */
+.gc-download__qrImage{
+  display: block;
+  width: 176px;
+  height: 176px;
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}

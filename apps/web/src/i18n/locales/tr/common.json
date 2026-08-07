@@ -27,6 +27,15 @@
     "disclaimerBefore": "Tüm sözler ilgili sahiplerine aittir. GraceChords yalnızca kişisel ve eğitim amaçlı kullanım için araçlar sağlar. Hak sahipleri, kaldırma talepleri için ",
     "disclaimerLink": "bize e-posta gönderin",
     "disclaimerAfter": ".",
+    "download": "GraceChords uygulamasını edinin",
     "copyright": "© {{range}} Ryan Moore. Tüm hakları saklıdır."
+  },
+  "announcement": {
+    "regionLabel": "Site duyurusu",
+    "dismiss": "Duyuruyu kapat",
+    "iosLaunch": {
+      "message": "GraceChords artık App Store'da.",
+      "cta": "Uygulamayı edinin"
+    }
   }
 }

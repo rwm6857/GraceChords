@@ -27,6 +27,15 @@
     "disclaimerBefore": "모든 가사는 각 저작권자의 소유입니다. GraceChords는 개인 및 교육 목적으로만 도구를 제공합니다. 저작권자께서는 게시물 삭제 요청을 위해 ",
     "disclaimerLink": "이메일을 보내주세요",
     "disclaimerAfter": ".",
+    "download": "GraceChords 앱 받기",
     "copyright": "© {{range}} Ryan Moore. 모든 권리 보유."
+  },
+  "announcement": {
+    "regionLabel": "사이트 공지",
+    "dismiss": "공지 닫기",
+    "iosLaunch": {
+      "message": "GraceChords가 App Store에 출시되었습니다.",
+      "cta": "앱 받기"
+    }
   }
 }

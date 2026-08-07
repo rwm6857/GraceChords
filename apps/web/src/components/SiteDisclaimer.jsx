@@ -1,5 +1,5 @@
 import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { isDisclaimerEnabled, DISCLAIMER_EMAIL } from '../config/disclaimer'
 
@@ -36,6 +36,8 @@ export default function SiteDisclaimer(){
           <a href={`mailto:${DISCLAIMER_EMAIL}`}>{t('footer.disclaimerLink')}</a>
           {t('footer.disclaimerAfter')}
         </div>
+        <div style={{ height: '1em' }} aria-hidden="true" />
+        <div><Link to="/download">{t('footer.download')}</Link></div>
         <div style={{ height: '1em' }} aria-hidden="true" />
         <div>{t('footer.copyright', { range })}</div>
       </div>

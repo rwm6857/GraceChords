@@ -128,9 +128,9 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 - New Supabase tables must have RLS enabled with policies before merging.
 
 ## Internationalization (i18n)
-UI translations live under `src/i18n/locales/{lang}/` across ten namespaces
-(`admin`, `auth`, `common`, `editor`, `errors`, `home`, `nav`, `profile`,
-`setlist`, `song`). The English files (`src/i18n/locales/en/`) are the **source of
+UI translations live under `src/i18n/locales/{lang}/` across eleven namespaces
+(`admin`, `auth`, `common`, `editor`, `errors`, `home`, `nav`, `pages`,
+`profile`, `setlist`, `song`). The English files (`src/i18n/locales/en/`) are the **source of
 truth**; every other locale mirrors their key shape. Runtime wiring is in
 `src/i18n/index.js` and `src/hooks/useLocale.jsx`; the supported list is in
 `src/i18n/config.js`. Tooling lives at `../../gracechords-i18n/` (`SKILL.md`,

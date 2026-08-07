@@ -23,6 +23,7 @@ const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
 const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./pages/portal/EditorPage'))
 const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
+const DownloadPage = lazyRoute(() => import('./pages/DownloadPage'))
 const PostsPage = lazyRoute(() => import('./pages/PostsPage'))
 const PostDetailPage = lazyRoute(() => import('./pages/PostDetailPage'))
 const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
@@ -34,6 +35,7 @@ import WorshipMode from './pages/WorshipModePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import WorshipSetRoute from './pages/WorshipSetRoutePage'
 import Toast from './components/Toast'
+import AnnouncementStrip from './components/AnnouncementStrip'
 import SiteDisclaimer from './components/SiteDisclaimer'
 import EditorFab from './components/EditorFab'
 
@@ -50,6 +52,7 @@ export default function App(){
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/licenses" element={<LicensesPage />} />
             <Route path="/delete-account" element={<DeleteAccountPage />} />
+            <Route path="/download" element={<DownloadPage />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/songs/:id" element={<SongView />} />
             <Route path="/setlist" element={<Setlist />} />
@@ -91,6 +94,9 @@ export default function App(){
 function Layout(){
   return (
     <div className="App">
+      {/* Above the sticky navbar and not sticky itself, so it scrolls away and
+          the nav keeps its top:0 anchor. */}
+      <AnnouncementStrip />
       <NavBar />
       <main id="main" className="Route">
         <Outlet />

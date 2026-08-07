@@ -58,7 +58,8 @@ const staticRoutes = [
   '/songbook',
   '/reading',
   '/resources',
-  '/bundle'
+  '/bundle',
+  '/download'
 ]
 
 const urlSet = new Set()

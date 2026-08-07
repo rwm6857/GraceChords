@@ -185,5 +185,26 @@
     "noPassages": "No passages found for this day.",
     "copyVerses": "Copy selected verses",
     "translationAria": "Choose Bible translation"
+  },
+  "download": {
+    "metaTitle": "Download the App | GraceChords",
+    "metaDescription": "Get GraceChords on your phone — chord charts, setlists, and the Daily Word, wherever you lead worship.",
+    "title": "Download GraceChords",
+    "lede": "Take your chord charts, setlists, and the Daily Word with you. Everything syncs with the account you already use on the web.",
+    "ios": {
+      "title": "iPhone & iPad",
+      "body": "GraceChords is available now on the App Store.",
+      "badgeAlt": "Download on the App Store"
+    },
+    "android": {
+      "title": "Android",
+      "body": "The Android app is in the works. The web app runs great in Chrome in the meantime.",
+      "comingSoon": "Coming soon"
+    },
+    "qr": {
+      "title": "Scan to open on your phone",
+      "body": "Point your camera at the code to open this page on your device.",
+      "alt": "QR code linking to gracechords.com/download"
+    }
   }
 }

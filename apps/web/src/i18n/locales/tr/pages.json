@@ -185,5 +185,26 @@
     "noPassages": "Bu güne ait bölüm bulunamadı.",
     "copyVerses": "Seçili ayetleri kopyala",
     "translationAria": "İncil çevirisi seç"
+  },
+  "download": {
+    "metaTitle": "Uygulamayı indir | GraceChords",
+    "metaDescription": "GraceChords'u telefonunuza alın: akorlu ilahiler, set listeleri ve Kutsal Kitap, ibadeti yönettiğiniz her yerde.",
+    "title": "GraceChords'u indirin",
+    "lede": "Akorlu ilahilerinizi, set listelerinizi ve Kutsal Kitap'ı yanınızda taşıyın. Her şey web'de kullandığınız hesapla eşitlenir.",
+    "ios": {
+      "title": "iPhone ve iPad",
+      "body": "GraceChords şu anda App Store'da mevcut.",
+      "badgeAlt": "App Store'dan indirin"
+    },
+    "android": {
+      "title": "Android",
+      "body": "Android uygulaması hazırlanıyor. Bu arada web uygulaması Chrome'da gayet iyi çalışıyor.",
+      "comingSoon": "Çok yakında"
+    },
+    "qr": {
+      "title": "Telefonunuzda açmak için tarayın",
+      "body": "Bu sayfayı cihazınızda açmak için kameranızı koda doğrultun.",
+      "alt": "gracechords.com/download adresine bağlanan QR kodu"
+    }
   }
 }
