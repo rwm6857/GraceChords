@@ -1,32 +1,33 @@
 import React from 'react'
 import { Routes, Route, Link, Outlet } from 'react-router-dom'
+import lazyRoute from './utils/app/lazyRoute'
 import HomeDashboard from './pages/HomeDashboardPage'
 import Songs from './pages/SongsPage'
 import SongView from './pages/SongViewPage'
-const Setlist = React.lazy(() => import('./pages/SetlistPage'))
-const ReadingsPage = React.lazy(() => import('./pages/ReadingsPage'))
+const Setlist = lazyRoute(() => import('./pages/SetlistPage'))
+const ReadingsPage = lazyRoute(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
-const Songbook = React.lazy(() => import('./pages/SongbookPage'))
-const About = React.lazy(() => import('./pages/AboutPage'))
-const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'))
-const TermsPage = React.lazy(() => import('./pages/TermsPage'))
-const LicensesPage = React.lazy(() => import('./pages/LicensesPage'))
-const DeleteAccountPage = React.lazy(() => import('./pages/DeleteAccountPage'))
-const LoginPage = React.lazy(() => import('./pages/LoginPage'))
-const SignupPage = React.lazy(() => import('./pages/SignupPage'))
-const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
-const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'))
-const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'))
-const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'))
-const AdminPage = React.lazy(() => import('./pages/AdminPage'))
-const EditorPage = React.lazy(() => import('./pages/EditorPage'))
-const PortalEditorPage = React.lazy(() => import('./pages/portal/EditorPage'))
-const AuditLogPage = React.lazy(() => import('./components/editor/AuditLogPanel'))
-const PostsPage = React.lazy(() => import('./pages/PostsPage'))
-const PostDetailPage = React.lazy(() => import('./pages/PostDetailPage'))
-const SessionViewer = React.lazy(() => import('./pages/SessionViewerPage'))
-const ManagePostsPage = React.lazy(() => import('./pages/portal/ManagePostsPage'))
-const EditPostPage = React.lazy(() => import('./pages/portal/EditPostPage'))
+const Songbook = lazyRoute(() => import('./pages/SongbookPage'))
+const About = lazyRoute(() => import('./pages/AboutPage'))
+const PrivacyPage = lazyRoute(() => import('./pages/PrivacyPage'))
+const TermsPage = lazyRoute(() => import('./pages/TermsPage'))
+const LicensesPage = lazyRoute(() => import('./pages/LicensesPage'))
+const DeleteAccountPage = lazyRoute(() => import('./pages/DeleteAccountPage'))
+const LoginPage = lazyRoute(() => import('./pages/LoginPage'))
+const SignupPage = lazyRoute(() => import('./pages/SignupPage'))
+const ProfilePage = lazyRoute(() => import('./pages/ProfilePage'))
+const AuthCallbackPage = lazyRoute(() => import('./pages/AuthCallbackPage'))
+const ResetPasswordPage = lazyRoute(() => import('./pages/ResetPasswordPage'))
+const ForgotPasswordPage = lazyRoute(() => import('./pages/ForgotPasswordPage'))
+const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
+const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
+const PortalEditorPage = lazyRoute(() => import('./pages/portal/EditorPage'))
+const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
+const PostsPage = lazyRoute(() => import('./pages/PostsPage'))
+const PostDetailPage = lazyRoute(() => import('./pages/PostDetailPage'))
+const SessionViewer = lazyRoute(() => import('./pages/SessionViewerPage'))
+const ManagePostsPage = lazyRoute(() => import('./pages/portal/ManagePostsPage'))
+const EditPostPage = lazyRoute(() => import('./pages/portal/EditPostPage'))
 import NavBar from './components/ui/Navbar'
 import RoleGuard from './components/auth/RoleGuard'
 import WorshipMode from './pages/WorshipModePage'
