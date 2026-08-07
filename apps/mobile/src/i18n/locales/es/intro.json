@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "card1": {
+    "heading": "Bienvenido a GraceChords.",
+    "body": "Canciones, repertorios y las Escrituras — sea como sea tu adoración hoy."
+  },
+  "card2": {
+    "heading": "Listo para la plataforma.",
+    "body": "Transpón a cualquier tono y léelo con claridad bajo las luces del escenario. Inicia una sesión en vivo para que todo el equipo siga la misma canción, o comparte la hoja de acordes en PDF o imagen en el tono que estás tocando.",
+    "features": {
+      "transpose": "Transponer",
+      "liveSessions": "Sesiones en vivo",
+      "share": "Compartir en PDF o imagen"
+    }
+  },
+  "card3": {
+    "heading": "Medita en la Palabra.",
+    "body": "El plan de lectura M'Cheyne te lleva por toda la Biblia en un año, cuatro pasajes al día. Descarga tu traducción favorita para leerla sin conexión.",
+    "reminder": "Recordatorio diario",
+    "streak": "Seguir mi racha"
+  },
+  "continue": "Continuar",
+  "getStarted": "Empezar",
+  "skip": "Omitir",
+  "replay": {
+    "row": "Ver la introducción otra vez",
+    "subtitle": "Vuelve a mostrar la introducción de inicio"
+  },
+  "a11y": {
+    "progress": "Paso {{current}} de {{total}}",
+    "reminderTime": "Hora del recordatorio"
+  }
+}

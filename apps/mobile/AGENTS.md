@@ -222,6 +222,22 @@ duplicate logic here and never edit core internals to suit mobile.
   downloads — scaffolded, no download logic yet). `app/login.tsx` — the auth
   screen (sign in + sign up modes in `src/screens/AuthScreen.tsx`);
   `app/choose-icon.tsx` — the post-signup sprite avatar picker.
+- **First-launch intro** (`app/intro.tsx` → `src/screens/IntroScreen.tsx`): a
+  three-card pager shown once per device, post-auth. Card 1 is a centered title
+  card, card 2 lists features (each icon borrowed from the live UI that owns it),
+  and card 3 carries two **real settings** — the Daily Word reminder (with the
+  Settings screen's own `ReminderTimeSheet`) and the reading streak — both
+  presented pre-toggled ON. The seen-flag is device-local
+  (`src/lib/introSeen.ts`, `gc.intro.seen.v1`, in the splash `multiGet` batch so
+  the gate can read it synchronously); it is **not** on the Supabase profile, so a
+  returning user on a new device sees the intro again by design. `wantsIntro()` in
+  `app/_layout.tsx` scopes the redirect to the app's own entry points (bare root /
+  `(tabs)`) so an inbound deep link keeps its destination. Both exits land on
+  **Home**; "Get started" commits card 3's settings and is the **only** place
+  notification permission is requested (via `commitOnboardingReminder`, which
+  checks permission before prompting and fails silently on denial), while **Skip
+  commits nothing**. Settings → Support → "See onboarding again" clears the flag
+  to replay it.
 - **Authenticated-only.** `app/_layout.tsx` gates every route on the Supabase
   session (redirect to `/login` when signed out, into the tabs when signed in) and
   holds the native splash (`expo-splash-screen`) until the session resolves *and*
@@ -341,8 +357,12 @@ duplicate logic here and never edit core internals to suit mobile.
   (`supabase.rpc('delete_user')`). The Language row opens an `OptionSheet`
   (Automatic + the supported locales) and shows the resolved language — see the
   i18n section below.
-- **Daily Word reminder** (Settings → Reader) is an OPT-IN, off-by-default local
-  notification via **`expo-notifications`** (config plugin in `app.json`). The
+- **Daily Word reminder** (Settings → Reader) is an OPT-IN local notification via
+  **`expo-notifications`** (config plugin in `app.json`). The stored default is
+  **off at 8:00 AM** (`DEFAULT_READER_REMINDER`), but the first-launch intro's
+  card 3 presents it pre-toggled ON, so a user who taps "Get started" opts in
+  there rather than in Settings — see the first-launch intro bullet under
+  "Routing, screens & auth". The
   preference (enabled + local hour/minute) is device-local in AsyncStorage
   (`gc.readerReminder.v1`), following the `defaults.ts` injected-storage /
   `useSyncExternalStore` pattern. `src/lib/readerReminder.ts` is the **pure,
@@ -402,7 +422,10 @@ duplicate logic here and never edit core internals to suit mobile.
   and the Recent-songs card reopens the song in that key via the viewer's
   existing `initialKey` param (Library opens still use the default key).
 - **Reading streak** (`src/lib/readingStreak.ts`, same injected-storage /
-  `useSyncExternalStore` pattern): OPT-IN, off by default — the toggle lives in
+  `useSyncExternalStore` pattern): OPT-IN — the stored default is off
+  (`DEFAULT_READING_STREAK`), but like the reminder above, the first-launch
+  intro's card 3 presents it pre-toggled ON, so most new users arrive with it
+  enabled. The toggle also lives in
   **Settings → Reader** (alongside the Daily Word reminder), not the reader
   settings sheet, and `DailyWordScreen` marks a day read
   when one of TODAY's chapters renders. Home's Daily Word card shows the streak

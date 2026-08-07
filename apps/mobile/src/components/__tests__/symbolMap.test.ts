@@ -45,6 +45,23 @@ describe('symbolMap', () => {
     expect(collisions).toEqual([])
   })
 
+  it('maps the first-launch intro icons', () => {
+    // IntroScreen's card-2 feature rows each borrow the icon from the live UI
+    // that owns the feature, so all three are already mapped — this pins that.
+    // An unmapped name is invisible on iOS (SF Symbols renders it natively) and
+    // silently wrong on Android, which is exactly what this file guards.
+    for (const sf of [
+      'chevron.up.chevron.down', // transpose — Setlist Builder key chip
+      'antenna.radiowaves.left.and.right', // Live Sessions — Performer header
+      'square.and.arrow.up', // share — Song Viewer export button
+      'arrow.triangle.2.circlepath', // Settings → "See onboarding again"
+    ]) {
+      const glyph = SF_TO_MATERIAL[sf]
+      expect(glyph, `${sf} has no SF→Material mapping`).toBeDefined()
+      expect(MATERIAL_CODEPOINTS[glyph.md], `${glyph.md} is not bundled`).toBeDefined()
+    }
+  })
+
   it('maps the reader text-options icon used by the Daily Word control bar', () => {
     // DailyWordScreen renders <SymbolIcon name="textformat" /> for the reader
     // settings sheet; Android needs text_format present to avoid the fallback.

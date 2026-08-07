@@ -13,7 +13,7 @@ import {
   reflectionCacheKey,
 } from '../reflectionDayStore'
 
-// The whole point of the facade is that the nine hydrate modules are unchanged,
+// The whole point of the facade is that the ten hydrate modules are unchanged,
 // so these tests assert the OUTCOME each module produces when fed through a
 // batch — not the facade in isolation. A silent change to any fallback here
 // would reset a real user's preference on upgrade.
@@ -45,9 +45,9 @@ function makeStore(seed: Record<string, string> = {}) {
 }
 
 describe('LAUNCH_STORAGE_KEYS', () => {
-  it('covers the 13 keys the splash gate reads', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(13)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(13)
+  it('covers the 14 keys the splash gate reads', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(14)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(14)
   })
 })
 
@@ -69,7 +69,7 @@ describe('primeLaunchStorage', () => {
 
   it('falls back to the real store when multiGet rejects', async () => {
     // Today each module does its own getItem behind its own try/catch, so one
-    // failing read can only affect one module. A batch that reset all 13
+    // failing read can only affect one module. A batch that reset all 14
     // keys to defaults at once would be a far worse failure.
     const { store } = makeStore({ 'gc.defaults.theme': 'dark' })
     store.multiGet = () => Promise.reject(new Error('storage unavailable'))

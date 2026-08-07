@@ -22,6 +22,7 @@ import { setCurrentUserFromSession } from '../src/lib/currentUser'
 import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
+import { hydrateIntroSeen, useIntroSeen } from '../src/lib/introSeen'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
@@ -49,6 +50,31 @@ import SplashOverlay from '../src/components/SplashOverlay'
 // out user on first open.
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
+/**
+ * Whether the first-launch intro (app/intro.tsx) should take over this route.
+ *
+ * Deliberately scoped to the app's OWN entry points — the bare root and the tab
+ * group — rather than "any route that isn't the intro". A deep link resolves to a
+ * specific screen (`viewer/[slug]`, `setlist/import`, the anonymous
+ * `session/[code]` follower), and hijacking that to show the intro would discard
+ * the destination the link was for. Leaving the flag unset instead means the
+ * intro simply shows on the next ordinary launch, which costs nothing.
+ *
+ * The `login` hand-off is NOT routed through here — it has its own branch,
+ * because it must send the user to the intro or the tabs, never leave them on
+ * /login. `choose-icon` is excluded so the post-signup avatar step is never
+ * interrupted mid-pick; its own replace('/') lands on the tab group and is
+ * caught here on the next pass.
+ */
+function wantsIntro(
+  session: Session | null,
+  seenIntro: boolean,
+  seg: string | undefined,
+): boolean {
+  if (!session || seenIntro) return false
+  return seg === undefined || seg === '(tabs)'
+}
+
 // Root layout: install the theme + safe-area providers, keep the native token
 // auto-refresh, and gate routes on the auth session using the standard
 // expo-router pattern — redirect to /login when signed out, and into the tabs
@@ -56,6 +82,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff: () => void) {
   const segments = useSegments()
   const router = useRouter()
+  // Device-local first-launch flag. Subscribed (not just read) so setting it from
+  // the intro re-runs the effects below with `seenIntro` already true — otherwise
+  // the redirect would fire again against the intro's own navigation.
+  const seenIntro = useIntroSeen()
 
   useEffect(() => {
     if (!ready) return
@@ -70,9 +100,12 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     if (!session && !inAuthFlow && !isPublic) {
       router.replace('/login')
     } else if (session && seg === 'login') {
-      router.replace('/')
+      // The intro is post-auth: a first launch lands there instead of the tabs.
+      router.replace(seenIntro ? '/' : '/intro')
+    } else if (wantsIntro(session, seenIntro, seg)) {
+      router.replace('/intro')
     }
-  }, [session, ready, segments, router])
+  }, [session, ready, segments, router, seenIntro])
 
   // Lift the splash only once the session is resolved AND the visible route
   // matches the auth state, so the native splash covers the redirect frame and
@@ -87,9 +120,15 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     const seg = segments[0] as string | undefined
     const inAuthFlow = seg === 'login' || seg === 'choose-icon'
     const isPublic = seg === 'session'
-    const settled = session ? seg !== 'login' : (inAuthFlow || isPublic)
+    // A signed-in first launch is not settled while the gate above still wants
+    // to replace this route with the intro — lifting the splash first would
+    // flash the tab group for a frame. Once /intro is mounted wantsIntro is
+    // false, so this settles normally.
+    const settled = session
+      ? seg !== 'login' && !wantsIntro(session, seenIntro, seg)
+      : (inAuthFlow || isPublic)
     if (settled) beginHandoff()
-  }, [session, ready, segments, beginHandoff])
+  }, [session, ready, segments, beginHandoff, seenIntro])
 
   // Safety net: if routing never "settles" for some reason, don't leave the
   // splash up indefinitely once the session has resolved. Note this can only arm
@@ -212,7 +251,7 @@ export default function RootLayout() {
     // session read were nested behind it the two would serialise and cold launch
     // would regress — the whole point of batching is to be no slower.
     const sessionRead = resolveInitialSession(supabase.auth)
-    // One AsyncStorage round trip for all 13 launch keys instead of 13 separate
+    // One AsyncStorage round trip for all 14 launch keys instead of 14 separate
     // getItem calls. The stores themselves are untouched: they receive a
     // KVStorage that answers from the batch, so every missing/null/malformed
     // fallback is byte-for-byte what it was. See launchStorage.ts.
@@ -231,6 +270,9 @@ export default function RootLayout() {
         // ordered against sessionRead: the stored entry names its own owner and
         // is only found by a lookup for that same user (reflectionDayStore.ts).
         hydrateTodayReflection(store),
+        // Must resolve before `ready` — the auth gate reads it synchronously to
+        // decide between /intro and the tabs while the splash is still up.
+        hydrateIntroSeen(store),
       ]),
     )
     Promise.all([
@@ -370,6 +412,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="login" />
             <Stack.Screen name="choose-icon" />
+            <Stack.Screen name="intro" />
             <Stack.Screen name="viewer/[slug]" />
             <Stack.Screen name="daily/reader" />
             <Stack.Screen name="daily/journal" />

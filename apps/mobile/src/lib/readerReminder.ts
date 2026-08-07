@@ -173,6 +173,45 @@ export async function syncReminder(
   await backend.scheduleDaily(REMINDER_NOTIFICATION_ID, pref.hour, pref.minute, content)
 }
 
+/**
+ * Commit the first-launch intro's reminder opt-in (app/intro.tsx card 3).
+ *
+ * Pure + injected like `syncReminder` above, so the decision logic is unit-tested
+ * headless; readerReminderService.ts wraps it with the real expo-notifications
+ * backend. Differs from the Settings toggle path in exactly two ways, both
+ * required by onboarding:
+ *
+ *  1. Permission is CHECKED before prompting, so a user who already granted
+ *     notifications is never asked twice. (Settings prompts on every toggle-on,
+ *     which is right there — the toggle IS the request — but wrong here, where
+ *     the request is deferred to "Get started".)
+ *  2. Denial FAILS SILENTLY and pins the preference off, so app state matches OS
+ *     state. Settings instead alerts and offers to open system settings;
+ *     onboarding must not interrupt with an error the user can't act on.
+ *
+ * Returns whether the reminder ended up scheduled. Callers ignore `false` — the
+ * intro proceeds either way.
+ */
+export async function commitReminderOptIn(
+  hour: number,
+  minute: number,
+  content: ReminderContent,
+  backend: NotificationBackend,
+): Promise<boolean> {
+  let granted = await backend.getPermissionGranted()
+  if (!granted) granted = await backend.requestPermission()
+  if (!granted) {
+    // No-op when already false (the default), so a denial writes nothing.
+    setReminderEnabled(false)
+    return false
+  }
+  setReminderTime(hour, minute)
+  setReminderEnabled(true)
+  // Not just the preference — this is what puts it on the OS schedule.
+  await syncReminder(cache, content, backend)
+  return true
+}
+
 /** Test-only reset so each test starts from a clean module state. */
 export function __resetReaderReminderForTest(): void {
   cache = DEFAULT_READER_REMINDER
