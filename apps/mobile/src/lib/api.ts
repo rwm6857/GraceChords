@@ -22,17 +22,31 @@ export function apiBase(): string {
   return base.replace(/\/$/, '')
 }
 
+async function authHeader(): Promise<{ Authorization: string }> {
+  const { data } = await supabase.auth.getSession()
+  const session = data?.session
+  if (!session) throw new Error('not_signed_in')
+  return { Authorization: `Bearer ${session.access_token}` }
+}
+
+/**
+ * GET or DELETE with the caller's Supabase bearer token.
+ *
+ * No 405-redirect retry, unlike apiPost: that retry exists because a redirect
+ * rewrites POST to GET, which cannot happen to a method that is already safe or
+ * idempotent (307/308 preserve the method, 301/302 on a GET are transparent).
+ */
+export async function apiRequest(method: 'GET' | 'DELETE', path: string): Promise<Response> {
+  return budgetedFetch(`${apiBase()}${path}`, { method, headers: await authHeader() })
+}
+
 // POST JSON with the caller's Supabase bearer token. If the configured base
 // URL redirects (e.g. apex → www), fetch follows the redirect but converts
 // the POST to a GET per spec, and the API answers 405 — so on a redirected
 // 405 we retry the POST once against the redirect's final origin.
 export async function apiPost(path: string, body: unknown): Promise<Response> {
-  const { data } = await supabase.auth.getSession()
-  const session = data?.session
-  if (!session) throw new Error('not_signed_in')
-
   const headers = {
-    Authorization: `Bearer ${session.access_token}`,
+    ...(await authHeader()),
     'Content-Type': 'application/json',
   }
   const payload = JSON.stringify(body)

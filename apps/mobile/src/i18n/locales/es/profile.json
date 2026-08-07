@@ -1,0 +1,42 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Account",
+  "sections": {
+    "profile": "PROFILE",
+    "security": "SECURITY",
+    "connections": "CONNECTIONS"
+  },
+  "appIcon": "App icon",
+  "name": "Name",
+  "email": "Email",
+  "changePassword": "Change password",
+  "nameSheet": {
+    "title": "Your name",
+    "placeholder": "Alex Brown",
+    "hint": "This is the name shown on your profile and in greetings.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saveFailedTitle": "Couldn't save your name",
+    "saveFailedMessage": "Please check your connection and try again."
+  },
+  "telegram": {
+    "title": "Telegram",
+    "status": "Status",
+    "link": "Link Telegram",
+    "linked": "Linked",
+    "linkedOn": "Linked · {{date}}",
+    "linkHint": "Linking is done on the web for now. We'll open your profile in the browser, where you can connect Telegram in one tap.",
+    "unlink": "Unlink Telegram",
+    "unlinking": "Unlinking…",
+    "unlinkAlert": {
+      "title": "Unlink Telegram?",
+      "message": "The bot will stop sending you charts until you link again.",
+      "confirm": "Unlink"
+    },
+    "unlinkFailedTitle": "Couldn't unlink Telegram"
+  },
+  "logOut": "Log out",
+  "logOutHint": "Signs you out of GraceChords on this device.",
+  "deleteAccount": "Delete account",
+  "deleteAccountHint": "Permanently deletes your account and all of your data."
+}
