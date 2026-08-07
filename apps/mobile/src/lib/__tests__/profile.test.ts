@@ -3,6 +3,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   PENDING_SPRITE_KEY,
   flushPendingSprite,
+  resolveDisplayName,
+  saveDisplayName,
   saveSpritePreference,
   stashPendingSprite,
   type KVStorage,
@@ -134,5 +136,54 @@ describe('stash / flush pending sprite', () => {
       removeItem: async () => {},
     }
     await expect(flushPendingSprite(db.client, storage, 'user-1')).resolves.toBeUndefined()
+  })
+})
+
+describe('resolveDisplayName', () => {
+  const user = {
+    email: 'ryan@example.com',
+    user_metadata: { full_name: 'Ryan Moore (mooer112233)', name: 'Ryan M' },
+  }
+
+  it('prefers the edited column over the provider profile', () => {
+    // The whole point of storing the name in public.users: an OAuth sign-in
+    // repopulates user_metadata, so the column has to win.
+    expect(resolveDisplayName('Ryan Moore', user)).toBe('Ryan Moore')
+  })
+
+  it('falls back to full_name when nothing has been edited', () => {
+    expect(resolveDisplayName(null, user)).toBe('Ryan Moore (mooer112233)')
+  })
+
+  it('falls back to name when full_name is absent', () => {
+    expect(resolveDisplayName(null, { email: 'a@b.co', user_metadata: { name: 'Just Name' } })).toBe(
+      'Just Name',
+    )
+  })
+
+  it('falls back to the email local part when no metadata name exists', () => {
+    expect(resolveDisplayName(null, { email: 'ryan@example.com', user_metadata: {} })).toBe('ryan')
+  })
+
+  it('returns null when nothing is usable, so callers localize the fallback', () => {
+    expect(resolveDisplayName(null, null)).toBeNull()
+    expect(resolveDisplayName('   ', { email: null, user_metadata: {} })).toBeNull()
+  })
+})
+
+describe('saveDisplayName', () => {
+  it('writes the trimmed name to display_name', async () => {
+    const db = fakeDb({ updatedRows: [{ id: 'user-1' }] })
+    const result = await saveDisplayName(db.client, 'user-1', '  Ryan Moore  ')
+
+    expect(result).toEqual({ error: null })
+    expect(db.update).toHaveBeenCalledWith({ display_name: 'Ryan Moore' })
+  })
+
+  it('reports an RLS-denied write rather than reporting success', async () => {
+    const db = fakeDb({ updatedRows: [] })
+    const result = await saveDisplayName(db.client, 'user-1', 'Ryan')
+
+    expect(result.error).toBeTruthy()
   })
 })

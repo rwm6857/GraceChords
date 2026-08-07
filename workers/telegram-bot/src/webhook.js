@@ -2,7 +2,8 @@
 // and inline-button callback queries. Channel posts and edited messages are
 // silently ignored.
 
-import { findUserByTelegramId } from './supabase.js'
+import { findUserByTelegramId, linkTelegramAccount } from './supabase.js'
+import { looksLikeLinkToken, redeemLinkToken } from './linkToken.js'
 import { checkRateLimit, formatCooldown } from './ratelimit.js'
 import { checkGroupRateLimit } from './groupRateLimit.js'
 import { parseRequest } from './parseRequest.js'
@@ -76,7 +77,8 @@ function onboardingText() {
     'I send chord charts as JPGs for you to use in the moment, or PDFs to download/share.',
     'To get started, link your GraceChords account to your Telegram so I know it\'s you.',
     '',
-    '➡️ Open https://www.gracechords.com/profile and use the "Link Telegram" section.',
+    '➡️ In the app: Profile & Settings → Account → Telegram → "Link Telegram".',
+    '➡️ On the web: open https://www.gracechords.com/profile and use the "Link Telegram" section.',
     '',
     'Once linked, just send me a song title (or a comma-separated setlist) and I\'ll do the rest.',
   ].join('\n')
@@ -104,8 +106,10 @@ function helpText() {
   ].join('\n')
 }
 
+const userCacheKey = (telegramUserId) => `userlookup:${telegramUserId}`
+
 async function getLinkedUser(env, telegramUserId) {
-  const cacheKey = `userlookup:${telegramUserId}`
+  const cacheKey = userCacheKey(telegramUserId)
   if (env.BOT_KV) {
     const cached = await env.BOT_KV.get(cacheKey, 'json')
     if (cached) return cached.linked ? cached.user : null
@@ -117,6 +121,55 @@ async function getLinkedUser(env, telegramUserId) {
     })
   }
   return user
+}
+
+/**
+ * Drop the cached lookup for one Telegram user.
+ *
+ * getLinkedUser caches the NEGATIVE answer too, for USER_CACHE_TTL_S. Without
+ * this purge, the message a user sends straight after linking would still be
+ * answered with the onboarding text for up to five minutes — the flow would
+ * appear broken exactly once, for every single user, and never in testing.
+ */
+async function forgetLinkedUser(env, telegramUserId) {
+  if (!env.BOT_KV) return
+  await env.BOT_KV.delete(userCacheKey(telegramUserId))
+}
+
+/**
+ * `/start <token>` — the mobile account-link handoff.
+ *
+ * Reached only from a DM whose payload matches the minted token shape; a bare
+ * /start never gets here.
+ */
+async function handleLinkToken(env, { chatId, telegramUserId, token }) {
+  const reply = (text) => sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text })
+
+  const userId = await redeemLinkToken(env, token)
+  if (!userId) {
+    return reply(
+      'That link has expired or was already used.\n\n' +
+        'Open GraceChords → Profile & Settings → Account → Telegram and tap "Link Telegram" to get a fresh one.',
+    )
+  }
+
+  const result = await linkTelegramAccount(env, { userId, telegramUserId })
+
+  if (result.status === 'already_linked_elsewhere') {
+    return reply(
+      'This Telegram account is already linked to a different GraceChords account.\n\n' +
+        'Unlink it from that account first, then try again.',
+    )
+  }
+  if (result.status !== 'ok') {
+    console.warn('telegram link write failed', result.detail)
+    return reply('Something went wrong linking your account. Please try again in a moment.')
+  }
+
+  await forgetLinkedUser(env, telegramUserId)
+  const user = await getLinkedUser(env, telegramUserId)
+  const name = (user?.display_name || '').trim()
+  return reply(`✅ Your account is linked!\n\n${startText(name)}`)
 }
 
 async function loadSetlistToken(env, token) {
@@ -149,6 +202,16 @@ async function handleTextMessage(env, ctx, message, options = {}) {
       })
       return
     }
+    // `/start <token>` carries the mobile link handoff. ONLY a payload matching
+    // the minted token shape is treated as one — a bare /start, /help, and any
+    // other payload fall straight through to the welcome text below, byte for
+    // byte the behaviour they had before this branch existed.
+    const startPayload = startMatch ? (text.match(/^\/start(?:@\S+)?\s+(\S+)/i)?.[1] ?? '') : ''
+    if (looksLikeLinkToken(startPayload)) {
+      await handleLinkToken(env, { chatId, telegramUserId, token: startPayload })
+      return
+    }
+
     const user = await getLinkedUser(env, telegramUserId)
     if (!user) {
       await sendMessage(env.TELEGRAM_BOT_TOKEN, { chat_id: chatId, text: onboardingText() })

@@ -3,6 +3,7 @@
 //   POST /webhook            — Telegram updates (DM flow)
 //   POST /internal/feature       — GitHub Action calls this on merged "post" PRs
 //   POST /internal/push          — Pages Function pushes a song/setlist to a linked user
+//   POST /internal/link-token    — Pages Function mints a short-lived account-link token
 //   POST /internal/report-alert  — Pages Function alerts admin about a reported reflection
 //   GET  /healthz                — liveness
 // Scheduled: digest cron, Mon + Fri 17:00 ET (see wrangler.toml).
@@ -13,6 +14,7 @@ import { runDigest } from './digest.js'
 import { postFeature } from './feature.js'
 import { pushToUser } from './push.js'
 import { sendReportAlert } from './reportAlert.js'
+import { createLinkToken } from './linkToken.js'
 
 function notFound() {
   return new Response('Not found', { status: 404 })
@@ -83,6 +85,34 @@ export default {
         })
       )
       return ok()
+    }
+
+    if (url.pathname === '/internal/link-token') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+      if (!verifyInternalBearer(request, env)) return unauthorized()
+      let body
+      try {
+        body = await request.json()
+      } catch {
+        return new Response('Invalid JSON', { status: 400 })
+      }
+      const userId = body?.user_id
+      if (!userId || typeof userId !== 'string') {
+        return new Response('Missing user_id', { status: 400 })
+      }
+      // Minted here rather than in the Pages Function because BOT_KV is bound to
+      // this worker. The caller has already verified the user's Supabase JWT —
+      // this endpoint trusts BOT_WEBHOOK_TOKEN and nothing else, so it must never
+      // be exposed to app clients directly.
+      try {
+        const token = await createLinkToken(env, userId)
+        return new Response(JSON.stringify({ token }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      } catch (err) {
+        return new Response(`Mint failed: ${err.message || err}`, { status: 500 })
+      }
     }
 
     if (url.pathname === '/internal/report-alert') {

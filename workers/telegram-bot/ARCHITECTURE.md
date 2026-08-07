@@ -28,6 +28,7 @@ Replaces the old GitHub Action; that workflow can be deleted.
 | Group / supergroup mentions | Same webhook, when the bot is `@`-mentioned in a group it's a member of | `POST /webhook` |
 | Guest-chat mentions | Same webhook, payload arrives under `update.guest_message` (BotFather → Guest Chat Mode → On) | `POST /webhook` |
 | Feature announcements | `feature-post.yml` on PR merge — fires on `feat(` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
+| Account linking (mobile) | App taps "Link Telegram" → web `POST /api/telegram/link-token` → this worker mints a token → app opens `t.me/<bot>?start=<token>` → user taps START | `POST /internal/link-token`, then `POST /webhook` |
 | Mon + Fri digest | Cloudflare cron `0 22 * * 1,5` | `scheduled()` handler |
 
 `src/index.js` is the HTTP router; auth lives in `src/auth.js`. Each
@@ -41,10 +42,11 @@ flows based on chat type and the presence of `update.guest_message`.
 |---|---|
 | `src/index.js` | HTTP router + `scheduled()`. Verifies webhook secret, dispatches. |
 | `src/auth.js` | `verifyTelegramWebhook()` and internal bearer auth for `/internal/feature`. |
-| `src/webhook.js` | Router for DM, group, and guest-chat flows. Handles `/start`, `/help`, free-text song queries, callback queries from inline buttons, and the dedicated `handleGuestMessage` path. Owns the JPG-vs-PDF UX. |
+| `src/webhook.js` | Router for DM, group, and guest-chat flows. Handles `/start` (bare **and** `/start <link-token>`), `/help`, free-text song queries, callback queries from inline buttons, and the dedicated `handleGuestMessage` path. Owns the JPG-vs-PDF UX. |
+| `src/linkToken.js` | Mint/redeem short-lived account-link tokens in BOT_KV (`linktok:<token>`, 10-min TTL, deleted on read). The encoding is load-bearing — see the header comment on Telegram's 64-char / `[A-Za-z0-9_-]` start-payload limit. |
 | `src/parseRequest.js` | Message text → list of `{ title, key? }` items. Handles "Song A in G, Song B" syntax. Same parser is used by all three message flows. |
 | `src/searchClient.js` | Calls the site's `/api/bot/*` Pages Functions. Talks to `songs/search`, `song/[id]`, `setlist`. Also classifies match quality (auto vs disambiguate vs no-match); `classifyMatch(results, query)` short-circuits to `auto` when any candidate's title exactly equals the parsed query. |
-| `src/supabase.js` | Direct DB reads via PostgREST. Used for `findUserByTelegramId` and the digest's recent-songs/posts queries. |
+| `src/supabase.js` | Direct DB reads via PostgREST (`findUserByTelegramId`, digest queries) plus the ONE write: `linkTelegramAccount` sets `telegram_user_id` + `telegram_linked_at` and nothing else. service_role bypasses RLS, so that narrowness is the only guard. |
 | `src/ratelimit.js` | KV-backed per-user limiter for DM — 30 requests / hour. |
 | `src/groupRateLimit.js` | KV-backed per-chat cooldown for group + guest traffic — 6 renders / minute. Independent of the DM limiter. |
 | `src/pdfRender.js` | PDF generation (always) and JPG rasterization (best-effort). Imports the shared `pdf_mvp/pure.js` engine + jsPDF; uses bundled pdfium WASM to rasterize the resulting PDF to PNG bytes for `sendPhoto`. |
@@ -74,6 +76,13 @@ WASM, jsPDF, transposition, and the chord-chart engine in
    to `findUserByTelegramId` (Supabase) on miss. Onboarding text if not
    linked. `/start` and `/help` route to `startText(name)` and
    `helpText()` respectively when the user is linked.
+   - **`/start <token>` is intercepted before that lookup.** Only a payload
+     matching the 43-char mint shape counts; a bare `/start` behaves exactly
+     as it always has. The handler redeems the token, writes the association,
+     and then **deletes `userlookup:<tg_id>`** — that cache holds negative
+     answers for 5 minutes, so without the purge the next message after a
+     successful link would still get the onboarding text. An already-linked
+     Telegram account is REFUSED, never transferred.
 5. `parseRequest(text)` produces `[{ title, key }]` items.
 6. `checkRateLimit` consumes one slot from the per-user KV bucket.
 7. `advanceResolution` (`resolver.js`) walks the items, calling

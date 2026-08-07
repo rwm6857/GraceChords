@@ -380,6 +380,8 @@ export default function RootLayout() {
             <Stack.Screen name="perform/[id]" />
             <Stack.Screen name="session/[code]" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="account/index" />
+            <Stack.Screen name="account/password" />
             <Stack.Screen name="about" />
             <Stack.Screen name="offline" />
             <Stack.Screen name="tuner" />

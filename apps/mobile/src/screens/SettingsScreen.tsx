@@ -8,14 +8,14 @@ import Card from '../components/Card'
 import ListRow from '../components/ListRow'
 import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
+import RowIcon from '../components/RowIcon'
 import GlassSurface from '../components/GlassSurface'
 import FormSheetShell from '../components/FormSheetShell'
 import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
-import type { Tokens } from '@gracechords/tokens/native'
-import { supabase } from '../lib/supabase'
 import { useCurrentUser } from '../lib/currentUser'
 import { useProfileSprite } from '../lib/useProfileSprite'
+import { useDisplayName } from '../lib/useDisplayName'
 import {
   setDefaultChordStyle,
   setDefaultDailyWordDestination,
@@ -38,10 +38,13 @@ import ReminderTimeSheet from '../components/reader/ReminderTimeSheet'
 import { setStreakEnabled, useReadingStreak } from '../lib/readingStreak'
 
 // The grouped "Profile & Settings" screen (design: [CONTENT] Settings Content).
-// Built from Stage-0 primitives — a Profile card, three grouped Cards
-// (Settings / Library / Support), and destructive Log out + Delete account
-// cards. Theme + chord style are app-wide DEFAULTS written here and read by the
-// Song Viewer / Performer / Daily Word.
+// Built from Stage-0 primitives — a Profile card and grouped Cards
+// (Settings / Reader / Library / Support). Theme + chord style are app-wide
+// DEFAULTS written here and read by the Song Viewer / Performer / Daily Word.
+//
+// The profile card now pushes ACCOUNT (app icon, name, email, change password,
+// Telegram) rather than the sprite picker directly. Log out and Delete account
+// live there too — moved, not copied, so there is only one of each.
 
 const HELP_URL = 'https://gracechords.com/help'
 const FEEDBACK_MAILTO = 'mailto:support@gracechords.com?subject=GraceChords%20feedback'
@@ -63,55 +66,6 @@ const DAILY_WORD_OPTIONS: { value: DailyWordDestination; labelKey: string }[] = 
 
 // Sentinel for "no override — follow the device language" in the picker.
 const LANGUAGE_SYSTEM = 'system'
-
-/** Rounded leading icon chip used on the grouped rows. */
-function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; t: Tokens }) {
-  return (
-    <View
-      style={{
-        width: 29,
-        height: 29,
-        borderRadius: 7,
-        backgroundColor: t.colors.accentSoft,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <SymbolIcon name={name} size={16} color={t.colors.accent} />
-    </View>
-  )
-}
-
-/** A standalone destructive action card (Log out / Delete account). */
-function DangerCard({
-  label,
-  onPress,
-  accessibilityLabel,
-}: {
-  label: string
-  onPress: () => void
-  accessibilityLabel?: string
-}) {
-  const t = useTheme()
-  return (
-    <Card style={{ marginTop: t.spacing.lg }}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? label}
-        style={({ pressed }) => ({
-          paddingVertical: 13,
-          alignItems: 'center',
-          backgroundColor: pressed ? t.colors.surfaceAlt : 'transparent',
-        })}
-      >
-        <Text style={{ fontSize: t.typography.body.fontSize, fontWeight: '600', color: t.colors.danger }}>
-          {label}
-        </Text>
-      </Pressable>
-    </Card>
-  )
-}
 
 /** Radio list of options with a checkmark on the current value, presented via
  * the native formSheet route (src/lib/formSheetHost.ts). */
@@ -179,10 +133,10 @@ export default function SettingsScreen() {
   // Measured glass-bar height feeds the scroll-behind top inset.
   const [barH, setBarH] = useState(0)
 
-  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>
-  const fullName = ((meta.full_name ?? meta.name) as string | undefined)?.trim()
   const email = user?.email ?? ''
-  const displayName = fullName || (email ? email.split('@')[0] : tx('yourAccount'))
+  // The edited name from public.users.display_name, falling back to the provider
+  // profile then the email local part — see resolveDisplayName in profile.ts.
+  const displayName = useDisplayName() ?? tx('yourAccount')
 
   const themeOptions = THEME_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
   const chordOptions = CHORD_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
@@ -226,38 +180,6 @@ export default function SettingsScreen() {
     }
   }
 
-  function onSignOut() {
-    Alert.alert(tx('signOutAlert.title'), tx('signOutAlert.message'), [
-      { text: tx('common:cancel'), style: 'cancel' },
-      { text: tx('signOutAlert.confirm'), style: 'destructive', onPress: () => void supabase.auth.signOut() },
-    ])
-  }
-
-  function onDeleteAccount() {
-    Alert.alert(
-      tx('deleteAccountAlert.title'),
-      tx('deleteAccountAlert.message'),
-      [
-        { text: tx('common:cancel'), style: 'cancel' },
-        {
-          text: tx('deleteAccountAlert.confirm'),
-          style: 'destructive',
-          onPress: async () => {
-            // Reuses the existing SECURITY DEFINER RPC (same path web uses):
-            // removes auth.users + cascades. Session then invalidates and the
-            // root auth listener redirects to /login.
-            const { error } = await supabase.rpc('delete_user')
-            if (error) {
-              Alert.alert(tx('deleteFailedAlert.title'), tx('deleteFailedAlert.message'))
-              return
-            }
-            await supabase.auth.signOut()
-          },
-        },
-      ],
-    )
-  }
-
   return (
     <Screen edges={['left', 'right']}>
       <ScrollView
@@ -284,9 +206,9 @@ export default function SettingsScreen() {
         {/* Profile card */}
         <Card>
           <Pressable
-            onPress={() => router.push({ pathname: '/choose-icon', params: { mode: 'edit' } })}
+            onPress={() => router.push('/account')}
             accessibilityRole="button"
-            accessibilityLabel={tx('changeYourIcon')}
+            accessibilityLabel={tx('openAccount')}
             style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
@@ -336,28 +258,28 @@ export default function SettingsScreen() {
         <Card>
           <ListRow
             title={tx('appearance')}
-            leading={<RowIcon name="circle.lefthalf.filled" t={t} />}
+            leading={<RowIcon name="circle.lefthalf.filled" />}
             value={themeOptions.find((o) => o.value === defaults.theme)?.label ?? ''}
             chevron
             onPress={() => setSheet('theme')}
           />
           <ListRow
             title={tx('language')}
-            leading={<RowIcon name="globe" t={t} />}
+            leading={<RowIcon name="globe" />}
             value={localeLabel(resolvedLanguage)}
             chevron
             onPress={() => setSheet('language')}
           />
           <ListRow
             title={tx('chordStyle')}
-            leading={<RowIcon name="music.note" t={t} />}
+            leading={<RowIcon name="music.note" />}
             value={chordOptions.find((o) => o.value === defaults.chordStyle)?.label ?? ''}
             chevron
             onPress={() => setSheet('chordStyle')}
           />
           <ListRow
             title={tx('offlineDownloads')}
-            leading={<RowIcon name="arrow.down.circle" t={t} />}
+            leading={<RowIcon name="arrow.down.circle" />}
             chevron
             isLast
             onPress={() => router.push('/offline')}
@@ -369,14 +291,14 @@ export default function SettingsScreen() {
         <Card>
           <ListRow
             title={tx('dailyWordEntry')}
-            leading={<RowIcon name="book" t={t} />}
+            leading={<RowIcon name="book" />}
             value={dailyWordOptions.find((o) => o.value === defaults.dailyWordDestination)?.label ?? ''}
             chevron
             onPress={() => setSheet('dailyEntry')}
           />
           <ListRow
             title={tx('reminder.dailyReminder')}
-            leading={<RowIcon name="bell" t={t} />}
+            leading={<RowIcon name="bell" />}
             trailing={
               <Switch
                 value={reminder.enabled}
@@ -390,7 +312,7 @@ export default function SettingsScreen() {
           {reminder.enabled ? (
             <ListRow
               title={tx('reminder.time')}
-              leading={<RowIcon name="clock" t={t} />}
+              leading={<RowIcon name="clock" />}
               value={formatReminderTime(reminder.hour, reminder.minute, i18n.language)}
               chevron
               onPress={() => setSheet('reminderTime')}
@@ -398,7 +320,7 @@ export default function SettingsScreen() {
           ) : null}
           <ListRow
             title={tx('readingStreak.title')}
-            leading={<RowIcon name="flame.fill" t={t} />}
+            leading={<RowIcon name="flame.fill" />}
             isLast
             trailing={
               <Switch
@@ -416,13 +338,13 @@ export default function SettingsScreen() {
         <Card>
           <ListRow
             title={tx('starred')}
-            leading={<RowIcon name="star" t={t} />}
+            leading={<RowIcon name="star" />}
             chevron
             onPress={() => router.push('/songs')}
           />
           <ListRow
             title={tx('mySetlists')}
-            leading={<RowIcon name="music.note.list" t={t} />}
+            leading={<RowIcon name="music.note.list" />}
             chevron
             isLast
             onPress={() => router.push('/setlists')}
@@ -434,27 +356,24 @@ export default function SettingsScreen() {
         <Card>
           <ListRow
             title={tx('helpCenter')}
-            leading={<RowIcon name="questionmark.circle" t={t} />}
+            leading={<RowIcon name="questionmark.circle" />}
             chevron
             onPress={() => void Linking.openURL(HELP_URL)}
           />
           <ListRow
             title={tx('sendFeedback')}
-            leading={<RowIcon name="envelope" t={t} />}
+            leading={<RowIcon name="envelope" />}
             chevron
             onPress={() => void Linking.openURL(FEEDBACK_MAILTO)}
           />
           <ListRow
             title={tx('aboutGraceChords')}
-            leading={<RowIcon name="info.circle" t={t} />}
+            leading={<RowIcon name="info.circle" />}
             chevron
             isLast
             onPress={() => router.push('/about')}
           />
         </Card>
-
-        <DangerCard label={tx('logOut')} onPress={onSignOut} />
-        <DangerCard label={tx('deleteAccount')} onPress={onDeleteAccount} />
       </ScrollView>
 
       {/* Scroll-behind top bar: Liquid Glass on iOS 26, opaque page-bg bar on

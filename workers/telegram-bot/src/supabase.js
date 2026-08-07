@@ -19,6 +19,53 @@ async function get(env, path) {
   return resp.json()
 }
 
+/**
+ * Associate a Telegram account with a GraceChords user.
+ *
+ * THE WRITE IS DELIBERATELY NARROW. service_role bypasses RLS entirely, so the
+ * only thing standing between this call and any column on public.users is the
+ * body below — there is no policy backstop. Write telegram_user_id and
+ * telegram_linked_at and nothing else, ever.
+ *
+ * REFUSES rather than transfers. users_telegram_user_id_key is UNIQUE
+ * (20260521000000_telegram_link.sql:19, codified again in 20260806000000), so
+ * pointing a second GraceChords account at an already-linked Telegram id fails
+ * at the constraint and surfaces here as 'already_linked_elsewhere'. Do not
+ * "fix" that by clearing the other row first: whoever most recently ran /start
+ * would silently inherit the other account, which is exactly the takeover this
+ * refusal exists to prevent.
+ */
+export async function linkTelegramAccount(env, { userId, telegramUserId }) {
+  const resp = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/users?id=eq.${encodeURIComponent(userId)}`,
+    {
+      method: 'PATCH',
+      headers: { ...headers(env), 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({
+        telegram_user_id: telegramUserId,
+        telegram_linked_at: new Date().toISOString(),
+      }),
+    },
+  )
+
+  if (resp.ok) {
+    const rows = await resp.json().catch(() => [])
+    // An empty representation means the id matched no row — treat as failure
+    // rather than reporting a link that does not exist.
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return { status: 'error', detail: 'no matching user row' }
+    }
+    return { status: 'ok' }
+  }
+
+  const text = await resp.text().catch(() => '')
+  // Same detection the web endpoint uses (functions/api/telegram/link.js:206).
+  if (resp.status === 409 || /telegram_user_id/.test(text)) {
+    return { status: 'already_linked_elsewhere' }
+  }
+  return { status: 'error', detail: `${resp.status} ${text}` }
+}
+
 export async function findUserByTelegramId(env, telegramUserId) {
   const rows = await get(
     env,

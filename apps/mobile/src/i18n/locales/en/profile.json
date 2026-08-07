@@ -1,0 +1,44 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Account",
+  "sections": {
+    "profile": "PROFILE",
+    "security": "SECURITY",
+    "connections": "CONNECTIONS"
+  },
+  "appIcon": "App icon",
+  "name": "Name",
+  "email": "Email",
+  "changePassword": "Change password",
+  "nameSheet": {
+    "title": "Your name",
+    "placeholder": "Alex Brown",
+    "hint": "This is the name shown on your profile and in greetings.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saveFailedTitle": "Couldn't save your name",
+    "saveFailedMessage": "Please check your connection and try again."
+  },
+  "telegram": {
+    "title": "Telegram",
+    "status": "Status",
+    "link": "Link Telegram",
+    "linking": "Opening Telegram…",
+    "linked": "Linked",
+    "linkedOn": "Linked · {{date}}",
+    "linkHint": "Opens Telegram so you can tap Start in @gracechords_bot. Once linked, send the bot a song title and it sends the chord chart back.",
+    "unlink": "Unlink Telegram",
+    "unlinking": "Unlinking…",
+    "unlinkAlert": {
+      "title": "Unlink Telegram?",
+      "message": "The bot will stop sending you charts until you link again.",
+      "confirm": "Unlink"
+    },
+    "unlinkFailedTitle": "Couldn't unlink Telegram",
+    "linkFailedTitle": "Couldn't start linking"
+  },
+  "logOut": "Log out",
+  "logOutHint": "Signs you out of GraceChords on this device.",
+  "deleteAccount": "Delete account",
+  "deleteAccountHint": "Permanently deletes your account and all of your data."
+}
