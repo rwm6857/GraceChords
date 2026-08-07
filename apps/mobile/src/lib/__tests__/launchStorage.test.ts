@@ -6,11 +6,20 @@ import { hydrateRecents, getRecentlyOpened } from '../recents'
 import { hydrateReadingStreak, getReadingStreak, DEFAULT_READING_STREAK } from '../readingStreak'
 import { hydrateReaderReminder, getReaderReminder, DEFAULT_READER_REMINDER } from '../readerReminder'
 import { hydrateViewerPrefs, getColumnMode } from '../viewerPrefs'
+import {
+  __resetReflectionDayStoreForTest,
+  getReflectionDay,
+  hydrateTodayReflection,
+  reflectionCacheKey,
+} from '../reflectionDayStore'
 
-// The whole point of the facade is that the eight hydrate modules are unchanged,
+// The whole point of the facade is that the nine hydrate modules are unchanged,
 // so these tests assert the OUTCOME each module produces when fed through a
 // batch — not the facade in isolation. A silent change to any fallback here
 // would reset a real user's preference on upgrade.
+
+/** Fixed "now" so the reflection cases don't depend on the day they run. */
+const REFLECTION_NOW = new Date('2026-08-07T12:00:00')
 
 function makeStore(seed: Record<string, string> = {}) {
   const data = new Map(Object.entries(seed))
@@ -36,9 +45,9 @@ function makeStore(seed: Record<string, string> = {}) {
 }
 
 describe('LAUNCH_STORAGE_KEYS', () => {
-  it('covers the 12 keys the splash gate reads', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(12)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(12)
+  it('covers the 13 keys the splash gate reads', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(13)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(13)
   })
 })
 
@@ -60,8 +69,8 @@ describe('primeLaunchStorage', () => {
 
   it('falls back to the real store when multiGet rejects', async () => {
     // Today each module does its own getItem behind its own try/catch, so one
-    // failing read can only affect one module. A batch that reset all 12
-    // preferences to defaults at once would be a far worse failure.
+    // failing read can only affect one module. A batch that reset all 13
+    // keys to defaults at once would be a far worse failure.
     const { store } = makeStore({ 'gc.defaults.theme': 'dark' })
     store.multiGet = () => Promise.reject(new Error('storage unavailable'))
     const primed = await primeLaunchStorage(store)
@@ -185,6 +194,46 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
       run: async (s) => {
         await hydrateViewerPrefs(s)
         return getColumnMode('anything')
+      },
+    },
+    {
+      name: 'today’s reflection: cached entry',
+      seed: {
+        'gc.reflection.today.v1': JSON.stringify({
+          userId: 'user-1',
+          date: '2026-08-07',
+          reflection: {
+            id: 'r1',
+            user_id: 'user-1',
+            reflection_date: '2026-08-07',
+            content_key: null,
+            visibility: 'private',
+            body: 'cached',
+            created_at: '2026-08-07T09:00:00Z',
+          },
+        }),
+      },
+      run: async (s) => {
+        // Module-level store, and `run` is called twice (direct then batched) —
+        // reset so the second pass genuinely re-reads rather than seeing the first.
+        __resetReflectionDayStoreForTest()
+        await hydrateTodayReflection(s, REFLECTION_NOW)
+        return getReflectionDay(reflectionCacheKey('user-1', '2026-08-07')) ?? null
+      },
+    },
+    {
+      name: 'today’s reflection: entry from an earlier day is dropped',
+      seed: {
+        'gc.reflection.today.v1': JSON.stringify({
+          userId: 'user-1',
+          date: '2026-08-06',
+          reflection: null,
+        }),
+      },
+      run: async (s) => {
+        __resetReflectionDayStoreForTest()
+        await hydrateTodayReflection(s, REFLECTION_NOW)
+        return getReflectionDay(reflectionCacheKey('user-1', '2026-08-06')) ?? null
       },
     },
     {

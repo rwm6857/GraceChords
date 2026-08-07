@@ -28,6 +28,7 @@ import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateDrafts } from '../src/lib/drafts/draftsStore'
 import { hydrateRecents } from '../src/lib/recents'
 import { hydrateReadingStreak } from '../src/lib/readingStreak'
+import { clearReflectionDays, hydrateTodayReflection } from '../src/lib/reflectionDayStore'
 import { hydrateReaderReminder } from '../src/lib/readerReminder'
 import { syncDevotionals } from '../src/lib/devotionals/sync'
 import {
@@ -211,7 +212,7 @@ export default function RootLayout() {
     // session read were nested behind it the two would serialise and cold launch
     // would regress — the whole point of batching is to be no slower.
     const sessionRead = resolveInitialSession(supabase.auth)
-    // One AsyncStorage round trip for all 12 launch keys instead of 12 separate
+    // One AsyncStorage round trip for all 13 launch keys instead of 13 separate
     // getItem calls. The stores themselves are untouched: they receive a
     // KVStorage that answers from the batch, so every missing/null/malformed
     // fallback is byte-for-byte what it was. See launchStorage.ts.
@@ -225,6 +226,11 @@ export default function RootLayout() {
         hydrateReaderReminder(store),
         hydrateViewerPrefs(store),
         hydrateBibleTranslationPref(store),
+        // Today's cached reflection, so the Daily Word landing paints the card
+        // it already knows about instead of spinning. Does NOT need to be
+        // ordered against sessionRead: the stored entry names its own owner and
+        // is only found by a lookup for that same user (reflectionDayStore.ts).
+        hydrateTodayReflection(store),
       ]),
     )
     Promise.all([
@@ -284,6 +290,11 @@ export default function RootLayout() {
       if (event === 'SIGNED_IN' && next?.user) {
         void flushPendingSprite(supabase, AsyncStorage, next.user.id)
       }
+      // A reflection is private journal text, and caching it to disk is only
+      // defensible if signing out takes it back off again. The in-memory copy is
+      // keyed by user id and so could never be shown to the next account, but
+      // the persisted one should not outlive the session that wrote it.
+      if (event === 'SIGNED_OUT') clearReflectionDays()
     })
     return () => {
       sub.subscription.unsubscribe()
