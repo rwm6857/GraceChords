@@ -334,6 +334,7 @@ export default function RootLayout() {
             <Stack.Screen name="daily/reader" />
             <Stack.Screen name="daily/journal" />
             <Stack.Screen name="daily/reflection" />
+            <Stack.Screen name="devotional/[date]/[slug]" />
             <Stack.Screen name="setlist/import" />
             <Stack.Screen name="setlist/[id]" />
             <Stack.Screen name="perform/[id]" />

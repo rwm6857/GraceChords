@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "reviewer": "",
+    "reviewedAt": "",
+    "needsReview": true
+  },
+  "card": {
+    "label": "Tefekkür",
+    "open": "{{reference}} tefekkürünü aç"
+  },
+  "placeholder": {
+    "none": "Bugünün okumaları için tefekkür yok."
+  },
+  "screen": {
+    "back": "Geri",
+    "attribution": "{{author}} · {{sourceWork}}",
+    "alsoToday": "Bugün ayrıca"
+  },
+  "notFound": {
+    "title": "Tefekkür bulunamadı",
+    "body": "Bu tefekkür kullanılamıyor. Taşınmış ya da bağlantı geçersiz olmuş olabilir."
+  }
+}

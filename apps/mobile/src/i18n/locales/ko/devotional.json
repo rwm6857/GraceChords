@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "reviewer": "",
+    "reviewedAt": "",
+    "needsReview": true
+  },
+  "card": {
+    "label": "묵상",
+    "open": "{{reference}} 묵상 열기"
+  },
+  "placeholder": {
+    "none": "오늘 본문에는 묵상이 없습니다."
+  },
+  "screen": {
+    "back": "뒤로",
+    "attribution": "{{author}} · {{sourceWork}}",
+    "alsoToday": "오늘의 다른 묵상"
+  },
+  "notFound": {
+    "title": "묵상을 찾을 수 없습니다",
+    "body": "이 묵상을 열 수 없습니다. 위치가 변경되었거나 링크가 오래된 것일 수 있습니다."
+  }
+}
