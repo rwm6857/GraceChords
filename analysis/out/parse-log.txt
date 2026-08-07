@@ -13,6 +13,8 @@ Validation
   PASS  every entry has a non-empty body
   PASS  no unconsumed "* NN/NN/" marker in any body
   PASS  no filename/marker/header errors
+  PASS  bodyBlocks round-trips to bodyPlain for all 732 entries
+  PASS  verse blocks keep their lines discrete
 
 Body length distribution (characters)
   min 1561 (06-19-PM)   p05 1715   p25 1798   median 1843   p75 1880   p95 1925   max 2940 (12-31-AM)
@@ -31,6 +33,13 @@ Parse statistics
   entries with >1 core text/reference pair: 07-12-AM (3), 08-30-PM (2)
   italic markers preserved: 3425 underscores
   timeHint morning / evening / ambiguous-so-null: 34 / 66 / 2
+
+bodyBlocks
+  type "p": 1015
+  type "verse": 145
+  verse lines: 534
+  spans: 4930 total, 1712 italic
+  round-trip to bodyPlain: 732/732 exact
 
 Hyphen joins, for spot-checking (tail|head of each join):
   Is it not done for self-|aggrandizement

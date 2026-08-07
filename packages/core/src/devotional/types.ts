@@ -19,13 +19,24 @@ export type ParagraphBlock = {
   spans: Span[]
 }
 
+/** One line of a verse stanza. `indent` is the source's relative indentation. */
+export type VerseLine = {
+  /**
+   * Leading spaces in the source, relative to the stanza. Non-zero on hanging
+   * continuation lines and centered inscriptions. A renderer that centres the
+   * stanza may ignore this; it exists so the artifact stays lossless.
+   */
+  indent: number
+  spans: Span[]
+}
+
 /**
  * A hymn or verse stanza. Lines are kept discrete because they are set as
  * distinct centered lines, not reflowed as prose.
  */
 export type VerseBlock = {
   type: 'verse'
-  lines: Span[][]
+  lines: VerseLine[]
 }
 
 /**
@@ -36,7 +47,13 @@ export type VerseBlock = {
 export type DevotionalBlock = ParagraphBlock | VerseBlock | { type: string }
 
 export type Devotional = {
-  /** Stable, globally unique, URL-safe. The deep-link identifier. */
+  /** Source identifier. For the CCEL corpus, its original M&E key. */
+  id: string
+  /**
+   * URL-safe slug from the MATCHED reference. Unique within its day, but NOT
+   * globally: 13 slugs recur across different days, so a deep link needs the
+   * day key as well as the slug.
+   */
   slug: string
   /** Scripture the entry is built on, e.g. `Genesis 1:5`. Card eyebrow. */
   reference: string
@@ -48,22 +65,38 @@ export type Devotional = {
   sourceWork: string
   /** The chapter of the day's reading this entry matched, e.g. `Genesis 1`. */
   matchedChapter: string | null
+  /**
+   * Vestige of the abandoned morning/evening structure. Null for the large
+   * majority. Carried for provenance only — never used for ordering or display.
+   */
+  timeHint: 'morning' | 'evening' | null
   bodyBlocks: DevotionalBlock[]
 }
 
+/** Whether a day carries two devotionals, one, or none. */
+export type DayState = 'two' | 'one' | 'open'
+
+export type DayEntry = {
+  state: DayState
+  /** The day's M'Cheyne reading slots, as displayed, e.g. `Psalms 119:145-176`. */
+  readings: string[]
+  /** In display order: the day's reading order. Empty when `state` is `open`. */
+  devotionals: Devotional[]
+}
+
 /**
- * One month of devotionals, keyed by `MM-DD`. Every day of the month is
- * present; a day with no scripture match maps to an empty array.
+ * One month, keyed by `MM-DD`. EVERY day of the month is present, including
+ * open ones, so a client lookup never misses. There is no `02-29` key — the
+ * leap day clamps to `02-28` (see dayKey.ts).
  */
 export type MonthFile = {
   month: number
-  /** Content hash of this file, matching its manifest entry. */
-  version: string
-  days: Record<string, Devotional[]>
+  schemaVersion: number
+  days: Record<string, DayEntry>
 }
 
 export type ManifestMonth = {
-  /** Path relative to the manifest, e.g. `month/01.json`. */
+  /** Path relative to the devotionals root, including the content version. */
   file: string
   /** sha256 of the month file's bytes, hex. */
   hash: string
@@ -72,7 +105,14 @@ export type ManifestMonth = {
 
 export type Manifest = {
   /** Artifact schema version. Bumped only on a breaking shape change. */
-  schema: number
+  schemaVersion: number
+  /**
+   * Content fingerprint. Appears in every month path, so month objects are
+   * immutable and never need cache invalidation.
+   */
+  contentVersion: string
+  /** Build timestamp when one was injected, else null. Never used for sync. */
+  generatedAt: string | null
   /** Keyed by zero-padded month, `"01"`–`"12"`. */
   months: Record<string, ManifestMonth>
 }

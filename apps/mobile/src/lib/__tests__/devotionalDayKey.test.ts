@@ -12,6 +12,13 @@ import {
   withCachedMonth,
   SYNC_INTERVAL_MS,
 } from '@gracechords/core/devotional/manifest'
+import {
+  selectDay,
+  selectDayForDate,
+  selectDevotional,
+  siblingDevotional,
+} from '@gracechords/core/devotional/selection'
+import type { MonthFile } from '@gracechords/core/devotional/types'
 
 describe('devotionalDayKey', () => {
   it('formats an ordinary date as MM-DD', () => {
@@ -54,20 +61,33 @@ describe('devotionalDayKey', () => {
 
 describe('manifest', () => {
   const good = {
-    schema: 1,
-    months: { '01': { file: 'month/01.json', hash: 'aaa', bytes: 10 } },
+    schemaVersion: 1,
+    contentVersion: 'abc123',
+    generatedAt: null,
+    months: { '01': { file: 'abc123/month/01.json', hash: 'aaa', bytes: 10 } },
   }
 
   it('parses a valid manifest', () => {
-    expect(parseManifest(good)?.months['01'].hash).toBe('aaa')
+    const m = parseManifest(good)
+    expect(m?.months['01'].hash).toBe('aaa')
+    expect(m?.contentVersion).toBe('abc123')
+    expect(m?.generatedAt).toBeNull()
   })
 
   it('rejects malformed or future-schema payloads instead of throwing', () => {
     expect(parseManifest(null)).toBeNull()
     expect(parseManifest('nope')).toBeNull()
-    expect(parseManifest({ schema: 99, months: good.months })).toBeNull()
-    expect(parseManifest({ schema: 1, months: {} })).toBeNull()
-    expect(parseManifest({ schema: 1, months: { '01': { file: 'x' } } })).toBeNull()
+    expect(parseManifest({ ...good, schemaVersion: 99 })).toBeNull()
+    expect(parseManifest({ ...good, months: {} })).toBeNull()
+    expect(parseManifest({ ...good, contentVersion: '' })).toBeNull()
+    expect(parseManifest({ ...good, months: { '01': { file: 'x' } } })).toBeNull()
+  })
+
+  it('ignores generatedAt entirely when planning a sync', () => {
+    // Staleness is decided by content hash alone -- a rebuilt-but-unchanged
+    // artifact with a fresh timestamp must not trigger any download.
+    const m = parseManifest({ ...good, generatedAt: '2026-08-07T00:00:00Z' })!
+    expect(staleMonths(m, { lastCheckedAt: 0, hashes: { '01': 'aaa' } })).toEqual([])
   })
 
   it('only reports months whose hash differs from the cache', () => {
@@ -90,5 +110,44 @@ describe('manifest', () => {
     expect(state.hashes).toEqual({ '01': 'a', '02': 'c' })
     expect(state.lastCheckedAt).toBe(5)
     expect(parseSyncState(undefined)).toEqual({ lastCheckedAt: 0, hashes: {} })
+  })
+})
+
+describe('selection', () => {
+  const month: MonthFile = {
+    month: 8,
+    schemaVersion: 1,
+    days: {
+      '08-06': { state: 'two', readings: ['Judges 20', 'Acts 24'], devotionals: [
+        { slug: 'judges-20-1', id: 'x', reference: 'Judges 20:1', coreText: '', excerpt: '', author: '', sourceWork: '', matchedChapter: 'Judges 20', timeHint: null, bodyBlocks: [] },
+        { slug: 'acts-24-16', id: 'y', reference: 'Acts 24:16', coreText: '', excerpt: '', author: '', sourceWork: '', matchedChapter: 'Acts 24', timeHint: null, bodyBlocks: [] },
+      ] },
+      '08-07': { state: 'open', readings: ['Judges 21'], devotionals: [] },
+    },
+  }
+
+  it('selects a day, and distinguishes open from wrong-month', () => {
+    expect(selectDay(month, '08-06')?.state).toBe('two')
+    expect(selectDay(month, '08-07')?.state).toBe('open')
+    // A key from another month is a bug, not an open day.
+    expect(selectDay(month, '09-01')).toBeNull()
+    expect(selectDay(null, '08-06')).toBeNull()
+  })
+
+  it('selects by date through the same leap clamp', () => {
+    const feb: MonthFile = {
+      month: 2, schemaVersion: 1,
+      days: { '02-28': { state: 'one', readings: [], devotionals: [] } },
+    }
+    expect(selectDayForDate(feb, new Date(2028, 1, 29))?.state).toBe('one')
+  })
+
+  it('finds a devotional by slug and its sibling', () => {
+    const day = selectDay(month, '08-06')!
+    expect(selectDevotional(day, 'acts-24-16')?.id).toBe('y')
+    expect(selectDevotional(day, 'nope')).toBeNull()
+    expect(siblingDevotional(day, 'acts-24-16')?.slug).toBe('judges-20-1')
+    // A one-devotional day has no sibling to offer.
+    expect(siblingDevotional(selectDay(month, '08-07'), 'anything')).toBeNull()
   })
 })

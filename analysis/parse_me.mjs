@@ -46,6 +46,7 @@
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { toBodyBlocks, bodyBlocksToPlain } from './lib/blocks.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const INGEST = join(HERE, 'ingest')
@@ -284,6 +285,10 @@ function parseEntry({ key, month, day, slot, lines, file }) {
     bodyPlain,
     timeHint: timeHintOf(`${coreTexts.join(' ')} ${bodyPlain}`),
     blocks,
+    // Offline-parsed body: paragraphs and verse stanzas with italic spans
+    // already resolved, so no client ships a markup parser. `body` and
+    // `bodyPlain` are unchanged — this is purely additive.
+    bodyBlocks: toBodyBlocks(blocks),
   }
 }
 
@@ -441,6 +446,47 @@ check(leaked.length === 0, 'no unconsumed "* NN/NN/" marker in any body',
 check(errors.length === 0, 'no filename/marker/header errors',
   errors.slice(0, 20).join('\n          '))
 
+// bodyBlocks must reassemble to exactly bodyPlain. This is THE guard against a
+// block or span parser silently dropping a sentence: a mismatch is a hard
+// error, not a warning, because the loss would be invisible on screen.
+const roundTripFails = records.filter((r) => bodyBlocksToPlain(r.bodyBlocks) !== r.bodyPlain)
+check(roundTripFails.length === 0,
+  `bodyBlocks round-trips to bodyPlain for all ${records.length} entries`,
+  roundTripFails.slice(0, 5).map((r) => r.key).join(', '))
+
+const blockTypes = new Map()
+let totalSpans = 0
+let italicSpans = 0
+let verseLines = 0
+for (const r of records) {
+  for (const b of r.bodyBlocks) {
+    blockTypes.set(b.type, (blockTypes.get(b.type) ?? 0) + 1)
+    if (b.type === 'verse') {
+      verseLines += b.lines.length
+      for (const line of b.lines) {
+        totalSpans += line.spans.length
+        italicSpans += line.spans.filter((s) => s.i).length
+      }
+    } else {
+      totalSpans += b.spans.length
+      italicSpans += b.spans.filter((s) => s.i).length
+    }
+  }
+}
+// A verse block must never be collapsed into a single reflowed line: the source
+// stanza's line count has to survive into the artifact.
+const flattenedVerse = []
+for (const r of records) {
+  const sourceVerse = r.blocks.filter((b) => b.type === 'verse')
+  const outVerse = r.bodyBlocks.filter((b) => b.type === 'verse')
+  sourceVerse.forEach((src, i) => {
+    const expected = src.text.split('\n').length
+    if (outVerse[i]?.lines.length !== expected) flattenedVerse.push(r.key)
+  })
+}
+check(flattenedVerse.length === 0, 'verse blocks keep their lines discrete',
+  [...new Set(flattenedVerse)].slice(0, 5).join(', '))
+
 // Body length distribution -- a short body almost always means a parse failure.
 const lens = records.map((r) => ({ key: r.key, n: r.body.length })).sort((a, b) => a.n - b.n)
 const pct = (p) => lens[Math.floor((lens.length - 1) * p)].n
@@ -466,6 +512,14 @@ say(`  mid-block paragraph splits (no blank line in source): ${stats.midBlockPar
 say(`  entries with >1 core text/reference pair: ${stats.multiRefEntries.join(', ') || 'none'}`)
 say(`  italic markers preserved: ${records.reduce((a, r) => a + (r.body.match(/_/g)?.length ?? 0), 0)} underscores`)
 say(`  timeHint morning / evening / ambiguous-so-null: ${stats.timeHintMorning} / ${stats.timeHintEvening} / ${stats.timeHintAmbiguous}`)
+
+say('\nbodyBlocks')
+for (const [type, n] of [...blockTypes.entries()].sort((a, b) => b[1] - a[1])) {
+  say(`  type "${type}": ${n}`)
+}
+say(`  verse lines: ${verseLines}`)
+say(`  spans: ${totalSpans} total, ${italicSpans} italic`)
+say(`  round-trip to bodyPlain: ${records.length - roundTripFails.length}/${records.length} exact`)
 
 say('\nHyphen joins, for spot-checking (tail|head of each join):')
 for (const s of stats.hyphenJoinSamples) say(`  ${s}`)

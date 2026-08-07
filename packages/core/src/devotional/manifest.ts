@@ -30,9 +30,11 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
  */
 export function parseManifest(payload: unknown): Manifest | null {
   if (!isObj(payload)) return null
-  const schema = Number(payload.schema)
-  if (!Number.isFinite(schema) || schema !== DEVOTIONAL_SCHEMA) return null
+  const schemaVersion = Number(payload.schemaVersion)
+  if (!Number.isFinite(schemaVersion) || schemaVersion !== DEVOTIONAL_SCHEMA) return null
   if (!isObj(payload.months)) return null
+  const contentVersion = typeof payload.contentVersion === 'string' ? payload.contentVersion : ''
+  if (!contentVersion) return null
 
   const months: Record<string, ManifestMonth> = {}
   for (const key of MONTH_KEYS) {
@@ -44,7 +46,13 @@ export function parseManifest(payload: unknown): Manifest | null {
     if (!file || !hash) continue
     months[key] = { file, hash, bytes: Number.isFinite(bytes) ? bytes : 0 }
   }
-  return Object.keys(months).length ? { schema, months } : null
+  if (!Object.keys(months).length) return null
+  return {
+    schemaVersion,
+    contentVersion,
+    generatedAt: typeof payload.generatedAt === 'string' ? payload.generatedAt : null,
+    months,
+  }
 }
 
 /** Validate an untrusted month payload. Returns null on anything unexpected. */
@@ -53,11 +61,9 @@ export function parseMonthFile(payload: unknown): MonthFile | null {
   const month = Number(payload.month)
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   if (!isObj(payload.days)) return null
-  return {
-    month,
-    version: typeof payload.version === 'string' ? payload.version : '',
-    days: payload.days as MonthFile['days'],
-  }
+  const schemaVersion = Number(payload.schemaVersion)
+  if (schemaVersion !== DEVOTIONAL_SCHEMA) return null
+  return { month, schemaVersion, days: payload.days as MonthFile['days'] }
 }
 
 export function emptySyncState(): SyncState {
