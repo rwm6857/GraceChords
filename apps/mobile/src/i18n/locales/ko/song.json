@@ -42,6 +42,7 @@
     "fontSize": "글자 크기",
     "smallerFont": "글자 작게",
     "largerFont": "글자 크게",
+    "autoFontSize": "자동 · {{percent}}%",
     "chordStyle": "코드 표기",
     "letters": "알파벳",
     "solfege": "계이름",

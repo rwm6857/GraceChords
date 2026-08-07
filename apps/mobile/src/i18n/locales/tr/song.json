@@ -42,6 +42,7 @@
     "fontSize": "Yazı boyutu",
     "smallerFont": "Daha küçük yazı",
     "largerFont": "Daha büyük yazı",
+    "autoFontSize": "Otomatik · %{{percent}}",
     "chordStyle": "Akor gösterimi",
     "letters": "Harfler",
     "solfege": "Solfej",

@@ -16,7 +16,7 @@ import {
   songRowToForm,
   fetchPersonalSongById,
 } from '@gracechords/core'
-import ChordChart, {
+import {
   CHART_FONT_SIZE,
   CHART_LINE_HEIGHT,
   CHART_LYRIC_FONT,
@@ -30,7 +30,7 @@ import Screen from '../../src/components/Screen'
 import StarButton from '../../src/components/StarButton'
 import SymbolIcon from '../../src/components/SymbolIcon'
 import TransposeBar from '../../src/components/TransposeBar'
-import TwoColumnChart from '../../src/components/TwoColumnChart'
+import AutoFitChart from '../../src/components/AutoFitChart'
 import ViewOptionsSheet, {
   type Accidental,
   defaultAccidental,
@@ -47,8 +47,7 @@ import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
-import { useIsTabletWidth } from '../../src/lib/useIsTabletWidth'
-import { setColumnMode, useColumnMode } from '../../src/lib/viewerPrefs'
+import { useChartAutoFit } from '../../src/lib/useChartAutoFit'
 import { useTheme } from '../../src/theme/ThemeProvider'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
@@ -117,7 +116,6 @@ export default function ViewerScreen() {
   // View options — all session-ephemeral.
   const [showChords, setShowChords] = useState(true)
   const [showSections, setShowSections] = useState(true)
-  const [fontScale, setFontScale] = useState(1)
   // Chord style initializes from the app-wide default (read-on-open); in-viewer
   // changes stay session-local — no write-back to the global default.
   const [chordStyle, setChordStyle] = useState<ChordStyle>(() => getDefaultsSnapshot().chordStyle)
@@ -133,12 +131,7 @@ export default function ViewerScreen() {
   // height seeds the chart's top inset, so the first line starts where the
   // header sits and the user can scroll up into that space.
   const [headerH, setHeaderH] = useState(0)
-  // Two-column mode: tablet widths only. Persisted PER SONG (device-local);
-  // phones never see the toggle and always take the baseline single path.
-  const isTablet = useIsTabletWidth()
-  const columnMode = useColumnMode(slug)
   const [chartAreaH, setChartAreaH] = useState(0)
-  const twoColumns = isTablet && columnMode === 'double'
 
   const nativeKey = doc?.meta?.key || song?.default_key || songKey || ''
   const seedSteps = initialKey ? stepsBetween(nativeKey, initialKey) : 0
@@ -173,6 +166,16 @@ export default function ViewerScreen() {
     () => Gesture.Tap().onEnd(() => runOnJS(reveal)()),
     [reveal],
   )
+
+  // Column ceiling + auto-fit font, shared with the Setlist Performer.
+  const autoFit = useChartAutoFit({
+    chartAreaH,
+    headerH,
+    horizontalPadding: t.spacing.lg,
+    columnGap: t.spacing.lg,
+    topGap: t.spacing.sm,
+    chromeVisible,
+  })
 
   const transposeBy = (dir: 1 | -1) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
@@ -398,32 +401,23 @@ export default function ViewerScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 paddingHorizontal: t.spacing.lg,
-                paddingTop: headerH + t.spacing.sm,
+                paddingTop: autoFit.paddingTop,
                 paddingBottom: t.spacing.xxl * 2 + TRANSPOSE_BAR_CLEARANCE,
               }}
             >
-              {twoColumns ? (
-                <TwoColumnChart
-                  doc={doc}
-                  steps={steps}
-                  preferFlat={preferFlat}
-                  showChords={showChords}
-                  showSections={showSections}
-                  fontScale={fontScale}
-                  chordStyle={chordStyle}
-                  viewportHeight={Math.max(0, chartAreaH - headerH - t.spacing.sm)}
-                />
-              ) : (
-                <ChordChart
-                  doc={doc}
-                  steps={steps}
-                  preferFlat={preferFlat}
-                  showChords={showChords}
-                  showSections={showSections}
-                  fontScale={fontScale}
-                  chordStyle={chordStyle}
-                />
-              )}
+              <AutoFitChart
+                doc={doc}
+                steps={steps}
+                preferFlat={preferFlat}
+                showChords={showChords}
+                showSections={showSections}
+                fontScale={autoFit.fontScale}
+                chordStyle={chordStyle}
+                maxColumns={autoFit.columns}
+                viewportHeight={autoFit.viewportHeight}
+                viewportHeightChromeHidden={autoFit.viewportHeightChromeHidden}
+                onPlan={autoFit.onPlan}
+              />
             </ScrollView>
           </GestureDetector>
           {keyLabel ? (
@@ -473,14 +467,16 @@ export default function ViewerScreen() {
         onShowChords={setShowChords}
         showSections={showSections}
         onShowSections={setShowSections}
-        fontScale={fontScale}
-        onFontScale={setFontScale}
+        fontScale={autoFit.effectiveFontScale}
+        fontAuto={autoFit.fontAuto}
+        onFontScale={autoFit.onFontScale}
         chordStyle={chordStyle}
         onChordStyle={setChordStyle}
         accidental={accidental}
         onAccidental={setAccidentalManual}
-        columnMode={isTablet ? columnMode : undefined}
-        onColumnMode={isTablet ? (m) => setColumnMode(slug, m) : undefined}
+        columns={autoFit.maxColumns > 1 ? autoFit.columns : undefined}
+        onColumns={autoFit.maxColumns > 1 ? autoFit.setColumns : undefined}
+        maxColumns={autoFit.maxColumns}
         autoHide={autoHide}
         onAutoHide={setAutoHide}
         keepAwake={keepAwake}

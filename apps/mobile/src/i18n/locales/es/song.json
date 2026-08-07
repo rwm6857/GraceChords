@@ -42,6 +42,7 @@
     "fontSize": "Tamaño de letra",
     "smallerFont": "Letra más pequeña",
     "largerFont": "Letra más grande",
+    "autoFontSize": "Auto · {{percent}} %",
     "chordStyle": "Estilo de acordes",
     "letters": "Letras",
     "solfege": "Solfeo",

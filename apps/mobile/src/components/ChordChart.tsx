@@ -23,6 +23,19 @@ export const CHART_MONO = Platform.select({ ios: 'Menlo', default: 'monospace' }
 export const CHART_LYRIC_FONT = undefined
 export const CHART_FONT_SIZE = 17
 export const CHART_LINE_HEIGHT = 24
+/** Chord row size at scale 1. Exported so the layout planner can width-test
+ *  monospace chord-only rows without rendering them. */
+export const CHART_CHORD_FONT_SIZE = 14
+/**
+ * Points pulled out from between a chord and the lyric it sits on (scaled with
+ * the font). The two Texts are stacked flush, so the visible gap is pure font
+ * leading — the chord's unused descent space plus the lyric's ascent-above-cap,
+ * ~12pt at scale 1 — which reads as too airy for a chord that belongs to the
+ * word beneath it. This tightens it by roughly a quarter. It stays inside the
+ * chord's descent space (chord symbols have no descenders), so nothing clips.
+ * Chord-only instrumental rows have no lyric beneath and are left alone.
+ */
+export const CHART_CHORD_LYRIC_TIGHTEN = 3
 
 export type ChordStyle = 'letters' | 'solfege'
 
@@ -78,7 +91,7 @@ export type RenderOpts = {
   chordStyle: ChordStyle
 }
 
-// Exported for TwoColumnChart, which renders the same sections one column at a
+// Exported for AutoFitChart, which renders the same sections one column at a
 // time (and offscreen for measurement). `first` gates the inter-section gap.
 export function ChartSection({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
   const t = useTheme()
@@ -138,7 +151,7 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
   const { steps, preferFlat, showChords, fontScale, chordStyle } = opts
   const lyricSize = CHART_FONT_SIZE * fontScale
   const lineHeight = Math.round(CHART_LINE_HEIGHT * fontScale)
-  const chordSize = 14 * fontScale
+  const chordSize = CHART_CHORD_FONT_SIZE * fontScale
   const chordLineHeight = Math.round(16 * fontScale)
 
   const lyric = { fontFamily: CHART_LYRIC_FONT, fontSize: lyricSize, lineHeight, fontWeight: '500' as const, color: t.colors.ink }
@@ -202,7 +215,12 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 2 }}>
       {cells.map((cell, i) => (
         <View key={i} style={{ marginRight: lyricSize * 0.28 }}>
-          <Text style={[chordStyleObj, { minHeight: chordLineHeight }]}>
+          <Text
+            style={[
+              chordStyleObj,
+              { minHeight: chordLineHeight, marginBottom: -CHART_CHORD_LYRIC_TIGHTEN * fontScale },
+            ]}
+          >
             {cell.chords.join(' ') || ' '}
           </Text>
           {cell.text ? <Text style={lyric}>{cell.text}</Text> : <Text style={lyric}> </Text>}

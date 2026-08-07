@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   __resetViewerPrefsForTest,
-  getColumnMode,
-  getDefaultColumnMode,
+  getColumns,
   hydrateViewerPrefs,
-  setColumnMode,
-  setDefaultColumnMode,
+  setColumns,
 } from '../viewerPrefs'
 import type { KVStorage as KV } from '../defaults'
 
-const KEY = 'gc.viewer.columnMode.v1'
+const KEY = 'gc.viewer.columns.v2'
+const LEGACY_KEY = 'gc.viewer.columnMode.v1'
 
 function memoryStorage(initial: Record<string, string> = {}): KV & { store: Map<string, string> } {
   const store = new Map(Object.entries(initial))
@@ -29,91 +28,86 @@ beforeEach(() => {
   __resetViewerPrefsForTest()
 })
 
-describe('viewerPrefs column mode', () => {
-  it('resolves to single when nothing is stored (app-wide default)', async () => {
+describe('viewerPrefs column ceiling', () => {
+  it('defaults to a single column when nothing is stored', async () => {
     await hydrateViewerPrefs(memoryStorage())
-    expect(getDefaultColumnMode()).toBe('single')
-    expect(getColumnMode('amazing-grace')).toBe('single')
-    expect(getColumnMode(undefined)).toBe('single')
+    expect(getColumns()).toBe(1)
   })
 
-  it('persists per song and is isolated between songs', async () => {
+  it('is GLOBAL — one value, not per song', async () => {
     const s = memoryStorage()
     await hydrateViewerPrefs(s)
-    setColumnMode('song-a', 'double')
-    await flush()
-
-    expect(getColumnMode('song-a')).toBe('double')
-    expect(getColumnMode('song-b')).toBe('single')
-    expect(JSON.parse(s.store.get(KEY)!)).toEqual({ songs: { 'song-a': 'double' } })
+    setColumns(3)
+    // No slug anywhere in the API: every song in every setlist reads the same
+    // value, which is the whole point of v2.
+    expect(getColumns()).toBe(3)
   })
 
-  it('survives a simulated reload (reopen a song set to double → still double)', async () => {
+  it('persists across a relaunch', async () => {
     const s = memoryStorage()
     await hydrateViewerPrefs(s)
-    setColumnMode('song-a', 'double')
+    setColumns(2)
     await flush()
 
-    await hydrateViewerPrefs(memoryStorage()) // fresh empty hydrate = relaunch reset
-    expect(getColumnMode('song-a')).toBe('single')
+    await hydrateViewerPrefs(memoryStorage()) // fresh empty hydrate = other device
+    expect(getColumns()).toBe(1)
 
     await hydrateViewerPrefs(s) // reload from the original storage
-    expect(getColumnMode('song-a')).toBe('double')
-    expect(getColumnMode('song-b')).toBe('single')
+    expect(getColumns()).toBe(2)
   })
 
-  it('does not bloat storage: flipping back to single removes the entry and the key', async () => {
+  it('drops the stored key when set back to the default', async () => {
     const s = memoryStorage()
     await hydrateViewerPrefs(s)
-    setColumnMode('song-a', 'double')
+    setColumns(3)
     await flush()
     expect(s.store.has(KEY)).toBe(true)
 
-    setColumnMode('song-a', 'single')
-    await flush()
-    expect(getColumnMode('song-a')).toBe('single')
-    expect(s.store.has(KEY)).toBe(false)
-  })
-
-  it('setting a mode a song already resolves to writes nothing', async () => {
-    const s = memoryStorage()
-    await hydrateViewerPrefs(s)
-    setColumnMode('song-a', 'single') // already the default
+    setColumns(1)
     await flush()
     expect(s.store.has(KEY)).toBe(false)
+    expect(getColumns()).toBe(1)
   })
 
-  it('app-wide default seam: overrides resolve against it and prune to it', async () => {
-    const s = memoryStorage()
-    await hydrateViewerPrefs(s)
-    setDefaultColumnMode('double')
-    await flush()
-
-    expect(getColumnMode('untouched-song')).toBe('double')
-    // A per-song 'single' now differs from the default → stored as an override.
-    setColumnMode('song-a', 'single')
-    await flush()
-    expect(getColumnMode('song-a')).toBe('single')
-    expect(JSON.parse(s.store.get(KEY)!)).toEqual({
-      default: 'double',
-      songs: { 'song-a': 'single' },
-    })
-
-    // Restoring the default prunes overrides that became redundant.
-    setDefaultColumnMode('single')
-    await flush()
-    expect(getColumnMode('song-a')).toBe('single')
-    expect(s.store.has(KEY)).toBe(false)
-  })
-
-  it('ignores corrupt or invalid stored data', async () => {
+  it('survives a corrupt or unknown payload', async () => {
     await hydrateViewerPrefs(memoryStorage({ [KEY]: '{ not json' }))
-    expect(getColumnMode('song-a')).toBe('single')
+    expect(getColumns()).toBe(1)
 
-    await hydrateViewerPrefs(
-      memoryStorage({ [KEY]: JSON.stringify({ default: 'triple', songs: { 'song-a': 'wide', 'song-b': 'double' } }) }),
-    )
-    expect(getColumnMode('song-a')).toBe('single')
-    expect(getColumnMode('song-b')).toBe('double')
+    __resetViewerPrefsForTest()
+    await hydrateViewerPrefs(memoryStorage({ [KEY]: JSON.stringify({ columns: 7 }) }))
+    expect(getColumns()).toBe(1)
+  })
+})
+
+describe('viewerPrefs v1 → v2 migration', () => {
+  it("carries over v1's app-wide default and removes the old key", async () => {
+    const s = memoryStorage({
+      [LEGACY_KEY]: JSON.stringify({ default: 'double', songs: { 'song-a': 'single' } }),
+    })
+    await hydrateViewerPrefs(s)
+    await flush()
+
+    expect(getColumns()).toBe(2)
+    expect(s.store.has(LEGACY_KEY)).toBe(false)
+    expect(JSON.parse(s.store.get(KEY)!)).toEqual({ columns: 2 })
+  })
+
+  it('drops v1 per-song overrides rather than picking one', async () => {
+    const s = memoryStorage({
+      [LEGACY_KEY]: JSON.stringify({ songs: { 'song-a': 'double', 'song-b': 'double' } }),
+    })
+    await hydrateViewerPrefs(s)
+    // v1 had no app-wide default here, so the result is the v2 default — the
+    // per-song 'double' entries do NOT get promoted.
+    expect(getColumns()).toBe(1)
+  })
+
+  it('prefers an existing v2 value over a stale v1 payload', async () => {
+    const s = memoryStorage({
+      [KEY]: JSON.stringify({ columns: 3 }),
+      [LEGACY_KEY]: JSON.stringify({ default: 'single' }),
+    })
+    await hydrateViewerPrefs(s)
+    expect(getColumns()).toBe(3)
   })
 })

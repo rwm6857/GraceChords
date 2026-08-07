@@ -1,8 +1,9 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs'
 import { Platform } from 'react-native'
-import { ThemeProvider as NavThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native'
+import { ThemeProvider as NavThemeProvider } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../../src/theme/ThemeProvider'
+import { useNavigationTheme } from '../../src/theme/navigationTheme'
 
 // The five-tab bottom bar: Home · Songs · Setlists · Daily Word · Utilities.
 // Rendered by the OS via Expo Router's NativeTabs — Liquid Glass on iOS/iPadOS
@@ -28,7 +29,11 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 // The NavThemeProvider wrapper (React Navigation's theme, matched to the current
 // color scheme) is required to prevent the known iOS 26 dark-mode glass flicker
 // on header buttons when switching tabs. It is aliased so it does not shadow the
-// app's own token ThemeProvider.
+// app's own token ThemeProvider. The theme itself comes from useNavigationTheme
+// (src/theme/navigationTheme.ts) rather than the stock React Navigation
+// palettes: expo-router paints each tab's content container with that theme's
+// background, and any mismatch with our page background washes through the
+// iOS 18+ tab cross-dissolve as a full-screen fade.
 //
 // Android bar tuning (Material 3): `labelVisibilityMode="labeled"` keeps every
 // tab's label visible. The NativeTabs default is `auto`, which — with five tabs
@@ -44,9 +49,10 @@ import { useTheme } from '../../src/theme/ThemeProvider'
 
 export default function TabsLayout() {
   const t = useTheme()
+  const navTheme = useNavigationTheme()
   const { t: tx } = useTranslation('nav')
   return (
-    <NavThemeProvider value={t.mode === 'dark' ? DarkTheme : DefaultTheme}>
+    <NavThemeProvider value={navTheme}>
       <NativeTabs
         tintColor={t.colors.accent}
         labelVisibilityMode="labeled"
