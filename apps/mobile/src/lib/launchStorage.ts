@@ -1,15 +1,15 @@
 // One AsyncStorage round trip for the whole splash gate.
 //
-// The launch path hydrates eight device-local stores before first paint, and
-// between them they read 12 keys with 12 separate getItem calls (five in
-// defaults.ts alone). This module reads all 12 in a single multiGet and hands
+// The launch path hydrates nine device-local stores before first paint, and
+// between them they read 13 keys with 13 separate getItem calls (five in
+// defaults.ts alone). This module reads all 13 in a single multiGet and hands
 // back a KVStorage-shaped facade served from the result.
 //
 // The point of the facade — rather than teaching each store to accept a
 // pre-read value — is that NOT ONE LINE of parsing, validation or fallback logic
-// in those stores changes. Every key backs a user preference, and a silent
-// behaviour change here would reset people's settings on upgrade. Equivalence is
-// established by construction instead of by review.
+// in those stores changes. Nearly every key backs a user preference, and a
+// silent behaviour change here would reset people's settings on upgrade.
+// Equivalence is established by construction instead of by review.
 //
 // RN-free (storage is injected, like defaults.ts) so it unit-tests headless.
 
@@ -49,21 +49,22 @@ export const LAUNCH_STORAGE_KEYS = [
   'gc.readerReminder.v1', // readerReminder.ts       → DEFAULT_READER_REMINDER
   'gc.viewer.columnMode.v1', // viewerPrefs.ts       → EMPTY (default 'single')
   'gc.bible.translation.v1', // bibleTranslationPref.ts → '' (no prior choice)
+  'gc.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
 ] as const
 
 /**
  * Read `keys` in one batch and return a KVStorage that serves those reads from
  * memory.
  *
- * Behaviour that is deliberately identical to 12 separate getItem calls:
+ * Behaviour that is deliberately identical to 13 separate getItem calls:
  *
  * - A key absent from storage yields null, which is what every store's
  *   missing-value branch already handles. multiGet reports an absent key as
  *   [key, null], and a pair missing from the response falls to null too.
  * - A REJECTING multiGet returns the raw store untouched, so each module does
  *   its own getItem behind its own try/catch just as it does today. Without
- *   this, one failed batch would reset all 12 preferences to defaults at once —
- *   a far worse failure than the per-module degradation we have now.
+ *   this, one failed batch would reset all 13 keys to defaults at once — a far
+ *   worse failure than the per-module degradation we have now.
  *
  * The facade is a correct KVStorage for the app's whole lifetime, not just for
  * the launch read: the stores keep whatever storage they were handed for
