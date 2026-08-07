@@ -185,5 +185,26 @@
     "noPassages": "No se encontraron pasajes para este día.",
     "copyVerses": "Copiar versículos seleccionados",
     "translationAria": "Elegir traducción bíblica"
+  },
+  "download": {
+    "metaTitle": "Descarga la app | GraceChords",
+    "metaDescription": "Lleva GraceChords en tu teléfono: canciones con acordes, repertorios y la Palabra del día, dondequiera que dirijas la adoración.",
+    "title": "Descarga GraceChords",
+    "lede": "Lleva contigo tus canciones con acordes, tus repertorios y la Palabra del día. Todo se sincroniza con la cuenta que ya usas en la web.",
+    "ios": {
+      "title": "iPhone y iPad",
+      "body": "GraceChords ya está disponible en el App Store.",
+      "badgeAlt": "Descárgalo en el App Store"
+    },
+    "android": {
+      "title": "Android",
+      "body": "La app de Android está en camino. Mientras tanto, la web funciona muy bien en Chrome.",
+      "comingSoon": "Próximamente"
+    },
+    "qr": {
+      "title": "Escanea para abrirlo en tu teléfono",
+      "body": "Apunta la cámara al código para abrir esta página en tu dispositivo.",
+      "alt": "Código QR que enlaza a gracechords.com/download"
+    }
   }
 }

@@ -52,10 +52,12 @@ mobile.
 
 ### `packages/tokens` (`@gracechords/tokens`)
 The single home for every platform's design tokens. Web imports `tokens.css`
-(the warm-brown `--gc-*` palette, via `apps/web/src/styles/index.css`); React
+(the `--gc-*` Signal Blue palette, via `apps/web/src/styles/index.css`); React
 Native imports the typed map from `@gracechords/tokens/native` (`native.ts`, the
-iOS Signal-blue palette). The two palettes are **deliberately different** — don't
-hardcode token values in any app.
+iOS Signal Blue palette). Both platforms now share the same accent
+(`#1F84C9` light / `#4EA6E6` dark — `--gc-primary` on web, `accent` on native);
+the neutrals and surfaces still differ per platform. Don't hardcode token values
+in any app.
 
 - **`apps/studio` (macOS) shares the mobile palette**, not the web one. It is a
   native SwiftUI target and not an npm workspace member, so it cannot import

@@ -65,7 +65,8 @@ await buildShellPages([
   { path: '/songbook', label: 'Songbook' },
   { path: '/setlist', label: 'Setlist' },
   { path: '/reading', label: 'Daily Word' },
-  { path: '/bundle', label: 'Bundle' }
+  { path: '/bundle', label: 'Bundle' },
+  { path: '/download', label: 'Download' }
 ])
 await build404Page()
 

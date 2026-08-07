@@ -13,6 +13,12 @@
     <meta property="og:site_name" content="GraceChords" />
     <meta property="og:title" content="GraceChords" />
     <meta property="application-name" content="GraceChords" />
+    <!-- Apple Smart App Banner (iOS Safari only). Static rather than
+         Helmet-driven: Safari reads this at page load and does not re-read it
+         on SPA navigation. No app-argument — Universal Links (see
+         public/.well-known/apple-app-site-association) already deep-link real
+         taps, and index.html cannot know the current route at build time. -->
+    <meta name="apple-itunes-app" content="app-id=6787127446" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

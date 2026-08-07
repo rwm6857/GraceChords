@@ -27,6 +27,15 @@
     "disclaimerBefore": "All lyrics are property of their respective owners. GraceChords provides tools for personal and educational use only. Rights holders, ",
     "disclaimerLink": "email us",
     "disclaimerAfter": " for takedown requests.",
+    "download": "Get the GraceChords app",
     "copyright": "© {{range}} Ryan Moore. All rights reserved."
+  },
+  "announcement": {
+    "regionLabel": "Site announcement",
+    "dismiss": "Dismiss announcement",
+    "iosLaunch": {
+      "message": "GraceChords is now on the App Store.",
+      "cta": "Get the app"
+    }
   }
 }

@@ -185,5 +185,26 @@
     "noPassages": "이 날짜에 해당하는 본문이 없습니다.",
     "copyVerses": "선택한 구절 복사",
     "translationAria": "성경 번역 선택"
+  },
+  "download": {
+    "metaTitle": "앱 다운로드 | GraceChords",
+    "metaDescription": "휴대폰에서 GraceChords를 사용하세요. 코드 악보와 셋리스트, 오늘의 말씀을 예배 인도하는 어디서나 함께합니다.",
+    "title": "GraceChords 다운로드",
+    "lede": "코드 악보와 셋리스트, 오늘의 말씀을 어디서나 함께하세요. 웹에서 쓰던 계정으로 모두 동기화됩니다.",
+    "ios": {
+      "title": "iPhone 및 iPad",
+      "body": "GraceChords를 App Store에서 지금 만나보세요.",
+      "badgeAlt": "App Store에서 다운로드하기"
+    },
+    "android": {
+      "title": "Android",
+      "body": "Android 앱은 준비 중입니다. 그동안 웹 앱을 Chrome에서 편하게 사용하실 수 있습니다.",
+      "comingSoon": "출시 예정"
+    },
+    "qr": {
+      "title": "휴대폰에서 열려면 스캔하세요",
+      "body": "카메라로 코드를 비추면 이 페이지가 기기에서 열립니다.",
+      "alt": "gracechords.com/download로 연결되는 QR 코드"
+    }
   }
 }
