@@ -8,6 +8,14 @@ node_modules/
 .vite/
 coverage/
 dist/
+# ...but analysis/out/dist is generated CONTENT, not build output, and its
+# README is hand-maintained upload documentation that must not be lost. The
+# month files and manifest stay untracked (regenerate with
+# `node analysis/export_content.mjs`); a parent directory has to be re-included
+# before a file inside it can be.
+!analysis/out/dist/
+analysis/out/dist/month/
+analysis/out/dist/manifest.json
 scripts/ingest/_ingest_staging/
 scripts/ingest/_ingest_inbox/
 scripts/ingest/_ingest_exports/
