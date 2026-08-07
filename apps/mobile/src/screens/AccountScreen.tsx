@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, AppState, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, AppState, Image, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import * as WebBrowser from 'expo-web-browser'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Screen from '../components/Screen'
@@ -23,7 +22,7 @@ import { saveDisplayName } from '../lib/profile'
 import { actionFailureMessage } from '../lib/errors'
 import {
   fetchTelegramLink,
-  telegramProfileUrl,
+  startTelegramLink,
   unlinkTelegram,
   UNLINKED,
   type TelegramLinkState,
@@ -128,6 +127,24 @@ export default function AccountScreen() {
     }
   }
 
+  // Mint a token and hand off to Telegram. We never learn whether the user
+  // actually tapped START, so there is nothing to await — the focus and
+  // foreground refetches above are what update the row when they come back.
+  async function onLinkTelegram() {
+    if (telegramBusy) return
+    setTelegramBusy(true)
+    try {
+      await Linking.openURL(await startTelegramLink())
+    } catch (err) {
+      Alert.alert(
+        tx('telegram.linkFailedTitle'),
+        actionFailureMessage('AccountScreen.startTelegramLink', err, tx),
+      )
+    } finally {
+      setTelegramBusy(false)
+    }
+  }
+
   function onUnlinkTelegram() {
     Alert.alert(tx('telegram.unlinkAlert.title'), tx('telegram.unlinkAlert.message'), [
       { text: tx('common:cancel'), style: 'cancel' },
@@ -193,7 +210,9 @@ export default function AccountScreen() {
     ? linkedDate
       ? tx('telegram.linkedOn', { date: linkedDate })
       : tx('telegram.linked')
-    : tx('telegram.link')
+    : telegramBusy
+      ? tx('telegram.linking')
+      : tx('telegram.link')
 
   return (
     <Screen edges={['left', 'right']}>
@@ -292,14 +311,8 @@ export default function AccountScreen() {
             chevron
             isLast
             onPress={() => {
-              if (telegram.linked) {
-                setSheet('telegram')
-                return
-              }
-              // In-app browser, so dismissing it returns here rather than
-              // leaving the app. Refetch on dismissal: the link may have just
-              // completed, and this is the tightest signal we get.
-              void WebBrowser.openBrowserAsync(telegramProfileUrl()).then(() => loadTelegram())
+              if (telegram.linked) setSheet('telegram')
+              else void onLinkTelegram()
             }}
           />
         </Card>

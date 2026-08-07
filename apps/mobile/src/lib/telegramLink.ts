@@ -1,18 +1,21 @@
-import { apiBase, apiError, apiRequest } from './api'
+import { apiError, apiPost, apiRequest } from './api'
 
-// Telegram account-link STATUS and UNLINK, against the web app's existing
-// Pages Function (apps/web/functions/api/telegram/link.js). Both verbs are
-// reused verbatim — nothing here forks the backend:
+// Telegram account linking, against the web app's Pages Functions:
 //
-//   GET    /api/telegram/link → { linked, telegram_user_id, telegram_linked_at }
-//   DELETE /api/telegram/link → clears both columns
+//   GET    /api/telegram/link       → { linked, telegram_user_id, telegram_linked_at }
+//   DELETE /api/telegram/link       → clears both columns
+//   POST   /api/telegram/link-token → { url, expires_in } — the native handoff
 //
-// LINKING is not implemented natively yet. The only mechanism the backend
-// supports today is the Telegram Login Widget, which is browser-only: it injects
-// a script that calls back with an HMAC-signed payload, and there is no native
-// equivalent. So the unlinked row hands off to the web profile, where that widget
-// lives. The native bot `?start=<token>` flow that replaces this handoff ships
-// separately (PR 2) because it changes the bot webhook, which is in daily use.
+// The link URL is a `t.me` deep link carrying a short-lived, single-use token.
+// Opening it launches Telegram on the bot; the user taps START; the bot redeems
+// the token and writes the association. `t.me` is a Telegram universal link, so
+// it opens the installed app directly and falls back to the web client
+// otherwise — there is no `tg://` probe and so no LSApplicationQueriesSchemes
+// entry or native rebuild.
+//
+// The app cannot observe the outcome: the association happens inside Telegram
+// and is written server-side. Callers refetch status on focus and on the
+// foreground transition instead.
 //
 // No handle is available: the schema stores telegram_user_id (bigint) and
 // telegram_linked_at only — there is no username column anywhere.
@@ -24,15 +27,19 @@ export type TelegramLinkState = {
 
 export const UNLINKED: TelegramLinkState = { linked: false, linkedAt: null }
 
-/** The web profile's Telegram section, where the Login Widget is rendered. */
-export function telegramProfileUrl(): string {
-  try {
-    return `${apiBase()}/profile#telegram`
-  } catch {
-    // apiBase() throws when EXPO_PUBLIC_API_BASE_URL is unset. Opening a help
-    // link should never be the thing that crashes a settings screen.
-    return 'https://www.gracechords.com/profile#telegram'
-  }
+/**
+ * Mint a link token and return the Telegram URL that carries it.
+ *
+ * Minted per tap rather than cached: the token lives ten minutes and is burned
+ * on first use, so a stale one would fail silently inside Telegram where we
+ * cannot see it or explain it.
+ */
+export async function startTelegramLink(): Promise<string> {
+  const res = await apiPost('/api/telegram/link-token', {})
+  if (!res.ok) throw await apiError(res, 'telegram_link_token_failed')
+  const body = (await res.json()) as { url?: string }
+  if (!body?.url) throw new Error('telegram_link_token_failed')
+  return body.url
 }
 
 export async function fetchTelegramLink(): Promise<TelegramLinkState> {
