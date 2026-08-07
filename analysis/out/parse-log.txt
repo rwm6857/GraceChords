@@ -1,0 +1,53 @@
+
+Parsed 732 entries from 24 files.
+
+Validation
+  PASS  entry count is 732 (got 732)
+  PASS  no duplicate keys
+  PASS  366 distinct dates incl. Feb 29 (got 366)
+  PASS  no missing dates
+  PASS  no unexpected dates
+  PASS  exactly 2 entries per date
+  PASS  every entry has a non-empty coreText
+  PASS  every entry has a non-empty reference
+  PASS  every entry has a non-empty body
+  PASS  no unconsumed "* NN/NN/" marker in any body
+  PASS  no filename/marker/header errors
+
+Body length distribution (characters)
+  min 1561 (06-19-PM)   p05 1715   p25 1798   median 1843   p75 1880   p95 1925   max 2940 (12-31-AM)
+  mean 1838   sd 86
+  shortest 5: 06-19-PM=1561, 05-13-AM=1583, 08-12-AM=1594, 01-25-AM=1632, 12-25-PM=1632
+  longest 5:  11-01-AM=1969, 06-05-PM=1970, 06-17-AM=1991, 12-31-PM=2836, 12-31-AM=2940
+  low outliers (< mean-3sd): 06-19-PM=1561
+  high outliers (> mean+3sd): 12-31-PM=2836, 12-31-AM=2940
+
+Parse statistics
+  hyphen joins (end-of-line "-" kept, lines joined): 18
+  em-dash joins (end-of-line "--"): 15
+  prose paragraphs: 1015
+  verse/hymn blocks preserved: 145
+  mid-block paragraph splits (no blank line in source): 0
+  entries with >1 core text/reference pair: 07-12-AM (3), 08-30-PM (2)
+  italic markers preserved: 3425 underscores
+  timeHint morning / evening / ambiguous-so-null: 34 / 66 / 2
+
+Hyphen joins, for spot-checking (tail|head of each join):
+  Is it not done for self-|aggrandizement
+  k, wherein thine infant-|faith
+  id low_. Proud creature-|sufficiency,
+  of the Redeemer's never-|ceasing
+  , removed without blood-|shedding.
+  en He openeth a granary-|door
+  er and Paul, the highly-|favoured
+  and my lily, my heart's-|ease
+  ong to express the self-|abhorrence
+  or the hemlock of self-|righteousness,
+  ed since all the twenty-|thousand
+  distance from the mercy-|seat,
+  in head. While our skin-|bottles
+  or them all! What a far-|reaching
+  t to crawl to the water-|brook.
+  "mansion," or "abiding-|place,"
+  of daily life, a double-|minded
+  onceit is fed, and self-|righteousness

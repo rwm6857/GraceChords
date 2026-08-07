@@ -12,6 +12,9 @@ scripts/ingest/_ingest_staging/
 scripts/ingest/_ingest_inbox/
 scripts/ingest/_ingest_exports/
 
+# Analysis source material (fetched, never committed — see analysis/README.md)
+analysis/ingest/
+
 # Local env and tooling
 .env
 .env.*
