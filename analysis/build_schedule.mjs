@@ -29,6 +29,7 @@ import { readFile, writeFile, access } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseVerseReference, bookNumberToName } from '../packages/core/src/songs/verseRef.js'
+import { escapeCell } from './lib/md.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = join(HERE, 'out')
@@ -508,7 +509,7 @@ while (samples.length < 25 && taken.size < filled.length) {
 
 const L = []
 const w = (s = '') => L.push(s)
-const esc = (s) => String(s).replace(/\|/g, '\\|').replace(/_/g, '')
+const esc = escapeCell
 
 w("# M&E ↔ M'Cheyne Pairing — Review Report")
 w()

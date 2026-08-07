@@ -13,6 +13,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseVerseReference, bookNumberToName, BOOKS } from '../packages/core/src/songs/verseRef.js'
+import { escapeCell } from './lib/md.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = join(HERE, 'out')
@@ -405,7 +406,7 @@ w('| # | Plan date | Chapter read | Devotional | Its reference | Core text |')
 w('|---|---|---|---|---|---|')
 picked.forEach((p, i) => {
   const dev = devByKey.get(p.devKey)
-  const core = dev.coreText.replace(/\|/g, '\\|').replace(/_/g, '')
+  const core = escapeCell(dev.coreText)
   w(`| ${i + 1} | ${p.date} | ${p.chapter.book} ${p.chapter.chapter} | \`${p.devKey}\` | ${dev.references.join(' / ')} | ${core} |`)
 })
 w()
