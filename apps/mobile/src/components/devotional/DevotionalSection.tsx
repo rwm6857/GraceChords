@@ -1,12 +1,14 @@
 import { View } from 'react-native'
-import DevotionalCard from '../devotional/DevotionalCard'
-import DevotionalPlaceholder from '../devotional/DevotionalPlaceholder'
+import DevotionalCard from './DevotionalCard'
+import DevotionalPlaceholder from './DevotionalPlaceholder'
 import { useTodayDevotionals } from '../../lib/devotionals/useDevotionalDay'
 import { useTheme } from '../../theme/ThemeProvider'
 
-// Today's devotionals on the home dashboard. Sits directly below the Daily Word
-// card because these are devotionals ON that card's readings — a devotional is
-// matched to a day by scripture, so it belongs beside the passages it speaks to.
+// Today's devotionals on the Daily Word landing screen, directly above the
+// reading list. A devotional is matched to a day BY SCRIPTURE, so it only makes
+// sense next to the passages it was matched against — and the open-day
+// placeholder in particular has no business on Home, where "no devotional today"
+// is noise to someone who came to open a song.
 //
 // Three states, and the distinction between the last two matters:
 //
@@ -23,13 +25,24 @@ export default function DevotionalSection() {
   const t = useTheme()
   const { dayKey, day } = useTodayDevotionals()
 
-  // Not downloaded yet: render nothing at all.
+  // Not downloaded yet: render nothing at all — and no leading margin either, so
+  // the reading section keeps its own spacing to the header and nothing hints
+  // that something is missing.
   if (!day) return null
 
-  if (day.state === 'open') return <DevotionalPlaceholder />
+  // Matches the gap the reading-section header keeps below the page header.
+  const leading = { marginTop: t.spacing.xl }
+
+  if (day.state === 'open') {
+    return (
+      <View style={leading}>
+        <DevotionalPlaceholder />
+      </View>
+    )
+  }
 
   return (
-    <View style={{ gap: t.spacing.lg }}>
+    <View style={[leading, { gap: t.spacing.lg }]}>
       {day.devotionals.map((devotional) => (
         <DevotionalCard key={devotional.slug} devotional={devotional} dayKey={dayKey} />
       ))}

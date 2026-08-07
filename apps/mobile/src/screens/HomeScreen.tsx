@@ -17,7 +17,6 @@ import HeroOverscrollFill from '../components/HeroOverscrollFill'
 import SymbolIcon from '../components/SymbolIcon'
 import DailyWordCard from '../components/home/DailyWordCard'
 import RecentSongsCard from '../components/home/RecentSongsCard'
-import DevotionalSection from '../components/home/DevotionalSection'
 import { cardStyle } from '../components/home/cardStyle'
 import { useTheme } from '../theme/ThemeProvider'
 import {
@@ -441,7 +440,6 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flex: 1, gap: t.spacing.lg }}>
                   <DailyWordCard />
-                  <DevotionalSection />
                   <RecentSongsCard />
                 </View>
               </View>
@@ -454,9 +452,6 @@ export default function HomeScreen() {
             ) : null}
             <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
               <DailyWordCard />
-            </View>
-            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
-              <DevotionalSection />
             </View>
             <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
               <RecentSongsCard />
