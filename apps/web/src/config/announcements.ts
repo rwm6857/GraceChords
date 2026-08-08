@@ -32,7 +32,7 @@ export const announcements: Announcement[] = [
     platforms: ['desktop', 'android', 'ios'],
     messageKey: 'announcement.iosLaunch.message',
     cta: { labelKey: 'announcement.iosLaunch.cta', href: '/download' },
-    startsAt: '2026-08-10T00:00:00Z',
+    startsAt: '2026-08-07T00:00:00Z',
     endsAt: '2026-09-30T23:59:59Z',
   },
 ]

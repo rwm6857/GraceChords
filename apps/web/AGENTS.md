@@ -133,14 +133,15 @@ UI translations live under `src/i18n/locales/{lang}/` across eleven namespaces
 `profile`, `setlist`, `song`). The English files (`src/i18n/locales/en/`) are the **source of
 truth**; every other locale mirrors their key shape. Runtime wiring is in
 `src/i18n/index.js` and `src/hooks/useLocale.jsx`; the supported list is in
-`src/i18n/config.js`. Tooling lives at `../../gracechords-i18n/` (`SKILL.md`,
-`scripts/validate.py`, `glossaries/{lang}.md`).
+`src/i18n/config.js`. Translation guidance is **not** in this repo — it ships as
+the installed `gracechords-i18n` agent skill (invoke it by name). The only
+in-repo checker is `npm run i18n:check`.
 
 ### Workflow when English strings change
 1. Apply the same key change to every other locale folder.
 2. For each non-English file modified, set `_meta.needsReview` to `true` and clear `_meta.reviewer` / `_meta.reviewedAt` to empty strings.
-3. Follow `../../gracechords-i18n/SKILL.md` for translation guidance; consult `glossaries/{lang}.md` for terminology (append new terms there).
-4. Run the validator per non-English locale (`python ../../gracechords-i18n/scripts/validate.py src/i18n/locales/en src/i18n/locales/{lang}`); exit `0` is clean. `npm run i18n:check` is a faster parity smoke pass.
+3. Invoke the `gracechords-i18n` skill for translation guidance and terminology. It carries the worship-vocabulary glossary; if its bundle includes `scripts/validate.py`, run that too (it is not present in every environment, so do not depend on it).
+4. Run `npm run i18n:check` from `apps/web/`; it compares every locale's leaf keys against `en/` and exits non-zero on drift. This is the check that always exists — run it before committing any locale change.
 
 ### Hard rules
 - **Never** modify a file where `_meta.needsReview` is `false` without explicit instruction — that value is a human reviewer's signoff.
