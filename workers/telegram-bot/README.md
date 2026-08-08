@@ -9,7 +9,7 @@ Surfaces:
 |---|---|
 | Direct messages | Telegram webhook → `POST /webhook` (`chat.type === 'private'`) |
 | Group / guest-chat mentions | Same webhook, when the bot is `@`-mentioned in a group/supergroup |
-| Feature announcements | GitHub Action (user-facing `feat(` merge, PR labelled `post`, or `#post` in PR title/body) → `POST /internal/feature`. Backend-only scopes (`feat(cli)`, `feat(worker)`, …) are dropped unless `post`/`#post` forces them. |
+| Feature announcements | **Paused** — the GitHub Action's merge trigger is commented out in `.github/workflows/feature-post.yml` (too many posts); nothing calls `/internal/feature` until it's uncommented. When live: user-facing `feat(` merge, PR labelled `post`, or `#post` in PR title/body → `POST /internal/feature`. Backend-only scopes (`feat(cli)`, `feat(worker)`, …) are dropped unless `post`/`#post` forces them. |
 | Mon/Fri digest | Cloudflare cron → `scheduled()` |
 
 ## Group chat behaviour

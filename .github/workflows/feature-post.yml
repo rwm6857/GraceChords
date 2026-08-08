@@ -1,6 +1,16 @@
 name: Notify dev channel on flagged merge
 
-# Fires on merge when ANY of the following is true:
+# PAUSED — the channel was getting a post on every flagged merge, which is too
+# frequent. The automatic `pull_request: [closed]` trigger is commented out
+# below and only `workflow_dispatch` remains, so the file stays valid but
+# nothing fires on its own. The job body is unchanged; to resume, uncomment the
+# trigger. (A manual dispatch is a no-op — the `if` below needs a merged-PR
+# payload that a dispatch run doesn't have.)
+#
+# Nothing else about the bot changed: the Mon/Fri digest cron and the
+# moderation report alerts still post to the same channel.
+#
+# When re-enabled, it fires on merge when ANY of the following is true:
 #   1. PR title starts with "feat(" or "feat:" — new user-visible features
 #      are announced by default.
 #   2. PR is labelled "post" — manual override for non-feat changes worth
@@ -15,8 +25,10 @@ name: Notify dev channel on flagged merge
 # worker to bypass the backend-scope skip — that's the manual override.
 
 on:
-  pull_request:
-    types: [closed]
+  # Uncomment to resume automatic dev-channel posts on merge:
+  # pull_request:
+  #   types: [closed]
+  workflow_dispatch:
 
 permissions:
   contents: read
