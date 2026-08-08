@@ -35,36 +35,49 @@ async function authHeader(): Promise<{ Authorization: string }> {
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
-/**
- * GET or DELETE with the caller's Supabase bearer token.
- *
- * No 405-redirect retry, unlike apiPost: that retry exists because a redirect
- * rewrites POST to GET, which cannot happen to a method that is already safe or
- * idempotent (307/308 preserve the method, 301/302 on a GET are transparent).
- */
-export async function apiRequest(method: 'GET' | 'DELETE', path: string): Promise<Response> {
-  return budgetedFetch(`${apiBase()}${path}`, { method, headers: await authHeader() })
+// A CROSS-ORIGIN REDIRECT BREAKS AN AUTHENTICATED REQUEST IN TWO WAYS, and both
+// land as a status code we can recognise:
+//
+//   401 — fetch drops the Authorization header when a redirect crosses origins
+//         (www.gracechords.com → gracechords.com are different origins), so the
+//         API sees no credentials and answers "Missing bearer token".
+//   405 — a 301/302 rewrites POST to GET per spec, and the API rejects the
+//         method. (307/308 would preserve it; Cloudflare's apex/www rule is 301.)
+//
+// Neither is a failure the user can act on and neither is visible in the request
+// we issued, so on either status — and only when the response came back from a
+// DIFFERENT origin than we aimed at, which is proof a redirect happened — we
+// re-issue the original request, method and headers intact, against that final
+// origin. Once.
+//
+// This exists as a backstop, not a strategy: EXPO_PUBLIC_API_BASE_URL should
+// name the canonical origin (see .env.example) and then this never fires. It is
+// here because the failure it repairs is otherwise invisible — a stripped header
+// reads as "not linked" or "not signed in" rather than as a misconfiguration,
+// which is exactly how it survived into a shipped build once already.
+const REDIRECT_REPAIRABLE = new Set([401, 405])
+
+async function sendRepairingRedirect(path: string, init: RequestInit): Promise<Response> {
+  const target = `${apiBase()}${path}`
+  const res = await budgetedFetch(target, init)
+  if (!REDIRECT_REPAIRABLE.has(res.status) || !res.url) return res
+  const finalOrigin = new URL(res.url).origin
+  if (finalOrigin === new URL(target).origin) return res
+  return budgetedFetch(`${finalOrigin}${path}`, init)
 }
 
-// POST JSON with the caller's Supabase bearer token. If the configured base
-// URL redirects (e.g. apex → www), fetch follows the redirect but converts
-// the POST to a GET per spec, and the API answers 405 — so on a redirected
-// 405 we retry the POST once against the redirect's final origin.
-export async function apiPost(path: string, body: unknown): Promise<Response> {
-  const headers = {
-    ...(await authHeader()),
-    'Content-Type': 'application/json',
-  }
-  const payload = JSON.stringify(body)
+/** GET or DELETE with the caller's Supabase bearer token. */
+export async function apiRequest(method: 'GET' | 'DELETE', path: string): Promise<Response> {
+  return sendRepairingRedirect(path, { method, headers: await authHeader() })
+}
 
-  let res = await budgetedFetch(`${apiBase()}${path}`, { method: 'POST', headers, body: payload })
-  if (res.status === 405 && res.url) {
-    const finalOrigin = new URL(res.url).origin
-    if (finalOrigin !== new URL(apiBase()).origin) {
-      res = await budgetedFetch(`${finalOrigin}${path}`, { method: 'POST', headers, body: payload })
-    }
-  }
-  return res
+/** POST JSON with the caller's Supabase bearer token. */
+export async function apiPost(path: string, body: unknown): Promise<Response> {
+  return sendRepairingRedirect(path, {
+    method: 'POST',
+    headers: { ...(await authHeader()), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 }
 
 // Read the API's { error } body into a thrown-Error message, with a
@@ -79,9 +92,11 @@ export async function apiError(res: Response, fallback: string): Promise<Error> 
     // UserFacingError so actionFailureMessage shows this verbatim instead of
     // replacing it with generic copy: it names the exact misconfiguration and the
     // exact fix, and whoever hits it is a developer or a tester on a bad build.
+    // Reaching here means sendRepairingRedirect already retried and still got a
+    // 405, so the base URL is wrong in a way one redirect hop cannot fix.
     return new UserFacingError(
       'The API rejected the request (405) — EXPO_PUBLIC_API_BASE_URL likely points at a ' +
-        'redirecting domain. Set it to the canonical one (e.g. https://www.gracechords.com).',
+        'redirecting domain. Set it to the canonical one (e.g. https://gracechords.com).',
     )
   }
   const body = (await res.json().catch(() => null)) as { error?: string } | null

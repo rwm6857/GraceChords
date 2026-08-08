@@ -127,7 +127,7 @@ describe('actionFailureMessage', () => {
     // "Something went wrong" would strand whoever is testing a bad build.
     const hint =
       'The API rejected the request (405) — EXPO_PUBLIC_API_BASE_URL likely points at a ' +
-      'redirecting domain. Set it to the canonical one (e.g. https://www.gracechords.com).'
+      'redirecting domain. Set it to the canonical one (e.g. https://gracechords.com).'
     expect(actionFailureMessage('SongbookBuilder.export', new UserFacingError(hint), t)).toBe(hint)
   })
 
