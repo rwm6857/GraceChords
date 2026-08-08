@@ -39,7 +39,7 @@ jobs:
 
       - name: Tests (warn-only)
         continue-on-error: true
-        # Suite is green (157/157); any failure is a real regression. Root
+        # Suite is green (323/323); any failure is a real regression. Root
         # script delegates to the @gracechords/web workspace.
         run: npm run test:run
 
