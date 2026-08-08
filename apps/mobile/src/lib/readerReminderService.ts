@@ -2,6 +2,7 @@ import { Platform } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import i18n from '../i18n'
 import {
+  commitReminderOptIn,
   getReaderReminder,
   REMINDER_NOTIFICATION_ID,
   setReminderEnabled,
@@ -129,6 +130,15 @@ export async function enableReaderReminder(hour: number, minute: number): Promis
   setReminderEnabled(true)
   await syncReminder(getReaderReminder(), reminderContent(), backend)
   return true
+}
+
+/**
+ * Commit the first-launch intro's reminder opt-in (app/intro.tsx card 3) against
+ * the real notification backend. All the logic — and the reasoning for why it
+ * differs from the Settings toggle path — lives in `commitReminderOptIn`.
+ */
+export function commitOnboardingReminder(hour: number, minute: number): Promise<boolean> {
+  return commitReminderOptIn(hour, minute, reminderContent(), backend)
 }
 
 /** Turn the reminder off and cancel the scheduled notification. */

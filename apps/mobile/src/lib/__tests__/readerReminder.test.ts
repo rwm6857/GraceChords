@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   __resetReaderReminderForTest,
+  commitReminderOptIn,
   DEFAULT_READER_REMINDER,
   formatReminderTime,
   getReaderReminder,
@@ -117,5 +118,67 @@ describe('syncReminder', () => {
     await syncReminder({ enabled: true, hour: 7, minute: 15 }, CONTENT, backend)
     expect(backend.cancel).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID)
     expect(backend.scheduleDaily).not.toHaveBeenCalled()
+  })
+})
+
+// The first-launch intro's card 3 (app/intro.tsx). Its contract differs from the
+// Settings toggle in two ways that matter enough to pin: permission is checked
+// before prompting, and a denial is silent + leaves the preference off.
+describe('commitReminderOptIn (onboarding card 3)', () => {
+  beforeEach(() => __resetReaderReminderForTest())
+
+  it('does NOT re-request when permission is already granted', async () => {
+    const backend = fakeBackend(true)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(true)
+    expect(backend.getPermissionGranted).toHaveBeenCalled()
+    expect(backend.requestPermission).not.toHaveBeenCalled()
+  })
+
+  it('prompts only when permission is not already held', async () => {
+    const backend = fakeBackend(true)
+    backend.getPermissionGranted.mockResolvedValueOnce(false)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(true)
+    expect(backend.requestPermission).toHaveBeenCalledTimes(1)
+  })
+
+  it('actually SCHEDULES on grant — not just persists the preference', async () => {
+    const backend = fakeBackend(true)
+    await commitReminderOptIn(6, 45, CONTENT, backend)
+    // The whole point: the OS has the notification, not just AsyncStorage.
+    expect(backend.scheduleDaily).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID, 6, 45, CONTENT)
+    expect(getReaderReminder()).toEqual({ enabled: true, hour: 6, minute: 45 })
+  })
+
+  it('persists the chosen time, not the default', async () => {
+    const backend = fakeBackend(true)
+    await commitReminderOptIn(21, 5, CONTENT, backend)
+    expect(getReaderReminder().hour).toBe(21)
+    expect(getReaderReminder().minute).toBe(5)
+    expect(DEFAULT_READER_REMINDER.hour).toBe(8) // guards the 8:00 AM default itself
+  })
+
+  it('on denial: leaves the reminder OFF, schedules nothing, reports false', async () => {
+    const backend = fakeBackend(false)
+    const ok = await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(ok).toBe(false)
+    expect(getReaderReminder().enabled).toBe(false)
+    expect(backend.scheduleDaily).not.toHaveBeenCalled()
+  })
+
+  it('on denial: requests permission exactly once (no retry)', async () => {
+    const backend = fakeBackend(false)
+    await commitReminderOptIn(7, 30, CONTENT, backend)
+    expect(backend.requestPermission).toHaveBeenCalledTimes(1)
+  })
+
+  it('works from a cold store with no prior reminder state', async () => {
+    // No hydrate call at all — the module cache is the untouched default. This is
+    // the fresh-install case the intro always runs in.
+    expect(getReaderReminder()).toEqual(DEFAULT_READER_REMINDER)
+    const backend = fakeBackend(true)
+    await expect(commitReminderOptIn(8, 0, CONTENT, backend)).resolves.toBe(true)
+    expect(backend.scheduleDaily).toHaveBeenCalledWith(REMINDER_NOTIFICATION_ID, 8, 0, CONTENT)
   })
 })

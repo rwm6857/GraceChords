@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "card1": {
+    "heading": "GraceChords'a hoş geldiniz.",
+    "body": "İlahiler, set listeleri ve Kutsal Yazılar — bugün tapınma sizin için nasıl görünüyorsa."
+  },
+  "card2": {
+    "heading": "Sahneye hazır.",
+    "body": "İstediğiniz tona geçin ve sahne ışıkları altında rahatça okuyun. Tüm ekibin aynı ilahide kalması için canlı oturum başlatın ya da akor sayfasını çaldığınız tonda PDF veya görsel olarak paylaşın.",
+    "features": {
+      "transpose": "Ton değiştir",
+      "liveSessions": "Canlı oturumlar",
+      "share": "PDF veya görsel olarak paylaş"
+    }
+  },
+  "card3": {
+    "heading": "Söz üzerinde derin düşünün.",
+    "body": "M'Cheyne okuma planı, günde dört bölümle bir yılda Kutsal Kitap'ın tamamını okumanızı sağlar. Sevdiğiniz çeviriyi indirin, bağlantı olmadan da okuyun.",
+    "reminder": "Günlük hatırlatma",
+    "streak": "Serimi takip et"
+  },
+  "continue": "Devam et",
+  "getStarted": "Başla",
+  "skip": "Atla",
+  "replay": {
+    "row": "Tanıtımı yeniden gör",
+    "subtitle": "İlk açılış tanıtımını yeniden oynatır"
+  },
+  "a11y": {
+    "progress": "Adım {{current}} / {{total}}",
+    "reminderTime": "Hatırlatma saati"
+  }
+}

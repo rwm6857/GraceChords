@@ -14,6 +14,7 @@ import FormSheetShell from '../components/FormSheetShell'
 import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 import { useCurrentUser } from '../lib/currentUser'
+import { resetIntroSeen } from '../lib/introSeen'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { useDisplayName } from '../lib/useDisplayName'
 import {
@@ -118,7 +119,7 @@ function OptionSheetContent<T extends string>({
 
 export default function SettingsScreen() {
   const t = useTheme()
-  const { t: tx, i18n } = useTranslation(['settings', 'common'])
+  const { t: tx, i18n } = useTranslation(['settings', 'common', 'intro'])
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useCurrentUser()
@@ -370,8 +371,23 @@ export default function SettingsScreen() {
             title={tx('aboutGraceChords')}
             leading={<RowIcon name="info.circle" />}
             chevron
-            isLast
             onPress={() => router.push('/about')}
+          />
+          {/* Replays the first-launch intro without a reinstall. Clearing the
+              flag makes the auth gate itself want /intro; the replace below just
+              gets there without waiting a frame. Finishing or skipping the replay
+              sets the flag again. Wired for testing — if the intro settles, this
+              row and intro.replay.* in the locale files come out together. */}
+          <ListRow
+            title={tx('intro:replay.row')}
+            subtitle={tx('intro:replay.subtitle')}
+            leading={<RowIcon name="arrow.triangle.2.circlepath" />}
+            chevron
+            isLast
+            onPress={() => {
+              resetIntroSeen()
+              router.replace('/intro')
+            }}
           />
         </Card>
       </ScrollView>

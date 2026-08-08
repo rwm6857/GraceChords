@@ -1,8 +1,8 @@
 // One AsyncStorage round trip for the whole splash gate.
 //
-// The launch path hydrates nine device-local stores before first paint, and
-// between them they read 13 keys with 13 separate getItem calls (five in
-// defaults.ts alone). This module reads all 13 in a single multiGet and hands
+// The launch path hydrates ten device-local stores before first paint, and
+// between them they read 14 keys with 14 separate getItem calls (five in
+// defaults.ts alone). This module reads all 14 in a single multiGet and hands
 // back a KVStorage-shaped facade served from the result.
 //
 // The point of the facade — rather than teaching each store to accept a
@@ -50,20 +50,21 @@ export const LAUNCH_STORAGE_KEYS = [
   'gc.viewer.columnMode.v1', // viewerPrefs.ts       → EMPTY (default 'single')
   'gc.bible.translation.v1', // bibleTranslationPref.ts → '' (no prior choice)
   'gc.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
+  'gc.intro.seen.v1', // introSeen.ts            → false ('1' is the only true)
 ] as const
 
 /**
  * Read `keys` in one batch and return a KVStorage that serves those reads from
  * memory.
  *
- * Behaviour that is deliberately identical to 13 separate getItem calls:
+ * Behaviour that is deliberately identical to 14 separate getItem calls:
  *
  * - A key absent from storage yields null, which is what every store's
  *   missing-value branch already handles. multiGet reports an absent key as
  *   [key, null], and a pair missing from the response falls to null too.
  * - A REJECTING multiGet returns the raw store untouched, so each module does
  *   its own getItem behind its own try/catch just as it does today. Without
- *   this, one failed batch would reset all 13 keys to defaults at once — a far
+ *   this, one failed batch would reset all 14 keys to defaults at once — a far
  *   worse failure than the per-module degradation we have now.
  *
  * The facade is a correct KVStorage for the app's whole lifetime, not just for

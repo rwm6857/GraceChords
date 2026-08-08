@@ -1,0 +1,33 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "card1": {
+    "heading": "Welcome to GraceChords.",
+    "body": "Songs, setlists, and Scripture — whatever worship looks like for you today."
+  },
+  "card2": {
+    "heading": "Ready for the platform.",
+    "body": "Transpose to any key and read it clean under stage lights. Start a Live Session to keep the whole team on the same song, or share a chord sheet as a PDF or image in the key you're playing.",
+    "features": {
+      "transpose": "Transpose",
+      "liveSessions": "Live Sessions",
+      "share": "Share as PDF or image"
+    }
+  },
+  "card3": {
+    "heading": "Meditate on the Word.",
+    "body": "The M'Cheyne reading plan walks you through the whole Bible in a year, four passages a day. Download your favorite translation for offline use.",
+    "reminder": "Daily reminder",
+    "streak": "Track my streak"
+  },
+  "continue": "Continue",
+  "getStarted": "Get started",
+  "skip": "Skip",
+  "replay": {
+    "row": "See onboarding again",
+    "subtitle": "Replay the first-launch intro"
+  },
+  "a11y": {
+    "progress": "Step {{current}} of {{total}}",
+    "reminderTime": "Reminder time"
+  }
+}
