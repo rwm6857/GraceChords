@@ -1,7 +1,7 @@
 // One AsyncStorage round trip for the whole splash gate.
 //
 // The launch path hydrates ten device-local stores before first paint, and
-// between them they read 14 keys with 14 separate getItem calls (five in
+// between them they read 15 keys with 15 separate getItem calls (five in
 // defaults.ts alone). This module reads those — plus the one non-splash-gating
 // key that rides along (see the list below) — in a single multiGet and hands
 // back a KVStorage-shaped facade served from the result.
@@ -48,14 +48,18 @@ export const LAUNCH_STORAGE_KEYS = [
   'gc.recents.songs.v1', // recents.ts              → []
   'gc.readingStreak.v1', // readingStreak.ts        → DEFAULT_READING_STREAK
   'gc.readerReminder.v1', // readerReminder.ts       → DEFAULT_READER_REMINDER
-  'gc.viewer.columnMode.v1', // viewerPrefs.ts       → EMPTY (default 'single')
+  'gc.viewer.columns.v2', // viewerPrefs.ts          → DEFAULT_COLUMNS (1)
+  // viewerPrefs.ts reads this superseded v1 key ONLY when columns.v2 is absent,
+  // to migrate the old per-song payload once. Batched so that first launch after
+  // upgrade still costs one round trip rather than two.
+  'gc.viewer.columnMode.v1',
   'gc.bible.translation.v1', // bibleTranslationPref.ts → '' (no prior choice)
   'gc.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
   'gc.intro.seen.v1', // introSeen.ts            → false ('1' is the only true)
   // reviewState.ts → DEFAULT_REVIEW_STATE. The odd one out: it does NOT gate the
   // splash (nothing on screen depends on it, and the review gate cannot fire
   // before the user has navigated somewhere). It rides this batch anyway rather
-  // than adding a fifteenth round trip for a key that is read on every launch.
+  // than adding a sixteenth round trip for a key that is read on every launch.
   'gc.review.v1',
 ] as const
 

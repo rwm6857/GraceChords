@@ -5,7 +5,7 @@ import { hydrateBibleTranslationPref, getBibleTranslationPref } from '../bibleTr
 import { hydrateRecents, getRecentlyOpened } from '../recents'
 import { hydrateReadingStreak, getReadingStreak, DEFAULT_READING_STREAK } from '../readingStreak'
 import { hydrateReaderReminder, getReaderReminder, DEFAULT_READER_REMINDER } from '../readerReminder'
-import { hydrateViewerPrefs, getColumnMode } from '../viewerPrefs'
+import { DEFAULT_COLUMNS, getColumns, hydrateViewerPrefs } from '../viewerPrefs'
 import {
   __resetReflectionDayStoreForTest,
   getReflectionDay,
@@ -45,11 +45,11 @@ function makeStore(seed: Record<string, string> = {}) {
 }
 
 describe('LAUNCH_STORAGE_KEYS', () => {
-  // 14 splash-gating keys plus gc.review.v1, which rides the same batch without
+  // 15 splash-gating keys plus gc.review.v1, which rides the same batch without
   // gating first paint (see the list's own comment in launchStorage.ts).
-  it('covers the 15 keys read at launch', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(15)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(15)
+  it('covers the 16 keys read at launch', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(16)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(16)
   })
 })
 
@@ -78,6 +78,18 @@ describe('primeLaunchStorage', () => {
     const primed = await primeLaunchStorage(store)
     expect(primed).toBe(store)
     await expect(hydrateDefaults(primed)).resolves.toMatchObject({ theme: 'dark' })
+  })
+
+  it('serves viewerPrefs entirely from the batch (no fall-through)', async () => {
+    // Regression: the list named the SUPERSEDED v1 key while viewerPrefs v2 reads
+    // gc.viewer.columns.v2 first, so every launch fell through to a second real
+    // getItem — correct, but exactly the round trip this module exists to remove.
+    // Behaviour is identical either way, so only the call log can catch it.
+    const { store } = makeStore({ 'gc.viewer.columns.v2': JSON.stringify({ columns: 2 }) })
+    const primed = await primeLaunchStorage(store)
+    await hydrateViewerPrefs(primed)
+    expect(getColumns()).toBe(2)
+    expect(store.getItemCalls).toEqual([])
   })
 
   it('serves a primed key once, then defers to the real store', async () => {
@@ -191,11 +203,19 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
       },
     },
     {
-      name: 'viewer prefs: malformed JSON',
+      name: 'viewer prefs: valid v2 payload',
+      seed: { 'gc.viewer.columns.v2': JSON.stringify({ columns: 3 }) },
+      run: async (s) => {
+        await hydrateViewerPrefs(s)
+        return getColumns()
+      },
+    },
+    {
+      name: 'viewer prefs: malformed v1 payload falls back to the default',
       seed: { 'gc.viewer.columnMode.v1': 'null' },
       run: async (s) => {
         await hydrateViewerPrefs(s)
-        return getColumnMode('anything')
+        return getColumns()
       },
     },
     {
@@ -282,7 +302,7 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     await hydrateRecents(primed)
     expect(getRecentlyOpened()).toStrictEqual([])
     await hydrateViewerPrefs(primed)
-    expect(getColumnMode(undefined)).toBe('single')
+    expect(getColumns()).toBe(DEFAULT_COLUMNS)
   })
 
   it('keeps defaults.ts all-or-nothing on a per-key read failure', async () => {
