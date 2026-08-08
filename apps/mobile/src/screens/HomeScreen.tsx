@@ -30,6 +30,11 @@ import type { Song } from '../lib/useSongList'
 
 type Translator = (key: string, options?: Record<string, unknown>) => string
 
+// Gap between the hero region (Continue card) and the first dashboard card.
+// Deliberately wider than the card-to-card gap (tokens `spacing.lg`), which is
+// the same on both form factors — see the dashboard block below.
+const HERO_GAP = 26
+
 function songMeta(song: Song, tx: Translator): string {
   return [
     song.default_key ? tx('common:keyOf', { key: song.default_key }) : null,
@@ -481,7 +486,7 @@ export default function HomeScreen() {
                   flexDirection: 'row',
                   alignItems: 'flex-start',
                   gap: t.spacing.lg,
-                  marginTop: 26,
+                  marginTop: HERO_GAP,
                 }}
               >
                 <View style={{ flex: 1, gap: t.spacing.lg }}>
@@ -496,20 +501,18 @@ export default function HomeScreen() {
             </ConstrainedContent>
           </View>
         ) : (
-          <>
-            {lastSetCard ? (
-              <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>{lastSetCard}</View>
-            ) : null}
-            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: 26 }}>
-              <DailyWordCard />
-            </View>
-            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
-              <RecentSongsCard />
-            </View>
-            <View style={{ paddingHorizontal: t.spacing.lg, marginTop: t.spacing.lg }}>
-              {starredCard}
-            </View>
-          </>
+          // One `gap` on the stack instead of a marginTop per card, so every
+          // card-to-card space is the same `t.spacing.lg` the grid uses between
+          // its cells — previously the first two gaps were HERO_GAP and the rest
+          // spacing.lg. A null card (no last set) contributes no gap.
+          <View
+            style={{ paddingHorizontal: t.spacing.lg, marginTop: HERO_GAP, gap: t.spacing.lg }}
+          >
+            {lastSetCard}
+            <DailyWordCard />
+            <RecentSongsCard />
+            {starredCard}
+          </View>
         )}
       </ScrollView>
     </View>
