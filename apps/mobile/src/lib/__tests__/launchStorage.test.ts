@@ -45,9 +45,11 @@ function makeStore(seed: Record<string, string> = {}) {
 }
 
 describe('LAUNCH_STORAGE_KEYS', () => {
-  it('covers the 14 keys the splash gate reads', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(14)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(14)
+  // 14 splash-gating keys plus gc.review.v1, which rides the same batch without
+  // gating first paint (see the list's own comment in launchStorage.ts).
+  it('covers the 15 keys read at launch', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(15)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(15)
   })
 })
 
@@ -69,8 +71,8 @@ describe('primeLaunchStorage', () => {
 
   it('falls back to the real store when multiGet rejects', async () => {
     // Today each module does its own getItem behind its own try/catch, so one
-    // failing read can only affect one module. A batch that reset all 14
-    // keys to defaults at once would be a far worse failure.
+    // failing read can only affect one module. A batch that reset every batched
+    // preference to its default at once would be a far worse failure.
     const { store } = makeStore({ 'gc.defaults.theme': 'dark' })
     store.multiGet = () => Promise.reject(new Error('storage unavailable'))
     const primed = await primeLaunchStorage(store)

@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { UserFacingError } from './errors'
+import { markSessionError } from './sessionError'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
 
 // Shared client for the web app's Pages Functions API (/api/export/song,
@@ -25,7 +26,12 @@ export function apiBase(): string {
 async function authHeader(): Promise<{ Authorization: string }> {
   const { data } = await supabase.auth.getSession()
   const session = data?.session
-  if (!session) throw new Error('not_signed_in')
+  if (!session) {
+    // Every caller turns this into a "Sign in to export" alert, so it is a
+    // visible failure even though it never reached the network.
+    markSessionError('api.authHeader')
+    throw new Error('not_signed_in')
+  }
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
@@ -64,6 +70,11 @@ export async function apiPost(path: string, body: unknown): Promise<Response> {
 // Read the API's { error } body into a thrown-Error message, with a
 // targeted hint for the redirect case a retry couldn't fix.
 export async function apiError(res: Response, fallback: string): Promise<Error> {
+  // The chokepoint for every non-ok Pages Function response — song, songbook and
+  // setlist exports, and Telegram pushes. It catches the failures raised inside
+  // the Song Viewer and the Performer, which alert raw messages without going
+  // through errors.ts and which this change is not allowed to edit.
+  markSessionError(`api ${res.status}`)
   if (res.status === 405) {
     // UserFacingError so actionFailureMessage shows this verbatim instead of
     // replacing it with generic copy: it names the exact misconfiguration and the

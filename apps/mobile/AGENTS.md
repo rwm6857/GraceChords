@@ -395,6 +395,68 @@ duplicate logic here and never edit core internals to suit mobile.
   Viewer/Performer seed their chord style read-on-open; in-session changes don't
   write back.
 
+## In-app review request
+
+Native store review (`expo-store-review` → `SKStoreReviewController` on iOS, Play
+In-App Review on Android), asked for after a genuinely positive interaction. **The
+OS sheet is the entire UI** — there is no pre-prompt, no "Enjoying GraceChords?"
+gate, no stars of our own, and deliberately no "Rate GraceChords" Settings row
+(if one is ever added it must DEEP-LINK to the store page, never call
+`requestReview`, because a tap that silently does nothing is worse than no row).
+
+The platform gives **no callback**: we cannot tell whether the sheet rendered,
+whether anyone rated, or whether the OS silently swallowed the call because its
+own cap (~3/year on iOS) was spent. Every request is therefore a spent,
+unverifiable attempt, which is why the gates below are as conservative as they
+are — and why the attempt is banked *before* the native call is awaited.
+
+- `src/lib/routeDwell.ts` — **pure**, injected clock. Accumulates foreground-only
+  time on the current route. Backgrounded time does not count, and the shared
+  `sheet` route is treated as an **overlay** (freeze, then resume) rather than a
+  departure, because every sheet in the app is a real router navigation via
+  `formSheetHost`. Dwell is keyed on the resolved `usePathname()`, so song A →
+  song B ends A's visit instead of pooling two half-reads.
+- `src/lib/reviewEligibility.ts` — **pure**. The whole policy in one function,
+  returning a decision *plus a human-readable reason*. Triggers: 90 s+ foreground
+  dwell on `viewer/[slug]` or `perform/[id]`, or leaving the reader with a
+  4+ day streak. Then: production build, no session error, 7+ days since first
+  launch, 3+ distinct open days, intro seen before *this* launch, under 3 lifetime
+  requests, 120+ days since the last.
+- `src/lib/reviewState.ts` — device-local persistence (`gc.review.v1`, joined to
+  the `launchStorage.ts` batch). **Bounded by construction:** distinct open days
+  are a count plus one date, never a list. Nothing touches the Supabase profile.
+- `src/lib/sessionError.ts` — in-memory only, never persisted. `markSessionError`
+  is called from `errors.ts` (below the `isAbortError` check — a user
+  cancellation is not a bad experience), `api.ts`, `exportSong.ts` and
+  `AuthScreen.tsx`. Asking someone to rate the app minutes after their export
+  failed is the most expensive mistake this feature can make.
+- `src/lib/reviewService.ts` — the native half (`expo-store-review`, `AppState`,
+  `useSegments`/`usePathname`), mounted **once** as `useReviewObserver()` in the
+  root layout. Same pure-store/service split as `readerReminder*.ts`.
+
+Two things to know before touching it:
+
+- **It derives everything from navigation state.** The Song Viewer, Performer and
+  Daily Word reader know nothing about it and must stay that way.
+- **Production detection is asymmetric.** On iOS, `StoreReview.isAvailableAsync()`
+  is a genuine signal — its native implementation returns false when the bundle
+  has a sandbox receipt and no embedded provisioning profile, i.e. TestFlight and
+  Xcode installs. On **Android it is not**: it only checks that the Play Store app
+  is installed, and Play internal/closed testing serves the *same production AAB*
+  from the same store, so `EXPO_PUBLIC_BUILD_PROFILE` (injected per profile in
+  `eas.json`) can rule out dev clients and `preview` APKs but **cannot** rule out
+  the internal-testing track. Nothing available at runtime can. Do not "fix" this
+  with `expo-application`'s `getIosApplicationReleaseTypeAsync()` either — it
+  reports `APP_STORE` for TestFlight builds too, since neither has an embedded
+  profile.
+
+Because the sheet does not appear in TestFlight and is unreliable in Play internal
+testing, **dev builds never call the API**: eligibility is evaluated in full, the
+decision and every input are logged (`[review] would request now (trigger=dwell,
+…)`), and near-misses log the specific failing gate. That log is the supported way
+to verify changes here; `src/lib/__tests__/reviewFlow.test.ts` covers the same
+scenarios headless.
+
 ## Data & stubs
 
 - Song data uses core's `fetchSongList` (widen columns via its `opts.columns`);

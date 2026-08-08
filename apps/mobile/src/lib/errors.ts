@@ -1,4 +1,5 @@
 import { isAbortError, isRequestTimeout } from './requestBudget'
+import { markSessionError } from './sessionError'
 
 // Supabase errors are plain objects ({ message, details, hint, code }), not Error
 // instances — so `String(err)` yields "[object Object]". Extract a readable
@@ -32,6 +33,10 @@ export function errMessage(err: unknown): string {
  */
 export function reportFailure(scope: string, err: unknown): boolean {
   if (isAbortError(err)) return false
+  // Below the abort check on purpose: a user-cancelled download is not a bad
+  // experience, and marking it would needlessly disqualify the session from an
+  // in-app review request. See sessionError.ts.
+  markSessionError(scope)
   console.error(`[${scope}] failed: ${describeReason(err)}`)
   return true
 }
@@ -90,6 +95,7 @@ const GENERIC_DETAIL_KEY = 'errors:tryAgain'
  */
 export function failureDetailKey(scope: string, err: unknown): string {
   const offline = isRequestTimeout(err) || isNetworkFailure(err)
+  markSessionError(scope)
   console.error(`[${scope}] failed: ${describeReason(err)}`)
   return offline ? OFFLINE_DETAIL_KEY : GENERIC_DETAIL_KEY
 }
@@ -110,6 +116,10 @@ export function actionFailureMessage(
   t: (key: string) => string,
 ): string {
   if (isUserFacingError(err)) {
+    // This branch returns before failureDetailKey can mark the session, so it
+    // marks its own — a misconfigured API base URL is still a failed action in
+    // front of whoever is holding the device.
+    markSessionError(scope)
     console.error(`[${scope}] failed: ${errMessage(err)}`)
     return errMessage(err).replace(/^UserFacingError:\s*/, '')
   }
@@ -123,6 +133,7 @@ export function actionFailureMessage(
  * nothing for the user to tap.
  */
 export function saveFailureKey(scope: string, err: unknown): string {
+  markSessionError(scope)
   console.error(`[${scope}] save failed: ${describeReason(err)}`)
   return 'errors:saveFailed'
 }

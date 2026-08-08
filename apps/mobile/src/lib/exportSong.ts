@@ -1,5 +1,6 @@
 import { File, Paths } from 'expo-file-system'
 import { apiError, apiPost } from './api'
+import { markSessionError } from './sessionError'
 
 // Server-side song export. Calls the web app's Pages Function
 // POST /api/export/song, which renders with the same pure pdf_mvp engine the
@@ -22,8 +23,13 @@ export async function exportSong(opts: {
     format,
   })
 
-  // 501 = server rasteriser unavailable; caller should offer PDF instead.
-  if (res.status === 501) throw new Error('image_unavailable')
+  // 501 = server rasteriser unavailable; caller should offer PDF instead. It is
+  // the one export failure that does not pass through apiError, so it marks the
+  // session itself — the user still tapped JPG and got an alert instead.
+  if (res.status === 501) {
+    markSessionError('exportSong.imageUnavailable')
+    throw new Error('image_unavailable')
+  }
   if (!res.ok) throw await apiError(res, 'export_failed')
 
   const contentType = res.headers.get('content-type') || ''

@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase'
 import { MIN_PASSWORD_LENGTH, validateSignIn, validateSignUp } from '../lib/authValidation'
 import { appleSignIn, emailSignIn, emailSignUp, googleSignIn, type AuthResult } from '../lib/authFlows'
 import { makeAppleDeps, makeGoogleDeps } from '../lib/authDeps'
+import { markSessionError } from '../lib/sessionError'
 
 // The auth screen per the design reference: one route, two modes (sign in /
 // sign up) toggled in place, with native Google + Apple sign-in below the
@@ -55,10 +56,19 @@ export default function AuthScreen() {
     setError(null)
     try {
       const result = await flow()
-      if (!result.ok && !result.canceled && result.error) setError(result.error)
+      if (!result.ok && !result.canceled && result.error) {
+        // Marked here rather than in authFlows.ts, which is a pure,
+        // injected-deps module the vitest harness runs headless — and because
+        // this is the point where a failure actually reaches the user. A
+        // CANCELLED Apple/Google sheet is excluded: dismissing a sign-in prompt
+        // is a choice, not a bad experience. See sessionError.ts.
+        markSessionError('AuthScreen.signIn')
+        setError(result.error)
+      }
       return result
     } catch {
       const result: AuthResult = { ok: false, error: 'errors.generic' }
+      markSessionError('AuthScreen.signIn')
       setError(result.error!)
       return result
     } finally {

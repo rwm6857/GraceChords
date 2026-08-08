@@ -23,6 +23,7 @@ import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { hydrateIntroSeen, useIntroSeen } from '../src/lib/introSeen'
+import { startReviewSession, useReviewObserver } from '../src/lib/reviewService'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
@@ -251,11 +252,12 @@ export default function RootLayout() {
     // session read were nested behind it the two would serialise and cold launch
     // would regress — the whole point of batching is to be no slower.
     const sessionRead = resolveInitialSession(supabase.auth)
-    // One AsyncStorage round trip for all 14 launch keys instead of 14 separate
+    // One AsyncStorage round trip for all 15 launch keys instead of 15 separate
     // getItem calls. The stores themselves are untouched: they receive a
     // KVStorage that answers from the batch, so every missing/null/malformed
     // fallback is byte-for-byte what it was. See launchStorage.ts.
-    const hydrated = primeLaunchStorage(AsyncStorage).then((store) =>
+    const primed = primeLaunchStorage(AsyncStorage)
+    const hydrated = primed.then((store) =>
       Promise.all([
         hydrateDefaults(store),
         hydrateDownloads(store),
@@ -275,6 +277,15 @@ export default function RootLayout() {
         hydrateIntroSeen(store),
       ]),
     )
+    // In-app review bookkeeping (src/lib/reviewService.ts). Deliberately its own
+    // chain rather than a member of the splash gate below: nothing on screen
+    // depends on it, and the review gate cannot fire until the user has
+    // navigated somewhere. It waits on `hydrated` only so the intro flag is
+    // resolved before it snapshots "was the intro already seen BEFORE this
+    // launch" — the whole point of that gate is to exclude a first run.
+    void Promise.all([primed, hydrated])
+      .then(([store]) => startReviewSession(store))
+      .catch(() => {})
     Promise.all([
       sessionRead,
       hydrated,
@@ -390,6 +401,10 @@ export default function RootLayout() {
   }, [router])
 
   useProtectedRoute(session, ready, beginHandoff)
+  // Watches navigation + app lifecycle to time the in-app review request. Reads
+  // navigation state only — the Song Viewer, Performer and Daily Word reader are
+  // untouched and know nothing about it. See src/lib/reviewService.ts.
+  useReviewObserver()
 
   if (supabaseConfigError) {
     return <ConfigErrorScreen message={supabaseConfigError} />

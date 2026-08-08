@@ -7,12 +7,18 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BUILD_PROFILE": "development"
+      },
       "ios": {
         "resourceClass": "m-medium"
       }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BUILD_PROFILE": "preview"
+      },
       "ios": {
         "resourceClass": "m-medium",
         "simulator": false
@@ -20,6 +26,9 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BUILD_PROFILE": "production"
+      },
       "ios": {
         "resourceClass": "m-medium"
       }
