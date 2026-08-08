@@ -27,7 +27,7 @@ Replaces the old GitHub Action; that workflow can be deleted.
 | Direct messages | Telegram webhook POST (`chat.type === 'private'`) | `POST /webhook` |
 | Group / supergroup mentions | Same webhook, when the bot is `@`-mentioned in a group it's a member of | `POST /webhook` |
 | Guest-chat mentions | Same webhook, payload arrives under `update.guest_message` (BotFather → Guest Chat Mode → On) | `POST /webhook` |
-| Feature announcements | `feature-post.yml` on PR merge — fires on `feat(` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
+| Feature announcements | **Paused** — `feature-post.yml`'s `pull_request` trigger is commented out, so no merge posts to the dev channel until it's restored. The worker route and its rules are untouched. When live: fires on `feat(` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
 | Account linking (mobile) | App taps "Link Telegram" → web `POST /api/telegram/link-token` → this worker mints a token → app opens `t.me/<bot>?start=<token>` → user taps START | `POST /internal/link-token`, then `POST /webhook` |
 | Mon + Fri digest | Cloudflare cron `0 22 * * 1,5` | `scheduled()` handler |
 
