@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -26,6 +26,12 @@ import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { chunkRows } from '../lib/gridRows'
 import { useSongList, type Song } from '../lib/useSongList'
 import { songMatchRank } from '../lib/songSearch'
+import {
+  buildSectionListLayout,
+  cellLayoutAt,
+  listRowHeight,
+  sectionHeaderHeight,
+} from '../lib/listRowMetrics'
 import { upsertDraft } from '../lib/drafts/draftsStore'
 
 // A list entry is one song (phone, single-column) or a grid row of songs
@@ -113,7 +119,7 @@ export default function SongLibraryScreen() {
   const { songs, loading, error, reload } = useSongList()
   const insets = useSafeAreaInsets()
   const isTablet = useIsTabletWidth()
-  const { width, height } = useWindowDimensions()
+  const { width, height, fontScale } = useWindowDimensions()
   // Grid columns: tablet-only (tokens layout.libraryColumns), 1 on phones —
   // the single-column path renders exactly as before (no chunking at all).
   const columns = isTablet
@@ -131,7 +137,6 @@ export default function SongLibraryScreen() {
 
   const inputRef = useRef<TextInput>(null)
   const listRef = useRef<SectionList<LibraryRow, Section>>(null)
-  const pendingSection = useRef(0)
 
   const availableTags = useMemo(() => {
     const set = new Set<string>()
@@ -159,6 +164,40 @@ export default function SongLibraryScreen() {
         ? sections
         : sections.map((s) => ({ ...s, data: chunkRows(s.data as Song[], columns) })),
     [sections, columns],
+  )
+
+  // Exact flat-cell geometry for the grouped list. Feeding this to
+  // `getItemLayout` is what lets the A–Z scrubber jump to a section that has
+  // never been rendered: without it `scrollToLocation` bails out through
+  // `onScrollToIndexFailed`, whose `averageItemLength` is 0 until cells have
+  // been measured, so the list scrolls to y=0 and the scrub lands at the top.
+  const cellLayout = useMemo(() => {
+    const headerHeight = sectionHeaderHeight(fontScale)
+    const rowHeight = (item: unknown) => {
+      const row = item as LibraryRow
+      // A grid row is as tall as its tallest cell; every grid cell renders a
+      // subtitle (blank when the song has no artist), so the slots are the
+      // union across the row.
+      const songs = Array.isArray(row) ? row : [row]
+      return listRowHeight(
+        {
+          subtitle: Array.isArray(row) || songs.some((s) => Boolean(s.artist)),
+          key: songs.some((s) => Boolean(s.default_key)),
+          meta: songs.some((s) => Boolean(s.time_signature)),
+        },
+        fontScale,
+      )
+    }
+    return buildSectionListLayout(displaySections, {
+      // Header-less sections (Recently added / Tempo) render nothing.
+      header: (section) => (section.title ? headerHeight : 0),
+      item: rowHeight,
+    })
+  }, [displaySections, fontScale])
+
+  const getItemLayout = useCallback(
+    (_data: unknown, index: number) => cellLayoutAt(cellLayout, index),
+    [cellLayout],
   )
 
   const trimmedQuery = query.trim().toLowerCase()
@@ -239,12 +278,11 @@ export default function SongLibraryScreen() {
   }
 
   function scrollToLetter(letter: string) {
-    const index = sections.findIndex((s) => s.letter === letter)
+    const index = displaySections.findIndex((s) => s.letter === letter)
     if (index < 0) return
-    pendingSection.current = index
-    // Non-animated so continuous scrubbing tracks the finger without lag; the
-    // failure fallback (onScrollToIndexFailed) recovers when the target section
-    // is outside the render window.
+    // itemIndex 0 targets the section header cell. Non-animated so continuous
+    // scrubbing tracks the finger without lag — `getItemLayout` makes this
+    // exact even for sections far outside the render window.
     listRef.current?.scrollToLocation({
       sectionIndex: index,
       itemIndex: 0,
@@ -490,23 +528,7 @@ export default function SongLibraryScreen() {
             section.title ? <SectionHeader label={section.title} /> : null
           }
           renderItem={renderRow}
-          onScrollToIndexFailed={(info) => {
-            // scrollToLocation can't reach a section outside the render window
-            // without getItemLayout — it fires this and scrolls nowhere. Nudge
-            // the list to an approximate offset so the target renders, then
-            // retry the precise scroll. Repeats (advancing each time) converge
-            // on far jumps instead of looping in place.
-            const approxOffset = info.averageItemLength * info.index
-            listRef.current?.getScrollResponder()?.scrollTo({ y: approxOffset, animated: false })
-            setTimeout(() => {
-              listRef.current?.scrollToLocation({
-                sectionIndex: pendingSection.current,
-                itemIndex: 0,
-                animated: true,
-                viewPosition: 0,
-              })
-            }, 60)
-          }}
+          getItemLayout={getItemLayout}
           // Clear the floating native tab bar (insets.bottom includes its
           // height under native tabs) so the last row scrolls fully above it.
           contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
