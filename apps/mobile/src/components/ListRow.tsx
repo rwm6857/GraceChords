@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTheme } from '../theme/ThemeProvider'
+import { LINE_HEIGHTS } from '../lib/listRowMetrics'
 import SymbolIcon from './SymbolIcon'
 
 // The dense, text-only list row from the design: a title + optional subtitle on
@@ -11,6 +12,11 @@ import SymbolIcon from './SymbolIcon'
 // The grouped Settings screen reuses this row with `leading` (an SF Symbol
 // slot), a muted `value` string, a disclosure `chevron`, and `isLast` to drop
 // the hairline on the final row inside a rounded Card group.
+//
+// Text line heights and the vertical paddings are pinned rather than left to the
+// platform font, because `listRowHeight` in listRowMetrics.ts mirrors them to
+// give the Song Library an exact `getItemLayout` (what makes the A–Z scrubber
+// land on the right section). Change them in both places.
 
 export type ListRowProps = {
   title: string
@@ -74,6 +80,7 @@ export default function ListRow({
               fontSize: t.typography.rowTitle.fontSize,
               fontWeight: t.typography.rowTitle.fontWeight,
               letterSpacing: t.typography.rowTitle.letterSpacing,
+              lineHeight: LINE_HEIGHTS.rowTitle,
               color: t.colors.ink,
             }}
           >
@@ -87,6 +94,7 @@ export default function ListRow({
             style={{
               marginTop: 2,
               fontSize: t.typography.rowSubtitle.fontSize,
+              lineHeight: LINE_HEIGHTS.rowSubtitle,
               color: t.colors.sec,
             }}
           >
@@ -102,6 +110,7 @@ export default function ListRow({
               style={{
                 fontSize: t.typography.rowKey.fontSize,
                 fontWeight: t.typography.rowKey.fontWeight,
+                lineHeight: LINE_HEIGHTS.rowKey,
                 color: t.colors.textAccent,
               }}
             >
@@ -113,6 +122,7 @@ export default function ListRow({
               style={{
                 marginTop: 2,
                 fontSize: t.typography.rowMeta.fontSize,
+                lineHeight: LINE_HEIGHTS.rowMeta,
                 color: t.colors.sec,
               }}
             >
