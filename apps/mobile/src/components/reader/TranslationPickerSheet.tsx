@@ -1,5 +1,4 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   translationOptionLabel,
   type BibleTranslation,
@@ -34,13 +33,12 @@ export default function TranslationPickerSheet(props: TranslationPickerProps) {
 function TranslationPickerContent({ onClose, groups, selectedId, onSelect }: TranslationPickerProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
-  const insets = useSafeAreaInsets()
 
   return (
     <FormSheetShell title={tx('translationPicker.title')} onAction={onClose}>
       <ScrollView
         style={{ maxHeight: 440 }}
-        contentContainerStyle={{ paddingBottom: t.spacing.md + insets.bottom, paddingTop: t.spacing.xs }}
+        contentContainerStyle={{ paddingBottom: t.spacing.md, paddingTop: t.spacing.xs }}
       >
         {groups.map((group) => (
           <View key={group.languageCode}>

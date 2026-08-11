@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { View } from 'react-native'
 import { Stack } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { notifyFormSheetRouteClosed, useFormSheetContent } from '../src/lib/formSheetHost'
 import { useTheme } from '../src/theme/ThemeProvider'
 
@@ -11,6 +12,7 @@ import { useTheme } from '../src/theme/ThemeProvider'
 
 export default function SheetRoute() {
   const t = useTheme()
+  const insets = useSafeAreaInsets()
   const content = useFormSheetContent()
 
   useEffect(() => () => notifyFormSheetRouteClosed(), [])
@@ -29,7 +31,17 @@ export default function SheetRoute() {
           showing the OS's default grey. Overriding contentStyle here (theme-
           aware) fills that strip for every sheet in the app, light and dark. */}
       <Stack.Screen options={{ contentStyle: { backgroundColor: t.colors.surface } }} />
-      <View collapsable={false} style={{ backgroundColor: t.colors.surface }}>
+      {/* Bottom safe-area inset for EVERY sheet, applied once here. A
+          fitToContents sheet is only as tall as its React content, so content
+          that stops short of the home indicator leaves the strip below it
+          uncovered — the gap where the screen behind shows through. Padding the
+          host (rather than each sheet) also puts the inset OUTSIDE any inner
+          ScrollView, where content-container padding would just scroll away.
+          Sheet content must not add insets.bottom of its own. */}
+      <View
+        collapsable={false}
+        style={{ backgroundColor: t.colors.surface, paddingBottom: insets.bottom }}
+      >
         {content}
       </View>
     </>

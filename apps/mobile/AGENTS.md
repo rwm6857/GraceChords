@@ -186,6 +186,13 @@ duplicate logic here and never edit core internals to suit mobile.
   `RowActionsSheet`, which stays on the hand-rolled `BottomSheet` Modal because
   it chains into the key picker via `onDismissed`; if you add a new sheet, use
   the `useFormSheet` + `FormSheetShell` pattern.
+  **The bottom safe-area inset belongs to the host, not the sheet.** `app/sheet.tsx`
+  pads its surface-painted wrapper by `insets.bottom` for every sheet — a
+  `fitToContents` sheet is only as tall as its React content, so content that stops
+  short of the home indicator leaves that strip uncovered and the screen behind
+  shows through. Sheet content must **not** add `insets.bottom` of its own (it
+  would double the gap, and inside a `maxHeight` ScrollView's
+  `contentContainerStyle` it just scrolls away instead of extending the sheet).
 - **Icons are native design-system glyphs only** (no hand-drawn/SVG), always via
   `src/components/SymbolIcon.tsx`. Call sites pass a single SF Symbol `name`;
   `SymbolIcon` branches internally on `Platform.OS`: iOS renders it through

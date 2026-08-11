@@ -1,5 +1,4 @@
 import { Pressable, Switch, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import SegmentedPill from './SegmentedPill'
@@ -103,7 +102,6 @@ function ViewOptionsContent({
 }: ViewOptionsProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('song')
-  const insets = useSafeAreaInsets()
 
   const stepFont = (dir: 1 | -1) => {
     const next = Math.round((fontScale + dir * FONT_SCALE_STEP) * 10) / 10
@@ -114,7 +112,7 @@ function ViewOptionsContent({
 
   return (
     <FormSheetShell title={tx('viewer.viewOptions')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
+      <View style={{ padding: t.spacing.lg }}>
         {/* Show chords */}
         <View
           style={{

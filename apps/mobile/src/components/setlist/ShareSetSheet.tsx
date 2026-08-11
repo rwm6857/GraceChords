@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
@@ -33,7 +32,6 @@ export default function ShareSetSheet(props: ShareSetProps) {
 function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram }: ShareSetProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('export')
-  const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState<Busy>(null)
 
   const run = (which: Exclude<Busy, null>, fn: () => Promise<void>) => async () => {
@@ -48,7 +46,7 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
 
   return (
     <FormSheetShell title={tx('title')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
+      <View style={{ padding: t.spacing.lg, gap: t.spacing.md }}>
         {/* Primary set-PDF export — combined PDF via /api/export/setlist. */}
         <Pressable
           onPress={run('pdf', onExport)}

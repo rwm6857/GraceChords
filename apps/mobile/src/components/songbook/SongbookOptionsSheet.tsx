@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ActivityIndicator, Image, Pressable, Switch, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import TextField from '../TextField'
@@ -53,7 +52,6 @@ function SongbookOptionsContent({
 }: SongbookOptionsProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('utilities')
-  const insets = useSafeAreaInsets()
   const [busy, setBusy] = useState(false)
 
   const runExport = async () => {
@@ -68,7 +66,7 @@ function SongbookOptionsContent({
 
   return (
     <FormSheetShell title={tx('songbook.optionsTitle')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.lg }}>
+      <View style={{ padding: t.spacing.lg, gap: t.spacing.lg }}>
         <TextField
           label={tx('songbook.nameLabel')}
           icon="book"
