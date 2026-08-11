@@ -310,7 +310,11 @@ duplicate logic here and never edit core internals to suit mobile.
   nonce in id_token should either both exist or not"). Apple is unaffected — it
   drives the raw/hashed nonce pair itself (see `appleSignIn`). The sprite pick is written to `users.preferences.sprite`
   (`src/lib/profile.ts`) — the same JSONB shape the web Profile page writes; ids in
-  `src/lib/sprites.ts` must stay in sync with web's `SpritePicker.jsx`.
+  `src/lib/sprites.ts` must stay in sync with web's `SpritePicker.jsx`. The
+  artwork is shared too, but **not the file format**: web serves the `.webp`
+  originals, mobile ships PNGs generated from them, because RN's `Image`
+  decodes WebP on Android only and a `.webp` avatar renders as nothing on iOS.
+  See `assets/README.md` for the regeneration command.
 
 ## Song Viewer, Performer & export
 

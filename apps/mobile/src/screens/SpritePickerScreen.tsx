@@ -131,6 +131,12 @@ export default function SpritePickerScreen() {
                     flex: 1,
                     borderRadius: t.radii.pill,
                     overflow: 'hidden',
+                    // The fill is invisible behind a loaded sprite (they are
+                    // opaque squares clipped to the circle) and only shows if
+                    // one fails to decode — without it an unselected tile has
+                    // no border either, so a broken image left the whole grid
+                    // invisible rather than merely blank.
+                    backgroundColor: t.colors.surfaceAlt,
                     borderWidth: isSelected ? 3 : 0,
                     borderColor: t.colors.accent,
                   }}
