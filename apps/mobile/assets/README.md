@@ -50,3 +50,37 @@ byte-for-byte):
 npx --yes sharp-cli@^5 -i assets/brand/gc-mark.svg      -o assets/splash-icon.png      resize 1024 1024
 npx --yes sharp-cli@^5 -i assets/brand/gc-mark-dark.svg -o assets/splash-icon-dark.png resize 1024 1024
 ```
+
+## `sprites/` — the profile avatars (**PNG, never WebP**)
+
+The 15 avatars a user picks from in "Choose your icon" / Settings → Account →
+Your icon. They are the *profile* avatar, not the app icon: the persisted value
+lives in `users.preferences.sprite` and is **shared with the web app**, so the
+ids here and in `apps/web/src/components/ui/SpritePicker.jsx` must match
+exactly, and both apps must show the same artwork for a given id.
+
+**The source of truth is the web copy, `apps/web/public/sprites/<id>.webp`.**
+Browsers decode WebP, so the web app serves those files directly. React Native
+does **not**: `Image` supports WebP on Android only (see the format list in
+`react-native/Libraries/Image/ImageProps.js`), and on iOS a `.webp` source
+decodes to nothing — which is exactly what shipped once, as blank circles in
+the Settings profile card, the Home and Daily Word headers, and an avatar
+picker whose unselected tiles were invisible. **Mobile therefore ships PNG.**
+
+- **Requirements:** `<id>.png`, 384×384, alpha intact. 384 is 3× the largest
+  size any screen draws them at (the picker's tiles on the widest phone);
+  everything else — the 52pt profile card, the 30pt headers, the 29pt row —
+  scales down from the same file.
+- Regenerate all 15 from the web originals (`--palette` keeps the set ~1.1MB
+  instead of ~2.8MB; the artwork is flat enough that it is indistinguishable at
+  display size):
+
+  ```sh
+  npx --yes sharp-cli@^5 -i "../web/public/sprites/*.webp" -o assets/sprites/ \
+    --format png --palette resize 384 384
+  ```
+
+- Adding an avatar means adding the `.webp` to `apps/web/public/sprites/`, the
+  id to **both** `SPRITE_IDS` lists, a `require` line in
+  `src/lib/sprites.ts` (Metro needs static literals), and re-running the
+  command above.

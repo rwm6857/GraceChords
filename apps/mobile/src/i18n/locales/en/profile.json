@@ -6,7 +6,7 @@
     "security": "SECURITY",
     "connections": "CONNECTIONS"
   },
-  "appIcon": "App icon",
+  "yourIcon": "Your icon",
   "name": "Name",
   "email": "Email",
   "changePassword": "Change password",

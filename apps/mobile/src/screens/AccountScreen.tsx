@@ -240,9 +240,11 @@ export default function AccountScreen() {
         {/* PROFILE */}
         <SectionHeader label={tx('sections.profile')} />
         <Card>
+          {/* The profile avatar, not the springboard app icon — the row opens
+              the sprite picker and previews the current pick. */}
           <ListRow
-            title={tx('appIcon')}
-            accessibilityLabel={tx('appIcon')}
+            title={tx('yourIcon')}
+            accessibilityLabel={tx('yourIcon')}
             leading={
               <View
                 style={{
