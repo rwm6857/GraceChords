@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Platform, View } from 'react-native'
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker'
 import { useTranslation } from 'react-i18next'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from '../FormSheetShell'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -56,7 +55,6 @@ function ReminderTimeSheetIOS(props: ReminderTimeProps) {
 function ReminderTimeContent({ hour, minute, onConfirm, onClose }: ReminderTimeProps) {
   const t = useTheme()
   const { t: tx, i18n } = useTranslation(['settings', 'common'])
-  const insets = useSafeAreaInsets()
   // Draft time — mounts from props on open, commits on Done.
   const [draft, setDraft] = useState(() => toDate(hour, minute))
 
@@ -71,7 +69,7 @@ function ReminderTimeContent({ hour, minute, onConfirm, onClose }: ReminderTimeP
         style={{
           paddingHorizontal: t.spacing.lg,
           paddingTop: t.spacing.sm,
-          paddingBottom: t.spacing.md + insets.bottom,
+          paddingBottom: t.spacing.md,
         }}
       >
         <DateTimePicker

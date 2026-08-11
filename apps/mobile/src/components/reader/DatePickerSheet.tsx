@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
@@ -32,7 +31,6 @@ export default function DatePickerSheet(props: DatePickerProps) {
 function DatePickerContent({ value, onSelect }: DatePickerProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
-  const insets = useSafeAreaInsets()
   const today = new Date()
   const WEEKDAYS = tx('datePicker.weekdays', { returnObjects: true }) as unknown as string[]
   const MONTHS = tx('datePicker.months', { returnObjects: true }) as unknown as string[]
@@ -77,7 +75,7 @@ function DatePickerContent({ value, onSelect }: DatePickerProps) {
 
   return (
     <FormSheetShell title={tx('datePicker.title')} actionLabel={tx('datePicker.today')} onAction={() => onSelect(new Date())}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
+      <View style={{ padding: t.spacing.lg }}>
         {/* Month header */}
         <View
           style={{

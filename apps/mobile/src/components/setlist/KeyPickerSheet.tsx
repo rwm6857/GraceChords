@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import { KEYS, normKey } from '@gracechords/core'
 import FormSheetShell from '../FormSheetShell'
@@ -44,7 +43,6 @@ function KeyPickerContent({
 }: KeyPickerProps) {
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'common'])
-  const insets = useSafeAreaInsets()
   const current = currentKey ? (normKey(currentKey) as string) : null
 
   // Default the spelling from the current/native key. The content mounts fresh
@@ -57,7 +55,7 @@ function KeyPickerContent({
 
   return (
     <FormSheetShell title={tx('keyPicker.title')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.md }}>
+      <View style={{ padding: t.spacing.lg, gap: t.spacing.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           {songTitle ? (
             <Text style={{ flexShrink: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}>

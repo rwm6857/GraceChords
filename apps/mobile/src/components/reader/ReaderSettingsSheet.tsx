@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Pressable, Text, View, useWindowDimensions } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SegmentedPill from '../SegmentedPill'
@@ -83,7 +82,6 @@ export default function ReaderSettingsSheet(props: ReaderSettingsProps) {
 function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('reader')
-  const insets = useSafeAreaInsets()
   // On narrow iPhone widths the 3-option Line spacing control would collide
   // with its label, so that row stacks. 2-option rows stay inline everywhere.
   const { width } = useWindowDimensions()
@@ -98,7 +96,7 @@ function ReaderSettingsContent({ onClose, settings, onChange }: ReaderSettingsPr
 
   return (
     <FormSheetShell title={tx('settings.title')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom }}>
+      <View style={{ padding: t.spacing.lg }}>
         <OverlineLabel first>{tx('settings.textSize')}</OverlineLabel>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.md }}>
           <Pressable

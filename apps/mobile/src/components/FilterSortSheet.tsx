@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
 import { useFormSheet } from '../lib/formSheetHost'
@@ -64,7 +63,6 @@ function FilterSortContent({
 }: FilterSortProps) {
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'common'])
-  const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
 
   return (
@@ -157,7 +155,6 @@ function FilterSortContent({
       <View
         style={{
           padding: t.spacing.md,
-          paddingBottom: t.spacing.md + insets.bottom,
           borderTopWidth: 1,
           borderTopColor: t.colors.border,
         }}

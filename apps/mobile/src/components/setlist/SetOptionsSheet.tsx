@@ -1,5 +1,4 @@
 import { View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import ActionSheetRow from './ActionSheetRow'
@@ -27,7 +26,6 @@ export default function SetOptionsSheet(props: SetOptionsProps) {
 function SetOptionsContent({ onClose, onRename, onSavedSets, onNewSet, onDeleteSet }: SetOptionsProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('setlist')
-  const insets = useSafeAreaInsets()
 
   const run = (fn: () => void) => () => {
     onClose()
@@ -36,7 +34,7 @@ function SetOptionsContent({ onClose, onRename, onSavedSets, onNewSet, onDeleteS
 
   return (
     <FormSheetShell title={tx('options.title')} onAction={onClose}>
-      <View style={{ padding: t.spacing.lg, paddingBottom: t.spacing.lg + insets.bottom, gap: t.spacing.sm }}>
+      <View style={{ padding: t.spacing.lg, gap: t.spacing.sm }}>
         <ActionSheetRow icon="pencil" label={tx('options.renameSet')} onPress={run(onRename)} />
         <ActionSheetRow icon="list.bullet" label={tx('options.savedSets')} onPress={run(onSavedSets)} />
         <ActionSheetRow icon="plus" label={tx('options.newSet')} onPress={run(onNewSet)} />
