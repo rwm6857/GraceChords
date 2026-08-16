@@ -25,6 +25,7 @@ import { hydrateDefaults } from '../src/lib/defaults'
 import { hydrateIntroSeen, useIntroSeen } from '../src/lib/introSeen'
 import { startReviewSession, useReviewObserver } from '../src/lib/reviewService'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
+import { hydrateReaderSettings } from '../src/lib/readerSettings'
 import { prefetchToday } from '../src/lib/bibleSource'
 import { hydrateDownloads } from '../src/lib/downloads/manifest'
 import { hydrateDrafts } from '../src/lib/drafts/draftsStore'
@@ -267,6 +268,10 @@ export default function RootLayout() {
         hydrateReaderReminder(store),
         hydrateViewerPrefs(store),
         hydrateBibleTranslationPref(store),
+        // Daily Word reader typography (size / typeface / verse layout / line
+        // spacing). Gates the splash like the rest so the reader's first paint
+        // is already at the user's chosen size — no flash of the default.
+        hydrateReaderSettings(store),
         // Today's cached reflection, so the Daily Word landing paints the card
         // it already knows about instead of spinning. Does NOT need to be
         // ordered against sessionRead: the stored entry names its own owner and

@@ -12,12 +12,15 @@ import {
   type ReaderSettings,
   type Typeface,
   type VerseLayout,
-} from '../../lib/useReader'
+} from '../../lib/readerSettings'
 
 // Reader settings sheet (Daily Word screen 18): text size stepper, typeface,
-// verse layout, and line spacing. All session-ephemeral — the screen owns the
-// state and nothing persists across launches. The reading-streak opt-in lives
-// in Settings → Reader (src/lib/readingStreak.ts), not here.
+// verse layout, and line spacing. All four PERSIST device-local
+// (src/lib/readerSettings.ts) — they are readability preferences, so they
+// outlive the reader, a relaunch and an app update. This sheet stays
+// controlled: it reports changes through `onChange`, and the screen writes
+// them to the store. The reading-streak opt-in lives in Settings → Reader
+// (src/lib/readingStreak.ts), not here.
 
 // Inline setting-value row: label left, control right-aligned and content-sized.
 // `stack` puts the control on its own line below the label — used on narrow

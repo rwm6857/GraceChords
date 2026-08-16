@@ -1,7 +1,7 @@
 // One AsyncStorage round trip for the whole splash gate.
 //
-// The launch path hydrates ten device-local stores before first paint, and
-// between them they read 15 keys with 15 separate getItem calls (five in
+// The launch path hydrates eleven device-local stores before first paint, and
+// between them they read 16 keys with 16 separate getItem calls (five in
 // defaults.ts alone). This module reads those — plus the one non-splash-gating
 // key that rides along (see the list below) — in a single multiGet and hands
 // back a KVStorage-shaped facade served from the result.
@@ -54,6 +54,7 @@ export const LAUNCH_STORAGE_KEYS = [
   // upgrade still costs one round trip rather than two.
   'gc.viewer.columnMode.v1',
   'gc.bible.translation.v1', // bibleTranslationPref.ts → '' (no prior choice)
+  'gc.reader.settings.v1', // readerSettings.ts       → defaultReaderSettings
   'gc.reflection.today.v1', // reflectionDayStore.ts   → null (nothing cached)
   'gc.intro.seen.v1', // introSeen.ts            → false ('1' is the only true)
   // reviewState.ts → DEFAULT_REVIEW_STATE. The odd one out: it does NOT gate the

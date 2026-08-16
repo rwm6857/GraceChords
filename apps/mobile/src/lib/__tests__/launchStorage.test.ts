@@ -7,6 +7,12 @@ import { hydrateReadingStreak, getReadingStreak, DEFAULT_READING_STREAK } from '
 import { hydrateReaderReminder, getReaderReminder, DEFAULT_READER_REMINDER } from '../readerReminder'
 import { DEFAULT_COLUMNS, getColumns, hydrateViewerPrefs } from '../viewerPrefs'
 import {
+  __resetReaderSettingsForTest,
+  defaultReaderSettings,
+  getReaderSettings,
+  hydrateReaderSettings,
+} from '../readerSettings'
+import {
   __resetReflectionDayStoreForTest,
   getReflectionDay,
   hydrateTodayReflection,
@@ -45,11 +51,11 @@ function makeStore(seed: Record<string, string> = {}) {
 }
 
 describe('LAUNCH_STORAGE_KEYS', () => {
-  // 15 splash-gating keys plus gc.review.v1, which rides the same batch without
+  // 16 splash-gating keys plus gc.review.v1, which rides the same batch without
   // gating first paint (see the list's own comment in launchStorage.ts).
-  it('covers the 16 keys read at launch', () => {
-    expect(LAUNCH_STORAGE_KEYS).toHaveLength(16)
-    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(16)
+  it('covers the 17 keys read at launch', () => {
+    expect(LAUNCH_STORAGE_KEYS).toHaveLength(17)
+    expect(new Set(LAUNCH_STORAGE_KEYS).size).toBe(17)
   })
 })
 
@@ -274,6 +280,31 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
         return getBibleTranslationPref()
       },
     },
+    {
+      name: 'reader settings: stored pick',
+      seed: {
+        'gc.reader.settings.v1': JSON.stringify({
+          pt: 18,
+          typeface: 'sans',
+          layout: 'prose',
+          lineSpacing: 'relaxed',
+        }),
+      },
+      run: async (s) => {
+        __resetReaderSettingsForTest()
+        await hydrateReaderSettings(s)
+        return getReaderSettings()
+      },
+    },
+    {
+      name: 'reader settings: malformed payload',
+      seed: { 'gc.reader.settings.v1': '{ not json' },
+      run: async (s) => {
+        __resetReaderSettingsForTest()
+        await hydrateReaderSettings(s)
+        return getReaderSettings()
+      },
+    },
   ]
 
   for (const testCase of cases) {
@@ -303,6 +334,9 @@ describe('fallbacks are unchanged, batched vs unbatched', () => {
     expect(getRecentlyOpened()).toStrictEqual([])
     await hydrateViewerPrefs(primed)
     expect(getColumns()).toBe(DEFAULT_COLUMNS)
+    __resetReaderSettingsForTest()
+    await hydrateReaderSettings(primed)
+    expect(getReaderSettings()).toStrictEqual(defaultReaderSettings)
   })
 
   it('keeps defaults.ts all-or-nothing on a per-key read failure', async () => {
