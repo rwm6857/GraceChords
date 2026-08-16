@@ -550,10 +550,33 @@ scenarios headless.
   `getPassage` returns a downloaded chapter blob when one exists (see the
   downloads module below) and falls back to R2 otherwise. Hooks:
   `useBibleTranslations`, `usePassageChapter` (`src/lib/useReader.ts`). Reader
-  settings (size/typeface/layout/spacing) are **session-ephemeral** — not tied to
-  Settings, so they reset on relaunch. **Follow-up:** `apps/web`'s
-  `features/readings` + `utils/bible` still hold their own copy of this logic;
-  migrate web onto core's `bible` module to remove the duplication.
+  settings (size/typeface/layout/spacing) **persist device-local** in
+  `src/lib/readerSettings.ts` (`gc.reader.settings.v1`, same injected-storage /
+  `useSyncExternalStore` pattern as `defaults.ts`, hydrated in the splash
+  `multiGet` batch): they are readability preferences, so they outlive the
+  reader, a relaunch and an app update. The text-options sheet stays controlled —
+  it reports through `onChange` and the screen writes to the store. Parsing is
+  per-field, so a corrupt record costs only the bad fields. **Follow-up:**
+  `apps/web`'s `features/readings` + `utils/bible` still hold their own copy of
+  this logic; migrate web onto core's `bible` module to remove the duplication.
+  - **Scroll position is per passage chip, and session-scoped.** Each chip keeps
+    its own offset while the reader is open (refs in `DailyWordScreen`, so a
+    scroll never re-renders the reading): chips open at the top, returning to one
+    restores where you left it, and closing the reader resets them all. The
+    reading `ScrollView` is keyed on the passage id so a chapter can never
+    inherit its predecessor's offset; the saved offset is re-applied on the first
+    `onContentSizeChange` after a passage change.
+  - **Verse numerals are inline `<View>`s** (`src/components/reader/VerseNumber.tsx`),
+    not nested `<Text>`. React Native has no per-run baseline offset on either
+    platform, and an inline view is the one thing both text engines position
+    relative to the baseline — that is what lifts the numeral out of the bottom
+    of the line box. Its metrics live in `readerSettings.ts` and are unit-tested
+    to stay shorter than the line's ascent at every size/spacing pair, so a line
+    carrying a verse number is never taller than its neighbours. The numeral is
+    joined to its first word with a **no-break space** (prose mode used to strand
+    numbers at the end of a line at larger sizes) and sits OUTSIDE the highlight
+    run, because an inline view takes no text background and would otherwise
+    punch a hole in the tint.
   - **Swipe between chapters** is `src/components/reader/ChapterSwipe.tsx`
     (Reanimated + RNGH), modelled on the Bible app's reader: the page **tracks
     the finger**, a chevron pill slides in from the edge you pull away from and

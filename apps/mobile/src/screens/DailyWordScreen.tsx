@@ -6,6 +6,8 @@ import {
   ScrollView,
   Text,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
@@ -29,6 +31,7 @@ import GlassSurface from '../components/GlassSurface'
 import EmptyState from '../components/EmptyState'
 import ChapterSwipe from '../components/reader/ChapterSwipe'
 import ReaderSettingsSheet from '../components/reader/ReaderSettingsSheet'
+import VerseNumber from '../components/reader/VerseNumber'
 import TranslationPickerSheet from '../components/reader/TranslationPickerSheet'
 import DatePickerSheet from '../components/reader/DatePickerSheet'
 import { useTheme } from '../theme/ThemeProvider'
@@ -43,12 +46,12 @@ import { resolveInitialPassageIndex } from '../lib/readerPassage'
 import { useBibleTranslations } from '../lib/useBibleTranslations'
 import { useDailyHighlights } from '../lib/useDailyHighlights'
 import {
-  defaultReaderSettings,
   readerFontSize,
   readerLineHeight,
-  usePassageChapter,
-  type ReaderSettings,
-} from '../lib/useReader'
+  setReaderSettings,
+  useReaderSettings,
+} from '../lib/readerSettings'
+import { usePassageChapter } from '../lib/useReader'
 
 type Sheet = 'none' | 'translations' | 'settings' | 'date'
 
@@ -59,6 +62,11 @@ const COPY_FAB_CLEARANCE = 56 + 16
 
 // Stable empty set for passages with no selection (never mutated).
 const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
+
+// U+00A0. Glues a verse number to the word it introduces: line breaking is
+// forbidden on either side of a no-break space, so the pair moves to the next
+// line together rather than leaving the number dangling at a line end.
+const NO_BREAK_SPACE = '\u00A0'
 
 function formatDateLabel(d: Date, locale: string) {
   const now = new Date()
@@ -99,7 +107,10 @@ export default function DailyWordScreen({
   // day-scoped, so switching chapters, copying, or a cold restart never clears
   // them — but a new day starts clean.
   const { selections: selectionsByPassage, toggleVerse } = useDailyHighlights()
-  const [settings, setSettings] = useState<ReaderSettings>(defaultReaderSettings)
+  // Typography settings are DEVICE-PERSISTED (readerSettings.ts) — they are
+  // readability preferences, so they survive closing the reader, a relaunch and
+  // an app update.
+  const settings = useReaderSettings()
   const [sheet, setSheet] = useState<Sheet>('none')
   const [reloadToken, setReloadToken] = useState(0)
 
@@ -126,6 +137,32 @@ export default function DailyWordScreen({
 
   const passageKey = currentPassage ? passageId(currentPassage) : ''
   const selection = (passageKey ? selectionsByPassage[passageKey] : undefined) || EMPTY_SELECTION
+
+  // Per-chip scroll memory. Every passage chip keeps its OWN scroll position for
+  // as long as the reader is open: chips start at the top, and coming back to
+  // one returns you to where you left it instead of to wherever the previous
+  // chapter happened to be scrolled.
+  //
+  // Refs, not state — writing an offset must never re-render the reading — and
+  // deliberately screen-scoped: closing the reader unmounts this and every chip
+  // starts at the top again, which is the specified behaviour.
+  const scrollRef = useRef<ScrollView>(null)
+  const scrollOffsets = useRef<Record<string, number>>({})
+  // True between a passage change and the moment its saved offset is applied.
+  // While it is set, onScroll events belong to the restore (or to the fresh
+  // ScrollView settling at 0) and must not overwrite what we are about to
+  // restore.
+  const restoringScroll = useRef(true)
+  useEffect(() => {
+    restoringScroll.current = true
+  }, [passageKey])
+  const rememberScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (restoringScroll.current || !passageKey) return
+      scrollOffsets.current[passageKey] = e.nativeEvent.contentOffset.y
+    },
+    [passageKey],
+  )
 
   const versesInScope = useMemo(() => {
     if (!chapter || !currentPassage) return []
@@ -204,7 +241,6 @@ export default function DailyWordScreen({
   const fontSize = readerFontSize(settings.pt)
   const lineHeight = readerLineHeight(settings.pt, settings.lineSpacing)
   const fontFamily = settings.typeface === 'serif' ? 'Georgia' : undefined
-  const numStyle = { fontSize: Math.round(fontSize * 0.72), fontWeight: '700' as const, color: t.colors.textAccent }
   const readingBase = {
     fontSize,
     lineHeight,
@@ -430,6 +466,33 @@ export default function DailyWordScreen({
           <EmptyState icon="book.closed" title={tx('empty.title')} subtitle={tx('empty.subtitle')} />
         ) : (
           <ScrollView
+            // Remount per passage so a chapter never inherits the previous
+            // one's offset, then put back whatever this chip was left at.
+            key={passageKey}
+            ref={scrollRef}
+            scrollEventThrottle={32}
+            onScroll={rememberScroll}
+            // onScroll is throttled, so it can miss the resting offset by a few
+            // points; these two fire at rest and pin the exact value.
+            onScrollEndDrag={rememberScroll}
+            onMomentumScrollEnd={rememberScroll}
+            // A drag is unambiguously the user, so it also ends any restore
+            // still armed — a chapter that somehow never reports a content size
+            // must not swallow scrolling for the rest of the session.
+            onScrollBeginDrag={() => {
+              restoringScroll.current = false
+            }}
+            // The earliest point at which the content is tall enough to scroll
+            // to. Fires again as the content grows (e.g. the copy FAB's extra
+            // bottom padding), which is why the restore is armed once per
+            // passage change rather than on every call. scrollTo clamps, so a
+            // saved offset from a longer chapter can't strand the view.
+            onContentSizeChange={() => {
+              if (!restoringScroll.current) return
+              restoringScroll.current = false
+              const y = passageKey ? (scrollOffsets.current[passageKey] ?? 0) : 0
+              if (y > 0) scrollRef.current?.scrollTo({ y, animated: false })
+            }}
             contentContainerStyle={{
               paddingHorizontal: 18,
               paddingTop: t.spacing.xs,
@@ -444,20 +507,38 @@ export default function DailyWordScreen({
                   {versesInScope.map(({ num, text }) => {
                     const isSel = selection.has(num)
                     return (
-                      <Text
-                        key={num}
-                        onPress={() => toggle(num)}
-                        style={{ backgroundColor: isSel ? t.colors.accentSoft : 'transparent' }}
-                      >
-                        <Text style={numStyle}>{num} </Text>
+                      <Text key={num} onPress={() => toggle(num)}>
+                        <VerseNumber
+                          num={num}
+                          fontSize={fontSize}
+                          color={t.colors.textAccent}
+                          fontFamily={fontFamily}
+                        />
+                        {/* The numeral is joined to the verse's first word by a
+                            NO-BREAK SPACE, so the two wrap as one unit. Without
+                            it, prose at larger sizes regularly stranded a verse
+                            number alone at the end of a line — the number now
+                            moves down to the next line with its text.
+
+                            The highlight starts here rather than at the numeral:
+                            the numeral is an inline view (see VerseNumber), and
+                            an inline view takes no text background, so keeping it
+                            inside the highlighted run would punch a hole in the
+                            tint. */}
                         <Text
                           style={{
+                            backgroundColor: isSel ? t.colors.accentSoft : 'transparent',
                             textDecorationLine: isSel ? 'underline' : 'none',
                             textDecorationColor: t.colors.accent,
                           }}
                         >
-                          {text}{' '}
+                          {NO_BREAK_SPACE}
+                          {text}
                         </Text>
+                        {/* Verse separator — a normal, breakable space, and
+                            outside the highlight so a selection ends on its own
+                            last word. */}
+                        {' '}
                       </Text>
                     )
                   })}
@@ -479,13 +560,19 @@ export default function DailyWordScreen({
                       }}
                     >
                       <Text style={readingBase}>
-                        <Text style={numStyle}>{num} </Text>
+                        <VerseNumber
+                          num={num}
+                          fontSize={fontSize}
+                          color={t.colors.textAccent}
+                          fontFamily={fontFamily}
+                        />
                         <Text
                           style={{
                             textDecorationLine: isSel ? 'underline' : 'none',
                             textDecorationColor: t.colors.accent,
                           }}
                         >
+                          {NO_BREAK_SPACE}
                           {text}
                         </Text>
                       </Text>
@@ -511,7 +598,7 @@ export default function DailyWordScreen({
         visible={sheet === 'settings'}
         onClose={() => setSheet('none')}
         settings={settings}
-        onChange={setSettings}
+        onChange={setReaderSettings}
       />
       <DatePickerSheet
         visible={sheet === 'date'}
