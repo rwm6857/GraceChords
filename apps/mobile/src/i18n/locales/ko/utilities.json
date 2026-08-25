@@ -8,7 +8,8 @@
     "metronome": "탭 템포 / 메트로놈",
     "pitchPipe": "피치 파이프",
     "songbook": "노래책 제작기",
-    "capo": "카포 계산기"
+    "capo": "카포 계산기",
+    "keyRef": "조성 레퍼런스"
   },
   "tuner": {
     "title": "기타 튜너",
@@ -79,5 +80,60 @@
     "resultNone": "카포 없음",
     "hint": "{{key}} 조로 소리 내려면 {{shape}} 코드로 연주하세요.",
     "hintNone": "{{key}} 조로 연주 — 카포가 필요 없습니다."
+  },
+  "keyRef": {
+    "title": "조성 레퍼런스",
+    "keyOf": "{{key}} 조",
+    "showAs": "코드 표시 방식",
+    "letters": "코드명",
+    "numbers": "숫자",
+    "emptySlot": "선택",
+    "pickProgression": "진행을 선택하면 아크에 표시됩니다.",
+    "pickerTitle": "코드 진행",
+    "setGeneral": "일반",
+    "setPrayer": "기도",
+    "changeProgression": "진행 변경",
+    "selectHint": "이 진행을 아크에 표시합니다",
+    "showNote": "연주 노트",
+    "replay": "시퀀스 다시 재생",
+    "a11yPosition": "{{chord}}, {{number}}번",
+    "a11yAdvance": "{{key}} 조로 이동",
+    "a11yChordOverBass": "{{chord}}, 베이스 {{bass}}",
+    "progressions": {
+      "g1564": "찬양 루프",
+      "g145": "세 코드",
+      "g6415": "단조 시작",
+      "g154": "추진형 세 코드",
+      "g4156": "4도 시작 상승",
+      "g1645": "가스펠 턴어라운드",
+      "g1465": "늦은 단조",
+      "g251": "투 파이브 원",
+      "g1415": "찬송가 절",
+      "g1345": "3도 경과화음",
+      "g4536": "로열 로드",
+      "g6545": "묵상 뱀프",
+      "gCanon": "캐논 8코드",
+      "g6451": "마지막 고조",
+      "g1454": "열린 뱀프",
+      "g1625": "재즈 턴어라운드",
+      "pTopics": "기도 제목 나눔",
+      "pTopicsAlt": "기도 제목 나눔 (대안)",
+      "pBasic": "분위기 조성",
+      "pClimax": "기도 절정",
+      "pRepentance": "회개",
+      "pRepentanceAlt": "회개 (대안)",
+      "pFull": "충만하고 강하게",
+      "pFullAlt": "충만하고 강하게 (대안)",
+      "pBuildUp": "빌드업",
+      "pPushing": "밀어붙이기",
+      "pRequest": "일반 간구",
+      "pRequestAlt": "일반 간구 (대안)",
+      "pBright": "밝고 소망차게",
+      "pIntense": "강렬한 빌드업"
+    },
+    "notes": {
+      "pClimax": "4/6을 연주할 때 9도를 더하세요.",
+      "pPushing": "2maj가 1/3 – 4로 해결될 때 가장 강하게 들립니다."
+    }
   }
 }
