@@ -11,6 +11,8 @@ export * from './chordpro/convert'
 export * from './chordpro/lexer'
 export * from './chordpro/solfege'
 export * from './chordpro/diatonicChords'
+// Key-spelled scale-degree notes + a spelling-preserving chord root
+export * from './chordpro/scaleDegrees'
 // Pure text-editing helpers for the shared song editor (insert/wrap + presets)
 export * from './chordpro/editing'
 // Transposition + KEYS (chordpro/index.js)

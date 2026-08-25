@@ -8,7 +8,8 @@
     "metronome": "Tempo / Metronom",
     "pitchPipe": "Nota Düdüğü",
     "songbook": "Şarkı Kitabı Oluşturucu",
-    "capo": "Kapo Hesaplayıcı"
+    "capo": "Kapo Hesaplayıcı",
+    "keyRef": "Ton Referansı"
   },
   "tuner": {
     "title": "Gitar Akort Aleti",
@@ -79,5 +80,60 @@
     "resultNone": "Kapo yok",
     "hint": "{{key}} tonunda duyulması için {{shape}} akorlarını çal.",
     "hintNone": "{{key}} tonunda çal — kapo gerekmez."
+  },
+  "keyRef": {
+    "title": "Ton Referansı",
+    "keyOf": "{{key}} tonu",
+    "showAs": "Akorları göster",
+    "letters": "Harfler",
+    "numbers": "Sayılar",
+    "emptySlot": "Seç",
+    "pickProgression": "Yayda görmek için bir akor dizisi seçin.",
+    "pickerTitle": "Akor dizisi",
+    "setGeneral": "GENEL",
+    "setPrayer": "DUA",
+    "changeProgression": "Akor dizisini değiştir",
+    "selectHint": "Bu diziyi yayda gösterir",
+    "showNote": "Çalma notu",
+    "replay": "Diziyi yeniden oynat",
+    "a11yPosition": "{{chord}}, {{number}} numara",
+    "a11yAdvance": "{{key}} tonuna geç",
+    "a11yChordOverBass": "{{chord}}, baste {{bass}}",
+    "progressions": {
+      "g1564": "Tapınma döngüsü",
+      "g145": "Üç akor",
+      "g6415": "Minör başlangıç",
+      "g154": "Sürükleyici üçlü",
+      "g4156": "4. dereceden yükseliş",
+      "g1645": "Gospel dönüşü",
+      "g1465": "Geç minör",
+      "g251": "İki-beş-bir",
+      "g1415": "İlahi kıtası",
+      "g1345": "Geçiş 3. derecesi",
+      "g4536": "Kraliyet yolu",
+      "g6545": "Dingin vamp",
+      "gCanon": "Kanon sekizlisi",
+      "g6451": "Son yükseliş",
+      "g1454": "Açık vamp",
+      "g1625": "Caz dönüşü",
+      "pTopics": "Paylaşılan dua konuları",
+      "pTopicsAlt": "Paylaşılan dua konuları (alt.)",
+      "pBasic": "Atmosferi kurmak",
+      "pClimax": "Duanın doruğu",
+      "pRepentance": "Tövbe",
+      "pRepentanceAlt": "Tövbe (alt.)",
+      "pFull": "Dolu ve güçlü",
+      "pFullAlt": "Dolu ve güçlü (alt.)",
+      "pBuildUp": "Yükseliş",
+      "pPushing": "Direnci aşmak",
+      "pRequest": "Genel dilek",
+      "pRequestAlt": "Genel dilek (alt.)",
+      "pBright": "Aydınlık ve umutlu",
+      "pIntense": "Yoğun yükseliş"
+    },
+    "notes": {
+      "pClimax": "4/6'yı çalarken 9'luyu ekleyin.",
+      "pPushing": "2maj, 1/3 – 4'e çözüldüğünde en güçlü şekilde oturur."
+    }
   }
 }

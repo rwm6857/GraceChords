@@ -8,7 +8,8 @@
     "metronome": "Tap Tempo / Metronome",
     "pitchPipe": "Pitch Pipe",
     "songbook": "Songbook Maker",
-    "capo": "Capo Calculator"
+    "capo": "Capo Calculator",
+    "keyRef": "Key Reference"
   },
   "tuner": {
     "title": "Guitar Tuner",
@@ -79,5 +80,60 @@
     "resultNone": "No capo",
     "hint": "Play {{shape}} shapes to sound in {{key}}.",
     "hintNone": "Play in {{key}} — no capo needed."
+  },
+  "keyRef": {
+    "title": "Key Reference",
+    "keyOf": "Key of {{key}}",
+    "showAs": "Show chords as",
+    "letters": "Letters",
+    "numbers": "Numbers",
+    "emptySlot": "Choose",
+    "pickProgression": "Pick a progression to see it on the arc.",
+    "pickerTitle": "Progression",
+    "setGeneral": "GENERAL",
+    "setPrayer": "PRAYER",
+    "changeProgression": "Change progression",
+    "selectHint": "Shows this progression on the arc",
+    "showNote": "Playing note",
+    "replay": "Play the sequence again",
+    "a11yPosition": "{{chord}}, number {{number}}",
+    "a11yAdvance": "Move to the key of {{key}}",
+    "a11yChordOverBass": "{{chord}}, {{bass}} in the bass",
+    "progressions": {
+      "g1564": "Anthem loop",
+      "g145": "Three chords",
+      "g6415": "Minor start",
+      "g154": "Driving three",
+      "g4156": "Subdominant lift",
+      "g1645": "Gospel turnaround",
+      "g1465": "Late minor",
+      "g251": "Two-five-one",
+      "g1415": "Hymn verse",
+      "g1345": "Passing third",
+      "g4536": "Royal road",
+      "g6545": "Reflective vamp",
+      "gCanon": "Canon eight",
+      "g6451": "Final lift",
+      "g1454": "Open vamp",
+      "g1625": "Jazz turnaround",
+      "pTopics": "Topics being shared",
+      "pTopicsAlt": "Topics being shared (alt)",
+      "pBasic": "Laying the atmosphere",
+      "pClimax": "Climax",
+      "pRepentance": "Repentance",
+      "pRepentanceAlt": "Repentance (alt)",
+      "pFull": "Full and strong",
+      "pFullAlt": "Full and strong (alt)",
+      "pBuildUp": "Build up",
+      "pPushing": "Pushing through",
+      "pRequest": "General request",
+      "pRequestAlt": "General request (alt)",
+      "pBright": "Bright and hopeful",
+      "pIntense": "Intense build"
+    },
+    "notes": {
+      "pClimax": "Reach for the 9th when you play the 4/6.",
+      "pPushing": "It lands hardest when the 2maj resolves into 1/3 – 4."
+    }
   }
 }

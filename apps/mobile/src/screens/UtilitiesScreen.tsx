@@ -12,14 +12,15 @@ import TunerScreen from './TunerScreen'
 import MetronomeScreen from './MetronomeScreen'
 import PitchPipeScreen from './PitchPipeScreen'
 import CapoCalculatorScreen from './CapoCalculatorScreen'
+import KeyReferenceScreen from './KeyReferenceScreen'
 import SongbookBuilderScreen from './SongbookBuilderScreen'
 import { useTheme } from '../theme/ThemeProvider'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import type { Tokens } from '@gracechords/tokens/native'
 
 // The Utilities tab landing page: musician's tools as a grouped list. Every
-// row is a live feature (Tuner, Tap Tempo / Metronome, Pitch Pipe, Capo
-// Calculator). Built entirely from the shared primitives (Screen /
+// row is a live feature (Tuner, Tap Tempo / Metronome, Pitch Pipe, Songbook
+// Maker, Capo Calculator, Key Reference). Built entirely from the shared primitives (Screen /
 // SectionHeader / Card / ListRow / SymbolIcon) and theme tokens, mirroring the
 // grouped-list layout used by Settings.
 //
@@ -46,7 +47,7 @@ function RowIcon({ name, t }: { name: Parameters<typeof SymbolIcon>[0]['name']; 
   )
 }
 
-type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/capo' | '/songbook'
+type ToolRoute = '/tuner' | '/metronome' | '/pitch-pipe' | '/capo' | '/songbook' | '/key-reference'
 
 const UTILITIES: {
   icon: Parameters<typeof SymbolIcon>[0]['name']
@@ -58,6 +59,7 @@ const UTILITIES: {
   { icon: 'pianokeys', titleKey: 'tools.pitchPipe', route: '/pitch-pipe' },
   { icon: 'book', titleKey: 'tools.songbook', route: '/songbook' },
   { icon: 'music.note', titleKey: 'tools.capo', route: '/capo' },
+  { icon: 'circle.hexagongrid', titleKey: 'tools.keyRef', route: '/key-reference' },
 ]
 
 export default function UtilitiesScreen() {
@@ -142,6 +144,8 @@ export default function UtilitiesScreen() {
             <SongbookBuilderScreen embedded />
           ) : tool === '/capo' ? (
             <CapoCalculatorScreen embedded />
+          ) : tool === '/key-reference' ? (
+            <KeyReferenceScreen embedded />
           ) : (
             <View
               style={{

@@ -177,7 +177,48 @@ duplicate logic here and never edit core internals to suit mobile.
   list on the left, the picked tool rendered inline on the right via each tool
   screen's `embedded` prop (hides its back link / safe-area bar padding), with
   a "Pick a tool" placeholder until one is selected. Phones keep pushing
-  `/tuner`, `/metronome`, `/pitch-pipe` as routes.
+  `/tuner`, `/metronome`, `/pitch-pipe`, `/songbook`, `/capo`,
+  `/key-reference` as routes.
+- **Key Reference** (`app/key-reference.tsx` → `KeyReferenceScreen`, components
+  in `src/components/keyref/`, logic in `src/lib/keyref/`) — a cropped
+  circle-of-fifths arc over a progression strip, sequence and bass row.
+  Standalone: the key is chosen by turning the arc, never seeded from a song or
+  setlist.
+  - **Progressions are stored NUMERICALLY** (`types.ts` / `progressions.ts`):
+    scale degree + optional quality override + optional bass degree + optional
+    extension. Letters are a view computed per key in `render.ts`, which is the
+    only module that turns a degree into a note. Canonical text is `1`, `1/3`,
+    `5/7`, `2maj`, `2m7`; **a bare `7` is the vii° chord and is never shorthand
+    for `5/7`** (nor `3` for `1/3`), and `parseChordToken` throws rather than
+    guessing. Two sets ship: 16 diatonic **General** and the 14-entry **Prayer**
+    set, whose two source annotations are `noteKey`s shown in a sheet rather
+    than encoded as playable data.
+  - **The geometry is a schematic, not a scale drawing** (`arcGeometry.ts`).
+    The outer radius is fixed by WIDTH (155pt: `155·sin60° + 28 = 162.2` inside
+    343pt at 375pt), and the inner ring is spaced **36°, not the true 30°** —
+    true spacing leaves 44pt minor bubbles a 6pt gap and breaks their tap
+    targets. Tune the numbers there, not in the component;
+    `__tests__/arcGeometry.test.ts` asserts the 44pt floor, non-overlap, and the
+    375pt fit.
+  - **Rotation is the only source of truth for angle** (`KeyArc`). It
+    accumulates and is never reset, and the key is derived from it. Deriving
+    bubble positions from the key instead would need key and rotation to change
+    in the same frame on every commit; whichever landed first would jump the
+    arc 30°. A commit changes labels only.
+  - Drag math is pure worklets in `keyWheel.ts` and the haptic policy is a pure
+    injected-clock module in `wheelHaptics.ts`, both unit-tested headless — the
+    same split `readerSwipe.ts` uses. **No velocity is consulted anywhere**, so
+    the wheel never flings. iOS ticks per 30° crossing and locks Medium on
+    release (suppressed within 80ms of a tick; a crossing-free release still
+    locks). **Android is deliberately silent** — its rotational motor buzzes
+    rather than ticks. Do not add a fallback.
+  - A non-diatonic chord (the Prayer set's `2maj`) never takes the solid accent
+    fill: it stays outlined and its own labels carry the altered spelling, so
+    the diatonic ii is never shown lit in place of the chord being played.
+  - Pinned slots + the letters/numbers toggle persist in `keyRefPrefs.ts`
+    (`gc.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
+    so it hydrates on mount and is **not** in `LAUNCH_STORAGE_KEYS`. The
+    selected key is deliberately not persisted.
 - **Option sheets:** every sheet presents through the native `formSheet` route
   (`app/sheet.tsx` + `src/lib/formSheetHost.ts` — screens keep owning
   state/callbacks; the host bridges the render into the route, one sheet at a

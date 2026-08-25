@@ -69,6 +69,7 @@ export const MATERIAL_CODEPOINTS: Record<string, number> = {
   visibility_off: 0xe8f5,
   warning: 0xf083,
   wifi_off: 0xe648,
+  workspaces: 0xea0f,
 }
 
 /**
@@ -92,6 +93,7 @@ export const SF_TO_MATERIAL: Record<string, MaterialGlyph> = {
   'chevron.right': { md: 'chevron_right', filled: false },
   'chevron.up': { md: 'expand_less', filled: false },
   'chevron.up.chevron.down': { md: 'unfold_more', filled: false },
+  'circle.hexagongrid': { md: 'workspaces', filled: false },
   'circle.lefthalf.filled': { md: 'contrast', filled: false },
   'clock': { md: 'schedule', filled: false },
   'doc.on.doc': { md: 'content_copy', filled: false },

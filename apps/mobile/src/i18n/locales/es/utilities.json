@@ -8,7 +8,8 @@
     "metronome": "Marca tempo / Metrónomo",
     "pitchPipe": "Diapasón",
     "songbook": "Creador de cancioneros",
-    "capo": "Calculadora de cejilla"
+    "capo": "Calculadora de cejilla",
+    "keyRef": "Referencia de tonalidad"
   },
   "tuner": {
     "title": "Afinador de guitarra",
@@ -79,5 +80,60 @@
     "resultNone": "Sin cejilla",
     "hint": "Toca acordes de {{shape}} para sonar en {{key}}.",
     "hintNone": "Toca en {{key}} — no hace falta cejilla."
+  },
+  "keyRef": {
+    "title": "Referencia de tonalidad",
+    "keyOf": "Tonalidad de {{key}}",
+    "showAs": "Mostrar acordes como",
+    "letters": "Letras",
+    "numbers": "Números",
+    "emptySlot": "Elegir",
+    "pickProgression": "Elige una progresión para verla en el arco.",
+    "pickerTitle": "Progresión",
+    "setGeneral": "GENERAL",
+    "setPrayer": "ORACIÓN",
+    "changeProgression": "Cambiar progresión",
+    "selectHint": "Muestra esta progresión en el arco",
+    "showNote": "Nota de interpretación",
+    "replay": "Reproducir la secuencia otra vez",
+    "a11yPosition": "{{chord}}, número {{number}}",
+    "a11yAdvance": "Ir a la tonalidad de {{key}}",
+    "a11yChordOverBass": "{{chord}}, {{bass}} en el bajo",
+    "progressions": {
+      "g1564": "Bucle de alabanza",
+      "g145": "Tres acordes",
+      "g6415": "Inicio menor",
+      "g154": "Tres con impulso",
+      "g4156": "Impulso desde el IV",
+      "g1645": "Giro gospel",
+      "g1465": "Menor tardío",
+      "g251": "Dos-cinco-uno",
+      "g1415": "Estrofa de himno",
+      "g1345": "Tercer grado de paso",
+      "g4536": "Camino real",
+      "g6545": "Vamp reflexivo",
+      "gCanon": "Canon de ocho",
+      "g6451": "Impulso final",
+      "g1454": "Vamp abierto",
+      "g1625": "Giro de jazz",
+      "pTopics": "Peticiones compartidas",
+      "pTopicsAlt": "Peticiones compartidas (alt.)",
+      "pBasic": "Crear el ambiente",
+      "pClimax": "Clímax",
+      "pRepentance": "Arrepentimiento",
+      "pRepentanceAlt": "Arrepentimiento (alt.)",
+      "pFull": "Pleno y fuerte",
+      "pFullAlt": "Pleno y fuerte (alt.)",
+      "pBuildUp": "Construcción",
+      "pPushing": "Abrirse paso",
+      "pRequest": "Petición general",
+      "pRequestAlt": "Petición general (alt.)",
+      "pBright": "Luminoso y esperanzado",
+      "pIntense": "Construcción intensa"
+    },
+    "notes": {
+      "pClimax": "Busca la novena al tocar el 4/6.",
+      "pPushing": "Suena con más fuerza cuando el 2maj resuelve en 1/3 – 4."
+    }
   }
 }
