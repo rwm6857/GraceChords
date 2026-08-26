@@ -6,13 +6,13 @@ import { useTranslation } from 'react-i18next'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlassSurface from '../components/GlassSurface'
 import Screen from '../components/Screen'
+import SectionHeader from '../components/SectionHeader'
 import SegmentedPill from '../components/SegmentedPill'
 import SymbolIcon from '../components/SymbolIcon'
 import KeyArc, { EMPTY_ANNOTATION, type ArcAnnotation } from '../components/keyref/KeyArc'
+import ProgressionList from '../components/keyref/ProgressionList'
 import ProgressionNoteSheet from '../components/keyref/ProgressionNoteSheet'
 import ProgressionPickerSheet from '../components/keyref/ProgressionPickerSheet'
-import ProgressionSequence from '../components/keyref/ProgressionSequence'
-import ProgressionStrip from '../components/keyref/ProgressionStrip'
 import { useTheme } from '../theme/ThemeProvider'
 import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 import { useFormSheet } from '../lib/formSheetHost'
@@ -29,14 +29,17 @@ import { flatChords, progressionById } from '../lib/keyref/progressions'
 import { isDiatonic } from '../lib/keyref/render'
 import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/types'
 
-// Key Reference (Utilities) — a cropped circle-of-fifths arc with a bass row and
-// a progression strip. Standalone: the key is chosen here by turning the arc,
+// Key Reference (Utilities) — a cropped circle-of-fifths arc under the four
+// pinned progressions. Standalone: the key is chosen here by turning the arc,
 // never seeded from a song or a setlist.
 //
-// Layout, top to bottom: the four pinned progressions, the selected
-// progression's name, its chords with their bass notes, the letters/numbers
-// toggle, the key readout, then the arc pinned to the bottom where a thumb
-// reaches it.
+// The stack is a scrolling upper region and a fixed lower one, and the split is
+// the layout's whole point. All four progressions show their chords and bass at
+// once in the upper region, with the letters/numbers toggle docked directly
+// beneath them — that toggle changes the spelling in the rows above it, and
+// proximity is what makes it self-explanatory, which is why it is here and not
+// in the nav bar (where a two-segment pill would also push the title off centre).
+// The lower third is the key readout and the arc, pinned where a thumb reaches.
 //
 // The arc sits OUTSIDE the ScrollView on purpose. Its wheel is a pan gesture,
 // and a pan that shares a vertical scroll container spends its life fighting the
@@ -197,98 +200,49 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
 
   return (
     <Screen edges={['left', 'right']}>
-      <View style={{ flex: 1, paddingTop: barH + t.spacing.md }}>
+      <View style={{ flex: 1, paddingTop: barH + t.spacing.sm }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: t.spacing.lg, paddingBottom: t.spacing.md }}
+          // Centred rather than top-aligned: on a tall phone the rows do not
+          // fill the upper region, and pooling every spare point below the
+          // toggle is exactly the dead zone this pass exists to remove. When the
+          // content does overflow (a three-phrase progression, large Dynamic
+          // Type) this has no effect and it simply scrolls.
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: t.spacing.lg,
+            paddingBottom: t.spacing.md,
+          }}
         >
-          <ProgressionStrip
+          <SectionHeader label={tx('keyRef.progressionsHeader')} />
+          <ProgressionList
             pinned={pinned}
             selectedSlot={selectedSlot}
             onSelect={setSelectedSlot}
             onEdit={setEditingSlot}
+            tonicKey={tonicKey}
+            mode={prefs.display}
+            activeIndex={activeIndex}
+            onShowNote={setNoteFor}
+            onReplay={startWalk}
+            showReplay={!reduceMotion}
             labelFor={labelFor}
             emptyLabel={tx('keyRef.emptySlot')}
             changeActionLabel={tx('keyRef.changeProgression')}
             selectHint={tx('keyRef.selectHint')}
+            bassRowLabel={tx('keyRef.bassLabel')}
+            noteLabel={tx('keyRef.showNote')}
+            replayLabel={tx('keyRef.replay')}
+            t={translate}
           />
-
-          {selected ? (
-            <>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: t.spacing.xs,
-                  marginTop: t.spacing.lg,
-                  marginBottom: t.spacing.sm,
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    flexShrink: 1,
-                    fontSize: t.typography.overline.fontSize,
-                    fontWeight: t.typography.overline.fontWeight,
-                    letterSpacing: t.typography.overline.letterSpacing,
-                    color: t.colors.sec,
-                  }}
-                >
-                  {labelFor(selected).toUpperCase()}
-                </Text>
-                {selected.noteKey ? (
-                  <Pressable
-                    onPress={() => setNoteFor(selected)}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={tx('keyRef.showNote')}
-                  >
-                    <SymbolIcon name="info.circle" size={15} color={t.colors.accent} />
-                  </Pressable>
-                ) : null}
-                <View style={{ flex: 1 }} />
-                {reduceMotion ? null : (
-                  <Pressable
-                    onPress={startWalk}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={tx('keyRef.replay')}
-                  >
-                    <SymbolIcon
-                      name="arrow.triangle.2.circlepath"
-                      size={15}
-                      color={t.colors.accent}
-                    />
-                  </Pressable>
-                )}
-              </View>
-
-              <ProgressionSequence
-                progression={selected}
-                tonicKey={tonicKey}
-                mode={prefs.display}
-                activeIndex={activeIndex}
-                t={translate}
-              />
-            </>
-          ) : (
-            <Text
-              style={{
-                marginTop: t.spacing.lg,
-                fontSize: t.typography.body.fontSize,
-                color: t.colors.sec,
-              }}
-            >
-              {tx('keyRef.pickProgression')}
-            </Text>
-          )}
 
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginTop: t.spacing.lg,
+              marginTop: t.spacing.md,
             }}
           >
             <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
@@ -305,8 +259,9 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
           </View>
         </ScrollView>
 
-        {/* Key readout + arc: pinned to the bottom, out of the scroll view. */}
-        <View style={{ paddingBottom: insets.bottom + t.spacing.sm }}>
+        {/* Key readout + arc: the lower third, out of the scroll view. The arc
+            is full-bleed, so no horizontal padding here. */}
+        <View style={{ paddingBottom: insets.bottom }}>
           <Text
             accessibilityRole="header"
             style={{

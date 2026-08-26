@@ -1,47 +1,78 @@
 import { describe, expect, it } from 'vitest'
-import { PHONE_ARC, arcLayout, polar, slotAngle } from '../arcGeometry'
+import { PHONE_ARC, arcLayout, polar, ringExitX, slotAngle } from '../arcGeometry'
 
-// The narrowest phone the app supports: 375pt wide, 16pt of page padding a side.
-const CONTENT_WIDTH = 375 - 16 * 2
+// The narrowest phone the app supports. The arc is FULL-BLEED — the page's 16pt
+// padding stops at the scrolling rows above it — so the budget is the whole
+// width, and what matters is the margin at the widest bubbles.
+const SCREEN = 375
+const HALF = SCREEN / 2
 
-const layout = arcLayout(PHONE_ARC)
+const layout = arcLayout(PHONE_ARC, SCREEN)
 
-function centre(ring: 'major' | 'minor' | 'dim', slot: number) {
+function centre(ring: 'major' | 'minor', slot: number) {
   return polar(PHONE_ARC, ring, slotAngle(PHONE_ARC, ring, slot))
 }
 
 describe('the arc at 375pt', () => {
-  it('fits the content width with a real margin', () => {
-    expect(layout.width).toBeLessThanOrEqual(CONTENT_WIDTH)
-    expect(CONTENT_WIDTH - layout.width).toBeGreaterThan(12)
+  it('keeps a real margin at the widest bubbles', () => {
+    const widest = Math.max(...layout.nodes.map((n) => Math.abs(n.x) + n.size / 2))
+    expect(widest).toBeCloseTo(175.2, 1)
+    expect(HALF - widest).toBeGreaterThan(10)
   })
 
-  it('stays inside the vertical budget the rows above it leave', () => {
-    // Worst case is a three-phrase progression on a 375x667 screen, which leaves
-    // about 336pt for the arc block.
-    expect(layout.height).toBeLessThanOrEqual(200)
+  it('never lets a bubble cross the screen edge', () => {
+    for (const node of layout.nodes) {
+      expect(node.left).toBeGreaterThan(0)
+      expect(node.left + node.size).toBeLessThan(SCREEN)
+    }
   })
 
-  it('crops to roughly 120 degrees of circle', () => {
+  it('crops to roughly 120 degrees of circle on the outer ring', () => {
     const span = slotAngle(PHONE_ARC, 'major', 2) - slotAngle(PHONE_ARC, 'major', -2)
     expect(span).toBe(120)
   })
 
-  it('drops about 78pt from the top of the arc to its edges', () => {
-    const drop = centre('major', 2).y - centre('major', 0).y
-    expect(drop).toBeCloseTo(77.5, 1)
+  it('drops 85pt from the I chord to the edge positions', () => {
+    expect(centre('major', 2).y - centre('major', 0).y).toBeCloseTo(85, 1)
+  })
+
+  it('stays inside the vertical third the rows above it leave', () => {
+    expect(layout.height).toBe(178)
+    expect(layout.height).toBeLessThanOrEqual(200)
   })
 
   it('puts the circle centre below everything drawn', () => {
-    expect(layout.centerY).toBeGreaterThanOrEqual(layout.height)
+    expect(layout.centerY).toBe(layout.height + PHONE_ARC.centerDrop)
+    expect(layout.centerY).toBeGreaterThan(layout.height)
+    for (const node of layout.nodes) expect(node.top + node.size).toBeLessThan(layout.height)
+  })
+})
+
+describe('the stroked rings', () => {
+  it('leaves the frame through the bottom edge, close to the corners', () => {
+    // A circle through the bubble centres is widest at ±R, so it cannot reach the
+    // 187.5pt screen edge without flattening the arc; instead the crop cuts it
+    // near the bottom corners, on a near-vertical tangent.
+    const outer = ringExitX(PHONE_ARC, 'major')
+    expect(outer).toBeCloseTo(168.8, 1)
+    expect(HALF - outer).toBeLessThan(20)
+  })
+
+  it('cuts the inner ring at the bottom edge too, so neither ring curls back', () => {
+    const inner = ringExitX(PHONE_ARC, 'minor')
+    expect(inner).toBeCloseTo(108.2, 1)
+    // Both exits are below the lowest bubble, so each stroke runs past its own
+    // outermost position before it leaves.
+    const lowestBubbleAboveCentre = Math.min(
+      ...layout.nodes.map((n) => -n.y - n.size / 2),
+    )
+    expect(lowestBubbleAboveCentre).toBeGreaterThan(PHONE_ARC.centerDrop)
   })
 })
 
 describe('tap targets', () => {
-  it('meets the 44pt minimum on every ring, inner minors included', () => {
-    for (const node of layout.nodes) {
-      expect(node.size).toBeGreaterThanOrEqual(44)
-    }
+  it('meets the 44pt minimum on both rings, inner minors included', () => {
+    for (const node of layout.nodes) expect(node.size).toBeGreaterThanOrEqual(44)
   })
 
   it('never overlaps two bubbles', () => {
@@ -50,14 +81,13 @@ describe('tap targets', () => {
         const first = layout.nodes[a]
         const second = layout.nodes[b]
         const distance = Math.hypot(first.x - second.x, first.y - second.y)
-        const gap = distance - (first.size + second.size) / 2
-        expect(gap).toBeGreaterThan(0)
+        expect(distance - (first.size + second.size) / 2).toBeGreaterThan(0)
       }
     }
   })
 
   it('keeps a visible gap, not merely a positive one', () => {
-    const gaps = []
+    const gaps: number[] = []
     for (let a = 0; a < layout.nodes.length; a++) {
       for (let b = a + 1; b < layout.nodes.length; b++) {
         const first = layout.nodes[a]
@@ -71,34 +101,55 @@ describe('tap targets', () => {
   })
 })
 
-describe('the schematic', () => {
-  it('spaces the minors wider than true geometry would', () => {
-    // True 30° spacing puts them ~50pt apart, which leaves 44pt bubbles a 6pt
-    // gap; the widened step is the whole reason the inner ring is usable.
-    expect(PHONE_ARC.minorStep).toBeGreaterThan(PHONE_ARC.majorStep)
-    const trueSpacing =
-      2 * PHONE_ARC.innerRadius * Math.sin((PHONE_ARC.majorStep * Math.PI) / 360)
-    const actual = Math.hypot(
-      centre('minor', 0).x - centre('minor', 1).x,
-      centre('minor', 0).y - centre('minor', 1).y,
-    )
-    expect(trueSpacing - PHONE_ARC.minorSize).toBeLessThan(8)
-    expect(actual - PHONE_ARC.minorSize).toBeGreaterThan(12)
+describe('true circle-of-fifths spacing', () => {
+  it('runs both rings at the same 30 degree step, with no schematic fudge', () => {
+    expect(PHONE_ARC.majorStep).toBe(30)
+    expect(PHONE_ARC.minorStep).toBe(30)
   })
 
-  it('still reads as nesting: a minor stays inboard of its parent', () => {
-    for (const slot of [-1, 1]) {
+  it('nests every minor exactly beneath its parent', () => {
+    for (const slot of PHONE_ARC.minorSlots) {
+      if (!PHONE_ARC.majorSlots.includes(slot)) continue
       const major = centre('major', slot)
       const minor = centre('minor', slot)
-      expect(Math.abs(minor.x)).toBeLessThan(Math.abs(major.x))
-      expect(minor.y).toBeGreaterThan(major.y) // lower on screen
+      // Same radial line: the ratio of coordinates is the ratio of the radii.
+      // (At the tonic both x are 0, so only y is meaningful there.)
+      const ratio = PHONE_ARC.innerRadius / PHONE_ARC.outerRadius
+      if (major.x !== 0) expect(minor.x / major.x).toBeCloseTo(ratio, 5)
+      expect(minor.y / major.y).toBeCloseTo(ratio, 5)
     }
   })
 
-  it('places the tonic at the top and the vii° between the flanking minors', () => {
+  it('has room for true spacing only because the inner radius grew', () => {
+    // At the old 97pt inner radius the true chord was 50.2pt, which left 44pt
+    // bubbles a 6.2pt gap and is why the ring used to be widened to 36°.
+    const chord =
+      2 * PHONE_ARC.innerRadius * Math.sin((PHONE_ARC.minorStep * Math.PI) / 360)
+    expect(chord).toBeCloseTo(56.9, 1)
+    expect(chord - PHONE_ARC.minorSize).toBeGreaterThan(8)
+  })
+})
+
+describe('the rings', () => {
+  it('carries IV I V outside and ii vi iii vii° inside', () => {
+    expect(PHONE_ARC.majorSlots).toEqual([-2, -1, 0, 1, 2])
+    expect(PHONE_ARC.minorSlots).toEqual([-1, 0, 1, 2])
+  })
+
+  it('runs the inner ring one position further right, where the vii° lives', () => {
+    // Asymmetric on purpose: a key has three majors and four everything-else
+    // chords, and the position left of ii holds no chord that is in the key.
+    const innerMax = Math.max(...PHONE_ARC.minorSlots)
+    const innerMin = Math.min(...PHONE_ARC.minorSlots)
+    expect(innerMax).toBe(2)
+    expect(innerMin).toBe(-1)
+    expect(centre('minor', 2).x).toBeGreaterThan(0)
+  })
+
+  it('puts the tonic at the top and nothing below the inner ring', () => {
     expect(centre('major', 0).x).toBeCloseTo(0)
-    expect(centre('dim', 0).x).toBeCloseTo(0)
-    expect(centre('dim', 0).y).toBeGreaterThan(centre('minor', 0).y)
-    expect(centre('dim', 0).y).toBeGreaterThan(centre('minor', 1).y)
+    const lowest = Math.max(...layout.nodes.map((n) => n.y + n.size / 2))
+    const innerEdge = centre('minor', 2).y + PHONE_ARC.minorSize / 2
+    expect(lowest).toBeCloseTo(innerEdge, 5)
   })
 })

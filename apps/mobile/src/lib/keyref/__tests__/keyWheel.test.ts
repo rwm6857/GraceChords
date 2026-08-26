@@ -133,13 +133,28 @@ describe('detents', () => {
 })
 
 describe('degree positions', () => {
-  it('covers all seven degrees across the three rings', () => {
+  it('covers all seven degrees across the two rings', () => {
     const positions = Object.values(DEGREE_POSITION).map((p) => positionKey(p.ring, p.slot))
     expect(new Set(positions).size).toBe(7)
     expect(DEGREE_POSITION[1]).toEqual({ ring: 'major', slot: 0 })
     expect(DEGREE_POSITION[4]).toEqual({ ring: 'major', slot: -1 })
     expect(DEGREE_POSITION[5]).toEqual({ ring: 'major', slot: 1 })
-    expect(DEGREE_POSITION[7]).toEqual({ ring: 'dim', slot: 0 })
+  })
+
+  it('puts the three majors outside and the four others inside', () => {
+    const outer = Object.values(DEGREE_POSITION).filter((p) => p.ring === 'major')
+    const inner = Object.values(DEGREE_POSITION).filter((p) => p.ring === 'minor')
+    expect(outer).toHaveLength(3)
+    expect(inner).toHaveLength(4)
+  })
+
+  it('continues the inner ring in fifths: ii vi iii vii°', () => {
+    // The vii° is one position right of iii — its root is a fifth above iii's,
+    // and the chord the key gives on that root happens to be diminished.
+    expect(DEGREE_POSITION[2]).toEqual({ ring: 'minor', slot: -1 })
+    expect(DEGREE_POSITION[6]).toEqual({ ring: 'minor', slot: 0 })
+    expect(DEGREE_POSITION[3]).toEqual({ ring: 'minor', slot: 1 })
+    expect(DEGREE_POSITION[7]).toEqual({ ring: 'minor', slot: 2 })
   })
 })
 
@@ -148,25 +163,30 @@ describe('bubble opacity', () => {
     expect(bubbleOpacity('major', 0)).toBe(1)
     expect(bubbleOpacity('major', 1)).toBe(1)
     expect(bubbleOpacity('major', -1)).toBe(1)
-    expect(bubbleOpacity('major', 2)).toBeCloseTo(0.35)
+    expect(bubbleOpacity('major', 2)).toBeCloseTo(0.45)
     expect(bubbleOpacity('major', 3)).toBe(0)
   })
 
-  it('stops the inner ring at the three relative minors', () => {
+  it('keeps the whole inner ring solid, vii° included', () => {
+    // +2 is the vii°: diatonic to the key even though the faded neighbour
+    // directly above it is not, so it must not inherit that column's fade.
+    expect(bubbleOpacity('minor', -1)).toBe(1)
+    expect(bubbleOpacity('minor', 0)).toBe(1)
     expect(bubbleOpacity('minor', 1)).toBe(1)
-    expect(bubbleOpacity('minor', 1.5)).toBe(0)
-    expect(bubbleOpacity('minor', 2)).toBe(0)
+    expect(bubbleOpacity('minor', 2)).toBe(1)
   })
 
-  it('never fades the vii°, which does not travel with the wheel', () => {
-    expect(bubbleOpacity('dim', 0)).toBe(1)
-    expect(bubbleOpacity('dim', 4)).toBe(1)
+  it('is asymmetric on the inner ring, which stops at ii on the left', () => {
+    expect(bubbleOpacity('minor', -1.6)).toBe(0)
+    expect(bubbleOpacity('minor', 2.6)).toBe(0)
+    expect(bubbleOpacity('minor', -1.3)).toBeCloseTo(0.5)
+    expect(bubbleOpacity('minor', 2.3)).toBeCloseTo(0.5)
   })
 
   it('is continuous, so nothing pops in or out mid-drag', () => {
     for (const ring of ['major', 'minor'] as const) {
-      let previous = bubbleOpacity(ring, -3)
-      for (let offset = -3; offset <= 3; offset += 0.05) {
+      let previous = bubbleOpacity(ring, -4)
+      for (let offset = -4; offset <= 4; offset += 0.05) {
         const value = bubbleOpacity(ring, offset)
         expect(Math.abs(value - previous)).toBeLessThan(0.2)
         previous = value

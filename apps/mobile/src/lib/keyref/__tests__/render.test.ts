@@ -134,15 +134,18 @@ describe('arc labels', () => {
     expect(arcDegreeAt('minor', -1)).toBe(2)
     expect(arcDegreeAt('minor', 0)).toBe(6)
     expect(arcDegreeAt('minor', 1)).toBe(3)
-    expect(arcDegreeAt('dim', 0)).toBe(7)
+    // The inner ring runs one further right than the outer: that is the vii°.
+    expect(arcDegreeAt('minor', 2)).toBe(7)
     expect(arcDegreeAt('major', 2)).toBeNull()
+    expect(arcDegreeAt('minor', 3)).toBeNull()
+    expect(arcDegreeAt('minor', -2)).toBeNull()
   })
 
   it('shows a name and a number for every diatonic position', () => {
     expect(arcPositionLabels('C', 'major', 0)).toEqual({ name: 'C', number: '1' })
     expect(arcPositionLabels('C', 'major', -1)).toEqual({ name: 'F', number: '4' })
     expect(arcPositionLabels('C', 'minor', 0)).toEqual({ name: 'Am', number: '6' })
-    expect(arcPositionLabels('C', 'dim', 0)).toEqual({ name: 'B°', number: '7' })
+    expect(arcPositionLabels('C', 'minor', 2)).toEqual({ name: 'B°', number: '7' })
   })
 
   it('shows the faded neighbours as keys with no number', () => {

@@ -193,13 +193,33 @@ duplicate logic here and never edit core internals to suit mobile.
     guessing. Two sets ship: 16 diatonic **General** and the 14-entry **Prayer**
     set, whose two source annotations are `noteKey`s shown in a sheet rather
     than encoded as playable data.
-  - **The geometry is a schematic, not a scale drawing** (`arcGeometry.ts`).
-    The outer radius is fixed by WIDTH (155pt: `155·sin60° + 28 = 162.2` inside
-    343pt at 375pt), and the inner ring is spaced **36°, not the true 30°** —
-    true spacing leaves 44pt minor bubbles a 6pt gap and breaks their tap
-    targets. Tune the numbers there, not in the component;
-    `__tests__/arcGeometry.test.ts` asserts the 44pt floor, non-overlap, and the
-    375pt fit.
+  - **Both rings run at TRUE 30° circle-of-fifths spacing** (`arcGeometry.ts`),
+    concentric, each minor exactly beneath its parent. That only fits because
+    the outer radius is 170 and the inner 110: at an earlier 97pt inner radius
+    the true chord between adjacent minors is 50pt, which leaves 44pt bubbles a
+    6pt gap, and the ring had to be widened to 36° to compensate. **Don't
+    reintroduce that fudge** — grow the radii instead. The outer radius is
+    capped by WIDTH: at 375pt the widest bubbles reach ±175.2 against a 187.5pt
+    half-width. Tune the numbers there, not in the component;
+    `__tests__/arcGeometry.test.ts` asserts the 44pt floor, non-overlap, the
+    true spacing, and the 375pt fit.
+  - **Two stroked rings are what make it read as a wheel.** Without them the
+    bubbles read as scattered chips. They are bordered `View`s wider than the
+    frame, cropped by its `overflow: 'hidden'` — the same technique
+    `PitchPipeScreen` uses for its ring. **`react-native-svg` is not installed
+    and is not needed**; don't add a native dep for this.
+    A circle through the bubble centres is widest at ±R, so it *cannot* reach
+    the screen edge without flattening the arc (R > 187.5 forces the drop from
+    85pt down to ~62pt). The crop instead cuts both strokes at the box's bottom
+    edge — outer at ±168.8, 18.7pt from each corner on a near-vertical tangent.
+    Curvature was the problem; curvature wins.
+  - The arc box is **full-bleed and self-measuring** (`onLayout`, not
+    `useWindowDimensions`): in landscape the safe-area inset makes the available
+    width narrower than the window, and a window-width circle would be centred
+    off-centre and overflow.
+  - **Detent ticks** sit at the half-step MIDPOINTS, not at the 30° positions —
+    the bubbles are already there and would cover them. They travel with the
+    wheel, so a drag demonstrates rotation instead of a label describing it.
   - **Rotation is the only source of truth for angle** (`KeyArc`). It
     accumulates and is never reset, and the key is derived from it. Deriving
     bubble positions from the key instead would need key and rotation to change
@@ -212,9 +232,25 @@ duplicate logic here and never edit core internals to suit mobile.
     release (suppressed within 80ms of a tick; a crossing-free release still
     locks). **Android is deliberately silent** — its rotational motor buzzes
     rather than ticks. Do not add a fallback.
+  - The **vii° lives on the inner ring at slot +2**, continuing it in fifths:
+    ii vi iii vii°. Outer ring = the three majors, inner = the four
+    everything-else chords, and between them all seven diatonic chords on two
+    clean rings. The inner ring is **deliberately asymmetric** — nothing sits
+    left of ii, because the chord that would go there is not in the key, and
+    inventing one to balance the drawing would make the picture prettier and the
+    teaching worse. `bubbleOpacity` is therefore asymmetric on that ring: slot
+    +2 stays solid even though the faded neighbour directly above it does not,
+    since the vii° *is* diatonic.
   - A non-diatonic chord (the Prayer set's `2maj`) never takes the solid accent
     fill: it stays outlined and its own labels carry the altered spelling, so
     the diatonic ii is never shown lit in place of the chord being played.
+  - **All four pinned progressions show their chords and bass at once**
+    (`ProgressionList` — four rows in one `Card`, the selected one tinted), with
+    the letters/numbers toggle docked directly beneath them. An earlier revision
+    had four name-only chips plus a separate display of just the selected
+    sequence, which left two thirds of the screen empty. The bass line carries a
+    leading label so its purpose is legible on a progression with no inversions,
+    where it otherwise just repeats the chord roots.
   - Pinned slots + the letters/numbers toggle persist in `keyRefPrefs.ts`
     (`gc.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
     so it hydrates on mount and is **not** in `LAUNCH_STORAGE_KEYS`. The

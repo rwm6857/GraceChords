@@ -100,18 +100,25 @@ export function crossingIndex(rotation: number): number {
 }
 
 /**
- * Where a scale degree lives on the arc. The three majors and three relative
- * minors cover six of the seven diatonic chords; the seventh, vii°, is the lone
- * bubble on the third ring.
+ * Where a scale degree lives on the arc. The outer ring carries the three
+ * majors — IV I V — and the inner ring the four everything-else chords in fifths
+ * order: ii vi iii vii°. Between them that is all seven diatonic chords on two
+ * clean concentric rings, with nothing protruding.
+ *
+ * The vii° sitting one position right of iii is what makes the inner ring a real
+ * sequence of fifths: its root is a fifth above iii's, and the chord the key
+ * gives on that root happens to be diminished rather than minor. It also means
+ * the vii° travels with the wheel like every other position — a bubble respells
+ * as it passes through (B is the vii of C and the iii of G).
  */
-export const DEGREE_POSITION: Record<Degree, { ring: 'major' | 'minor' | 'dim'; slot: number }> = {
+export const DEGREE_POSITION: Record<Degree, { ring: 'major' | 'minor'; slot: number }> = {
   1: { ring: 'major', slot: 0 },
   2: { ring: 'minor', slot: -1 },
   3: { ring: 'minor', slot: 1 },
   4: { ring: 'major', slot: -1 },
   5: { ring: 'major', slot: 1 },
   6: { ring: 'minor', slot: 0 },
-  7: { ring: 'dim', slot: 0 },
+  7: { ring: 'minor', slot: 2 },
 }
 
 /** Stable identity for an arc position, for highlight lookups. */
