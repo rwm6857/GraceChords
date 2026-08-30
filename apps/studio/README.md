@@ -18,6 +18,7 @@ monorepo's install graph. See [`js/README.md`](js/README.md) for the JS bridge a
 | 1 | Auth (email/password), Song Library with search, Song Viewer rendering parsed ChordPro |
 | 2 | Design tokens generated into Swift; Viewer and Library brought to iOS/iPadOS parity |
 | 3 | Song creation, editing, publishing and deletion in a role-gated Manage section |
+| 4 | Syntax highlighting, draft recovery, the lint strip, a test target, and a signed release |
 
 Phase 2 covers the live view controls (transpose bar, key picker, capo hint, view
 options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
@@ -25,8 +26,13 @@ push, and the library's filter & sort, result counts and lettered sections.
 
 Phase 3 adds the editor: a syntax-highlighted ChordPro editor with a live preview
 that reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
-delete, and the bridged ChordPro linter (bridged and parity-checked; not currently
-surfaced in the UI). See [Editing songs](#editing-songs).
+delete, draft recovery across a quit, and the bridged ChordPro linter surfaced as a
+warnings strip. See [Editing songs](#editing-songs).
+
+Phase 4 is the editor's remaining rough edges plus the means to ship it: ChordPro
+[syntax highlighting](#editing-songs), unsaved work that survives a quit, warnings you
+can click through to, a [test target](#tests), and a
+[notarized DMG](#releasing) for direct download.
 
 Not built yet: setlists, admin/content management beyond songs, GraceTracks,
 offline caching. Personal drafts (`personal_songs`, which mobile merges into its
@@ -373,9 +379,30 @@ guard that offers Save / Discard / Cancel. That is why the open editor lives in
 `EditorSession` (Manage/EditorSession.swift) rather than in `ManageSongsView`'s private
 state: the shell has to be able to ask "would leaving now lose work?" before it
 switches sections, and with the model private to the Manage view it could not, so
-switching to Library discarded unsaved edits silently. **Local autosave is not
-implemented** — the guard is the reliable half, and a draft cache that survives
-quitting is its own piece of work.
+switching to Library discarded unsaved edits silently.
+
+**Unsaved work also survives quitting** (`Editor/DraftStore.swift`). The guard was
+only ever the reliable half — it catches every way *out of the editor* and nothing
+about a crash, a force quit or a flat battery. A draft is written to Application
+Support 1.5s after typing stops (longer than the preview's 300ms because nothing is
+watching the result: the preview has to keep up with the eye, a draft only has to beat
+a crash), flushed synchronously on `willTerminate`, and read back when that song is
+opened again. It is keyed on `EditorSession.Target.id`, so a song's id or the literal
+`new` — which means there is one recoverable new-song draft at a time, and it comes
+back the next time you choose New Song rather than announcing itself at launch.
+
+Three rules make it safe rather than merely convenient. **It restores into `form`,
+never `savedForm`**, so recovered text is unsaved work that still has to be saved
+deliberately and `isDirty` stays honest — there is deliberately no auto-save *to
+Supabase*, because Studio has no review step and a background write that publishes a
+half-typed lyric to every worshipper's library is the one failure this must not have.
+**A draft that cannot be decoded is deleted, not repaired**, and so is one from a
+newer build: losing recovered work is a bad day, and silently inventing content in a
+song somebody is about to publish is worse. **A draft matching what was loaded is
+deleted silently** rather than announced, because a banner about nothing teaches people
+to dismiss banners. Discarding in the unsaved-changes guard clears the file too — the
+alternative is the text you just discarded waiting for you the next time you open the
+song.
 
 **A new song writes no row until the first save.** `songs.slug` is `UNIQUE NOT NULL`
 and core's `slugify` returns `''` for a title with no alphanumerics, so a row cannot
@@ -394,12 +421,28 @@ favourites list with it. The confirmation dialog names those consequences. An
 `editor_audit_log.song_id` is `ON DELETE SET NULL` — the row survives the cascade
 carrying `song_slug` and `song_title` text, and is the only remaining trace.
 
-**Lint is bridged but not currently surfaced.** `CoreBridge.lint` and its parity
-checks remain (see `apps/studio/js/README.md`), but the warnings strip was removed as
-visual clutter: with `warn:missing_title` and `warn:missing_key` suppressed there was
-usually nothing left to show, and a panel that says "no warnings" on every song is a
-panel that earns no space. Re-surfacing it is a few lines against
-`model.rawWarnings` if that changes.
+**The lint strip is back** (`Editor/LintStrip.swift`), with the two changes that
+answer why it was removed. It is **not there at all when there is nothing to say** —
+`SongEditorModel.applicable` drops the two form-answered codes and a clean song renders
+no strip rather than an empty one — and it is **collapsed by default**, one summary row
+naming the count, because every code core emits is prefixed `warn:` and none of them
+block saving, so they get the space an advisory deserves.
+
+**Clicking a warning goes to its line, when its line can be known.**
+`LintWarning.lineIndex` carries two different units and the code now says so rather
+than flattening them: for `warn:long_line` and `warn:unknown_chord` it indexes a
+*section's lyric lines* after comment lines are filtered out; for
+`warn:section_mismatch` it indexes the *raw body's lines*, from a separate text scan
+in `lint.ts` that never touches the parsed document. `LintWarning.Location` sorts them
+into cases, and `Editor/LintLocator.swift` resolves a caret position from them —
+exactly for a body line, and for a section-scoped warning by finding that section's
+opening line, gated on its own count of section openers matching the parsed
+document's. If the two disagree the jump is refused and the row is not a button: a
+jump that lands two lines off is worse than no jump, because the writer edits what
+they landed on. Pinning a *lyric line inside* a section is deliberately not attempted
+— that would mean reimplementing the parser's line model in Swift, which is the drift
+the bridge exists to prevent. If it ever matters, the fix is core emitting a
+body-relative line, not a cleverer scan here.
 
 A body the *parser* rejects is a different failure and still appears in the preview
 pane, above the last successfully rendered chart rather than replacing it — mid-edit a
@@ -466,10 +509,11 @@ The split is: **extraction is native, every judgement is core's.**
 with fonts, per-page column assignments — and hands it over the bridge as JSON to
 `packages/core/src/songs/pdfImport.ts`, which decides what is a chord line, where a
 section starts and which syllable a chord belongs to. Those heuristics are pure
-string and geometry math with no platform in them, Studio has no test target, and
-the web editor could feed the same function from pdf.js later; they are covered by
+string and geometry math with no platform in them, and the web editor could feed the
+same function from pdf.js later; they are covered by
 `apps/web/src/__tests__/pdfImport*.test.js`, whose fixtures are chord sheets written
-as ASCII art and converted to geometry.
+as ASCII art and converted to geometry. (Studio now has a test target too — see
+[Tests](#tests) — but the heuristics stay in core, where both clients get them.)
 
 **`PDFPage.characterBounds(at:)` is deliberately not the geometry source.** It has
 regressed twice — [FB14843671](https://developer.apple.com/forums/thread/762788) is
@@ -587,3 +631,76 @@ Two things that investigation also settled, worth not re-deriving:
   a future macOS does make it fatal it will affect a great many SwiftUI apps at once,
   and the remedy will be whatever Apple's guidance is then — not a bespoke
   restructuring now.
+
+## Tests
+
+```sh
+xcodebuild -project "apps/studio/GraceChords Studio/GraceChords Studio.xcodeproj" \
+  -scheme "GraceChords StudioTests" -destination 'platform=macOS' test
+```
+
+A Swift Testing bundle hosted by the app, in `GraceChords StudioTests/`. The scheme is
+**shared and separately named** on purpose: the run scheme lives under `xcuserdata/`
+because it holds the Supabase environment variables, and a shared scheme of the same
+name would shadow it and take those away.
+
+What is covered is what can be wrong *silently*. `ChordProHighlighter` is the one place
+Studio reads ChordPro without the bridge, so its patterns are pinned against the
+parser's — including that a `[G]` inside a `#` comment is not a chord, and that
+re-highlighting one line matches a full pass. `ChordProTextView.minimalReplacement` is
+what makes a toolbar insert one undo step, so it is checked against emoji and Korean
+boundaries where a naive prefix/suffix diff would split a surrogate pair.
+`DraftStore` is checked for the refusals — corrupt file, newer version, a key that
+tries to walk out of the directory — because "restore nothing" is a fine answer and
+"restore half a form" is not. `LintLocator` is checked for the case it must get right:
+refusing when its section count disagrees with the parser's.
+
+What is *not* covered is anything needing Supabase, since the tests run without
+credentials, and the IME marked-text path, which needs a key window an automated run
+does not get.
+
+## Releasing
+
+Studio ships as a **notarized DMG for direct download** — not the Mac App Store — so
+`scripts/release.sh` is the whole of "will this open on somebody else's Mac".
+
+```sh
+./apps/studio/scripts/release.sh --check          # preflight only, changes nothing
+SUPABASE_URL=… SUPABASE_ANON_KEY=… API_BASE_URL=… \
+  ./apps/studio/scripts/release.sh --version 1.1.0 --build 4
+```
+
+It archives, exports with a Developer ID signature, embeds the configuration,
+notarizes, staples, packages a DMG, notarizes and staples *that*, and finishes by
+running the check a downloader's Mac will run (`spctl --assess`). Two one-time
+prerequisites, neither of which the script can create for you:
+
+- A **Developer ID Application** certificate. An *Apple Development* certificate is not
+  it — that one only works on machines already in your provisioning profile, which is
+  every Mac you are not shipping to. `--check` says which you have.
+- A **notarytool keychain profile** (`xcrun notarytool store-credentials
+  gracechords-studio --apple-id … --team-id J7Y8NYZ48Q --password <app-specific>`),
+  which is what keeps the app-specific password out of the repo.
+
+Two details worth knowing before editing that script:
+
+**The Supabase credentials are written into `Info.plist` after the export and the app
+is re-signed**, rather than passed as build settings. `INFOPLIST_KEY_<name>` only maps
+the keys Xcode already knows; a custom name is accepted on the command line and
+silently dropped, which yields a signed, notarized, published build that shows "Studio
+is not configured" to everyone who downloads it. The re-sign passes the exported app's
+own entitlements back explicitly, because `codesign --force` without them drops the
+lot and an app that has lost `com.apple.security.network.client` cannot reach Supabase
+at all. Both facts are asserted in the script rather than trusted.
+
+**The app and the DMG are notarized separately.** Stapling only the DMG leaves an app
+copied out of it relying on Gatekeeper reaching Apple online; stapling both means it
+opens either way.
+
+**Unused entitlements, worth tidying before a first public release.** The target still
+carries the Xcode template's `com.apple.security.device.audio-input`,
+`.device.bluetooth`, `.device.usb` and `.network.server`. Studio uses none of them —
+it makes outgoing requests and opens files the user picked. They do not block
+notarization, so this is not urgent, but they are four capabilities in the signature
+that the app cannot justify. `ENABLE_USER_SELECTED_FILES` (the PDF import's open panel)
+and `ENABLE_OUTGOING_NETWORK_CONNECTIONS` are the two it does need.
