@@ -23,15 +23,14 @@ Phase 2 covers the live view controls (transpose bar, key picker, capo hint, vie
 options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
 push, and the library's filter & sort, result counts and lettered sections.
 
-Phase 3 adds the editor: a plain-text ChordPro editor with a live preview that
-reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
+Phase 3 adds the editor: a syntax-highlighted ChordPro editor with a live preview
+that reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
 delete, and the bridged ChordPro linter (bridged and parity-checked; not currently
 surfaced in the UI). See [Editing songs](#editing-songs).
 
 Not built yet: setlists, admin/content management beyond songs, GraceTracks,
-offline caching, ChordPro syntax highlighting. Personal drafts (`personal_songs`,
-which mobile merges into its library) are not included — Studio reads and writes
-the public catalog only.
+offline caching. Personal drafts (`personal_songs`, which mobile merges into its
+library) are not included — Studio reads and writes the public catalog only.
 
 ## First-run setup
 
@@ -407,14 +406,54 @@ pane, above the last successfully rendered chart rather than replacing it — mi
 body is transiently unparseable (a half-typed `{start_of_`), and blanking the pane on
 those keystrokes would make the preview unusable.
 
-**Syntax highlighting is not implemented.** SwiftUI's `TextEditor` cannot style
-ranges, so it needs `NSViewRepresentable` over `NSTextView` with a custom
-`NSTextStorage` — which brings attribute runs fighting the undo manager, IME
-marked-text ranges, and re-highlight cost on a long song. That is a self-contained
-piece of work orthogonal to whether saving and publishing are correct, so the editor
-ships monospaced and unhighlighted. Clicking a lint warning to jump to its line
-waits on the same change, and `LintWarning.lineIndex` is inconsistent besides
-(section-relative for most codes, body-relative for `warn:section_mismatch`).
+**Syntax highlighting.** `TextEditor` cannot style ranges, so the body is
+`Editor/ChordProTextView.swift` — an `NSTextView` behind an `NSViewRepresentable`,
+highlighted from its `NSTextStorage` delegate. Three colours:
+**blue is a chord, purple is structure** (directives and bare `Verse 2` headings),
+**grey is something the parser ignores** (`#` lines, and the brackets around a chord),
+and everything left in the body colour is a word a worshipper will sing. A rainbow
+would compete with the lyrics, which are what the writer is actually reading.
+
+The patterns live in `Editor/ChordProHighlighter.swift`, transcribed from
+`packages/core/src/chordpro/parser.ts` and naming the constant each one mirrors.
+**This is the one place Studio reads ChordPro without the bridge**, on purpose:
+what a chord *means* is a judgement and stays in core, but which characters to paint
+is the same lexical shape core's own regexes describe, and routing it over
+JavaScriptCore would mean a round trip per keystroke for something that cannot affect
+what gets saved. Highlighting is allowed to be wrong where the parser is not — the
+cost is a mis-coloured bracket. What it must not do is *disagree*: a chord the parser
+reads but the editor leaves grey gets retyped by a writer who thinks it did not take.
+If those regexes change, change these.
+
+It is **line-oriented because ChordPro is** — no construct spans a newline, so
+re-colouring the lines an edit touched is not an approximation, it is the whole of the
+work. Measured: **0.3 ms** for the one-line pass typing pays, and 1.5 ms for a full
+pass on a 97-line song (100 ms on a 1000-line body, which only a paste would reach).
+The three hazards the earlier note here predicted were each real and each answered:
+
+- **The undo manager.** Highlighting only ever sets attributes, never characters, so
+  it cannot enter the undo stack. The quick-insert toolbar was the harder half —
+  core hands back a whole new body, and assigning that wholesale would flatten every
+  undo step behind it. `minimalReplacement` reduces it to the contiguous edit it
+  actually was and applies it through `shouldChangeText(in:replacementString:)`, which
+  is what registers the undo. Inserting `[G]` costs one ⌘Z and the typing survives.
+  Undo history is also dropped when a different song is opened
+  (`SongEditorModel.instanceID`), so ⌘Z cannot paste one song into another.
+- **IME marked text.** Re-colouring underneath a composition fights the input method,
+  so `hasMarkedText()` suspends the pass; the commit is itself a character edit and
+  colours the line a keystroke later. Note that AppKit substitutes a Hangul-capable
+  face for the monospaced one on Korean lyrics — correct, and the same thing
+  `TextEditor` did.
+- **Cost on a long song.** Answered by the line scoping above.
+
+The move also *removed* code. The caret is now an `NSRange`, whose offsets are UTF-16
+code units — exactly what a JS string index means — so the `TextSelection` →
+`String.Index` → UTF-16 conversion that used to live in `Core/ChordProEditing.swift`
+is gone rather than reimplemented.
+
+Clicking a lint warning to jump to its line is now unblocked, but still needs
+`LintWarning.lineIndex` fixed first: it is inconsistent (section-relative for most
+codes, body-relative for `warn:section_mismatch`).
 
 ### Importing a PDF
 

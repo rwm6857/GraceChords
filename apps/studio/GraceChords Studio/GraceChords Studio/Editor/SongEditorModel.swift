@@ -23,9 +23,8 @@ import AppKit
 // SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY.
 import Combine
 import Foundation
-// SwiftUI for `TextSelection`. The caret lives here rather than in the view because
-// the menu bar's Insert commands have to act on it, and a menu cannot reach a view's
-// private @State.
+// The caret lives here rather than in the view because the menu bar's Insert
+// commands have to act on it, and a menu cannot reach a view's private @State.
 import SwiftUI
 
 @MainActor
@@ -40,6 +39,17 @@ final class SongEditorModel: ObservableObject {
     /// heavy — moving the work off the main thread is not, because that would mean
     /// a second JSContext and therefore a second copy of the parser.
     static let previewDebounce = Duration.milliseconds(300)
+
+    /// Identifies *this editing session*, not the song.
+    ///
+    /// The text view keys its undo stack on it. A model is built fresh for every
+    /// song opened — including each blank draft — so a change here means "a different
+    /// document is in the editor now", which is the moment the undo history has to be
+    /// dropped. Song ID will not do: a new draft has none, so two blank drafts in a
+    /// row would look like the same document and ⌘Z in the second could resurrect the
+    /// first. `ManageSongsView`'s `.id(target.id)` usually rebuilds the view anyway;
+    /// this covers the case where it does not.
+    let instanceID = UUID()
 
     // MARK: - Form
 
@@ -84,8 +94,13 @@ final class SongEditorModel: ObservableObject {
     @Published private(set) var previewErrorText: String?
     @Published var showsPreview = true
 
-    /// Where the caret is in the ChordPro body, bound by the editor's TextEditor.
-    @Published var selection: TextSelection?
+    /// Where the caret is in the ChordPro body, bound by `ChordProTextView`.
+    ///
+    /// `NSRange` because its offsets are UTF-16 code units, which is exactly what a
+    /// JS string index means — so the caret crosses the bridge without a conversion
+    /// step. (`TextEditor`'s `TextSelection` carried `String.Index`es, which count
+    /// Characters, and the two disagree on any Turkish or Korean lyric.)
+    @Published var selection: NSRange?
 
     /// How the last Save or Publish went, for the badge on its toolbar button.
     ///
@@ -262,11 +277,13 @@ final class SongEditorModel: ObservableObject {
     /// often used on a body written top to bottom, and inserting at offset 0 would push
     /// new sections above everything already typed.
     var selectionRange: (start: Int, end: Int) {
-        guard let selection = selection else {
-            let end = form.chordproContent.utf16.count
-            return (end, end)
-        }
-        return selection.utf16Range(in: form.chordproContent)
+        let length = form.chordproContent.utf16.count
+        guard let selection = selection else { return (length, length) }
+        // Clamped: the body can be replaced out from under a caret (a PDF import, an
+        // undo), and an offset past the end would be handed to core as a real one.
+        let start = max(0, min(selection.location, length))
+        let end = max(start, min(selection.location + selection.length, length))
+        return (start, end)
     }
 
     var hasSelection: Bool {
@@ -275,13 +292,12 @@ final class SongEditorModel: ObservableObject {
     }
 
     var selectedText: String {
-        let text = form.chordproContent
         let range = selectionRange
         guard range.end > range.start else { return "" }
-        let lower = text.index(fromUTF16Offset: range.start)
-        let upper = text.index(fromUTF16Offset: range.end)
-        guard lower <= upper else { return "" }
-        return String(text[lower..<upper])
+        // NSString substring rather than a String.Index walk: the offsets are already
+        // UTF-16, which is the unit NSString indexes in.
+        return (form.chordproContent as NSString)
+            .substring(with: NSRange(location: range.start, length: range.end - range.start))
     }
 
     /// Insert `text` at the caret, replacing any selection, through core.
@@ -324,7 +340,7 @@ final class SongEditorModel: ObservableObject {
             form.chordproContent = result.value
             // Against the NEW body — the offsets core returned index into that, not the
             // text the range was read from.
-            selection = TextSelection.spanning(result.selection, in: form.chordproContent)
+            selection = result.selection.range
         } catch {
             errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
         }
