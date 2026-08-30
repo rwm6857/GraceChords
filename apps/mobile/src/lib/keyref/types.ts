@@ -54,5 +54,13 @@ export type Progression = {
   phrases: Phrase[]
 }
 
-/** How chords and bass notes are spelled on screen. Persisted. */
-export type DisplayMode = 'letters' | 'numbers'
+/**
+ * How chords are written on screen. Persisted.
+ *
+ * `numbers` is the canonical Nashville form the data is stored in (`1`, `5/7`,
+ * `2maj`); `nashville` is roman-numeral analysis (`I`, `V/7`, `II`), where the
+ * case of the numeral carries the quality. The segment is labelled "Nashville"
+ * because that is what the team calls it, though strictly Nashville numbering is
+ * the Arabic one.
+ */
+export type DisplayMode = 'letters' | 'numbers' | 'nashville'

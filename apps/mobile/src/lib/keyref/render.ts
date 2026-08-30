@@ -19,6 +19,9 @@ import type { Degree, DisplayMode, Extension, ProgressionChord, QualityOverride 
 
 const TOKEN_RE = /^([1-7])(maj|min|m|dim|°)?(7|9)?(?:\/([1-7]))?$/
 
+/** Roman-numeral analysis: the CASE carries the quality, so `2maj` is `II`. */
+const ROMAN: readonly string[] = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII']
+
 /** Diatonic quality of each degree of a major scale, by degree index (1-based). */
 const DIATONIC_QUALITY: readonly QualityOverride[] = [
   'maj', // 1
@@ -80,15 +83,36 @@ export function formatChordToken(chord: ProgressionChord): string {
 }
 
 /**
+ * Roman-numeral form of a chord, without its bass.
+ *
+ *   1     → I        2      → ii       7 → vii°
+ *   2maj  → II       2m7    → ii7
+ *
+ * An inversion keeps the Arabic scale degree in the bass (`V/7`, not `V/VII`):
+ * a roman numeral names a CHORD, so a roman bass would read as a second chord
+ * rather than as a note.
+ */
+export function romanLabel(chord: ProgressionChord): string {
+  const quality = effectiveQuality(chord)
+  const base = ROMAN[chord.degree - 1]
+  const numeral = quality === 'maj' ? base : base.toLowerCase()
+  return numeral + (quality === 'dim' ? '°' : '') + (chord.extension ?? '')
+}
+
+/**
  * The chord as shown in the sequence row.
  *
- * `numbers` gives the canonical token. `letters` spells it in `key`, including
- * the bass note of a slash chord — `1/3` is A/C# in A, G/B in G, F/A in F.
- * Falls back to the canonical token if the key is unrecognized, so an unexpected
- * key degrades to a still-correct label rather than to an empty chip.
+ * `numbers` gives the canonical token, `nashville` its roman-numeral analysis,
+ * and `letters` spells it in `key`, including the bass note of a slash chord —
+ * `1/3` is A/C# in A, G/B in G, F/A in F. Falls back to the canonical token if
+ * the key is unrecognized, so an unexpected key degrades to a still-correct
+ * label rather than to an empty chip.
  */
 export function chordLabel(chord: ProgressionChord, key: string, mode: DisplayMode): string {
   if (mode === 'numbers') return formatChordToken(chord)
+  if (mode === 'nashville') {
+    return romanLabel(chord) + (chord.bass ? `/${chord.bass}` : '')
+  }
   const notes = scaleDegreeNotes(key)
   if (!notes) return formatChordToken(chord)
   const root = notes[chord.degree - 1] + QUALITY_SUFFIX[effectiveQuality(chord)] + (chord.extension ?? '')
@@ -102,7 +126,7 @@ export function chordLabel(chord: ProgressionChord, key: string, mode: DisplayMo
  */
 export function bassLabel(chord: ProgressionChord, key: string, mode: DisplayMode): string {
   const degree = chord.bass ?? chord.degree
-  if (mode === 'numbers') return String(degree)
+  if (mode !== 'letters') return String(degree)
   const notes = scaleDegreeNotes(key)
   return notes ? notes[degree - 1] : String(degree)
 }
@@ -126,6 +150,9 @@ export function chordAccessibilityLabel(
 // ---------------------------------------------------------------------------
 // Arc labels
 // ---------------------------------------------------------------------------
+
+/** How the arc writes its degree numerals. */
+export type NumberStyle = 'arabic' | 'roman'
 
 /** Scale degree at an arc position, or null for positions that aren't degrees. */
 export function arcDegreeAt(ring: ArcRing, offset: number): Degree | null {
@@ -157,6 +184,7 @@ export function arcPositionLabels(
   ring: ArcRing,
   offset: number,
   altered?: ProgressionChord,
+  numberStyle: NumberStyle = 'arabic',
 ): { name: string; number: string | null } {
   const degree = arcDegreeAt(ring, offset)
   const notes = scaleDegreeNotes(tonicKey)
@@ -177,12 +205,20 @@ export function arcPositionLabels(
   if (altered) {
     return {
       name: notes[altered.degree - 1] + QUALITY_SUFFIX[effectiveQuality(altered)] + (altered.extension ?? ''),
-      number: formatChordToken({ ...altered, bass: undefined }),
+      number:
+        numberStyle === 'roman'
+          ? romanLabel({ ...altered, bass: undefined })
+          : formatChordToken({ ...altered, bass: undefined }),
     }
   }
 
   return {
     name: notes[degree - 1] + QUALITY_SUFFIX[diatonicQuality(degree)],
-    number: String(degree),
+    number: numberStyle === 'roman' ? romanLabel({ degree }) : String(degree),
   }
+}
+
+/** The arc's numerals follow the toggle: roman under Nashville, Arabic otherwise. */
+export function numberStyleFor(mode: DisplayMode): NumberStyle {
+  return mode === 'nashville' ? 'roman' : 'arabic'
 }

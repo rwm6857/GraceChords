@@ -25,8 +25,9 @@ import { DETENT_DEG, wrapDegrees } from '../../lib/keyref/keyWheel'
 // so nothing here depends on the current key. That is deliberate — deriving the
 // angle from the key instead would mean the key and the rotation had to change
 // in the same frame, and either one landing first would jump the whole arc. The
-// inner ring is spaced wider than true geometry (see arcGeometry), so its angle
-// is the outer angle scaled by the ratio of the two steps.
+// The inner ring is rotated half a step so its four bubbles sit centred under
+// the tonic (see arcGeometry), which is what `angleOffset` applies after the
+// rotation — a constant, so the ring still turns exactly with the wheel.
 
 export type ArcBubbleState = 'idle' | 'ringed' | 'active'
 
@@ -39,6 +40,8 @@ export type ArcBubbleProps = {
   baseAngle: number
   /** Ratio of this ring's angular step to the outer ring's. 1 for majors. */
   stepRatio: number
+  /** Constant rotation applied to this ring after the drag. 0 for majors. */
+  angleOffset: number
   radius: number
   size: number
   centerX: number
@@ -67,6 +70,7 @@ export default function ArcBubble({
   ring,
   baseAngle,
   stepRatio,
+  angleOffset,
   radius,
   size,
   centerX,
@@ -86,7 +90,7 @@ export default function ArcBubble({
     // Wrapping means a bubble on the far side of the circle is drawn on
     // whichever edge it is nearest, where it is fully transparent anyway.
     const outer = wrapDegrees(baseAngle + rotation.value)
-    const angle = ((outer * stepRatio) * Math.PI) / 180
+    const angle = ((outer * stepRatio + angleOffset) * Math.PI) / 180
     return {
       opacity: bubbleOpacity(ring, outer / DETENT_DEG),
       transform: [
@@ -100,14 +104,17 @@ export default function ArcBubble({
   const outlined = state === 'active' || state === 'ringed'
   const border = solid ? 2 : altered && state === 'active' ? 3 : outlined ? 2 : 1
 
+  // The dial face is tinted (accentSoft), so an accentSoft bubble would vanish
+  // into it — an altered chord takes the neutral recessed fill instead. Three
+  // distinct fills: surface = ordinary, surfaceAlt = altered, accent = playing.
   const fill = solid
     ? t.colors.accent
     : altered && outlined
-      ? t.colors.accentSoft
+      ? t.colors.surfaceAlt
       : t.colors.surface
   const borderColor = outlined ? t.colors.accent : t.colors.border
   // White on Signal Blue is only ever semibold or heavier, per the brand rule.
-  const nameColor = solid ? t.colors.onAccent : altered && outlined ? t.colors.textAccent : t.colors.ink
+  const nameColor = solid ? t.colors.onAccent : t.colors.ink
   const numberColor = solid
     ? t.colors.onAccent
     : altered && outlined

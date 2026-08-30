@@ -16,8 +16,8 @@ function centre(ring: 'major' | 'minor', slot: number) {
 describe('the arc at 375pt', () => {
   it('keeps a real margin at the widest bubbles', () => {
     const widest = Math.max(...layout.nodes.map((n) => Math.abs(n.x) + n.size / 2))
-    expect(widest).toBeCloseTo(175.2, 1)
-    expect(HALF - widest).toBeGreaterThan(10)
+    expect(widest).toBeCloseTo(179.0, 1)
+    expect(HALF - widest).toBeGreaterThan(8)
   })
 
   it('never lets a bubble cross the screen edge', () => {
@@ -32,13 +32,27 @@ describe('the arc at 375pt', () => {
     expect(span).toBe(120)
   })
 
-  it('drops 85pt from the I chord to the edge positions', () => {
-    expect(centre('major', 2).y - centre('major', 0).y).toBeCloseTo(85, 1)
+  it('drops 86pt from the I chord to the edge positions', () => {
+    expect(centre('major', 2).y - centre('major', 0).y).toBeCloseTo(86, 1)
   })
 
-  it('stays inside the vertical third the rows above it leave', () => {
-    expect(layout.height).toBe(178)
-    expect(layout.height).toBeLessThanOrEqual(200)
+  it('stays inside the vertical third the list above it leaves', () => {
+    expect(layout.height).toBe(188)
+    expect(layout.height).toBeLessThanOrEqual(210)
+  })
+
+  it('leaves room above the tonic halo so it is never clipped', () => {
+    const haloTop = layout.centerY - PHONE_ARC.outerRadius - PHONE_ARC.tonicHaloSize / 2
+    expect(haloTop).toBeGreaterThanOrEqual(0)
+  })
+
+  it('extends over the home-indicator inset so the face runs off the bottom', () => {
+    const extended = arcLayout(PHONE_ARC, SCREEN, 34)
+    expect(extended.height).toBe(layout.height + 34)
+    // The centre must NOT move, or the whole dial would shift on notched phones.
+    expect(extended.centerY).toBe(layout.centerY)
+    // Near the extended bottom the face is still almost the full screen width.
+    expect(2 * ringExitX(PHONE_ARC, 'major', 34)).toBeGreaterThan(SCREEN - 40)
   })
 
   it('puts the circle centre below everything drawn', () => {
@@ -54,13 +68,13 @@ describe('the stroked rings', () => {
     // 187.5pt screen edge without flattening the arc; instead the crop cuts it
     // near the bottom corners, on a near-vertical tangent.
     const outer = ringExitX(PHONE_ARC, 'major')
-    expect(outer).toBeCloseTo(168.8, 1)
+    expect(outer).toBeCloseTo(170.8, 1)
     expect(HALF - outer).toBeLessThan(20)
   })
 
   it('cuts the inner ring at the bottom edge too, so neither ring curls back', () => {
     const inner = ringExitX(PHONE_ARC, 'minor')
-    expect(inner).toBeCloseTo(108.2, 1)
+    expect(inner).toBeCloseTo(114.3, 1)
     // Both exits are below the lowest bubble, so each stroke runs past its own
     // outermost position before it leaves.
     const lowestBubbleAboveCentre = Math.min(
@@ -107,16 +121,18 @@ describe('true circle-of-fifths spacing', () => {
     expect(PHONE_ARC.minorStep).toBe(30)
   })
 
-  it('nests every minor exactly beneath its parent', () => {
+  it('centres the inner ring under the tonic', () => {
+    // Four inner chords against three outer ones: aligning them radially leaves
+    // the set hanging off to the right, so the ring is rotated half a step.
+    expect(PHONE_ARC.minorAngleOffset).toBe(-PHONE_ARC.minorStep / 2)
+    const xs = PHONE_ARC.minorSlots.map((slot) => centre('minor', slot).x)
+    expect(Math.min(...xs)).toBeCloseTo(-Math.max(...xs), 5)
+  })
+
+  it('sits every minor between two majors rather than under one', () => {
     for (const slot of PHONE_ARC.minorSlots) {
-      if (!PHONE_ARC.majorSlots.includes(slot)) continue
-      const major = centre('major', slot)
-      const minor = centre('minor', slot)
-      // Same radial line: the ratio of coordinates is the ratio of the radii.
-      // (At the tonic both x are 0, so only y is meaningful there.)
-      const ratio = PHONE_ARC.innerRadius / PHONE_ARC.outerRadius
-      if (major.x !== 0) expect(minor.x / major.x).toBeCloseTo(ratio, 5)
-      expect(minor.y / major.y).toBeCloseTo(ratio, 5)
+      const angle = slotAngle(PHONE_ARC, 'minor', slot)
+      expect(angle % PHONE_ARC.majorStep).not.toBe(0)
     }
   })
 
@@ -125,7 +141,7 @@ describe('true circle-of-fifths spacing', () => {
     // bubbles a 6.2pt gap and is why the ring used to be widened to 36°.
     const chord =
       2 * PHONE_ARC.innerRadius * Math.sin((PHONE_ARC.minorStep * Math.PI) / 360)
-    expect(chord).toBeCloseTo(56.9, 1)
+    expect(chord).toBeCloseTo(60.0, 1)
     expect(chord - PHONE_ARC.minorSize).toBeGreaterThan(8)
   })
 })
@@ -146,10 +162,17 @@ describe('the rings', () => {
     expect(centre('minor', 2).x).toBeGreaterThan(0)
   })
 
-  it('puts the tonic at the top and nothing below the inner ring', () => {
+  it('puts the tonic at the top', () => {
     expect(centre('major', 0).x).toBeCloseTo(0)
-    const lowest = Math.max(...layout.nodes.map((n) => n.y + n.size / 2))
-    const innerEdge = centre('minor', 2).y + PHONE_ARC.minorSize / 2
-    expect(lowest).toBeCloseTo(innerEdge, 5)
+  })
+
+  it('clears the tonic halo of every other bubble', () => {
+    const tonic = centre('major', 0)
+    const halo = PHONE_ARC.tonicHaloSize / 2
+    for (const node of layout.nodes) {
+      if (node.ring === 'major' && node.slot === 0) continue
+      const distance = Math.hypot(tonic.x - node.x, tonic.y - node.y)
+      expect(distance - halo - node.size / 2).toBeGreaterThanOrEqual(8)
+    }
   })
 })

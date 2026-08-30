@@ -43,6 +43,14 @@ export type ArcVariant = {
   majorStep: number
   /** Angular step between adjacent minors. Also true — see the note above. */
   minorStep: number
+  /**
+   * Rotates the whole inner ring by half a step. The inner ring carries FOUR
+   * chords against the outer's three, so aligning them radially leaves the set
+   * hanging off to the right of the tonic. Half a step centres it — and it is
+   * the classic chord-wheel offset ring, where each minor sits between two
+   * majors rather than under one.
+   */
+  minorAngleOffset: number
   /** Slot offsets drawn on the outer ring (0 is the tonic). */
   majorSlots: readonly number[]
   /** Slot offsets drawn on the inner ring. */
@@ -59,6 +67,8 @@ export type ArcVariant = {
   ringStroke: number
   /** Radial length of a detent tick. */
   tickLength: number
+  /** Breathing room above the tonic halo, so it is never clipped by the frame. */
+  topPad: number
   /**
    * Diameter of the halo behind the tonic. It marks the top of the dial rather
    * than a bubble, so it does NOT travel with the wheel — bubbles slide through
@@ -71,12 +81,13 @@ export type ArcVariant = {
 }
 
 export const PHONE_ARC: ArcVariant = {
-  outerRadius: 170,
-  innerRadius: 110,
-  majorSize: 56,
-  minorSize: 48,
+  outerRadius: 172,
+  innerRadius: 116,
+  majorSize: 60,
+  minorSize: 50,
   majorStep: 30,
   minorStep: 30,
+  minorAngleOffset: -15,
   // IV I V plus one faded neighbour each way — 5 positions × 30° = the ~120° of
   // visible circle the arc crops to.
   majorSlots: [-2, -1, 0, 1, 2],
@@ -89,7 +100,8 @@ export const PHONE_ARC: ArcVariant = {
   centerDrop: 20,
   ringStroke: 1,
   tickLength: 6,
-  // Clears the relative minor below it by 2pt and IV/V by 26pt.
+  topPad: 2,
+  // Clears the nearest inner bubble by 8pt.
   tonicHaloSize: 68,
   tickSpan: 78,
   tickFade: 12,
@@ -126,7 +138,8 @@ const rad = (deg: number) => (deg * Math.PI) / 180
 
 /** Angle of a slot on a given ring, at rest. */
 export function slotAngle(v: ArcVariant, ring: ArcRing, slot: number): number {
-  return slot * (ring === 'major' ? v.majorStep : v.minorStep)
+  if (ring === 'major') return slot * v.majorStep
+  return slot * v.minorStep + v.minorAngleOffset
 }
 
 function ringRadius(v: ArcVariant, ring: ArcRing): number {
@@ -152,10 +165,14 @@ export function polar(v: ArcVariant, ring: ArcRing, angle: number): { x: number;
  * move with the drag), so `left`/`top` here describe the at-rest arrangement the
  * tests assert against.
  */
-export function arcLayout(v: ArcVariant, width: number): ArcLayout {
-  const height = v.outerRadius + v.majorSize / 2 - v.centerDrop
+export function arcLayout(v: ArcVariant, width: number, extraBottom = 0): ArcLayout {
+  // The circle centre is fixed relative to the TOP of the box, so extending the
+  // box downward over the home-indicator inset only reveals more of the dial —
+  // it never shifts the geometry. That extension is what lets the face run off
+  // the bottom of the screen instead of stopping at a hard edge above it.
+  const contentHeight = v.outerRadius + v.tonicHaloSize / 2 - v.centerDrop + v.topPad
   const centerX = width / 2
-  const centerY = height + v.centerDrop
+  const centerY = contentHeight + v.centerDrop
 
   const nodes = [
     ...v.majorSlots.map((slot) => ({ ring: 'major' as const, slot })),
@@ -176,13 +193,18 @@ export function arcLayout(v: ArcVariant, width: number): ArcLayout {
     }
   })
 
-  return { width, height, centerX, centerY, nodes }
+  return { width, height: contentHeight + extraBottom, centerX, centerY, nodes }
 }
 
-/** Where a stroked ring leaves the box's bottom edge, as ±x from the centre. */
-export function ringExitX(v: ArcVariant, ring: ArcRing): number {
+/**
+ * Where a stroked ring leaves the box's bottom edge, as ±x from the centre.
+ * `extraBottom` is the home-indicator inset the box is extended by, which
+ * carries the strokes further down and therefore further out.
+ */
+export function ringExitX(v: ArcVariant, ring: ArcRing, extraBottom = 0): number {
   const r = ringRadius(v, ring)
-  return Math.sqrt(Math.max(0, r * r - v.centerDrop * v.centerDrop))
+  const below = Math.abs(v.centerDrop - extraBottom)
+  return Math.sqrt(Math.max(0, r * r - below * below))
 }
 
 /**

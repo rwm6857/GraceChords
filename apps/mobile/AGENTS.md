@@ -183,7 +183,9 @@ duplicate logic here and never edit core internals to suit mobile.
   in `src/components/keyref/`, logic in `src/lib/keyref/`) — a cropped
   circle-of-fifths dial under the four pinned progressions. Standalone: the key
   is chosen by turning the dial, never seeded from a song or setlist. The dial's
-  face is filled (`surfaceAlt`) so the wheel reads as an object, and the **tonic
+  face is filled (`accentSoft`) so the wheel reads as an object, and it is
+  extended by the home-indicator inset so the circle runs off the bottom of the
+  screen rather than stopping on a hard edge above it, and the **tonic
   is marked by a static index halo at the top of the dial** — it does not rotate;
   bubbles travel through it, the way a physical dial says "whatever is here is
   the current value". That halo uses the `spotlight`/`spotlightSoft` tokens (a
@@ -203,8 +205,11 @@ duplicate logic here and never edit core internals to suit mobile.
     `i18n/locales/*/utilities.json` — a missing one renders the raw key on
     screen rather than failing anywhere, so a test asserts the two lists match.
   - **Both rings run at TRUE 30° circle-of-fifths spacing** (`arcGeometry.ts`),
-    concentric, each minor exactly beneath its parent. That only fits because
-    the outer radius is 170 and the inner 110: at an earlier 97pt inner radius
+    concentric — but the inner ring is rotated **half a step**
+    (`minorAngleOffset`) so its FOUR bubbles sit centred under the tonic instead
+    of hanging off to the right of the outer ring's three. Each minor therefore
+    sits between two majors, which is the classic chord-wheel offset ring. That
+    only fits because the outer radius is 172 and the inner 116: at an earlier 97pt inner radius
     the true chord between adjacent minors is 50pt, which leaves 44pt bubbles a
     6pt gap, and the ring had to be widened to 36° to compensate. **Don't
     reintroduce that fudge** — grow the radii instead. The outer radius is
@@ -253,14 +258,22 @@ duplicate logic here and never edit core internals to suit mobile.
   - A non-diatonic chord (the Prayer set's `2maj`) never takes the solid accent
     fill: it stays outlined and its own labels carry the altered spelling, so
     the diatonic ii is never shown lit in place of the chord being played.
-  - **All four pinned progressions show their chords at once**
-    (`ProgressionList` — four rows in one `Card`, the selected one tinted), with
-    the letters/numbers toggle above them. An earlier revision had four
-    name-only chips plus a separate display of just the selected sequence, which
-    left two thirds of the screen empty. A bass line under each chord was tried
-    and removed: a slash chord already carries its bass in its own name
-    (`D/F#`), so it only said anything new on the progressions with inversions.
-  - Pinned slots + the letters/numbers toggle persist in `keyRefPrefs.ts`
+  - **The whole library is one scrolling list**, grouped by set, each row showing
+    its chords (`ProgressionList`). Two earlier revisions narrowed this — four
+    name-only chips with a picker sheet, then four pinned rows — and both were a
+    lot of machinery to show an eighth of the data, so the pinning, the picker
+    and the per-slot long-press are gone. A bass line under each chord was also
+    tried and removed: a slash chord already carries its bass in its own name
+    (`D/F#`), so it only said anything new on the entries with inversions.
+  - **Three display modes**, on a switcher PINNED above the list so the one
+    control that reprints every row never scrolls away from them: `letters`,
+    `numbers` (the canonical Arabic form the data is stored in) and `nashville`
+    (roman-numeral analysis, where the case of the numeral carries the quality —
+    `II` is a borrowed major, `ii` the diatonic minor). An inversion keeps an
+    Arabic bass in roman mode (`V/7`, not `V/VII`): a roman numeral names a
+    chord, so a roman bass would read as a second chord. The dial's numerals
+    follow the toggle through `numberStyleFor`.
+  - The selected progression + the display mode persist in `keyRefPrefs.ts`
     (`gc.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
     so it hydrates on mount and is **not** in `LAUNCH_STORAGE_KEYS`. The
     selected key is deliberately not persisted.

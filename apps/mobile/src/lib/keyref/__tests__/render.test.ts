@@ -9,7 +9,9 @@ import {
   diatonicQuality,
   formatChordToken,
   isDiatonic,
+  numberStyleFor,
   parseChordToken,
+  romanLabel,
 } from '../render'
 
 const t = (key: string, vars: Record<string, string>) =>
@@ -126,6 +128,43 @@ describe('chord and bass labels', () => {
   })
 })
 
+describe('roman numerals', () => {
+  it('carries the quality in the case of the numeral', () => {
+    const roman = (token: string) => romanLabel(parseChordToken(token))
+    expect(['1', '2', '3', '4', '5', '6', '7'].map(roman)).toEqual([
+      'I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°',
+    ])
+  })
+
+  it('uppercases a borrowed major', () => {
+    expect(romanLabel(parseChordToken('2maj'))).toBe('II')
+    expect(romanLabel(parseChordToken('2'))).toBe('ii')
+  })
+
+  it('keeps extensions', () => {
+    expect(romanLabel(parseChordToken('2m7'))).toBe('ii7')
+    expect(romanLabel(parseChordToken('5'))).toBe('V')
+  })
+
+  it('keeps the bass as an Arabic degree, since a roman bass would read as a chord', () => {
+    expect(chordLabel(parseChordToken('5/7'), 'C', 'nashville')).toBe('V/7')
+    expect(chordLabel(parseChordToken('1/3'), 'Db', 'nashville')).toBe('I/3')
+    expect(chordLabel(parseChordToken('4/6'), 'A', 'nashville')).toBe('IV/6')
+  })
+
+  it('is key-independent, unlike letters', () => {
+    for (const key of ['C', 'Db', 'F#', 'A']) {
+      expect(chordLabel(parseChordToken('2maj'), key, 'nashville')).toBe('II')
+    }
+  })
+
+  it('drives the arc numerals only under the Nashville toggle', () => {
+    expect(numberStyleFor('letters')).toBe('arabic')
+    expect(numberStyleFor('numbers')).toBe('arabic')
+    expect(numberStyleFor('nashville')).toBe('roman')
+  })
+})
+
 describe('arc labels', () => {
   it('maps the visible positions to their degrees', () => {
     expect(arcDegreeAt('major', -1)).toBe(4)
@@ -146,6 +185,25 @@ describe('arc labels', () => {
     expect(arcPositionLabels('C', 'major', -1)).toEqual({ name: 'F', number: '4' })
     expect(arcPositionLabels('C', 'minor', 0)).toEqual({ name: 'Am', number: '6' })
     expect(arcPositionLabels('C', 'minor', 2)).toEqual({ name: 'B°', number: '7' })
+  })
+
+  it('writes its numerals in roman under the Nashville toggle', () => {
+    expect(arcPositionLabels('C', 'major', 0, undefined, 'roman')).toEqual({
+      name: 'C',
+      number: 'I',
+    })
+    expect(arcPositionLabels('C', 'minor', 0, undefined, 'roman')).toEqual({
+      name: 'Am',
+      number: 'vi',
+    })
+    expect(arcPositionLabels('C', 'minor', 2, undefined, 'roman')).toEqual({
+      name: 'B°',
+      number: 'vii°',
+    })
+    expect(arcPositionLabels('C', 'minor', -1, parseChordToken('2maj'), 'roman')).toEqual({
+      name: 'D',
+      number: 'II',
+    })
   })
 
   it('shows the faded neighbours as keys with no number', () => {
