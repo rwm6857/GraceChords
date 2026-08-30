@@ -73,6 +73,10 @@ struct ManageSongsView: View {
                 }
             }
             Button("Discard", role: .destructive) {
+                // Drop the recovery copy too. Discarding and then finding the same
+                // text waiting the next time the song is opened would read as the
+                // app ignoring the decision.
+                session.editor?.discardDraft()
                 go(to: pending.target)
                 pendingNavigation = nil
             }

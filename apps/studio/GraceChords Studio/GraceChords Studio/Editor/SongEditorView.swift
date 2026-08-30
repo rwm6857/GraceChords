@@ -157,6 +157,7 @@ struct SongEditorView: View {
     /// here is where they do not block typing.
     @ViewBuilder
     private var statusBanner: some View {
+        recoveredDraftBanner
         importBanner
         if let errorText = model.errorText {
             HStack(spacing: GCSpacing.sm) {
@@ -168,6 +169,42 @@ struct SongEditorView: View {
                 Spacer()
                 Button {
                     model.errorText = nil
+                } label: {
+                    Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(GCColor.muted)
+                .accessibilityLabel("Dismiss")
+            }
+            .padding(.horizontal, GCSpacing.md)
+            .padding(.vertical, GCSpacing.sm)
+            .background(GCColor.surfaceAlt)
+            .overlay(alignment: .bottom) { Divider() }
+        }
+    }
+
+    /// Work that came back from disk after a quit or a crash.
+    ///
+    /// Announced rather than restored silently, for one reason: the editor is now
+    /// dirty against a song the server still has in its old state, and somebody who
+    /// does not know that could publish text they do not remember writing. Discard is
+    /// offered beside it because the other half of "we brought this back" has to be
+    /// "and you can put it down".
+    @ViewBuilder
+    private var recoveredDraftBanner: some View {
+        if let savedAt = model.restoredDraftAt {
+            HStack(alignment: .top, spacing: GCSpacing.sm) {
+                Image(systemName: "clock.arrow.circlepath").foregroundStyle(GCColor.accent)
+                Text("Restored unsaved changes from \(savedAt.formatted(date: .abbreviated, time: .shortened)). They are not saved yet.")
+                    .gcTextStyle(.rowMeta)
+                    .foregroundStyle(GCColor.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button("Discard") { model.discardRestoredDraft() }
+                    .buttonStyle(.link)
+                    .gcTextStyle(.rowMeta)
+                Button {
+                    model.dismissRestoredDraftBanner()
                 } label: {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
                 }
@@ -498,6 +535,15 @@ struct SongEditorView: View {
             // no longer averts that; it is kept because the editor should still take
             // the height the window offers rather than the 200 it needs.
             .frame(minHeight: 200, maxHeight: .infinity)
+
+            // Below the body, not above it: the strip appears and disappears as the
+            // song changes, and anything that moves the text you are typing in is
+            // worse than anything that moves the footer under it.
+            LintStrip(
+                warnings: model.warnings,
+                canJump: model.canJump(to:),
+                onJump: { model.jump(to: $0) }
+            )
         }
         .frame(maxHeight: .infinity)
     }

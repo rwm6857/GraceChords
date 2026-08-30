@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Direct download, not the Mac App Store: a Developer ID Application
+	     signature plus notarization is what lets Gatekeeper open it on a machine
+	     that has never seen it before. -->
+	<key>method</key>
+	<string>developer-id</string>
+
+	<key>teamID</key>
+	<string>J7Y8NYZ48Q</string>
+
+	<!-- The export re-signs, so this is where the Developer ID identity is
+	     chosen; the archive itself is built with whatever the project's automatic
+	     signing picked. -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- notarize=false on purpose. Xcode's built-in notarization hides the
+	     submission id and the log URL, and the log is the only thing that tells
+	     you *why* a rejection happened. release.sh calls notarytool itself and
+	     prints both. -->
+	<key>destination</key>
+	<string>export</string>
+
+	<!-- Symbols are for crash reports Studio has no collector for, and uploading
+	     them is an App Store concern. -->
+	<key>uploadSymbols</key>
+	<false/>
+</dict>
+</plist>

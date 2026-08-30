@@ -22,7 +22,7 @@
 
 import Foundation
 
-struct SongForm: Equatable {
+struct SongForm: Equatable, Sendable {
     var title = ""
     var artist = ""
     var defaultKey = ""
@@ -222,5 +222,41 @@ struct SongForm: Equatable {
             }
         }
         return (trimmed, false)
+    }
+}
+
+// MARK: - Draft persistence
+
+/// `Codable` so `DraftStore` can keep unsaved work across a quit.
+///
+/// The decoder is deliberately lenient — every field is `decodeIfPresent` onto the
+/// blank form's default. A draft written by an older build is missing whatever field
+/// has been added since, and the useful answer there is "restore the eleven fields it
+/// does have and leave the twelfth blank", not "throw the user's unsaved song away
+/// because the schema moved". Removing or repurposing a field is the case that
+/// genuinely changes meaning; that is what `SongDraftSnapshot.version` is for.
+extension SongForm: Codable {
+    enum CodingKeys: String, CodingKey {
+        case title, artist, defaultKey, tempo, timeSignature
+        case country, youtubeID, language, pptxURL, tags, chordproContent
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        func string(_ key: CodingKeys) throws -> String {
+            try container.decodeIfPresent(String.self, forKey: key) ?? ""
+        }
+        self.init()
+        title = try string(.title)
+        artist = try string(.artist)
+        defaultKey = try string(.defaultKey)
+        tempo = try string(.tempo)
+        timeSignature = try string(.timeSignature)
+        country = try string(.country)
+        youtubeID = try string(.youtubeID)
+        language = try string(.language)
+        pptxURL = try string(.pptxURL)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        chordproContent = try string(.chordproContent)
     }
 }
