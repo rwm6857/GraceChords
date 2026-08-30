@@ -78,6 +78,14 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
+# Read a command's output into a variable and test *that*, rather than piping into
+# `grep -q`. `grep -q` exits on its first match, which closes the pipe and kills the
+# producer with SIGPIPE (exit 141); under `set -o pipefail` the pipeline then reports
+# failure even though the grep matched. That turned a correctly hardened, correctly
+# signed app into "the hardened runtime is not enabled". Same hazard applies to any
+# `| head -1`, hence `first_line`.
+first_line() { printf '%s' "${1%%$'\n'*}"; }
+
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
 fail() { printf '\033[31m✗ %s\033[0m\n' "$1" >&2; exit 1; }
 ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
@@ -92,18 +100,17 @@ warn() { printf '\033[33m!\033[0m %s\n' "$1"; }
 step "Preflight"
 
 command -v xcodebuild >/dev/null || fail "xcodebuild not found. Install Xcode and run: sudo xcode-select -s /Applications/Xcode.app"
-ok "Xcode: $(xcodebuild -version | head -1)"
+ok "Xcode: $(first_line "$(xcodebuild -version)")"
 
-SIGNING_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-	| grep 'Developer ID Application' \
-	| head -1 \
-	| sed -E 's/.*"(.*)".*/\1/' || true)"
+CODESIGN_IDENTITIES="$(security find-identity -v -p codesigning 2>/dev/null || true)"
+SIGNING_IDENTITY="$(first_line "$(printf '%s\n' "$CODESIGN_IDENTITIES" \
+	| sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p')")"
 
 if [[ -z "$SIGNING_IDENTITY" ]]; then
 	printf '\033[31m✗ No "Developer ID Application" certificate in the keychain.\033[0m\n' >&2
 	echo >&2
 	echo "  What is there now:" >&2
-	security find-identity -v -p codesigning 2>/dev/null | sed 's/^/    /' >&2
+	printf '%s\n' "$CODESIGN_IDENTITIES" | sed 's/^/    /' >&2
 	echo >&2
 	echo "  An \"Apple Development\" certificate cannot sign for distribution — it only" >&2
 	echo "  works on machines in your provisioning profile. Create the right one at" >&2
@@ -220,10 +227,13 @@ step "Verify the signature"
 codesign --verify --deep --strict --verbose=2 "$APP"
 ok "Signature valid"
 
-if ! codesign -d --verbose=2 "$APP" 2>&1 | grep -q 'flags=.*runtime'; then
-	fail "The hardened runtime is not enabled. Notarization requires it (ENABLE_HARDENED_RUNTIME in the project)."
-fi
-ok "Hardened runtime enabled"
+SIGNATURE_INFO="$(codesign -d --verbose=2 "$APP" 2>&1 || true)"
+case "$SIGNATURE_INFO" in
+	*"(runtime)"*) ok "Hardened runtime enabled" ;;
+	*) fail "The hardened runtime is not enabled. Notarization requires it (ENABLE_HARDENED_RUNTIME in the project).
+  codesign reported:
+$(printf '%s\n' "$SIGNATURE_INFO" | sed 's/^/    /')" ;;
+esac
 
 # The credentials actually made it in, and survived the re-sign. A build that ships
 # without them shows the "Studio is not configured" screen, which to somebody who
@@ -235,9 +245,11 @@ ok "Hardened runtime enabled"
 ok "Configuration present in the signed bundle"
 
 # The sandbox is what keeps a stray entitlement from being the thing nobody noticed.
-codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q 'network.client' \
-	|| fail "The signed app has lost com.apple.security.network.client and cannot reach Supabase."
-ok "Network entitlement intact"
+SIGNED_ENTITLEMENTS="$(codesign -d --entitlements - --xml "$APP" 2>/dev/null || true)"
+case "$SIGNED_ENTITLEMENTS" in
+	*network.client*) ok "Network entitlement intact" ;;
+	*) fail "The signed app has lost com.apple.security.network.client and cannot reach Supabase." ;;
+esac
 
 # ------------------------------------------------------------- notarize app
 #
@@ -265,7 +277,11 @@ readonly DMG="$BUILD_DIR/$APP_NAME $RESOLVED_VERSION.dmg"
 readonly STAGING="$BUILD_DIR/dmg"
 rm -rf "$STAGING" "$DMG"
 mkdir -p "$STAGING"
-cp -R "$APP" "$STAGING/"
+# ditto, not cp -R: it is the copy Apple documents for signed bundles, and it
+# carries the extended attributes and the stapled ticket across intact. A signature
+# broken here would not surface until the final Gatekeeper check, two notarization
+# round trips later.
+ditto "$APP" "$STAGING/$APP_NAME.app"
 # The /Applications alias is the whole install instruction: drag left to right.
 ln -s /Applications "$STAGING/Applications"
 hdiutil create \
