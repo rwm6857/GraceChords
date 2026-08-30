@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   ALL_PROGRESSIONS,
-  DEFAULT_PINNED,
+  DEFAULT_PROGRESSION_ID,
   GENERAL_PROGRESSIONS,
   PRAYER_PROGRESSIONS,
   flatChords,
@@ -46,9 +46,8 @@ describe('progression sets', () => {
     }
   })
 
-  it('pins four slots that all resolve', () => {
-    expect(DEFAULT_PINNED).toHaveLength(4)
-    for (const id of DEFAULT_PINNED) expect(progressionById(id)).not.toBeNull()
+  it('opens on a progression that exists', () => {
+    expect(progressionById(DEFAULT_PROGRESSION_ID)).not.toBeNull()
   })
 
   it('resolves an unknown id to null rather than throwing', () => {

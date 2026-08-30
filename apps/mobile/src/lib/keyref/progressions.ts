@@ -112,8 +112,8 @@ export function progressionById(id: string | null | undefined): Progression | nu
   return id ? (BY_ID.get(id) ?? null) : null
 }
 
-/** The four slots a fresh install starts with: one per functional family. */
-export const DEFAULT_PINNED: (string | null)[] = ['g1564', 'g145', 'pRequest', 'pFull']
+/** What a fresh install opens on. */
+export const DEFAULT_PROGRESSION_ID = 'g1564'
 
 /** Every chord in a progression, phrase boundaries flattened away. */
 export function flatChords(progression: Progression) {

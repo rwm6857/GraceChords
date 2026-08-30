@@ -1,10 +1,15 @@
 import { useSyncExternalStore } from 'react'
 import type { KVStorage } from '../defaults'
-import { DEFAULT_PINNED, progressionById } from './progressions'
+import { DEFAULT_PROGRESSION_ID, progressionById } from './progressions'
 import type { DisplayMode } from './types'
 
-// Key Reference preferences: the four pinned progressions and the
-// letters/numbers toggle. Device-local (AsyncStorage), NOT Supabase-synced.
+// Key Reference preferences: which progression is selected, and how chords are
+// written. Device-local (AsyncStorage), NOT Supabase-synced.
+//
+// An earlier revision pinned four progressions to four slots, with a picker
+// sheet per slot. The whole set is now one scrollable list, so there is nothing
+// to pin — a `pinned` array in a stored payload is simply ignored, and the
+// selection it used to imply is replaced by `selectedId`.
 //
 // Follows the defaults.ts / viewerPrefs.ts pattern — storage is INJECTED so the
 // module is RN-free and unit-testable headless, the cache is replaced with a new
@@ -13,26 +18,24 @@ import type { DisplayMode } from './types'
 //
 // Unlike those two it is NOT part of the splash batch and its key is NOT in
 // LAUNCH_STORAGE_KEYS: nothing on the launch path reads it, so it hydrates when
-// the screen mounts, the way the other screen-scoped preferences do. The screen
-// renders defaults for the one frame before the read lands.
+// the screen mounts, the way the other screen-scoped preferences do.
 //
 // The SELECTED KEY is deliberately not persisted. This screen is standalone and
 // starts from a manual choice every time.
 
-export const PIN_COUNT = 4
-
 export type KeyRefPrefs = {
-  /** Progression ids, one per slot. null = an empty slot. */
-  pinned: (string | null)[]
+  /** Progression id, or null when nothing is selected. */
+  selectedId: string | null
   display: DisplayMode
 }
 
 export const DEFAULT_KEY_REF_PREFS: KeyRefPrefs = {
-  pinned: DEFAULT_PINNED.slice(0, PIN_COUNT),
+  selectedId: DEFAULT_PROGRESSION_ID,
   display: 'letters',
 }
 
 const STORAGE_KEY = 'gc.keyref.v1'
+const DISPLAY_MODES: readonly DisplayMode[] = ['letters', 'numbers', 'nashville']
 
 let cache: KeyRefPrefs = DEFAULT_KEY_REF_PREFS
 let storage: KVStorage | null = null
@@ -43,10 +46,13 @@ function emit() {
   for (const l of listeners) l()
 }
 
+function isDisplayMode(v: unknown): v is DisplayMode {
+  return typeof v === 'string' && (DISPLAY_MODES as readonly string[]).includes(v)
+}
+
 /**
- * Coerce a stored payload. Slots are normalized to exactly PIN_COUNT entries and
- * an id no longer in the data drops to an empty slot — a progression can be
- * renamed or retired without wedging someone's saved strip.
+ * Coerce a stored payload. An id no longer in the data drops to null — a
+ * progression can be renamed or retired without wedging someone's screen.
  */
 function parse(raw: string | null): KeyRefPrefs {
   if (!raw) return DEFAULT_KEY_REF_PREFS
@@ -54,13 +60,10 @@ function parse(raw: string | null): KeyRefPrefs {
     const parsed = JSON.parse(raw) as unknown
     if (!parsed || typeof parsed !== 'object') return DEFAULT_KEY_REF_PREFS
     const record = parsed as Record<string, unknown>
-    const stored = Array.isArray(record.pinned) ? record.pinned : []
-    const pinned = Array.from({ length: PIN_COUNT }, (_, i) => {
-      const id = stored[i]
-      return typeof id === 'string' && progressionById(id) ? id : null
-    })
-    const display: DisplayMode = record.display === 'numbers' ? 'numbers' : 'letters'
-    return { pinned, display }
+    const stored = record.selectedId
+    const selectedId =
+      typeof stored === 'string' && progressionById(stored) ? stored : DEFAULT_PROGRESSION_ID
+    return { selectedId, display: isDisplayMode(record.display) ? record.display : 'letters' }
   } catch {
     return DEFAULT_KEY_REF_PREFS
   }
@@ -91,13 +94,9 @@ export function getKeyRefPrefs(): KeyRefPrefs {
   return cache
 }
 
-/** Assign a progression to a slot, or clear it with null. */
-export function setPinned(slot: number, id: string | null): void {
-  if (slot < 0 || slot >= PIN_COUNT) return
-  if (cache.pinned[slot] === id) return
-  const pinned = cache.pinned.slice()
-  pinned[slot] = id
-  cache = { ...cache, pinned }
+export function setSelectedProgression(id: string | null): void {
+  if (cache.selectedId === id) return
+  cache = { ...cache, selectedId: id }
   emit()
   persist()
 }
@@ -116,7 +115,7 @@ function subscribe(listener: () => void): () => void {
   }
 }
 
-/** Subscribing hook — re-renders on any pin or display-mode change. */
+/** Subscribing hook — re-renders on a selection or display-mode change. */
 export function useKeyRefPrefs(): KeyRefPrefs {
   return useSyncExternalStore(subscribe, getKeyRefPrefs, getKeyRefPrefs)
 }

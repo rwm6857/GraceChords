@@ -35,14 +35,16 @@ import {
   wrapDegrees,
 } from '../../lib/keyref/keyWheel'
 import { createWheelHaptics } from '../../lib/keyref/wheelHaptics'
-import { arcPositionLabels } from '../../lib/keyref/render'
+import { arcPositionLabels, type NumberStyle } from '../../lib/keyref/render'
 import type { ProgressionChord } from '../../lib/keyref/types'
 
-// The cropped circle-of-fifths arc: IV I V on the outer ring, and beneath them
+// The cropped circle-of-fifths dial: IV I V on the outer ring, and beneath them
 // ii vi iii vii° on the inner one — all seven diatonic chords, both rings at
-// true 30° spacing, each minor exactly under its parent. The circle's centre
-// sits below everything drawn, so it reads as a rainbow rather than as a slice
-// of a wheel.
+// true 30° spacing. The inner ring is rotated half a step so its four bubbles
+// sit centred under the tonic rather than hanging off to the right of it. The
+// circle's centre sits below everything drawn, so it reads as a rainbow rather
+// than as a slice of a wheel, and the face runs on under the home indicator
+// instead of stopping on a hard horizontal edge above it.
 //
 // TWO CONCENTRIC STROKES connect the positions, drawn as bordered circles wider
 // than the frame and cropped by it. Without them the bubbles read as scattered
@@ -104,6 +106,14 @@ export type KeyArcProps = {
   variant: ArcVariant
   tonicKey: string
   onKeyChange: (key: string) => void
+  /**
+   * Home-indicator inset the block is extended by. The dial face is a circle, so
+   * letting it run under the indicator instead of stopping above it is what
+   * keeps the bottom of the wheel from ending on a hard horizontal edge.
+   */
+  extraBottom?: number
+  /** Roman numerals under the Nashville toggle, Arabic otherwise. */
+  numberStyle?: NumberStyle
   annotation?: ArcAnnotation
   /** Injected so every accessibility string stays in the locale files. */
   labels: {
@@ -266,6 +276,8 @@ export default function KeyArc({
   variant,
   tonicKey,
   onKeyChange,
+  extraBottom = 0,
+  numberStyle = 'arabic',
   annotation = EMPTY_ANNOTATION,
   labels,
 }: KeyArcProps) {
@@ -277,7 +289,10 @@ export default function KeyArc({
   // overflow. The height does not depend on width, so the box can be laid out
   // before the first measurement lands.
   const [width, setWidth] = useState(0)
-  const layout = useMemo(() => arcLayout(variant, width), [variant, width])
+  const layout = useMemo(
+    () => arcLayout(variant, width, extraBottom),
+    [variant, width, extraBottom],
+  )
   const tonicSlot = keySlot(tonicKey)
 
   /** The slot the wheel's fixed angles are measured from. Set once. */
@@ -427,7 +442,7 @@ export default function KeyArc({
       const offset = slotOffset(slot, tonicSlot)
       const key = positionKey(ring, offset)
       const altered = annotation.altered.get(key)
-      const { name, number } = arcPositionLabels(tonicKey, ring, offset, altered)
+      const { name, number } = arcPositionLabels(tonicKey, ring, offset, altered, numberStyle)
       const isEdge = isMajor && Math.abs(offset) === variant.fadedFrom
       // Reachability follows each ring's own visible span: the inner ring runs
       // one further right than the outer, because that is where the vii° lives.
@@ -440,6 +455,7 @@ export default function KeyArc({
           ring={ring}
           baseAngle={slotOffset(slot, baseSlot) * variant.majorStep}
           stepRatio={(isMajor ? variant.majorStep : variant.minorStep) / variant.majorStep}
+          angleOffset={isMajor ? 0 : variant.minorAngleOffset}
           radius={isMajor ? variant.outerRadius : variant.innerRadius}
           size={isMajor ? variant.majorSize : variant.minorSize}
           centerX={layout.centerX}
@@ -474,7 +490,7 @@ export default function KeyArc({
             <DialFace
               radius={variant.outerRadius}
               layout={layout}
-              color={t.colors.surfaceAlt}
+              color={t.colors.accentSoft}
             />
             <TonicIndex
               variant={variant}

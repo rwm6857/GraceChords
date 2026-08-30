@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { KVStorage } from '../../defaults'
 import {
   DEFAULT_KEY_REF_PREFS,
-  PIN_COUNT,
   __resetKeyRefPrefsForTest,
   getKeyRefPrefs,
   hydrateKeyRefPrefs,
   setDisplayMode,
-  setPinned,
+  setSelectedProgression,
 } from '../keyRefPrefs'
+import { DEFAULT_PROGRESSION_ID } from '../progressions'
 
 const KEY = 'gc.keyref.v1'
 
@@ -35,18 +35,19 @@ describe('hydration', () => {
   it('starts from the defaults when nothing is stored', async () => {
     await hydrateKeyRefPrefs(memoryStorage())
     expect(getKeyRefPrefs()).toEqual(DEFAULT_KEY_REF_PREFS)
+    expect(getKeyRefPrefs().selectedId).toBe(DEFAULT_PROGRESSION_ID)
   })
 
   it('restores what was written', async () => {
     const store = memoryStorage()
     await hydrateKeyRefPrefs(store)
-    setPinned(2, 'pIntense')
-    setDisplayMode('numbers')
+    setSelectedProgression('pIntense')
+    setDisplayMode('nashville')
 
     __resetKeyRefPrefsForTest()
     await hydrateKeyRefPrefs(memoryStorage(Object.fromEntries(store.map)))
-    expect(getKeyRefPrefs().pinned[2]).toBe('pIntense')
-    expect(getKeyRefPrefs().display).toBe('numbers')
+    expect(getKeyRefPrefs().selectedId).toBe('pIntense')
+    expect(getKeyRefPrefs().display).toBe('nashville')
   })
 
   it('survives a corrupt payload', async () => {
@@ -65,28 +66,38 @@ describe('hydration', () => {
     expect(getKeyRefPrefs()).toEqual(DEFAULT_KEY_REF_PREFS)
   })
 
-  it('drops an id the data no longer has rather than wedging the strip', async () => {
+  it('falls back when the stored id is no longer in the data', async () => {
     await hydrateKeyRefPrefs(
-      memoryStorage({
-        [KEY]: JSON.stringify({ pinned: ['g145', 'retired-id', null, 'pFull'], display: 'letters' }),
-      }),
+      memoryStorage({ [KEY]: JSON.stringify({ selectedId: 'retired-id', display: 'letters' }) }),
     )
-    expect(getKeyRefPrefs().pinned).toEqual(['g145', null, null, 'pFull'])
+    expect(getKeyRefPrefs().selectedId).toBe(DEFAULT_PROGRESSION_ID)
   })
 
-  it('normalizes a short or long stored list to the slot count', async () => {
+  it('ignores the pinned array a previous version wrote, keeping its display mode', async () => {
+    // The four pinned slots became one scrollable list; an old payload still has
+    // to leave the user's spelling preference alone.
     await hydrateKeyRefPrefs(
-      memoryStorage({ [KEY]: JSON.stringify({ pinned: ['g145'], display: 'numbers' }) }),
+      memoryStorage({
+        [KEY]: JSON.stringify({ pinned: ['g145', null, null, 'pFull'], display: 'numbers' }),
+      }),
     )
-    expect(getKeyRefPrefs().pinned).toHaveLength(PIN_COUNT)
-    expect(getKeyRefPrefs().pinned).toEqual(['g145', null, null, null])
+    expect(getKeyRefPrefs().display).toBe('numbers')
+    expect(getKeyRefPrefs().selectedId).toBe(DEFAULT_PROGRESSION_ID)
   })
 
   it('falls back to letters for an unrecognized display mode', async () => {
     await hydrateKeyRefPrefs(
-      memoryStorage({ [KEY]: JSON.stringify({ pinned: [], display: 'solfege' }) }),
+      memoryStorage({ [KEY]: JSON.stringify({ display: 'solfege' }) }),
     )
     expect(getKeyRefPrefs().display).toBe('letters')
+  })
+
+  it('accepts every display mode it ships', async () => {
+    for (const mode of ['letters', 'numbers', 'nashville'] as const) {
+      __resetKeyRefPrefsForTest()
+      await hydrateKeyRefPrefs(memoryStorage({ [KEY]: JSON.stringify({ display: mode }) }))
+      expect(getKeyRefPrefs().display).toBe(mode)
+    }
   })
 
   it('does not re-read over an unwritten change when the screen remounts', async () => {
@@ -102,30 +113,22 @@ describe('writes', () => {
   it('replaces the snapshot object so subscribers see a change', async () => {
     await hydrateKeyRefPrefs(memoryStorage())
     const before = getKeyRefPrefs()
-    setPinned(0, 'pBright')
+    setSelectedProgression('pBright')
     expect(getKeyRefPrefs()).not.toBe(before)
-    expect(getKeyRefPrefs().pinned[0]).toBe('pBright')
+    expect(getKeyRefPrefs().selectedId).toBe('pBright')
   })
 
   it('keeps the snapshot stable when nothing actually changed', async () => {
     await hydrateKeyRefPrefs(memoryStorage())
     const before = getKeyRefPrefs()
     setDisplayMode(before.display)
-    setPinned(0, before.pinned[0])
+    setSelectedProgression(before.selectedId)
     expect(getKeyRefPrefs()).toBe(before)
   })
 
-  it('clears a slot', async () => {
+  it('clears the selection', async () => {
     await hydrateKeyRefPrefs(memoryStorage())
-    setPinned(1, null)
-    expect(getKeyRefPrefs().pinned[1]).toBeNull()
-  })
-
-  it('ignores a slot outside the strip', async () => {
-    await hydrateKeyRefPrefs(memoryStorage())
-    const before = getKeyRefPrefs()
-    setPinned(-1, 'g145')
-    setPinned(PIN_COUNT, 'g145')
-    expect(getKeyRefPrefs()).toBe(before)
+    setSelectedProgression(null)
+    expect(getKeyRefPrefs().selectedId).toBeNull()
   })
 })
