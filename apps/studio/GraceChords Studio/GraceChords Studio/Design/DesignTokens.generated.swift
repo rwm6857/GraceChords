@@ -132,6 +132,25 @@ enum GCColor {
         darkIncreasedContrast: GCRGBA(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0)
     ).color
 
+    /// Non-accent emphasis: marks a fixed point that is NOT a selection. Used for the Key Reference
+    /// dial's index, where the accent already means "chosen" and a second meaning on the same hue
+    /// would be unreadable. A muted violet — outside the Signal Blue family, and deliberately quiet
+    /// enough not to compete with it.
+    static let spotlight = GCDynamicColor(
+        light: GCRGBA(red: 0.415686, green: 0.352941, blue: 0.768627, alpha: 1.0),
+        dark: GCRGBA(red: 0.662745, green: 0.607843, blue: 0.941176, alpha: 1.0),
+        lightIncreasedContrast: GCRGBA(red: 0.415686, green: 0.352941, blue: 0.768627, alpha: 1.0),
+        darkIncreasedContrast: GCRGBA(red: 0.662745, green: 0.607843, blue: 0.941176, alpha: 1.0)
+    ).color
+
+    /// Soft spotlight fill, for a halo behind a marked element.
+    static let spotlightSoft = GCDynamicColor(
+        light: GCRGBA(red: 0.894118, green: 0.878431, blue: 0.964706, alpha: 1.0),
+        dark: GCRGBA(red: 0.164706, green: 0.152941, blue: 0.25098, alpha: 1.0),
+        lightIncreasedContrast: GCRGBA(red: 0.894118, green: 0.878431, blue: 0.964706, alpha: 1.0),
+        darkIncreasedContrast: GCRGBA(red: 0.164706, green: 0.152941, blue: 0.25098, alpha: 1.0)
+    ).color
+
     /// Positive/confirmed state (e.g. tuner in-tune).
     static let success = GCDynamicColor(
         light: GCRGBA(red: 0.203922, green: 0.780392, blue: 0.34902, alpha: 1.0),

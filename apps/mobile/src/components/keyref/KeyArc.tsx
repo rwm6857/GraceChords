@@ -146,6 +146,68 @@ function RingStroke({
 }
 
 /**
+ * The dial's face: the disc bounded by the outer ring, filled so the wheel
+ * reads as an object rather than as bubbles floating on the page. Its edge
+ * coincides with the outer stroke, so the outer bubbles straddle the rim like
+ * beads, and the crop cuts the bottom off flat.
+ */
+function DialFace({ radius, layout, color }: { radius: number; layout: ArcLayout; color: string }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: layout.centerX - radius,
+        top: layout.centerY - radius,
+        width: radius * 2,
+        height: radius * 2,
+        borderRadius: radius,
+        backgroundColor: color,
+      }}
+    />
+  )
+}
+
+/**
+ * The index that marks the key. It sits at the TOP OF THE DIAL, not on a bubble,
+ * and does not rotate — bubbles travel through it, which is how a physical dial
+ * says "whatever is here is the current value". That also keeps it out of the
+ * accent's way: the accent means "in the selected progression" everywhere else
+ * on this screen, so marking the tonic with it would give one colour two jobs.
+ */
+function TonicIndex({
+  variant,
+  layout,
+  fill,
+  stroke,
+}: {
+  variant: ArcVariant
+  layout: ArcLayout
+  fill: string
+  stroke: string
+}) {
+  const size = variant.tonicHaloSize
+  return (
+    <View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        position: 'absolute',
+        left: layout.centerX - size / 2,
+        top: layout.centerY - variant.outerRadius - size / 2,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: fill,
+        borderWidth: 2,
+        borderColor: stroke,
+      }}
+    />
+  )
+}
+
+/**
  * A detent graduation. These sit between the bubbles rather than under them (a
  * 56pt bubble subtends 19° at this radius, so a midpoint tick clears its
  * neighbour by 5.5°) and they TRAVEL with the wheel, so a drag demonstrates that
@@ -409,6 +471,17 @@ export default function KeyArc({
       >
         {width === 0 ? null : (
           <>
+            <DialFace
+              radius={variant.outerRadius}
+              layout={layout}
+              color={t.colors.surfaceAlt}
+            />
+            <TonicIndex
+              variant={variant}
+              layout={layout}
+              fill={t.colors.spotlightSoft}
+              stroke={t.colors.spotlight}
+            />
             <RingStroke
               radius={variant.outerRadius}
               layout={layout}

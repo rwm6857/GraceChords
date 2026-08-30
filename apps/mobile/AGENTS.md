@@ -181,18 +181,27 @@ duplicate logic here and never edit core internals to suit mobile.
   `/key-reference` as routes.
 - **Key Reference** (`app/key-reference.tsx` → `KeyReferenceScreen`, components
   in `src/components/keyref/`, logic in `src/lib/keyref/`) — a cropped
-  circle-of-fifths arc over a progression strip, sequence and bass row.
-  Standalone: the key is chosen by turning the arc, never seeded from a song or
-  setlist.
+  circle-of-fifths dial under the four pinned progressions. Standalone: the key
+  is chosen by turning the dial, never seeded from a song or setlist. The dial's
+  face is filled (`surfaceAlt`) so the wheel reads as an object, and the **tonic
+  is marked by a static index halo at the top of the dial** — it does not rotate;
+  bubbles travel through it, the way a physical dial says "whatever is here is
+  the current value". That halo uses the `spotlight`/`spotlightSoft` tokens (a
+  muted violet added to `native.ts` for it), NOT the accent: the accent means "in
+  the selected progression" everywhere else on this screen, and one colour cannot
+  carry both jobs.
   - **Progressions are stored NUMERICALLY** (`types.ts` / `progressions.ts`):
     scale degree + optional quality override + optional bass degree + optional
     extension. Letters are a view computed per key in `render.ts`, which is the
     only module that turns a degree into a note. Canonical text is `1`, `1/3`,
     `5/7`, `2maj`, `2m7`; **a bare `7` is the vii° chord and is never shorthand
     for `5/7`** (nor `3` for `1/3`), and `parseChordToken` throws rather than
-    guessing. Two sets ship: 16 diatonic **General** and the 14-entry **Prayer**
-    set, whose two source annotations are `noteKey`s shown in a sheet rather
-    than encoded as playable data.
+    guessing. Two sets ship: 19 diatonic **General** (inversions included — a
+    slash chord is still a chord of the key) and the 14-entry **Prayer** set,
+    whose two source annotations are `noteKey`s shown in a sheet rather than
+    encoded as playable data. Every id needs a label in
+    `i18n/locales/*/utilities.json` — a missing one renders the raw key on
+    screen rather than failing anywhere, so a test asserts the two lists match.
   - **Both rings run at TRUE 30° circle-of-fifths spacing** (`arcGeometry.ts`),
     concentric, each minor exactly beneath its parent. That only fits because
     the outer radius is 170 and the inner 110: at an earlier 97pt inner radius
@@ -244,13 +253,13 @@ duplicate logic here and never edit core internals to suit mobile.
   - A non-diatonic chord (the Prayer set's `2maj`) never takes the solid accent
     fill: it stays outlined and its own labels carry the altered spelling, so
     the diatonic ii is never shown lit in place of the chord being played.
-  - **All four pinned progressions show their chords and bass at once**
+  - **All four pinned progressions show their chords at once**
     (`ProgressionList` — four rows in one `Card`, the selected one tinted), with
-    the letters/numbers toggle docked directly beneath them. An earlier revision
-    had four name-only chips plus a separate display of just the selected
-    sequence, which left two thirds of the screen empty. The bass line carries a
-    leading label so its purpose is legible on a progression with no inversions,
-    where it otherwise just repeats the chord roots.
+    the letters/numbers toggle above them. An earlier revision had four
+    name-only chips plus a separate display of just the selected sequence, which
+    left two thirds of the screen empty. A bass line under each chord was tried
+    and removed: a slash chord already carries its bass in its own name
+    (`D/F#`), so it only said anything new on the progressions with inversions.
   - Pinned slots + the letters/numbers toggle persist in `keyRefPrefs.ts`
     (`gc.keyref.v1`, injected storage / `useSyncExternalStore`). Screen-scoped,
     so it hydrates on mount and is **not** in `LAUNCH_STORAGE_KEYS`. The

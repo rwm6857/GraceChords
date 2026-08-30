@@ -50,6 +50,16 @@ export type ThemeColors = {
   onDanger: string
   /** Favorite/star fill (gold). */
   star: string
+  /**
+   * Non-accent emphasis: marks a fixed point that is NOT a selection. Used for
+   * the Key Reference dial's index, where the accent already means "chosen" and
+   * a second meaning on the same hue would be unreadable. A muted violet —
+   * outside the Signal Blue family, and deliberately quiet enough not to compete
+   * with it.
+   */
+  spotlight: string
+  /** Soft spotlight fill, for a halo behind a marked element. */
+  spotlightSoft: string
   /** Positive/confirmed state (e.g. tuner in-tune). */
   success: string
   /** Dimmed color for inactive scrubber letters. */
@@ -78,6 +88,8 @@ export const lightColors: ThemeColors = {
   danger: '#C43D38',
   onDanger: '#FFFFFF',
   star: '#F0B000',
+  spotlight: '#6A5AC4',
+  spotlightSoft: '#E4E0F6',
   success: '#34C759',
   off: 'rgba(138,146,155,0.45)',
   heroGradient: {
@@ -102,6 +114,8 @@ export const darkColors: ThemeColors = {
   danger: '#F0736A',
   onDanger: '#14171A',
   star: '#FFCC00',
+  spotlight: '#A99BF0',
+  spotlightSoft: '#2A2740',
   success: '#30D158',
   off: 'rgba(124,133,142,0.5)',
   heroGradient: {

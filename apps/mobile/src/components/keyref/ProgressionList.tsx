@@ -8,8 +8,8 @@ import { PIN_COUNT } from '../../lib/keyref/keyRefPrefs'
 import type { DisplayMode, Progression } from '../../lib/keyref/types'
 
 // The four pinned progressions, all visible at once — each row shows its name
-// and its full chord-and-bass sequence, so the set can be compared at a glance
-// instead of one at a time. Tapping a row selects it; the arc follows.
+// and its full chord sequence, so the set can be compared at a glance instead of
+// one at a time. Tapping a row selects it; the arc follows.
 //
 // This replaced a row of four name-only chips plus a separate display of the
 // selected sequence below it. Two thirds of the screen sat empty under that
@@ -42,7 +42,6 @@ export type ProgressionListProps = {
   emptyLabel: string
   changeActionLabel: string
   selectHint: string
-  bassRowLabel: string
   noteLabel: string
   replayLabel: string
   t: (key: string, vars: Record<string, string>) => string
@@ -63,7 +62,6 @@ export default function ProgressionList({
   emptyLabel,
   changeActionLabel,
   selectHint,
-  bassRowLabel,
   noteLabel,
   replayLabel,
   t: tx,
@@ -164,7 +162,6 @@ export default function ProgressionList({
                 // Only the selected row's walk is lit; the others sit static so
                 // the highlight can never read as belonging to two progressions.
                 activeIndex={selected ? activeIndex : null}
-                bassRowLabel={bassRowLabel}
                 t={tx}
               />
             ) : null}

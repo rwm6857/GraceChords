@@ -34,12 +34,12 @@ import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/t
 // never seeded from a song or a setlist.
 //
 // The stack is a scrolling upper region and a fixed lower one, and the split is
-// the layout's whole point. All four progressions show their chords and bass at
-// once in the upper region, with the letters/numbers toggle docked directly
-// beneath them — that toggle changes the spelling in the rows above it, and
-// proximity is what makes it self-explanatory, which is why it is here and not
-// in the nav bar (where a two-segment pill would also push the title off centre).
-// The lower third is the key readout and the arc, pinned where a thumb reaches.
+// the layout's whole point. All four progressions show their chords at once in
+// the upper region, under the letters/numbers toggle — that toggle changes the
+// spelling in the rows below it, and proximity is what makes it
+// self-explanatory, which is why it is here and not in the nav bar (where a
+// two-segment pill would also push the title off centre). The lower third is the
+// key readout and the dial, pinned where a thumb reaches.
 //
 // The arc sits OUTSIDE the ScrollView on purpose. Its wheel is a pan gesture,
 // and a pan that shares a vertical scroll container spends its life fighting the
@@ -53,7 +53,7 @@ import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/t
 // nothing here branches on size class.
 
 /** One step of the walk that lights the progression's chords in order. */
-const WALK_STEP_MS = 260
+const WALK_STEP_MS = 520
 
 export default function KeyReferenceScreen({ embedded }: { embedded?: boolean }) {
   const t = useTheme()
@@ -215,6 +215,27 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
             paddingBottom: t.spacing.md,
           }}
         >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: t.spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
+              {tx('keyRef.showAs')}
+            </Text>
+            <SegmentedPill<DisplayMode>
+              options={[
+                { value: 'letters', label: tx('keyRef.letters') },
+                { value: 'numbers', label: tx('keyRef.numbers') },
+              ]}
+              value={prefs.display}
+              onChange={setDisplayMode}
+            />
+          </View>
+
           <SectionHeader label={tx('keyRef.progressionsHeader')} />
           <ProgressionList
             pinned={pinned}
@@ -231,32 +252,11 @@ export default function KeyReferenceScreen({ embedded }: { embedded?: boolean })
             emptyLabel={tx('keyRef.emptySlot')}
             changeActionLabel={tx('keyRef.changeProgression')}
             selectHint={tx('keyRef.selectHint')}
-            bassRowLabel={tx('keyRef.bassLabel')}
             noteLabel={tx('keyRef.showNote')}
             replayLabel={tx('keyRef.replay')}
             t={translate}
           />
 
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: t.spacing.md,
-            }}
-          >
-            <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
-              {tx('keyRef.showAs')}
-            </Text>
-            <SegmentedPill<DisplayMode>
-              options={[
-                { value: 'letters', label: tx('keyRef.letters') },
-                { value: 'numbers', label: tx('keyRef.numbers') },
-              ]}
-              value={prefs.display}
-              onChange={setDisplayMode}
-            />
-          </View>
         </ScrollView>
 
         {/* Key readout + arc: the lower third, out of the scroll view. The arc

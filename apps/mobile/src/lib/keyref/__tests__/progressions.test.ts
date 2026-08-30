@@ -8,6 +8,7 @@ import {
   progressionById,
 } from '../progressions'
 import { chordLabel, formatChordToken, isDiatonic } from '../render'
+import en from '../../../i18n/locales/en/utilities.json'
 
 const shorthand = (id: string) =>
   progressionById(id)!
@@ -15,9 +16,17 @@ const shorthand = (id: string) =>
     .join(' /// ')
 
 describe('progression sets', () => {
-  it('ships sixteen General and fourteen Prayer progressions', () => {
-    expect(GENERAL_PROGRESSIONS).toHaveLength(16)
+  it('ships nineteen General and fourteen Prayer progressions', () => {
+    expect(GENERAL_PROGRESSIONS).toHaveLength(19)
     expect(PRAYER_PROGRESSIONS).toHaveLength(14)
+  })
+
+  it('has a real label for every progression, and no orphan labels', () => {
+    // The data carries only i18n keys, so a progression whose label was never
+    // written would render the raw key on screen rather than fail anywhere.
+    const labels = en.keyRef.progressions as Record<string, string>
+    expect(Object.keys(labels).sort()).toEqual(ALL_PROGRESSIONS.map((p) => p.id).sort())
+    for (const value of Object.values(labels)) expect(value.trim()).not.toBe('')
   })
 
   it('gives every progression a unique id and an i18n label key', () => {
@@ -55,10 +64,25 @@ describe('the General set', () => {
     for (const shape of required) expect(present).toContain(shape)
   })
 
-  it('is entirely diatonic', () => {
+  it('is entirely diatonic, inversions included', () => {
     for (const chord of GENERAL_PROGRESSIONS.flatMap(flatChords)) {
       expect(isDiatonic(chord)).toBe(true)
     }
+  })
+
+  it('carries the shapes added by request', () => {
+    expect(shorthand('gCcm')).toBe('1 – 4 – 6 – 5')
+    expect(shorthand('g3645')).toBe('3 – 6 – 4 – 5')
+    expect(shorthand('gDescending')).toBe('1 – 5/7 – 6 – 1/5 – 4 – 1/3 – 2 – 5')
+    expect(shorthand('gLoopExit')).toBe('1 – 5 – 6 – 4 /// 4 – 5 – 1')
+  })
+
+  it('walks the bass down the scale in the descending entry', () => {
+    // The one General entry with inversions, and the whole reason it is here.
+    const chords = flatChords(progressionById('gDescending')!)
+    expect(chords.map((c) => chordLabel(c, 'G', 'letters'))).toEqual([
+      'G', 'D/F#', 'Em', 'G/D', 'C', 'G/B', 'Am', 'D',
+    ])
   })
 })
 
@@ -77,8 +101,8 @@ describe('the Prayer set', () => {
     expect(shorthand('pBright')).toBe('4 – 1/3 – 2 – 5')
   })
 
-  it('preserves the repeated phrases as phrases', () => {
-    expect(shorthand('pFull')).toBe('6 – 5/7 – 1 /// 6 – 5/7 – 1')
+  it('keeps each phrase a phrase', () => {
+    expect(shorthand('pFull')).toBe('6 – 5/7 – 1 /// 2 – 4 – 5')
     expect(shorthand('pFullAlt')).toBe('6 – 5/7 – 1 /// 2 – 5')
     expect(shorthand('pIntense')).toBe('6 – 4 – 1 /// 6 – 4 – 1 /// 6 – 4 – 1 – 2 – 4 – 5')
     expect(progressionById('pFull')!.phrases).toHaveLength(2)
@@ -111,10 +135,10 @@ describe('the Prayer set', () => {
   it('renders its slash chords with the bass spelled for the key', () => {
     const full = flatChords(progressionById('pFull')!)
     expect(full.map((c) => chordLabel(c, 'A', 'letters'))).toEqual([
-      'F#m', 'E/G#', 'A', 'F#m', 'E/G#', 'A',
+      'F#m', 'E/G#', 'A', 'Bm', 'D', 'E',
     ])
     expect(full.map((c) => chordLabel(c, 'Db', 'letters'))).toEqual([
-      'Bbm', 'Ab/C', 'Db', 'Bbm', 'Ab/C', 'Db',
+      'Bbm', 'Ab/C', 'Db', 'Ebm', 'Gb', 'Ab',
     ])
   })
 })
