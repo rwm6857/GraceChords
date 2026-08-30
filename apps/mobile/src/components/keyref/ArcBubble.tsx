@@ -10,6 +10,12 @@ import { DETENT_DEG, wrapDegrees } from '../../lib/keyref/keyWheel'
 // showing the mapping is the whole teaching value of the thing, so the toggle
 // deliberately does not reach it.
 //
+// A faded neighbour is the SAME bubble: same radius, same diameter, same stroke
+// weight. Only its opacity differs, and it carries no number, because the chord
+// a fifth above V is a secondary dominant rather than the diatonic 2 — labelling
+// it "2" would teach the wrong chord. What makes it read as part of the ring
+// rather than as a leftover chip is the stroked arc it now sits on.
+//
 // Position is a transform rather than animated left/top so the rotation stays on
 // the compositor. The bubble is parked at the circle center and pushed out along
 // its own radius.
@@ -126,7 +132,7 @@ export default function ArcBubble({
       <Text
         numberOfLines={1}
         style={{
-          fontSize: ring === 'major' ? 17 : 14,
+          fontSize: ring === 'major' ? 17 : 15,
           fontWeight: '700',
           letterSpacing: -0.3,
           color: nameColor,

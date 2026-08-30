@@ -129,10 +129,13 @@ export function chordAccessibilityLabel(
 
 /** Scale degree at an arc position, or null for positions that aren't degrees. */
 export function arcDegreeAt(ring: ArcRing, offset: number): Degree | null {
-  if (ring === 'dim') return 7
-  if (offset < -1 || offset > 1) return null
-  if (ring === 'major') return ([4, 1, 5] as Degree[])[offset + 1]
-  return ([2, 6, 3] as Degree[])[offset + 1]
+  if (ring === 'major') {
+    if (offset < -1 || offset > 1) return null
+    return ([4, 1, 5] as Degree[])[offset + 1]
+  }
+  // The inner ring runs one further to the right than the outer: ii vi iii vii°.
+  if (offset < -1 || offset > 2) return null
+  return ([2, 6, 3, 7] as Degree[])[offset + 1]
 }
 
 /**

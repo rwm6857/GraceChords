@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
@@ -7,11 +7,18 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import ArcBubble, { type ArcBubbleState } from './ArcBubble'
+import { useTheme } from '../../theme/ThemeProvider'
 import { useAccessibilityFlags } from '../../lib/accessibilityFlags'
-import { arcLayout, type ArcVariant } from '../../lib/keyref/arcGeometry'
+import {
+  arcLayout,
+  type ArcLayout,
+  type ArcRing,
+  type ArcVariant,
+} from '../../lib/keyref/arcGeometry'
 import {
   DETENT_DEG,
   FIFTHS,
@@ -25,15 +32,24 @@ import {
   slotOffset,
   touchAngle,
   touchRadius,
+  wrapDegrees,
 } from '../../lib/keyref/keyWheel'
 import { createWheelHaptics } from '../../lib/keyref/wheelHaptics'
 import { arcPositionLabels } from '../../lib/keyref/render'
 import type { ProgressionChord } from '../../lib/keyref/types'
 
-// The cropped circle-of-fifths arc: majors on the outer ring, their relative
-// minors nested beneath them, and the lone vii° on a third ring between the two
-// flanking minors. The circle's center sits below everything drawn, so it reads
-// as a rainbow rather than as a slice of a wheel.
+// The cropped circle-of-fifths arc: IV I V on the outer ring, and beneath them
+// ii vi iii vii° on the inner one — all seven diatonic chords, both rings at
+// true 30° spacing, each minor exactly under its parent. The circle's centre
+// sits below everything drawn, so it reads as a rainbow rather than as a slice
+// of a wheel.
+//
+// TWO CONCENTRIC STROKES connect the positions, drawn as bordered circles wider
+// than the frame and cropped by it. Without them the bubbles read as scattered
+// chips; the strokes are what make the thing a wheel. They are hairlines in a
+// muted token — connective tissue, not outline — and the bubbles render on top.
+// There is no SVG in this project and none is needed: a View whose radius is half
+// its size is a circle, which is exactly how PitchPipeScreen draws its ring.
 //
 // TWO WAYS TO TURN IT, and tap is the one that has to work:
 //
@@ -57,11 +73,12 @@ import type { ProgressionChord } from '../../lib/keyref/types'
 
 /** The whole wheel is mounted; opacity hides whatever is off-arc. */
 const WHEEL_SLOTS = FIFTHS.map((_, i) => i)
+/** Detent ticks sit at the MIDPOINTS between slots, where no bubble covers them. */
+const TICK_SLOTS = FIFTHS.map((_, i) => i)
+const TICK_OPACITY = 0.5
 
 const ROTATE_MS = 260
 const EASE_OUT = Easing.out(Easing.cubic)
-/** Degrees of travel over which the stationary vii° fades out of a turning arc. */
-const DIM_FADE_DEG = 8
 
 export type ArcAnnotation = {
   /** Positions used by the selected progression (positionKey of ring + offset). */
@@ -95,6 +112,94 @@ export type KeyArcProps = {
   }
 }
 
+/**
+ * One ring, stroked. A circle wider than the frame, cropped by it — so the outer
+ * ring's ends leave through the bottom edge close to the corners on a
+ * near-vertical tangent, which is what says "this circle continues".
+ */
+function RingStroke({
+  radius,
+  layout,
+  stroke,
+  color,
+}: {
+  radius: number
+  layout: ArcLayout
+  stroke: number
+  color: string
+}) {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: layout.centerX - radius,
+        top: layout.centerY - radius,
+        width: radius * 2,
+        height: radius * 2,
+        borderRadius: radius,
+        borderWidth: stroke,
+        borderColor: color,
+      }}
+    />
+  )
+}
+
+/**
+ * A detent graduation. These sit between the bubbles rather than under them (a
+ * 56pt bubble subtends 19° at this radius, so a midpoint tick clears its
+ * neighbour by 5.5°) and they TRAVEL with the wheel, so a drag demonstrates that
+ * the arc turns instead of a label having to say so.
+ */
+function DetentTick({
+  index,
+  variant,
+  layout,
+  rotation,
+  color,
+}: {
+  index: number
+  variant: ArcVariant
+  layout: ArcLayout
+  rotation: SharedValue<number>
+  color: string
+}) {
+  const baseAngle = (index + 0.5) * DETENT_DEG
+
+  const animated = useAnimatedStyle(() => {
+    const angle = wrapDegrees(baseAngle + rotation.value)
+    const theta = (angle * Math.PI) / 180
+    const fade = (variant.tickSpan - Math.abs(angle)) / variant.tickFade
+    return {
+      opacity: Math.max(0, Math.min(1, fade)) * TICK_OPACITY,
+      transform: [
+        { translateX: variant.outerRadius * Math.sin(theta) },
+        { translateY: -variant.outerRadius * Math.cos(theta) },
+        { rotate: `${angle}deg` },
+      ],
+    }
+  })
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        {
+          position: 'absolute',
+          left: layout.centerX - variant.ringStroke / 2,
+          top: layout.centerY - variant.tickLength / 2,
+          width: variant.ringStroke,
+          height: variant.tickLength,
+          backgroundColor: color,
+        },
+        animated,
+      ]}
+    />
+  )
+}
+
 export default function KeyArc({
   variant,
   tonicKey,
@@ -102,8 +207,15 @@ export default function KeyArc({
   annotation = EMPTY_ANNOTATION,
   labels,
 }: KeyArcProps) {
+  const t = useTheme()
   const { reduceMotion } = useAccessibilityFlags()
-  const layout = useMemo(() => arcLayout(variant), [variant])
+  // Full-bleed, but MEASURED rather than read off the window: in landscape on a
+  // notched phone the safe-area inset makes the available width narrower than the
+  // window, and a window-width circle would then be centred off-centre and
+  // overflow. The height does not depend on width, so the box can be laid out
+  // before the first measurement lands.
+  const [width, setWidth] = useState(0)
+  const layout = useMemo(() => arcLayout(variant, width), [variant, width])
   const tonicSlot = keySlot(tonicKey)
 
   /** The slot the wheel's fixed angles are measured from. Set once. */
@@ -117,7 +229,7 @@ export default function KeyArc({
   const crossed = useSharedValue(0)
   /** Finger angle at the previous frame, for incremental tracking. */
   const lastAngle = useSharedValue(0)
-  /** 0 while a drag is ignored (it began too near the center to track). */
+  /** 0 while a drag is ignored (it began too near the centre to track). */
   const tracking = useSharedValue(0)
 
   // A key set from outside the arc (never happens today — the screen only
@@ -192,7 +304,7 @@ export default function KeyArc({
         .activeOffsetX([-8, 8])
         .activeOffsetY([-8, 8])
         .onBegin((e) => {
-          // Angle tracking is unstable near the center, so a drag starting there
+          // Angle tracking is unstable near the centre, so a drag starting there
           // is ignored outright rather than amplified into a spin.
           tracking.value =
             touchRadius(e.x, e.y, layout.centerX, layout.centerY) >= MIN_DRAG_RADIUS ? 1 : 0
@@ -244,36 +356,30 @@ export default function KeyArc({
     ],
   )
 
-  const dimPositionKey = positionKey('dim', 0)
-  const dimLabels = arcPositionLabels(tonicKey, 'dim', 0, annotation.altered.get(dimPositionKey))
-  // The vii° does not travel with the wheel — its root is five fifths away, not
-  // adjacent — so rather than leave one stationary bubble in a turning field it
-  // fades out for the duration of the drag and returns with the new key.
-  const dimStyle = useAnimatedStyle(() => {
-    const detents = Math.round(rotation.value / DETENT_DEG)
-    const drift = Math.abs(rotation.value - detents * DETENT_DEG)
-    return { opacity: Math.max(0, 1 - drift / DIM_FADE_DEG) }
-  })
-
   const bubbleState = (key: string): ArcBubbleState =>
     annotation.active === key ? 'active' : annotation.ringed.has(key) ? 'ringed' : 'idle'
 
-  const renderRing = (ring: 'major' | 'minor') =>
-    WHEEL_SLOTS.map((slot) => {
+  const renderRing = (ring: ArcRing) => {
+    const isMajor = ring === 'major'
+    return WHEEL_SLOTS.map((slot) => {
       const offset = slotOffset(slot, tonicSlot)
       const key = positionKey(ring, offset)
       const altered = annotation.altered.get(key)
       const { name, number } = arcPositionLabels(tonicKey, ring, offset, altered)
-      const isEdge = ring === 'major' && Math.abs(offset) === variant.fadedFrom
-      const reachable = Math.abs(offset) <= (ring === 'major' ? variant.fadedFrom : 1)
+      const isEdge = isMajor && Math.abs(offset) === variant.fadedFrom
+      // Reachability follows each ring's own visible span: the inner ring runs
+      // one further right than the outer, because that is where the vii° lives.
+      const reachable = isMajor
+        ? Math.abs(offset) <= variant.fadedFrom
+        : offset >= -1 && offset <= 2
       return (
         <ArcBubble
           key={`${ring}-${slot}`}
           ring={ring}
           baseAngle={slotOffset(slot, baseSlot) * variant.majorStep}
-          stepRatio={ring === 'major' ? 1 : variant.minorStep / variant.majorStep}
-          radius={ring === 'major' ? variant.outerRadius : variant.innerRadius}
-          size={ring === 'major' ? variant.majorSize : variant.minorSize}
+          stepRatio={(isMajor ? variant.majorStep : variant.minorStep) / variant.majorStep}
+          radius={isMajor ? variant.outerRadius : variant.innerRadius}
+          size={isMajor ? variant.majorSize : variant.minorSize}
           centerX={layout.centerX}
           centerY={layout.centerY}
           rotation={rotation}
@@ -287,43 +393,49 @@ export default function KeyArc({
         />
       )
     })
+  }
 
   return (
     <GestureDetector gesture={pan}>
       <View
+        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         style={{
-          width: layout.width,
+          width: '100%',
           height: layout.height,
-          alignSelf: 'center',
-          // Anything the drag carries past the edge is clipped rather than
-          // spilling into the rows above.
+          // The strokes are wider than the frame; this is what crops them into
+          // arcs rather than letting them curl back as full circles.
           overflow: 'hidden',
         }}
       >
-        {renderRing('major')}
-        {renderRing('minor')}
+        {width === 0 ? null : (
+          <>
+            <RingStroke
+              radius={variant.outerRadius}
+              layout={layout}
+              stroke={variant.ringStroke}
+              color={t.colors.border}
+            />
+            <RingStroke
+              radius={variant.innerRadius}
+              layout={layout}
+              stroke={variant.ringStroke}
+              color={t.colors.border}
+            />
+            {TICK_SLOTS.map((index) => (
+              <DetentTick
+                key={`tick-${index}`}
+                index={index}
+                variant={variant}
+                layout={layout}
+                rotation={rotation}
+                color={t.colors.muted}
+              />
+            ))}
 
-        <Animated.View
-          pointerEvents="box-none"
-          style={[{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }, dimStyle]}
-        >
-          <ArcBubble
-            ring="dim"
-            baseAngle={0}
-            stepRatio={0}
-            radius={variant.dimRadius}
-            size={variant.dimSize}
-            centerX={layout.centerX}
-            centerY={layout.centerY}
-            rotation={rotation}
-            name={dimLabels.name}
-            number={dimLabels.number}
-            state={bubbleState(dimPositionKey)}
-            altered={annotation.altered.has(dimPositionKey)}
-            reachable
-            accessibilityLabel={labels.position(dimLabels.name, dimLabels.number)}
-          />
-        </Animated.View>
+            {renderRing('major')}
+            {renderRing('minor')}
+          </>
+        )}
       </View>
     </GestureDetector>
   )
