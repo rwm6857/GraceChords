@@ -59,6 +59,12 @@ export type ArcVariant = {
   ringStroke: number
   /** Radial length of a detent tick. */
   tickLength: number
+  /**
+   * Diameter of the halo behind the tonic. It marks the top of the dial rather
+   * than a bubble, so it does NOT travel with the wheel — bubbles slide through
+   * it, which is what makes it read as an index rather than as a selection.
+   */
+  tonicHaloSize: number
   /** Angular half-span over which ticks are visible, and their fade width. */
   tickSpan: number
   tickFade: number
@@ -83,6 +89,8 @@ export const PHONE_ARC: ArcVariant = {
   centerDrop: 20,
   ringStroke: 1,
   tickLength: 6,
+  // Clears the relative minor below it by 2pt and IV/V by 26pt.
+  tonicHaloSize: 68,
   tickSpan: 78,
   tickFade: 12,
 }

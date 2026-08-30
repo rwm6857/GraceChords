@@ -10,7 +10,7 @@ import type { Progression, ProgressionSet } from './types'
 // inversion is written `5/7` — see the note in render.ts about the shorthand the
 // parser deliberately refuses.
 
-/** `'6 – 5/7 – 1 /// 6 – 5/7 – 1'` → phrases of parsed chords. */
+/** `'6 – 5/7 – 1 /// 2 – 4 – 5'` → phrases of parsed chords. */
 function phrases(source: string) {
   return source
     .split('///')
@@ -34,10 +34,14 @@ function progression(
 }
 
 /**
- * General — sixteen diatonic progressions weighted toward congregational
+ * General — nineteen diatonic progressions weighted toward congregational
  * worship rather than generic pop. The order is roughly "most reached for
- * first"; the eight-chord Canon entry is last of the four-bar shapes because it
- * is a whole form rather than a loop.
+ * first"; the whole-form entries (the Canon eight, the descending bass, the
+ * two-phrase lift) come last because they are forms rather than loops.
+ *
+ * Inversions are diatonic too — a slash chord here is a chord of the key with a
+ * different chord tone underneath — so "Descending bass" belongs in this set
+ * even though every other General entry is in root position.
  */
 export const GENERAL_PROGRESSIONS: Progression[] = [
   progression('general', 'g1564', '1 – 5 – 6 – 4'),
@@ -46,7 +50,7 @@ export const GENERAL_PROGRESSIONS: Progression[] = [
   progression('general', 'g154', '1 – 5 – 4'),
   progression('general', 'g4156', '4 – 1 – 5 – 6'),
   progression('general', 'g1645', '1 – 6 – 4 – 5'),
-  progression('general', 'g1465', '1 – 4 – 6 – 5'),
+  progression('general', 'gCcm', '1 – 4 – 6 – 5'),
   progression('general', 'g251', '2 – 5 – 1'),
   progression('general', 'g1415', '1 – 4 – 1 – 5'),
   progression('general', 'g1345', '1 – 3 – 4 – 5'),
@@ -56,6 +60,16 @@ export const GENERAL_PROGRESSIONS: Progression[] = [
   progression('general', 'g6451', '6 – 4 – 5 – 1'),
   progression('general', 'g1454', '1 – 4 – 5 – 4'),
   progression('general', 'g1625', '1 – 6 – 2 – 5'),
+  // Starts on the least stable diatonic triad, so it never commits to the tonic
+  // — the reason it turns up in intros and bridges that need to float.
+  progression('general', 'g3645', '3 – 6 – 4 – 5'),
+  // The worship-ballad stepdown. The only General entry with inversions, and the
+  // clearest demonstration of what a slash chord is for: the bass walks down the
+  // scale under chords that mostly stay put.
+  progression('general', 'gDescending', '1 – 5/7 – 6 – 1/5 – 4 – 1/3 – 2 – 5'),
+  // A loop and the cadence that gets you out of it — the shape of a vamp
+  // resolving into a chorus, which no single-phrase entry can show.
+  progression('general', 'gLoopExit', '1 – 5 – 6 – 4 /// 4 – 5 – 1'),
 ]
 
 /**
@@ -74,7 +88,7 @@ export const PRAYER_PROGRESSIONS: Progression[] = [
   progression('prayer', 'pClimax', '1 – 4/6 – 5 – 2 – 4 – 1/3 – 2 – 5', 'keyRef.notes.pClimax'),
   progression('prayer', 'pRepentance', '6 – 1/5 – 4 – 1/3 – 6 – 1/5 – 4 – 5'),
   progression('prayer', 'pRepentanceAlt', '6 – 1/5 – 4 – 1/3 – 2 – 1/3 – 4 – 5'),
-  progression('prayer', 'pFull', '6 – 5/7 – 1 /// 6 – 5/7 – 1'),
+  progression('prayer', 'pFull', '6 – 5/7 – 1 /// 2 – 4 – 5'),
   progression('prayer', 'pFullAlt', '6 – 5/7 – 1 /// 2 – 5'),
   progression('prayer', 'pBuildUp', '4 – 5 – 6 – 4 – 5 – 6 – 2 – 5'),
   progression(
