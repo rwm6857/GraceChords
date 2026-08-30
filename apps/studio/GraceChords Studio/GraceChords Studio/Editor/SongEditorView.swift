@@ -9,12 +9,11 @@
 //  editor-specific renderer: a preview that could disagree with the Viewer would be
 //  worse than no preview.
 //
-//  The editor itself is a plain monospaced `TextEditor`. Syntax highlighting for
-//  [chords] and {directives} is NOT here — SwiftUI's TextEditor cannot style
-//  ranges, so it would mean dropping to NSTextView via NSViewRepresentable with a
-//  custom NSTextStorage, which brings its own problems (attribute runs fighting the
-//  undo manager, IME marked-text ranges, re-highlight cost on a long song) and is
-//  orthogonal to whether saving and publishing work. See apps/studio/README.md.
+//  The editor itself is `ChordProTextView` — an NSTextView behind an
+//  NSViewRepresentable, which is what it takes to colour [chords] and {directives},
+//  since SwiftUI's `TextEditor` cannot style ranges. That file owns the plumbing and
+//  `ChordProHighlighter` owns what the colours mean; neither is this view's business
+//  beyond handing them the body and the caret.
 //
 //  Toolbar verbs are icons with a transient outcome badge rather than words plus a
 //  status chip. Save and Publish each report how they went on themselves — green
@@ -480,24 +479,25 @@ struct SongEditorView: View {
                 macroSource: { model.selectedText.isEmpty ? model.form.chordproContent : model.selectedText }
             )
 
-            TextEditor(text: $model.form.chordproContent, selection: $model.selection)
-                .font(.system(size: 12.5, weight: .regular, design: .monospaced))
-                .lineSpacing(2)
-                // Spelling and autocorrect fight ChordPro constantly: {sov} and
-                // [Bbmaj7] are not words, and macOS's automatic substitutions would
-                // turn a straight quote in a lyric into a curly one that the parser
-                // then carries into the chart.
-                .disableAutocorrection(true)
-                .scrollContentBackground(.hidden)
-                .background(GCColor.bg)
-                // `maxHeight: .infinity` is not cosmetic. A TextEditor's IDEAL height
-                // is its content height, and with only a minimum declared that ideal
-                // propagates up through the pane and the split view to the window,
-                // which then grows to fit the whole song instead of letting the editor
-                // scroll — a 60-line import stretched the window taller than the
-                // screen. Declaring the editor flexible makes the proposed height come
-                // from the window instead, which is what makes it scroll.
-                .frame(minHeight: 200, maxHeight: .infinity)
+            // Font size and line spacing are passed rather than applied as
+            // modifiers: they are the highlighter's metrics too (it builds the bold
+            // and semibold faces from that size), so there is one number, not a
+            // SwiftUI one and an AppKit one that can drift apart.
+            ChordProTextView(
+                text: $model.form.chordproContent,
+                selection: $model.selection,
+                documentID: model.instanceID,
+                fontSize: 12.5,
+                lineSpacing: 2
+            )
+            // `maxHeight: .infinity` is not cosmetic. It was load-bearing for the
+            // TextEditor this replaced, whose ideal height is its content height —
+            // with only a minimum declared, that ideal propagated up through the pane
+            // and the split view to the window, and a 60-line import stretched the
+            // window taller than the screen. An NSScrollView has no such ideal, so it
+            // no longer averts that; it is kept because the editor should still take
+            // the height the window offers rather than the 200 it needs.
+            .frame(minHeight: 200, maxHeight: .infinity)
         }
         .frame(maxHeight: .infinity)
     }
