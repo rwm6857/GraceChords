@@ -90,17 +90,24 @@ those decisions.
   (auth flows, validation, sprite persistence). Native modules are injected
   deps, never `vi.mock`ed.
 
-## Metro monorepo resolution (load-bearing)
+## Metro monorepo resolution
 
 `@gracechords/core` is consumed as **TypeScript source with no build step** (its
-`main` is `src/index.ts`). `metro.config.js` therefore:
+`main` is `src/index.ts`), so Metro must watch the workspace package dirs for
+edits to hot-reload. `expo/metro-config` already derives that from the root
+`workspaces` globs, so `metro.config.js` carries **no overrides** — it is
+`getDefaultConfig(__dirname)` and should stay that way. Metro transpiles core's
+`.ts` through `babel-preset-expo`; do **not** add a build step to core to make
+mobile work.
 
-1. adds the repo root to `watchFolders`, and
-2. lists both `apps/mobile/node_modules` and the hoisted root `node_modules` in
-   `resolver.nodeModulesPaths`.
-
-Metro transpiles core's `.ts` through `babel-preset-expo`. Do **not** add a build
-step to core to make mobile work — fix Metro config instead.
+React is **not** deduplicated by anything in `metro.config.js`. npm hoists
+`react@18.2.0` to the root for `apps/web` while mobile keeps `19.2.0` nested,
+but Expo CLI's sticky resolution pins `react`, `react-dom`, `react-native` and
+`@react-navigation/{core,native}` to the app's copy by module *name* regardless
+of the importer — see `KNOWN_STICKY_DEPENDENCIES` in `@expo/cli`'s
+`createExpoAutolinkingResolver`. Both `expo export` bundles contain exactly one
+react. expo-doctor's duplicate-dependency warning describes the install tree,
+not the bundle.
 
 ## Supabase
 
