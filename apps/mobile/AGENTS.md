@@ -89,6 +89,35 @@ those decisions.
 - `npm run test` — vitest (node env) over the RN-free logic in `src/lib`
   (auth flows, validation, sprite persistence). Native modules are injected
   deps, never `vi.mock`ed.
+- `npm run release:ios` / `release:android` — bump the marketing version, then
+  `eas build --profile production --auto-submit`. **This is the command that
+  ships a release.**
+- `npm run build:ios` — production build with **no** version bump, for
+  iterating within a train that is not yet released (TestFlight betas).
+- `npm run version:bump` — the bump alone. `--minor` / `--major` / `--dry-run`.
+
+## App versioning (two independent numbers)
+
+`eas.json` sets `cli.appVersionSource: "remote"`, so the **build number**
+(`CFBundleVersion` / `versionCode`) lives on EAS servers and `autoIncrement:
+true` on the `production` profile increments it per build. It is never read
+from `app.json` — do **not** re-add `ios.buildNumber` there; EAS ignores it,
+warns, and a hardcoded value only makes it look like incrementing is broken.
+
+The **marketing version** (`expo.version` → `CFBundleShortVersionString`) is
+*not* covered by that and never auto-increments: eas-cli throws
+`{"autoIncrement": "version"} is not supported when app version source is set
+to remote`. `scripts/bump-version.mjs` fills the gap, which is why releases go
+through `npm run release:ios` rather than a bare `eas build`. It rewrites the
+single version line with a targeted regex — app.json's hand-tuned compact
+arrays (`intentFilters`, `associatedDomains`) must not be reflowed by a
+`JSON.stringify` round-trip.
+
+Apple closes a version train once that version is **released**; every later
+build needs a strictly higher `CFBundleShortVersionString`, or App Store Connect
+rejects it with `90186 Invalid Pre-Release Train` and `90062`. Builds *within*
+an unreleased train need only a new build number, so bump the version per
+release, not per build.
 
 ## Metro monorepo resolution
 

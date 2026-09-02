@@ -1,6 +1,6 @@
 {
   "name": "@gracechords/mobile",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -8,6 +8,10 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "prebuild": "expo prebuild",
+    "version:bump": "node scripts/bump-version.mjs",
+    "build:ios": "eas build --platform ios --profile production",
+    "release:ios": "node scripts/bump-version.mjs && eas build --platform ios --profile production --auto-submit",
+    "release:android": "node scripts/bump-version.mjs && eas build --platform android --profile production --auto-submit",
     "export:ios": "expo export --platform ios",
     "typecheck": "tsc --noEmit",
     "i18n:check": "node scripts/i18n-check.mjs",
