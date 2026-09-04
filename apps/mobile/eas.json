@@ -22,6 +22,9 @@
       "ios": {
         "resourceClass": "m-medium",
         "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
@@ -31,6 +34,9 @@
       },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
       }
     }
   },
@@ -39,6 +45,11 @@
       "ios": {
         "ascAppId": "6787127446",
         "appleTeamId": "J7Y8NYZ48Q"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }

@@ -1,6 +1,6 @@
 # @gracechords/mobile
 
-The GraceChords native iOS app — Expo (React Native) — consuming the shared
+The GraceChords native iOS + Android app — Expo (React Native) — consuming the shared
 `@gracechords/core` package and Supabase auth on-device.
 
 This is one workspace in the GraceChords monorepo. See the
@@ -41,15 +41,16 @@ A few things are still stubs or later stages — see [Roadmap](#roadmap).
 
 - **Stack:** Expo SDK 55, Expo Router v7, TypeScript, React 19.2 / React Native 0.83.
 - **Native dirs:** `ios/` and `android/` use Continuous Native Generation — they are gitignored and regenerated via `npx expo prebuild`. Never commit them; treat `app.json` (+ config plugins) as the source of truth for native config.
-- **Theme:** the typed token map from `@gracechords/tokens/native` (iOS light/dark palette), consumed via `useTheme()`. Icons are **SF Symbols only**.
+- **Theme:** the typed token map from `@gracechords/tokens/native` (light/dark palette), consumed via `useTheme()`. Icons go through `SymbolIcon` — **SF Symbols on iOS, Material Symbols on Android**; never hand-drawn SVGs.
 - **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export**, **Telegram** push, and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
 
-## Run it (macOS + Xcode required for the simulator)
+## Run it (macOS + Xcode required for the iOS simulator)
 
 ```bash
 cd apps/mobile
 cp .env.example .env        # fill in the public Supabase URL + anon key (and more)
 npx expo run:ios            # prebuild + build + launch on the iOS simulator
+npx expo run:android        # ...or on an attached Android device / emulator
 ```
 
 Without a Mac you can still verify the JS bundle (resolution + transpile of the
@@ -57,6 +58,7 @@ TS core) and the RN-free logic on any OS:
 
 ```bash
 npm run export:ios          # expo export --platform ios (Metro only, no Xcode)
+npm run export:android      # same for Android
 npm run typecheck           # tsc --noEmit
 npm run test                # vitest over src/lib logic (auth, defaults, profile)
 npm run start               # Metro dev server
@@ -86,9 +88,6 @@ Not yet in the build, in rough priority order:
   translations (Daily Word translation downloads already ship).
 - **Password reset / email-confirmation** screens (login "Forgot?" is an alert).
 - **Tablet** master-detail layout.
-- **EAS Build / TestFlight** distribution.
-- **Android** — auth code is cross-platform-safe, but Android OAuth config
-  (SHA-1, `google-services`) is not set up.
 - **GraceTracks** practice-stem integration.
 
 See [`AGENTS.md`](./AGENTS.md) for the conventions that keep new screens

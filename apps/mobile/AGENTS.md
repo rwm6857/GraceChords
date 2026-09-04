@@ -83,17 +83,25 @@ those decisions.
   and Mac on the same Wi-Fi (no Guest SSID / VPN) so the launcher can reach
   `http://<mac-ip>:8081`.
 - `npm run start` — Metro dev server.
-- `npm run export:ios` — `expo export --platform ios`; a Metro-only bundle that
-  works on any OS. Use it to verify resolution/transpile without a simulator.
+- `npx expo run:android` — prebuild + build + launch on an attached Android
+  device or emulator.
+- `npm run export:ios` / `export:android` — `expo export --platform <os>`; a
+  Metro-only bundle that works on any OS. Use it to verify resolution/transpile
+  without a simulator. Run **both** after touching anything shared.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run test` — vitest (node env) over the RN-free logic in `src/lib`
   (auth flows, validation, sprite persistence). Native modules are injected
   deps, never `vi.mock`ed.
 - `npm run release:ios` / `release:android` — bump the marketing version, then
   `eas build --profile production --auto-submit`. **This is the command that
-  ships a release.**
-- `npm run build:ios` — production build with **no** version bump, for
-  iterating within a train that is not yet released (TestFlight betas).
+  ships a release.** Android submission additionally needs a Google Play service
+  account JSON at `apps/mobile/play-service-account.json` (gitignored; path set
+  in `eas.json` → `submit.production.android`), and the **first** upload of a new
+  app must be made by hand in the Play Console — `eas submit` cannot create the
+  listing.
+- `npm run build:ios` / `build:android` — production build with **no** version
+  bump, for iterating within a train that is not yet released (TestFlight betas,
+  Play internal testing).
 - `npm run version:bump` — the bump alone. `--minor` / `--major` / `--dry-run`.
 
 ## App versioning (two independent numbers)
@@ -798,9 +806,12 @@ The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
 **"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
-link is an informational alert only), tablet master-detail, EAS Build /
-TestFlight, Android (auth code is cross-platform-safe, but native Google
-sign-in needs an Android-type OAuth client — package + signing SHA-1 — in the
-Google Cloud project; without it the picker shows then fails with
-DEVELOPER_ERROR → `errors.googleConfigError`), GraceTracks, and migrating web's
-`features/readings` onto core's `bible` module.
+link is an informational alert only), tablet master-detail, GraceTracks, and
+migrating web's `features/readings` onto core's `bible` module.
+
+**No longer out of scope:** EAS Build ships iOS today (`eas.json` carries a live
+`submit.production.ios`), and **Android is a real target** — see the MD3 section
+at the top, the Android config in `app.json`, and the Android release commands
+above. The one Android prerequisite that is still on you is the **Android-type
+OAuth client** (package + signing SHA-1); that requirement is documented in full
+in the auth section, not repeated here.
