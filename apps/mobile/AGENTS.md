@@ -64,8 +64,11 @@ those decisions.
   `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
   offline downloads), `@react-native-community/datetimepicker` (the platform's own
   time picker behind the Daily Word reminder — pinned **exactly** at the
-  SDK-bundled version, `8.6.0`), `expo-build-properties` (`useFrameworks: static`,
-  required by google-signin), and `expo-dev-client` (dev launcher — see the
+  SDK-bundled version, `8.6.0`), `expo-image` (the **only** component allowed to
+  render the sprite and mark assets — RN's own `Image` decodes WebP on Android
+  only, see `assets/README.md`), `expo-build-properties` (`useFrameworks: static`
+  for google-signin on iOS, plus R8 minify + resource shrinking on Android — see
+  the Android release build section below), and `expo-dev-client` (dev launcher — see the
   device note under Commands). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
   version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
@@ -103,6 +106,40 @@ those decisions.
   bump, for iterating within a train that is not yet released (TestFlight betas,
   Play internal testing).
 - `npm run version:bump` — the bump alone. `--minor` / `--major` / `--dry-run`.
+
+## Android release build (R8)
+
+`app.json` → `expo-build-properties` → `android` turns on
+`enableMinifyInReleaseBuilds` and `enableShrinkResourcesInReleaseBuilds`.
+Google Play requires **≥25% DEX optimization/shrinking/obfuscation from
+1 Feb 2027**, enforced once uncompressed DEX reaches 10MB, and the Expo
+prebuild template defaults `minifyEnabled` to **false** — so without this block
+the app scores 0% and loses Store visibility and publishing.
+
+- **Do not add keep rules speculatively.** `expo`, `expo-modules-core`,
+  `react-native-reanimated`, `react-native-worklets` and
+  `react-native-audio-api` all declare `consumerProguardFiles`, so their rules
+  are applied automatically; `expo-modules-core`'s ruleset already covers the
+  Kotlin reflection that registers Expo modules. `@supabase/supabase-js` is
+  plain JavaScript running in Hermes and contributes no DEX at all.
+  `modules/differentiate-without-color` is `"platforms": ["apple"]` and never
+  links on Android. Add a rule only when a **release** build actually breaks,
+  and say in a comment what broke.
+- The only rules set by default keep `SourceFile`/`LineNumberTable`, so a
+  release crash can be retraced instead of guessed at.
+- R8 breakage is runtime-only and invisible in debug. Smoke-test a production
+  build across: both native sign-ins and email/password, the viewer + transpose,
+  setlist autosave, PDF/PNG export and the share sheet, Telegram push, the Daily
+  Word reader and an offline download, reminder notifications, tuner, metronome,
+  pitch pipe, and deep links.
+- Measure the metric itself on a real bundle:
+  `unzip -l app.aab | grep '\.dex$' | awk '{sum+=$1} END {print sum}'` for the
+  size gate, and `unzip -p app.aab BUNDLE-METADATA/com.android.tools/r8.json`
+  for the percentages Play reads.
+- **Toolchain caveat:** `plugins/withFoojayFix.js` sets
+  `org.gradle.java.installations.auto-download=false`, so Gradle will not fetch
+  a JDK — R8 runs on the toolchain Expo provisions. A future AGP bump that wants
+  a newer JDK will fail there first.
 
 ## App versioning (two independent numbers)
 
