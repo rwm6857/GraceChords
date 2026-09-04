@@ -10,6 +10,11 @@
 // 2. 16 KB page sizes (required for updates from 1 Feb 2027). Every bundled
 //    .so must have its PT_LOAD segments aligned to at least 16384, or the app
 //    will not load on 16 KB-page devices.
+// 3. Crash readability. An app bundle carries its own deobfuscation mapping
+//    (AGP embeds it under BUNDLE-METADATA/com.android.tools.build.obfuscation)
+//    and, when debugSymbolLevel is set, native debug symbols. Play picks both up
+//    on upload; this only checks they are actually there, so a missing one is
+//    caught before release rather than as a Play Console warning after.
 //
 // Reads the archive with `unzip` and parses ELF program headers directly, so
 // there is nothing to install and no NDK required.
@@ -134,6 +139,35 @@ if (!sos.length) {
     }
   } finally {
     rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+// ── 3. Crash readability ────────────────────────────────────────────────────
+console.log('\nCrash readability')
+const isBundle = artifact.toLowerCase().endsWith('.aab')
+const metadata = entries.filter((e) => e.name.startsWith('BUNDLE-METADATA/'))
+// Match loosely — the exact metadata subpaths have moved between AGP versions,
+// and a hard-coded path would report a false failure after a toolchain bump.
+const has = (...needles) =>
+  metadata.some((e) => needles.some((n) => e.name.toLowerCase().includes(n)))
+
+if (!isBundle) {
+  note('APK, not an app bundle — mapping and native symbols upload separately')
+} else {
+  if (!r8) {
+    note('R8 did not run, so there is nothing to deobfuscate')
+  } else if (has('obfuscation', '.map')) {
+    pass('deobfuscation mapping embedded (Play extracts it on upload — never upload one by hand)')
+  } else {
+    fail('R8 ran but no mapping is embedded — crash traces will stay obfuscated')
+  }
+
+  if (has('debugsymbol', 'native-debug-symbols')) {
+    pass('native debug symbols embedded')
+  } else if (sos.length) {
+    fail("no native debug symbols — set debugSymbolLevel (see plugins/withNativeDebugSymbols.js)")
+  } else {
+    note('no native libraries, so no symbols needed')
   }
 }
 

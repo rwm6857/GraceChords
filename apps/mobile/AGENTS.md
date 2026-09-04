@@ -137,6 +137,20 @@ the app scores 0% and loses Store visibility and publishing.
   against the 10MB gate, the three R8 percentages Play reads out of
   `BUNDLE-METADATA/com.android.tools/r8.json`, **and** 16 KB page alignment (see
   below); it exits non-zero on a real failure.
+- **Deobfuscation is automatic — do not upload a mapping by hand.** For an app
+  bundle (which the production profile builds), AGP embeds the mapping at
+  `BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map` and Play
+  extracts it on upload; Play **rejects** a manual upload when one is already
+  embedded. Only APK builds need a hand-uploaded `mapping.txt`. Note `r8.json`
+  is a *different* file — the optimization metrics for the quality gate above,
+  not a mapping. `-keepattributes SourceFile,LineNumberTable` (set in
+  `app.json`) is what keeps line numbers in the retraced trace.
+- **Native symbols are not automatic.** Nothing in the Expo template sets
+  `debugSymbolLevel` and `expo-build-properties` exposes no option for it, so
+  `plugins/withNativeDebugSymbols.js` sets `SYMBOL_TABLE` — without it Play warns
+  "no debug symbols for native code" and Hermes/Reanimated/audio-api crashes
+  symbolicate to raw addresses. Symbols ship only in the uploaded artifact; Play
+  strips them from the user download.
 - **16 KB page sizes** are required for updates from **1 Feb 2027**. Expo SDK 55
   / RN 0.83 / current AGP produce aligned output, and the one third-party native
   dependency worth doubting is already clear —

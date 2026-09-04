@@ -89,6 +89,7 @@
     "plugins": [
       "./plugins/withFoojayFix",
       "./plugins/withBaselineProfile",
+      "./plugins/withNativeDebugSymbols",
       "expo-router",
       [
         "expo-splash-screen",
