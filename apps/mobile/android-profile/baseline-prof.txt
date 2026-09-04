@@ -1,0 +1,6 @@
+# Android Baseline Profile — NOT YET RECORDED.
+#
+# withBaselineProfile.js ignores a comment-only file, so this is a no-op until
+# a real profile is generated on a device. See README.md in this directory for
+# the procedure, and record it AFTER R8 is verified — the rules reference
+# post-obfuscation symbols.

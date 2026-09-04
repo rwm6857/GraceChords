@@ -132,10 +132,20 @@ the app scores 0% and loses Store visibility and publishing.
   setlist autosave, PDF/PNG export and the share sheet, Telegram push, the Daily
   Word reader and an offline download, reminder notifications, tuner, metronome,
   pitch pipe, and deep links.
-- Measure the metric itself on a real bundle:
-  `unzip -l app.aab | grep '\.dex$' | awk '{sum+=$1} END {print sum}'` for the
-  size gate, and `unzip -p app.aab BUNDLE-METADATA/com.android.tools/r8.json`
-  for the percentages Play reads.
+- Measure it on the real artifact before uploading:
+  `npm run check:aab -- path/to/app.aab`. That reports uncompressed DEX size
+  against the 10MB gate, the three R8 percentages Play reads out of
+  `BUNDLE-METADATA/com.android.tools/r8.json`, **and** 16 KB page alignment (see
+  below); it exits non-zero on a real failure.
+- **16 KB page sizes** are required for updates from **1 Feb 2027**. Expo SDK 55
+  / RN 0.83 / current AGP produce aligned output, and the one third-party native
+  dependency worth doubting is already clear —
+  `react-native-audio-api/android/build.gradle` sets `useLegacyPackaging = false`
+  explicitly for this. Nothing to configure; `npm run check:aab` is the proof.
+- **Baseline Profile:** `plugins/withBaselineProfile.js` ships
+  `android-profile/baseline-prof.txt` into the native project on every prebuild.
+  It is empty until recorded on a device — see `android-profile/README.md`, and
+  record it **after** R8, since the rules name post-obfuscation symbols.
 - **Toolchain caveat:** `plugins/withFoojayFix.js` sets
   `org.gradle.java.installations.auto-download=false`, so Gradle will not fetch
   a JDK — R8 runs on the toolchain Expo provisions. A future AGP bump that wants

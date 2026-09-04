@@ -88,6 +88,7 @@
     },
     "plugins": [
       "./plugins/withFoojayFix",
+      "./plugins/withBaselineProfile",
       "expo-router",
       [
         "expo-splash-screen",
