@@ -115,9 +115,34 @@ function withDownloadedTranslations(result: TranslationsResult): TranslationsRes
 // is immutable, so within a day the reader never re-fetches. The cache is
 // scoped to a calendar day: the first open on a new day clears it (see
 // prefetchToday), so "today's" reading is naturally repulled.
+//
+// The day scope alone is not a bound: swiping through the reader accumulates
+// every chapter visited, all day, and a chapter is the largest single thing
+// this app holds in memory. Capped least-recently-used, in the same shape as
+// the cap in src/lib/recents.ts. A day's actual reading is a handful of
+// chapters, so the cap only bites on free browsing — where re-fetching an
+// evicted chapter is exactly what the reader already does on a cold open.
+const MAX_CACHED_CHAPTERS = 40
 const chapterCache = new Map<string, ChapterData>()
 const inFlight = new Map<string, Promise<ChapterData>>()
 let cacheDay = ''
+
+/** Read through the cache, refreshing recency so the cap evicts the coldest. */
+function readChapterCache(key: string): ChapterData | undefined {
+  const hit = chapterCache.get(key)
+  if (!hit) return undefined
+  chapterCache.delete(key)
+  chapterCache.set(key, hit)
+  return hit
+}
+
+function writeChapterCache(key: string, data: ChapterData): void {
+  chapterCache.delete(key)
+  chapterCache.set(key, data)
+  for (const stale of [...chapterCache.keys()].slice(0, Math.max(0, chapterCache.size - MAX_CACHED_CHAPTERS))) {
+    chapterCache.delete(stale)
+  }
+}
 
 function chapterKey(translationId: string, bookNumber: number, chapter: number) {
   return `${translationId}:${bookNumber}:${chapter}`
@@ -129,7 +154,7 @@ export function getCachedPassage(
   bookNumber: number,
   chapter: number
 ): ChapterData | undefined {
-  return chapterCache.get(chapterKey(translationId, bookNumber, chapter))
+  return readChapterCache(chapterKey(translationId, bookNumber, chapter))
 }
 
 export type PassageQuery = {
@@ -189,7 +214,7 @@ const fetchRemoteChapter = ({ passage, translation }: PassageQuery): Promise<Cha
  */
 export function getPassage({ passage, translation }: PassageQuery): Promise<ChapterData> {
   const key = chapterKey(translation.id, passage.bookNumber, passage.chapter)
-  const cached = chapterCache.get(key)
+  const cached = readChapterCache(key)
   if (cached) return Promise.resolve(cached)
   const existing = inFlight.get(key)
   if (existing) return existing
@@ -199,7 +224,7 @@ export function getPassage({ passage, translation }: PassageQuery): Promise<Chap
     { readLocal: readLocalChapter, fetchRemote: fetchRemoteChapter }
   )
     .then((data) => {
-      chapterCache.set(key, data)
+      writeChapterCache(key, data)
       inFlight.delete(key)
       return data
     })

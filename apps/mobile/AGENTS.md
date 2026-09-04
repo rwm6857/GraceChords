@@ -64,8 +64,11 @@ those decisions.
   `expo-apple-authentication` (native auth), `expo-network` (Wi-Fi-only gate for
   offline downloads), `@react-native-community/datetimepicker` (the platform's own
   time picker behind the Daily Word reminder — pinned **exactly** at the
-  SDK-bundled version, `8.6.0`), `expo-build-properties` (`useFrameworks: static`,
-  required by google-signin), and `expo-dev-client` (dev launcher — see the
+  SDK-bundled version, `8.6.0`), `expo-image` (the **only** component allowed to
+  render the sprite and mark assets — RN's own `Image` decodes WebP on Android
+  only, see `assets/README.md`), `expo-build-properties` (`useFrameworks: static`
+  for google-signin on iOS, plus R8 minify + resource shrinking on Android — see
+  the Android release build section below), and `expo-dev-client` (dev launcher — see the
   device note under Commands). Add Expo deps with
   `npx expo install <pkg>`; if the Expo API is unreachable, pin the SDK-correct
   version from `node_modules/expo/bundledNativeModules.json` and `npm install`.
@@ -83,18 +86,84 @@ those decisions.
   and Mac on the same Wi-Fi (no Guest SSID / VPN) so the launcher can reach
   `http://<mac-ip>:8081`.
 - `npm run start` — Metro dev server.
-- `npm run export:ios` — `expo export --platform ios`; a Metro-only bundle that
-  works on any OS. Use it to verify resolution/transpile without a simulator.
+- `npx expo run:android` — prebuild + build + launch on an attached Android
+  device or emulator.
+- `npm run export:ios` / `export:android` — `expo export --platform <os>`; a
+  Metro-only bundle that works on any OS. Use it to verify resolution/transpile
+  without a simulator. Run **both** after touching anything shared.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run test` — vitest (node env) over the RN-free logic in `src/lib`
   (auth flows, validation, sprite persistence). Native modules are injected
   deps, never `vi.mock`ed.
 - `npm run release:ios` / `release:android` — bump the marketing version, then
   `eas build --profile production --auto-submit`. **This is the command that
-  ships a release.**
-- `npm run build:ios` — production build with **no** version bump, for
-  iterating within a train that is not yet released (TestFlight betas).
+  ships a release.** Android submission additionally needs a Google Play service
+  account JSON at `apps/mobile/play-service-account.json` (gitignored; path set
+  in `eas.json` → `submit.production.android`), and the **first** upload of a new
+  app must be made by hand in the Play Console — `eas submit` cannot create the
+  listing.
+- `npm run build:ios` / `build:android` — production build with **no** version
+  bump, for iterating within a train that is not yet released (TestFlight betas,
+  Play internal testing).
 - `npm run version:bump` — the bump alone. `--minor` / `--major` / `--dry-run`.
+
+## Android release build (R8)
+
+`app.json` → `expo-build-properties` → `android` turns on
+`enableMinifyInReleaseBuilds` and `enableShrinkResourcesInReleaseBuilds`.
+Google Play requires **≥25% DEX optimization/shrinking/obfuscation from
+1 Feb 2027**, enforced once uncompressed DEX reaches 10MB, and the Expo
+prebuild template defaults `minifyEnabled` to **false** — so without this block
+the app scores 0% and loses Store visibility and publishing.
+
+- **Do not add keep rules speculatively.** `expo`, `expo-modules-core`,
+  `react-native-reanimated`, `react-native-worklets` and
+  `react-native-audio-api` all declare `consumerProguardFiles`, so their rules
+  are applied automatically; `expo-modules-core`'s ruleset already covers the
+  Kotlin reflection that registers Expo modules. `@supabase/supabase-js` is
+  plain JavaScript running in Hermes and contributes no DEX at all.
+  `modules/differentiate-without-color` is `"platforms": ["apple"]` and never
+  links on Android. Add a rule only when a **release** build actually breaks,
+  and say in a comment what broke.
+- The only rules set by default keep `SourceFile`/`LineNumberTable`, so a
+  release crash can be retraced instead of guessed at.
+- R8 breakage is runtime-only and invisible in debug. Smoke-test a production
+  build across: both native sign-ins and email/password, the viewer + transpose,
+  setlist autosave, PDF/PNG export and the share sheet, Telegram push, the Daily
+  Word reader and an offline download, reminder notifications, tuner, metronome,
+  pitch pipe, and deep links.
+- Measure it on the real artifact before uploading:
+  `npm run check:aab -- path/to/app.aab`. That reports uncompressed DEX size
+  against the 10MB gate, the three R8 percentages Play reads out of
+  `BUNDLE-METADATA/com.android.tools/r8.json`, **and** 16 KB page alignment (see
+  below); it exits non-zero on a real failure.
+- **Deobfuscation is automatic — do not upload a mapping by hand.** For an app
+  bundle (which the production profile builds), AGP embeds the mapping at
+  `BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map` and Play
+  extracts it on upload; Play **rejects** a manual upload when one is already
+  embedded. Only APK builds need a hand-uploaded `mapping.txt`. Note `r8.json`
+  is a *different* file — the optimization metrics for the quality gate above,
+  not a mapping. `-keepattributes SourceFile,LineNumberTable` (set in
+  `app.json`) is what keeps line numbers in the retraced trace.
+- **Native symbols are not automatic.** Nothing in the Expo template sets
+  `debugSymbolLevel` and `expo-build-properties` exposes no option for it, so
+  `plugins/withNativeDebugSymbols.js` sets `SYMBOL_TABLE` — without it Play warns
+  "no debug symbols for native code" and Hermes/Reanimated/audio-api crashes
+  symbolicate to raw addresses. Symbols ship only in the uploaded artifact; Play
+  strips them from the user download.
+- **16 KB page sizes** are required for updates from **1 Feb 2027**. Expo SDK 55
+  / RN 0.83 / current AGP produce aligned output, and the one third-party native
+  dependency worth doubting is already clear —
+  `react-native-audio-api/android/build.gradle` sets `useLegacyPackaging = false`
+  explicitly for this. Nothing to configure; `npm run check:aab` is the proof.
+- **Baseline Profile:** `plugins/withBaselineProfile.js` ships
+  `android-profile/baseline-prof.txt` into the native project on every prebuild.
+  It is empty until recorded on a device — see `android-profile/README.md`, and
+  record it **after** R8, since the rules name post-obfuscation symbols.
+- **Toolchain caveat:** `plugins/withFoojayFix.js` sets
+  `org.gradle.java.installations.auto-download=false`, so Gradle will not fetch
+  a JDK — R8 runs on the toolchain Expo provisions. A future AGP bump that wants
+  a newer JDK will fail there first.
 
 ## App versioning (two independent numbers)
 
@@ -798,9 +867,12 @@ The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
 **"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
-link is an informational alert only), tablet master-detail, EAS Build /
-TestFlight, Android (auth code is cross-platform-safe, but native Google
-sign-in needs an Android-type OAuth client — package + signing SHA-1 — in the
-Google Cloud project; without it the picker shows then fails with
-DEVELOPER_ERROR → `errors.googleConfigError`), GraceTracks, and migrating web's
-`features/readings` onto core's `bible` module.
+link is an informational alert only), tablet master-detail, GraceTracks, and
+migrating web's `features/readings` onto core's `bible` module.
+
+**No longer out of scope:** EAS Build ships iOS today (`eas.json` carries a live
+`submit.production.ios`), and **Android is a real target** — see the MD3 section
+at the top, the Android config in `app.json`, and the Android release commands
+above. The one Android prerequisite that is still on you is the **Android-type
+OAuth client** (package + signing SHA-1); that requirement is documented in full
+in the auth section, not repeated here.

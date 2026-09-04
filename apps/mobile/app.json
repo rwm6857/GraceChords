@@ -88,6 +88,8 @@
     },
     "plugins": [
       "./plugins/withFoojayFix",
+      "./plugins/withBaselineProfile",
+      "./plugins/withNativeDebugSymbols",
       "expo-router",
       [
         "expo-splash-screen",
@@ -124,6 +126,11 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile\n"
           }
         }
       ],

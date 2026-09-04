@@ -44,8 +44,15 @@ const FAILSAFE_MS = 1200
 
 // Static requires so Metro bundles both tints; the mark PNGs are transparent
 // (assets/README.md) — the opaque app icon must never be used here.
-const MARK_LIGHT = require('../../assets/splash-icon.png')
-const MARK_DARK = require('../../assets/splash-icon-dark.png')
+//
+// These are the 600px in-app marks, not the 1024px splash-icon*.png the
+// expo-splash-screen plugin hands to the native storyboard: this renders at
+// 200pt, and decoding 1024² for it cost ~4MB of bitmap on the launch path.
+// Deliberately still RN's Animated.Image rather than expo-image — the splash
+// handoff keys off onLoadEnd and is timing-sensitive — which is also why these
+// stay PNG (RN decodes WebP on Android only).
+const MARK_LIGHT = require('../../assets/splash-mark.png')
+const MARK_DARK = require('../../assets/splash-mark-dark.png')
 
 export default function SplashOverlay({ onDone }: { onDone: () => void }) {
   // Deliberately the SYSTEM appearance, not the app theme: the native splash

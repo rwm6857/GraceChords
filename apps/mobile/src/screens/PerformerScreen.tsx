@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -208,21 +208,24 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   const count = items.length
 
-  function goTo(next: number, dir: 'next' | 'prev') {
-    if (next < 0 || next >= count || next === index) return
-    setSheet(null)
-    setDelta(0)
-    reveal()
-    slideX.value = dir === 'next' ? 26 : -26
-    slideOpacity.value = 0.15
-    setIndex(next)
-    slideX.value = withTiming(0, { duration: 260 })
-    slideOpacity.value = withTiming(1, { duration: 240 })
-    Haptics.selectionAsync().catch(() => {})
-  }
+  const goTo = useCallback(
+    (next: number, dir: 'next' | 'prev') => {
+      if (next < 0 || next >= count || next === index) return
+      setSheet(null)
+      setDelta(0)
+      reveal()
+      slideX.value = dir === 'next' ? 26 : -26
+      slideOpacity.value = 0.15
+      setIndex(next)
+      slideX.value = withTiming(0, { duration: 260 })
+      slideOpacity.value = withTiming(1, { duration: 240 })
+      Haptics.selectionAsync().catch(() => {})
+    },
+    [count, index, reveal, slideX, slideOpacity],
+  )
 
-  const goNext = () => goTo(index + 1, 'next')
-  const goPrev = () => goTo(index - 1, 'prev')
+  const goNext = useCallback(() => goTo(index + 1, 'next'), [goTo, index])
+  const goPrev = useCallback(() => goTo(index - 1, 'prev'), [goTo, index])
 
   const transposeBy = (dir: 1 | -1) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
@@ -232,23 +235,27 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
 
   // Horizontal swipe to change songs. activeOffsetX/failOffsetY keep it from
   // fighting vertical scroll; the ~50px threshold + horizontal-dominance check
-  // mirror the reference.
-  const swipe = Gesture.Pan()
-    .activeOffsetX([-30, 30])
-    .failOffsetY([-24, 24])
-    .onEnd((e) => {
-      const dx = e.translationX
-      const dy = e.translationY
-      if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) + 8) {
-        if (dx < 0) runOnJS(goNext)()
-        else runOnJS(goPrev)()
-      }
-    })
+  // mirror the reference. Memoized because a fresh Gesture config reconfigures
+  // the native handler on every render, and AutoFitChart's layout search
+  // re-renders this screen many times per song.
+  const chartGesture = useMemo(() => {
+    const swipe = Gesture.Pan()
+      .activeOffsetX([-30, 30])
+      .failOffsetY([-24, 24])
+      .onEnd((e) => {
+        const dx = e.translationX
+        const dy = e.translationY
+        if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) + 8) {
+          if (dx < 0) runOnJS(goNext)()
+          else runOnJS(goPrev)()
+        }
+      })
 
-  // A quick tap on the chart reveals hidden chrome (and resets the idle
-  // timer); it races the swipe so a drag still changes songs.
-  const tapReveal = Gesture.Tap().onEnd(() => runOnJS(reveal)())
-  const chartGesture = Gesture.Race(swipe, tapReveal)
+    // A quick tap on the chart reveals hidden chrome (and resets the idle
+    // timer); it races the swipe so a drag still changes songs.
+    const tapReveal = Gesture.Tap().onEnd(() => runOnJS(reveal)())
+    return Gesture.Race(swipe, tapReveal)
+  }, [goNext, goPrev, reveal])
 
   // Use the entry's catalog metadata for the header so it tracks the current
   // song immediately, not the still-loading `song`.
@@ -599,6 +606,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                   viewportHeight={autoFit.viewportHeight}
                   viewportHeightChromeHidden={autoFit.viewportHeightChromeHidden}
                   onPlan={autoFit.onPlan}
+                  // Prev/Next remounts this; a slug keeps the previous song's
+                  // measured heights so stepping back is instant. Personal
+                  // entries opt out — their bodies can change under a fixed id.
+                  cacheId={isPersonalEntry ? undefined : entry?.song.slug}
                 />
               </ScrollView>
             ) : (

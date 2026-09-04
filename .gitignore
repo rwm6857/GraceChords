@@ -33,4 +33,10 @@ analysis/ingest/
 
 # Local static build output
 docs/
-.env
+
+# Signing material — never commit, in any workspace.
+*.jks
+*.keystore
+*.p12
+*.p8
+*.pem

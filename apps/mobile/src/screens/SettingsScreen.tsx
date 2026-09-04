@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Alert, Image, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native'
+import { Alert, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native'
+import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -232,7 +233,7 @@ export default function SettingsScreen() {
               }}
             >
               {spriteSource ? (
-                <Image source={spriteSource} style={{ width: 52, height: 52 }} resizeMode="cover" />
+                <Image source={spriteSource} style={{ width: 52, height: 52 }} contentFit="cover" />
               ) : (
                 <SymbolIcon name="person" size={26} color={t.colors.accent} />
               )}

@@ -420,6 +420,10 @@ export default function ViewerScreen() {
                 viewportHeight={autoFit.viewportHeight}
                 viewportHeightChromeHidden={autoFit.viewportHeightChromeHidden}
                 onPlan={autoFit.onPlan}
+                // Published bodies are immutable within a session, so their
+                // measured heights are safe to reuse across mounts. Personal
+                // drafts change under a fixed id — no cacheId, no reuse.
+                cacheId={isPersonal ? undefined : slug}
               />
             </ScrollView>
           </GestureDetector>

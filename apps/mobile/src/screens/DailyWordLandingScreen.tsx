@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native'
+import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -146,7 +147,7 @@ export default function DailyWordLandingScreen() {
               }}
             >
               {spriteSource ? (
-                <Image source={spriteSource} style={{ width: 30, height: 30 }} resizeMode="contain" />
+                <Image source={spriteSource} style={{ width: 30, height: 30 }} contentFit="contain" />
               ) : (
                 <SymbolIcon name="person" size={20} color={t.colors.accent} />
               )}

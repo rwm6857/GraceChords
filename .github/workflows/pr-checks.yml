@@ -53,6 +53,39 @@ jobs:
           VITE_COMMIT_SHA: ${{ github.sha }}
         run: npx vite build
 
+  # apps/mobile had no CI at all until now — its typecheck/test/i18n:check
+  # scripts existed but nothing ran them, and every root script delegates to
+  # @gracechords/web only. Warn-only to match the job above; these are the
+  # cheap, OS-independent checks (no Xcode, no Gradle, no simulator).
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Typecheck (warn-only)
+        continue-on-error: true
+        run: npm run typecheck -w @gracechords/mobile
+
+      - name: Tests (warn-only)
+        continue-on-error: true
+        run: npm run test -w @gracechords/mobile
+
+      - name: i18n parity (warn-only)
+        continue-on-error: true
+        # The mobile script reads locales/ off disk; the root i18n:check only
+        # covers the web workspace, so this has to be invoked directly.
+        run: npm run i18n:check -w @gracechords/mobile
+
   # apps/studio consumes packages/tokens as a *committed* Swift mirror (an Xcode
   # build cannot run node), so the only thing keeping it honest is regenerating
   # and comparing. Separate job because it needs Node 22.18+ for TypeScript type

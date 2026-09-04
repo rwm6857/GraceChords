@@ -1,4 +1,5 @@
-import { Platform, Text, View } from 'react-native'
+import { memo, useMemo } from 'react'
+import { Platform, StyleSheet, Text, View } from 'react-native'
 import type { SongDoc, SongLine, SongSection } from '@gracechords/core'
 import {
   formatChord,
@@ -49,7 +50,7 @@ type Props = {
   chordStyle?: ChordStyle
 }
 
-export default function ChordChart({
+function ChordChartInner({
   doc,
   steps,
   preferFlat,
@@ -58,29 +59,34 @@ export default function ChordChart({
   fontScale = 1,
   chordStyle = 'letters',
 }: Props) {
+  // The parser re-opens a section after an inline {instrumental} directive,
+  // which can leave an empty trailing copy — skip line-less sections so no
+  // stray duplicate heading renders.
+  const sections = useMemo(() => doc.sections.filter((section) => section.lines.length > 0), [doc])
   return (
     <View>
-      {doc.sections
-        // The parser re-opens a section after an inline {instrumental} directive,
-        // which can leave an empty trailing copy — skip line-less sections so no
-        // stray duplicate heading renders.
-        .filter((section) => section.lines.length > 0)
-        .map((section, i) => (
-          <ChartSection
-            key={i}
-            section={section}
-            first={i === 0}
-            steps={steps}
-            preferFlat={preferFlat}
-            showChords={showChords}
-            showSections={showSections}
-            fontScale={fontScale}
-            chordStyle={chordStyle}
-          />
-        ))}
+      {sections.map((section, i) => (
+        <ChartSection
+          key={i}
+          section={section}
+          first={i === 0}
+          steps={steps}
+          preferFlat={preferFlat}
+          showChords={showChords}
+          showSections={showSections}
+          fontScale={fontScale}
+          chordStyle={chordStyle}
+        />
+      ))}
     </View>
   )
 }
+
+// Memoized all the way down. AutoFitChart re-renders this tree on every step of
+// its measure/plan search — up to a dozen times for one plan on a tablet — and
+// without memo each of those re-reconciles every word of the song.
+const ChordChart = memo(ChordChartInner)
+export default ChordChart
 
 export type RenderOpts = {
   steps: number
@@ -93,30 +99,31 @@ export type RenderOpts = {
 
 // Exported for AutoFitChart, which renders the same sections one column at a
 // time (and offscreen for measurement). `first` gates the inter-section gap.
-export function ChartSection({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
+function ChartSectionInner({ section, first, ...opts }: RenderOpts & { section: SongSection; first: boolean }) {
   const t = useTheme()
+  const wrap = useMemo(() => ({ marginTop: first ? 0 : t.spacing.md }), [first, t])
+  const header = useMemo(
+    () => ({
+      fontSize: t.typography.sectionHeader.fontSize,
+      fontWeight: t.typography.sectionHeader.fontWeight,
+      letterSpacing: t.typography.sectionHeader.letterSpacing,
+      color: t.colors.accent,
+      textTransform: 'uppercase' as const,
+      marginBottom: t.spacing.sm,
+    }),
+    [t],
+  )
   return (
-    <View style={{ marginTop: first ? 0 : t.spacing.md }}>
-      {section.label && opts.showSections ? (
-        <Text
-          style={{
-            fontSize: t.typography.sectionHeader.fontSize,
-            fontWeight: t.typography.sectionHeader.fontWeight,
-            letterSpacing: t.typography.sectionHeader.letterSpacing,
-            color: t.colors.accent,
-            textTransform: 'uppercase',
-            marginBottom: t.spacing.sm,
-          }}
-        >
-          {section.label}
-        </Text>
-      ) : null}
+    <View style={wrap}>
+      {section.label && opts.showSections ? <Text style={header}>{section.label}</Text> : null}
       {section.lines.map((line, i) => (
         <ChartLine key={i} line={line} {...opts} />
       ))}
     </View>
   )
 }
+
+export const ChartSection = memo(ChartSectionInner)
 
 // A word (or trailing empty anchor) with the chord symbols that sit on it.
 type WordCell = { text: string; chords: string[] }
@@ -146,33 +153,91 @@ function buildWordCells(
   return cells
 }
 
-function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
+// Styles that never vary. Everything else scales with the font or the theme and
+// is memoized per line below.
+const staticStyles = StyleSheet.create({
+  stack: { marginBottom: 2 },
+  wrapRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 2 },
+})
+
+function ChartLineInner({ line, ...opts }: RenderOpts & { line: SongLine }) {
   const t = useTheme()
   const { steps, preferFlat, showChords, fontScale, chordStyle } = opts
-  const lyricSize = CHART_FONT_SIZE * fontScale
-  const lineHeight = Math.round(CHART_LINE_HEIGHT * fontScale)
-  const chordSize = CHART_CHORD_FONT_SIZE * fontScale
-  const chordLineHeight = Math.round(16 * fontScale)
 
-  const lyric = { fontFamily: CHART_LYRIC_FONT, fontSize: lyricSize, lineHeight, fontWeight: '500' as const, color: t.colors.ink }
-  const chordStyleObj = {
-    fontFamily: CHART_MONO,
-    fontSize: chordSize,
-    lineHeight: chordLineHeight,
-    fontWeight: '700' as const,
-    color: t.colors.accent,
-  }
+  // One object per (theme, fontScale) instead of ~6 fresh literals per word.
+  const s = useMemo(() => {
+    const lyricSize = CHART_FONT_SIZE * fontScale
+    const lineHeight = Math.round(CHART_LINE_HEIGHT * fontScale)
+    const chordLineHeight = Math.round(16 * fontScale)
+    const lyric = {
+      fontFamily: CHART_LYRIC_FONT,
+      fontSize: lyricSize,
+      lineHeight,
+      fontWeight: '500' as const,
+      color: t.colors.ink,
+    }
+    const chord = {
+      fontFamily: CHART_MONO,
+      fontSize: CHART_CHORD_FONT_SIZE * fontScale,
+      lineHeight: chordLineHeight,
+      fontWeight: '700' as const,
+      color: t.colors.accent,
+    }
+    return {
+      lyric,
+      chord,
+      // Flattened rather than a [chord, {...}] array so the style prop is one
+      // stable object shared by every word in the line.
+      chordOverWord: {
+        ...chord,
+        minHeight: chordLineHeight,
+        marginBottom: -CHART_CHORD_LYRIC_TIGHTEN * fontScale,
+      },
+      comment: {
+        fontFamily: CHART_LYRIC_FONT,
+        fontSize: 14.5 * fontScale,
+        lineHeight,
+        fontStyle: 'italic' as const,
+        color: t.colors.sec,
+      },
+      blank: { height: lineHeight },
+      cell: { marginRight: lyricSize * 0.28 },
+    }
+  }, [t, fontScale])
+
+  // Transposition + formatting are pure in these inputs, so they survive the
+  // re-renders the measure/plan search causes.
+  const rows = useMemo(
+    () =>
+      line.instrumental
+        ? formatInstrumental(transposeInstrumental(line.instrumental, steps, preferFlat, { style: chordStyle }))
+        : null,
+    [line, steps, preferFlat, chordStyle],
+  )
+
+  const hasChords = showChords && line.chords.length > 0
+
+  const cells = useMemo(
+    () =>
+      hasChords
+        ? buildWordCells(
+            line.lyrics,
+            line.chords.map((c) => ({
+              sym: formatChord(transposeSymPrefer(c.sym, steps, preferFlat), { style: chordStyle }),
+              index: c.index,
+            })),
+          )
+        : null,
+    [hasChords, line, steps, preferFlat, chordStyle],
+  )
 
   // Instrumental (chord-only) line — a row of mono chord tokens.
   if (line.instrumental) {
     if (!showChords) return null
-    const rows: string[] = formatInstrumental(
-      transposeInstrumental(line.instrumental, steps, preferFlat, { style: chordStyle }),
-    )
     return (
-      <View style={{ marginBottom: 2 }}>
-        {rows.map((row, i) => (
-          <Text key={i} style={chordStyleObj}>
+      <View style={staticStyles.stack}>
+        {rows!.map((row, i) => (
+          <Text key={i} style={s.chord}>
             {row}
           </Text>
         ))}
@@ -181,51 +246,32 @@ function ChartLine({ line, ...opts }: RenderOpts & { line: SongLine }) {
   }
 
   if (line.comment) {
-    return (
-      <Text style={{ fontFamily: CHART_LYRIC_FONT, fontSize: 14.5 * fontScale, lineHeight, fontStyle: 'italic', color: t.colors.sec }}>
-        {line.comment}
-      </Text>
-    )
+    return <Text style={s.comment}>{line.comment}</Text>
   }
-
-  const hasChords = showChords && line.chords.length > 0
 
   // Genuinely blank line keeps its spacing; a chords-only line vanishes in
   // lyrics-only mode.
   if (!line.lyrics && !hasChords) {
     if (line.chords.length && !showChords) return null
-    return <View style={{ height: lineHeight }} />
+    return <View style={s.blank} />
   }
 
   // Lyrics with no chords (or chords hidden): plain wrapping line.
   if (!hasChords) {
-    return <Text style={lyric}>{line.lyrics || ' '}</Text>
+    return <Text style={s.lyric}>{line.lyrics || ' '}</Text>
   }
-
-  const cells = buildWordCells(
-    line.lyrics,
-    line.chords.map((c) => ({
-      sym: formatChord(transposeSymPrefer(c.sym, steps, preferFlat), { style: chordStyle }),
-      index: c.index,
-    })),
-  )
 
   // Word-anchored: each cell stacks its chord(s) over the word; the row wraps.
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 2 }}>
-      {cells.map((cell, i) => (
-        <View key={i} style={{ marginRight: lyricSize * 0.28 }}>
-          <Text
-            style={[
-              chordStyleObj,
-              { minHeight: chordLineHeight, marginBottom: -CHART_CHORD_LYRIC_TIGHTEN * fontScale },
-            ]}
-          >
-            {cell.chords.join(' ') || ' '}
-          </Text>
-          {cell.text ? <Text style={lyric}>{cell.text}</Text> : <Text style={lyric}> </Text>}
+    <View style={staticStyles.wrapRow}>
+      {cells!.map((cell, i) => (
+        <View key={i} style={s.cell}>
+          <Text style={s.chordOverWord}>{cell.chords.join(' ') || ' '}</Text>
+          {cell.text ? <Text style={s.lyric}>{cell.text}</Text> : <Text style={s.lyric}> </Text>}
         </View>
       ))}
     </View>
   )
 }
+
+const ChartLine = memo(ChartLineInner)

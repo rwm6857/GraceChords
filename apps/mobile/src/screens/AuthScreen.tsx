@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -9,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as AppleAuthentication from 'expo-apple-authentication'
@@ -119,7 +119,7 @@ export default function AuthScreen() {
           style={{ alignItems: 'center', paddingTop: insets.top + t.spacing.xxl, paddingBottom: t.spacing.xl }}
         >
           <Image
-            source={require('../../assets/icon.png')}
+            source={require('../../assets/mark.webp')}
             accessibilityLabel="GraceChords"
             style={{ width: 64, height: 64, borderRadius: t.radii.card }}
           />
@@ -237,7 +237,7 @@ export default function AuthScreen() {
             >
               {/* Brand logo, not a glyph — the sanctioned non-SF-Symbol exception. */}
               <Image
-                source={require('../../assets/google-g.png')}
+                source={require('../../assets/google-g.webp')}
                 style={{ width: 20, height: 20 }}
               />
               <Text style={{ fontSize: 16, fontWeight: '600', color: t.colors.ink }}>

@@ -25,3 +25,17 @@ node_modules/
 # scripts/build-symbol-fonts.py. Only the generated subsets in assets/fonts are
 # committed.
 .cache/
+
+# Signing material — NEVER commit. EAS holds the upload key (credentialsSource
+# defaults to remote); a keystore in the repo is a leaked secret even when
+# password-protected. See AGENTS.md (Android OAuth client + signing).
+*.jks
+*.keystore
+*.p12
+*.p8
+*.pem
+# Google Play service account for `eas submit` (eas.json submit.production.android).
+play-service-account.json
+
+# node-gyp configure output, committed by accident once.
+build/
