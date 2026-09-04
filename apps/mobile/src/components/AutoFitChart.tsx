@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import type { SongDoc, SongSection } from '@gracechords/core'
 import { formatInstrumental, transposeInstrumental } from '@gracechords/core'
 import ChordChart, {
@@ -51,9 +51,65 @@ type Props = {
   viewportHeightChromeHidden: number
   /** Fires when the resolved plan changes (font scale readout, diagnostics). */
   onPlan?: (plan: ColumnPlan) => void
+  /**
+   * Stable identity for the measured-height cache across mounts (a song slug).
+   * Omit for content whose body can change under a fixed id — personal drafts —
+   * and measurement falls back to being per-mount, as it was before.
+   */
+  cacheId?: string
 }
 
 const INITIAL_PLAN: ColumnPlan = { columns: 1, fontScale: 1, cuts: [0], fit: 'scroll' }
+
+/** How long the wrapping inputs must hold still before a search restarts. */
+const MEASURE_SETTLE_MS = 180
+
+/**
+ * Measured section heights, keyed by song identity + `columnMeasureKey`. This
+ * used to be a per-mount ref, so the Performer threw away a whole search on
+ * every Prev/Next and the Viewer did the same on every exit — up to 27 samples
+ * for a three-column plan. Insertion-ordered eviction, capped, in the same
+ * shape as the cap in src/lib/recents.ts.
+ */
+const HEIGHT_CACHE_MAX = 24
+const heightCache = new Map<string, Map<string, number[]>>()
+
+/** Per-mount fallback identity for docs with no stable id (personal drafts). */
+let anonSeq = 0
+
+function useCacheScope(cacheId: string | undefined, doc: SongDoc): string {
+  const ref = useRef<{ doc: SongDoc; scope: string } | null>(null)
+  if (cacheId) return cacheId
+  // No stable id: behave exactly as the old per-mount ref did — a fresh scope
+  // per doc, never shared, so an edited draft can't read stale heights.
+  if (!ref.current || ref.current.doc !== doc) {
+    ref.current = { doc, scope: `anon:${++anonSeq}` }
+  }
+  return ref.current.scope
+}
+
+function samplesFor(scope: string, measureKey: string): Map<string, number[]> {
+  const key = `${scope}::${measureKey}`
+  const hit = heightCache.get(key)
+  if (hit) {
+    // Refresh recency so an actively-used song is not the next one evicted.
+    heightCache.delete(key)
+    heightCache.set(key, hit)
+    return hit
+  }
+  const fresh = new Map<string, number[]>()
+  heightCache.set(key, fresh)
+  for (const stale of [...heightCache.keys()].slice(0, Math.max(0, heightCache.size - HEIGHT_CACHE_MAX))) {
+    heightCache.delete(stale)
+  }
+  return fresh
+}
+
+const autoFitStyles = StyleSheet.create({
+  columnRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  column: { flex: 1 },
+  offscreen: { position: 'absolute', top: 0, left: 0, opacity: 0 },
+})
 
 export default function AutoFitChart({
   doc,
@@ -67,6 +123,7 @@ export default function AutoFitChart({
   viewportHeight,
   viewportHeightChromeHidden,
   onPlan,
+  cacheId,
 }: Props) {
   const t = useTheme()
   const [width, setWidth] = useState(0)
@@ -81,43 +138,59 @@ export default function AutoFitChart({
   const sectionGap = t.spacing.md
   const columnGap = t.spacing.lg
 
-  // Longest chord-only row in the song at the current transpose/style. Drives
-  // the planner's horizontal-spill guard — these rows are fixed-width monospace
-  // and would wrap mid-token in a column that's too narrow.
-  const maxMonoRowChars = useMemo(() => {
-    let longest = 0
-    if (!showChords) return 0
-    for (const section of sections) {
-      for (const line of section.lines) {
-        if (!line.instrumental) continue
-        const rows: string[] = formatInstrumental(
-          transposeInstrumental(line.instrumental, steps, preferFlat, { style: chordStyle }),
-        )
-        for (const row of rows) longest = Math.max(longest, row.length)
-      }
-    }
-    return longest
-  }, [sections, steps, preferFlat, chordStyle, showChords])
-
-  // Measured heights per (columns, fontScale) pass, scoped to the current doc
-  // and invalidated by anything that changes wrapping.
-  const invalidationKey = columnMeasureKey({
+  // Measurement runs against a SETTLED snapshot of the wrapping inputs, not the
+  // live ones. Chords still re-render immediately on a transpose tap; only the
+  // layout search waits for tapping to stop. Three quick ± taps used to start
+  // three overlapping searches, each up to a dozen offscreen song mounts.
+  const liveKey = columnMeasureKey({ width, steps, preferFlat, chordStyle, showChords, showSections })
+  const [settled, setSettled] = useState(() => ({
+    key: liveKey,
     width,
     steps,
     preferFlat,
     chordStyle,
     showChords,
     showSections,
-  })
-  // Bounded by construction: the map is thrown away whenever the doc or any
-  // wrapping input changes, so it can never hold more than
-  // (column counts x font scales) = 27 entries. No eviction needed — and none
-  // wanted, since evicting a sample the search still needs would re-measure it.
-  const cacheRef = useRef<{ doc: SongDoc; key: string; samples: Map<string, number[]> } | null>(null)
-  if (!cacheRef.current || cacheRef.current.doc !== doc || cacheRef.current.key !== invalidationKey) {
-    cacheRef.current = { doc, key: invalidationKey, samples: new Map() }
-  }
-  const samples = cacheRef.current.samples
+  }))
+
+  useEffect(() => {
+    if (settled.key === liveKey) return
+    const next = { key: liveKey, width, steps, preferFlat, chordStyle, showChords, showSections }
+    // A width change is a real layout event (first measure, rotation, split
+    // view), not a rapid gesture — adopt it at once so nothing is measured at a
+    // stale width. Only the user-driven inputs settle.
+    if (settled.width !== width) {
+      setSettled(next)
+      return
+    }
+    const id = setTimeout(() => setSettled(next), MEASURE_SETTLE_MS)
+    return () => clearTimeout(id)
+  }, [settled, liveKey, width, steps, preferFlat, chordStyle, showChords, showSections])
+
+  const scope = useCacheScope(cacheId, doc)
+  const samples = samplesFor(scope, settled.key)
+
+  // Longest chord-only row in the song at the SETTLED transpose/style. Drives
+  // the planner's horizontal-spill guard — these rows are fixed-width monospace
+  // and would wrap mid-token in a column that's too narrow. Must come from the
+  // settled inputs, not the live ones, or it would disagree with the heights
+  // the planner is reading out of `samples`.
+  const maxMonoRowChars = useMemo(() => {
+    if (!settled.showChords) return 0
+    let longest = 0
+    for (const section of sections) {
+      for (const line of section.lines) {
+        if (!line.instrumental) continue
+        const rows: string[] = formatInstrumental(
+          transposeInstrumental(line.instrumental, settled.steps, settled.preferFlat, {
+            style: settled.chordStyle,
+          }),
+        )
+        for (const row of rows) longest = Math.max(longest, row.length)
+      }
+    }
+    return longest
+  }, [sections, settled])
 
   const [plan, setPlan] = useState<ColumnPlan>(INITIAL_PLAN)
   // The pass currently being measured offscreen, if any.
@@ -129,7 +202,7 @@ export default function AutoFitChart({
     maxColumns,
     gap: sectionGap,
     columnGap,
-    contentWidth: width,
+    contentWidth: settled.width,
     viewportHeight,
     viewportHeightChromeHidden,
     chordFontSize: CHART_CHORD_FONT_SIZE,
@@ -165,20 +238,43 @@ export default function AutoFitChart({
     if (onPlan) onPlan(plan)
   }, [onPlan, plan])
 
-  const chartOpts = {
-    steps,
-    preferFlat,
-    showChords,
-    showSections,
-    fontScale: plan.fontScale,
-    chordStyle,
-  }
+  // Must be stable: ChartSection and ChordChart are memoized, and a fresh
+  // object here would defeat both on every step of the search below.
+  const chartOpts = useMemo(
+    () => ({
+      steps,
+      preferFlat,
+      showChords,
+      showSections,
+      fontScale: plan.fontScale,
+      chordStyle,
+    }),
+    [steps, preferFlat, showChords, showSections, plan.fontScale, chordStyle],
+  )
 
-  // Reads the cache off the ref rather than the captured `samples` so a pass
-  // that lands after an invalidation writes into the live map, never a
-  // discarded one.
+  // The offscreen pass must render the SETTLED inputs, not the live ones —
+  // heights measured at a newer transpose would be written under the settled
+  // key and quietly corrupt the search.
+  const measureOpts = useMemo(
+    () =>
+      pending
+        ? {
+            steps: settled.steps,
+            preferFlat: settled.preferFlat,
+            showChords: settled.showChords,
+            showSections: settled.showSections,
+            chordStyle: settled.chordStyle,
+            fontScale: pending.fontScale,
+          }
+        : null,
+    [settled, pending],
+  )
+
+  // `samples` is the module cache's own map for this (scope, settled key), so a
+  // pass that lands late still writes under the key it was actually measured
+  // at — never into a map belonging to different inputs.
   const onPassMeasured = (columns: number, scale: number, heights: number[]) => {
-    cacheRef.current?.samples.set(sampleKey(columns, scale), heights)
+    samples.set(sampleKey(columns, scale), heights)
     forceStep((n) => n + 1)
   }
 
@@ -187,11 +283,11 @@ export default function AutoFitChart({
   return (
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {columns > 1 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', columnGap }}>
+        <View style={[autoFitStyles.columnRow, { columnGap }]}>
           {plan.cuts.map((start, i) => {
             const end = i + 1 < plan.cuts.length ? plan.cuts[i + 1] : sections.length
             return (
-              <View key={start} style={{ flex: 1 }}>
+              <View key={start} style={autoFitStyles.column}>
                 {sections.slice(start, end).map((section, j) => (
                   <ChartSection key={start + j} section={section} first={j === 0} {...chartOpts} />
                 ))}
@@ -212,10 +308,10 @@ export default function AutoFitChart({
           // guarantees every section reports even when its height is identical
           // under the new inputs (e.g. re-measuring the same pass after a
           // transpose that happened not to change any height).
-          key={`${invalidationKey}::${sampleKey(pending.columns, pending.fontScale)}`}
+          key={`${settled.key}::${sampleKey(pending.columns, pending.fontScale)}`}
           sections={sections}
-          width={columnWidthFor(width, columnGap, pending.columns)}
-          opts={{ ...chartOpts, fontScale: pending.fontScale }}
+          width={columnWidthFor(settled.width, columnGap, pending.columns)}
+          opts={measureOpts!}
           onMeasured={(heights) => onPassMeasured(pending.columns, pending.fontScale, heights)}
         />
       ) : null}
@@ -250,7 +346,7 @@ function MeasurePass({
     <View
       pointerEvents="none"
       collapsable={false}
-      style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width }}
+      style={[autoFitStyles.offscreen, { width }]}
     >
       {sections.map((section, i) => (
         <View
