@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -361,7 +361,7 @@ export default function HomeScreen() {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
                 <Image
-                  source={require('../../assets/icon.png')}
+                  source={require('../../assets/mark.webp')}
                   accessibilityLabel="GraceChords"
                   style={{ width: 28, height: 28, borderRadius: 8 }}
                 />
@@ -390,7 +390,7 @@ export default function HomeScreen() {
                   }}
                 >
                   {spriteSource ? (
-                    <Image source={spriteSource} style={{ width: 30, height: 30 }} resizeMode="contain" />
+                    <Image source={spriteSource} style={{ width: 30, height: 30 }} contentFit="contain" />
                   ) : (
                     <SymbolIcon name="person" size={20} color={t.colors.accent} />
                   )}

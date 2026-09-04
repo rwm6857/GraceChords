@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Alert, Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
+import { Alert, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native'
+import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
@@ -144,7 +145,7 @@ export default function SpritePickerScreen() {
                   <Image
                     source={SPRITE_SOURCES[id]}
                     style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 </View>
                 {isSelected ? (

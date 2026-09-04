@@ -25,8 +25,30 @@ import { fetchManifest, fetchMonth } from './remote'
 //   * A cached month is served without any network call at all, so the common
 //     case after first launch is a pure local read.
 
-/** Parsed months, memoized so a month is validated once per session. */
+/**
+ * Parsed months, memoized so a month is validated once per session. Capped
+ * least-recently-used: free date-picker navigation would otherwise hold every
+ * month ever opened, and a month is ~30 days of prose. Same shape as the cap in
+ * src/lib/recents.ts; a miss just re-reads the cached text off disk.
+ */
+const MAX_MEMOIZED_MONTHS = 6
 const monthMemo = new Map<string, MonthFile>()
+
+function readMonthMemo(monthKey: string): MonthFile | undefined {
+  const hit = monthMemo.get(monthKey)
+  if (!hit) return undefined
+  monthMemo.delete(monthKey)
+  monthMemo.set(monthKey, hit)
+  return hit
+}
+
+function writeMonthMemo(monthKey: string, month: MonthFile): void {
+  monthMemo.delete(monthKey)
+  monthMemo.set(monthKey, month)
+  for (const stale of [...monthMemo.keys()].slice(0, Math.max(0, monthMemo.size - MAX_MEMOIZED_MONTHS))) {
+    monthMemo.delete(stale)
+  }
+}
 /** In-flight month fetches, so two cards on one day don't fetch twice. */
 const inFlight = new Map<string, Promise<MonthFile | null>>()
 let manifestMemo: Manifest | null = null
@@ -35,14 +57,14 @@ let manifestMemo: Manifest | null = null
 
 /** The cached month, or null. No network. */
 export async function readCachedMonth(monthKey: string): Promise<MonthFile | null> {
-  const hit = monthMemo.get(monthKey)
+  const hit = readMonthMemo(monthKey)
   if (hit) return hit
   const text = await readCachedText(monthRelPath(monthKey))
   if (!text) return null
   try {
     const parsed = parseMonthFile(JSON.parse(text) as unknown)
     if (!parsed) return null
-    monthMemo.set(monthKey, parsed)
+    writeMonthMemo(monthKey, parsed)
     return parsed
   } catch {
     return null
@@ -75,7 +97,7 @@ export async function cacheManifest(manifest: Manifest, text: string): Promise<b
 
 export async function cacheMonth(monthKey: string, month: MonthFile, text: string): Promise<boolean> {
   const ok = await writeCachedTextAtomic(tmpRelPath(`${monthKey}.json`), monthRelPath(monthKey), text)
-  if (ok) monthMemo.set(monthKey, month)
+  if (ok) writeMonthMemo(monthKey, month)
   return ok
 }
 

@@ -17,9 +17,33 @@ export type SongDetail = {
 }
 
 // Process-lifetime cache of fetched song bodies, keyed by slug. Lets the
-// performer prefetch the whole set so page turns are instant. Cleared only on
-// reload — song bodies are effectively immutable within a session.
+// performer prefetch the whole set so page turns are instant. Song bodies are
+// effectively immutable within a session, so a hit is always safe.
+//
+// Capped least-recently-used: PerformerScreen and SessionFollowerScreen each
+// bulk-prefetch a whole setlist into this map, so a long session across several
+// sets used to accumulate every song body it had ever seen. Every read path is
+// cache-first with a network fallback, so eviction only costs a re-fetch. Same
+// shape as the cap in src/lib/recents.ts.
+const MAX_CACHED_SONGS = 60
 const songCache = new Map<string, SongDetail | null>()
+
+/** Read through the cache, refreshing recency so the cap evicts the coldest. */
+function readSongCache(slug: string): { hit: true; value: SongDetail | null } | { hit: false } {
+  if (!songCache.has(slug)) return { hit: false }
+  const value = songCache.get(slug) ?? null
+  songCache.delete(slug)
+  songCache.set(slug, value)
+  return { hit: true, value }
+}
+
+function writeSongCache(slug: string, value: SongDetail | null): void {
+  songCache.delete(slug)
+  songCache.set(slug, value)
+  for (const stale of [...songCache.keys()].slice(0, Math.max(0, songCache.size - MAX_CACHED_SONGS))) {
+    songCache.delete(stale)
+  }
+}
 
 // Fetch (and cache) one song by slug. Safe to call ahead of need; concurrent
 // prefetches for the same slug dedupe on the in-flight promise.
@@ -29,7 +53,7 @@ export function prefetchSong(slug: string | undefined): void {
   const p = fetchSongBySlug(supabase, slug)
     .then((row: unknown) => {
       const detail = (row as SongDetail | null) ?? null
-      songCache.set(slug, detail)
+      writeSongCache(slug, detail)
       return detail
     })
     .catch(() => null)
@@ -41,9 +65,9 @@ export function prefetchSong(slug: string | undefined): void {
 // prefetched (or previously viewed) song renders instantly. A missing row
 // resolves to song === null with no error — the screen treats that as not found.
 export function useSong(slug: string | undefined) {
-  const cached = slug ? songCache.get(slug) : undefined
-  const [song, setSong] = useState<SongDetail | null>(cached ?? null)
-  const [loading, setLoading] = useState(cached === undefined)
+  const cached = slug ? readSongCache(slug) : { hit: false as const }
+  const [song, setSong] = useState<SongDetail | null>(cached.hit ? cached.value : null)
+  const [loading, setLoading] = useState(!cached.hit)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -52,8 +76,9 @@ export function useSong(slug: string | undefined) {
       return
     }
     // Cache hit → render immediately, no fetch.
-    if (songCache.has(slug)) {
-      setSong(songCache.get(slug) ?? null)
+    const hit = readSongCache(slug)
+    if (hit.hit) {
+      setSong(hit.value)
       setError(null)
       setLoading(false)
       return
@@ -63,7 +88,7 @@ export function useSong(slug: string | undefined) {
     fetchSongBySlug(supabase, slug)
       .then((row: unknown) => {
         const detail = (row as SongDetail | null) ?? null
-        songCache.set(slug, detail)
+        writeSongCache(slug, detail)
         if (alive) {
           setSong(detail)
           setError(null)

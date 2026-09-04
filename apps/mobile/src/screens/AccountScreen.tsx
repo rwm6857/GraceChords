@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, AppState, Image, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, AppState, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -258,7 +259,7 @@ export default function AccountScreen() {
                 }}
               >
                 {spriteSource ? (
-                  <Image source={spriteSource} style={{ width: 29, height: 29 }} resizeMode="cover" />
+                  <Image source={spriteSource} style={{ width: 29, height: 29 }} contentFit="cover" />
                 ) : (
                   <SymbolIcon name="person" size={16} color={t.colors.accent} />
                 )}
