@@ -5,8 +5,11 @@
  * be a silent regression on another route. Everything here is gc-set-* / gc-rail-*.
  */
 
+/* .gc-page is a flex item in the route shell, so max-width alone leaves it
+   shrink-wrapped around its content; width makes it actually claim the space. */
 .gc-page.is-setlist-workspace {
   max-width: 1440px;
+  width: 100%;
 }
 
 /* ===== Action bar ===== */
@@ -24,7 +27,8 @@
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-left: auto;
+  /* Sits beside the setlists toggle rather than centred, so the bar doesn't
+     open a wide gap of nothing between them. */
   margin-right: auto;
 }
 
@@ -34,23 +38,26 @@
   grid-template-columns: 236px minmax(0, 1fr) 330px;
   gap: var(--space-3);
   margin-top: var(--space-3);
+  /* .gc-page is already a full-height flex column with overflow hidden, so the
+     workspace claims the remaining height and each column scrolls on its own
+     rather than the page scrolling as one long strip. */
+  flex: 1;
   min-height: 0;
-  /* Leaves room for the site header + action bar so each column scrolls on its
-     own rather than the page scrolling as one long strip. */
-  height: calc(100vh - 220px);
-  min-height: 420px;
 }
 
+/* A collapsed rail is removed from the grid entirely, so the track list has to
+   shrink with it — leaving a 0-width track behind would let auto-placement drop
+   the centre column into it and the whole workspace would vanish. */
 .gc-set-workspace.is-setlists-hidden {
-  grid-template-columns: 0 minmax(0, 1fr) 330px;
+  grid-template-columns: minmax(0, 1fr) 330px;
 }
 
 .gc-set-workspace.is-library-hidden {
-  grid-template-columns: 236px minmax(0, 1fr) 0;
+  grid-template-columns: 236px minmax(0, 1fr);
 }
 
 .gc-set-workspace.is-setlists-hidden.is-library-hidden {
-  grid-template-columns: 0 minmax(0, 1fr) 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .gc-set-col {
@@ -846,8 +853,10 @@
 /* ===== Responsive ===== */
 /* The setlists rail folds away first; the library keeps its place. */
 @media (max-width: 1200px) {
+  /* The setlists rail is always out at this width, so every variant has one
+     fewer track than above. */
   .gc-set-workspace,
-  .gc-set-workspace.is-library-hidden {
+  .gc-set-workspace.is-setlists-hidden {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 
@@ -855,25 +864,29 @@
     display: none;
   }
 
-  .gc-set-workspace.is-library-hidden {
+  .gc-set-workspace.is-library-hidden,
+  .gc-set-workspace.is-setlists-hidden.is-library-hidden {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .gc-set-workspace.is-library-hidden .gc-set-col--right {
-    display: none;
   }
 }
 
 /* Single column with Set / Library tabs — the only place this looks like the
    phone app, which is correct at this width. */
 @media (max-width: 900px) {
+  /* .gc-page is a fixed-viewport-height, overflow:hidden shell. Stacked, the
+     workspace is taller than the viewport, so the page itself has to scroll. */
+  .gc-page.is-setlist-workspace {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
   .gc-set-workspace,
   .gc-set-workspace.is-setlists-hidden,
   .gc-set-workspace.is-library-hidden,
   .gc-set-workspace.is-setlists-hidden.is-library-hidden {
     grid-template-columns: minmax(0, 1fr);
-    height: auto;
-    min-height: 0;
+    flex: 0 0 auto;
   }
 
   .gc-set-workspace .gc-set-col {

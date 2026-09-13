@@ -23,7 +23,7 @@ import '../styles/setlist-workspace.css'
 import { Button, Toolbar } from '../components/ui/layout-kit'
 import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
-import { ListIcon, PlusIcon, SearchIcon } from '../components/Icons'
+import { ListIcon, MediaIcon, PlusIcon, SearchIcon } from '../components/Icons'
 import SetlistsRail from '../features/setlist/SetlistsRail'
 import LibraryRail from '../features/setlist/LibraryRail'
 import SetHeader from '../features/setlist/SetHeader'
@@ -570,12 +570,13 @@ export default function SetlistWorkspacePage() {
             iconOnly
             aria-label={t('setlist.toggleSetlists')}
             aria-pressed={!railsHidden.setlists}
+            iconLeft={<ListIcon />}
             onClick={() => setRailsHidden((r) => ({ ...r, setlists: !r.setlists }))}
-          >
-            <ListIcon />
-          </Button>
+          />
         ) : null}
-        <div className="gc-set-bar-actions">{actions}</div>
+        {/* apps/web/AGENTS.md: on mobile the export actions belong in the sheet,
+            not as individual buttons in the bar. */}
+        {!isMobile ? <div className="gc-set-bar-actions">{actions}</div> : null}
         {!isMobile ? (
           <Button
             size="sm"
@@ -583,15 +584,26 @@ export default function SetlistWorkspacePage() {
             iconOnly
             aria-label={t('setlist.toggleLibrary')}
             aria-pressed={!railsHidden.library}
+            iconLeft={<SearchIcon />}
             onClick={() => setRailsHidden((r) => ({ ...r, library: !r.library }))}
-          >
-            <SearchIcon />
-          </Button>
+          />
         ) : null}
         {isMobile ? (
-          <Button size="sm" variant="secondary" onClick={() => setMobileActionsOpen(true)}>
-            {t('setlist.moreActions')}
-          </Button>
+          <div className="gc-set-bar-actions">
+            <Button
+              variant="primary"
+              size="sm"
+              as={Link}
+              to={worshipPath}
+              iconLeft={<MediaIcon />}
+              title={t('setlist.worshipModeTooltip')}
+            >
+              {t('setlist.worshipMode')}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setMobileActionsOpen(true)}>
+              {t('setlist.moreActions')}
+            </Button>
+          </div>
         ) : null}
       </Toolbar>
 

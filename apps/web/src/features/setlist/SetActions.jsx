@@ -152,10 +152,9 @@ export default function SetActions({
           aria-haspopup="menu"
           aria-expanded={moreOpen}
           aria-label={t('setlist.moreActions')}
+          iconLeft={<EllipsisIcon />}
           onClick={() => setMoreOpen((v) => !v)}
-        >
-          <EllipsisIcon />
-        </Button>
+        />
         {moreOpen ? (
           <div className="gc-menu gc-more-menu__panel" role="menu" aria-label={t('setlist.actionsTitle')}>
             <button
