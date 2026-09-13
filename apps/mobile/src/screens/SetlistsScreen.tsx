@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
-import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import Screen from '../components/Screen'
@@ -18,10 +19,15 @@ import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { uuidv4 } from '../lib/uuid'
 import { actionFailureMessage, errMessage } from '../lib/errors'
 
+// A refresh that resolves in 60ms reads as "nothing happened" — the spinner
+// never renders a full frame. Hold it briefly so the pull is acknowledged.
+const MIN_REFRESH_MS = 500
+
 // The Setlists tab: every personal setlist (newest-edited first), a New set
 // action, and tap-to-open into the builder.
 export default function SetlistsScreen() {
   const t = useTheme()
+  const insets = useSafeAreaInsets()
   const { t: tx, i18n } = useTranslation(['setlist', 'common', 'errors'])
   const router = useRouter()
   const { setlists, loading, error, refresh, create, remove, removeMany, limit, atLimit } =
@@ -41,8 +47,22 @@ export default function SetlistsScreen() {
 
   async function onRefresh() {
     setRefreshing(true)
+    const started = Date.now()
     await refresh()
+    const held = Date.now() - started
+    if (held < MIN_REFRESH_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_REFRESH_MS - held))
+    }
     setRefreshing(false)
+  }
+
+  // Shared by every branch below so the pull-to-refresh gesture is a force-sync
+  // from any state — including the empty and error states, where it used to be
+  // unreachable because only the populated list carried one.
+  function refreshControl() {
+    return (
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
+    )
   }
 
   async function onCreate() {
@@ -142,36 +162,42 @@ export default function SetlistsScreen() {
       return <LoadingSkeleton label={tx('syncing')} />
     }
     // `error` is an i18n key, not raw error text (see useSetlists / errors.ts).
-    // The RefreshControl below only exists on the populated list, so before 1.0.1
-    // this branch had no way forward at all even though `refresh` was in scope.
     if (error) {
       return (
-        <EmptyState
-          icon="wifi.slash"
-          title={tx(error)}
-          subtitle={tx('errors:load.hint')}
-          actionLabel={tx('common:retry')}
-          onAction={() => void refresh()}
-        />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + t.spacing.xl }}
+          refreshControl={refreshControl()}
+        >
+          <EmptyState
+            icon="wifi.slash"
+            title={tx(error)}
+            subtitle={tx('errors:load.hint')}
+            actionLabel={tx('common:retry')}
+            onAction={() => void refresh()}
+          />
+        </ScrollView>
       )
     }
     if (setlists.length === 0) {
       return (
-        <EmptyState
-          icon="list.bullet"
-          title={tx('empty')}
-          actionLabel={tx('newSet')}
-          onAction={onCreate}
-        />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + t.spacing.xl }}
+          refreshControl={refreshControl()}
+        >
+          <EmptyState
+            icon="list.bullet"
+            title={tx('empty')}
+            actionLabel={tx('newSet')}
+            onAction={onCreate}
+          />
+        </ScrollView>
       )
     }
     return (
       <FlatList
         data={setlists}
         keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.muted} />
-        }
+        refreshControl={refreshControl()}
         renderItem={({ item }) => (
           <SwipeToDelete
             onDelete={() => onDeleteSetlist(item)}
@@ -192,7 +218,9 @@ export default function SetlistsScreen() {
             />
           </SwipeToDelete>
         )}
-        contentContainerStyle={{ paddingBottom: t.spacing.sm }}
+        // Clear the floating native tab bar (insets.bottom includes its height
+        // under native tabs) so the last row scrolls fully above it.
+        contentContainerStyle={{ paddingBottom: insets.bottom + t.spacing.xl }}
       />
     )
   }
