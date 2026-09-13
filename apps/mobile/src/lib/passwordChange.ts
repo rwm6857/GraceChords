@@ -13,6 +13,7 @@
 // needs an email round trip, which fails in the low-connectivity settings this
 // app is used in.
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { authErrorKey } from '@gracechords/core'
 import { validatePasswordStrength } from './authValidation'
 
 type SupabaseAuth = Pick<SupabaseClient, 'auth'>
@@ -20,9 +21,8 @@ type SupabaseAuth = Pick<SupabaseClient, 'auth'>
 export type PasswordChangeResult = {
   ok: boolean
   /**
-   * An auth-namespace i18n key (errors.*) for our own failures, or a raw
-   * passthrough message from Supabase. The screen renders it through
-   * t(error, { defaultValue: error }) so both forms display.
+   * ALWAYS an auth-namespace i18n key (errors.*) — ours, or one mapped from a
+   * provider failure by authErrorKey(). Never a raw Supabase message.
    */
   error?: string
   /**
@@ -33,44 +33,22 @@ export type PasswordChangeResult = {
   othersSignedOut?: boolean
 }
 
-// Supabase auth errors are plain objects: { message, status, code, name }.
-type AuthErrorish = { message?: string; status?: number; code?: string } | null | undefined
-
-function code(e: AuthErrorish): string {
-  return String(e?.code ?? '')
-}
-
 /**
- * Supabase throttles by IP and account, and the limit it applies here is the
- * general sign-in limit — not a change-password-specific one. So repeated wrong
- * guesses lock the user out of signing in anywhere, which the copy must say.
+ * Two of authErrorKey's generic keys need change-password-specific wording, so
+ * they are remapped here rather than in the shared mapper.
+ *
+ * A wrong password is `invalid_credentials`, which on the sign-in screen means
+ * "that email or password is wrong" but here means "that CURRENT password is
+ * wrong" — a different sentence about a different field.
+ *
+ * A throttle is the general SIGN-IN limit, not a change-password-specific one
+ * (Supabase throttles by IP and account on the same endpoint), so repeated wrong
+ * guesses lock the user out of signing in anywhere — which the copy must say.
  */
-function isRateLimited(e: AuthErrorish): boolean {
-  return e?.status === 429 || code(e).includes('rate_limit')
-}
-
-function isWrongPassword(e: AuthErrorish): boolean {
-  return code(e) === 'invalid_credentials' || code(e) === 'invalid_grant'
-}
-
-function isWeakPassword(e: AuthErrorish): boolean {
-  return code(e) === 'weak_password'
-}
-
-function isSamePassword(e: AuthErrorish): boolean {
-  return code(e) === 'same_password'
-}
-
-// React Native's fetch rejects with a bare TypeError on an unreachable host —
-// no code, no cause. Same string match as errors.ts, inlined to keep this
-// module free of that module's RN-adjacent imports.
-function isNetworkFailure(e: AuthErrorish): boolean {
-  const message = String(e?.message ?? '').toLowerCase()
-  return (
-    message.includes('network request failed') ||
-    message.includes('failed to fetch') ||
-    message.includes('network error')
-  )
+function contextualise(key: string): string {
+  if (key === 'errors.invalidCredentials') return 'errors.wrongCurrentPassword'
+  if (key === 'errors.rateLimited') return 'errors.rateLimitedSignIn'
+  return key
 }
 
 export type ChangePasswordInput = {
@@ -107,22 +85,13 @@ export async function changePassword(
     password: currentPassword,
   })
   if (verify.error) {
-    const e = verify.error as AuthErrorish
-    if (isRateLimited(e)) return { ok: false, error: 'errors.rateLimitedSignIn' }
-    if (isWrongPassword(e)) return { ok: false, error: 'errors.wrongCurrentPassword' }
-    if (isNetworkFailure(e)) return { ok: false, error: 'errors.network' }
-    return { ok: false, error: e?.message || 'errors.generic' }
+    return { ok: false, error: contextualise(authErrorKey(verify.error)) }
   }
 
   // 2. Set the new password.
   const update = await supabase.auth.updateUser({ password: newPassword })
   if (update.error) {
-    const e = update.error as AuthErrorish
-    if (isRateLimited(e)) return { ok: false, error: 'errors.rateLimitedSignIn' }
-    if (isSamePassword(e)) return { ok: false, error: 'errors.passwordSameAsCurrent' }
-    if (isWeakPassword(e)) return { ok: false, error: 'errors.passwordNeedsMix' }
-    if (isNetworkFailure(e)) return { ok: false, error: 'errors.network' }
-    return { ok: false, error: e?.message || 'errors.generic' }
+    return { ok: false, error: contextualise(authErrorKey(update.error)) }
   }
 
   // 3. Drop every OTHER session, keeping this device signed in. The password is

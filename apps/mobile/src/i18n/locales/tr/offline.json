@@ -1,5 +1,6 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "banner": "Çevrimdışısınız. Kaydedilen içerik çalışmaya devam ediyor.",
   "title": "Çevrimdışı ve İndirmeler",
   "onThisDeviceStorage": "Bu cihazdaki çeviriler",
   "downloadedCount": "{{total}} çeviriden {{count}} tanesi indirildi",

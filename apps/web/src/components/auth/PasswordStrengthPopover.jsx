@@ -1,22 +1,18 @@
 import React from 'react'
+import { PASSWORD_POLICY, checkPassword } from '@gracechords/core'
 
+// The rules themselves live in @gracechords/core so this list, the mobile
+// requirement line and both validators cannot drift apart — see
+// packages/core/src/auth/passwordPolicy.ts. Only the labels are local.
 const PW_REQUIREMENTS = [
-  { key: 'minLength',  label: 'At least 8 characters' },
+  { key: 'minLength',  label: `At least ${PASSWORD_POLICY.minLength} characters` },
   { key: 'hasLower',   label: 'One lowercase letter' },
   { key: 'hasUpper',   label: 'One uppercase letter' },
-  { key: 'hasNumber',  label: 'One number' },
-  { key: 'hasSpecial', label: 'One special character' },
+  { key: 'hasDigit',   label: 'One number' },
+  { key: 'hasSymbol',  label: 'One special character' },
 ]
 
-export function checkPassword(pw) {
-  return {
-    minLength:  pw.length >= 8,
-    hasLower:   /[a-z]/.test(pw),
-    hasUpper:   /[A-Z]/.test(pw),
-    hasNumber:  /[0-9]/.test(pw),
-    hasSpecial: /[^A-Za-z0-9]/.test(pw),
-  }
-}
+export { checkPassword }
 
 function CircleIcon({ filled }) {
   return filled ? (

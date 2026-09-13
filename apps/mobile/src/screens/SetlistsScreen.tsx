@@ -11,6 +11,9 @@ import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
 import PruneSetlistsModal from '../components/setlist/PruneSetlistsModal'
 import { useTheme } from '../theme/ThemeProvider'
+import { duplicateSetlist, nextCopyName } from '@gracechords/core'
+import { defaultSetlistName } from '../lib/setlistName'
+import { supabase } from '../lib/supabase'
 import { useSetlists, type SetlistRow } from '../lib/useSetlists'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
@@ -27,6 +30,7 @@ export default function SetlistsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [creating, setCreating] = useState(false)
   const [pruneOpen, setPruneOpen] = useState(false)
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
 
   // Refresh whenever the tab regains focus so edits made in the builder
   // (name, songs, deletes) are reflected without a manual pull.
@@ -56,9 +60,17 @@ export default function SetlistsScreen() {
     // background. The builder retries its initial fetch a few times to cover
     // the in-flight INSERT.
     const id = uuidv4()
+    // Named here rather than in core's createSetlist: this is the one caller
+    // that already holds every existing name, so it is the only one that can
+    // de-duplicate a second set made on the same day without a round trip.
+    const name = defaultSetlistName(
+      (key, opts) => tx(key, opts),
+      i18n.language,
+      setlists.map((row) => row.name),
+    )
     router.push(`/setlist/${id}`)
     try {
-      await create({ id })
+      await create({ id, name })
     } catch (err: unknown) {
       // A stale role/limit read can let an over-cap create slip through to the
       // trigger. Surface the prune flow rather than a raw error.
@@ -71,6 +83,42 @@ export default function SetlistsScreen() {
       }
     } finally {
       setCreating(false)
+    }
+  }
+
+  // Duplicate from the row's swipe actions. Numbered against the names already
+  // in the list ("Sunday" → "Sunday (2)"), so the copy is distinguishable at a
+  // glance — the complaint behind QA Nº 6994's M-01 was a column of identical
+  // rows, and an unnumbered copy would recreate it.
+  async function onDuplicateSetlist(item: SetlistRow) {
+    if (duplicatingId) return
+    // Same cap as creating: a duplicate is a new setlist and the DB trigger
+    // rejects it exactly the same way.
+    if (atLimit) {
+      setPruneOpen(true)
+      return
+    }
+    setDuplicatingId(item.id)
+    try {
+      const name = nextCopyName(
+        item.name,
+        setlists.map((row) => row.name),
+      )
+      await duplicateSetlist(supabase, item.id, name)
+      await refresh()
+    } catch (err: unknown) {
+      if (errMessage(err).includes('PERSONAL_SETLIST_LIMIT_REACHED')) {
+        await refresh()
+        setPruneOpen(true)
+      } else {
+        Alert.alert(
+          tx('alerts.couldNotDuplicate'),
+          actionFailureMessage('Setlists.duplicate', err, tx),
+        )
+        await refresh()
+      }
+    } finally {
+      setDuplicatingId(null)
     }
   }
 
@@ -131,6 +179,11 @@ export default function SetlistsScreen() {
             confirm={{
               title: tx('deleteConfirm.title', { name: item.name }),
               message: tx('deleteConfirm.message'),
+            }}
+            secondary={{
+              label: tx('rowActions.duplicate'),
+              icon: 'plus.square.on.square',
+              onPress: () => void onDuplicateSetlist(item),
             }}
           >
             <ListRow

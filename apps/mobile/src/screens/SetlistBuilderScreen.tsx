@@ -41,6 +41,7 @@ import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
 import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
 import { actionFailureMessage } from '../lib/errors'
+import { defaultSetlistName } from '../lib/setlistName'
 
 const TOAST_MS = 1900
 
@@ -56,6 +57,8 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const isTablet = useIsTabletWidth()
   const {
     name,
+    loadFailed,
+    retryLoad,
     items,
     songs,
     songsLoading,
@@ -179,8 +182,12 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
     // Optimistic: open the new (empty) set immediately; insert in the
     // background (the builder retries its initial fetch to cover the race).
     const id = uuidv4()
+    // No existing-names list on this screen, so the date name is used as-is; a
+    // second set made from here on the same day is not de-duplicated. The
+    // Setlists tab, which does hold the list, numbers them.
+    const name = defaultSetlistName((key, opts) => tx(key, opts), i18n.language)
     router.replace(`/setlist/${id}`)
-    createSetlist(supabase, { id }).catch((err: unknown) => {
+    createSetlist(supabase, { id, name }).catch((err: unknown) => {
       Alert.alert(tx('alerts.couldNotCreate'), actionFailureMessage('SetlistBuilder.create', err, tx))
     })
   }
@@ -268,6 +275,44 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
           <Text style={{ fontSize: t.typography.body.fontSize, color: t.colors.sec }}>
             {tx('builder.notFound')}
           </Text>
+        </View>
+      </Screen>
+    )
+  }
+
+  // A load that FAILED is NOT an empty setlist, and must not be presented as
+  // one. It used to be: the builder rendered its normal editable card over
+  // initial state, so the set appeared to have no name and no songs. Renaming
+  // that card edited a setlist the app had never actually read — the rename went
+  // nowhere and the set stayed "New Setlist" (QA report Nº 6994, M-01). Offer
+  // the retry instead; the real setlist is intact on the server.
+  if (loadFailed) {
+    return (
+      <Screen edges={['top', 'left', 'right', 'bottom']}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: t.spacing.xl,
+            gap: t.spacing.lg,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: t.typography.body.fontSize,
+              color: t.colors.sec,
+              textAlign: 'center',
+            }}
+          >
+            {tx('builder.loadFailed')}
+          </Text>
+          <Button title={tx('common:retry')} onPress={retryLoad} fullWidth={false} />
+          <Pressable onPress={() => router.back()} accessibilityRole="button" hitSlop={8}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>
+              {tx('builder.backToSets')}
+            </Text>
+          </Pressable>
         </View>
       </Screen>
     )

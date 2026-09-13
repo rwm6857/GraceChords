@@ -1,5 +1,6 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "banner": "오프라인 상태입니다. 저장된 콘텐츠는 그대로 사용할 수 있습니다.",
   "title": "오프라인 및 다운로드",
   "onThisDeviceStorage": "이 기기의 번역본",
   "downloadedCount": "{{total}}개 번역본 중 {{count}}개 다운로드됨",

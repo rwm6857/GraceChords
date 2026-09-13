@@ -1,5 +1,6 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
+  "banner": "You're offline. Saved content still works.",
   "title": "Offline & Downloads",
   "onThisDeviceStorage": "Translations on this device",
   "downloadedCount": "{{count}} of {{total}} translations downloaded",

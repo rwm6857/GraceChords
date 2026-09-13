@@ -2,6 +2,7 @@
   "_meta": { "reviewer": "", "reviewedAt": "" },
   "title": "Setlists",
   "newSet": "New set",
+  "defaultName": "{{date}} Worship",
   "empty": "No setlists yet",
   "syncing": "Syncing your setlists…",
   "editedAgo": "edited {{time}}",
@@ -12,6 +13,7 @@
   "alerts": {
     "couldNotCreate": "Could not create set",
     "couldNotDelete": "Could not delete set",
+    "couldNotDuplicate": "Could not duplicate set",
     "couldNotDeleteMany": "Could not delete setlists",
     "couldNotCopyLink": "Could not copy link",
     "couldNotSendSet": "Could not send set",
@@ -40,7 +42,9 @@
     "add": "Add",
     "addSongs": "Add songs",
     "startSet": "Start set",
-    "notFound": "This setlist no longer exists."
+    "notFound": "This setlist no longer exists.",
+    "loadFailed": "This set couldn’t be loaded. Check your connection and try again — your setlist is safe.",
+    "backToSets": "Back to setlists"
   },
   "timeline": {
     "reorder": "Reorder {{title}}",

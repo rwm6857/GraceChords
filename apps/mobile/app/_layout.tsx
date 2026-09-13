@@ -17,7 +17,10 @@ import {
   supabase,
   supabaseConfigError,
 } from '../src/lib/supabase'
-import { resolveInitialSession } from '../src/lib/authSession'
+import { resolveInitialSession, INITIAL_SESSION_TIMEOUT_MS } from '../src/lib/authSession'
+import { makeStoredSessionReader } from '../src/lib/storedSession'
+import { startConnectivityWatch } from '../src/lib/connectivity'
+import OfflineBanner from '../src/components/OfflineBanner'
 import { setCurrentUserFromSession } from '../src/lib/currentUser'
 import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
@@ -95,7 +98,10 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     // choose-icon is the post-signup avatar step: it must stay visible both
     // WITH a session (confirm-email off signs in immediately — don't bounce to
     // Home before the pick) and WITHOUT one (confirmation pending).
-    const inAuthFlow = seg === 'login' || seg === 'choose-icon'
+    // forgot-password is reached FROM the sign-in screen, so by definition it is
+    // opened without a session and must not bounce back to /login.
+    const inAuthFlow =
+      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
     // `session/[code]` is the anonymous live-session follower — a logged-out app
     // user must be able to view it without being bounced to /login.
     const isPublic = seg === 'session'
@@ -120,7 +126,8 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
   useEffect(() => {
     if (!ready) return
     const seg = segments[0] as string | undefined
-    const inAuthFlow = seg === 'login' || seg === 'choose-icon'
+    const inAuthFlow =
+      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
     const isPublic = seg === 'session'
     // A signed-in first launch is not settled while the gate above still wants
     // to replace this route with the intro — lifting the splash first would
@@ -252,7 +259,14 @@ export default function RootLayout() {
     // primeLaunchStorage awaits a multiGet before any store hydrates, and if the
     // session read were nested behind it the two would serialise and cold launch
     // would regress — the whole point of batching is to be no slower.
-    const sessionRead = resolveInitialSession(supabase.auth)
+    // The third argument is the offline fallback: when the network cannot
+    // confirm the persisted session, adopt the one on disk instead of reporting
+    // the user signed out. See authSession.ts.
+    const sessionRead = resolveInitialSession(
+      supabase.auth,
+      INITIAL_SESSION_TIMEOUT_MS,
+      makeStoredSessionReader(process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''),
+    )
     // One AsyncStorage round trip for all 15 launch keys instead of 15 separate
     // getItem calls. The stores themselves are untouched: they receive a
     // KVStorage that answers from the batch, so every missing/null/malformed
@@ -339,6 +353,10 @@ export default function RootLayout() {
       // 12's Font.loadAsync().catch — lifting the splash into a signed-out app
       // with default preferences beats holding it indefinitely.
       .catch(() => setReady(true))
+    // Connectivity tracking for the offline banner. Starts here so there is one
+    // poll for the whole app, and stops with this effect.
+    const stopConnectivityWatch = startConnectivityWatch()
+
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next)
       setCurrentUserFromSession(next)
@@ -357,6 +375,7 @@ export default function RootLayout() {
     return () => {
       sub.subscription.unsubscribe()
       stopAutoRefresh?.()
+      stopConnectivityWatch()
       a11y.stop()
     }
   }, [])
@@ -420,6 +439,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <SafeAreaProvider>
           <ThemedStatusBar />
+          {/* Above the navigator so it overlays rather than shifting any
+              screen's layout. Renders nothing while online. */}
+          <OfflineBanner />
           {/* Reduce Motion: swap the default slide push for a cross-fade
               (the HIG-preferred reduced-motion transition). Default settings
               keep the standard push animation. */}
@@ -431,6 +453,7 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="login" />
+            <Stack.Screen name="forgot-password" />
             <Stack.Screen name="choose-icon" />
             <Stack.Screen name="intro" />
             <Stack.Screen name="viewer/[slug]" />

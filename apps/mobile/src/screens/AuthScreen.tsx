@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -95,8 +94,7 @@ export default function AuthScreen() {
   }
 
   function onForgot() {
-    // The design's "Forgot?" link is not wired to a reset flow this stage.
-    Alert.alert(tx('resetPasswordAlert.title'), tx('resetPasswordAlert.message'))
+    router.push('/forgot-password')
   }
 
   return (
@@ -166,6 +164,9 @@ export default function AuthScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder={isSignup ? tx('passwordPlaceholderSignup') : tx('passwordPlaceholderSignin')}
+            helperText={
+              isSignup ? tx('passwordRequirements', { min: MIN_PASSWORD_LENGTH }) : undefined
+            }
             secureTextEntry
             autoComplete={isSignup ? 'new-password' : 'current-password'}
             textContentType={isSignup ? 'newPassword' : 'password'}
@@ -182,7 +183,7 @@ export default function AuthScreen() {
 
           {error ? (
             <Text style={{ fontSize: 13.5, color: t.colors.danger }}>
-              {tx(error, { defaultValue: error, min: MIN_PASSWORD_LENGTH })}
+              {tx(error, { min: MIN_PASSWORD_LENGTH })}
             </Text>
           ) : null}
 

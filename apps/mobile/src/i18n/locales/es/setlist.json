@@ -2,6 +2,7 @@
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "title": "Repertorios",
   "newSet": "Nuevo repertorio",
+  "defaultName": "Alabanza {{date}}",
   "empty": "Aún no hay repertorios",
   "syncing": "Sincronizando tus repertorios…",
   "editedAgo": "editado {{time}}",
@@ -12,6 +13,7 @@
   "alerts": {
     "couldNotCreate": "No se pudo crear el repertorio",
     "couldNotDelete": "No se pudo eliminar el repertorio",
+    "couldNotDuplicate": "No se pudo duplicar el repertorio",
     "couldNotDeleteMany": "No se pudieron eliminar los repertorios",
     "couldNotCopyLink": "No se pudo copiar el enlace",
     "couldNotSendSet": "No se pudo enviar el repertorio",
@@ -40,7 +42,9 @@
     "add": "Añadir",
     "addSongs": "Añadir canciones",
     "startSet": "Iniciar repertorio",
-    "notFound": "Este repertorio ya no existe."
+    "notFound": "Este repertorio ya no existe.",
+    "loadFailed": "No se pudo cargar este repertorio. Comprueba tu conexión e inténtalo de nuevo: tu repertorio está a salvo.",
+    "backToSets": "Volver a repertorios"
   },
   "timeline": {
     "reorder": "Reordenar {{title}}",

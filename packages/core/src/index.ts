@@ -41,6 +41,7 @@ export * from './songs/songSuggestions'
 // Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
 export * from './setlists/setlistsRepo'
+export * from './setlists/copyName'
 export * from './setlists/setlistSummary'
 export * from './setlists/limits'
 
@@ -51,6 +52,10 @@ export * from './sessions/sessionsRepo'
 // Private per-user reading reflections (Daily Word landing + journal)
 export * from './reflections/types'
 export * from './reflections/reflectionsRepo'
+
+// Password policy (single source of truth) + provider-error → i18n key mapper
+export * from './auth/passwordPolicy'
+export * from './auth/authErrorKey'
 
 // Role hierarchy + canonical role read
 export * from './rbac/roles'

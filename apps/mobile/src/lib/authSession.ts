@@ -7,6 +7,13 @@ import { GATE_MS } from './requestBudget'
 
 type BootAuth = Pick<SupabaseClient['auth'], 'getSession' | 'signOut'>
 
+/**
+ * Reads the session supabase-js persisted, straight out of storage, without
+ * touching the network. Injected rather than imported so this module stays
+ * RN-free — see src/lib/storedSession.ts for the mobile implementation.
+ */
+export type StoredSessionReader = () => Promise<Session | null>
+
 // A persisted session whose refresh token has been revoked or rotated (signed
 // out on another device, session deleted in the dashboard, token reuse) surfaces
 // as an AuthApiError with this code / message on the next refresh. We treat it
@@ -73,6 +80,41 @@ export const INITIAL_SESSION_TIMEOUT_MS = GATE_MS
 
 const TIMED_OUT = Symbol('gc.initialSessionTimeout')
 
+/**
+ * Fall back to the session on disk when the network could not confirm it.
+ *
+ * getSession() refreshes whenever the access token expires within auth-js's
+ * 90 s margin, and an offline refresh makes it resolve { session: null, error }.
+ * Read literally that is indistinguishable from "signed out", and the app acted
+ * on it: the gate in app/_layout.tsx sent the user to /login with a perfectly
+ * good session sitting in AsyncStorage. Any offline launch more than about an
+ * hour after the last refresh logged the user out, which is the single most
+ * common complaint this app has (and the worst one, because the user's own fix —
+ * signing in again — also needs the network).
+ *
+ * So a session that cannot be VERIFIED is not the same as no session. If storage
+ * still holds one with a refresh token, we adopt it and let the app render.
+ * Nothing is weakened by this: authorization is decided server-side by RLS, every
+ * query carries the same token it always did, and a revoked one fails exactly as
+ * before. The cost is that an account revoked while the device is offline keeps
+ * showing cached UI until the device next reaches the network — at which point
+ * auth-js emits SIGNED_OUT and the gate takes over.
+ */
+async function readStoredSessionSafely(
+  readStoredSession: StoredSessionReader | undefined,
+): Promise<Session | null> {
+  if (!readStoredSession) return null
+  try {
+    const stored = await readStoredSession()
+    // A session with no refresh token can never be revived, so it is not worth
+    // adopting — it would only put the user in an app where nothing loads.
+    if (!stored?.refresh_token || !stored.user) return null
+    return stored
+  } catch {
+    return null
+  }
+}
+
 // Resolve the persisted session at launch, within a bounded time.
 //
 // A race, not a catch: getSession() RESOLVES with { session: null, error } on a
@@ -89,14 +131,21 @@ const TIMED_OUT = Symbol('gc.initialSessionTimeout')
 export async function resolveInitialSession(
   auth: BootAuth,
   timeoutMs: number = INITIAL_SESSION_TIMEOUT_MS,
+  readStoredSession?: StoredSessionReader,
 ): Promise<Session | null> {
   let timer: ReturnType<typeof setTimeout> | undefined
   const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
     timer = setTimeout(() => resolve(TIMED_OUT), timeoutMs)
   })
   try {
-    const result = await Promise.race([readPersistedSession(auth), deadline])
-    return result === TIMED_OUT ? null : result
+    const result = await Promise.race([
+      readPersistedSession(auth, readStoredSession),
+      deadline,
+    ])
+    // A timeout is the same situation as an offline refresh — we could not
+    // confirm the session, which is not the same as not having one.
+    if (result !== TIMED_OUT) return result
+    return await readStoredSessionSafely(readStoredSession)
   } finally {
     clearTimeout(timer)
   }
@@ -113,15 +162,25 @@ export async function resolveInitialSession(
 // Wrapped so a throw (lock acquisition, storage adapter) resolves null rather than
 // rejecting: this promise is a member of the hydration Promise.all that gates the
 // splash, and a rejection there would leave `ready` false forever.
-async function readPersistedSession(auth: BootAuth): Promise<Session | null> {
+async function readPersistedSession(
+  auth: BootAuth,
+  readStoredSession?: StoredSessionReader,
+): Promise<Session | null> {
   try {
     const { data, error } = await auth.getSession()
+    // A DEAD token is the one case that really is "signed out": purge it and let
+    // the gate route to /login. Checked first so the offline fallback below can
+    // never resurrect a session the server has already rejected.
     if (error && isInvalidRefreshTokenError(error)) {
       await auth.signOut({ scope: 'local' }).catch(() => {})
       return null
     }
-    return data.session ?? null
-  } catch {
+    if (data.session) return data.session
+    // No session AND an error means the refresh could not complete — almost
+    // always the network. Fall back to disk rather than reporting signed out.
+    if (error) return await readStoredSessionSafely(readStoredSession)
     return null
+  } catch {
+    return await readStoredSessionSafely(readStoredSession)
   }
 }

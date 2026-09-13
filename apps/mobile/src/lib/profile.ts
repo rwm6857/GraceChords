@@ -7,6 +7,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const PENDING_SPRITE_KEY = 'gc.pendingSprite'
 
+// The last sprite we successfully READ for an account, cached so the avatar is
+// right on the first frame of the next launch.
+//
+// Without it the sprite came from a network read on every cold launch and was
+// persisted nowhere, so every launch showed the generic `person` glyph until the
+// read landed — and offline it never landed at all. That is the "user icon
+// sometimes doesn't display" report: not random, just usually too fast to catch.
+export const CACHED_SPRITE_KEY = 'gc.cachedSprite'
+
 export type KVStorage = {
   getItem(key: string): Promise<string | null>
   setItem(key: string, value: string): Promise<void>
@@ -128,6 +137,51 @@ export function resolveDisplayName(stored: string | null, user: NameMetadataSour
   const email = user?.email
   if (email) return email.split('@')[0]
   return null
+}
+
+/**
+ * The cached sprite for `userId`, or null.
+ *
+ * Stored as `<userId>:<sprite>` and matched on the id, so a cache written for
+ * one account can never paint another account's avatar — the device is shared
+ * often enough (a worship team passing a phone around) for that to matter.
+ */
+export async function readCachedSprite(
+  storage: KVStorage,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const raw = await storage.getItem(CACHED_SPRITE_KEY)
+    if (!raw) return null
+    const sep = raw.indexOf(':')
+    if (sep < 0) return null
+    return raw.slice(0, sep) === userId ? raw.slice(sep + 1) || null : null
+  } catch {
+    return null
+  }
+}
+
+/** Cache (or, with a null sprite, clear) the sprite for `userId`. */
+export async function writeCachedSprite(
+  storage: KVStorage,
+  userId: string,
+  sprite: string | null,
+): Promise<void> {
+  try {
+    if (sprite) await storage.setItem(CACHED_SPRITE_KEY, `${userId}:${sprite}`)
+    else await storage.removeItem(CACHED_SPRITE_KEY)
+  } catch {
+    // Best-effort: a cosmetic preference must never surface an error.
+  }
+}
+
+/** Drop the cache entirely (sign-out). */
+export async function clearCachedSprite(storage: KVStorage): Promise<void> {
+  try {
+    await storage.removeItem(CACHED_SPRITE_KEY)
+  } catch {
+    // Best-effort by design.
+  }
 }
 
 export async function stashPendingSprite(storage: KVStorage, sprite: string): Promise<void> {

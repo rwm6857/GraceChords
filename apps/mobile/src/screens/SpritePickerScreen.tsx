@@ -8,7 +8,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import SymbolIcon from '../components/SymbolIcon'
 import { supabase } from '../lib/supabase'
 import { SPRITE_IDS, SPRITE_SOURCES, type SpriteId } from '../lib/sprites'
-import { saveSpritePreference, stashPendingSprite } from '../lib/profile'
+import { saveSpritePreference, stashPendingSprite, writeCachedSprite } from '../lib/profile'
 import { setLocalSprite, useProfileSprite } from '../lib/useProfileSprite'
 
 // Avatar picker. Two modes:
@@ -51,7 +51,11 @@ export default function SpritePickerScreen() {
       if (sprite) {
         const { error } = await saveSpritePreference(supabase, data.session.user.id, sprite)
         if (error) await stashPendingSprite(AsyncStorage, sprite)
-        else setLocalSprite(sprite) // reflect the new avatar everywhere at once
+        else {
+          setLocalSprite(sprite) // reflect the new avatar everywhere at once
+          // …and on the next cold launch, before the network answers.
+          await writeCachedSprite(AsyncStorage, data.session.user.id, sprite)
+        }
       }
       // Edit came from Settings — return there; onboarding enters the app.
       if (isEdit) router.back()
