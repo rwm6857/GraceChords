@@ -159,6 +159,35 @@ describe('light mode specifics', () => {
   })
 })
 
+describe('segmented-control selection indicator', () => {
+  // Why SegmentedPill/AccidentalToggle keep a SOLID accent fill on Android
+  // instead of taking MD3's `secondaryContainer` tint.
+  //
+  // MD3's tint is not the indicator on its own — the spec pairs it with a check
+  // icon on the selected segment. Reserving an icon slot on every cell (needed,
+  // or the control changes width as the selection moves) costs ~22dp per
+  // segment, which the three-segment pills in ko/tr/es do not have to spare. So
+  // the tint would have had to carry selection alone, and it cannot: the whole
+  // job of these controls is showing which option is active, and neither has a
+  // Differentiate-Without-Color cue to fall back on.
+  //
+  // These assertions are the alarm. If someone later retunes `accent` toward
+  // `accentSoft`, or swaps the fill for the tint, the indicator quietly stops
+  // being an indicator and nothing else in the suite notices.
+  it.each(MODES)('$name: the accent fill clears the 3:1 non-text floor on the track', ({ colors }) => {
+    expect(contrastRatio(colors.accent, colors.surface)).toBeGreaterThanOrEqual(NON_TEXT)
+  })
+
+  it.each(MODES)('$name: accentSoft would NOT have cleared it — this is why', ({ colors }) => {
+    // Recorded, not aspirational: the measured reason for the deviation.
+    expect(contrastRatio(colors.accentSoft, colors.surface)).toBeLessThan(NON_TEXT)
+  })
+
+  it.each(MODES)('$name: the selected label stays legible on the fill', ({ colors }) => {
+    expect(contrastRatio(colors.onAccent, colors.accent)).toBeGreaterThanOrEqual(NON_TEXT)
+  })
+})
+
 describe('typography ramp vs the large-text threshold', () => {
   // 24px at any weight, or 18.66px at ≥700, qualifies for the relaxed 3:1 ratio.
   const isLargeText = (fontSize: number, fontWeight: string) =>

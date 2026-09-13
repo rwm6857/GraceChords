@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
@@ -45,6 +45,7 @@ export default function PerformerShareSheet(props: PerformerShareProps) {
 
 function PerformerShareContent({ onClose, songCount, initialScope, handlers }: PerformerShareProps) {
   const t = useTheme()
+  const isAndroid = Platform.OS === 'android'
   const { t: tx } = useTranslation('export')
   // The content mounts fresh on every open (formSheet route), so the scope
   // initializer re-seeds per open (single-song sets shouldn't land on
@@ -168,23 +169,51 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
     </Pressable>
   )
 
+  // Full-width view-switcher. On Android it takes the same Material 3
+  // segmented-button shape as SegmentedPill/AccidentalToggle (outlined track,
+  // 40dp, divider between cells, accent-filled selection) rather than iOS's
+  // raised-thumb switcher — a `surface` fill would be invisible against an
+  // outlined track. It stays full width on both. Kept inline rather
+  // than folded into SegmentedPill because that primitive hugs its content by
+  // design and this one must stretch.
   const segment = (value: Scope, label: string) => {
     const active = scope === value
+    const first = value === 'song'
     return (
       <Pressable
         onPress={() => setScope(value)}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
+        android_ripple={{ borderless: false, foreground: true }}
         style={{
           flex: 1,
-          height: 34,
-          borderRadius: 8,
+          height: isAndroid ? 38 : 34,
+          borderRadius: isAndroid ? 0 : 8,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: active ? t.colors.surface : 'transparent',
+          backgroundColor: active
+            ? isAndroid
+              ? t.colors.accent
+              : t.colors.surface
+            : 'transparent',
+          ...(isAndroid && !first
+            ? { borderLeftWidth: 1, borderLeftColor: t.colors.border }
+            : null),
         }}
       >
-        <Text style={{ fontSize: 14, fontWeight: '600', color: active ? t.colors.ink : t.colors.sec }}>
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: '600',
+            color: active
+              ? isAndroid
+                ? t.colors.onAccent
+                : t.colors.ink
+              : isAndroid
+                ? t.colors.ink
+                : t.colors.sec,
+          }}
+        >
           {label}
         </Text>
       </Pressable>
@@ -198,9 +227,12 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
         <View
           style={{
             flexDirection: 'row',
-            padding: 3,
-            borderRadius: 10,
-            backgroundColor: t.colors.surfaceAlt,
+            padding: isAndroid ? 0 : 3,
+            borderRadius: isAndroid ? 20 : 10,
+            backgroundColor: isAndroid ? 'transparent' : t.colors.surfaceAlt,
+            ...(isAndroid
+              ? { borderWidth: 1, borderColor: t.colors.border, overflow: 'hidden' as const }
+              : null),
           }}
         >
           {segment('song', tx('thisSong'))}
