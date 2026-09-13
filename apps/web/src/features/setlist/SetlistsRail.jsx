@@ -42,7 +42,11 @@ export default function SetlistsRail({
 
   if (!isLoggedIn) {
     return (
-      <div className="gc-rail gc-rail--setlists" ref={railRef}>
+      <nav
+        className="gc-rail gc-rail--setlists"
+        ref={railRef}
+        aria-label={t('setlist.savedSets')}
+      >
         <div className="gc-rail-head">{t('setlist.savedSets')}</div>
         <div className="gc-signin-card">
           <h3>{t('setlist.signInTitle')}</h3>
@@ -51,7 +55,7 @@ export default function SetlistsRail({
             {t('setlist.signIn')}
           </Button>
         </div>
-      </div>
+      </nav>
     )
   }
 
@@ -62,7 +66,11 @@ export default function SetlistsRail({
   }
 
   return (
-    <div className="gc-rail gc-rail--setlists" ref={railRef}>
+    <nav
+      className="gc-rail gc-rail--setlists"
+      ref={railRef}
+      aria-label={t('setlist.savedSets')}
+    >
       <div className="gc-rail-head">{t('setlist.savedSets')}</div>
       <div className="gc-rail-controls">
         <Button variant="primary" size="sm" fullWidth iconLeft={<PlusIcon />} onClick={onCreate}>
@@ -202,6 +210,6 @@ export default function SetlistsRail({
           : t('setlist.usageCountUnlimited', { count: setlists.length })}
         {atLimit ? <span className="gc-rail-foot-warn"> · {t('setlist.atLimit')}</span> : null}
       </div>
-    </div>
+    </nav>
   )
 }
