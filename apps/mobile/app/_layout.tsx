@@ -475,14 +475,22 @@ export default function RootLayout() {
             <Stack.Screen name="pitch-pipe" />
             {/* Shared option-sheet route (src/lib/formSheetHost.ts): native
                 formSheet so phones keep a bottom sheet with grabber/detents
-                while tablets get the centered, naturally-narrow form sheet. */}
+                while tablets get the centered, naturally-narrow form sheet.
+
+                sheetGrabberVisible is iOS-only in react-native-screens 4.23 —
+                Android stores the prop and never renders anything — so the
+                Android handle is drawn in app/sheet.tsx instead. Corner radius
+                IS implemented on both (the @platform ios doc comment on the
+                prop is stale; Screen.kt applies it for FORM_SHEET), so Android
+                takes Material's 28dp Extra-Large while iOS keeps its 20. */}
             <Stack.Screen
               name="sheet"
               options={{
                 presentation: 'formSheet',
                 sheetAllowedDetents: 'fitToContents',
                 sheetGrabberVisible: true,
-                sheetCornerRadius: radii.sheet,
+                sheetCornerRadius:
+                  Platform.OS === 'android' ? radii.sheetLarge : radii.sheet,
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
