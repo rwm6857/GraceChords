@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   AppState,
@@ -13,13 +13,21 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { SongDoc } from '@gracechords/core'
 import { fetchSessionByCode, parseChordProOrLegacy, subscribeToSession } from '@gracechords/core'
-import ChordChart from '../components/ChordChart'
+import AutoFitChart from '../components/AutoFitChart'
+import type { ChordStyle } from '../components/ChordChart'
+import HeaderIconButton from '../components/HeaderIconButton'
 import VerseChart from '../components/VerseChart'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
-import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP } from '../components/ViewOptionsSheet'
+import ViewOptionsSheet, {
+  type Accidental,
+  defaultAccidental,
+  resolvePreferFlat,
+} from '../components/ViewOptionsSheet'
 import { useTheme } from '../theme/ThemeProvider'
-import { setDefaultTheme } from '../lib/defaults'
+import { getDefaultsSnapshot, setDefaultKeepAwake, setDefaultTheme, useAppDefaults } from '../lib/defaults'
+import { useChartAutoFit } from '../lib/useChartAutoFit'
+import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
 import { supabase } from '../lib/supabase'
 import { prefetchSong, useSong } from '../lib/useSong'
 
@@ -47,13 +55,25 @@ type SessionRow = {
   current_key?: string | null
 }
 
-// Native, LYRICS-ONLY live-session follower. Mirrors the web follower
+// Native live-session follower. Mirrors the web follower
 // (apps/web/src/pages/SessionViewerPage.jsx): one `sessions` row is the single
 // source of truth (late-join snapshot + live stream via Realtime). Public songs
-// render from the public catalog by slug with chords suppressed; personal/verse
-// items show a placeholder. No transposer, no key/change gestures — the follower
-// only follows. Anonymous viewers are allowed (see the `session` whitelist in
-// app/_layout.tsx).
+// render from the public catalog by slug; personal items show a placeholder.
+// The JOIN CODE decides the tier — the chord code renders chords in the
+// leader's live key, the lyric code renders lyrics only. Anonymous viewers are
+// allowed (see the `session` whitelist in app/_layout.tsx).
+//
+// The chart is the Song Viewer's: AutoFitChart + the shared useChartAutoFit, so
+// a follower gets the same auto-fitting size and tablet columns, driven by the
+// same ViewOptionsSheet. What it deliberately does NOT get is anything that
+// would fight the leader — no transpose, no key picker, no gestures. Nothing a
+// follower changes leaves this device.
+//
+// The header does not auto-hide (the Viewer's one remaining option): it is the
+// live-state indicator — LIVE, the current title, the reconnect banner — so
+// hiding it after a few idle seconds would hide exactly what a follower checks
+// when they look up. That also keeps headerH at 0 for auto-fit, since the
+// chart starts below a static header rather than under a floating one.
 export default function SessionFollowerScreen({ code }: { code: string }) {
   const t = useTheme()
   const { t: tx } = useTranslation(['setlist', 'song'])
@@ -67,8 +87,18 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
 
   const [displayedUid, setDisplayedUid] = useState<string | null>(null)
   const [autoFollow, setAutoFollow] = useState(true)
-  // Ephemeral per open, like the Song Viewer's own font scale.
-  const [fontScale, setFontScale] = useState(1)
+
+  // View options — the same set the Song Viewer offers, minus anything that
+  // would fight the leader (no transpose, no key picker: the session owns the
+  // key). All session-ephemeral except the column ceiling and keep-awake,
+  // which are the app's own persisted preferences.
+  const [sheet, setSheet] = useState<null | 'options'>(null)
+  const [showChordsPref, setShowChordsPref] = useState(true)
+  const [showSections, setShowSections] = useState(true)
+  const [chordStyle, setChordStyle] = useState<ChordStyle>(() => getDefaultsSnapshot().chordStyle)
+  const [accidental, setAccidental] = useState<Accidental>('sharp')
+  const accidentalTouched = useRef(false)
+  const [chartAreaH, setChartAreaH] = useState(0)
 
   const scrollRef = useRef<ScrollView | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -171,10 +201,21 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
 
   const isSong = displayedItem?.kind === 'song'
   const isVerse = displayedItem?.kind === 'verse'
-  // Chord tier renders chords in the leader's live key; lyric tier is lyrics-only.
-  const showChords = tier === 'chord'
-  const steps = showChords ? ((((session?.transpose || 0) % 12) + 12) % 12) : 0
-  const preferFlat = String(session?.current_key || '').includes('b')
+  // The TIER decides whether chords exist here at all (the lyric join code is
+  // the congregation's); on the chord tier the follower may still hide them.
+  const isChordTier = tier === 'chord'
+  const showChords = isChordTier && showChordsPref
+  const steps = isChordTier ? ((((session?.transpose || 0) % 12) + 12) % 12) : 0
+  // Spelling follows the leader's key until the follower flips it themselves.
+  const leaderKey = session?.current_key || ''
+  const preferFlat = resolvePreferFlat(accidental)
+  useEffect(() => {
+    if (!accidentalTouched.current) setAccidental(defaultAccidental(leaderKey))
+  }, [leaderKey])
+  const setAccidentalManual = (v: Accidental) => {
+    accidentalTouched.current = true
+    setAccidental(v)
+  }
   const { song } = useSong(isSong ? displayedItem?.slug : undefined)
   const songReady = !!(song && isSong && song.slug === displayedItem?.slug)
 
@@ -204,17 +245,28 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
     else router.replace('/')
   }
 
-  const stepFont = (dir: 1 | -1) => {
-    setFontScale((prev) => {
-      const next = Math.round((prev + dir * FONT_SCALE_STEP) * 10) / 10
-      return Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, next))
-    })
-  }
-
   // The follower has no Settings access (an anonymous viewer never sees the tab
   // shell), so the toggle writes the app-wide preference directly — there is one
   // theme source of truth and this is it.
   const toggleTheme = () => setDefaultTheme(t.mode === 'dark' ? 'light' : 'dark')
+
+  // Keep-awake: the same persisted preference the Viewer/Performer share, held
+  // only while this screen is focused. A follower on a stand for a whole set is
+  // exactly the case it exists for.
+  const { keepAwake } = useAppDefaults()
+  useKeepAwakeWhileFocused(keepAwake)
+
+  // Column ceiling + auto-fit font, the same wiring the Viewer and Performer
+  // use. The header here is static (it carries live state, so it never hides),
+  // which is why headerH is 0: the ScrollView already starts below it.
+  const autoFit = useChartAutoFit({
+    chartAreaH,
+    headerH: 0,
+    horizontalPadding: t.spacing.lg,
+    columnGap: t.spacing.lg,
+    topGap: t.spacing.lg,
+    chromeVisible: true,
+  })
 
   // ---------- Render ----------
   if (phase === 'loading') {
@@ -315,28 +367,21 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
           {displayedItem?.title || ''}
         </Text>
 
-        {/* Reader controls — deliberately quiet, in the follower's own hands:
-            neither the size nor the theme is broadcast to the session. Grouped
-            in one row so the header's gap sits before the cluster, not between
-            three related buttons. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <HeaderControl
-            label={tx('song:viewOptions.smallerFont')}
-            onPress={() => stepFont(-1)}
-            disabled={fontScale <= FONT_SCALE_MIN}
-          >
-            <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.sec }}>A</Text>
-          </HeaderControl>
-          <HeaderControl
-            label={tx('song:viewOptions.largerFont')}
-            onPress={() => stepFont(1)}
-            disabled={fontScale >= FONT_SCALE_MAX}
-          >
-            <Text style={{ fontSize: 19, fontWeight: '700', color: t.colors.sec }}>A</Text>
-          </HeaderControl>
-          <HeaderControl label={tx('setlist:sessionFollower.toggleTheme')} onPress={toggleTheme}>
-            <SymbolIcon name="circle.lefthalf.filled" size={19} color={t.colors.sec} />
-          </HeaderControl>
+        {/* Reader controls — in the follower's own hands: nothing here is
+            broadcast, so the leader's view and every other follower are
+            untouched. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
+          <HeaderIconButton
+            icon="circle.lefthalf.filled"
+            iconSize={19}
+            label={tx('setlist:sessionFollower.toggleTheme')}
+            onPress={toggleTheme}
+          />
+          <HeaderIconButton
+            icon="ellipsis"
+            label={tx('song:viewer.viewOptions')}
+            onPress={() => setSheet('options')}
+          />
         </View>
       </View>
 
@@ -348,40 +393,56 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         </View>
       ) : null}
 
-      {/* Content */}
-      <ScrollView
-        ref={scrollRef}
-        onScroll={onScroll}
-        scrollEventThrottle={64}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl * 2 }}
-      >
-        {isVerse && displayedItem?.ref ? (
-          <VerseChart verseRef={displayedItem.ref} fontScale={fontScale} />
-        ) : displayedItem && !isSong ? (
-          <View style={styles.center}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
-              {displayedItem.title || ''}
-            </Text>
-            <Text style={{ color: t.colors.sec }}>{tx('setlist:sessionFollower.unavailable')}</Text>
-          </View>
-        ) : doc ? (
-          <ChordChart
-            doc={doc}
-            steps={steps}
-            preferFlat={preferFlat}
-            showChords={showChords}
-            fontScale={fontScale}
-          />
-        ) : (
-          <View style={styles.center}>
-            <ActivityIndicator color={t.colors.accent} />
-            <Text style={{ marginTop: t.spacing.md, color: t.colors.sec }}>
-              {tx('setlist:sessionFollower.loadingSong')}
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+      {/* Content. The wrapper is measured so auto-fit knows the height it has
+          to fill; the reconnect banner above it shrinks that, as it should. */}
+      <View style={{ flex: 1 }} onLayout={(e) => setChartAreaH(e.nativeEvent.layout.height)}>
+        <ScrollView
+          ref={scrollRef}
+          onScroll={onScroll}
+          scrollEventThrottle={64}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: t.spacing.lg,
+            paddingTop: autoFit.paddingTop,
+            paddingBottom: t.spacing.xxl * 2,
+          }}
+        >
+          {isVerse && displayedItem?.ref ? (
+            <VerseChart verseRef={displayedItem.ref} fontScale={autoFit.effectiveFontScale} />
+          ) : displayedItem && !isSong ? (
+            <View style={styles.center}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
+                {displayedItem.title || ''}
+              </Text>
+              <Text style={{ color: t.colors.sec }}>{tx('setlist:sessionFollower.unavailable')}</Text>
+            </View>
+          ) : doc ? (
+            <AutoFitChart
+              doc={doc}
+              steps={steps}
+              preferFlat={preferFlat}
+              showChords={showChords}
+              showSections={showSections}
+              fontScale={autoFit.fontScale}
+              chordStyle={chordStyle}
+              maxColumns={autoFit.columns}
+              viewportHeight={autoFit.viewportHeight}
+              viewportHeightChromeHidden={autoFit.viewportHeightChromeHidden}
+              onPlan={autoFit.onPlan}
+              // Published bodies are immutable within a session, so the leader
+              // moving back to an earlier song re-uses its measured heights.
+              cacheId={displayedItem?.slug}
+            />
+          ) : (
+            <View style={styles.center}>
+              <ActivityIndicator color={t.colors.accent} />
+              <Text style={{ marginTop: t.spacing.md, color: t.colors.sec }}>
+                {tx('setlist:sessionFollower.loadingSong')}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
 
       {/* Catch-up pill */}
       {behind ? (
@@ -403,39 +464,31 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
           </Text>
         </Pressable>
       ) : null}
-    </Screen>
-  )
-}
 
-function HeaderControl({
-  label,
-  onPress,
-  disabled,
-  children,
-}: {
-  label: string
-  onPress: () => void
-  disabled?: boolean
-  children: ReactNode
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: !!disabled }}
-      hitSlop={6}
-      style={{
-        width: 36,
-        height: 36,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: disabled ? 0.3 : 1,
-      }}
-    >
-      {children}
-    </Pressable>
+      {/* Same sheet the Viewer and Performer use. Chords, chord style and
+          accidentals are wired on the chord tier only — on the lyric tier there
+          are no chords on screen for them to act on. */}
+      <ViewOptionsSheet
+        visible={sheet === 'options'}
+        onClose={() => setSheet(null)}
+        showChords={isChordTier ? showChordsPref : undefined}
+        onShowChords={isChordTier ? setShowChordsPref : undefined}
+        showSections={showSections}
+        onShowSections={setShowSections}
+        fontScale={autoFit.effectiveFontScale}
+        fontAuto={autoFit.fontAuto}
+        onFontScale={autoFit.onFontScale}
+        chordStyle={isChordTier ? chordStyle : undefined}
+        onChordStyle={isChordTier ? setChordStyle : undefined}
+        accidental={isChordTier ? accidental : undefined}
+        onAccidental={isChordTier ? setAccidentalManual : undefined}
+        columns={autoFit.maxColumns > 1 ? autoFit.columns : undefined}
+        onColumns={autoFit.maxColumns > 1 ? autoFit.setColumns : undefined}
+        maxColumns={autoFit.maxColumns}
+        keepAwake={keepAwake}
+        onKeepAwake={setDefaultKeepAwake}
+      />
+    </Screen>
   )
 }
 

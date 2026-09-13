@@ -44,8 +44,11 @@ function OverlineLabel({ children, first }: { children: string; first?: boolean 
 type ViewOptionsProps = {
   visible: boolean
   onClose: () => void
-  showChords: boolean
-  onShowChords: (v: boolean) => void
+  // Chords + chord style are optional: the live-session follower on the LYRIC
+  // tier has no chords to show, and a switch that can't do anything is worse
+  // than no switch. Rendered only when the screen wires them.
+  showChords?: boolean
+  onShowChords?: (v: boolean) => void
   showSections: boolean
   onShowSections: (v: boolean) => void
   /** The scale currently in effect — auto-fit's pick, or the user's own. */
@@ -53,8 +56,8 @@ type ViewOptionsProps = {
   /** True while auto-fit owns the size; the first A−/A+ tap hands it over. */
   fontAuto?: boolean
   onFontScale: (v: number) => void
-  chordStyle: ChordStyle
-  onChordStyle: (v: ChordStyle) => void
+  chordStyle?: ChordStyle
+  onChordStyle?: (v: ChordStyle) => void
   // Accidental spelling (session-scoped). Optional — rendered only when wired.
   accidental?: Accidental
   onAccidental?: (v: Accidental) => void
@@ -110,35 +113,33 @@ function ViewOptionsContent({
   const atMin = fontScale <= FONT_SCALE_MIN
   const atMax = fontScale >= FONT_SCALE_MAX
 
+  // Every setting sits on the same row; only the first one in the sheet skips
+  // the leading gap, and which row that is depends on what the screen wired.
+  const row = (first?: boolean) => ({
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: first ? 0 : t.spacing.xl,
+  })
+
   return (
     <FormSheetShell title={tx('viewer.viewOptions')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg }}>
         {/* Show chords */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.showChords')}</Text>
-          <Switch
-            value={showChords}
-            onValueChange={onShowChords}
-            trackColor={{ true: t.colors.accent }}
-            accessibilityLabel={tx('viewOptions.showChords')}
-          />
-        </View>
+        {onShowChords ? (
+          <View style={row(true)}>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.showChords')}</Text>
+            <Switch
+              value={!!showChords}
+              onValueChange={onShowChords}
+              trackColor={{ true: t.colors.accent }}
+              accessibilityLabel={tx('viewOptions.showChords')}
+            />
+          </View>
+        ) : null}
 
         {/* Section labels */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: t.spacing.xl,
-          }}
-        >
+        <View style={row(!onShowChords)}>
           <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.sectionLabels')}</Text>
           <Switch
             value={showSections}
@@ -149,14 +150,7 @@ function ViewOptionsContent({
         </View>
 
         {/* Font size */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: t.spacing.xl,
-          }}
-        >
+        <View style={row()}>
           <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.fontSize')}</Text>
           <View
             style={{
@@ -215,37 +209,26 @@ function ViewOptionsContent({
           </View>
         </View>
 
-        {/* Chord style — inline setting-value picker (content-sized pill). */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: t.spacing.xl,
-          }}
-        >
-          <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.chordStyle')}</Text>
-          <SegmentedPill<ChordStyle>
-            options={[
-              { value: 'letters', label: tx('viewOptions.letters') },
-              { value: 'solfege', label: tx('viewOptions.solfege') },
-            ]}
-            value={chordStyle}
-            onChange={onChordStyle}
-          />
-        </View>
+        {/* Chord style — inline setting-value picker (content-sized pill).
+            Rendered only when the screen wires it. */}
+        {onChordStyle ? (
+          <View style={row()}>
+            <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.chordStyle')}</Text>
+            <SegmentedPill<ChordStyle>
+              options={[
+                { value: 'letters', label: tx('viewOptions.letters') },
+                { value: 'solfege', label: tx('viewOptions.solfege') },
+              ]}
+              value={chordStyle ?? 'letters'}
+              onChange={onChordStyle}
+            />
+          </View>
+        ) : null}
 
         {/* Accidentals — ♯/♭ spelling (session-scoped). Rendered only when the
             screen wires it. */}
         {onAccidental && accidental ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: t.spacing.xl,
-            }}
-          >
+          <View style={row()}>
             <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.accidentals')}</Text>
             <AccidentalToggle value={accidental} onChange={onAccidental} />
           </View>
@@ -256,14 +239,7 @@ function ViewOptionsContent({
             It is a CEILING: auto-fit uses fewer columns when fewer give bigger
             text. Rendered only when the screen wires it. */}
         {onColumns && columns ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: t.spacing.xl,
-            }}
-          >
+          <View style={row()}>
             <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.columns')}</Text>
             <SegmentedPill<ColumnCount>
               options={([1, 2, 3] as ColumnCount[])
@@ -279,9 +255,7 @@ function ViewOptionsContent({
             above). Each row renders only when the screen wires it. */}
         {onAutoHide || onKeepAwake ? <OverlineLabel>{tx('viewOptions.screen')}</OverlineLabel> : null}
         {onAutoHide ? (
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          >
+          <View style={row(true)}>
             <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.hideControlsWhenIdle')}</Text>
             <Switch
               value={!!autoHide}
@@ -292,14 +266,7 @@ function ViewOptionsContent({
           </View>
         ) : null}
         {onKeepAwake ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: onAutoHide ? t.spacing.xl : 0,
-            }}
-          >
+          <View style={row(!onAutoHide)}>
             <Text style={{ fontSize: 16, color: t.colors.ink }}>{tx('viewOptions.keepScreenAwake')}</Text>
             <Switch
               value={!!keepAwake}

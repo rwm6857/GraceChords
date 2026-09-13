@@ -103,8 +103,11 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     const inAuthFlow =
       seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
     // `session/[code]` is the anonymous live-session follower — a logged-out app
-    // user must be able to view it without being bounced to /login.
-    const isPublic = seg === 'session'
+    // user must be able to view it without being bounced to /login. `sheet` is
+    // the shared formSheet HOST route (src/lib/formSheetHost.ts), not a screen
+    // of its own: the follower's View-options sheet presents through it, and
+    // gating it would bounce an anonymous follower to /login mid-session.
+    const isPublic = seg === 'session' || seg === 'sheet'
     if (!session && !inAuthFlow && !isPublic) {
       router.replace('/login')
     } else if (session && seg === 'login') {
@@ -128,7 +131,7 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     const seg = segments[0] as string | undefined
     const inAuthFlow =
       seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
-    const isPublic = seg === 'session'
+    const isPublic = seg === 'session' || seg === 'sheet'
     // A signed-in first launch is not settled while the gate above still wants
     // to replace this route with the intro — lifting the splash first would
     // flash the tab group for a frame. Once /intro is mounted wantsIntro is
