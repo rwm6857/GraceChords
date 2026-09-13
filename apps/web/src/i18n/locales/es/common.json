@@ -8,6 +8,12 @@
   "close": "Cerrar",
   "back": "Atrás",
   "loading": "Cargando…",
+  "timeAgo": {
+    "justNow": "justo ahora",
+    "minutes": "hace {{count}} min",
+    "hours": "hace {{count}} h",
+    "days": "hace {{count}} d"
+  },
   "search": "Buscar",
   "language": "Idioma",
   "light": "Claro",

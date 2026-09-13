@@ -8,6 +8,12 @@
   "close": "Close",
   "back": "Back",
   "loading": "Loading…",
+  "timeAgo": {
+    "justNow": "just now",
+    "minutes": "{{count}}m ago",
+    "hours": "{{count}}h ago",
+    "days": "{{count}}d ago"
+  },
   "search": "Search",
   "language": "Language",
   "light": "Light",

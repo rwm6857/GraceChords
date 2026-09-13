@@ -38,6 +38,9 @@ export * from './songs/personalSongsRepo'
 export * from './songs/songsWriteRepo'
 export * from './songs/songSuggestions'
 
+// Compact relative timestamps ("5m ago"), rendered from the caller's i18n
+export * from './format/relativeTime'
+
 // Setlist codec + queries + summary math + per-role limits
 export * from './setlists/setcode'
 export * from './setlists/setlistsRepo'

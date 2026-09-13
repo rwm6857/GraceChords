@@ -15,6 +15,8 @@ export default function Navbar(){
   const { pathname, hash } = useLocation()
   const path = (hash && hash.replace('#','')) || pathname
   const isActive = (p: string) => path === p
+  // The setlist workspace answers to /setlist and /setlists/<id> alike.
+  const isSetlistActive = path === '/setlist' || path.startsWith('/setlists')
   const navRef = useRef<HTMLDivElement | null>(null)
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null)
@@ -22,6 +24,9 @@ export default function Navbar(){
   const [portalNode, setPortalNode] = useState<HTMLDivElement | null>(null)
   const [open, setOpen] = React.useState(false)
   const { isLoggedIn, loading: authLoading, session, profile, hasMinRole, role } = useAuth()
+  // Signed in, the setlists workspace opens on your saved sets; signed out it
+  // opens the local draft builder.
+  const setlistHome = isLoggedIn ? '/setlists' : '/setlist'
   const [userMenuOpen, setUserMenuOpen] = React.useState(false)
   const userMenuRef = React.useRef<HTMLDivElement | null>(null)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
@@ -152,7 +157,7 @@ export default function Navbar(){
         <div className="gc-navlinks">
           <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('home')}</Link>
           <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`} style={isActive('/songs') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songs')}</Link>
-          <Link to="/setlist" className={`gc-navlink ${isActive('/setlist') ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistPage')} style={isActive('/setlist') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('setlist')}</Link>
+          <Link to={setlistHome} className={`gc-navlink ${isSetlistActive ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistWorkspacePage')} style={isSetlistActive ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('setlist')}</Link>
           <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songbook')}</Link>
           <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('dailyWord')}</Link>
           <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`} style={isActive('/posts') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('blog')}</Link>
@@ -267,7 +272,7 @@ export default function Navbar(){
             <div className="gc-drawer__links">
               <Link ref={firstLinkRef as any} to="/" onClick={closeDrawer} className={`gc-navlink ${isActive('/') ? 'active':''}`}>{t('home')}</Link>
               <Link to="/songs" onClick={closeDrawer} className={`gc-navlink ${isActive('/songs') ? 'active':''}`}>{t('songs')}</Link>
-              <Link to="/setlist" onClick={closeDrawer} className={`gc-navlink ${isActive('/setlist') ? 'active':''}`}>{t('setlist')}</Link>
+              <Link to={setlistHome} onClick={closeDrawer} className={`gc-navlink ${isSetlistActive ? 'active':''}`}>{t('setlist')}</Link>
               <Link to="/songbook" onClick={closeDrawer} className={`gc-navlink ${isActive('/songbook') ? 'active':''}`}>{t('songbook')}</Link>
               <Link to="/reading" onClick={closeDrawer} className={`gc-navlink ${isActive('/reading') ? 'active':''}`}>{t('dailyWord')}</Link>
               <Link to="/posts" onClick={closeDrawer} className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>{t('blog')}</Link>

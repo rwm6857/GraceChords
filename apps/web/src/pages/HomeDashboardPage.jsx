@@ -15,6 +15,7 @@ import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.
 import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/app/theme'
 import { useSongs } from '../hooks/useSongs'
+import { useAuth } from '../hooks/useAuth'
 import { fetchPosts } from '../hooks/usePosts'
 import { filterByTag, pickRandom } from '../utils/songs/quickActions'
 import { isIncompleteSong } from '../utils/songs/songStatus'
@@ -47,6 +48,7 @@ export default function HomeDashboard(){
   const [listsReady, setListsReady] = useState(false)
 
   const { songs: catalogSongs, loading: songsLoading } = useSongs()
+  const { isLoggedIn } = useAuth()
 
   const trimmed = query.trim()
   const suggestions = useMemo(() => {
@@ -401,7 +403,7 @@ export default function HomeDashboard(){
           </div>
           <div className="home-tools-grid">
             <QuickCard to="/songs" title={t('tools.songLibrary.title')} desc={t('tools.songLibrary.desc')} />
-            <QuickCard to="/setlist" title={t('tools.setlistBuilder.title')} desc={t('tools.setlistBuilder.desc')} />
+            <QuickCard to={isLoggedIn ? '/setlists' : '/setlist'} title={t('tools.setlistBuilder.title')} desc={t('tools.setlistBuilder.desc')} />
             <QuickCard to="/songbook" title={t('tools.songbookTool.title')} desc={t('tools.songbookTool.desc')} />
             <QuickCard to="/posts" title={t('tools.blog.title')} desc={t('tools.blog.desc')} />
           </div>

@@ -8,6 +8,12 @@
   "close": "Kapat",
   "back": "Geri",
   "loading": "Yükleniyor…",
+  "timeAgo": {
+    "justNow": "az önce",
+    "minutes": "{{count}} dk önce",
+    "hours": "{{count}} sa önce",
+    "days": "{{count}} gün önce"
+  },
   "search": "Ara",
   "language": "Dil",
   "light": "Açık",

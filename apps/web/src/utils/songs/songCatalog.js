@@ -143,6 +143,10 @@ export function hasGroupLanguage(group, language){
 
 export function buildSongCatalog(rawItems = []){
   const byId = new Map()
+  // Keyed by the Supabase uuid (useSongs maps it to `dbId`, and `id` to the
+  // slug). Setlist entries are stored by uuid, so the builder needs this to go
+  // from a saved entry back to the catalog song.
+  const byDbId = new Map()
   const groupBySongId = new Map()
   const groupByEntryId = new Map()
 
@@ -151,6 +155,7 @@ export function buildSongCatalog(rawItems = []){
     if (!item) continue
     if (byId.has(item.id)) continue
     byId.set(item.id, item)
+    if (item.dbId) byDbId.set(item.dbId, item)
 
     const key = item.songId || slugify(item.id)
     if (!groupBySongId.has(key)) {
@@ -202,6 +207,7 @@ export function buildSongCatalog(rawItems = []){
   return {
     items: Array.from(byId.values()),
     byId,
+    byDbId,
     groups,
     groupBySongId,
     groupByEntryId,

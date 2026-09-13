@@ -48,6 +48,7 @@ import {
   ChevronLeft,
   ChevronUp,
   ChevronsUpDown,
+  CirclePile,
   Contrast,
   Clock,
   FileText,
@@ -147,6 +148,7 @@ export const ChevronDownIcon = wrap(ChevronDown) // SF: chevron.down
 export const ChevronLeftIcon = wrap(ChevronLeft) // SF: chevron.left
 export const ChevronUpIcon = wrap(ChevronUp) // SF: chevron.up
 export const SortIcon = wrap(ChevronsUpDown) // SF: chevron.up.chevron.down
+export const KeyReferenceIcon = wrap(CirclePile) // SF: circle.hexagongrid
 export const ThemeIcon = wrap(Contrast) // SF: circle.lefthalf.filled
 export const ClockIcon = wrap(Clock) // SF: clock
 export const FileTextIcon = wrap(FileText) // SF: doc.text

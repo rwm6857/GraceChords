@@ -16,7 +16,7 @@ describe('Routing smoke', () => {
 	expect(await screen.findByLabelText(/search/i)).toBeInTheDocument()
   })
 
-  test('setlist route renders', async () => {
+  test('draft setlist route renders', async () => {
     window.location.hash = '#/setlist'
     render(
       <HelmetProvider>
@@ -25,7 +25,19 @@ describe('Routing smoke', () => {
         </HashRouter>
       </HelmetProvider>
     )
-    // PDF download button is the primary action in the Setlist toolbar
+    // PDF download is in the setlist workspace's action bar on every route.
+    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+  })
+
+  test('saved setlists route renders', async () => {
+    window.location.hash = '#/setlists'
+    render(
+      <HelmetProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </HelmetProvider>
+    )
     expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
   })
 

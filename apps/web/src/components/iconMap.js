@@ -31,6 +31,7 @@ export const ICON_MAP = {
   'chevron.right':                   { concept: 'Forward',          lucide: 'ChevronRight',  web: 'ChevronRightIcon' },
   'chevron.up':                      { concept: 'Disclosure up',    lucide: 'ChevronUp',     web: 'ChevronUpIcon' },
   'chevron.up.chevron.down':         { concept: 'Sort toggle',      lucide: 'ChevronsUpDown', web: 'SortIcon' },
+  'circle.hexagongrid':              { concept: 'Key reference',    lucide: 'CirclePile',    web: 'KeyReferenceIcon' },
   'circle.lefthalf.filled':          { concept: 'Theme',            lucide: 'Contrast',      web: 'ThemeIcon' },
   'clock':                           { concept: 'Reminder',         lucide: 'Clock',         web: 'ClockIcon' },
   'doc.on.doc':                      { concept: 'Copy',             lucide: 'Copy',          web: 'CopyIcon' },
