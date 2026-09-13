@@ -158,7 +158,13 @@
     "toggleSetlists": "Set listelerinizi göster veya gizle",
     "transposeDown": "Set tonunu düşür",
     "transposeUp": "Set tonunu yükselt",
-    "untitledSet": "Adsız set listesi"
+    "untitledSet": "Adsız set listesi",
+    "legacyTitle": "Bu cihazda kayıtlı {{count}} set listeniz var.",
+    "legacySignedOut": "Bunları saklamak için oturum açın.",
+    "legacyImport": "İçe aktar",
+    "legacyDismiss": "Kapat",
+    "legacyImported": "{{count}} set listesi içe aktarıldı.",
+    "legacyFailed": "Kayıtlı set listeleriniz içe aktarılamadı."
   },
   "songbook": {
     "title": "İlahi Kitabı Oluşturucu",

@@ -158,7 +158,13 @@
     "toggleSetlists": "Show or hide your setlists",
     "transposeDown": "Transpose set down",
     "transposeUp": "Transpose set up",
-    "untitledSet": "Untitled set"
+    "untitledSet": "Untitled set",
+    "legacyTitle": "You have {{count}} setlists saved on this device.",
+    "legacySignedOut": "Sign in to keep them.",
+    "legacyImport": "Import them",
+    "legacyDismiss": "Dismiss",
+    "legacyImported": "Imported {{count}} setlists.",
+    "legacyFailed": "Couldn't import your saved setlists."
   },
   "songbook": {
     "title": "Songbook Builder",

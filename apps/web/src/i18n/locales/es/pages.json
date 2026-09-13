@@ -158,7 +158,13 @@
     "toggleSetlists": "Mostrar u ocultar tus repertorios",
     "transposeDown": "Bajar el tono del repertorio",
     "transposeUp": "Subir el tono del repertorio",
-    "untitledSet": "Repertorio sin título"
+    "untitledSet": "Repertorio sin título",
+    "legacyTitle": "Tienes {{count}} repertorios guardados en este dispositivo.",
+    "legacySignedOut": "Inicia sesión para conservarlos.",
+    "legacyImport": "Importarlos",
+    "legacyDismiss": "Descartar",
+    "legacyImported": "Se importaron {{count}} repertorios.",
+    "legacyFailed": "No se pudieron importar tus repertorios guardados."
   },
   "songbook": {
     "title": "Creador de cancioneros",

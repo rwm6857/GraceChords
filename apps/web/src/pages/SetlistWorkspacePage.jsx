@@ -33,6 +33,11 @@ import AddVerseDialog from '../features/setlist/AddVerseDialog'
 import PruneSetlistsModal from '../features/setlist/PruneSetlistsModal'
 import ShortcutsDialog from '../features/setlist/ShortcutsDialog'
 import { useSetlistKeymap } from '../features/setlist/useSetlistKeymap'
+import {
+  clearLegacyLocalSets,
+  dismissLegacyLocalSets,
+  readLegacyLocalSets,
+} from '../features/setlist/legacyLocalSets'
 import { usePptxAvailability } from '../features/setlist/usePptxAvailability'
 import {
   bundlePptxZip,
@@ -115,6 +120,10 @@ export default function SetlistWorkspacePage() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pptxProgress, setPptxProgress] = useState('')
   const [combineProgress, setCombineProgress] = useState('')
+  // Sets left behind by the old localStorage builder, offered for a one-time
+  // import rather than dropped on the floor.
+  const [legacySets, setLegacySets] = useState(() => readLegacyLocalSets())
+  const [legacyBusy, setLegacyBusy] = useState(false)
 
   const verseCache = useRef(new Map())
   const searchRef = useRef(null)
@@ -343,6 +352,38 @@ export default function SetlistWorkspacePage() {
       }
       console.error('[SetlistWorkspace] promote draft:', err)
       showToast(t('setlist.failedSave'))
+    }
+  }
+
+  async function onImportLegacy() {
+    if (legacyBusy) return
+    setLegacyBusy(true)
+    try {
+      for (const set of legacySets) {
+        const created = await createSetlist(supabase, { name: set.name || 'Imported setlist' })
+        if (!set.items.length) continue
+        await updateSetlist(supabase, created.id, {
+          name: created.name,
+          serviceDate: null,
+          // The old store kept catalog slugs; setlist_songs wants uuids.
+          songs: set.items
+            .map((i) => {
+              if (isVerseId(i.id)) return { id: i.id, toKey: i.toKey || null }
+              const song = catalog.byId.get(i.id)
+              return song?.dbId ? { id: song.dbId, toKey: i.toKey || null } : null
+            })
+            .filter(Boolean),
+        })
+      }
+      clearLegacyLocalSets()
+      setLegacySets([])
+      await lists.refresh()
+      showToast(t('setlist.legacyImported', { count: legacySets.length }))
+    } catch (err) {
+      console.error('[SetlistWorkspace] import legacy sets:', err)
+      showToast(t('setlist.legacyFailed'))
+    } finally {
+      setLegacyBusy(false)
     }
   }
 
@@ -606,6 +647,28 @@ export default function SetlistWorkspacePage() {
           </div>
         ) : null}
       </Toolbar>
+
+      {legacySets.length > 0 ? (
+        <div className="gc-draft-banner">
+          <strong>{t('setlist.legacyTitle', { count: legacySets.length })}</strong>
+          {isLoggedIn ? null : <span>{t('setlist.legacySignedOut')}</span>}
+          {isLoggedIn ? (
+            <Button size="sm" variant="primary" loading={legacyBusy} onClick={onImportLegacy}>
+              {t('setlist.legacyImport')}
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              dismissLegacyLocalSets()
+              setLegacySets([])
+            }}
+          >
+            {t('setlist.legacyDismiss')}
+          </Button>
+        </div>
+      ) : null}
 
       {!routeId && !isLoggedIn ? (
         <div className="gc-draft-banner">
