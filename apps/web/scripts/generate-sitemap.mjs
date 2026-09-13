@@ -27,6 +27,20 @@ async function loadDotEnv() {
 
 await loadDotEnv()
 
+// Cloudflare sets CF_PAGES_BRANCH on every Pages build. These artefacts are
+// production-only: SITE_URL/BASE_URL below is hardcoded to the live domain, so
+// generating them for a *.pages.dev preview would publish canonicals and a
+// sitemap pointing at production from a preview host. Skipping also means a
+// preview build needs no SUPABASE_SERVICE_ROLE_KEY — Pages keeps Production and
+// Preview variables in separate sets, and that missing key is what failed the
+// preview deploy. The credential check below is unchanged, so a production
+// build still fails loudly when it is misconfigured.
+const PRODUCTION_BRANCH = 'main'
+if (process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== PRODUCTION_BRANCH) {
+  console.log(`[sitemap] Preview build (${process.env.CF_PAGES_BRANCH}) — skipping.`)
+  process.exit(0)
+}
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 

@@ -88,7 +88,7 @@ paths are available. Apply these in **Pages → Settings → Builds & deployment
 | **Build command** | `cd ../.. && npm ci && npm run build -w @gracechords/web` |
 | **Build output directory** | `dist`  *(relative to root directory → `apps/web/dist`)* |
 | **Functions** | auto-detected at `apps/web/functions/` (it sits at the root directory) |
-| **Env vars** | unchanged — already set in Pages → Variables (`VITE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_R2_PUBLIC_URL`/`BIBLE_CDN_URL`, bot tokens) |
+| **Env vars** | Production is unchanged — already set in Pages → Variables (`VITE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_R2_PUBLIC_URL`/`BIBLE_CDN_URL`, bot tokens). **Preview is a separate set and is not inherited** — see [Preview environment variables](#preview-environment-variables) below. |
 | **Node version** | ensure 18+ (Vite 7). CF V3 default is fine; pin via `NODE_VERSION` env or a `.node-version` file if a build picks an older Node. |
 
 **Why this build command.** Root directory must be `apps/web` so CF finds
@@ -111,6 +111,38 @@ so building from `apps/web` finds the hoisted deps.
 > that case rely solely on the `cd ../.. && npm ci` in the build command (it
 > installs correctly at the root). The `cd ../..` form above is written to be
 > self-sufficient regardless of CF's auto-install behavior.
+
+### Preview environment variables
+
+**Cloudflare Pages does not share variables between Production and Preview.**
+They are two independent environments with independent variable sets; there is
+no inherit toggle, so anything set only on Production is simply absent from
+every preview build. Copying values across is a copy, not a link — they drift.
+
+This is what broke preview deploys: the build command runs the full
+`npm run build`, whose `generate-seo-pages.mjs` step exited 1 on the missing
+`SUPABASE_SERVICE_ROLE_KEY`, and the deploy was marked failed. Both SEO scripts
+now skip themselves when `CF_PAGES_BRANCH` is set to anything other than `main`,
+so **a preview build no longer needs the service-role key at all**. Those
+artefacts are production-only anyway: each script hardcodes
+`https://gracechords.com`, so running them on a preview would publish canonicals
+and a sitemap pointing at the live site from a `*.pages.dev` host.
+
+Set on **Preview** as well as Production:
+
+| Variable | Why |
+|---|---|
+| `VITE_SUPABASE_URL` | **Required.** `src/lib/supabase.js` builds the client at module scope; supabase-js throws `supabaseUrl is required` when it is undefined, so a preview without it builds green and then white-screens. |
+| `VITE_SUPABASE_ANON_KEY` | **Required**, same reason. Public by design — it already ships in the production bundle. |
+| `VITE_R2_PUBLIC_URL`, `VITE_PPTX_WORKER_URL`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_UPLOAD_PRESET`, `VITE_ENABLE_DISCLAIMER`, `VITE_CONTACT_EMAIL` | Client features degrade without them. All `VITE_*` values are compiled into public JS and are never secret. |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `BIBLE_CDN_URL`, `BOT_INTERNAL_URL`, `BOT_WEBHOOK_TOKEN`, `BOT_API_TOKEN`, `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY` | Only needed to exercise **Pages Functions** (`/api/*`, `/bible/*`, `/pptx/*`) on a preview. These are read at Function runtime, not at build time, so the build fix above does not cover them. Note Functions read `SUPABASE_URL` unprefixed — distinct from `VITE_SUPABASE_URL`. |
+
+> **Weigh the last row before setting it.** `SUPABASE_SERVICE_ROLE_KEY` bypasses
+> RLS entirely, and a Preview variable is present in builds triggered by *any*
+> branch push, not just the production branch. Granting it to Preview is a
+> reasonable trade for being able to test Functions on a preview, but it is a
+> real widening of that key's blast radius — set it deliberately, and leave it
+> out if you only need the SPA to load.
 
 **Validate on a per-branch preview before merging to the production branch:**
 push this branch, open the CF `*.pages.dev` preview, and check SPA routes load,
