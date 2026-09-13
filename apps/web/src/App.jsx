@@ -4,7 +4,7 @@ import lazyRoute from './utils/app/lazyRoute'
 import HomeDashboard from './pages/HomeDashboardPage'
 import Songs from './pages/SongsPage'
 import SongView from './pages/SongViewPage'
-const Setlist = lazyRoute(() => import('./pages/SetlistPage'))
+const Setlist = lazyRoute(() => import('./pages/SetlistWorkspacePage'))
 const ReadingsPage = lazyRoute(() => import('./pages/ReadingsPage'))
 import Bundle from './pages/BundlePage'
 const Songbook = lazyRoute(() => import('./pages/SongbookPage'))
@@ -55,6 +55,8 @@ export default function App(){
             <Route path="/download" element={<DownloadPage />} />
             <Route path="/song/:id" element={<SongView />} />
             <Route path="/songs/:id" element={<SongView />} />
+            <Route path="/setlists" element={<Setlist />} />
+            <Route path="/setlists/:id" element={<Setlist />} />
             <Route path="/setlist" element={<Setlist />} />
             <Route path="/setlist/:songIds" element={<Setlist />} />
             <Route path="/set/:code" element={<Setlist />} />

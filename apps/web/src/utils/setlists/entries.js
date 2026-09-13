@@ -79,7 +79,9 @@ export function toWorkingItems(entries, catalog) {
         song: {
           id: entry.songId,
           slug: '',
-          title: (parsed && parsed.refDisplay) || 'Scripture',
+          // Empty when the reference won't parse; SetTable substitutes a
+          // translated label rather than an English literal from a util.
+          title: (parsed && parsed.refDisplay) || '',
           artist: null,
           default_key: null,
           tempo: null,

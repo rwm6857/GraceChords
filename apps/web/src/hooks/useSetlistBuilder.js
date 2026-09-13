@@ -65,7 +65,7 @@ export function useSetlistBuilder(setlistId) {
   const unmounted = useRef(false)
 
   const runSave = useCallback(async () => {
-    if (deleted.current) return
+    if (deleted.current || !setlistId) return
     if (!hydrated.current) {
       // An edit landed before the initial load resolved — defer rather than
       // drop it, so nothing written could clobber entries not yet fetched.
@@ -140,6 +140,14 @@ export function useSetlistBuilder(setlistId) {
     let retry = null
     setLoadFailed(false)
     setNotFound(false)
+    // No setlist selected: the workspace still mounts this hook so hook order
+    // stays stable across routes, but there is nothing to fetch.
+    if (!setlistId) {
+      setNameState('')
+      setEntries([])
+      setLoading(false)
+      return () => {}
+    }
     setLoading(true)
 
     const load = () => {
