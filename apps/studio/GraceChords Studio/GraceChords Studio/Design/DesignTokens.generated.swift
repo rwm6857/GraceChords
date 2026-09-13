@@ -167,6 +167,15 @@ enum GCColor {
         darkIncreasedContrast: GCRGBA(red: 0.603922, green: 0.635294, blue: 0.666667, alpha: 0.75)
     ).color
 
+    /// The Material bottom-sheet drag handle (Android only). MD3 draws it in `onSurfaceVariant` at
+    /// 40% opacity; iOS renders UIKit's own grabber and never reads this.
+    static let sheetHandle = GCDynamicColor(
+        light: GCRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 0.4),
+        dark: GCRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 0.4),
+        lightIncreasedContrast: GCRGBA(red: 0.541176, green: 0.572549, blue: 0.607843, alpha: 0.4),
+        darkIncreasedContrast: GCRGBA(red: 0.486275, green: 0.521569, blue: 0.556863, alpha: 0.4)
+    ).color
+
     /// Soft top-center highlight overlaid on the hero to hint the radial glow.
     static let heroGlow = GCDynamicColor(
         light: GCRGBA(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.55),
@@ -247,6 +256,12 @@ enum GCRadius {
     static let md: CGFloat = 12
     static let card: CGFloat = 14
     static let sheet: CGFloat = 20
+
+    /// Material 3 "Extra large" — the Android bottom-sheet corner. iOS sheets stay on `sheet`; only
+    /// the Android formSheet reads this. Deliberately NOT named `xl`: generate-swift.mjs maps doc
+    /// comments by identifier name with first-occurrence-wins, so an `xl` here would retitle
+    /// `spacing.xl` too.
+    static let sheetLarge: CGFloat = 28
     static let pill: CGFloat = 999
 }
 

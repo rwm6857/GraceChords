@@ -63,8 +63,18 @@ function ReminderTimeContent({ hour, minute, onConfirm, onClose }: ReminderTimeP
     onClose()
   }
 
+  // The label is named rather than defaulted because this action COMMITS the
+  // draft time — FormSheetShell reads an absent `actionLabel` as "plain
+  // dismissal" and drops it on Android. Android never reaches this component
+  // (it gets DateTimePickerAndroid below), so today the default would be
+  // harmless; naming it means that stays true if the routing ever changes.
+  // Resolves to the same "Done" string, so iOS renders identically.
   return (
-    <FormSheetShell title={tx('reminder.timeSheetTitle')} onAction={confirm}>
+    <FormSheetShell
+      title={tx('reminder.timeSheetTitle')}
+      actionLabel={tx('common:done')}
+      onAction={confirm}
+    >
       <View
         style={{
           paddingHorizontal: t.spacing.lg,

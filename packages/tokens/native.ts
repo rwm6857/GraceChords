@@ -65,6 +65,12 @@ export type ThemeColors = {
   /** Dimmed color for inactive scrubber letters. */
   off: string
   /**
+   * The Material bottom-sheet drag handle (Android only). MD3 draws it in
+   * `onSurfaceVariant` at 40% opacity; iOS renders UIKit's own grabber and
+   * never reads this.
+   */
+  sheetHandle: string
+  /**
    * The atmospheric hero gradient (Home) — the one sanctioned gradient, an
    * atmospheric header, never a UI-surface gradient.
    */
@@ -92,6 +98,7 @@ export const lightColors: ThemeColors = {
   spotlightSoft: '#E4E0F6',
   success: '#34C759',
   off: 'rgba(138,146,155,0.45)',
+  sheetHandle: 'rgba(138,146,155,0.4)',
   heroGradient: {
     colors: ['#BFD3E3', '#CFE0EA', '#E3EDF2', '#F5F7F9'],
     locations: [0, 0.34, 0.72, 1],
@@ -118,6 +125,7 @@ export const darkColors: ThemeColors = {
   spotlightSoft: '#2A2740',
   success: '#30D158',
   off: 'rgba(124,133,142,0.5)',
+  sheetHandle: 'rgba(124,133,142,0.4)',
   heroGradient: {
     colors: ['#1C2A36', '#18222A', '#15191D', '#14171A'],
     locations: [0, 0.38, 0.78, 1],
@@ -203,6 +211,13 @@ export const radii = {
   md: 12,
   card: 14,
   sheet: 20,
+  /**
+   * Material 3 "Extra large" — the Android bottom-sheet corner. iOS sheets stay
+   * on `sheet`; only the Android formSheet reads this. Deliberately NOT named
+   * `xl`: generate-swift.mjs maps doc comments by identifier name with
+   * first-occurrence-wins, so an `xl` here would retitle `spacing.xl` too.
+   */
+  sheetLarge: 28,
   pill: 999,
 } as const
 
