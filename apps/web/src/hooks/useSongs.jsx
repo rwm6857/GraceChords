@@ -3,7 +3,7 @@
  * into the same shape that components previously read from src/data/index.json.
  *
  * Extra fields added by the DB:
- *   dbId          — UUID primary key (used for starring)
+ *   dbId          — UUID primary key (used for starring and setlist entries)
  *   star_count    — integer, maintained by DB trigger
  *   chordpro_content — full renderable body (metadata directives stripped)
  *
@@ -27,9 +27,9 @@ async function fetchSongs() {
   _promise = supabase
     .from('songs')
     .select(
-      'id, slug, title, artist, default_key, tags, country, youtube_id, ' +
-      'source_filename, chordpro_content, star_count, song_group_id, is_deleted, ' +
-      'has_stems, stem_slug, gracetracks_url'
+      'id, slug, title, artist, default_key, tempo, time_signature, tags, ' +
+      'country, youtube_id, source_filename, chordpro_content, star_count, ' +
+      'song_group_id, is_deleted, has_stems, stem_slug, gracetracks_url'
     )
     .eq('is_deleted', false)
     .order('title')
@@ -71,6 +71,10 @@ function normaliseSong(song) {
     title: song.title,
     language: 'en',  // language will be added when multi-lingual support is wired
     originalKey: song.default_key || '',
+    // Setlist rows show these in their own columns and core's summarizeSet
+    // derives the set's BPM range from them.
+    tempo: song.tempo ?? null,
+    timeSignature: song.time_signature || '',
     tags: Array.isArray(song.tags) ? song.tags : [],
     authors: song.artist
       ? song.artist.split(/,\s*/).filter(Boolean)
