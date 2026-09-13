@@ -18,6 +18,7 @@ import {
   effectiveKey,
   formatSetSummary,
   summarizeSet,
+  timeAgo,
 } from '@gracechords/core'
 import Screen from '../components/Screen'
 import Card from '../components/Card'
@@ -38,7 +39,6 @@ import { supabase } from '../lib/supabase'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { exportSetlist } from '../lib/exportSong'
 import { pushSetToTelegram, TELEGRAM_BOT_URL } from '../lib/telegramPush'
-import { timeAgo } from '../lib/relativeTime'
 import { uuidv4 } from '../lib/uuid'
 import { actionFailureMessage } from '../lib/errors'
 import { defaultSetlistName } from '../lib/setlistName'

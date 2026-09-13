@@ -1,7 +1,7 @@
 // Compact relative timestamp for setlist metadata: "just now", "5m ago",
-// "3h ago", "2d ago", then a localized "Mar 16" beyond a month. RN-free: the
-// caller passes its i18n `t` (common namespace) and the active locale so this
-// stays unit-testable headless.
+// "3h ago", "2d ago", then a localized "Mar 16" beyond a month. Platform-free:
+// the caller passes its i18n `t` (common namespace) and the active locale, so
+// web and mobile render the same string from their own translation files.
 
 export type Translator = (key: string, options?: Record<string, unknown>) => string
 
