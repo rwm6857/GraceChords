@@ -464,7 +464,12 @@ duplicate logic here and never edit core internals to suit mobile.
   normal launch path (`ConfigErrorScreen` still lifts it directly). Session persists
   via AsyncStorage until uninstall — don't add proactive sign-outs. Exception:
   `choose-icon` is reachable both with and without a session (post-signup step —
-  email confirmation may still be pending).
+  email confirmation may still be pending). Two segments are **public**:
+  `session/[code]` (the anonymous live-session follower) and `sheet` — the
+  shared formSheet HOST route, not a screen of its own. The follower's
+  View-options sheet presents through that host, so gating it would bounce an
+  anonymous follower to `/login` mid-session; a new public screen that presents
+  a sheet needs nothing further.
 - **Deep links / Universal Links.** iOS Universal Links are wired via
   `ios.associatedDomains: ["applinks:gracechords.com"]` (apex only, no `www`);
   Android App Links via `android.intentFilters` in `app.json`. Which paths each
@@ -558,6 +563,16 @@ duplicate logic here and never edit core internals to suit mobile.
   body, and reuses the same chart/transpose/view-options. Its
   `PerformerShareSheet` has a This-song / Whole-set scope toggle — whole-set PDF
   works here (not in the builder's `ShareSetSheet`).
+- **Live-session follower** (`app/session/[code].tsx` → `SessionFollowerScreen`)
+  is the **third** consumer of that chart: same `AutoFitChart` +
+  `useChartAutoFit` + `ViewOptionsSheet`, so a follower gets auto-fit sizing and
+  the tablet column ceiling. What it must never grow is anything that competes
+  with the leader — no transpose, no key picker. The join code's TIER gates the
+  chord-only options (chords, chord style, accidentals), which is why those four
+  `ViewOptionsSheet` props are optional: on the lyric tier the rows are not
+  rendered rather than rendered inert. Its header does not auto-hide (it carries
+  LIVE / title / reconnect state), so it passes `headerH: 0` and
+  `chromeVisible: true` — the one Viewer option it deliberately skips.
 - **Export/share** is server-side via the web app's Pages Functions (base
   `EXPO_PUBLIC_API_BASE_URL`, `src/lib/api.ts`): `src/lib/exportSong.ts` calls
   `POST /api/export/song` (PDF, or a page-1 PNG for `jpg`) and

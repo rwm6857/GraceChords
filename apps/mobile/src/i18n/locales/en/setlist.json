@@ -106,7 +106,8 @@
     "waiting": "Waiting for the leader…",
     "live": "LIVE",
     "loadingSong": "Loading song…",
-    "home": "Home"
+    "home": "Home",
+    "toggleTheme": "Switch light or dark"
   },
   "resume": {
     "title": "Resume live session?",

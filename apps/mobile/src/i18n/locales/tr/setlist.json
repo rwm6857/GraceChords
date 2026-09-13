@@ -106,7 +106,8 @@
     "waiting": "Lider bekleniyor…",
     "live": "CANLI",
     "loadingSong": "Şarkı yükleniyor…",
-    "home": "Ana sayfa"
+    "home": "Ana sayfa",
+    "toggleTheme": "Açık veya koyu tema değiştir"
   },
   "resume": {
     "title": "Canlı oturuma devam edilsin mi?",
