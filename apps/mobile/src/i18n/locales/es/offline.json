@@ -1,5 +1,6 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "banner": "Estás sin conexión. El contenido guardado sigue funcionando.",
   "title": "Sin conexión y descargas",
   "onThisDeviceStorage": "Traducciones en este dispositivo",
   "downloadedCount": "{{count}} de {{total}} traducciones descargadas",

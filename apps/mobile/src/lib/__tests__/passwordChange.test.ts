@@ -122,6 +122,28 @@ describe('changePassword', () => {
     expect(supabase.auth.signInWithPassword).not.toHaveBeenCalled()
   })
 
+  it('never leaks a raw provider message from either round trip', async () => {
+    const verifyLeak = fakeSupabase({
+      signInWithPassword: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { message: 'raw internal detail' } }),
+    })
+    expect(await changePassword(verifyLeak, input())).toEqual({
+      ok: false,
+      error: 'errors.generic',
+    })
+
+    const updateLeak = fakeSupabase({
+      updateUser: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { message: 'raw internal detail' } }),
+    })
+    expect(await changePassword(updateLeak, input())).toEqual({
+      ok: false,
+      error: 'errors.generic',
+    })
+  })
+
   it('maps the server-side weak_password rejection to the same message', async () => {
     const supabase = fakeSupabase({
       updateUser: vi.fn().mockResolvedValue({ data: {}, error: { code: 'weak_password', status: 422 } }),

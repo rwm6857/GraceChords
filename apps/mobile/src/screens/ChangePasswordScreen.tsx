@@ -128,7 +128,7 @@ export default function ChangePasswordScreen() {
                 secureTextEntry
                 autoComplete="new-password"
                 textContentType="newPassword"
-                helperText={tx('changePassword.requirements', { min: MIN_PASSWORD_LENGTH })}
+                helperText={tx('passwordRequirements', { min: MIN_PASSWORD_LENGTH })}
               />
               <TextField
                 label={tx('changePassword.confirm')}
@@ -145,7 +145,7 @@ export default function ChangePasswordScreen() {
                   accessibilityLiveRegion="polite"
                   style={{ fontSize: 13.5, color: t.colors.danger }}
                 >
-                  {tx(error, { defaultValue: error, min: MIN_PASSWORD_LENGTH })}
+                  {tx(error, { min: MIN_PASSWORD_LENGTH })}
                 </Text>
               ) : null}
 

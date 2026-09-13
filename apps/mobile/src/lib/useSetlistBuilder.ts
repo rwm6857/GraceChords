@@ -66,6 +66,13 @@ export function useSetlistBuilder(setlistId: string) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
+  // A load that FAILED (network/timeout), as opposed to one that returned no
+  // row. Tracked separately because the two must not be treated alike: a missing
+  // row is a dead end, but a failed load leaves working state that only LOOKS
+  // empty, and saving from it would overwrite the real setlist. See below.
+  const [loadFailed, setLoadFailed] = useState(false)
+  // Bumped by retryLoad() to re-run the load effect.
+  const [reloadNonce, setReloadNonce] = useState(0)
 
   const songsById = useMemo(() => new Map(songs.map((s) => [s.id, s])), [songs])
 
@@ -81,13 +88,18 @@ export function useSetlistBuilder(setlistId: string) {
   const trailing = useRef(false)
   const deleted = useRef(false)
   const hydrated = useRef(false)
+  const unmounted = useRef(false)
 
   const runSave = useCallback(async () => {
     if (deleted.current) return
     if (!hydrated.current) {
       // An edit landed before the initial load resolved — defer rather than
       // drop it, so nothing written could clobber entries not yet fetched.
-      if (!timer.current) {
+      //
+      // Not re-armed after unmount: the unmount flush runs this, and a load that
+      // never succeeds would otherwise leave a timer rescheduling itself for the
+      // life of the process.
+      if (!timer.current && !unmounted.current) {
         timer.current = setTimeout(() => {
           timer.current = null
           runSave()
@@ -146,6 +158,8 @@ export function useSetlistBuilder(setlistId: string) {
   useEffect(() => {
     let alive = true
     let attempt = 0
+    setLoadFailed(false)
+    setLoading(true)
     const load = () => {
       fetchSetlist(supabase, setlistId)
         .then((data: Awaited<ReturnType<typeof fetchSetlist>>) => {
@@ -171,11 +185,16 @@ export function useSetlistBuilder(setlistId: string) {
               song: entry.song ? { id: entry.song_id, ...entry.song } : null,
             })),
           )
+          setLoadFailed(false)
+          // Clear a previous attempt's error, or a successful Retry still shows
+          // the failure line above a setlist that plainly did load.
+          setError(null)
           setLoading(false)
         })
         .catch((err: unknown) => {
           if (alive) {
             setError(failureDetailKey('useSetlistBuilder.load', err))
+            setLoadFailed(true)
             setLoading(false)
           }
         })
@@ -184,13 +203,22 @@ export function useSetlistBuilder(setlistId: string) {
     return () => {
       alive = false
     }
-  }, [setlistId, makeEntryKey])
+  }, [setlistId, makeEntryKey, reloadNonce])
 
-  // Only allow saves once the initial load has landed, so an early rename
+  // Only allow saves once the initial load has SUCCEEDED, so an early rename
   // can't wipe entries that haven't been fetched yet.
+  //
+  // `loadFailed` is part of this condition and must stay: without it a failed
+  // load (offline, or a request that blew the FOREGROUND_MS deadline) also
+  // cleared `loading`, hydration flipped on regardless, and the working state it
+  // hydrated from was the INITIAL one — empty name, no entries. The next edit
+  // then saved that, and updateSetlist's wipe-and-replace renamed the setlist to
+  // "Untitled Set" and deleted every song in it. An effect rather than a line in
+  // the load's success branch because it must run after the state it depends on
+  // has committed, or `latest.current` would still hold the pre-load values.
   useEffect(() => {
-    if (!loading && !notFound && !hydrated.current) hydrated.current = true
-  }, [loading, notFound])
+    if (!loading && !notFound && !loadFailed && !hydrated.current) hydrated.current = true
+  }, [loading, notFound, loadFailed])
 
   // Flush pending edits when the app backgrounds or the screen unmounts.
   useEffect(() => {
@@ -199,6 +227,10 @@ export function useSetlistBuilder(setlistId: string) {
     })
     return () => {
       sub.remove()
+      // Marked BEFORE the flush, not after: a pending save still runs (the
+      // hydrated path doesn't consult this), but an UNhydrated one must not
+      // re-arm its deferral timer on the way out.
+      unmounted.current = true
       flushSave()
     }
   }, [flushSave])
@@ -237,6 +269,10 @@ export function useSetlistBuilder(setlistId: string) {
         .filter((item): item is SetlistItem => item != null),
     [entries, songsById],
   )
+
+  const retryLoad = useCallback(() => {
+    setReloadNonce((n) => n + 1)
+  }, [])
 
   const setName = useCallback(
     (next: string) => {
@@ -332,6 +368,8 @@ export function useSetlistBuilder(setlistId: string) {
 
   return {
     name,
+    loadFailed,
+    retryLoad,
     items,
     songs,
     songsLoading,

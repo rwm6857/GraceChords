@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { isValidEmail, validateSignIn, validateSignUp } from '../authValidation'
+import {
+  isValidEmail,
+  validatePasswordStrength,
+  validateSignIn,
+  validateSignUp,
+} from '../authValidation'
 
 describe('isValidEmail', () => {
   it('accepts a normal address', () => {
@@ -33,8 +38,25 @@ describe('validateSignIn', () => {
   })
 })
 
+describe('validatePasswordStrength', () => {
+  it('accepts a password meeting every rule', () => {
+    expect(validatePasswordStrength('Grace123!')).toBeNull()
+  })
+
+  it('reports length separately from composition', () => {
+    expect(validatePasswordStrength('Gr1!')).toBe('errors.passwordTooShort')
+  })
+
+  it('rejects each missing character class', () => {
+    expect(validatePasswordStrength('GRACE123!')).toBe('errors.passwordNeedsMix')
+    expect(validatePasswordStrength('grace123!')).toBe('errors.passwordNeedsMix')
+    expect(validatePasswordStrength('GraceChords!')).toBe('errors.passwordNeedsMix')
+    expect(validatePasswordStrength('GraceChords1')).toBe('errors.passwordNeedsMix')
+  })
+})
+
 describe('validateSignUp', () => {
-  const valid = { fullName: 'Alex Brown', email: 'alex@example.com', password: 'longenough' }
+  const valid = { fullName: 'Alex Brown', email: 'alex@example.com', password: 'Grace123!' }
 
   it('returns null for a valid form', () => {
     expect(validateSignUp(valid)).toBeNull()
@@ -50,7 +72,14 @@ describe('validateSignUp', () => {
   })
 
   it('rejects passwords shorter than 8 characters', () => {
-    expect(validateSignUp({ ...valid, password: '1234567' })).toBe('errors.passwordTooShort')
-    expect(validateSignUp({ ...valid, password: '12345678' })).toBeNull()
+    expect(validateSignUp({ ...valid, password: 'Gr1!' })).toBe('errors.passwordTooShort')
+  })
+
+  // The regression behind QA Nº 6994 M-02: sign-up used to check length ONLY,
+  // so a long-but-weak password passed here and failed server-side, and GoTrue's
+  // own wording was what the user read.
+  it('enforces the full policy, not just length', () => {
+    expect(validateSignUp({ ...valid, password: 'longenough' })).toBe('errors.passwordNeedsMix')
+    expect(validateSignUp({ ...valid, password: '12345678' })).toBe('errors.passwordNeedsMix')
   })
 })

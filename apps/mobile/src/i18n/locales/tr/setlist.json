@@ -2,6 +2,7 @@
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "title": "Set Listeleri",
   "newSet": "Yeni set",
+  "defaultName": "{{date}} İbadeti",
   "empty": "Henüz set listesi yok",
   "syncing": "Set listeleriniz eşitleniyor…",
   "editedAgo": "{{time}} düzenlendi",
@@ -12,6 +13,7 @@
   "alerts": {
     "couldNotCreate": "Set oluşturulamadı",
     "couldNotDelete": "Set silinemedi",
+    "couldNotDuplicate": "Set çoğaltılamadı",
     "couldNotDeleteMany": "Set listeleri silinemedi",
     "couldNotCopyLink": "Bağlantı kopyalanamadı",
     "couldNotSendSet": "Set gönderilemedi",
@@ -40,7 +42,9 @@
     "add": "Ekle",
     "addSongs": "İlahi ekle",
     "startSet": "Seti başlat",
-    "notFound": "Bu set listesi artık mevcut değil."
+    "notFound": "Bu set listesi artık mevcut değil.",
+    "loadFailed": "Bu set yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin — set listeniz güvende.",
+    "backToSets": "Set listelerine dön"
   },
   "timeline": {
     "reorder": "{{title}} yeniden sırala",

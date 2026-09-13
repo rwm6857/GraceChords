@@ -4,6 +4,7 @@
 // authDeps.ts — so this module stays importable under plain Node for the vitest
 // harness. Type-only supabase imports erase at compile time.
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { authErrorKey } from '@gracechords/core'
 
 type SupabaseAuth = Pick<SupabaseClient, 'auth'>
 
@@ -11,9 +12,10 @@ export type AuthResult = {
   ok: boolean
   canceled?: boolean
   /**
-   * Either an auth-namespace i18n key (errors.*) for this module's own
-   * failures, or a raw passthrough message from Supabase. The screen renders
-   * it via t(error, { defaultValue: error }) so both forms display.
+   * ALWAYS an auth-namespace i18n key (errors.*) — this module's own failures
+   * and, via authErrorKey(), every provider failure too. Never a raw Supabase
+   * message: the screen renders it with plain t(), so a non-key would display
+   * as the key itself rather than leaking GoTrue's wording.
    */
   error?: string
   needsConfirmation?: boolean
@@ -55,7 +57,7 @@ export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
     token: credential.identityToken,
     nonce: rawNonce,
   })
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: authErrorKey(error) }
 
   // Apple only includes the user's name on the FIRST authorization; persist it
   // to user_metadata.full_name (which getDisplayName in greetings.ts reads) or
@@ -122,7 +124,7 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     provider: 'google',
     token: result.idToken,
   })
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: authErrorKey(error) }
   return { ok: true }
 }
 
@@ -134,7 +136,7 @@ export async function emailSignIn(
     email: input.email.trim(),
     password: input.password,
   })
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: authErrorKey(error) }
   return { ok: true }
 }
 
@@ -147,10 +149,41 @@ export async function emailSignUp(
     password: input.password,
     options: { data: { full_name: input.fullName.trim() } },
   })
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: authErrorKey(error) }
   if (data.session) return { ok: true }
   // No session: either confirm-email is on, or the email already exists (then
   // Supabase returns an obfuscated user with identities: []). Report both as
   // needsConfirmation so account existence is never leaked.
   return { ok: true, needsConfirmation: true }
+}
+
+/**
+ * Request a password-reset email.
+ *
+ * ALWAYS reports success to the caller when the request itself went through,
+ * regardless of whether an account exists — Supabase deliberately returns 200
+ * either way, and branching on the response would turn this screen into an
+ * account-existence oracle. The ONLY failures reported are ones that say nothing
+ * about the address: a throttle and a dead network.
+ *
+ * `redirectTo` is the WEB reset page (apps/web ResetPasswordPage), not an app
+ * route — the user requests the reset in the app and completes it in a browser.
+ * It must also be on the Supabase dashboard's redirect allow-list.
+ */
+export async function requestPasswordReset(
+  supabase: SupabaseAuth,
+  input: { email: string; redirectTo: string },
+): Promise<AuthResult> {
+  const { error } = await supabase.auth.resetPasswordForEmail(input.email.trim(), {
+    redirectTo: input.redirectTo,
+  })
+  if (error) {
+    const key = authErrorKey(error)
+    // Anything else — an unknown email, a malformed one, a provider hiccup — is
+    // swallowed on purpose so the confirmation copy stays uniform.
+    if (key === 'errors.rateLimited' || key === 'errors.network') {
+      return { ok: false, error: key }
+    }
+  }
+  return { ok: true }
 }

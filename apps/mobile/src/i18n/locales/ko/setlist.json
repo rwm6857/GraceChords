@@ -2,6 +2,7 @@
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
   "title": "셋리스트",
   "newSet": "새 셋리스트",
+  "defaultName": "{{date}} 예배",
   "empty": "아직 셋리스트가 없습니다",
   "syncing": "셋리스트 동기화 중…",
   "editedAgo": "{{time}} 편집됨",
@@ -12,6 +13,7 @@
   "alerts": {
     "couldNotCreate": "셋리스트를 만들 수 없음",
     "couldNotDelete": "셋리스트를 삭제할 수 없음",
+    "couldNotDuplicate": "세트를 복제하지 못했습니다",
     "couldNotDeleteMany": "셋리스트를 삭제할 수 없음",
     "couldNotCopyLink": "링크를 복사할 수 없음",
     "couldNotSendSet": "셋리스트를 보낼 수 없음",
@@ -40,7 +42,9 @@
     "add": "추가",
     "addSongs": "찬양곡 추가",
     "startSet": "셋리스트 시작",
-    "notFound": "이 셋리스트는 더 이상 존재하지 않습니다."
+    "notFound": "이 셋리스트는 더 이상 존재하지 않습니다.",
+    "loadFailed": "이 세트를 불러오지 못했습니다. 연결을 확인한 후 다시 시도해 주세요. 세트는 그대로 유지됩니다.",
+    "backToSets": "세트리스트로 돌아가기"
   },
   "timeline": {
     "reorder": "{{title}} 순서 변경",

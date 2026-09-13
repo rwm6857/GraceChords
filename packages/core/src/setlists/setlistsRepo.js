@@ -195,6 +195,43 @@ export async function updateSetlist(client, setlistId, input = {}) {
 }
 
 /**
+ * Copy a setlist — metadata and every entry, in order — into a new one.
+ *
+ * Reuses createSetlist + updateSetlist rather than issuing its own inserts, so
+ * the copy is written through exactly the same path (and the same personal-song
+ * / verse id decoding) as a set the user built by hand.
+ *
+ * NOT atomic: createSetlist commits before the entries are written, so a failure
+ * midway leaves an empty setlist behind rather than a half-populated one. That is
+ * the same exposure the optimistic create in the app already has, and an empty
+ * set the user can delete beats a copy that silently drops songs.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} client
+ * @param {string} setlistId
+ * @param {string} name  Name for the copy — see nextCopyName in copyName.ts.
+ * @returns {Promise<{ id: string, name: string }>}
+ */
+export async function duplicateSetlist(client, setlistId, name) {
+  const source = await fetchSetlist(client, setlistId)
+  if (!source) throw new Error('Setlist not found')
+
+  const created = await createSetlist(client, {
+    name,
+    serviceDate: source.service_date,
+  })
+
+  if (source.entries.length > 0) {
+    await updateSetlist(client, created.id, {
+      name,
+      serviceDate: source.service_date,
+      songs: source.entries.map((entry) => ({ id: entry.song_id, toKey: entry.toKey })),
+    })
+  }
+
+  return { id: created.id, name }
+}
+
+/**
  * Delete a setlist by id. Cascade handles setlist_songs.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client

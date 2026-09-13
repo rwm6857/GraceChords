@@ -213,3 +213,88 @@ describe('resolveInitialSession', () => {
     expect(auth.signOut).not.toHaveBeenCalled()
   })
 })
+
+// The offline-logout regression (reported by users opening the app with no
+// service): a session that cannot be VERIFIED is not a session that is gone.
+describe('resolveInitialSession — offline fallback', () => {
+  const stored = { user: { id: 'u1' }, access_token: 'a', refresh_token: 'r' }
+
+  it('adopts the stored session when the refresh fails on a dead network', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: 'Network request failed' },
+      }),
+    })
+    const read = vi.fn().mockResolvedValue(stored)
+
+    await expect(resolveInitialSession(auth, 5000, read)).resolves.toBe(stored)
+    // Critically: it must NOT purge the session it could not verify.
+    expect(auth.signOut).not.toHaveBeenCalled()
+  })
+
+  it('adopts the stored session when the boot read times out', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockImplementation(() => new Promise(() => {})),
+    })
+    const read = vi.fn().mockResolvedValue(stored)
+
+    await expect(resolveInitialSession(auth, 5, read)).resolves.toBe(stored)
+  })
+
+  it('still reports signed out when the token is DEAD, not merely unverifiable', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: { code: 'refresh_token_not_found' },
+      }),
+    })
+    const read = vi.fn().mockResolvedValue(stored)
+
+    await expect(resolveInitialSession(auth, 5000, read)).resolves.toBeNull()
+    expect(auth.signOut).toHaveBeenCalled()
+    // The fallback must never resurrect a session the server already rejected.
+    expect(read).not.toHaveBeenCalled()
+  })
+
+  it('reports signed out when storage is genuinely empty', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: 'Network request failed' },
+      }),
+    })
+    await expect(
+      resolveInitialSession(auth, 5000, vi.fn().mockResolvedValue(null)),
+    ).resolves.toBeNull()
+  })
+
+  it('ignores a stored session with no refresh token — it could never be revived', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: 'Network request failed' },
+      }),
+    })
+    const read = vi.fn().mockResolvedValue({ user: { id: 'u1' }, access_token: 'a' })
+    await expect(resolveInitialSession(auth, 5000, read)).resolves.toBeNull()
+  })
+
+  it('does not fall back when there is no error — that really is signed out', async () => {
+    const auth = fakeAuth()
+    const read = vi.fn().mockResolvedValue(stored)
+    await expect(resolveInitialSession(auth, 5000, read)).resolves.toBeNull()
+    expect(read).not.toHaveBeenCalled()
+  })
+
+  it('survives a throwing storage reader', async () => {
+    const auth = fakeAuth({
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: { message: 'Network request failed' },
+      }),
+    })
+    const read = vi.fn().mockRejectedValue(new Error('storage exploded'))
+    await expect(resolveInitialSession(auth, 5000, read)).resolves.toBeNull()
+  })
+})

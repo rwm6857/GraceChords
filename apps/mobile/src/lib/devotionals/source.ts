@@ -3,7 +3,11 @@ import { monthOfDayKey } from '@gracechords/core/devotional/dayKey'
 import { selectDay } from '@gracechords/core/devotional/selection'
 import type { DayEntry, Manifest, MonthFile } from '@gracechords/core/devotional/types'
 import { manifestRelPath, monthRelPath, tmpRelPath } from './paths'
-import { readCachedText, writeCachedTextAtomic } from './cacheStore'
+import {
+  enforceDevotionalCacheBudget,
+  readCachedText,
+  writeCachedTextAtomic,
+} from './cacheStore'
 import { fetchManifest, fetchMonth } from './remote'
 
 // Read seam for devotional content.
@@ -97,7 +101,14 @@ export async function cacheManifest(manifest: Manifest, text: string): Promise<b
 
 export async function cacheMonth(monthKey: string, month: MonthFile, text: string): Promise<boolean> {
   const ok = await writeCachedTextAtomic(tmpRelPath(`${monthKey}.json`), monthRelPath(monthKey), text)
-  if (ok) writeMonthMemo(monthKey, month)
+  if (ok) {
+    writeMonthMemo(monthKey, month)
+    // Sweep AFTER the write, so the month just fetched counts toward the budget
+    // and the oldest is what goes. Fire-and-forget: the read that triggered this
+    // must not wait on housekeeping, and a failed sweep only means the cache is
+    // trimmed on the next write instead.
+    void enforceDevotionalCacheBudget()
+  }
   return ok
 }
 

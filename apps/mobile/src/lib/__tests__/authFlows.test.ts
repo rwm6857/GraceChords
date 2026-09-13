@@ -4,6 +4,7 @@ import {
   emailSignIn,
   emailSignUp,
   googleSignIn,
+  requestPasswordReset,
   type AppleDeps,
   type GoogleDeps,
 } from '../authFlows'
@@ -17,6 +18,7 @@ function fakeSupabase(overrides: Record<string, unknown> = {}): SupabaseAuth {
       signInWithPassword: vi.fn().mockResolvedValue({ data: {}, error: null }),
       signUp: vi.fn().mockResolvedValue({ data: { user: {}, session: {} }, error: null }),
       updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      resetPasswordForEmail: vi.fn().mockResolvedValue({ data: {}, error: null }),
       ...overrides,
     },
   } as unknown as SupabaseAuth
@@ -129,7 +131,7 @@ describe('appleSignIn', () => {
         .mockResolvedValue({ data: {}, error: { message: 'Nonce mismatch' } }),
     })
     const result = await appleSignIn(appleDeps({ supabase }))
-    expect(result).toEqual({ ok: false, error: 'Nonce mismatch' })
+    expect(result).toEqual({ ok: false, error: 'errors.generic' })
   })
 })
 
@@ -219,10 +221,13 @@ describe('emailSignIn', () => {
     const supabase = fakeSupabase({
       signInWithPassword: vi
         .fn()
-        .mockResolvedValue({ data: {}, error: { message: 'Invalid login credentials' } }),
+        .mockResolvedValue({
+          data: {},
+          error: { code: 'invalid_credentials', message: 'Invalid login credentials' },
+        }),
     })
     const result = await emailSignIn(supabase, { email: 'a@b.co', password: 'pw' })
-    expect(result).toEqual({ ok: false, error: 'Invalid login credentials' })
+    expect(result).toEqual({ ok: false, error: 'errors.invalidCredentials' })
   })
 })
 
@@ -264,9 +269,75 @@ describe('emailSignUp', () => {
 
   it('surfaces signUp errors', async () => {
     const supabase = fakeSupabase({
-      signUp: vi.fn().mockResolvedValue({ data: {}, error: { message: 'Password too weak' } }),
+      signUp: vi.fn().mockResolvedValue({
+        data: {},
+        error: {
+          code: 'weak_password',
+          message:
+            'Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789.',
+        },
+      }),
     })
     const result = await emailSignUp(supabase, input)
-    expect(result).toEqual({ ok: false, error: 'Password too weak' })
+    // The QA Nº 6994 M-02 regression: this message must never reach the screen.
+    expect(result).toEqual({ ok: false, error: 'errors.passwordNeedsMix' })
+  })
+})
+
+describe('requestPasswordReset', () => {
+  const input = { email: '  alex@example.com  ', redirectTo: 'https://gracechords.com/reset-password' }
+
+  it('trims the address and forwards the web redirect', async () => {
+    const supabase = fakeSupabase()
+    const result = await requestPasswordReset(supabase, input)
+
+    expect(result).toEqual({ ok: true })
+    expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('alex@example.com', {
+      redirectTo: 'https://gracechords.com/reset-password',
+    })
+  })
+
+  // Account enumeration: the caller must not be able to tell a real address from
+  // an unknown one, so everything except a throttle and a dead network reports ok.
+  it('reports success for an unknown address', async () => {
+    const supabase = fakeSupabase({
+      resetPasswordForEmail: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { code: 'user_not_found' } }),
+    })
+    expect(await requestPasswordReset(supabase, input)).toEqual({ ok: true })
+  })
+
+  it('reports success even for an unrecognised provider failure', async () => {
+    const supabase = fakeSupabase({
+      resetPasswordForEmail: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { message: 'something raw and internal' } }),
+    })
+    expect(await requestPasswordReset(supabase, input)).toEqual({ ok: true })
+  })
+
+  it('surfaces a throttle, which says nothing about the address', async () => {
+    const supabase = fakeSupabase({
+      resetPasswordForEmail: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { code: 'over_email_send_rate_limit' } }),
+    })
+    expect(await requestPasswordReset(supabase, input)).toEqual({
+      ok: false,
+      error: 'errors.rateLimited',
+    })
+  })
+
+  it('surfaces a network failure so the user knows nothing was sent', async () => {
+    const supabase = fakeSupabase({
+      resetPasswordForEmail: vi
+        .fn()
+        .mockResolvedValue({ data: {}, error: { message: 'Network request failed' } }),
+    })
+    expect(await requestPasswordReset(supabase, input)).toEqual({
+      ok: false,
+      error: 'errors.network',
+    })
   })
 })

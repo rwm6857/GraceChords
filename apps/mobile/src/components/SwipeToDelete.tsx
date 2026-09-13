@@ -9,15 +9,17 @@ import Animated, {
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { useTranslation } from 'react-i18next'
-import SymbolIcon from './SymbolIcon'
+import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 
 // iOS-26-style swipe-to-delete, reusable across lists (setlist rows in the
 // builder, setlists in the library, …). Behavior:
-//  • Partial swipe left → the row opens to reveal a red Delete button and
-//    rests there. Tap the button to delete; swipe back to close.
+//  • Partial swipe left → the row opens to reveal a red Delete button (and, when
+//    `secondary` is set, one more action beside it) and rests there. Tap an
+//    action to run it; swipe back to close.
 //  • Full swipe left (past ~half the row width) → the row slides off and
-//    deletes.
+//    deletes. Delete stays the full-swipe action whether or not there is a
+//    secondary one: the gesture must mean the same thing in every row.
 // Pass `confirm` for destructive targets (e.g. a whole setlist): the delete is
 // gated behind a native alert; Cancel snaps the row closed. The moving layer
 // carries an opaque background so the red action only shows as it's revealed.
@@ -27,12 +29,21 @@ const FULL_SWIPE_FRACTION = 0.5
 
 export type ConfirmDelete = { title: string; message?: string; confirmLabel?: string }
 
+/** A non-destructive action revealed beside Delete on a partial swipe. */
+export type SwipeSecondaryAction = {
+  label: string
+  /** SF Symbol name, e.g. 'plus.square.on.square'. */
+  icon: SymbolIconProps['name']
+  onPress: () => void
+}
+
 export default function SwipeToDelete({
   children,
   onDelete,
   label,
   background,
   confirm,
+  secondary,
 }: {
   children: ReactNode
   onDelete: () => void
@@ -42,6 +53,8 @@ export default function SwipeToDelete({
   background?: string
   /** When set, gate the delete behind a native confirm alert. */
   confirm?: ConfirmDelete
+  /** Optional non-destructive action shown to the left of Delete. */
+  secondary?: SwipeSecondaryAction
 }) {
   const t = useTheme()
   // Aliased `tr` — `tx` is this component's translateX shared value.
@@ -51,10 +64,19 @@ export default function SwipeToDelete({
   const tx = useSharedValue(0)
   const startX = useSharedValue(0)
   const hasConfirm = !!confirm
+  // How far the row rests open: one button, or two when there is a secondary.
+  const restW = secondary ? BUTTON_W * 2 : BUTTON_W
 
   const snapClosed = useCallback(() => {
     tx.value = withTiming(0, { duration: 160 })
   }, [tx])
+
+  // A secondary action closes the row rather than leaving it hanging open over a
+  // list that is about to change underneath it.
+  const runSecondary = useCallback(() => {
+    snapClosed()
+    secondary?.onPress()
+  }, [secondary, snapClosed])
 
   // Slide the row off, then remove it.
   const commit = useCallback(() => {
@@ -91,15 +113,15 @@ export default function SwipeToDelete({
       if (-tx.value >= full) {
         if (hasConfirm) {
           // Rest open under the confirm dialog; commit/cancel resolves it.
-          tx.value = withTiming(-BUTTON_W, { duration: 140 })
+          tx.value = withTiming(-restW, { duration: 140 })
           runOnJS(requestDelete)()
         } else {
           tx.value = withTiming(-width, { duration: 180 }, (finished) => {
             if (finished) runOnJS(onDelete)()
           })
         }
-      } else if (-tx.value > BUTTON_W / 2) {
-        tx.value = withTiming(-BUTTON_W, { duration: 140 })
+      } else if (-tx.value > restW / 2) {
+        tx.value = withTiming(-restW, { duration: 140 })
       } else {
         tx.value = withTiming(0, { duration: 140 })
       }
@@ -108,10 +130,54 @@ export default function SwipeToDelete({
   const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: tx.value }] }))
   // The red action fills from the right, growing as the row is pulled further
   // so a full swipe reads as an edge-to-edge delete.
-  const actionStyle = useAnimatedStyle(() => ({ width: Math.max(BUTTON_W, -tx.value) }))
+  //
+  // The offset keeps it off the secondary action's slot until the swipe goes
+  // PAST the rest position: without it the red panel is as wide as the whole
+  // opening from the first pixel and simply covers the button beside it. Past
+  // rest it overtakes the secondary, which is what a full swipe should look
+  // like. With no secondary the offset is zero and this is the old expression.
+  const actionStyle = useAnimatedStyle(() => ({
+    width: Math.max(BUTTON_W, -tx.value - (restW - BUTTON_W)),
+  }))
 
   return (
     <View style={{ overflow: 'hidden' }}>
+      {/* Rendered BELOW the destructive layer so a full swipe, whose red panel
+          grows leftward across the whole row, covers this rather than leaving a
+          non-destructive button sitting under a delete gesture. */}
+      {secondary ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: BUTTON_W,
+            bottom: 0,
+            width: BUTTON_W,
+            backgroundColor: t.colors.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Pressable
+            onPress={runSecondary}
+            accessibilityRole="button"
+            accessibilityLabel={secondary.label}
+            style={{
+              width: BUTTON_W,
+              height: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+            }}
+          >
+            <SymbolIcon name={secondary.icon} size={20} color={t.colors.onAccent} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: t.colors.onAccent }}>
+              {secondary.label}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       <Animated.View
         style={[
           {
