@@ -15,6 +15,29 @@ describe('copyNameStem', () => {
   it('trims surrounding whitespace', () => {
     expect(copyNameStem('  Sunday  ')).toBe('Sunday')
   })
+
+  // Guards the SHAPE of the implementation, not just its output. The regex this
+  // replaced was quadratic on a long whitespace run (CodeQL: polynomial regular
+  // expression), and setlist names are user-typed with no length cap.
+  //
+  // The run must have non-whitespace on BOTH sides: a name that is only
+  // whitespace trims to empty, and one that merely starts with the run is
+  // fast-pathed, so either would pass against the old regex and prove nothing.
+  // Measured on the old implementation: 270ms at 20k, 1067ms at 40k — doubling
+  // the input quadrupled the time. The scan is ~0ms at both.
+  it('is linear on a long whitespace run inside the name', () => {
+    const pathological = `a${'\t'.repeat(40000)}b`
+    const started = Date.now()
+    expect(copyNameStem(pathological)).toBe(pathological)
+    expect(Date.now() - started).toBeLessThan(100)
+  })
+
+  it('is linear when that name also ends in parentheses', () => {
+    const pathological = `a${'\t'.repeat(40000)}(x)`
+    const started = Date.now()
+    expect(copyNameStem(pathological)).toBe(pathological)
+    expect(Date.now() - started).toBeLessThan(100)
+  })
 })
 
 describe('nextCopyName', () => {
