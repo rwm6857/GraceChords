@@ -8,9 +8,9 @@ doc first.
 ## What this is
 
 A native (Expo / React Native) client for GraceChords, built from the design
-reference. The core worship-team flows all ship: a themed four-tab shell (Home ·
-Songs · Setlists · Daily Word), a full **Song Viewer** (real chord chart —
-transpose, key change, accidentals, view options, star, export/share), a
+reference. The core worship-team flows all ship: a themed five-tab shell (Home ·
+Songs · Setlists · Daily Word · Utilities), a full **Song Viewer** (real chord
+chart — transpose, key change, accidentals, view options, star, export/share), a
 **Performer** setlist play-through, the **Setlist Builder** (autosave, key
 overrides, sharing, whole-set PDF), the **Daily Word / Reader** (M'Cheyne plan,
 translations, highlights), native **Google/Apple auth** with a sprite avatar
@@ -386,10 +386,13 @@ duplicate logic here and never edit core internals to suit mobile.
   (`app/sheet.tsx` + `src/lib/formSheetHost.ts` — screens keep owning
   state/callbacks; the host bridges the render into the route, one sheet at a
   time). Phones get a native bottom sheet with grabber/detents, iPads a
-  centered narrow form sheet. The ONE exception is the builder's
-  `RowActionsSheet`, which stays on the hand-rolled `BottomSheet` Modal because
-  it chains into the key picker via `onDismissed`; if you add a new sheet, use
-  the `useFormSheet` + `FormSheetShell` pattern.
+  centered narrow form sheet. **There is no longer an exception — all 16 sheets
+  go through it**, so a new sheet uses the `useFormSheet` + `FormSheetShell`
+  pattern. (`src/components/BottomSheet.tsx` and
+  `src/components/setlist/RowActionsSheet.tsx` are the hand-rolled `Modal`
+  sheet and its only caller; nothing imports `RowActionsSheet` any more, so both
+  are dead code awaiting deletion. This doc previously described them as the one
+  live exception.)
   **The bottom safe-area inset belongs to the host, not the sheet.** `app/sheet.tsx`
   pads its surface-painted wrapper by `insets.bottom` for every sheet — a
   `fitToContents` sheet is only as tall as its React content, so content that stops
@@ -424,8 +427,9 @@ duplicate logic here and never edit core internals to suit mobile.
 
 ## Routing, screens & auth
 
-- `app/(tabs)/_layout.tsx` — the four-tab shell (Home · Songs · Setlists · Daily
-  Word), `headerShown:false` (screens draw their own large-title headers).
+- `app/(tabs)/_layout.tsx` — the five-tab shell (Home · Songs · Setlists · Daily
+  Word · Utilities), `headerShown:false` (screens draw their own large-title
+  headers).
 - Routes **outside** the tab group push over the shell: `app/viewer/[slug].tsx`
   (Song Viewer — real chord chart), `app/perform/[id].tsx` (Performer / setlist
   play-through → `PerformerScreen`), `app/setlist/[id].tsx` (Setlist Builder),

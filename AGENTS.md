@@ -9,7 +9,7 @@ sub-docs — **read the matching one before touching that app.**
 | You're working on… | Read |
 |--------------------|------|
 | The web app (`apps/web/**`) | [`apps/web/AGENTS.md`](apps/web/AGENTS.md) — structure, design tokens, PDF engine, service worker, i18n, Cloudflare wiring, env vars, testing baselines |
-| The iOS app (`apps/mobile/**`) | [`apps/mobile/AGENTS.md`](apps/mobile/AGENTS.md) — theme/primitives, SF Symbols, auth gating, Metro resolution, CNG, Supabase |
+| The mobile app — iOS + Android (`apps/mobile/**`) | [`apps/mobile/AGENTS.md`](apps/mobile/AGENTS.md) — theme/primitives, SF Symbols, auth gating, Metro resolution, CNG, Supabase |
 | Shared logic (`packages/**`) | this file (below) |
 | Workers (`workers/**`) | the `README.md` / `ARCHITECTURE.md` in that worker's directory |
 
@@ -25,7 +25,7 @@ This repo is an npm-workspaces monorepo. Platform-agnostic logic lives in
 
 ```
 apps/web/       @gracechords/web     — React + Vite SPA (production site)
-apps/mobile/    @gracechords/mobile  — Expo / React Native iOS app
+apps/mobile/    @gracechords/mobile  — Expo / React Native app (iOS + Android)
 packages/core/  @gracechords/core    — shared, DOM-free TS/JS
 packages/tokens/@gracechords/tokens  — design tokens (web CSS + native TS map + generated Swift)
 workers/        Cloudflare Workers (deployed independently)
@@ -33,7 +33,7 @@ supabase/       SQL migrations
 ```
 
 - The web app lives in `apps/web/` (its `src/`, `public/`, `functions/`, `scripts/`, `index.html`, `vite.config.js`, `eslint.config.js`). Cloudflare Pages' root directory is `apps/web`. See [`MONOREPO_MIGRATION.md`](MONOREPO_MIGRATION.md) for the exact CF settings.
-- The Expo iOS app lives in `apps/mobile/` (`@gracechords/mobile`). It's a real native client (themed four-tab shell, chord-chart Song Viewer, Performer mode, setlist builder, Daily Word reader, native Google/Apple auth, all behind an authenticated-only route gate), not just a scaffold.
+- The Expo mobile app lives in `apps/mobile/` (`@gracechords/mobile`) and ships on **both iOS and Android**. It's a real native client (themed five-tab shell, chord-chart Song Viewer, Performer mode, setlist builder, Daily Word reader, native Google/Apple auth, all behind an authenticated-only route gate), not just a scaffold.
 - Run web tasks from the repo root via the delegating scripts (`npm run dev`, `npm run build`, `npm run test`, `npm run lint` → `-w @gracechords/web`), or from inside `apps/web/`.
 - The repo root holds only the workspace `package.json` + lockfile, `packages/`, `apps/`, `workers/`, `supabase/`, and docs.
 
