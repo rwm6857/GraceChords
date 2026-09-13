@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ActivityIndicator,
   AppState,
@@ -17,7 +17,9 @@ import ChordChart from '../components/ChordChart'
 import VerseChart from '../components/VerseChart'
 import Screen from '../components/Screen'
 import SymbolIcon from '../components/SymbolIcon'
+import { FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP } from '../components/ViewOptionsSheet'
 import { useTheme } from '../theme/ThemeProvider'
+import { setDefaultTheme } from '../lib/defaults'
 import { supabase } from '../lib/supabase'
 import { prefetchSong, useSong } from '../lib/useSong'
 
@@ -54,7 +56,7 @@ type SessionRow = {
 // app/_layout.tsx).
 export default function SessionFollowerScreen({ code }: { code: string }) {
   const t = useTheme()
-  const { t: tx } = useTranslation(['setlist'])
+  const { t: tx } = useTranslation(['setlist', 'song'])
   const router = useRouter()
 
   const [session, setSession] = useState<SessionRow | null>(null)
@@ -65,6 +67,8 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
 
   const [displayedUid, setDisplayedUid] = useState<string | null>(null)
   const [autoFollow, setAutoFollow] = useState(true)
+  // Ephemeral per open, like the Song Viewer's own font scale.
+  const [fontScale, setFontScale] = useState(1)
 
   const scrollRef = useRef<ScrollView | null>(null)
   const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -200,6 +204,18 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
     else router.replace('/')
   }
 
+  const stepFont = (dir: 1 | -1) => {
+    setFontScale((prev) => {
+      const next = Math.round((prev + dir * FONT_SCALE_STEP) * 10) / 10
+      return Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, next))
+    })
+  }
+
+  // The follower has no Settings access (an anonymous viewer never sees the tab
+  // shell), so the toggle writes the app-wide preference directly — there is one
+  // theme source of truth and this is it.
+  const toggleTheme = () => setDefaultTheme(t.mode === 'dark' ? 'light' : 'dark')
+
   // ---------- Render ----------
   if (phase === 'loading') {
     return (
@@ -298,6 +314,30 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         <Text numberOfLines={1} style={{ flex: 1, color: t.colors.sec }}>
           {displayedItem?.title || ''}
         </Text>
+
+        {/* Reader controls — deliberately quiet, in the follower's own hands:
+            neither the size nor the theme is broadcast to the session. Grouped
+            in one row so the header's gap sits before the cluster, not between
+            three related buttons. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <HeaderControl
+            label={tx('song:viewOptions.smallerFont')}
+            onPress={() => stepFont(-1)}
+            disabled={fontScale <= FONT_SCALE_MIN}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: t.colors.sec }}>A</Text>
+          </HeaderControl>
+          <HeaderControl
+            label={tx('song:viewOptions.largerFont')}
+            onPress={() => stepFont(1)}
+            disabled={fontScale >= FONT_SCALE_MAX}
+          >
+            <Text style={{ fontSize: 19, fontWeight: '700', color: t.colors.sec }}>A</Text>
+          </HeaderControl>
+          <HeaderControl label={tx('setlist:sessionFollower.toggleTheme')} onPress={toggleTheme}>
+            <SymbolIcon name="circle.lefthalf.filled" size={19} color={t.colors.sec} />
+          </HeaderControl>
+        </View>
       </View>
 
       {!connected ? (
@@ -317,7 +357,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         contentContainerStyle={{ padding: t.spacing.lg, paddingBottom: t.spacing.xxl * 2 }}
       >
         {isVerse && displayedItem?.ref ? (
-          <VerseChart verseRef={displayedItem.ref} />
+          <VerseChart verseRef={displayedItem.ref} fontScale={fontScale} />
         ) : displayedItem && !isSong ? (
           <View style={styles.center}>
             <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
@@ -326,7 +366,13 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
             <Text style={{ color: t.colors.sec }}>{tx('setlist:sessionFollower.unavailable')}</Text>
           </View>
         ) : doc ? (
-          <ChordChart doc={doc} steps={steps} preferFlat={preferFlat} showChords={showChords} />
+          <ChordChart
+            doc={doc}
+            steps={steps}
+            preferFlat={preferFlat}
+            showChords={showChords}
+            fontScale={fontScale}
+          />
         ) : (
           <View style={styles.center}>
             <ActivityIndicator color={t.colors.accent} />
@@ -358,6 +404,38 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         </Pressable>
       ) : null}
     </Screen>
+  )
+}
+
+function HeaderControl({
+  label,
+  onPress,
+  disabled,
+  children,
+}: {
+  label: string
+  onPress: () => void
+  disabled?: boolean
+  children: ReactNode
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+      hitSlop={6}
+      style={{
+        width: 36,
+        height: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: disabled ? 0.3 : 1,
+      }}
+    >
+      {children}
+    </Pressable>
   )
 }
 

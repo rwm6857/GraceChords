@@ -39,15 +39,25 @@ vi.mock('../../utils/bible/chapters', () => ({
 
 // Platform detection drives the mobile-only "open in app" banner. Toggle per test.
 import SessionViewer from '../SessionViewerPage'
+import { SettingsProvider } from '../../hooks/useSettings'
 
+// Mirrors main.jsx: the follower reads theme + chord style from SettingsProvider.
 function renderAt(code = 'ABC123') {
   return render(
-    <MemoryRouter initialEntries={[`/s/${code}`]}>
-      <Routes>
-        <Route path="/s/:code" element={<SessionViewer />} />
-      </Routes>
-    </MemoryRouter>,
+    <SettingsProvider>
+      <MemoryRouter initialEntries={[`/s/${code}`]}>
+        <Routes>
+          <Route path="/s/:code" element={<SessionViewer />} />
+        </Routes>
+      </MemoryRouter>
+    </SettingsProvider>,
   )
+}
+
+const LIVE_ROW = {
+  id: 'sess-1', code: 'ABC123', status: 'live', setlist_id: null,
+  items: [{ uid: 'i0', kind: 'song', slug: 'abba', title: 'Abba', defaultKey: 'Am' }],
+  current_item_uid: 'i0', transpose: 0, current_key: 'Am',
 }
 
 describe('SessionViewer', () => {
@@ -113,5 +123,41 @@ describe('SessionViewer', () => {
     sessionMock.row = null
     renderAt('NOPE99')
     expect(await screen.findByText(/Session not found/i)).toBeInTheDocument()
+  })
+
+  it('toggles light/dark from the header', async () => {
+    sessionMock.row = LIVE_ROW
+    document.documentElement.setAttribute('data-theme', 'light')
+    renderAt()
+    await screen.findByText('Father we love You')
+
+    fireEvent.click(screen.getByLabelText('Switch to dark mode'))
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+
+    fireEvent.click(screen.getByLabelText('Switch to light mode'))
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+  })
+
+  it('steps the lyric font size and remembers it', async () => {
+    sessionMock.row = LIVE_ROW
+    renderAt()
+    const lyric = await screen.findByText('Father we love You')
+    // The size lives on the content wrapper; the lines inherit it.
+    const sizedAncestor = (el) => {
+      for (let n = el; n; n = n.parentElement) {
+        const size = n.style?.fontSize
+        if (size && size !== 'inherit') return n
+      }
+      return null
+    }
+    expect(sizedAncestor(lyric).style.fontSize).toBe('20px')
+
+    fireEvent.click(screen.getByLabelText('Larger text'))
+    expect(sizedAncestor(await screen.findByText('Father we love You')).style.fontSize).toBe('22px')
+    expect(localStorage.getItem('gracechords.session.fontPx')).toBe('22')
+
+    fireEvent.click(screen.getByLabelText('Smaller text'))
+    expect(sizedAncestor(await screen.findByText('Father we love You')).style.fontSize).toBe('20px')
+    expect(localStorage.getItem('gracechords.session.fontPx')).toBe('20')
   })
 })

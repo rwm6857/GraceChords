@@ -4,10 +4,11 @@ import { fetchSessionByCode, subscribeToSession, parseVerseId, resolveVerseLines
 import { supabase } from '../lib/supabase'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
-import { useChordStyle } from '../hooks/useSettings'
+import { useSettings } from '../hooks/useSettings'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
 import { fetchBibleChapter } from '../utils/bible/chapters'
 import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordRender'
+import { Sun, Moon } from '../components/Icons'
 
 // Live Session follower (web). Joined via a plain link at /s/{code}. Reads ONE
 // `sessions` row (single source of truth: late-join snapshot + live stream) and
@@ -21,6 +22,25 @@ import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordR
 // After this long without any realtime signal following a drop, soften the
 // "reconnecting" hint (we still HOLD the last-known state either way).
 const GRACE_MS = 50_000
+
+// Reader controls. The follower is a full-screen route with no NavBar, so the
+// site's own theme switch is out of reach — the header carries its own. Font
+// size is follower-local (the leader's view is unaffected) and persists, since
+// a phone in a dark room is rejoined session after session.
+const FONT_KEY = 'gracechords.session.fontPx'
+const FONT_DEFAULT = 20
+const FONT_MIN = 14
+const FONT_MAX = 36
+const FONT_STEP = 2
+
+function readStoredFontPx() {
+  try {
+    const v = Number(localStorage.getItem(FONT_KEY))
+    return Number.isFinite(v) && v >= FONT_MIN && v <= FONT_MAX ? v : FONT_DEFAULT
+  } catch {
+    return FONT_DEFAULT
+  }
+}
 
 // Parse a catalog song's ChordPro into the section shape the renderer consumes.
 // Chords are kept; the render decides per-tier whether to show them.
@@ -46,7 +66,7 @@ function webFetchChapter(translationId, bookNumber, chapter) {
 
 export default function SessionViewer() {
   const { code = '' } = useParams()
-  const chordStyle = useChordStyle()
+  const { chordStyle, theme, toggleTheme } = useSettings()
   const { songs: catalogSongs } = useSongs()
   const catalog = useMemo(() => buildSongCatalog(catalogSongs), [catalogSongs])
 
@@ -58,6 +78,7 @@ export default function SessionViewer() {
 
   const [displayedUid, setDisplayedUid] = useState(null)
   const [autoFollow, setAutoFollow] = useState(true)
+  const [fontPx, setFontPx] = useState(readStoredFontPx)
 
   // Resolved verse lines keyed by verse ref (cache across item changes).
   const [verseByRef, setVerseByRef] = useState({})
@@ -187,6 +208,14 @@ export default function SessionViewer() {
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
+  const stepFont = (dir) => {
+    setFontPx((px) => {
+      const next = Math.min(FONT_MAX, Math.max(FONT_MIN, px + dir * FONT_STEP))
+      try { localStorage.setItem(FONT_KEY, String(next)) } catch { /* private mode */ }
+      return next
+    })
+  }
+
   // ---------- Render ----------
   if (phase === 'loading') {
     return <div style={SHELL}><div style={CENTER}>Joining session…</div></div>
@@ -231,9 +260,40 @@ export default function SessionViewer() {
             {displayedItem?.title || ''}
           </span>
         </div>
-        {showChords && !isVerse && session?.current_key ? (
-          <span style={KEY_PILL}>Key: {session.current_key}</span>
-        ) : null}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {showChords && !isVerse && session?.current_key ? (
+            <span style={{ ...KEY_PILL, marginRight: 4 }}>Key: {session.current_key}</span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => stepFont(-1)}
+            disabled={fontPx <= FONT_MIN}
+            title="Smaller text"
+            aria-label="Smaller text"
+            style={{ ...CTRL, ...(fontPx <= FONT_MIN ? CTRL_OFF : null), fontSize: 13 }}
+          >
+            A−
+          </button>
+          <button
+            type="button"
+            onClick={() => stepFont(1)}
+            disabled={fontPx >= FONT_MAX}
+            title="Larger text"
+            aria-label="Larger text"
+            style={{ ...CTRL, ...(fontPx >= FONT_MAX ? CTRL_OFF : null), fontSize: 17 }}
+          >
+            A+
+          </button>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={CTRL}
+          >
+            {theme === 'dark' ? <Sun width={16} height={16} /> : <Moon width={16} height={16} />}
+          </button>
+        </div>
       </div>
 
       {!connected ? (
@@ -246,7 +306,7 @@ export default function SessionViewer() {
       <div ref={scrollRef} onScroll={onScroll} style={CONTENT}>
         {isVerse ? (
           verseLines ? (
-            <div style={{ maxWidth: 900, margin: '0 auto', fontSize: 20 }}>
+            <div style={{ maxWidth: 900, margin: '0 auto', fontSize: fontPx }}>
               <VerseView sections={[{ label: '', lines: verseLines }]} />
             </div>
           ) : (
@@ -258,7 +318,10 @@ export default function SessionViewer() {
             <p style={{ opacity: 0.6 }}>Not available in this view.</p>
           </div>
         ) : view ? (
-          <div style={{ maxWidth: 1200, margin: '0 auto', fontSize: 20 }}>
+          // Keyed on the size: ChordLine canvas-measures chord offsets in an
+          // effect that runs on mount, so remounting is what re-lays-out the
+          // chord layer against the new font metrics.
+          <div key={fontPx} style={{ maxWidth: 1200, margin: '0 auto', fontSize: fontPx }}>
             {view.sections.map((sec, si) => (
               <div key={si} style={{ breakInside: 'avoid', marginBottom: 6 }}>
                 {sec.label ? <div className="section" style={SECTION}>[{sec.label}]</div> : null}
@@ -330,3 +393,12 @@ const PILL = {
   padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,.25)',
 }
 const LINK = { color: 'var(--gc-primary, #2563eb)', fontWeight: 600, textDecoration: 'none' }
+// Reader controls: deliberately quiet (they sit beside a LIVE badge and must not
+// compete with the lyrics), but still a 36px touch target.
+const CTRL = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  minWidth: 36, height: 36, padding: '0 8px', background: 'transparent',
+  border: 'none', borderRadius: 8, color: 'inherit', opacity: 0.55,
+  fontWeight: 700, lineHeight: 1, cursor: 'pointer',
+}
+const CTRL_OFF = { opacity: 0.2, cursor: 'default' }

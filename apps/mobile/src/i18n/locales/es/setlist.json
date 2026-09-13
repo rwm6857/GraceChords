@@ -106,7 +106,8 @@
     "waiting": "Esperando al líder…",
     "live": "EN VIVO",
     "loadingSong": "Cargando canción…",
-    "home": "Inicio"
+    "home": "Inicio",
+    "toggleTheme": "Cambiar entre claro y oscuro"
   },
   "resume": {
     "title": "¿Reanudar la sesión en vivo?",

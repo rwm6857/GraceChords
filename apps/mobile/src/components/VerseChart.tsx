@@ -13,7 +13,13 @@ import { getPassage, getTranslations } from '../lib/bibleSource'
 // R2 Bible source the Daily Word reader uses (cache-first via getPassage), so an
 // anonymous session follower can read it. `verseRef` is the canonical
 // `v:<translation>|<Book> <ref>` id.
-export default function VerseChart({ verseRef }: { verseRef: string }) {
+export default function VerseChart({
+  verseRef,
+  fontScale = 1,
+}: {
+  verseRef: string
+  fontScale?: number
+}) {
   const t = useTheme()
   const [lines, setLines] = useState<VerseLine[] | null>(null)
   const [failed, setFailed] = useState(false)
@@ -71,10 +77,21 @@ export default function VerseChart({ verseRef }: { verseRef: string }) {
     <View style={{ gap: 10, maxWidth: 760, alignSelf: 'center', width: '100%' }}>
       {lines.map((ln, i) => (
         <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-          <Text style={{ minWidth: ln.showChapter ? 46 : 28, textAlign: 'right', color: t.colors.sec, fontWeight: '600' }}>
+          <Text
+            style={{
+              minWidth: (ln.showChapter ? 46 : 28) * fontScale,
+              textAlign: 'right',
+              color: t.colors.sec,
+              fontWeight: '600',
+              // 14 is RN's default size — named here only so it can scale.
+              fontSize: 14 * fontScale,
+            }}
+          >
             {ln.showChapter ? `${ln.chapter}:${ln.number}` : `${ln.number}`}
           </Text>
-          <Text style={{ flex: 1, color: t.colors.ink, fontSize: 18, lineHeight: 26 }}>{ln.text}</Text>
+          <Text style={{ flex: 1, color: t.colors.ink, fontSize: 18 * fontScale, lineHeight: 26 * fontScale }}>
+            {ln.text}
+          </Text>
         </View>
       ))}
     </View>
