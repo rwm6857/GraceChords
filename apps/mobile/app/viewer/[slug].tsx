@@ -66,10 +66,9 @@ export default function ViewerScreen() {
   const t = useTheme()
   const { t: tx } = useTranslation(['song', 'export', 'errors', 'common'])
   const router = useRouter()
-  const { slug, title, artist, songKey, initialKey, source, personalId } = useLocalSearchParams<{
+  const { slug, title, songKey, initialKey, source, personalId } = useLocalSearchParams<{
     slug: string
     title?: string
-    artist?: string
     songKey?: string
     initialKey?: string
     source?: string
@@ -199,7 +198,6 @@ export default function ViewerScreen() {
   }
 
   const displayTitle = song?.title || title || slug
-  const displayArtist = song?.artist ?? artist ?? ''
   const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
   // Capo chip: only a net DOWNWARD ± transpose (delta < 0) has a capo
   // equivalent — the played shapes sit below the sounding key, which stays the
@@ -341,7 +339,9 @@ export default function ViewerScreen() {
           </Text>
           {isPersonal ? <PersonalChip /> : <StarButton songId={song?.id} />}
         </View>
-        {/* Subtitle row per the reference: artist · Key pill (+ time sig / BPM) */}
+        {/* Subtitle row: Key pill (+ time sig / BPM). The author/artist is
+            deliberately absent — on stage the key has to be readable at a
+            glance, and a long credit line crowded the pill off the row. */}
         <View
           style={{
             marginTop: 6,
@@ -350,14 +350,6 @@ export default function ViewerScreen() {
             gap: t.spacing.sm,
           }}
         >
-          {displayArtist ? (
-            <Text style={{ fontSize: 13.5, color: t.colors.sec }}>{displayArtist}</Text>
-          ) : null}
-          {displayArtist && keyLabel ? (
-            <View
-              style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: t.colors.muted }}
-            />
-          ) : null}
           {keyLabel ? (
             <View
               style={{

@@ -22,7 +22,6 @@ export default function RecentSongsCard() {
       params: {
         slug: s.slug,
         title: s.title,
-        artist: s.artist ?? '',
         songKey: s.default_key ?? '',
         ...(s.lastKey ? { initialKey: s.lastKey } : {}),
       },

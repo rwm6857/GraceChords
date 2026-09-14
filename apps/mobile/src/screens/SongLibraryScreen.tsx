@@ -233,7 +233,6 @@ export default function SongLibraryScreen() {
         // route segment and flag the source so the viewer reads personal_songs.
         slug: song.source === 'personal' ? song.personalId! : song.slug,
         title: song.title,
-        artist: song.artist ?? '',
         songKey: song.default_key ?? '',
         ...(song.source === 'personal'
           ? { source: 'personal', personalId: song.personalId! }

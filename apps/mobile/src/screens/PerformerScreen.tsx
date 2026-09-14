@@ -260,7 +260,6 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // Use the entry's catalog metadata for the header so it tracks the current
   // song immediately, not the still-loading `song`.
   const displayTitle = entry?.song.title || ''
-  const displayArtist = entry?.song.artist ?? ''
   const keyLabel = effectiveKey ? formatKeyDisplay(effectiveKey, chordStyle) : ''
   // The song-scope export key is whatever the performer is currently viewing:
   // '' (native) when not transposed away from native, else the displayed key.
@@ -508,7 +507,9 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           </View>
         ) : null}
 
-        {/* Title (+ favorite) + artist + key */}
+        {/* Title (+ favorite) + key. No author/artist line: mid-set the key is
+            the only metadata worth header space, and a long credit line pushed
+            the key pill out of the row. */}
         <View style={{ marginTop: t.spacing.md, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
           <Text
             numberOfLines={1}
@@ -524,14 +525,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           </Text>
           <StarButton songId={entry?.song.id} />
         </View>
-        <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
-          {displayArtist ? (
-            <Text style={{ fontSize: 13.5, color: t.colors.sec }}>{displayArtist}</Text>
-          ) : null}
-          {displayArtist && keyLabel ? (
-            <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: t.colors.muted }} />
-          ) : null}
-          {keyLabel ? (
+        {keyLabel ? (
+          <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center' }}>
             <View
               style={{
                 backgroundColor: t.colors.accentSoft,
@@ -544,8 +539,8 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
                 {tx('common:keyOf', { key: keyLabel })}
               </Text>
             </View>
-          ) : null}
-        </View>
+          </View>
+        ) : null}
       </RNAnimated.View>
 
       {/* Chart area */}

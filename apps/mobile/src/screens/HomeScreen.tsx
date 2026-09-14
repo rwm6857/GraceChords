@@ -122,7 +122,6 @@ export default function HomeScreen() {
       params: {
         slug: s.slug,
         title: s.title,
-        artist: s.artist ?? '',
         songKey: s.default_key ?? '',
       },
     })

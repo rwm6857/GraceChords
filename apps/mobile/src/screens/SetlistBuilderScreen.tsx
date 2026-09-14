@@ -151,7 +151,6 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         params: {
           slug: item.song.slug,
           title: item.song.title,
-          artist: item.song.artist ?? '',
           songKey: item.song.default_key ?? '',
           ...(key ? { initialKey: key } : {}),
         },
