@@ -4,7 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { showToast } from '../utils/app/toast'
 import Button from '../components/ui/layout-kit/Button'
+import { DownloadIcon } from '../components/Icons'
 import { ROLES_BY_RANK_DESC } from '../lib/roles'
+import { buildChordProArchiveFiles, chordProArchiveName } from '../utils/export/chordproArchive'
 import '../styles/admin-portal.css'
 
 function formatTime(date) {
@@ -60,6 +62,7 @@ export default function AdminPage() {
   const [expandedUserId, setExpandedUserId] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [exporting, setExporting] = useState(false)
 
   const loadUsers = useCallback(async () => {
     setUsersLoading(true)
@@ -130,6 +133,31 @@ export default function AdminPage() {
     setDeleteTarget(null)
   }
 
+  async function handleExportChordPro() {
+    setExporting(true)
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('slug, chordpro_content')
+        .eq('is_deleted', false)
+        .order('slug')
+      if (error) throw error
+      const files = buildChordProArchiveFiles(data)
+      if (files.length === 0) {
+        showToast('No songs to export.')
+        return
+      }
+      const { downloadZip } = await import('../utils/archive/zip')
+      await downloadZip(files, { name: chordProArchiveName() })
+      showToast(`Exported ${files.length} ChordPro file${files.length === 1 ? '' : 's'}.`)
+    } catch (err) {
+      showToast('Failed to export ChordPro archive.')
+      console.error('[AdminPage] handleExportChordPro:', err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const currentUserId = session?.user?.id
 
   return (
@@ -138,7 +166,7 @@ export default function AdminPage() {
 
       <h1>Admin Portal</h1>
       <p className="gc-portal-page__subtitle">
-        Manage users and roles.
+        Manage users and roles, and export the song library.
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginBottom: 'var(--gc-space-4)' }}>
         <Button
@@ -254,6 +282,24 @@ export default function AdminPage() {
             </table>
           </div>
         )}
+      </section>
+
+      {/* ── Song Library Export ───────────────────────────────────── */}
+      <section className="gc-portal-section">
+        <h2>Song Library</h2>
+        <p className="gc-portal-page__subtitle">
+          Download every published song as a ZIP of <code>slug.pro</code> ChordPro
+          files — the same contents as a single song&rsquo;s ChordPro download.
+        </p>
+        <Button
+          size="sm"
+          variant="secondary"
+          leftIcon={<DownloadIcon />}
+          loading={exporting}
+          onClick={handleExportChordPro}
+        >
+          {exporting ? 'Preparing ZIP…' : 'Download all ChordPro'}
+        </Button>
       </section>
 
       {/* ── 4b. Role & Privilege Matrix ───────────────────────────── */}
