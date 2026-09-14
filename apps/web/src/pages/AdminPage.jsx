@@ -138,7 +138,7 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase
         .from('songs')
-        .select('slug, chordpro_content')
+        .select('slug, title, chordpro_content')
         .eq('is_deleted', false)
         .order('slug')
       if (error) throw error
@@ -289,7 +289,7 @@ export default function AdminPage() {
         <h2>Song Library</h2>
         <p className="gc-portal-page__subtitle">
           Download every published song as a ZIP of <code>slug.pro</code> ChordPro
-          files — the same contents as a single song&rsquo;s ChordPro download.
+          files, each opening with its <code>{'{title: …}'}</code> line.
         </p>
         <Button
           size="sm"
