@@ -48,6 +48,14 @@
   "helpCenter": "Help center",
   "sendFeedback": "Send feedback",
   "aboutGraceChords": "About GraceChords",
+  "signInDiagnostics": {
+    "row": "Sign-in diagnostics",
+    "subtitle": "Details of a sign-in problem on this device",
+    "title": "Sign-in diagnostics",
+    "intro": "Technical details of the sign-in failures since the app last started. Nothing here is sent anywhere — include it in a bug report if you are asked to.",
+    "copy": "Copy",
+    "copied": "Copied to the clipboard."
+  },
   "logOut": "Log out",
   "deleteAccount": "Delete account",
   "signOutAlert": {

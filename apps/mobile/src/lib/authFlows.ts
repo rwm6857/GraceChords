@@ -18,7 +18,49 @@ export type AuthResult = {
    * as the key itself rather than leaking GoTrue's wording.
    */
   error?: string
+  /**
+   * Interpolation values for `error`, merged into the t() call by the screen.
+   * Only ever bounded, non-sensitive values — a provider status code, a count —
+   * never a raw provider message: `error` exists precisely so GoTrue's wording
+   * cannot reach a user, and this must not be the hole in that.
+   */
+  errorParams?: Record<string, string | number>
   needsConfirmation?: boolean
+}
+
+/**
+ * Diagnostics hooks, injected like the rest of the native surface.
+ *
+ * Both are OPTIONAL so the vitest harness (and any caller that does not care)
+ * can build a deps object without them. `describeError` pulls the provider's
+ * code/status out of the thrown value; `logFailure` records it. Keeping them
+ * here rather than importing a logger preserves this module's contract: RN-free
+ * and importable under plain Node.
+ */
+type DiagnosticsDeps = {
+  describeError?: (e: unknown) => { code: string | null; status: number | null; message: string }
+  logFailure?: (
+    scope: string,
+    info: { code: string | null; status: number | null; message: string },
+  ) => void
+}
+
+/**
+ * Describe and log a provider failure, and hand the description back so the
+ * caller can reuse a code it needs in user-facing copy.
+ *
+ * Returns null when no `describeError` dep was injected — there is then nothing
+ * to log and nothing to interpolate.
+ */
+function logProviderFailure(
+  deps: DiagnosticsDeps,
+  scope: string,
+  e: unknown,
+): { code: string | null; status: number | null; message: string } | null {
+  const info = deps.describeError?.(e)
+  if (!info) return null
+  deps.logFailure?.(scope, info)
+  return info
 }
 
 export type AppleDeps = {
@@ -32,7 +74,7 @@ export type AppleDeps = {
   sha256: (value: string) => Promise<string>
   randomUUID: () => string
   isCancelError: (e: unknown) => boolean
-}
+} & DiagnosticsDeps
 
 // Apple requires the SHA-256 of the nonce in the credential request, while
 // Supabase must receive the RAW nonce to verify the token's nonce claim.
@@ -45,6 +87,10 @@ export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
     credential = await deps.signInAsync(hashedNonce)
   } catch (e) {
     if (deps.isCancelError(e)) return { ok: false, canceled: true }
+    // Dismissing the sheet is a choice, not a failure, so it is excluded above.
+    // Everything past it is worth a diagnostic — the friendly copy below is the
+    // same string for every cause.
+    logProviderFailure(deps, 'appleSignIn', e)
     return { ok: false, error: 'errors.appleFailed' }
   }
 
@@ -88,7 +134,7 @@ export type GoogleDeps = {
   // client in the same Google Cloud project as webClientId. The account picker
   // still appears, then sign-in fails right after selection.
   isConfigError: (e: unknown) => boolean
-}
+} & DiagnosticsDeps
 
 export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
   let result
@@ -97,6 +143,10 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     result = await deps.signIn()
   } catch (e) {
     if (deps.isCancelError(e)) return { ok: false, canceled: true }
+    // Log BEFORE a friendly string is chosen. From here on the provider's own
+    // code is discarded, and it is the only thing that tells these failures
+    // apart — QA report Nº 7327 could report the sentence but not the number.
+    const info = logProviderFailure(deps, 'googleSignIn', e)
     if (deps.isPlayServicesError(e)) {
       return { ok: false, error: 'errors.googlePlayUnavailable' }
     }
@@ -104,7 +154,14 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     // than as a network/cancel error; report it distinctly so the failure is
     // diagnosable instead of the generic "please try again".
     if (deps.isConfigError(e)) {
-      return { ok: false, error: 'errors.googleConfigError' }
+      return {
+        ok: false,
+        error: 'errors.googleConfigError',
+        // isConfigError gates on code '10' (Android CommonStatusCodes
+        // .DEVELOPER_ERROR), so that is what got us here; the literal is only
+        // reached when no describeError dep was injected.
+        errorParams: { code: info?.code ?? '10' },
+      }
     }
     return { ok: false, error: 'errors.googleFailed' }
   }

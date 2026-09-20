@@ -43,16 +43,30 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Interpolation values for `error`. Bounded, non-sensitive things only — a
+  // provider status code today — so the friendly copy can name the failure
+  // precisely without a raw provider message ever reaching the screen.
+  const [errorParams, setErrorParams] = useState<Record<string, string | number>>({})
   const isSignup = mode === 'signup'
+
+  function showError(key: string, params: Record<string, string | number> = {}) {
+    setError(key)
+    setErrorParams(params)
+  }
+
+  function clearError() {
+    setError(null)
+    setErrorParams({})
+  }
 
   function switchMode() {
     setMode(isSignup ? 'signin' : 'signup')
-    setError(null)
+    clearError()
   }
 
   async function run(flow: () => Promise<AuthResult>): Promise<AuthResult> {
     setBusy(true)
-    setError(null)
+    clearError()
     try {
       const result = await flow()
       if (!result.ok && !result.canceled && result.error) {
@@ -62,13 +76,13 @@ export default function AuthScreen() {
         // CANCELLED Apple/Google sheet is excluded: dismissing a sign-in prompt
         // is a choice, not a bad experience. See sessionError.ts.
         markSessionError('AuthScreen.signIn')
-        setError(result.error)
+        showError(result.error, result.errorParams)
       }
       return result
     } catch {
       const result: AuthResult = { ok: false, error: 'errors.generic' }
       markSessionError('AuthScreen.signIn')
-      setError(result.error!)
+      showError(result.error!)
       return result
     } finally {
       setBusy(false)
@@ -80,7 +94,7 @@ export default function AuthScreen() {
       ? validateSignUp({ fullName, email, password })
       : validateSignIn({ email, password })
     if (invalid) {
-      setError(invalid)
+      showError(invalid)
       return
     }
     if (isSignup) {
@@ -183,7 +197,7 @@ export default function AuthScreen() {
 
           {error ? (
             <Text style={{ fontSize: 13.5, color: t.colors.danger }}>
-              {tx(error, { min: MIN_PASSWORD_LENGTH })}
+              {tx(error, { min: MIN_PASSWORD_LENGTH, ...errorParams })}
             </Text>
           ) : null}
 

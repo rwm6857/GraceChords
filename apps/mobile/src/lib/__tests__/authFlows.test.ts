@@ -201,8 +201,54 @@ describe('googleSignIn', () => {
     const deps = googleDeps({ supabase, signIn: vi.fn().mockRejectedValue(err) })
 
     const result = await googleSignIn(deps)
-    expect(result).toEqual({ ok: false, error: 'errors.googleConfigError' })
+    // The code rides along as an interpolation value so the friendly copy can
+    // name it ("… (Error 10)") without a raw provider message reaching the user.
+    expect(result).toEqual({
+      ok: false,
+      error: 'errors.googleConfigError',
+      errorParams: { code: '10' },
+    })
     expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled()
+  })
+
+  it('logs the provider code and status before substituting friendly copy', async () => {
+    // The whole point of the diagnostics deps: from googleSignIn's return value
+    // onwards the provider's own code is gone, and it is the only thing that
+    // tells a missing SHA-1 apart from any other Google failure.
+    const err = Object.assign(new Error('DEVELOPER_ERROR'), { code: '10' })
+    const logFailure = vi.fn()
+    const deps = googleDeps({
+      signIn: vi.fn().mockRejectedValue(err),
+      describeError: (e: unknown) => ({
+        code: String((e as { code?: unknown }).code),
+        status: null,
+        message: String((e as { message?: unknown }).message),
+      }),
+      logFailure,
+    })
+
+    const result = await googleSignIn(deps)
+
+    expect(logFailure).toHaveBeenCalledWith('googleSignIn', {
+      code: '10',
+      status: null,
+      message: 'DEVELOPER_ERROR',
+    })
+    // …and the user still sees only an i18n key, never the provider's text.
+    expect(result.error).toBe('errors.googleConfigError')
+  })
+
+  it('does not log a user-cancelled sheet — dismissing is a choice, not a failure', async () => {
+    const cancel = Object.assign(new Error('canceled'), { code: 'CANCELED' })
+    const logFailure = vi.fn()
+    const deps = googleDeps({
+      signIn: vi.fn().mockRejectedValue(cancel),
+      describeError: () => ({ code: 'CANCELED', status: null, message: 'canceled' }),
+      logFailure,
+    })
+
+    await googleSignIn(deps)
+    expect(logFailure).not.toHaveBeenCalled()
   })
 })
 

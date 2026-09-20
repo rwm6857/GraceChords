@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { Image } from 'expo-image'
+import * as Clipboard from 'expo-clipboard'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -16,6 +17,7 @@ import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
 import { useCurrentUser } from '../lib/currentUser'
 import { resetIntroSeen } from '../lib/introSeen'
+import { formatAuthDiagnostics, getAuthDiagnostics } from '../lib/authDiagnostics'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { useDisplayName } from '../lib/useDisplayName'
 import {
@@ -139,6 +141,10 @@ export default function SettingsScreen() {
   // The edited name from public.users.display_name, falling back to the provider
   // profile then the email local part — see resolveDisplayName in profile.ts.
   const displayName = useDisplayName() ?? tx('yourAccount')
+  // Read during render, like recents on Home: the buffer is synchronous and
+  // only changes on a failed sign-in, which cannot happen while this screen is
+  // mounted (it is reachable only when signed in).
+  const authDiagnostics = getAuthDiagnostics()
 
   const themeOptions = THEME_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
   const chordOptions = CHORD_OPTIONS.map((o) => ({ value: o.value, label: tx(o.labelKey) }))
@@ -374,6 +380,39 @@ export default function SettingsScreen() {
             chevron
             onPress={() => router.push('/about')}
           />
+          {/* Sign-in diagnostics. Present ONLY once a native sign-in has
+              actually failed this launch, so it is invisible to everyone whose
+              sign-in worked and needs no hidden gesture to reach. The buffer is
+              in-memory and device-local (see authDiagnostics.ts) — this row
+              displays it, it does not send it anywhere. It exists because QA
+              report Nº 7327 could report the friendly copy but not the provider
+              status code that named the cause. */}
+          {authDiagnostics.length ? (
+            <ListRow
+              title={tx('signInDiagnostics.row')}
+              subtitle={tx('signInDiagnostics.subtitle')}
+              leading={<RowIcon name="exclamationmark.triangle.fill" />}
+              chevron
+              onPress={() => {
+                const body = formatAuthDiagnostics()
+                Alert.alert(
+                  tx('signInDiagnostics.title'),
+                  `${tx('signInDiagnostics.intro')}\n\n${body}`,
+                  [
+                    {
+                      text: tx('signInDiagnostics.copy'),
+                      onPress: () => {
+                        void Clipboard.setStringAsync(body).then(() =>
+                          Alert.alert(tx('signInDiagnostics.copied')),
+                        )
+                      },
+                    },
+                    { text: tx('common:ok'), style: 'cancel' },
+                  ],
+                )
+              }}
+            />
+          ) : null}
           {/* Replays the first-launch intro without a reinstall. Clearing the
               flag makes the auth gate itself want /intro; the replace below just
               gets there without waiting a frame. Finishing or skipping the replay
