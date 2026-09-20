@@ -207,6 +207,23 @@ of the importer — see `KNOWN_STICKY_DEPENDENCIES` in `@expo/cli`'s
 react. expo-doctor's duplicate-dependency warning describes the install tree,
 not the bundle.
 
+## Expected `expo-doctor` failures
+
+Three checks fail on a healthy tree. Confirm they are still *these* three before
+shipping; don't "fix" them.
+
+- **Duplicate `react`** — the hoisting described above. Expected.
+- **`app.json` schema: "should NOT have additional property `newArchEnabled`"**
+  — `newArchEnabled` was dropped from the Expo config *schema* in SDK 55, but
+  `@expo/prebuild-config` still reads it: **deleting the key removes
+  `RCTNewArchEnabled` from the generated iOS `Info.plist`** (Android's
+  `gradle.properties` is unaffected — its `newArchEnabled=true` comes from the
+  template). It is a schema-validation complaint, not a dead key. Keep it.
+- **Patch-version drift within SDK 55** — `expo install --check` will report a
+  couple dozen packages a few patches behind, `react-native` included. Align
+  them with `npx expo install --fix` as its own commit, then re-run the local
+  release builds; never fold it into a release commit.
+
 ## Supabase
 
 - Wired through core's `createGcSupabase({ url, anonKey, storage, auth })` —
