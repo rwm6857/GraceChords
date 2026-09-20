@@ -4,11 +4,17 @@ import { useRouter } from 'expo-router'
 import { cardStyle } from './cardStyle'
 import { useTheme } from '../../theme/ThemeProvider'
 import { getRecentlyOpened, type RecentSong } from '../../lib/recents'
+import { formatKeyPair } from '../../lib/keyDisplay'
 
 // Home's Recent-songs card: the most-recently-opened songs (count from tokens
-// layout.recentSongs), each showing the key it was LAST VIEWED in. Tapping
-// reopens the song in that stored key via the viewer's existing initialKey
-// param — opening the same song from the Library still uses its default key.
+// layout.recentSongs). Each row shows the song's own key, plus the key it was
+// last viewed in when the two differ ("C → D") — it used to show only the
+// last-viewed key, which is why the same song could read as C on the Continue
+// card and D here (QA report Nº 7327, S-02).
+//
+// Tapping still reopens the song in that stored key via the viewer's existing
+// initialKey param — opening the same song from the Library uses its default
+// key, as before.
 
 export default function RecentSongsCard() {
   const t = useTheme()
@@ -48,56 +54,60 @@ export default function RecentSongsCard() {
         </Text>
       ) : (
         <View style={{ marginTop: t.spacing.xs }}>
-          {recents.map((s, i) => (
-            <Pressable
-              key={s.slug}
-              onPress={() => openSong(s)}
-              accessibilityRole="button"
-              accessibilityLabel={tx('common:openSong', { title: s.title })}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: t.spacing.md,
-                paddingVertical: 10,
-                borderTopWidth: i === 0 ? 0 : 0.5,
-                borderTopColor: t.colors.border,
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: t.typography.rowTitle.fontSize,
-                    fontWeight: t.typography.rowTitle.fontWeight,
-                    letterSpacing: t.typography.rowTitle.letterSpacing,
-                    color: t.colors.ink,
-                  }}
-                >
-                  {s.title}
-                </Text>
-                {s.artist ? (
+          {recents.map((s, i) => {
+            const key = formatKeyPair(s.default_key, s.lastKey, tx)
+            return (
+              <Pressable
+                key={s.slug}
+                onPress={() => openSong(s)}
+                accessibilityRole="button"
+                accessibilityLabel={tx('common:openSong', { title: s.title })}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: t.spacing.md,
+                  paddingVertical: 10,
+                  borderTopWidth: i === 0 ? 0 : 0.5,
+                  borderTopColor: t.colors.border,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     numberOfLines={1}
-                    style={{ marginTop: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
+                    style={{
+                      fontSize: t.typography.rowTitle.fontSize,
+                      fontWeight: t.typography.rowTitle.fontWeight,
+                      letterSpacing: t.typography.rowTitle.letterSpacing,
+                      color: t.colors.ink,
+                    }}
                   >
-                    {s.artist}
+                    {s.title}
+                  </Text>
+                  {s.artist ? (
+                    <Text
+                      numberOfLines={1}
+                      style={{ marginTop: 1, fontSize: t.typography.rowSubtitle.fontSize, color: t.colors.sec }}
+                    >
+                      {s.artist}
+                    </Text>
+                  ) : null}
+                </View>
+                {key ? (
+                  <Text
+                    accessibilityLabel={key.a11yLabel}
+                    style={{
+                      fontSize: t.typography.rowKey.fontSize,
+                      fontWeight: t.typography.rowKey.fontWeight,
+                      color: t.colors.textAccent,
+                    }}
+                  >
+                    {key.text}
                   </Text>
                 ) : null}
-              </View>
-              {s.lastKey ?? s.default_key ? (
-                <Text
-                  style={{
-                    fontSize: t.typography.rowKey.fontSize,
-                    fontWeight: t.typography.rowKey.fontWeight,
-                    color: t.colors.textAccent,
-                  }}
-                >
-                  {s.lastKey ?? s.default_key}
-                </Text>
-              ) : null}
-            </Pressable>
-          ))}
+              </Pressable>
+            )
+          })}
         </View>
       )}
     </View>

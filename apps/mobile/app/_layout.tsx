@@ -26,6 +26,7 @@ import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { hydrateIntroSeen, useIntroSeen } from '../src/lib/introSeen'
+import { clearInboundLink, holdInboundLink, takeHeldLink } from '../src/lib/pendingRoute'
 import { startReviewSession, useReviewObserver } from '../src/lib/reviewService'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { hydrateReaderSettings } from '../src/lib/readerSettings'
@@ -100,8 +101,17 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     // Home before the pick) and WITHOUT one (confirmation pending).
     // forgot-password is reached FROM the sign-in screen, so by definition it is
     // opened without a session and must not bounce back to /login.
+    // `auth-link` consumes a recovery/confirmation email's tokens and is by
+    // definition opened WITHOUT a session — it is what creates one.
+    // `reset-password` follows it: a session normally exists by then, but the
+    // gate must not bounce it in the window before that lands, and must never
+    // redirect away from a half-finished reset.
     const inAuthFlow =
-      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
+      seg === 'login' ||
+      seg === 'choose-icon' ||
+      seg === 'forgot-password' ||
+      seg === 'auth-link' ||
+      seg === 'reset-password'
     // `session/[code]` is the anonymous live-session follower — a logged-out app
     // user must be able to view it without being bounced to /login. `sheet` is
     // the shared formSheet HOST route (src/lib/formSheetHost.ts), not a screen
@@ -109,8 +119,37 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     // gating it would bounce an anonymous follower to /login mid-session.
     const isPublic = seg === 'session' || seg === 'sheet'
     if (!session && !inAuthFlow && !isPublic) {
+      // Keep the destination this redirect is about to throw away. Until now a
+      // shared song or set link opened by a signed-out recipient died here: they
+      // got /login, then Home, with nothing to say what the link was for.
+      holdInboundLink()
       router.replace('/login')
-    } else if (session && seg === 'login') {
+      return
+    }
+
+    // Any route the gate lets through means the inbound link (if there was one)
+    // was not discarded, so there is nothing to resume later.
+    clearInboundLink()
+
+    // The two places the app drops you by default once a session exists: off
+    // the sign-in screen, and at the tab group after the post-signup avatar
+    // step. Both are where a held link should take over — resuming only from
+    // /login would strand a NEW user, who reaches the app via /choose-icon and
+    // never passes through /login at all. That path is the whole point: a link
+    // shared with someone who does not have an account yet.
+    const atDefaultLanding = seg === 'login' || seg === undefined || seg === '(tabs)'
+    if (session && atDefaultLanding) {
+      const held = takeHeldLink()
+      if (held) {
+        // Deliberately ahead of the intro. wantsIntro's own note already treats
+        // a deep link as something the intro must not hijack, and leaving
+        // `seenIntro` unset just shows the intro on the next ordinary launch.
+        router.replace(held as Parameters<typeof router.replace>[0])
+        return
+      }
+    }
+
+    if (session && seg === 'login') {
       // The intro is post-auth: a first launch lands there instead of the tabs.
       router.replace(seenIntro ? '/' : '/intro')
     } else if (wantsIntro(session, seenIntro, seg)) {
@@ -130,7 +169,11 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     if (!ready) return
     const seg = segments[0] as string | undefined
     const inAuthFlow =
-      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
+      seg === 'login' ||
+      seg === 'choose-icon' ||
+      seg === 'forgot-password' ||
+      seg === 'auth-link' ||
+      seg === 'reset-password'
     const isPublic = seg === 'session' || seg === 'sheet'
     // A signed-in first launch is not settled while the gate above still wants
     // to replace this route with the intro — lifting the splash first would

@@ -7,5 +7,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/__tests__/**/*.test.ts'],
+    // devotionalSource.test.ts reads generated, untracked content artifacts at
+    // module scope; without this the suite fails on a fresh clone. See the file.
+    globalSetup: ['./vitest.globalSetup.ts'],
   },
 })

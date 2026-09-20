@@ -9,6 +9,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin'
 import type { AppleDeps, GoogleDeps } from './authFlows'
+import { describeAuthError, recordAuthFailure } from './authDiagnostics'
 import { supabase } from './supabase'
 
 export function makeAppleDeps(): AppleDeps {
@@ -27,6 +28,8 @@ export function makeAppleDeps(): AppleDeps {
     randomUUID: () => Crypto.randomUUID(),
     isCancelError: (e) =>
       typeof e === 'object' && e !== null && (e as { code?: string }).code === 'ERR_REQUEST_CANCELED',
+    describeError: describeAuthError,
+    logFailure: recordAuthFailure,
   }
 }
 
@@ -59,5 +62,9 @@ export function makeGoogleDeps(): GoogleDeps {
     // value ("10"). It means the app's package + signing SHA-1 aren't registered
     // against an Android OAuth client in webClientId's Google Cloud project.
     isConfigError: (e) => isErrorWithCode(e) && e.code === '10',
+    // The raw code/status the mapper is about to replace with friendly copy.
+    // Logged here, at the one layer that still holds the native error object.
+    describeError: describeAuthError,
+    logFailure: recordAuthFailure,
   }
 }

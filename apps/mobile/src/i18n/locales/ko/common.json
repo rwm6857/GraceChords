@@ -19,6 +19,8 @@
   "hidePassword": "비밀번호 숨기기",
   "copyright": "© {{range}} Ryan Moore. 모든 권리 보유.",
   "keyOf": "{{key}} 키",
+  "keyTransposed": "{{from}} → {{to}}",
+  "keyTransposedA11y": "{{from}} 키, {{to}} 키로 조옮김",
   "bpm": "{{tempo}} BPM",
   "openSong": "{{title}} 열기",
   "songCount_one": "{{count}}곡",

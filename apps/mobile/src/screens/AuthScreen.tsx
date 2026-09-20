@@ -23,6 +23,8 @@ import { MIN_PASSWORD_LENGTH, validateSignIn, validateSignUp } from '../lib/auth
 import { appleSignIn, emailSignIn, emailSignUp, googleSignIn, type AuthResult } from '../lib/authFlows'
 import { makeAppleDeps, makeGoogleDeps } from '../lib/authDeps'
 import { markSessionError } from '../lib/sessionError'
+import { getLastSignUpEmail, rememberSignUpEmail } from '../lib/lastSignUpEmail'
+import { signUpConfirmRedirectUrl } from '../lib/passwordResetLink'
 
 // The auth screen per the design reference: one route, two modes (sign in /
 // sign up) toggled in place, with native Google + Apple sign-in below the
@@ -39,20 +41,35 @@ export default function AuthScreen() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('signin')
   const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
+  // Seeded from a sign-up made earlier in this app run, if there was one.
+  const [email, setEmail] = useState(() => getLastSignUpEmail() ?? '')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Interpolation values for `error`. Bounded, non-sensitive things only — a
+  // provider status code today — so the friendly copy can name the failure
+  // precisely without a raw provider message ever reaching the screen.
+  const [errorParams, setErrorParams] = useState<Record<string, string | number>>({})
   const isSignup = mode === 'signup'
+
+  function showError(key: string, params: Record<string, string | number> = {}) {
+    setError(key)
+    setErrorParams(params)
+  }
+
+  function clearError() {
+    setError(null)
+    setErrorParams({})
+  }
 
   function switchMode() {
     setMode(isSignup ? 'signin' : 'signup')
-    setError(null)
+    clearError()
   }
 
   async function run(flow: () => Promise<AuthResult>): Promise<AuthResult> {
     setBusy(true)
-    setError(null)
+    clearError()
     try {
       const result = await flow()
       if (!result.ok && !result.canceled && result.error) {
@@ -62,13 +79,13 @@ export default function AuthScreen() {
         // CANCELLED Apple/Google sheet is excluded: dismissing a sign-in prompt
         // is a choice, not a bad experience. See sessionError.ts.
         markSessionError('AuthScreen.signIn')
-        setError(result.error)
+        showError(result.error, result.errorParams)
       }
       return result
     } catch {
       const result: AuthResult = { ok: false, error: 'errors.generic' }
       markSessionError('AuthScreen.signIn')
-      setError(result.error!)
+      showError(result.error!)
       return result
     } finally {
       setBusy(false)
@@ -80,11 +97,26 @@ export default function AuthScreen() {
       ? validateSignUp({ fullName, email, password })
       : validateSignIn({ email, password })
     if (invalid) {
-      setError(invalid)
+      showError(invalid)
       return
     }
     if (isSignup) {
-      const result = await run(() => emailSignUp(supabase, { fullName, email, password }))
+      // Prefill the sign-in form for the trip back from the confirmation email:
+      // sign-up ends at the sprite picker, which sends the user to /login, and
+      // this screen would otherwise mount with an empty email field and ask for
+      // an address they typed a moment ago.
+      rememberSignUpEmail(email)
+      const result = await run(() =>
+        emailSignUp(supabase, {
+          fullName,
+          email,
+          password,
+          // Sends the confirmation email to a path the app claims, so confirming
+          // it on this device opens the app signed in instead of a browser
+          // (QA report Nº 7327, S-01).
+          confirmRedirectTo: signUpConfirmRedirectUrl(),
+        }),
+      )
       // Advance to the picker in both cases: with a session (confirm-email
       // OFF) the pick writes immediately; without one it is stashed there.
       if (result.ok) router.replace('/choose-icon')
@@ -183,7 +215,7 @@ export default function AuthScreen() {
 
           {error ? (
             <Text style={{ fontSize: 13.5, color: t.colors.danger }}>
-              {tx(error, { min: MIN_PASSWORD_LENGTH })}
+              {tx(error, { min: MIN_PASSWORD_LENGTH, ...errorParams })}
             </Text>
           ) : null}
 

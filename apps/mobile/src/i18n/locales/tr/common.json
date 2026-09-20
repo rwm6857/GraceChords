@@ -19,6 +19,8 @@
   "hidePassword": "Şifreyi gizle",
   "copyright": "© {{range}} Ryan Moore. Tüm hakları saklıdır.",
   "keyOf": "{{key}} tonu",
+  "keyTransposed": "{{from}} → {{to}}",
+  "keyTransposedA11y": "{{from}} tonu, {{to}} tonuna transpoze edildi",
   "bpm": "{{tempo}} BPM",
   "openSong": "{{title}} ilahisini aç",
   "songCount_one": "{{count}} ilahi",

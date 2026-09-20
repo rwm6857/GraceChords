@@ -48,6 +48,14 @@
   "helpCenter": "Yardım merkezi",
   "sendFeedback": "Geri bildirim gönder",
   "aboutGraceChords": "GraceChords Hakkında",
+  "signInDiagnostics": {
+    "row": "Giriş tanılama",
+    "subtitle": "Bu cihazdaki giriş sorununun ayrıntıları",
+    "title": "Giriş tanılama",
+    "intro": "Uygulama en son başlatıldığından beri oluşan giriş hatalarının teknik ayrıntıları. Buradaki hiçbir bilgi hiçbir yere gönderilmez; istenirse bir hata raporuna ekleyin.",
+    "copy": "Kopyala",
+    "copied": "Panoya kopyalandı."
+  },
   "logOut": "Çıkış yap",
   "deleteAccount": "Hesabı sil",
   "signOutAlert": {

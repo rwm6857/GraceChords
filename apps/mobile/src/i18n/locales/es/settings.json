@@ -48,6 +48,14 @@
   "helpCenter": "Centro de ayuda",
   "sendFeedback": "Enviar comentarios",
   "aboutGraceChords": "Acerca de GraceChords",
+  "signInDiagnostics": {
+    "row": "Diagnóstico de inicio de sesión",
+    "subtitle": "Detalles de un problema de inicio de sesión en este dispositivo",
+    "title": "Diagnóstico de inicio de sesión",
+    "intro": "Detalles técnicos de los fallos de inicio de sesión desde el último arranque de la app. Nada de esto se envía a ningún sitio; inclúyelo en un informe de error si te lo piden.",
+    "copy": "Copiar",
+    "copied": "Copiado al portapapeles."
+  },
   "logOut": "Cerrar sesión",
   "deleteAccount": "Eliminar cuenta",
   "signOutAlert": {

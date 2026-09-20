@@ -19,6 +19,8 @@
   "hidePassword": "Ocultar contraseña",
   "copyright": "© {{range}} Ryan Moore. Todos los derechos reservados.",
   "keyOf": "Tono de {{key}}",
+  "keyTransposed": "{{from}} → {{to}}",
+  "keyTransposedA11y": "Tono {{from}}, transpuesto a {{to}}",
   "bpm": "{{tempo}} BPM",
   "openSong": "Abrir {{title}}",
   "songCount_one": "{{count}} canción",

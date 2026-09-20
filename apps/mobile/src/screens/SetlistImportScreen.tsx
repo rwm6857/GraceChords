@@ -17,6 +17,7 @@ import EmptyState from '../components/EmptyState'
 import SymbolIcon from '../components/SymbolIcon'
 import { useTheme } from '../theme/ThemeProvider'
 import { useSongList } from '../lib/useSongList'
+import { formatKeyPair } from '../lib/keyDisplay'
 import { supabase } from '../lib/supabase'
 import { uuidv4 } from '../lib/uuid'
 import { actionFailureMessage } from '../lib/errors'
@@ -205,7 +206,16 @@ export default function SetlistImportScreen({
               key={`${entry.song.id}:${i}`}
               title={entry.song.title}
               subtitle={entry.song.artist}
-              trailingTop={effectiveKey({ toKey: entry.toKey }, entry.song)}
+              // Render-only, as on the builder's timeline: the song's own key,
+              // plus the incoming set's override when it differs ("C → D"), so
+              // the preview says what is being imported as well as in what key.
+              trailingTop={
+                formatKeyPair(
+                  entry.song.default_key,
+                  effectiveKey({ toKey: entry.toKey }, entry.song),
+                  tx,
+                )?.text
+              }
               leading={
                 <View
                   style={{

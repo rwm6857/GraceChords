@@ -24,6 +24,24 @@ export function validateSignIn(input: { email: string; password: string }): stri
   return null
 }
 
+/**
+ * The set-a-new-password form reached from a recovery link.
+ *
+ * No current-password field, deliberately: the link IS the proof of identity,
+ * and not knowing the current password is why the user is here at all. Same
+ * full strength policy as sign-up, so a reset cannot land on a password the
+ * server would reject.
+ */
+export function validatePasswordReset(input: {
+  password: string
+  confirmPassword: string
+}): string | null {
+  const weak = validatePasswordStrength(input.password)
+  if (weak) return weak
+  if (input.password !== input.confirmPassword) return 'errors.passwordMismatch'
+  return null
+}
+
 export function validateSignUp(input: {
   fullName: string
   email: string

@@ -79,7 +79,9 @@
             { "scheme": "https", "host": "gracechords.com", "path": "/about" },
             { "scheme": "https", "host": "gracechords.com", "path": "/profile" },
             { "scheme": "https", "host": "gracechords.com", "path": "/posts" },
-            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" }
+            { "scheme": "https", "host": "gracechords.com", "pathPrefix": "/posts/" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/app/reset-password" },
+            { "scheme": "https", "host": "gracechords.com", "path": "/app/auth/callback" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

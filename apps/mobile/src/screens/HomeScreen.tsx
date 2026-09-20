@@ -24,6 +24,7 @@ import { useCurrentUser } from '../lib/currentUser'
 import { useIsTabletWidth } from '../lib/useIsTabletWidth'
 import { useProfileSprite } from '../lib/useProfileSprite'
 import { getRecentlyOpened } from '../lib/recents'
+import { formatKeyPair } from '../lib/keyDisplay'
 import { useLastSet } from '../lib/useLastSet'
 import { useStarredSongs, type StarredSong } from '../lib/useStarredSongs'
 import type { Song } from '../lib/useSongList'
@@ -35,14 +36,29 @@ type Translator = (key: string, options?: Record<string, unknown>) => string
 // the same on both form factors — see the dashboard block below.
 const HERO_GAP = 26
 
-function songMeta(song: Song, tx: Translator): string {
-  return [
-    song.default_key ? tx('common:keyOf', { key: song.default_key }) : null,
-    song.time_signature,
-    song.tempo ? tx('common:bpm', { tempo: song.tempo }) : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+// The Continue card's meta line. `working` is the key the Viewer was last left
+// in (recents.lastKey); when it differs from the song's own key the slot shows
+// the pair, so this card and the Recent-songs card below it can no longer
+// disagree about the same song (QA report Nº 7327, S-02).
+//
+// Returns the rendered text and a spoken form separately: the display string
+// contains "→", which does not read aloud usefully.
+function songMeta(
+  song: Song,
+  working: string | null | undefined,
+  tx: Translator,
+): { text: string; a11yLabel: string } | null {
+  const key = formatKeyPair(song.default_key, working, tx)
+  const rest = [song.time_signature, song.tempo ? tx('common:bpm', { tempo: song.tempo }) : null]
+  const join = (first: string | null) => [first, ...rest].filter(Boolean).join(' · ')
+
+  // Display keeps this card's existing "Key of …" prefix, so the only visible
+  // change is the "→ D" that appears when a transposition is stored.
+  const text = join(key ? tx('common:keyOf', { key: key.text }) : null)
+  if (!text) return null
+  // Spoken form already reads as a sentence ("Key C, transposed to D"), so it
+  // is used as-is rather than wrapped in the prefix a second time.
+  return { text, a11yLabel: join(key ? key.a11yLabel : null) }
 }
 
 export default function HomeScreen() {
@@ -80,6 +96,7 @@ export default function HomeScreen() {
     }, []),
   )
   const continueSong = getRecentlyOpened()[0] ?? null
+  const continueMeta = continueSong ? songMeta(continueSong, continueSong.lastKey, tx) : null
   const { lastSet, error: lastSetError, retry: retryLastSet } = useLastSet()
 
   // Inline failure line for a dashboard card: the localized reason plus a text
@@ -116,13 +133,26 @@ export default function HomeScreen() {
     router.push('/settings')
   }
 
-  function openSong(s: { slug: string; title: string; artist: string | null; default_key: string | null }) {
+  // `lastKey` is optional because this opens songs from two cards: the Continue
+  // card, whose entry carries the key the Viewer was last left in, and the
+  // Starred card, whose rows have no stored key. Seeding `initialKey` when one
+  // exists is what makes tapping a song here land in the same key as tapping it
+  // in the Recent-songs card — before this, Continue silently reopened in the
+  // song's original key while Recent songs honoured the stored one.
+  function openSong(s: {
+    slug: string
+    title: string
+    artist: string | null
+    default_key: string | null
+    lastKey?: string | null
+  }) {
     router.push({
       pathname: '/viewer/[slug]',
       params: {
         slug: s.slug,
         title: s.title,
         songKey: s.default_key ?? '',
+        ...(s.lastKey ? { initialKey: s.lastKey } : {}),
       },
     })
   }
@@ -448,9 +478,13 @@ export default function HomeScreen() {
                         {continueSong.artist}
                       </Text>
                     ) : null}
-                    {songMeta(continueSong, tx) ? (
-                      <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 3 }}>
-                        {songMeta(continueSong, tx)}
+                    {continueMeta ? (
+                      <Text
+                        numberOfLines={1}
+                        accessibilityLabel={continueMeta.a11yLabel}
+                        style={{ fontSize: 12.5, color: t.colors.sec, marginTop: 3 }}
+                      >
+                        {continueMeta.text}
                       </Text>
                     ) : null}
                   </View>

@@ -34,7 +34,8 @@
     "noChartBody": "This song has no ChordPro content yet.",
     "chordsUnavailable": "Chords unavailable",
     "rawFallback": "Chords unavailable — showing raw text",
-    "capo": "Capo {{fret}} for {{key}}"
+    "capo": "Capo {{fret}} for {{key}}",
+    "couldNotOpenEditorTitle": "Couldn't open the editor"
   },
   "viewOptions": {
     "showChords": "Show chords",

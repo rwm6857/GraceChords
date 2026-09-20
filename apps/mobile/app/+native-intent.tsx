@@ -10,6 +10,8 @@
 import { router } from 'expo-router'
 import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../src/lib/deepLinks'
 import { getFocusedRouteKey } from '../src/lib/topRoute'
+import { noteInboundLink } from '../src/lib/pendingRoute'
+import { parseAuthLink, setPendingAuthLink } from '../src/lib/authLink'
 
 export function redirectSystemPath({
   path,
@@ -18,7 +20,24 @@ export function redirectSystemPath({
   path: string
   initial: boolean
 }): string | null {
+  // Auth emails first, and never through resolveDeepLinkPath: their payload
+  // lives in the URL FRAGMENT, which the path mapper drops, and the tokens must
+  // not become route params. Hand them to the module the callback screen reads
+  // and route to that screen by name.
+  const authLink = parseAuthLink(path)
+  if (authLink) {
+    setPendingAuthLink(authLink)
+    return '/auth-link'
+  }
+
   const target = resolveDeepLinkPath(path)
+
+  // Hand the resolved target to the auth gate before navigating. If the user is
+  // signed out the gate is about to replace this route with /login, and this is
+  // the only place the full destination — query string and all, which matters
+  // for /setlist/import?ids=…&toKeys=… — still exists. The gate keeps it only if
+  // it actually discards the route; see src/lib/pendingRoute.ts.
+  noteInboundLink(target)
 
   // Expo Router pushes for every inbound link, so a run of shared links stacked one
   // detail screen per tap — measured at ~6–8 MB each, with the process jettisoned at

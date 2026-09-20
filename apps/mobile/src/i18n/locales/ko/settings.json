@@ -48,6 +48,14 @@
   "helpCenter": "고객센터",
   "sendFeedback": "피드백 보내기",
   "aboutGraceChords": "GraceChords 정보",
+  "signInDiagnostics": {
+    "row": "로그인 진단",
+    "subtitle": "이 기기에서 발생한 로그인 문제의 세부 정보",
+    "title": "로그인 진단",
+    "intro": "앱을 마지막으로 시작한 이후 발생한 로그인 실패의 기술적 세부 정보입니다. 이 내용은 어디에도 전송되지 않습니다. 요청받은 경우 오류 보고에 포함해 주세요.",
+    "copy": "복사",
+    "copied": "클립보드에 복사되었습니다."
+  },
   "logOut": "로그아웃",
   "deleteAccount": "계정 삭제",
   "signOutAlert": {

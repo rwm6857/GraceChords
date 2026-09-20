@@ -14,9 +14,13 @@ import { requestPasswordReset } from '../lib/authFlows'
 import { passwordResetRedirectUrl } from '../lib/passwordResetLink'
 import { markSessionError } from '../lib/sessionError'
 
-// "Forgot?" on the sign-in screen. The user asks for the link here; they set the
-// new password on the WEB reset page the email points at (apps/web
-// ResetPasswordPage) — the app has no set-password route.
+// "Forgot?" on the sign-in screen. The user asks for the link here and, if they
+// open it on this device, sets the new password in the app: the email points at
+// /app/reset-password, which the app claims as a Universal Link / App Link and
+// lands on app/auth-link.tsx -> app/reset-password.tsx. Opened anywhere the app
+// is not installed — a desktop browser, or a mail client's in-app browser that
+// does not fire App Links — the same URL serves the web reset page instead, so
+// the link always works.
 //
 // The confirmation NEVER says whether the address has an account. Supabase
 // returns 200 either way by design, and the copy has to match, or this screen

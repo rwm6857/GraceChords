@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import SwipeToDelete from '../SwipeToDelete'
 import SymbolIcon from '../SymbolIcon'
 import { useTheme } from '../../theme/ThemeProvider'
+import { formatKeyPair } from '../../lib/keyDisplay'
 import type { SetlistItem } from '../../lib/useSetlistBuilder'
 
 // The builder's numbered timeline: drag grip + numbered badge on a vertical
@@ -64,6 +65,12 @@ const Row = memo(function Row({
 }) {
   const t = useTheme()
   const { t: tx } = useTranslation(['setlist', 'common'])
+
+  // Render-only: the chip shows the song's own key, and the set's override
+  // alongside it when one is set ("C → D"), so a row says both what the song is
+  // and what this set plays it in. Purely derived from props — it reads nothing
+  // and writes nothing, so it cannot reach the autosave path.
+  const keyDisplay = formatKeyPair(item.song.default_key, effectiveKey, tx)
 
   const startDragHaptic = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
@@ -256,7 +263,7 @@ const Row = memo(function Row({
               }}
             >
               <Text style={{ fontSize: 13.5, fontWeight: '700', color: t.colors.textAccent }}>
-                {effectiveKey ?? tx('timeline.noKey')}
+                {keyDisplay ? keyDisplay.text : tx('timeline.noKey')}
               </Text>
               <SymbolIcon name="chevron.up.chevron.down" size={10} color={t.colors.textAccent} />
             </Pressable>
