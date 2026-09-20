@@ -26,6 +26,7 @@ import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
 import { hydrateIntroSeen, useIntroSeen } from '../src/lib/introSeen'
+import { clearInboundLink, holdInboundLink, takeHeldLink } from '../src/lib/pendingRoute'
 import { startReviewSession, useReviewObserver } from '../src/lib/reviewService'
 import { hydrateBibleTranslationPref } from '../src/lib/bibleTranslationPref'
 import { hydrateReaderSettings } from '../src/lib/readerSettings'
@@ -109,8 +110,37 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     // gating it would bounce an anonymous follower to /login mid-session.
     const isPublic = seg === 'session' || seg === 'sheet'
     if (!session && !inAuthFlow && !isPublic) {
+      // Keep the destination this redirect is about to throw away. Until now a
+      // shared song or set link opened by a signed-out recipient died here: they
+      // got /login, then Home, with nothing to say what the link was for.
+      holdInboundLink()
       router.replace('/login')
-    } else if (session && seg === 'login') {
+      return
+    }
+
+    // Any route the gate lets through means the inbound link (if there was one)
+    // was not discarded, so there is nothing to resume later.
+    clearInboundLink()
+
+    // The two places the app drops you by default once a session exists: off
+    // the sign-in screen, and at the tab group after the post-signup avatar
+    // step. Both are where a held link should take over — resuming only from
+    // /login would strand a NEW user, who reaches the app via /choose-icon and
+    // never passes through /login at all. That path is the whole point: a link
+    // shared with someone who does not have an account yet.
+    const atDefaultLanding = seg === 'login' || seg === undefined || seg === '(tabs)'
+    if (session && atDefaultLanding) {
+      const held = takeHeldLink()
+      if (held) {
+        // Deliberately ahead of the intro. wantsIntro's own note already treats
+        // a deep link as something the intro must not hijack, and leaving
+        // `seenIntro` unset just shows the intro on the next ordinary launch.
+        router.replace(held as Parameters<typeof router.replace>[0])
+        return
+      }
+    }
+
+    if (session && seg === 'login') {
       // The intro is post-auth: a first launch lands there instead of the tabs.
       router.replace(seenIntro ? '/' : '/intro')
     } else if (wantsIntro(session, seenIntro, seg)) {
