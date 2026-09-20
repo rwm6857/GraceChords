@@ -62,6 +62,22 @@ describe('parseAuthLink', () => {
     ).toBe('recovery')
   })
 
+  it('accepts the custom scheme, which is how a simulator opens the link', () => {
+    // URL() reads the first segment after a schemeless host as the HOST, so
+    // gracechords://app/reset-password would otherwise parse as host "app" +
+    // pathname "/reset-password" and match nothing. This is the form used by
+    // `xcrun simctl openurl` and `adb am start`, where an https link cannot be
+    // verified against an undeployed AASA or an unmatched signing certificate.
+    expect(parseAuthLink(`gracechords://app/reset-password#${TOKENS}&type=recovery`)).toEqual({
+      kind: 'recovery',
+      accessToken: 'AT',
+      refreshToken: 'RT',
+    })
+    expect(parseAuthLink(`gracechords://app/auth/callback#${TOKENS}&type=signup`)?.kind).toBe(
+      'signup',
+    )
+  })
+
   it('ignores every other deep link, including the web app auth paths', () => {
     // /reset-password and /auth/callback belong to the BROWSER flows and are
     // deliberately unclaimed — web's signInWithOAuth redirects to the latter.

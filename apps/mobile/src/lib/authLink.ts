@@ -32,6 +32,17 @@ export type AuthLink =
  */
 const APP_AUTH_PATHS = ['/app/reset-password', '/app/auth/callback']
 
+// The custom scheme carries no real host, so URL() reads the first segment as
+// one: gracechords://app/reset-password parses with host "app" and pathname
+// "/reset-password", which matches nothing above. Strip the scheme so the whole
+// remainder is read as a path — the same thing resolveDeepLinkPath does, for the
+// same reason.
+//
+// This form is not just theoretical: it is how a deep link is opened against a
+// simulator (xcrun simctl openurl / adb am start), where https links cannot be
+// verified against an undeployed AASA or an unmatched signing certificate.
+const APP_SCHEME = 'gracechords://'
+
 function paramsOf(raw: string): URLSearchParams {
   return new URLSearchParams(raw.startsWith('#') || raw.startsWith('?') ? raw.slice(1) : raw)
 }
@@ -48,7 +59,8 @@ function paramsOf(raw: string): URLSearchParams {
 export function parseAuthLink(url: string): AuthLink | null {
   let parsed: URL
   try {
-    parsed = new URL(url, 'https://gracechords.com')
+    const href = url.startsWith(APP_SCHEME) ? `/${url.slice(APP_SCHEME.length)}` : url
+    parsed = new URL(href, 'https://gracechords.com')
   } catch {
     return null
   }
