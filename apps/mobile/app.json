@@ -89,6 +89,7 @@
     },
     "plugins": [
       "./plugins/withFoojayFix",
+      "./plugins/withIosPodDeploymentTarget",
       "./plugins/withBaselineProfile",
       "./plugins/withNativeDebugSymbols",
       "expo-router",

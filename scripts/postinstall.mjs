@@ -15,6 +15,7 @@
 // break an unrelated build.
 
 import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -35,5 +36,26 @@ try {
   process.exit(0)
 }
 
-const result = spawnSync(process.execPath, [binPath], { stdio: 'inherit' })
-process.exit(result.status ?? 0)
+// Patches are applied once per directory that owns a node_modules tree, because
+// patch-package resolves both `patches/` and `node_modules/` relative to its cwd.
+// The root holds the hoisted packages (@react-native/gradle-plugin); apps/mobile
+// keeps its own copies of anything npm could not hoist — expo-router among them,
+// which carries an iOS build fix (see apps/mobile/patches). A workspace with no
+// patches/ directory is skipped rather than run, so this stays quiet for the
+// common case.
+const roots = [
+  path.resolve(process.cwd()),
+  path.resolve(process.cwd(), 'apps/mobile'),
+]
+
+let status = 0
+for (const cwd of roots) {
+  if (!existsSync(path.join(cwd, 'patches'))) continue
+  if (!existsSync(path.join(cwd, 'node_modules'))) {
+    console.log(`[postinstall] ${cwd}: no node_modules; skipping its patches.`)
+    continue
+  }
+  const result = spawnSync(process.execPath, [binPath], { stdio: 'inherit', cwd })
+  status = status || (result.status ?? 0)
+}
+process.exit(status)
