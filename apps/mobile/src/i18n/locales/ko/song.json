@@ -34,7 +34,8 @@
     "noChartBody": "이 찬양곡에는 아직 ChordPro 콘텐츠가 없습니다.",
     "chordsUnavailable": "코드를 사용할 수 없음",
     "rawFallback": "코드를 사용할 수 없음 — 원본 텍스트 표시 중",
-    "capo": "카포 {{fret}}프렛, {{key}}"
+    "capo": "카포 {{fret}}프렛, {{key}}",
+    "couldNotOpenEditorTitle": "편집기를 열 수 없습니다"
   },
   "viewOptions": {
     "showChords": "코드 표시",

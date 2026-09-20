@@ -34,7 +34,8 @@
     "noChartBody": "Bu ilahinin henüz ChordPro içeriği yok.",
     "chordsUnavailable": "Akorlar kullanılamıyor",
     "rawFallback": "Akorlar kullanılamıyor — ham metin gösteriliyor",
-    "capo": "{{key}} için kapo: {{fret}}"
+    "capo": "{{key}} için kapo: {{fret}}",
+    "couldNotOpenEditorTitle": "Düzenleyici açılamadı"
   },
   "viewOptions": {
     "showChords": "Akorları göster",

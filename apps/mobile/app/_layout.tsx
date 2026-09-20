@@ -101,8 +101,17 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     // Home before the pick) and WITHOUT one (confirmation pending).
     // forgot-password is reached FROM the sign-in screen, so by definition it is
     // opened without a session and must not bounce back to /login.
+    // `auth-link` consumes a recovery/confirmation email's tokens and is by
+    // definition opened WITHOUT a session — it is what creates one.
+    // `reset-password` follows it: a session normally exists by then, but the
+    // gate must not bounce it in the window before that lands, and must never
+    // redirect away from a half-finished reset.
     const inAuthFlow =
-      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
+      seg === 'login' ||
+      seg === 'choose-icon' ||
+      seg === 'forgot-password' ||
+      seg === 'auth-link' ||
+      seg === 'reset-password'
     // `session/[code]` is the anonymous live-session follower — a logged-out app
     // user must be able to view it without being bounced to /login. `sheet` is
     // the shared formSheet HOST route (src/lib/formSheetHost.ts), not a screen
@@ -160,7 +169,11 @@ function useProtectedRoute(session: Session | null, ready: boolean, beginHandoff
     if (!ready) return
     const seg = segments[0] as string | undefined
     const inAuthFlow =
-      seg === 'login' || seg === 'choose-icon' || seg === 'forgot-password'
+      seg === 'login' ||
+      seg === 'choose-icon' ||
+      seg === 'forgot-password' ||
+      seg === 'auth-link' ||
+      seg === 'reset-password'
     const isPublic = seg === 'session' || seg === 'sheet'
     // A signed-in first launch is not settled while the gate above still wants
     // to replace this route with the intro — lifting the splash first would

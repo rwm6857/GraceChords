@@ -199,12 +199,20 @@ export async function emailSignIn(
 
 export async function emailSignUp(
   supabase: SupabaseAuth,
-  input: { fullName: string; email: string; password: string },
+  input: { fullName: string; email: string; password: string; confirmRedirectTo?: string },
 ): Promise<AuthResult> {
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim(),
     password: input.password,
-    options: { data: { full_name: input.fullName.trim() } },
+    options: {
+      data: { full_name: input.fullName.trim() },
+      // Without this the confirmation email falls back to the project's Site
+      // URL — the web home page — so confirming from the phone left the user
+      // staring at a browser and having to go back and sign in by hand
+      // (QA report Nº 7327, S-01). The option is `emailRedirectTo`; `redirectTo`
+      // is silently ignored by signUp.
+      ...(input.confirmRedirectTo ? { emailRedirectTo: input.confirmRedirectTo } : {}),
+    },
   })
   if (error) return { ok: false, error: authErrorKey(error) }
   if (data.session) return { ok: true }

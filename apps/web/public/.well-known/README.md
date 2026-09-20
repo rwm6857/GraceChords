@@ -29,6 +29,8 @@ banner at all.
 | `/about` | `about` |
 | `/profile` | `settings` (the app has no `/profile` route) |
 | `/posts`, `/posts/*` | home tab (blog — no app parallel) |
+| `/app/reset-password` | `reset-password` (app-requested recovery only) |
+| `/app/auth/callback` | `auth/callback` (app-requested sign-up confirmation only) |
 
 Paths are **enumerated, never wildcarded across the domain**: Android App Links
 have no exclusion mechanism, so enumerating is the only way the two platforms
@@ -37,7 +39,15 @@ app.
 
 **Deliberately never claimed** — `/login`, `/signup`, `/auth/callback`,
 `/forgot-password`, `/reset-password` (claiming these would pull Supabase OAuth
-redirects and password-reset emails out of the browser mid-flow); `/admin`,
+redirects and password-reset emails out of the browser mid-flow). This still
+holds, and is why the two app auth paths live under `/app/` instead: web's
+`signInWithOAuth` redirects to `/auth/callback` (`LoginPage.jsx`,
+`SignupPage.jsx`), so claiming that path would yank a browser Google sign-in
+into the app mid-handshake on any phone with the app installed. The `/app/…`
+twins are only ever requested BY the app, as the `redirectTo` it sends with its
+own recovery and sign-up calls, so a browser-initiated flow never touches them;
+the web app serves them as plain fallbacks for when the app is not installed.
+Also never claimed: `/admin`,
 `/editor`, `/portal/*` (role-gated browser tooling); `/privacy`, `/terms`,
 `/licenses`, `/delete-account` (the mobile About/Settings screens link *out* to
 these, so claiming them would bounce a user app → Safari → app home);

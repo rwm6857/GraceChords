@@ -78,6 +78,17 @@ export default function App(){
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          {/* Fallbacks for the two paths the mobile app claims (iOS Universal
+              Links / Android App Links). They are only ever requested BY the
+              app, but the link still has to work when it is opened somewhere
+              the app is not installed — a desktop browser, or a phone without
+              it. Same components as the browser-initiated routes: the Supabase
+              client reads the recovery/confirmation tokens off the URL the same
+              way whichever path served the page. Web's own /auth/callback and
+              /reset-password stay unclaimed — see
+              apps/web/public/.well-known/README.md. */}
+          <Route path="/app/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/app/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/worship/:songIds?" element={<WorshipMode />} />

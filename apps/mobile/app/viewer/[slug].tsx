@@ -42,6 +42,7 @@ import { pushSongToTelegram, TELEGRAM_BOT_URL } from '../../src/lib/telegramPush
 import { useSong, usePersonalSong } from '../../src/lib/useSong'
 import { supabase } from '../../src/lib/supabase'
 import { upsertDraft } from '../../src/lib/drafts/draftsStore'
+import { actionFailureMessage } from '../../src/lib/errors'
 import { PersonalChip } from '../../src/components/PersonalChip'
 import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
@@ -226,7 +227,14 @@ export default function ViewerScreen() {
       })
       router.push({ pathname: '/editor/[draftId]', params: { draftId } })
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : String(err))
+      // Was Alert.alert('Error', err.message): an untranslated title and the
+      // raw provider text straight to the user — exactly what errors.ts warns
+      // about, and how `column … does not exist` reached a user before.
+      // actionFailureMessage logs the detail and returns localized copy.
+      Alert.alert(
+        tx('song:viewer.couldNotOpenEditorTitle'),
+        actionFailureMessage('Viewer.editPersonal', err, tx),
+      )
     }
   }
 
@@ -250,7 +258,13 @@ export default function ViewerScreen() {
       } else if (msg === 'not_signed_in') {
         Alert.alert(tx('export:alerts.signInRequiredTitle'), tx('export:alerts.signInToExportSongs'))
       } else {
-        Alert.alert(tx('export:alerts.exportFailedTitle'), msg)
+        // `msg` above is only for matching the two sentinel strings the export
+        // path throws; it must not become the body. Anything else is a real
+        // failure and gets localized copy, not the provider's wording.
+        Alert.alert(
+          tx('export:alerts.exportFailedTitle'),
+          actionFailureMessage('Viewer.export', err, tx),
+        )
       }
     }
   }

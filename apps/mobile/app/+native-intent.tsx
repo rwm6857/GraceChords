@@ -11,6 +11,7 @@ import { router } from 'expo-router'
 import { deepLinkStackRouteKey, resolveDeepLinkPath } from '../src/lib/deepLinks'
 import { getFocusedRouteKey } from '../src/lib/topRoute'
 import { noteInboundLink } from '../src/lib/pendingRoute'
+import { parseAuthLink, setPendingAuthLink } from '../src/lib/authLink'
 
 export function redirectSystemPath({
   path,
@@ -19,6 +20,16 @@ export function redirectSystemPath({
   path: string
   initial: boolean
 }): string | null {
+  // Auth emails first, and never through resolveDeepLinkPath: their payload
+  // lives in the URL FRAGMENT, which the path mapper drops, and the tokens must
+  // not become route params. Hand them to the module the callback screen reads
+  // and route to that screen by name.
+  const authLink = parseAuthLink(path)
+  if (authLink) {
+    setPendingAuthLink(authLink)
+    return '/auth-link'
+  }
+
   const target = resolveDeepLinkPath(path)
 
   // Hand the resolved target to the auth gate before navigating. If the user is

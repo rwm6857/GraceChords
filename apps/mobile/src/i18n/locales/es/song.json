@@ -34,7 +34,8 @@
     "noChartBody": "Esta canción aún no tiene contenido ChordPro.",
     "chordsUnavailable": "Acordes no disponibles",
     "rawFallback": "Acordes no disponibles — mostrando texto sin formato",
-    "capo": "Cejilla {{fret}} para {{key}}"
+    "capo": "Cejilla {{fret}} para {{key}}",
+    "couldNotOpenEditorTitle": "No se pudo abrir el editor"
   },
   "viewOptions": {
     "showChords": "Mostrar acordes",

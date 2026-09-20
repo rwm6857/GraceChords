@@ -20,7 +20,9 @@
           { "/": "/about", "comment": "About -> about" },
           { "/": "/profile", "comment": "Profile -> settings (the app has no /profile route)" },
           { "/": "/posts", "comment": "Blog index - no app parallel -> home tab" },
-          { "/": "/posts/*", "comment": "Blog post - no app parallel -> home tab" }
+          { "/": "/posts/*", "comment": "Blog post - no app parallel -> home tab" },
+          { "/": "/app/reset-password", "comment": "App-requested password recovery -> in-app reset (web /reset-password stays unclaimed)" },
+          { "/": "/app/auth/callback", "comment": "App-requested sign-up confirmation -> signs in, in app (web /auth/callback stays unclaimed)" }
         ]
       }
     ]
