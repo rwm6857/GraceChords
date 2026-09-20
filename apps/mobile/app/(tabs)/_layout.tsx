@@ -26,6 +26,21 @@ import { useNavigationTheme } from '../../src/theme/navigationTheme'
 // because their previous glyphs (music.note.list, list.bullet) have no .fill twin
 // in SF Symbols and so could not invert.
 //
+// …but all four of those names are SF Symbols 2025, i.e. iOS 26.0+ ONLY (checked
+// against CoreGlyphs' name_availability.plist). UIKit draws nothing at all for a
+// symbol name it does not know, so on iOS 18 the Songs and Setlists tabs came up
+// as bare labels with a hole where the icon belongs, while the other three
+// (house / book / wrench.and.screwdriver — iOS 13–14) were fine. SONGS_ICON and
+// SETLISTS_ICON below fall back to long-lived glyphs when the OS predates 26, so
+// the bar is complete on every version the app supports (floor: iOS 15.1).
+// The fallbacks: music.note.list (iOS 13 — and the same glyph Android's
+// queue_music draws, so the two platforms still agree) and
+// list.bullet.rectangle.portrait (iOS 15, which unlike plain list.bullet does
+// have a .fill twin). music.note.list has no .fill twin, so it repeats for
+// `selected` and that one tab tints rather than inverting on older iOS — the
+// same trade-off that motivated the iOS 26 glyphs, now scoped to old versions
+// instead of applied everywhere. iOS 26 and Android are untouched.
+//
 // The NavThemeProvider wrapper (React Navigation's theme, matched to the current
 // color scheme) is required to prevent the known iOS 26 dark-mode glass flicker
 // on header buttons when switching tabs. It is aliased so it does not shadow the
@@ -47,6 +62,32 @@ import { useNavigationTheme } from '../../src/theme/navigationTheme'
 // cross-platform `labelStyle`, so it is gated to Android to leave iOS labels
 // exactly as the system draws them.
 
+// Liquid Glass and the 2025 symbol set both land in iOS 26, so one check gates
+// everything that differs between the glass bar and the older opaque one.
+// Platform.Version is the OS version string on iOS ("26.5"); on Android it is
+// the API level, which would read as far below 26 — hence the explicit OS guard
+// rather than a bare number comparison.
+const IS_IOS_26_PLUS =
+  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 26
+
+// iOS 15–18 draw the bar with UIKit's scroll-edge appearance, which is fully
+// transparent: with content scrolled under it the bar vanished and the icons
+// and labels floated over the song list. Glass is *meant* to be translucent, so
+// this is scoped to pre-26 only and Android (Material 3, already opaque) never
+// sees it.
+const NEEDS_OPAQUE_TAB_BAR = Platform.OS === 'ios' && !IS_IOS_26_PLUS
+
+const SONGS_ICON = IS_IOS_26_PLUS
+  ? ({ default: 'music.pages', selected: 'music.pages.fill' } as const)
+  : ({ default: 'music.note.list', selected: 'music.note.list' } as const)
+
+const SETLISTS_ICON = IS_IOS_26_PLUS
+  ? ({ default: 'music.note.square.stack', selected: 'music.note.square.stack.fill' } as const)
+  : ({
+      default: 'list.bullet.rectangle.portrait',
+      selected: 'list.bullet.rectangle.portrait.fill',
+    } as const)
+
 export default function TabsLayout() {
   const t = useTheme()
   const navTheme = useNavigationTheme()
@@ -57,6 +98,7 @@ export default function TabsLayout() {
         tintColor={t.colors.accent}
         labelVisibilityMode="labeled"
         labelStyle={Platform.OS === 'android' ? { fontSize: 13 } : undefined}
+        disableTransparentOnScrollEdge={NEEDS_OPAQUE_TAB_BAR}
       >
         <NativeTabs.Trigger name="index">
           <NativeTabs.Trigger.Icon
@@ -68,7 +110,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="songs">
           <NativeTabs.Trigger.Icon
-            sf={{ default: 'music.pages', selected: 'music.pages.fill' }}
+            sf={SONGS_ICON}
             md="queue_music"
           />
           <NativeTabs.Trigger.Label>{tx('songs')}</NativeTabs.Trigger.Label>
@@ -76,7 +118,7 @@ export default function TabsLayout() {
 
         <NativeTabs.Trigger name="setlists">
           <NativeTabs.Trigger.Icon
-            sf={{ default: 'music.note.square.stack', selected: 'music.note.square.stack.fill' }}
+            sf={SETLISTS_ICON}
             md="list"
           />
           <NativeTabs.Trigger.Label>{tx('setlists')}</NativeTabs.Trigger.Label>

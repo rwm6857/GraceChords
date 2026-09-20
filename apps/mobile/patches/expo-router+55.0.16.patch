@@ -1,0 +1,25 @@
+diff --git a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeActionView.swift b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeActionView.swift
+index 3884b78..dfae07a 100644
+--- a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeActionView.swift
++++ b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeActionView.swift
+@@ -107,7 +107,10 @@ class LinkPreviewNativeActionView: RouterViewWithLogger, LinkPreviewMenuUpdatabl
+       children: subActions
+     )
+ 
+-    if let subtitle = subtitle {
++    // UIMenuElement.subtitle is ios(15.0) in the ObjC header but 16.0+ in
++    // Xcode 27's Swift overlay; guard so this compiles at the deployment
++    // target Expo SDK 55 actually declares (15.1).
++    if #available(iOS 16.0, *), let subtitle = subtitle {
+       menuAction.subtitle = subtitle
+     }
+ 
+@@ -137,7 +140,7 @@ class LinkPreviewNativeActionView: RouterViewWithLogger, LinkPreviewMenuUpdatabl
+     baseUiAction.attributes = attributes
+     baseUiAction.state = isOn == true ? .on : .off
+ 
+-    if let subtitle = subtitle {
++    if #available(iOS 16.0, *), let subtitle = subtitle {
+       baseUiAction.subtitle = subtitle
+     }
+     if let label = discoverabilityLabel {
