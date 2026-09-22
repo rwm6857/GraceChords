@@ -51,6 +51,8 @@ export const ICON_MAP = {
   'line.3.horizontal.decrease':      { concept: 'Filter/sort',      lucide: 'ListFilter',    web: 'FilterIcon' },
   'link':                            { concept: 'Copy link',        lucide: 'Link',          web: 'LinkIcon' },
   'list.bullet':                     { concept: 'List',             lucide: 'List',          web: 'ListIcon' },
+  'list.bullet.rectangle.portrait':  { concept: 'Setlists (tab)',   lucide: 'ListMusic',     web: 'SetlistIcon' }, // pre-iOS 26 fallback for music.note.square.stack
+  'list.bullet.rectangle.portrait.fill': { concept: 'Setlists (tab)', lucide: 'ListMusic',   web: 'SetlistIcon' },
   'lock':                            { concept: 'Password',         lucide: 'Lock',          web: 'LockIcon' },
   'magnifyingglass':                 { concept: 'Search',           lucide: 'Search',        web: 'SearchIcon' },
   'mic.slash':                       { concept: 'Mic off',          lucide: 'MicOff',        web: 'MicOffIcon' },
@@ -109,3 +111,6 @@ export const WEB_PENDING = []
 //
 // Songs vs Setlists deliberately differ on web (as they do on mobile): Songs -> FileMusic
 // (music.pages), Setlists -> ListMusic (music.note.square.stack).
+// On iOS < 26 the tab bar swaps those 2025-only glyphs for music.note.list and
+// list.bullet.rectangle.portrait(.fill); the fallbacks keep the same web exports, since
+// the concept (Songs / Setlists tab) is unchanged — only the iOS glyph availability differs.
