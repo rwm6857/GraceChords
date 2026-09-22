@@ -82,7 +82,7 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 
 ## Data flow & search
 - Songs and posts are served directly from Supabase at runtime (`useSongs.jsx`, `usePosts.jsx`), cached per session; `SongsPage` feeds results to Fuse.js for in-memory fuzzy search. There is no required local JSON index.
-- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id` and `/resources/:slug`; `generate-sitemap.mjs` writes `public/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`.
+- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id` and `/resources/:slug`, plus fully pre-rendered `/privacy`, `/terms` and `/delete-account` (from `src/content/*.md`). Any route **without** a file in `dist/` is served by Pages as `404.html` with HTTP 404 (the SPA still renders it via the redirect script), so a URL that external systems check — e.g. the Google Play privacy-policy and account-deletion links — must be emitted here. `generate-sitemap.mjs` writes `public/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`.
 - Sorting: numeric titles first; otherwise case-insensitive, ignoring leading punctuation (`'Tis` sorts under `T`); translation-aware (selected-language variants first). Songs group by `song_id`.
 
 ## PDF engine
