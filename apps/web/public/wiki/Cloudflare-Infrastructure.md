@@ -61,7 +61,7 @@ Handles PPTX file uploads and deletes for song slide decks.
 - `DELETE /delete` — Delete a `.pptx` file. Requires Editor+ role.
 
 **Security**:
-- JWT is verified using HMAC-SHA256 against `SUPABASE_JWT_SECRET`
+- Access token is verified by Supabase Auth (`GET /auth/v1/user`), so it survives JWT signing-key rotation
 - Role is fetched from `public.users` via `SUPABASE_SERVICE_ROLE_KEY` (not trusted from JWT claims)
 - Slug validated against `/^[a-z0-9_]+$/` to prevent path traversal
 - CORS enforced against `ALLOWED_ORIGINS` secret
@@ -69,7 +69,6 @@ Handles PPTX file uploads and deletes for song slide decks.
 **Secrets** (set with `wrangler secret put`):
 ```
 SUPABASE_URL
-SUPABASE_JWT_SECRET
 SUPABASE_SERVICE_ROLE_KEY
 ALLOWED_ORIGINS   # comma-separated: https://gracechords.com,...
 ```

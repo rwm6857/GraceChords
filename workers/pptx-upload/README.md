@@ -17,24 +17,17 @@ Handles PPTX file uploads and deletions for GraceChords songs. Files are stored 
 2. Set secrets:
    ```bash
    wrangler secret put SUPABASE_URL
-   wrangler secret put SUPABASE_JWT_SECRET
    wrangler secret put SUPABASE_SERVICE_ROLE_KEY
    wrangler secret put ALLOWED_ORIGINS
    ```
 
    - `SUPABASE_URL`: your project URL (e.g. `https://xyz.supabase.co`)
-   - `SUPABASE_JWT_SECRET`: found in Supabase dashboard → Settings → API → JWT Secret
    - `SUPABASE_SERVICE_ROLE_KEY`: found in Supabase dashboard → Settings → API → service_role key
    - `ALLOWED_ORIGINS`: comma-separated list of allowed frontend origins (e.g. `https://gracechords.com,https://migration.gracechords-app.pages.dev`)
 
-3. Provision the rate-limit KV namespace (one-time):
-   ```bash
-   wrangler kv:namespace create RATE_LIMIT_KV
-   ```
-
-   Paste the returned `id` into `wrangler.toml` (replace
-   `REPLACE_WITH_NAMESPACE_ID` under `[[kv_namespaces]]`). The binding name
-   must remain `RATE_LIMIT_KV` — the worker reads `env.RATE_LIMIT_KV`.
+3. The rate-limit KV namespace (`RATE_LIMIT_KV`) is already provisioned and
+   its id is committed in `wrangler.toml`. The binding name must remain
+   `RATE_LIMIT_KV` — the worker reads `env.RATE_LIMIT_KV`.
 
 4. Deploy:
    ```bash
@@ -56,7 +49,7 @@ Runs the Worker locally via Wrangler. R2 bindings use a local simulation. You wi
 
 ## Security notes
 
-- JWT is verified using HMAC-SHA256 against `SUPABASE_JWT_SECRET` before any R2 operation
+- The caller's access token is verified by Supabase Auth (`GET /auth/v1/user`) before any R2 operation. The worker does not check signatures itself — the project uses asymmetric JWT signing keys, so the legacy `SUPABASE_JWT_SECRET` can't verify session tokens
 - Role is fetched from `public.users` via service role key — not trusted from the JWT claims
 - Slug is validated against `/^[a-z0-9_]+$/` before use as an R2 key
 - File type and size are validated before upload (`.pptx` only, 20MB max)

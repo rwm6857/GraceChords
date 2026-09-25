@@ -6,7 +6,6 @@
  *
  * Required secrets (set via `wrangler secret put` before deploying):
  *   SUPABASE_URL              — e.g. https://xyz.supabase.co
- *   SUPABASE_JWT_SECRET       — JWT secret from Supabase dashboard → Settings → API
  *   SUPABASE_SERVICE_ROLE_KEY — service_role key from Supabase dashboard → Settings → API
  *   ALLOWED_ORIGINS           — comma-separated list of allowed frontend origins
  */
@@ -22,17 +21,6 @@ function isAtLeast(userRole, minRole) {
   // for both operands and `-1 >= -1` grants access to everyone.
   if (minIdx < 0) return false
   return ROLE_HIERARCHY.indexOf(userRole) >= minIdx
-}
-
-// ---- Base64url helpers (Web Standard, no Node built-ins) ----
-
-function base64urlDecode(str) {
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = base64 + '==='.slice((base64.length + 3) % 4)
-  const raw = atob(padded)
-  const bytes = new Uint8Array(raw.length)
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
-  return bytes.buffer
 }
 
 function jsonError(msg, status) {
@@ -90,59 +78,39 @@ async function verifyAndGetRole(request, env) {
     return { error: 401, msg: 'Missing or malformed Authorization header' }
   }
   const token = auth.slice(7).trim()
-  const parts = token.split('.')
-  if (parts.length !== 3) {
-    return { error: 401, msg: 'Invalid token format' }
+  if (!token) {
+    return { error: 401, msg: 'Missing bearer token' }
   }
 
-  const [headerB64, payloadB64, sigB64] = parts
-  const signingInput = `${headerB64}.${payloadB64}`
-
-  // Import HMAC-SHA256 key from the Supabase JWT secret
-  const secretBytes = new TextEncoder().encode(env.SUPABASE_JWT_SECRET)
-  let key
+  // Delegate signature verification to Supabase Auth, same as the Pages
+  // Functions under apps/web/functions/api/. The project signs session JWTs
+  // with asymmetric signing keys, so the legacy HS256 SUPABASE_JWT_SECRET no
+  // longer verifies them — checking locally against it rejected every real
+  // token with 'Invalid token signature'. /auth/v1/user keeps working through
+  // key rotations and also rejects revoked sessions.
+  let userId
   try {
-    key = await crypto.subtle.importKey(
-      'raw',
-      secretBytes,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    )
+    const resp = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    if (resp.status === 401 || resp.status === 403) {
+      return { error: 401, msg: 'Invalid or expired token' }
+    }
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '')
+      console.error('[pptx-upload] auth check failed:', resp.status, detail)
+      return { error: 502, msg: 'Auth check failed' }
+    }
+    const user = await resp.json().catch(() => null)
+    userId = user?.id
   } catch {
-    return { error: 401, msg: 'Token verification setup failed' }
+    return { error: 502, msg: 'Auth check failed' }
   }
-
-  // Verify signature
-  let valid
-  try {
-    const sigBytes = base64urlDecode(sigB64)
-    const dataBytes = new TextEncoder().encode(signingInput)
-    valid = await crypto.subtle.verify('HMAC', key, sigBytes, dataBytes)
-  } catch {
-    return { error: 401, msg: 'Token signature verification failed' }
-  }
-  if (!valid) {
-    return { error: 401, msg: 'Invalid token signature' }
-  }
-
-  // Decode payload
-  let payload
-  try {
-    const payloadBytes = base64urlDecode(payloadB64)
-    payload = JSON.parse(new TextDecoder().decode(payloadBytes))
-  } catch {
-    return { error: 401, msg: 'Failed to decode token payload' }
-  }
-
-  // Check expiry
-  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-    return { error: 401, msg: 'Token expired' }
-  }
-
-  const userId = payload.sub
   if (!userId) {
-    return { error: 401, msg: 'Token missing sub claim' }
+    return { error: 401, msg: 'Token missing user id' }
   }
 
   // Fetch the caller's role from Supabase
