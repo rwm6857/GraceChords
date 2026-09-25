@@ -25,14 +25,9 @@ Handles PPTX file uploads and deletions for GraceChords songs. Files are stored 
    - `SUPABASE_SERVICE_ROLE_KEY`: found in Supabase dashboard → Settings → API → service_role key
    - `ALLOWED_ORIGINS`: comma-separated list of allowed frontend origins (e.g. `https://gracechords.com,https://migration.gracechords-app.pages.dev`)
 
-3. Provision the rate-limit KV namespace (one-time):
-   ```bash
-   wrangler kv:namespace create RATE_LIMIT_KV
-   ```
-
-   Paste the returned `id` into `wrangler.toml` (replace
-   `REPLACE_WITH_NAMESPACE_ID` under `[[kv_namespaces]]`). The binding name
-   must remain `RATE_LIMIT_KV` — the worker reads `env.RATE_LIMIT_KV`.
+3. The rate-limit KV namespace (`RATE_LIMIT_KV`) is already provisioned and
+   its id is committed in `wrangler.toml`. The binding name must remain
+   `RATE_LIMIT_KV` — the worker reads `env.RATE_LIMIT_KV`.
 
 4. Deploy:
    ```bash
