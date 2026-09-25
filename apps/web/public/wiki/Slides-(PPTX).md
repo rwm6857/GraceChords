@@ -17,7 +17,7 @@ To delete a deck, click **Delete PPTX** in the editor (Editor+ role required).
 
 ## Worker setup
 The Worker is deployed separately from the main SPA. See [`workers/pptx-upload/README.md`](../workers/pptx-upload/README.md) for:
-- Wrangler secrets (`SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `ALLOWED_ORIGINS`)
+- Wrangler secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ALLOWED_ORIGINS`)
 - R2 bucket binding
 - Local dev instructions
 

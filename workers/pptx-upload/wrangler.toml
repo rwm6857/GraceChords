@@ -1,6 +1,5 @@
 # Required secrets — run these before deploying:
 # wrangler secret put SUPABASE_URL
-# wrangler secret put SUPABASE_JWT_SECRET
 # wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # wrangler secret put ALLOWED_ORIGINS
 
@@ -24,6 +23,5 @@ id = "REPLACE_WITH_NAMESPACE_ID"
 
 # Secrets (set via `wrangler secret put`, never committed):
 # SUPABASE_URL
-# SUPABASE_JWT_SECRET
 # SUPABASE_SERVICE_ROLE_KEY
 # ALLOWED_ORIGINS (comma-separated)
