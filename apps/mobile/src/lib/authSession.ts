@@ -3,7 +3,7 @@
 // injected dep, like authFlows.ts. Type-only supabase imports erase at compile
 // time.
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
-import { GATE_MS } from './requestBudget'
+import { GATE_MS, urlOf, type FetchFn } from './requestBudget'
 
 type BootAuth = Pick<SupabaseClient['auth'], 'getSession' | 'signOut'>
 
@@ -24,6 +24,65 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
   if (e.code === 'refresh_token_not_found') return true
   const msg = typeof e.message === 'string' ? e.message.toLowerCase() : ''
   return msg.includes('refresh token') && (msg.includes('not found') || msg.includes('invalid'))
+}
+
+export type RefreshFailure = {
+  status: number
+  code: string | null
+  message: string
+  /** false only when GoTrue itself rejected the token, which ends the session. */
+  keptSession: boolean
+}
+
+/**
+ * Stop a refresh failure that isn't about the token from ending the session.
+ *
+ * auth-js deletes the persisted session on ANY refresh error it does not class
+ * as retryable, and it only classes a thrown fetch or a 502/503/504/52x as
+ * retryable (see @supabase/auth-js handleError / _callRefreshToken). So a
+ * GoTrue 500, a 429 rate limit, or a non-JSON 4xx from something in the network
+ * path (a captive portal, a content filter, a WAF page) signs the user out with a
+ * perfectly good refresh token still on the server. Supabase refresh tokens do
+ * not expire on their own, so a session should only ever end because the server
+ * said so.
+ *
+ * Only a 4xx carrying a GoTrue error body (`code` / `error_code` / `error`) is
+ * that: refresh_token_not_found, refresh_token_already_used, session_not_found,
+ * user_banned and the like. Every other failed response is turned into a thrown
+ * error, which auth-js treats exactly like being offline: the session is kept,
+ * the auto-refresh tick retries it, and resolveInitialSession adopts it from disk
+ * at launch.
+ */
+export function keepSessionOnTransientRefreshFailure(
+  fetchImpl: FetchFn,
+  onFailure?: (failure: RefreshFailure) => void,
+): FetchFn {
+  return async (input, init) => {
+    const res = await fetchImpl(input, init)
+    if (res.ok || !urlOf(input).includes('grant_type=refresh_token')) return res
+
+    let body: Record<string, unknown> | null = null
+    try {
+      const parsed = await res.clone().json()
+      if (parsed && typeof parsed === 'object') body = parsed as Record<string, unknown>
+    } catch {
+      // Not JSON, so not GoTrue.
+    }
+    const code = [body?.error_code, body?.code, body?.error].find(
+      (v): v is string => typeof v === 'string',
+    )
+    const rawMessage = body?.msg ?? body?.message ?? body?.error_description
+    const definitive = res.status >= 400 && res.status < 500 && res.status !== 429 && !!code
+    const failure: RefreshFailure = {
+      status: res.status,
+      code: code ?? null,
+      message: typeof rawMessage === 'string' ? rawMessage : `HTTP ${res.status}`,
+      keptSession: !definitive,
+    }
+    onFailure?.(failure)
+    if (definitive) return res
+    throw new Error(`Token refresh failed (HTTP ${res.status}); keeping the session.`)
+  }
 }
 
 // GoTrue's automatic init runs `_recoverAndRefresh` the moment the client is

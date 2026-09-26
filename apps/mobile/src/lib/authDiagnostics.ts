@@ -13,9 +13,11 @@
 // disk, and the buffer is dropped when the app is killed. This app has no
 // analytics sink BY DESIGN (see reviewService.ts) and this does not add one.
 //
-// Scope: the native Google/Apple id-token flows only. The email/password and
-// change-password paths are excluded on purpose — ChangePasswordScreen.tsx
-// forbids logging anything at all from that flow.
+// Scope: the native Google/Apple id-token flows, plus failed token refreshes
+// (keepSessionOnTransientRefreshFailure in authSession.ts) — those are what end
+// a session nobody asked to end. The email/password and change-password paths
+// are excluded on purpose — ChangePasswordScreen.tsx forbids logging anything at
+// all from that flow.
 
 /** The parts of a provider error worth keeping: never the credential, never the user. */
 export type AuthErrorInfo = {

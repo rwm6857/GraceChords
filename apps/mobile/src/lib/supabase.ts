@@ -3,7 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { AppState } from 'react-native'
 import { createGcSupabase } from '@gracechords/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { silenceInvalidRefreshTokenLogs } from './authSession'
+import { recordAuthFailure } from './authDiagnostics'
+import {
+  keepSessionOnTransientRefreshFailure,
+  silenceInvalidRefreshTokenLogs,
+} from './authSession'
 import { FOREGROUND_MS, withRequestBudget } from './requestBudget'
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -80,7 +84,13 @@ export const supabase: SupabaseClient = supabaseConfigError
         detectSessionInUrl: false,
       },
       global: {
-        fetch: withRequestBudget(fetch, supabaseRequestBudget),
+        // Every refresh failure is recorded, kept or not, so the next unexpected
+        // sign-out can be read back from Settings → Sign-in diagnostics.
+        fetch: keepSessionOnTransientRefreshFailure(
+          withRequestBudget(fetch, supabaseRequestBudget),
+          ({ keptSession, ...info }) =>
+            recordAuthFailure(keptSession ? 'tokenRefresh (kept session)' : 'tokenRefresh', info),
+        ),
       },
     })
 

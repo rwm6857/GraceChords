@@ -233,6 +233,13 @@ shipping; don't "fix" them.
   `persistSession`/`autoRefreshToken` keep the factory defaults (`true`).
 - Token refresh is driven by `AppState` (`registerAuthAutoRefresh` in
   `src/lib/supabase.ts`), called once at the app root.
+- **Only GoTrue ends a session.** auth-js deletes the persisted session on any
+  refresh error it doesn't class as retryable — including a GoTrue 500, a 429,
+  or a non-JSON 4xx from a captive portal / content filter. The client's `fetch`
+  is wrapped in `keepSessionOnTransientRefreshFailure` (`src/lib/authSession.ts`)
+  so only a 4xx with a GoTrue error body passes through; everything else is
+  thrown and treated like being offline. Every refresh failure is recorded in
+  Settings → Sign-in diagnostics. Keep this wrapper outermost.
 - A **dead persisted refresh token** (signed out elsewhere, token rotated,
   session deleted) is benign and self-healing: `resolveInitialSession`
   (`src/lib/authSession.ts`) purges it locally at launch and the gate routes to

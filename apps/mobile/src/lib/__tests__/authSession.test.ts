@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   isInvalidRefreshTokenError,
+  keepSessionOnTransientRefreshFailure,
   resolveInitialSession,
   silenceInvalidRefreshTokenLogs,
 } from '../authSession'
@@ -296,5 +297,61 @@ describe('resolveInitialSession — offline fallback', () => {
     })
     const read = vi.fn().mockRejectedValue(new Error('storage exploded'))
     await expect(resolveInitialSession(auth, 5000, read)).resolves.toBeNull()
+  })
+})
+
+describe('keepSessionOnTransientRefreshFailure', () => {
+  const REFRESH = 'https://ref.supabase.co/auth/v1/token?grant_type=refresh_token'
+
+  function respond(status: number, body: string, type = 'application/json') {
+    return vi.fn().mockResolvedValue(new Response(body, { status, headers: { 'content-type': type } }))
+  }
+
+  it('passes GoTrue rejections of the token through, so a dead session still ends', async () => {
+    const onFailure = vi.fn()
+    const dead = JSON.stringify({
+      code: 'refresh_token_not_found',
+      message: 'Invalid Refresh Token: Refresh Token Not Found',
+    })
+    const res = await keepSessionOnTransientRefreshFailure(respond(400, dead), onFailure)(REFRESH)
+    expect(res.status).toBe(400)
+    // The body is still readable by auth-js after we peeked at it.
+    expect(await res.json()).toMatchObject({ code: 'refresh_token_not_found' })
+    expect(onFailure).toHaveBeenCalledWith({
+      status: 400,
+      code: 'refresh_token_not_found',
+      message: 'Invalid Refresh Token: Refresh Token Not Found',
+      keptSession: false,
+    })
+  })
+
+  it('recognises the legacy error_code and OAuth error shapes', async () => {
+    const legacy = JSON.stringify({ code: 400, error_code: 'refresh_token_already_used', msg: 'x' })
+    const oauth = JSON.stringify({ error: 'invalid_grant', error_description: 'x' })
+    await expect(keepSessionOnTransientRefreshFailure(respond(400, legacy))(REFRESH)).resolves.toBeInstanceOf(Response)
+    await expect(keepSessionOnTransientRefreshFailure(respond(400, oauth))(REFRESH)).resolves.toBeInstanceOf(Response)
+  })
+
+  it.each([
+    ['a GoTrue 500', 500, JSON.stringify({ code: 'unexpected_failure', message: 'db' })],
+    ['a rate limit', 429, JSON.stringify({ code: 'over_request_rate_limit', message: 'slow down' })],
+    ['a non-JSON block page', 403, '<html>Blocked by your network</html>'],
+    ['a gateway error without a GoTrue body', 401, JSON.stringify({ message: 'Unauthorized' })],
+  ])('throws on %s so auth-js keeps the session and retries', async (_label, status, body) => {
+    const onFailure = vi.fn()
+    const wrapped = keepSessionOnTransientRefreshFailure(respond(status, body), onFailure)
+    await expect(wrapped(REFRESH)).rejects.toThrow(/keeping the session/)
+    expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ status, keptSession: true }))
+  })
+
+  it('leaves successful refreshes and every other request alone', async () => {
+    const onFailure = vi.fn()
+    const ok = await keepSessionOnTransientRefreshFailure(respond(200, '{}'), onFailure)(REFRESH)
+    expect(ok.status).toBe(200)
+    const other = await keepSessionOnTransientRefreshFailure(respond(500, '<html/>'), onFailure)(
+      'https://ref.supabase.co/rest/v1/songs',
+    )
+    expect(other.status).toBe(500)
+    expect(onFailure).not.toHaveBeenCalled()
   })
 })
