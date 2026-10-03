@@ -5,9 +5,11 @@ import { AppleIcon, QrCodeIcon } from '../components/Icons'
 
 const SITE_URL = 'https://gracechords.com'
 const APP_STORE_URL = 'https://apps.apple.com/us/app/gracechords/id6787127446'
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.gracechords.app'
 // public/ assets are served from the site root and referenced by URL, not
 // imported (matches SpriteAvatar's /sprites/ usage).
 const APP_STORE_BADGE = '/badges/app-store-badge.svg'
+const PLAY_STORE_BADGE = '/badges/google-play-badge.svg'
 const DOWNLOAD_QR = '/badges/download-qr.svg'
 
 export default function DownloadPage(){
@@ -50,17 +52,27 @@ export default function DownloadPage(){
           </a>
         </section>
 
-        {/* Android is deliberately inert: no <a>, no href. A disabled link is
-            still a dead link. */}
-        <section
-          className="gc-download__card gc-download__card--pending"
-          aria-labelledby="gc-download-android"
-        >
+        <section className="gc-download__card" aria-labelledby="gc-download-android">
           <h2 id="gc-download-android" className="gc-download__cardTitle">
             {t('download.android.title')}
           </h2>
           <p className="gc-download__cardBody">{t('download.android.body')}</p>
-          <p className="gc-download__pendingChip">{t('download.android.comingSoon')}</p>
+          {/* Same rule as the App Store badge: Google's official artwork,
+              unmodified and self-hosted. */}
+          <a
+            className="gc-download__badgeLink"
+            href={PLAY_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              className="gc-download__badge"
+              src={PLAY_STORE_BADGE}
+              alt={t('download.android.badgeAlt')}
+              width="136"
+              height="40"
+            />
+          </a>
         </section>
       </div>
 
@@ -70,8 +82,8 @@ export default function DownloadPage(){
           {t('download.qr.title')}
         </h2>
         <p className="gc-download__cardBody">{t('download.qr.body')}</p>
-        {/* Encodes /download rather than the App Store listing, so the same
-            code keeps working when Android ships. Regenerate with:
+        {/* Encodes /download rather than either store listing, so one code
+            serves both platforms. Regenerate with:
             npx qrcode -t svg -o public/badges/download-qr.svg -w 512 --qzone 2 \
               "https://gracechords.com/download" */}
         <img
@@ -82,6 +94,8 @@ export default function DownloadPage(){
           height="176"
         />
       </section>
+
+      <p className="gc-download__legal">{t('download.legal')}</p>
     </div>
   )
 }

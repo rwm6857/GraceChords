@@ -229,13 +229,14 @@
     },
     "android": {
       "title": "Android",
-      "body": "Android uygulaması hazırlanıyor. Bu arada web uygulaması Chrome'da gayet iyi çalışıyor.",
-      "comingSoon": "Çok yakında"
+      "body": "GraceChords şu anda Google Play'de mevcut.",
+      "badgeAlt": "Google Play'den alın"
     },
     "qr": {
       "title": "Telefonunuzda açmak için tarayın",
       "body": "Bu sayfayı cihazınızda açmak için kameranızı koda doğrultun.",
       "alt": "gracechords.com/download adresine bağlanan QR kodu"
-    }
+    },
+    "legal": "Apple ve Apple logosu, Apple Inc.'in ABD'de ve diğer ülkelerde tescilli ticari markalarıdır. App Store, Apple Inc.'in hizmet markasıdır. Google Play ve Google Play logosu, Google LLC'nin ticari markalarıdır."
   }
 }

@@ -39,8 +39,8 @@
   "announcement": {
     "regionLabel": "Anuncio del sitio",
     "dismiss": "Cerrar anuncio",
-    "iosLaunch": {
-      "message": "GraceChords ya está en el App Store.",
+    "mobileLaunch": {
+      "message": "GraceChords ya está en el App Store y Google Play.",
       "cta": "Obtener la app"
     }
   }

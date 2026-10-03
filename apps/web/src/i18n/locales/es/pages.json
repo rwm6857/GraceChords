@@ -229,13 +229,14 @@
     },
     "android": {
       "title": "Android",
-      "body": "La app de Android está en camino. Mientras tanto, la web funciona muy bien en Chrome.",
-      "comingSoon": "Próximamente"
+      "body": "GraceChords ya está disponible en Google Play.",
+      "badgeAlt": "Disponible en Google Play"
     },
     "qr": {
       "title": "Escanea para abrirlo en tu teléfono",
       "body": "Apunta la cámara al código para abrir esta página en tu dispositivo.",
       "alt": "Código QR que enlaza a gracechords.com/download"
-    }
+    },
+    "legal": "Apple y el logotipo de Apple son marcas comerciales de Apple Inc., registradas en EE. UU. y otros países. App Store es una marca de servicio de Apple Inc. Google Play y el logotipo de Google Play son marcas comerciales de Google LLC."
   }
 }

@@ -39,8 +39,8 @@
   "announcement": {
     "regionLabel": "사이트 공지",
     "dismiss": "공지 닫기",
-    "iosLaunch": {
-      "message": "GraceChords가 App Store에 출시되었습니다.",
+    "mobileLaunch": {
+      "message": "GraceChords가 App Store와 Google Play에 출시되었습니다.",
       "cta": "앱 받기"
     }
   }
