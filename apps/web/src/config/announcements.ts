@@ -24,16 +24,16 @@ export interface Announcement {
 
 export const announcements: Announcement[] = [
   {
-    id: 'ios-launch-2026-08',
+    id: 'mobile-launch-2026-10',
     // iOS is included even though iOS Safari never shows the strip: the
     // suppression there is isNativeAppBannerActive(), a client concern, not an
     // audience one. Chrome/Firefox/webviews on iOS get no native banner and do
     // need the strip.
     platforms: ['desktop', 'android', 'ios'],
-    messageKey: 'announcement.iosLaunch.message',
-    cta: { labelKey: 'announcement.iosLaunch.cta', href: '/download' },
-    startsAt: '2026-08-07T00:00:00Z',
-    endsAt: '2026-09-30T23:59:59Z',
+    messageKey: 'announcement.mobileLaunch.message',
+    cta: { labelKey: 'announcement.mobileLaunch.cta', href: '/download' },
+    startsAt: '2026-10-03T00:00:00Z',
+    endsAt: '2026-11-30T23:59:59Z',
   },
 ]
 

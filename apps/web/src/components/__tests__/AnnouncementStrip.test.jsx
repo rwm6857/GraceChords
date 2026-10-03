@@ -15,9 +15,9 @@ vi.mock('../../utils/app/platform', () => ({
   isNativeAppBannerActive: () => platform.nativeBanner,
 }))
 
-// A fixed instant inside the shipped ios-launch-2026-08 window, so the suite
+// A fixed instant inside the shipped mobile-launch-2026-10 window, so the suite
 // keeps passing after the real campaign expires.
-const INSIDE_WINDOW = Date.parse('2026-08-15T12:00:00Z')
+const INSIDE_WINDOW = Date.parse('2026-10-15T12:00:00Z')
 
 import AnnouncementStrip from '../AnnouncementStrip'
 import { announcements, dismissKey, resolveAnnouncement } from '../../config/announcements'

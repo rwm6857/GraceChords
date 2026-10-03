@@ -1449,10 +1449,6 @@ button.tool-card{
   padding: var(--space-4);
   box-shadow: var(--gc-shadow-1);
 }
-.gc-download__card--pending{
-  background: var(--gc-surface-2);
-  box-shadow: none;
-}
 .gc-download__cardTitle{
   display: flex;
   align-items: center;
@@ -1465,10 +1461,6 @@ button.tool-card{
 .gc-download__cardBody{
   margin: 0 0 var(--space-4);
   color: var(--gc-text-secondary);
-}
-.gc-download__card--pending .gc-download__cardTitle,
-.gc-download__card--pending .gc-download__cardBody{
-  color: var(--gc-text-tertiary);
 }
 .gc-download__badgeLink{
   display: inline-block;
@@ -1489,18 +1481,14 @@ button.tool-card{
 [data-theme="dark"] .gc-download__badge{
   box-shadow: 0 0 0 1px var(--gc-separator);
 }
-.gc-download__pendingChip{
-  display: inline-block;
-  margin: 0;
-  padding: var(--gc-btn-pad-y-sm) var(--gc-btn-pad-x-sm);
-  border: 1px solid var(--gc-separator);
-  border-radius: var(--radius-pill);
-  background: var(--gc-surface-3);
-  color: var(--gc-text-secondary);
-  font-size: var(--gc-btn-font-size-sm);
-}
 .gc-download__qr{
   margin-bottom: var(--space-6);
+}
+.gc-download__legal{
+  margin: 0 0 var(--space-6);
+  max-width: 60ch;
+  color: var(--gc-text-tertiary);
+  font-size: var(--gc-font-cap);
 }
 /* The generated SVG carries its own white field and a 2-module quiet zone, so
    the element needs no background of its own — tinting or inverting a QR costs

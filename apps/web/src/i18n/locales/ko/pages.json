@@ -229,13 +229,14 @@
     },
     "android": {
       "title": "Android",
-      "body": "Android 앱은 준비 중입니다. 그동안 웹 앱을 Chrome에서 편하게 사용하실 수 있습니다.",
-      "comingSoon": "출시 예정"
+      "body": "GraceChords를 Google Play에서 지금 만나보세요.",
+      "badgeAlt": "Google Play에서 다운로드하기"
     },
     "qr": {
       "title": "휴대폰에서 열려면 스캔하세요",
       "body": "카메라로 코드를 비추면 이 페이지가 기기에서 열립니다.",
       "alt": "gracechords.com/download로 연결되는 QR 코드"
-    }
+    },
+    "legal": "Apple 및 Apple 로고는 미국 및 기타 국가에 등록된 Apple Inc.의 상표입니다. App Store는 Apple Inc.의 서비스 마크입니다. Google Play 및 Google Play 로고는 Google LLC의 상표입니다."
   }
 }
