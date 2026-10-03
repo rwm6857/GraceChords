@@ -68,6 +68,16 @@ const EMPTY_SELECTION: ReadonlySet<number> = new Set<number>()
 // line together rather than leaving the number dangling at a line end.
 const NO_BREAK_SPACE = '\u00A0'
 
+// U+2060, zero-width. Must be the first character of every reading paragraph.
+// iOS takes a paragraph's line height from its FIRST character, and React
+// Native emits an inline view (VerseNumber) as an attachment with no paragraph
+// style \u2014 so a paragraph that opens on a verse numeral silently drops
+// `lineHeight` and the Line spacing setting does nothing. Leading with a real
+// character carries the paragraph style. A word joiner rather than a
+// zero-width space so it adds no break opportunity before the numeral; it is
+// used only at paragraph starts, where there is nothing before it to bind.
+const PARAGRAPH_ANCHOR = '\u2060'
+
 function formatDateLabel(d: Date, locale: string) {
   const now = new Date()
   const base = d.toLocaleDateString(locale, { month: 'long', day: 'numeric' })
@@ -504,6 +514,7 @@ export default function DailyWordScreen({
           >
               {settings.layout === 'prose' ? (
                 <Text style={readingBase}>
+                  {PARAGRAPH_ANCHOR}
                   {versesInScope.map(({ num, text }) => {
                     const isSel = selection.has(num)
                     return (
@@ -560,6 +571,7 @@ export default function DailyWordScreen({
                       }}
                     >
                       <Text style={readingBase}>
+                        {PARAGRAPH_ANCHOR}
                         <VerseNumber
                           num={num}
                           fontSize={fontSize}
