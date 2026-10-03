@@ -816,7 +816,12 @@ scenarios headless.
     joined to its first word with a **no-break space** (prose mode used to strand
     numbers at the end of a line at larger sizes) and sits OUTSIDE the highlight
     run, because an inline view takes no text background and would otherwise
-    punch a hole in the tint.
+    punch a hole in the tint. Every reading paragraph (each verse in Lines, the
+    whole chapter in Prose) must **open with `PARAGRAPH_ANCHOR`** (U+2060) before
+    the numeral: iOS reads a paragraph's line height from its first character,
+    and RN emits an inline view as an attachment with no paragraph style, so a
+    paragraph that starts on the numeral ignores `lineHeight` and the Line
+    spacing setting silently stops working.
   - **Swipe between chapters** is `src/components/reader/ChapterSwipe.tsx`
     (Reanimated + RNGH), modelled on the Bible app's reader: the page **tracks
     the finger**, a chevron pill slides in from the edge you pull away from and
