@@ -40,8 +40,23 @@ export function reloadOnceForStaleChunk(){
   if (Date.now() - last < RELOAD_COOLDOWN_MS) return false
   try { window.sessionStorage.setItem(RELOAD_KEY, String(Date.now())) } catch {}
   reloadInFlight = true
-  window.location.reload()
+  purgeAssetCaches().then(() => window.location.reload())
   return true
+}
+
+// sw.js serves /assets/* cache-first from a per-deploy cache, so a chunk it
+// stored in a broken state keeps failing after a plain reload until the next
+// deploy. Drop those caches first so the reload refetches from the network.
+// Bounded so a stuck Cache API can never block the recovery reload.
+function purgeAssetCaches(){
+  if (!('caches' in window)) return Promise.resolve()
+  const purge = window.caches.keys()
+    .then((keys) => Promise.all(
+      keys.filter((key) => key.startsWith('gracechords-')).map((key) => window.caches.delete(key)),
+    ))
+    .catch(() => {})
+  const timeout = new Promise((resolve) => setTimeout(resolve, 2000))
+  return Promise.race([purge, timeout])
 }
 
 // Stands in for the route only while the recovery reload is in flight, so a

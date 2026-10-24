@@ -101,6 +101,34 @@ describe('lazyRoute', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
+  // A chunk the service worker cached in a broken state would fail again after
+  // a plain reload, so the app's own caches must be gone before reloading.
+  it('clears the service worker asset caches before reloading', async () => {
+    const deleted = []
+    let deletedAtReload = null
+    const originalCaches = Object.getOwnPropertyDescriptor(window, 'caches')
+    Object.defineProperty(window, 'caches', {
+      configurable: true,
+      value: {
+        keys: async () => ['gracechords-abc123', 'unrelated-cache'],
+        delete: async (key) => { deleted.push(key); return true },
+      },
+    })
+    reload.mockImplementation(() => { deletedAtReload = [...deleted] })
+    try {
+      const { default: lazyRoute } = await loadLazyRoute()
+      const Route = lazyRoute(async () => undefined)
+
+      render(<Boundary><Route /></Boundary>)
+
+      await waitFor(() => expect(reload).toHaveBeenCalledTimes(1))
+      expect(deletedAtReload).toEqual(['gracechords-abc123'])
+    } finally {
+      if (originalCaches) Object.defineProperty(window, 'caches', originalCaches)
+      else delete window.caches
+    }
+  })
+
   it('reloads again once the cooldown has passed', async () => {
     window.sessionStorage.setItem('gc:chunkReloadAt', String(Date.now() - 20000))
     const { default: lazyRoute } = await loadLazyRoute()
