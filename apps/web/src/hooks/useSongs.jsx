@@ -12,7 +12,7 @@
  * are updated without requiring a hard refresh.
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const STALE_MS = 5 * 60 * 1000  // revalidate after 5 minutes
@@ -112,21 +112,32 @@ function normaliseSong(song) {
 }
 
 /**
- * Hook.  Returns { songs, loading }.
+ * Hook.  Returns { songs, loading, error, retry }.
  * songs — array of normalised song objects
  * loading — true while the first fetch is in flight
+ * error — true when the first fetch failed and there is nothing cached to show
+ * retry — re-issues the fetch after an error
  */
 export function useSongs() {
   const [songs, setSongs] = useState(_cache || [])
   const [loading, setLoading] = useState(!_cache)
+  const [error, setError] = useState(false)
+
+  // _listeners will push the data into this component's state.
+  const loadFirst = useCallback(() => {
+    setLoading(true)
+    setError(false)
+    fetchSongs().then(() => {
+      setLoading(false)
+      setError(!_cache)
+    })
+  }, [])
 
   useEffect(() => {
     _listeners.add(setSongs)
 
     if (!_cache) {
-      // First load — fetch and clear loading when done.
-      // _listeners will push the data into this component's state.
-      fetchSongs().then(() => setLoading(false))
+      loadFirst()
     } else {
       setLoading(false)
       // Stale-while-revalidate: if cached data is older than STALE_MS,
@@ -139,7 +150,7 @@ export function useSongs() {
     }
 
     return () => _listeners.delete(setSongs)
-  }, [])
+  }, [loadFirst])
 
-  return { songs, loading }
+  return { songs, loading, error, retry: loadFirst }
 }

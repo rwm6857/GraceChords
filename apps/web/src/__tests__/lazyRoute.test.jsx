@@ -97,7 +97,7 @@ describe('lazyRoute', () => {
 
     render(<Boundary><Route /></Boundary>)
 
-    expect(await screen.findByText(/caught: Route chunk loaded without a module/)).toBeInTheDocument()
+    expect(await screen.findByText(/caught: Route chunk failed to load/)).toBeInTheDocument()
     expect(reload).not.toHaveBeenCalled()
   })
 

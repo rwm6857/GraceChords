@@ -27,7 +27,9 @@
     "languageAria": "찬양곡 언어",
     "languageTooltip": "{{language}} 찬양곡 보기",
     "noTranslation": "선택한 언어로 번역 없음",
-    "resultsAria": "찬양곡 결과"
+    "resultsAria": "찬양곡 결과",
+    "loadError": "찬양곡을 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요.",
+    "retry": "다시 시도"
   },
   "setlist": {
     "title": "셋리스트 빌더",

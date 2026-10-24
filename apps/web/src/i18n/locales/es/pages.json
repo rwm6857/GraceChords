@@ -27,7 +27,9 @@
     "languageAria": "Idioma de la canción",
     "languageTooltip": "Mostrar canciones en {{language}}",
     "noTranslation": "Sin traducción en el idioma seleccionado",
-    "resultsAria": "Resultados de canciones"
+    "resultsAria": "Resultados de canciones",
+    "loadError": "No se pudieron cargar las canciones. Revisa tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar"
   },
   "setlist": {
     "title": "Creador de repertorios",

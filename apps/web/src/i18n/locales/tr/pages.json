@@ -27,7 +27,9 @@
     "languageAria": "İlahi dili",
     "languageTooltip": "{{language}} ilahileri göster",
     "noTranslation": "Seçili dilde çeviri yok",
-    "resultsAria": "İlahi sonuçları"
+    "resultsAria": "İlahi sonuçları",
+    "loadError": "İlahiler yüklenemedi. Bağlantını kontrol edip tekrar dene.",
+    "retry": "Yeniden dene"
   },
   "setlist": {
     "title": "Set Listesi Oluşturucu",

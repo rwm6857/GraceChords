@@ -1,4 +1,5 @@
 import React from 'react';
+import { isChunkLoadError } from '../utils/app/lazyRoute';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props){
@@ -31,11 +32,15 @@ export default class ErrorBoundary extends React.Component {
   render(){
     if(this.state.error){
       const report = this.buildReport();
+      const chunkFailed = isChunkLoadError(this.state.error);
       return (
         <div className="container" style={{padding:'2rem', maxWidth: 720, margin: '0 auto'}}>
-          <h1>Something went wrong.</h1>
+          <h1>{chunkFailed ? 'This page didn’t finish loading.' : 'Something went wrong.'}</h1>
+          {chunkFailed ? (
+            <p>This usually means a weak or dropped connection. Check your signal and try again.</p>
+          ) : null}
           <p>
-            <a href="#" onClick={e=>{e.preventDefault(); window.location.reload();}}>Reload</a>
+            <a href="#" onClick={e=>{e.preventDefault(); window.location.reload();}}>{chunkFailed ? 'Try again' : 'Reload'}</a>
           </p>
           {/* Error detail is surfaced on-screen so it can be read/screenshotted
               on devices without a developer console (e.g. mobile browsers). */}
