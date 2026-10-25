@@ -27,7 +27,9 @@
     "languageAria": "Song language",
     "languageTooltip": "Show {{language}} songs",
     "noTranslation": "No Translation in Selected Language",
-    "resultsAria": "Song results"
+    "resultsAria": "Song results",
+    "loadError": "Couldn't load songs. Check your connection and try again.",
+    "retry": "Retry"
   },
   "setlist": {
     "title": "Setlist Builder",

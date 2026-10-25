@@ -12,6 +12,17 @@ const RELOAD_COOLDOWN_MS = 15000
 // which would surface an error screen while the page is navigating away.
 let reloadInFlight = false
 
+const CHUNK_MISSING_MESSAGE = 'Route chunk failed to load — the connection dropped or a newer deploy replaced it.'
+const CHUNK_ERROR_RE = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload (?:CSS|module)|Route chunk failed to load/i
+
+// True for any failure to fetch a route chunk. On a weak connection this is
+// far more often a dropped request than a stale deploy, so callers shouldn't
+// assume which one it was.
+export function isChunkLoadError(error){
+  const message = error?.message ?? error ?? ''
+  return CHUNK_ERROR_RE.test(String(message))
+}
+
 /**
  * Reload once to pick up the current deploy's chunk hashes.
  *
@@ -29,8 +40,23 @@ export function reloadOnceForStaleChunk(){
   if (Date.now() - last < RELOAD_COOLDOWN_MS) return false
   try { window.sessionStorage.setItem(RELOAD_KEY, String(Date.now())) } catch {}
   reloadInFlight = true
-  window.location.reload()
+  purgeAssetCaches().then(() => window.location.reload())
   return true
+}
+
+// sw.js serves /assets/* cache-first from a per-deploy cache, so a chunk it
+// stored in a broken state keeps failing after a plain reload until the next
+// deploy. Drop those caches first so the reload refetches from the network.
+// Bounded so a stuck Cache API can never block the recovery reload.
+function purgeAssetCaches(){
+  if (!('caches' in window)) return Promise.resolve()
+  const purge = window.caches.keys()
+    .then((keys) => Promise.all(
+      keys.filter((key) => key.startsWith('gracechords-')).map((key) => window.caches.delete(key)),
+    ))
+    .catch(() => {})
+  const timeout = new Promise((resolve) => setTimeout(resolve, 2000))
+  return Promise.race([purge, timeout])
 }
 
 // Stands in for the route only while the recovery reload is in flight, so a
@@ -65,7 +91,7 @@ export default function lazyRoute(load){
   return React.lazy(() => Promise.resolve().then(load).then(
     (mod) => (mod && mod.default
       ? mod
-      : recoverOrRethrow(new Error('Route chunk loaded without a module — its deploy is no longer being served.'))),
+      : recoverOrRethrow(new Error(CHUNK_MISSING_MESSAGE))),
     (error) => recoverOrRethrow(error),
   ))
 }

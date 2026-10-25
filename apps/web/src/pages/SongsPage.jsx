@@ -7,7 +7,7 @@ import { searchSongs } from '../utils/songs/search'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
 import { useSongs } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
-import { Chip, Input, SongCard } from '../components/ui/layout-kit'
+import { Button, Chip, Input, SongCard } from '../components/ui/layout-kit'
 import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
@@ -38,7 +38,7 @@ function personalBadge(s) {
 
 export default function Songs(){
   const { t } = useTranslation('pages')
-  const { songs: itemsRaw } = useSongs()
+  const { songs: itemsRaw, loading: songsLoading, error: songsError, retry: retrySongs } = useSongs()
   const { personalSongs } = usePersonalSongs()
   const catalog = useMemo(() => buildSongCatalog(itemsRaw), [itemsRaw])
   const languageChipCodes = catalog.translationLanguages || []
@@ -468,7 +468,21 @@ export default function Songs(){
         ref={resultsRef}
         onKeyDown={onResultsKeyDown}
       >
-        <div className="HomeGrid" role="listbox" aria-label={t('songs.resultsAria')}>
+        {songsError && items.length === 0 ? (
+          <div className="home-empty-note" role="alert" style={{ marginTop: 'var(--space-4)' }}>
+            <p>{t('songs.loadError')}</p>
+            <Button onClick={retrySongs}>{t('songs.retry')}</Button>
+          </div>
+        ) : null}
+        <div className="HomeGrid" role="listbox" aria-label={t('songs.resultsAria')} aria-busy={songsLoading}>
+          {songsLoading && items.length === 0 ? Array.from({ length: 9 }, (_, i) => (
+            <div key={i} className="gc-card gc-song-card home-skeleton" aria-hidden="true">
+              <div className="gc-card__body">
+                <div className="skeleton-line skeleton-line--title" />
+                <div className="skeleton-line skeleton-line--meta" />
+              </div>
+            </div>
+          )) : null}
           {resultParts.translated.map((s, i) => (
             <SongCard
               as={Link}

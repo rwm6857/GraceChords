@@ -7,7 +7,7 @@ import { AuthProvider } from './hooks/useAuth'
 import { LocaleProvider } from './hooks/useLocale'
 import { SettingsProvider } from './hooks/useSettings'
 import { initTheme } from './utils/app/theme'
-import { reloadOnceForStaleChunk } from './utils/app/lazyRoute'
+import { isChunkLoadError, reloadOnceForStaleChunk } from './utils/app/lazyRoute'
 import './i18n'
 
 function bootstrapRouteFromQuery(){
@@ -118,7 +118,6 @@ function recoverFromMissingStylesheets(){
 // lazyRoute() so both recovery paths agree on whether a reload is under way.
 function recoverFromStaleChunks(){
   if (typeof window === 'undefined') return
-  const CHUNK_ERROR_RE = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload (?:CSS|module)/i
 
   // Vite dispatches this when __vitePreload can't load a dynamically imported
   // chunk — the canonical stale-deploy signal. preventDefault stops Vite from
@@ -132,8 +131,7 @@ function recoverFromStaleChunks(){
 
   // Backstop for failures that surface as an unhandled promise rejection.
   window.addEventListener('unhandledrejection', (event) => {
-    const message = event?.reason?.message ?? event?.reason ?? ''
-    if (CHUNK_ERROR_RE.test(String(message))) reloadOnceForStaleChunk()
+    if (isChunkLoadError(event?.reason)) reloadOnceForStaleChunk()
   })
 }
 
