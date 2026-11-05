@@ -240,5 +240,12 @@
       "alt": "gracechords.com/download로 연결되는 QR 코드"
     },
     "legal": "Apple 및 Apple 로고는 미국 및 기타 국가에 등록된 Apple Inc.의 상표입니다. App Store는 Apple Inc.의 서비스 마크입니다. Google Play 및 Google Play 로고는 Google LLC의 상표입니다."
+  },
+  "notFound": {
+    "metaTitle": "페이지를 찾을 수 없음 · GraceChords",
+    "title": "페이지를 찾을 수 없습니다",
+    "body": "해당 페이지를 찾을 수 없습니다. 페이지가 이동되었거나 링크가 잘못 입력되었을 수 있습니다.",
+    "home": "홈으로 이동",
+    "songs": "찬양 둘러보기"
   }
 }

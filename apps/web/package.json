@@ -17,6 +17,7 @@
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
     "generate:licenses": "node scripts/generate-licenses.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "smoke:prod": "node scripts/smoke-prod.mjs",
     "pagespeed": "node --env-file-if-exists=../../.env scripts/pagespeed.mjs"
   },
   "dependencies": {

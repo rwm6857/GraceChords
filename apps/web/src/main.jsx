@@ -8,6 +8,7 @@ import { LocaleProvider } from './hooks/useLocale'
 import { SettingsProvider } from './hooks/useSettings'
 import { initTheme } from './utils/app/theme'
 import { isChunkLoadError, reloadOnceForStaleChunk } from './utils/app/lazyRoute'
+import { installGlobalErrorReporting } from './utils/app/errorReporter'
 import { i18nReady } from './i18n'
 
 function bootstrapRouteFromQuery(){
@@ -141,6 +142,7 @@ resetServiceWorkerIfRequested()
 registerServiceWorker()
 recoverFromMissingStylesheets()
 recoverFromStaleChunks()
+installGlobalErrorReporting()
 
 // Global styles
 import './styles/index.css'

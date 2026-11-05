@@ -57,6 +57,24 @@ const injectLcpPreload = {
   },
 }
 
+// Preconnect to Supabase so DNS + TLS happen in parallel with HTML parsing.
+// Generated from the env rather than written into index.html so the project
+// URL lives in one place, and so a build without the variable simply omits the
+// hint instead of shipping a placeholder.
+let supabaseUrl = ''
+const injectSupabasePreconnect = {
+  name: 'inject-supabase-preconnect',
+  configResolved(config){ supabaseUrl = config.env.VITE_SUPABASE_URL || '' },
+  transformIndexHtml(){
+    let origin = ''
+    try { origin = new URL(supabaseUrl).origin } catch { return [] }
+    return [
+      { tag: 'link', attrs: { rel: 'preconnect', href: origin, crossorigin: true }, injectTo: 'head' },
+      { tag: 'link', attrs: { rel: 'dns-prefetch', href: origin }, injectTo: 'head' },
+    ]
+  },
+}
+
 export default defineConfig({
   // Keep assets rooted at the site origin for absolute public paths.
   base: '/',
@@ -86,6 +104,7 @@ export default defineConfig({
       ]
     }),
     injectLcpPreload,
+    injectSupabasePreconnect,
     // Enable bundle analysis with ANALYZE=1 to find unused JS and split chunks safely
     process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],

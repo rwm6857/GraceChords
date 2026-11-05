@@ -240,5 +240,12 @@
       "alt": "gracechords.com/download adresine bağlanan QR kodu"
     },
     "legal": "Apple ve Apple logosu, Apple Inc.'in ABD'de ve diğer ülkelerde tescilli ticari markalarıdır. App Store, Apple Inc.'in hizmet markasıdır. Google Play ve Google Play logosu, Google LLC'nin ticari markalarıdır."
+  },
+  "notFound": {
+    "metaTitle": "Sayfa bulunamadı · GraceChords",
+    "title": "Sayfa bulunamadı",
+    "body": "Bu sayfayı bulamadık. Taşınmış olabilir ya da bağlantı yanlış yazılmış olabilir.",
+    "home": "Ana sayfaya git",
+    "songs": "İlahilere göz at"
   }
 }

@@ -1,0 +1,44 @@
+name: Production smoke test
+
+# Checks https://gracechords.com after every production deploy and every 6 hours
+# (domain, TLS expiry, redirects, security headers, key routes, sitemap,
+# deep-link files, crash-report endpoint). A failed scheduled run emails the
+# repo owner, so this doubles as a free uptime / certificate monitor.
+# Script: apps/web/scripts/smoke-prod.mjs (run locally with `npm run smoke:prod -w @gracechords/web`).
+
+on:
+  # Cloudflare Pages posts a "Cloudflare Pages" check run on each commit it builds.
+  check_run:
+    types: [completed]
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name != 'check_run' || (
+        github.event.check_run.name == 'Cloudflare Pages' &&
+        github.event.check_run.conclusion == 'success' &&
+        github.event.check_run.check_suite.head_branch == 'main'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Smoke test production
+        # No install needed — the script uses only Node built-ins.
+        run: node apps/web/scripts/smoke-prod.mjs

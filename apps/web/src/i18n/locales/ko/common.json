@@ -43,5 +43,6 @@
       "message": "GraceChords가 App Store와 Google Play에 출시되었습니다.",
       "cta": "앱 받기"
     }
-  }
+  },
+  "offline": "오프라인 상태입니다. 이미 열어 본 페이지는 계속 사용할 수 있으며, 새 콘텐츠는 다시 연결되면 불러옵니다."
 }

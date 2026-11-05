@@ -33,9 +33,8 @@
         }
       }
     </script>
-    <!-- Preconnect to Supabase so DNS + TLS happen in parallel with HTML parsing -->
-    <link rel="preconnect" href="https://tndnjetevtgohunqpzbi.supabase.co" crossorigin />
-    <link rel="dns-prefetch" href="https://tndnjetevtgohunqpzbi.supabase.co" />
+    <!-- Supabase preconnect + dns-prefetch are injected from VITE_SUPABASE_URL
+         by the inject-supabase-preconnect plugin in vite.config.js. -->
     <!-- Favicon bundle (Signal Blue brand mark; path-versioned under /icons/v2 to bust caches) -->
     <link rel="icon" type="image/svg+xml" href="/icons/v2/favicon.svg">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/v2/apple-touch-icon.png">
