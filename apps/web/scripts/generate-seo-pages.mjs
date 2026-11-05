@@ -243,7 +243,10 @@ function insertHeadTags(html, { description, canonical, ld }){
     tags.push(`<link rel="canonical" href="${escapeAttr(canonical)}" />`)
   }
   if (ld) {
-    tags.push(`<script type="application/ld+json">${JSON.stringify(ld)}</script>`)
+    // JSON.stringify leaves "<" alone, so a title containing "</script>" would
+    // close this tag and inject markup. \u003c is the same character to a JSON
+    // parser but can't end the script element.
+    tags.push(`<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`)
   }
   if (!tags.length) return html
   return html.replace(/<\/head>/i, `    ${tags.join('\n    ')}\n  </head>`)
@@ -328,7 +331,14 @@ function buildPostLd(title, url, item){
 // escaped into a <pre>, so editor markup never reaches the page unsanitised.
 function htmlToText(html){
   let text = String(html || '').replace(/\r\n/g, '\n')
-  text = text.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
+  // Repeat until stable so a nested "<scr<script></script>ipt>" can't leave a
+  // script block behind. (Safety doesn't depend on this — every caller escapes
+  // the result — it keeps script/style text out of the SEO copy.)
+  let previous
+  do {
+    previous = text
+    text = text.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
+  } while (text !== previous)
   text = text.replace(/<br\s*\/?>/gi, '\n')
   text = text.replace(/<\/(p|div|h[1-6]|li|blockquote|pre|tr)>/gi, '\n\n')
   text = text.replace(/<[^>]+>/g, '')
