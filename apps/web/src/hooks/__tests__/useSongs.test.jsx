@@ -50,6 +50,8 @@ describe('useSongs', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.songs).toHaveLength(1)
+    // Lyrics are not part of the list; they load on demand.
+    expect(result.current.songs[0].chordpro_content).toBeUndefined()
     expect(result.current.songs[0]).toMatchObject({
       dbId: 'uuid-1',          // UUID kept for FK relationships (starring)
       id: 'abba',              // slug becomes the routing id
@@ -60,7 +62,6 @@ describe('useSongs', () => {
       country: 'US',
       tags: ['worship'],
       youtube: 'https://www.youtube.com/watch?v=abc123', // youtube_id → full URL
-      chordpro_content: 'title: Abba\n[Am]Father',
       filename: 'abba_song.chordpro', // source_filename + .chordpro
       star_count: 3,
       song_group_id: 'group-1',
@@ -127,5 +128,31 @@ describe('useSongs', () => {
     expect(second.result.current.loading).toBe(false)
     expect(second.result.current.songs).toHaveLength(1)
     expect(spies.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves lyrics out of the list query and loads them on demand', async () => {
+    const { chordpro_content, ...listRow } = fullRow
+    const order = vi.fn().mockResolvedValue({ data: [listRow], error: null })
+    const inFn = vi.fn().mockResolvedValue({ data: [{ id: 'uuid-1', chordpro_content }], error: null })
+    const select = vi.fn((cols) => (
+      cols.includes('chordpro_content') ? { in: inFn } : { eq: () => ({ order }) }
+    ))
+    vi.doMock('../../lib/supabase', () => ({ supabase: { from: () => ({ select }) } }))
+    const { useSongs, ensureSongContent, songContent, hasSongContent } = await import('../useSongs')
+
+    const { result } = renderHook(() => useSongs())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(select.mock.calls[0][0]).not.toContain('chordpro_content')
+
+    const song = result.current.songs[0]
+    expect(hasSongContent(song)).toBe(false)
+    await ensureSongContent([song])
+    expect(inFn).toHaveBeenCalledWith('id', ['uuid-1'])
+    expect(songContent(song)).toBe(chordpro_content)
+    // Mounted lists are updated with the loaded lyrics.
+    await waitFor(() => expect(result.current.songs[0].chordpro_content).toBe(chordpro_content))
+
+    await ensureSongContent([song])
+    expect(inFn).toHaveBeenCalledTimes(1)
   })
 })

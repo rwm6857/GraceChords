@@ -5,10 +5,9 @@ import { useTranslation } from 'react-i18next'
 import { compareSongsByTitle } from '../utils/songs/sort'
 import { searchSongs } from '../utils/songs/search'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, ensureSongContent, songContent } from '../hooks/useSongs'
 import { usePersonalSongs } from '../hooks/usePersonalSongs'
 import { Button, Chip, Input, SongCard } from '../components/ui/layout-kit'
-import { publicUrl } from '../utils/network/publicUrl'
 import { isIncompleteSong } from '../utils/songs/songStatus'
 import { buildTagMap, canonicalizeTags, filterDisplayTags, isHiddenTag, normalizeTagKey, tagLabelFromKey } from '../utils/songs/tags'
 import {
@@ -151,7 +150,6 @@ export default function Songs(){
   }, [communityOnly])
 
   const [lyricsCache, setLyricsCache] = useState({})
-  const fetchingRef = useRef(new Set())
 
 
   const selectedTagsKey = selectedTags.join('|')
@@ -166,30 +164,26 @@ export default function Songs(){
     return tags.includes(COMMUNITY_KEY)
   }, [communityOnly, COMMUNITY_KEY])
 
+  // Lyrics aren't part of the song list; load them (one request) the first
+  // time a lyrics search runs.
   useEffect(() => {
     if (!lyricsOn || qLower.length === 0) return
-    const shouldFetch = items
+    const pending = items
       .filter(tagPass)
       .filter(communityPass)
-      .filter((s) => !(s.id in lyricsCache) && !fetchingRef.current.has(s.id))
-      .slice(0, 200)
-    if (!shouldFetch.length) return
+      .filter((s) => !(s.id in lyricsCache))
+    if (!pending.length) return
 
     let cancelled = false
-    ;(async () => {
+    ensureSongContent(pending).then(() => {
+      if (cancelled) return
       const next = {}
-      for (const s of shouldFetch) {
-        try {
-          fetchingRef.current.add(s.id)
-          const txt = await fetch(publicUrl(`songs/${s.filename}`)).then((r) => r.text())
-          if (cancelled) return
-          next[s.id] = (txt || '').toLowerCase()
-        } catch {}
+      // Drop inline chords so a phrase matches across them ("[G]Whatever may [D]pass").
+      for (const s of pending) {
+        next[s.id] = songContent(s).replace(/\[[^\]]*\]/g, '').replace(/\s+/g, ' ').toLowerCase()
       }
-      if (!cancelled && Object.keys(next).length) {
-        setLyricsCache((prev) => ({ ...prev, ...next }))
-      }
-    })()
+      setLyricsCache((prev) => ({ ...prev, ...next }))
+    })
     return () => { cancelled = true }
   // lyricsCache is intentionally omitted: this effect updates it, including it would loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps

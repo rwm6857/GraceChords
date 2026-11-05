@@ -17,7 +17,7 @@ import { transposeInstrumental, formatInstrumental } from '../utils/songs/instru
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, useSongContent, prefetchSongContentBySlug } from '../hooks/useSongs'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
 import PushToTelegramButton from '../components/PushToTelegramButton'
 import { showToast } from '../utils/app/toast'
@@ -107,10 +107,14 @@ export default function SongView(){
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const personalParam = searchParams.get('p')
-  const { songs } = useSongs()
+  const { songs, loading: songsLoading } = useSongs()
   const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
   const catalogEntry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+  // Lyrics aren't in the song list. Start fetching this song's by its URL slug
+  // right away, in parallel with the list, then make sure by dbId once known.
+  useEffect(() => { prefetchSongContentBySlug(id) }, [id])
+  useSongContent(catalogEntry ? [catalogEntry] : [])
 
   // Read-only personal draft mode: /song/...?p=<personal_songs.id>. Fetched
   // per-view (owner-scoped by RLS); synthesized into the same entry shape the
@@ -274,8 +278,6 @@ export default function SongView(){
     }
   }, [entry?.chordpro_content, entry?.title, entry?.originalKey])
 
-  // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
-
   // check for PPTX slides
   useEffect(() => {
     if (!entry) return
@@ -285,7 +287,7 @@ export default function SongView(){
     setPptxUrl(url)
     let cancelled = false
     async function check(){
-      const ok = await headOk(url, entry.id)
+      const ok = await headOk(`${url}?probe`, entry.id)
       if (cancelled || !ok) return
       setHasPptx(true)
     }
@@ -340,8 +342,9 @@ export default function SongView(){
   )
 
   if(!entry){
-    // Don't flash "not found" while a personal draft is still being fetched.
-    if (personalParam && !personalRow) {
+    // Don't flash "not found" while the catalog or a personal draft is still
+    // being fetched.
+    if (songsLoading || (personalParam && !personalRow)) {
       return (
         <div className="container">
           {helmet}

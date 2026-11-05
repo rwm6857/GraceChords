@@ -65,7 +65,16 @@ if (songsError) {
   process.exit(1)
 }
 
-const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
+const { data: posts, error: postsError } = await supabase
+  .from('posts')
+  .select('slug, title, excerpt, content, tags, published_at, updated_at')
+  .eq('status', 'published')
+  .order('published_at', { ascending: false })
+
+if (postsError) {
+  console.error('Supabase posts query failed:', postsError.message)
+  process.exit(1)
+}
 
 // The home-hero preload (vite.config.js `inject-lcp-preload`) only helps `/`.
 // Every page generated here is another route, where it would spend ~20-60 KiB
@@ -73,14 +82,23 @@ const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.j
 const template = (await fs.readFile(templatePath, 'utf8'))
   .replace(/\s*<link rel="preload" as="image"[^>]*dashboard-hero[^>]*>/, '')
 
+// Song pages render lyrics in Noto Sans and chords in Noto Sans Mono Bold, but
+// the browser only discovers those fonts once React has fetched the song and
+// rendered it, so the text first paints in a fallback font and then swaps,
+// shifting every block below it (CLS ~0.1). Preloading the Latin subsets (see
+// src/styles/fonts.css) makes them arrive before that first render.
+const SONG_FONT_PRELOADS = ['NotoSans-Regular-latin', 'NotoSansMono-Bold-latin']
+  .map((name) => `<link rel="preload" href="/fonts/${name}.woff2" as="font" type="font/woff2" crossorigin>`)
+  .join('\n    ')
+
 const genericDescription = 'GraceChords provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in GraceChords for the full experience.'
 
 await buildSongPages(songs || [])
-await buildResourcePages(resourcesData?.items || [])
+await buildPostPages(posts || [])
 await buildShellPages([
   { path: '/about', label: 'About' },
   { path: '/songs', label: 'Songs' },
-  { path: '/resources', label: 'Resources' },
+  { path: '/posts', label: 'Posts' },
   { path: '/songbook', label: 'Songbook' },
   { path: '/setlist', label: 'Setlist' },
   { path: '/reading', label: 'Daily Word' },
@@ -93,16 +111,6 @@ await buildLegalPages([
   { path: '/delete-account', title: 'Delete Your Account', file: 'delete-account.md', description: 'How to delete your GraceChords account and the data that is removed.' }
 ])
 await build404Page()
-
-async function readJson(filePath){
-  try {
-    const txt = await fs.readFile(filePath, 'utf8')
-    return JSON.parse(txt)
-  } catch (err) {
-    console.warn(`Warning: failed to read ${filePath}: ${err?.message || err}`)
-    return {}
-  }
-}
 
 async function buildSongPages(items){
   let count = 0
@@ -117,6 +125,7 @@ async function buildSongPages(items){
     const ld = buildSongLd(title, canonical, item)
     const body = buildLyricsBody(title, lyrics)
     const html = buildSeoHtml({ title: `${title} – Lyrics & Chords | GraceChords`, description, canonical, ld, body })
+      .replace('</head>', `    ${SONG_FONT_PRELOADS}\n  </head>`)
     const outPath = path.join(docsDir, 'songs', encoded, 'index.html')
     await writeFile(outPath, html)
     count += 1
@@ -124,37 +133,26 @@ async function buildSongPages(items){
   console.log(`Generated ${count} song SEO page(s).`)
 }
 
-async function buildResourcePages(items){
+async function buildPostPages(items){
   let count = 0
   for (const item of items) {
     const slug = item?.slug
-    if (!slug || !item?.filename) continue
-    const sourcePath = path.join(root, 'public', 'resources', item.filename)
-    let raw = ''
-    try { raw = await fs.readFile(sourcePath, 'utf8') } catch {}
-    const ext = path.extname(item.filename || '').toLowerCase()
-    let content = raw
-    let text = ''
-    let title = ''
-    if (ext === '.md' || ext === '.mdx') {
-      content = stripFrontmatter(raw)
-      text = cleanMarkdownText(content)
-      title = (item?.title || extractMarkdownTitle(content) || slug).trim()
-    } else {
-      text = cleanChordProText(raw)
-      title = (item?.title || extractChordProTitle(raw) || slug).trim()
-    }
-    const description = buildDescription(text, item?.summary || buildResourceFallback(title))
+    if (!slug) continue
+    const title = (item?.title || slug).trim()
+    const text = htmlToText(item?.content)
+    const description = item?.excerpt?.trim() || buildDescription(text, buildPostFallback(title))
     const encoded = encodeURIComponent(slug)
-    const canonical = `${SITE_URL}/resources/${encoded}`
-    const ld = buildResourceLd(title, canonical, item)
+    const canonical = `${SITE_URL}/posts/${encoded}`
+    const ld = buildPostLd(title, canonical, item)
     const body = buildLyricsBody(title, text)
-    const html = buildSeoHtml({ title: `${title} | GraceChords Resources`, description, canonical, ld, body })
-    const outPath = path.join(docsDir, 'resources', encoded, 'index.html')
+    const html = buildSeoHtml({ title: `${title} · GraceChords`, description, canonical, ld, body })
+    // `<slug>.html`, not `<slug>/index.html`, so Pages serves the in-app link
+    // `/posts/<slug>` with a 200 instead of a 308 to `/posts/<slug>/`.
+    const outPath = path.join(docsDir, 'posts', `${encoded}.html`)
     await writeFile(outPath, html)
     count += 1
   }
-  console.log(`Generated ${count} resource SEO page(s).`)
+  console.log(`Generated ${count} post SEO page(s).`)
 }
 
 async function buildShellPages(routes){
@@ -165,7 +163,10 @@ async function buildShellPages(routes){
     const canonical = `${SITE_URL}${route.path}`
     const body = `\n      <main>\n        <h1>GraceChords</h1>\n        <p>Loading...</p>\n      </main>\n    `
     const html = buildSeoHtml({ title: pageTitle, description: genericDescription, canonical, ld: null, body })
-    const outPath = path.join(docsDir, route.path.replace(/^\//, ''), 'index.html')
+    // `<route>.html`, not `<route>/index.html`, for the same reason as the legal
+    // pages below: Pages serves it at `/songs` with a 200 instead of a 308 to
+    // `/songs/` (~750 ms on mobile for every visit from search or the sitemap).
+    const outPath = path.join(docsDir, `${route.path.replace(/^\//, '')}.html`)
     await writeFile(outPath, html)
     count += 1
   }
@@ -242,7 +243,10 @@ function insertHeadTags(html, { description, canonical, ld }){
     tags.push(`<link rel="canonical" href="${escapeAttr(canonical)}" />`)
   }
   if (ld) {
-    tags.push(`<script type="application/ld+json">${JSON.stringify(ld)}</script>`)
+    // JSON.stringify leaves "<" alone, so a title containing "</script>" would
+    // close this tag and inject markup. \u003c is the same character to a JSON
+    // parser but can't end the script element.
+    tags.push(`<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`)
   }
   if (!tags.length) return html
   return html.replace(/<\/head>/i, `    ${tags.join('\n    ')}\n  </head>`)
@@ -291,9 +295,9 @@ function buildSongFallback(title){
   return `Free worship chord sheet and lyrics for ${title}. Transposable and printable on GraceChords for worship teams and churches.`
 }
 
-function buildResourceFallback(title){
+function buildPostFallback(title){
   if (!title) return genericDescription
-  return `${title} on GraceChords. Worship resources, chord sheets, and guides for church musicians and worship teams.`
+  return `${title} on GraceChords. News, guides, and worship resources for church musicians and worship teams.`
 }
 
 function buildSongLd(title, url, item){
@@ -311,57 +315,40 @@ function buildSongLd(title, url, item){
   return ld
 }
 
-function buildResourceLd(title, url, item){
+function buildPostLd(title, url, item){
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: title || 'GraceChords Resource',
-    author: item?.author || 'GraceChords',
-    datePublished: item?.date,
-    dateModified: item?.date,
+    headline: title || 'GraceChords Post',
+    author: 'GraceChords',
+    datePublished: item?.published_at || undefined,
+    dateModified: item?.updated_at || item?.published_at || undefined,
     url
   }
 }
 
-function extractChordProTitle(raw){
-  const match = /\{\s*(?:title|t)\s*:\s*([^}]+)\}/i.exec(raw || '')
-  return match ? match[1].trim() : ''
-}
-
-function cleanChordProText(raw){
-  let text = String(raw || '').replace(/\r\n/g, '\n')
-  text = text.replace(/^\s*#.*$/gm, '')
-  text = text.replace(/\{[^}\n]*\}/g, '')
-  text = text.replace(/\[[^\]]+\]/g, '')
-  text = text.replace(/[ \t]+$/gm, '')
-  text = text.replace(/\n{3,}/g, '\n\n')
-  return text.trim()
-}
-
-function stripFrontmatter(raw){
-  return String(raw || '').replace(/^---[\s\S]*?---\s*/,'')
-}
-
-function extractMarkdownTitle(raw){
-  const match = /^\s*#\s+(.+)$/m.exec(raw || '')
-  return match ? match[1].trim() : ''
-}
-
-function cleanMarkdownText(raw){
-  let text = String(raw || '').replace(/\r\n/g, '\n')
-  text = text.replace(/^:{2,3}youtube[^\n]*$/gim, '')
-  text = text.replace(/```[\s\S]*?```/g, '')
-  text = text.replace(/`[^`]*`/g, '')
-  text = text.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-  text = text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-  text = text.replace(/^>\s?/gm, '')
-  text = text.replace(/^#{1,6}\s*/gm, '')
-  text = text.replace(/\*\*([^*]+)\*\*/g, '$1')
-  text = text.replace(/\*([^*]+)\*/g, '$1')
-  text = text.replace(/__([^_]+)__/g, '$1')
-  text = text.replace(/_([^_]+)_/g, '$1')
+// Post bodies are Tiptap HTML. Reduce them to plain text: the SEO body is
+// escaped into a <pre>, so editor markup never reaches the page unsanitised.
+function htmlToText(html){
+  let text = String(html || '').replace(/\r\n/g, '\n')
+  // Repeat until stable so a nested "<scr<script></script>ipt>" can't leave a
+  // script block behind. (Safety doesn't depend on this — every caller escapes
+  // the result — it keeps script/style text out of the SEO copy.)
+  let previous
+  do {
+    previous = text
+    text = text.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
+  } while (text !== previous)
+  text = text.replace(/<br\s*\/?>/gi, '\n')
+  text = text.replace(/<\/(p|div|h[1-6]|li|blockquote|pre|tr)>/gi, '\n\n')
   text = text.replace(/<[^>]+>/g, '')
-  text = text.replace(/\[[^\]]+\]/g, '')
+  text = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&')
   text = text.replace(/[ \t]+$/gm, '')
   text = text.replace(/\n{3,}/g, '\n\n')
   return text.trim()

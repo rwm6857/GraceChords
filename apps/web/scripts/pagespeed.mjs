@@ -12,7 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ORIGIN = process.env.PAGESPEED_ORIGIN || 'https://gracechords.com'
-const DEFAULT_PATHS = ['/', '/songs', '/songs/10000_reasons/', '/reading', '/resources']
+const DEFAULT_PATHS = ['/', '/songs', '/songs/10000_reasons/', '/reading', '/posts']
 const STRATEGIES = ['mobile', 'desktop']
 const API = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 const OUT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'pagespeed-reports')

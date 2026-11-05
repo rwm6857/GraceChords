@@ -24,7 +24,7 @@ to `-w @gracechords/web`) or from inside `apps/web/`.
 ## `apps/web/`
 The production single-page app.
 
-- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Resources, Worship Mode, Editor Portal, Admin Portal, Daily Word)
+- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Posts, Worship Mode, Editor Portal, Admin Portal, Daily Word)
 - `src/components/auth/RoleGuard.jsx` — route guard; redirects users lacking the required role
 - `src/hooks/useAuth.jsx` — auth context (`role`, `hasMinRole`, `isOwner`, …)
 - `src/hooks/useSongs.jsx` — fetches the song catalog from Supabase (session cache)
@@ -37,7 +37,7 @@ The production single-page app.
 - `src/components/ui/layout-kit/` — reusable UI primitives (Card, Toolbar, Chip, …)
 - `src/features/readings/` — Daily Word (M'Cheyne plan + Bible loader)
 - `src/i18n/` — UI translations (en, tr, ar, es)
-- `public/` — static assets: `wiki/` (this wiki's source), `bible/` (translations manifest + chapter JSON), `fonts/` (UI fonts), `pptx/`, `resources/`, `sitemap.xml`, `robots.txt`
+- `public/` — static assets: `wiki/` (this wiki's source), `bible/` (translations manifest + chapter JSON), `fonts/` (UI fonts), `pptx/`, `sitemap.xml`, `robots.txt`
 - `functions/` — Cloudflare Pages Functions (`bible/`, `pptx/`, `api/` proxies)
 - `scripts/` — SEO/sitemap generation, Bible ingest, wiki sync, i18n check, ChordPro conversion
 - `dist/` — Vite build output for Cloudflare Pages (gitignored, generated)

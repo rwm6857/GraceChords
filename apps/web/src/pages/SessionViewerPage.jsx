@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchSessionByCode, subscribeToSession, parseVerseId, resolveVerseLines } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, useSongContent, songContent } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { useSettings } from '../hooks/useSettings'
 import { buildSongCatalog } from '../utils/songs/songCatalog'
@@ -45,7 +45,7 @@ function readStoredFontPx() {
 // Parse a catalog song's ChordPro into the section shape the renderer consumes.
 // Chords are kept; the render decides per-tier whether to show them.
 function buildSongView(song) {
-  const doc = parseChordProOrLegacy(song.chordpro_content || '')
+  const doc = parseChordProOrLegacy(songContent(song))
   const title = doc?.meta?.title || song.title || song.id
   const sections = (doc.sections || []).map((sec) => ({
     label: sec.label,
@@ -164,16 +164,19 @@ export default function SessionViewer() {
   )
 
   // Resolve + parse the displayed public song from the follower's own catalog.
+  const displayedSong = displayedItem?.kind === 'song'
+    ? catalog?.byId?.get(String(displayedItem.slug)) || null
+    : null
+  const displayedSongReady = useSongContent(displayedSong ? [displayedSong] : [])
   const view = useMemo(() => {
-    if (!displayedItem || displayedItem.kind !== 'song') return null
-    const song = catalog?.byId?.get(String(displayedItem.slug))
-    if (!song) return null
+    const song = displayedSong
+    if (!song || !displayedSongReady) return null
     try {
       return buildSongView(song)
     } catch {
       return null
     }
-  }, [displayedItem, catalog])
+  }, [displayedSong, displayedSongReady])
 
   // Fetch verse content anonymously (cache-first), for every verse item on join
   // and whenever the displayed item is a verse.

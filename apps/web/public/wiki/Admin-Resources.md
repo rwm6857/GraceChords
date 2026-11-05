@@ -31,7 +31,7 @@ The resources editor lets you create, edit, and publish blog-style guides for wo
 - **Slugs**: Use short, kebab-case slugs for stable URLs (e.g., `leading-with-confidence`).
 - **Images**: Upload to Cloudinary via the editor image button; this returns a CDN URL inserted inline.
 - **Embeds**: Paste a YouTube URL directly in the editor; the YouTube extension converts it to an embed.
-- **Draft review**: Posts with `status = draft` are not visible on the public `/resources` page.
+- **Draft review**: Posts with `status = draft` are not visible on the public `/posts` page.
 
 ### Related
 

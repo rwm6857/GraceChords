@@ -19,7 +19,7 @@ export function usePptxAvailability(items, catalog) {
       const slug = pptxSlug(song)
       if (!slug || seen.has(slug)) continue
       seen.add(slug)
-      targets.push({ slug, url: publicUrl(`pptx/${slug}.pptx`) })
+      targets.push({ slug, url: publicUrl(`pptx/${slug}.pptx?probe`) })
     }
 
     Promise.all(targets.map(({ slug, url }) => headOk(url, slug).then((ok) => ({ slug, ok }))))
