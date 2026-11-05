@@ -66,7 +66,7 @@ It checks TLS, the HTTP→HTTPS redirect, security headers, asset caching, key r
 ## 3. Production optimization
 
 **In code**
-- **Assets.** Vite content-hashes everything under `/assets/`. `public/_headers` now serves those with `Cache-Control: public, max-age=31536000, immutable`, while HTML and `sw.js` keep Cloudflare's revalidate-every-time default so deploys take effect immediately. The home hero ships responsive WebP (768/960/1200) with a build-injected preload; the 2.7 MB PNGs are only a `<picture>` fallback for browsers without WebP. Run `ANALYZE=1 npx vite build` (in `apps/web`) for a bundle treemap at `dist/stats.html`.
+- **Assets.** Vite content-hashes everything under `/assets/`. `public/_headers` now serves those with `Cache-Control: public, max-age=31536000, immutable`, while HTML and `sw.js` keep Cloudflare's revalidate-every-time default so deploys take effect immediately. The home hero ships responsive WebP (640–1536) with a build-injected preload; the PNG originals in `src/assets/` are no longer imported, so they never ship. Run `ANALYZE=1 npx vite build` (in `apps/web`) for a bundle treemap at `dist/stats.html`.
 - **Console output.** Production code has no stray `console.log`. The three remaining calls are opt-in PDF traces (`localStorage.pdfFontTrace` / `PDF_TRACE`). `console.error`/`console.warn` are kept on purpose because they help debugging on users' devices.
 - **Security headers** (`public/_headers`): `frame-ancestors 'none'`, `nosniff`, `strict-origin-when-cross-origin`, HSTS (one year; no `includeSubDomains` or `preload` until every subdomain is HTTPS-only), and a `Permissions-Policy` that turns off camera, microphone, geolocation, payment and USB, none of which the web app uses.
 - **SEO.** Per-route `<Helmet>` titles, descriptions, canonicals and Open Graph tags. `generate-seo-pages.mjs` pre-renders `/songs/:id`, `/resources/:slug`, `/privacy`, `/terms` and `/delete-account`, and `generate-sitemap.mjs` writes the sitemap. `robots.txt` now keeps auth, profile, admin and editor routes out of search results.
@@ -74,7 +74,7 @@ It checks TLS, the HTTP→HTTPS redirect, security headers, asset caching, key r
 
 **Test**
 - `curl -sI https://gracechords.com/assets/<any index-*.js>` should show `immutable`.
-- Run <https://pagespeed.web.dev> on `/`, `/songs` and a song page, or Lighthouse in Chrome DevTools at Mobile. Track LCP and CLS.
+- Run `npm run pagespeed -w @gracechords/web` (reads `PAGESPEED_API_KEY` from `.env`), <https://pagespeed.web.dev>, or Lighthouse in Chrome DevTools at Mobile. Track LCP and CLS.
 - Responsive: check Home, Songs, a song, Setlist and Songbook at 375 px and 768 px in DevTools device mode. There should be no horizontal scrolling.
 - SEO: paste a song URL into <https://search.google.com/test/rich-results> and Facebook's Sharing Debugger.
 

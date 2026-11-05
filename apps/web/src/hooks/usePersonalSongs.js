@@ -5,7 +5,9 @@
 // paths that read that cache.
 
 import { useEffect, useState } from 'react'
-import { fetchPersonalSongs } from '@gracechords/core'
+// Subpath, not the package barrel, to keep the Bible reading plan JSON out of
+// the entry chunk (see SongViewPage).
+import { fetchPersonalSongs } from '@gracechords/core/songs/personalSongsRepo'
 import { supabase } from '../lib/supabase'
 
 export function usePersonalSongs() {

@@ -33,9 +33,9 @@ const ManagePostsPage = lazyRoute(() => import('./pages/portal/ManagePostsPage')
 const EditPostPage = lazyRoute(() => import('./pages/portal/EditPostPage'))
 import NavBar from './components/ui/Navbar'
 import RoleGuard from './components/auth/RoleGuard'
-import WorshipMode from './pages/WorshipModePage'
+const WorshipMode = lazyRoute(() => import('./pages/WorshipModePage'))
 import ErrorBoundary from './components/ErrorBoundary'
-import WorshipSetRoute from './pages/WorshipSetRoutePage'
+const WorshipSetRoute = lazyRoute(() => import('./pages/WorshipSetRoutePage'))
 import Toast from './components/Toast'
 import AnnouncementStrip from './components/AnnouncementStrip'
 import SiteDisclaimer from './components/SiteDisclaimer'

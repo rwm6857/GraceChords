@@ -9,7 +9,7 @@ import { SettingsProvider } from './hooks/useSettings'
 import { initTheme } from './utils/app/theme'
 import { isChunkLoadError, reloadOnceForStaleChunk } from './utils/app/lazyRoute'
 import { installGlobalErrorReporting } from './utils/app/errorReporter'
-import './i18n'
+import { i18nReady } from './i18n'
 
 function bootstrapRouteFromQuery(){
   if (typeof window === 'undefined') return
@@ -147,9 +147,9 @@ installGlobalErrorReporting()
 // Global styles
 import './styles/index.css'
 
-// Variable font already covers all weights; nothing extra to load after idle
-
-createRoot(document.getElementById('root')).render(
+// A non-English visitor's locale chunk is fetched during i18n init; wait for it
+// so the first render isn't raw translation keys. English resolves at once.
+i18nReady.finally(() => createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter>
@@ -163,4 +163,4 @@ createRoot(document.getElementById('root')).render(
       </BrowserRouter>
     </HelmetProvider>
   </React.StrictMode>
-)
+))
