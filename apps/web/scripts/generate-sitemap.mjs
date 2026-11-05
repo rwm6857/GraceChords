@@ -62,7 +62,15 @@ if (songsError) {
   process.exit(1)
 }
 
-const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
+const { data: posts, error: postsError } = await supabase
+  .from('posts')
+  .select('slug')
+  .eq('status', 'published')
+
+if (postsError) {
+  console.error('Supabase posts query failed:', postsError.message)
+  process.exit(1)
+}
 
 const staticRoutes = [
   '/', // home
@@ -71,22 +79,12 @@ const staticRoutes = [
   '/setlist',
   '/songbook',
   '/reading',
-  '/resources',
+  '/posts',
   '/bundle',
   '/download'
 ]
 
 const urlSet = new Set()
-
-async function readJson(filePath){
-  try {
-    const txt = await fs.readFile(filePath, 'utf8')
-    return JSON.parse(txt)
-  } catch (err) {
-    console.warn(`Warning: failed to read ${filePath}: ${err?.message || err}`)
-    return {}
-  }
-}
 
 function encodeSlug(raw){
   if (!raw) return ''
@@ -107,10 +105,9 @@ for (const song of (songs || [])) {
   addUrl(loc)
 }
 
-for (const res of (resourcesData?.items || [])) {
-  if (!res?.slug) continue
-  const loc = `/resources/${encodeSlug(res.slug)}`
-  addUrl(loc)
+for (const post of (posts || [])) {
+  if (!post?.slug) continue
+  addUrl(`/posts/${encodeSlug(post.slug)}`)
 }
 
 const xml = [
