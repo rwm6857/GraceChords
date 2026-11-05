@@ -1,0 +1,90 @@
+name: Database backup
+
+# Nightly logical backup of the Supabase database to a PRIVATE Cloudflare R2
+# bucket. The project is on Supabase's free tier, which has no restorable
+# backups, and supabase/migrations/ cannot rebuild the schema from scratch, so
+# this is the only recovery path.
+#
+# Follows Supabase's documented CLI backup procedure: roles, schema and data as
+# three files. The data dump includes auth.users (emails and password hashes),
+# so the bucket must stay private and these files must never be uploaded as
+# GitHub artifacts: this repository is public.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_DB_URL       Session pooler connection string (IPv4; the direct
+#                         connection is IPv6-only and unreachable from Actions)
+#   R2_ACCOUNT_ID         Cloudflare account id
+#   R2_ACCESS_KEY_ID      R2 API token key id (Object Read & Write, this bucket only)
+#   R2_SECRET_ACCESS_KEY  R2 API token secret
+#   R2_BACKUP_BUCKET      Bucket name, e.g. gracechords-db-backups
+#
+# Retention is a lifecycle rule on the bucket (Cloudflare dashboard), not here.
+#
+# Restore (into a fresh project), from the unpacked archive:
+#   psql --single-transaction --variable ON_ERROR_STOP=1 \
+#     --file roles.sql --file schema.sql \
+#     --command 'SET session_replication_role = replica' \
+#     --file data.sql --dbname "$NEW_DB_URL"
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      R2_BUCKET: ${{ secrets.R2_BACKUP_BUCKET }}
+    steps:
+      - name: Check secrets are configured
+        run: |
+          for v in SUPABASE_DB_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_BUCKET; do
+            if [ -z "${!v}" ]; then echo "::error::Missing secret for $v"; exit 1; fi
+          done
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.116.0
+
+      - name: Dump roles, schema and data
+        run: |
+          set -euo pipefail
+          mkdir -p dump
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/data.sql --use-copy --data-only
+
+      - name: Sanity-check the dump
+        run: |
+          set -euo pipefail
+          ls -l dump
+          grep -Eq 'CREATE TABLE (IF NOT EXISTS )?"?public"?\."?songs"?' dump/schema.sql \
+            || { echo "::error::schema.sql has no public.songs table"; exit 1; }
+          grep -Eq 'COPY "?public"?\."?songs"?' dump/data.sql \
+            || { echo "::error::data.sql has no public.songs rows"; exit 1; }
+
+      - name: Upload to R2
+        run: |
+          set -euo pipefail
+          stamp=$(date -u +%Y-%m-%dT%H%MZ)
+          tar -czf "gracechords-db-$stamp.tar.gz" -C dump .
+          aws s3 cp "gracechords-db-$stamp.tar.gz" \
+            "s3://$R2_BUCKET/daily/gracechords-db-$stamp.tar.gz" \
+            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          echo "Uploaded daily/gracechords-db-$stamp.tar.gz ($(du -h gracechords-db-$stamp.tar.gz | cut -f1))"
