@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { vi } from 'vitest'
 
 // Song data comes from Supabase via useSongs(), not the deprecated
@@ -29,9 +30,11 @@ describe('Songbook filters', () => {
   test('filters songs by selected author present in index', async () => {
     setViewport(1024)
     render(
-      <MemoryRouter initialEntries={['/songbook']}>
-        <Songbook />
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/songbook']}>
+          <Songbook />
+        </MemoryRouter>
+      </HelmetProvider>
     )
     const searchInput = await screen.findByPlaceholderText(/search/i)
 
@@ -51,9 +54,11 @@ describe('Songbook filters', () => {
     setViewport(390)
     const user = userEvent.setup()
     render(
-      <MemoryRouter initialEntries={['/songbook']}>
-        <Songbook />
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/songbook']}>
+          <Songbook />
+        </MemoryRouter>
+      </HelmetProvider>
     )
 
     expect(await screen.findByRole('radio', { name: /Add songs/i })).toBeInTheDocument()

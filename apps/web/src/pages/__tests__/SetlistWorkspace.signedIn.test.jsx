@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 
 // Signed-in coverage for the setlist workspace.
 //
@@ -195,13 +196,15 @@ afterEach(() => {
 function renderAt(path) {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/setlists" element={<SetlistWorkspacePage />} />
-        <Route path="/setlists/:id" element={<SetlistWorkspacePage />} />
-        <Route path="/setlist" element={<SetlistWorkspacePage />} />
-      </Routes>
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/setlists" element={<SetlistWorkspacePage />} />
+          <Route path="/setlists/:id" element={<SetlistWorkspacePage />} />
+          <Route path="/setlist" element={<SetlistWorkspacePage />} />
+        </Routes>
+      </MemoryRouter>
+    </HelmetProvider>
   )
   return user
 }

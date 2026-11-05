@@ -1,5 +1,6 @@
 import React from 'react';
 import { isChunkLoadError } from '../utils/app/lazyRoute';
+import { reportError } from '../utils/app/errorReporter';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props){
@@ -12,6 +13,14 @@ export default class ErrorBoundary extends React.Component {
   componentDidCatch(error, info){
     console.error(error, info);
     this.setState({ info });
+    reportError(error, { componentStack: info?.componentStack, source: 'error-boundary' });
+  }
+  componentDidUpdate(prevProps){
+    // A route-level boundary is keyed on the path, so navigating away from a
+    // crashed page clears it instead of leaving the error screen up.
+    if (this.state.error && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ error: null, info: null, copied: false });
+    }
   }
   buildReport(){
     const { error, info } = this.state;
@@ -41,6 +50,8 @@ export default class ErrorBoundary extends React.Component {
           ) : null}
           <p>
             <a href="#" onClick={e=>{e.preventDefault(); window.location.reload();}}>{chunkFailed ? 'Try again' : 'Reload'}</a>
+            {' · '}
+            <a href="/">Go to home page</a>
           </p>
           {/* Error detail is surfaced on-screen so it can be read/screenshotted
               on devices without a developer console (e.g. mobile browsers). */}

@@ -16,7 +16,8 @@
     "convert:short": "node scripts/convertChordProAll.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
     "generate:licenses": "node scripts/generate-licenses.mjs",
-    "i18n:check": "node scripts/i18n-check.mjs"
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "smoke:prod": "node scripts/smoke-prod.mjs"
   },
   "dependencies": {
     "@gracechords/core": "*",

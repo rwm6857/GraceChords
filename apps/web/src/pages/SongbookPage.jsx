@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 import { useSongs } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -304,6 +305,7 @@ export default function Songbook() {
 
   return (
     <PageContainer className="is-songbook">
+      <Helmet><title>{`${t('songbook.title')} · GraceChords`}</title></Helmet>
       <Busy busy={busy} />
       <PageHeader
         title={t('songbook.title')}

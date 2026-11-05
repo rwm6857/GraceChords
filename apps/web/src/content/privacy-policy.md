@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** July 4th, 2026
+**Effective date:** November 5th, 2026
 **Applies to:** the GraceChords website ([https://gracechords.com](https://gracechords.com)) and the GraceChords mobile app (collectively, the "Service").
 
 GraceChords ("GraceChords," "we," "us," or "our") is a free, non-commercial worship tool operated by Ryan Moore, an individual based in the U.S. state of Georgia. We take your privacy seriously and collect as little information as the Service needs to work. This policy explains what we collect, why, and the choices and rights you have.
@@ -20,7 +20,11 @@ You may create an account directly (email + password) or through **Sign in with 
 
 **Content you create.** To provide the Service, we store the content you make within it — for example, your setlists, song key preferences, view settings, and reading-plan progress. This is stored so it's available to you across your devices.
 
-**Technical information (infrastructure).** We do not run analytics or tracking. However, like any online service, our hosting and infrastructure providers automatically process limited technical data — such as your IP address and standard request logs — to deliver content, keep the Service secure, and prevent abuse. This is not used to profile or track you, and we do not build advertising or behavioral profiles from it.
+**Technical information (infrastructure).** Like any online service, our hosting and infrastructure providers automatically process limited technical data — such as your IP address and standard request logs — to deliver content, keep the Service secure, and prevent abuse. This is not used to profile or track you, and we do not build advertising or behavioral profiles from it.
+
+**Website visit statistics.** On the website we use Cloudflare Web Analytics to count page views, see which pages are popular, and measure how quickly pages load. It is cookieless: it does not set cookies, use local storage, or fingerprint your device, and it does not follow you across other sites. We see only aggregate totals (for example, page views per day by country or browser), never individual visitors. The mobile app does not use it.
+
+**Crash reports.** When the website hits an unexpected error, it sends us a short crash report so we can fix the bug: the error message and technical trace, the page's path (without any query string or link fragment), your browser's name and version, and which version of the site you were running. Crash reports do not include your name, email, account ID, or anything you've written, and we use them only to fix problems. They are kept for up to 90 days.
 
 **Microphone (instrument tuner).** The mobile app includes a guitar tuner that uses your device's microphone **solely for real-time, on-device pitch detection**. The audio is analyzed in memory on your device and immediately discarded — it is **never recorded, stored, or transmitted**, and no audio ever leaves your device. The microphone is active only while the tuner screen is open, and the app asks for microphone permission only when you first use the tuner. You can revoke this permission at any time in your device settings; the rest of the app works without it.
 
@@ -37,7 +41,7 @@ We do not use analytics cookies, advertising cookies, or third-party tracking co
 
 To be clear about our practices, we do **not**:
 
-- Run analytics or usage tracking
+- Track you across other websites or apps, or build a profile of your activity
 - Show advertising of any kind
 - Use remarketing or retargeting services
 - Sell, rent, or share your personal information
@@ -78,7 +82,7 @@ We rely on a small number of trusted providers to run the Service. They process 
 | Provider | Purpose |
 |---|---|
 | **Supabase** | Account authentication and database (stores your account info and content) |
-| **Cloudflare** | Website and app hosting, content storage/delivery, and backend functions |
+| **Cloudflare** | Website and app hosting, content storage/delivery, backend functions, and cookieless website visit statistics |
 | **Google** | Authentication, only if you choose "Sign in with Google" |
 | **Apple** | Authentication, only if you choose "Sign in with Apple" |
 | **Telegram** | Delivering exports to Telegram, only if you choose to link your Telegram account |

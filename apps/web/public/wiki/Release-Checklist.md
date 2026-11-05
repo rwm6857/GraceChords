@@ -32,6 +32,7 @@ Push to `main`. **Cloudflare Pages** automatically builds from `dist/` and deplo
 No manual deploy step is required. Watch the build status in the Cloudflare Pages dashboard.
 
 ## 5) Verify on Production
+- Check the **Production smoke test** workflow is green, or run `npm run smoke:prod -w @gracechords/web` (see [[Production-Readiness]])
 - Hard refresh the site (Ctrl+Shift+R)
 - Confirm edited songs load (Supabase network-first)
 - Export a PDF to verify visuals (title 26pt, key 16pt gray, lyric/chord ≥12pt)

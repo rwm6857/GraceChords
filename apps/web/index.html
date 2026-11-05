@@ -33,9 +33,8 @@
         }
       }
     </script>
-    <!-- Preconnect to Supabase so DNS + TLS happen in parallel with HTML parsing -->
-    <link rel="preconnect" href="https://tndnjetevtgohunqpzbi.supabase.co" crossorigin />
-    <link rel="dns-prefetch" href="https://tndnjetevtgohunqpzbi.supabase.co" />
+    <!-- Supabase preconnect + dns-prefetch are injected from VITE_SUPABASE_URL
+         by the inject-supabase-preconnect plugin in vite.config.js. -->
     <!-- Preload variable font to cut requests and improve LCP -->
     <link
       rel="preload"

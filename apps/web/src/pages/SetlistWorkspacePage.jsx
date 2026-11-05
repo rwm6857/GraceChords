@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Helmet } from 'react-helmet-async'
 import { createSetlist, isVerseId, uniqueName, updateSetlist } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -603,6 +604,7 @@ export default function SetlistWorkspacePage() {
 
   return (
     <PageContainer className="is-setlist-workspace">
+      <Helmet><title>{`${t('setlist.title')} · GraceChords`}</title></Helmet>
       <Toolbar className="gc-set-bar">
         {!isMobile ? (
           <Button

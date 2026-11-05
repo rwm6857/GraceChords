@@ -43,5 +43,6 @@
       "message": "GraceChords ya está en el App Store y Google Play.",
       "cta": "Obtener la app"
     }
-  }
+  },
+  "offline": "Estás sin conexión. Las páginas que ya abriste siguen funcionando; lo nuevo se cargará cuando vuelvas a conectarte."
 }

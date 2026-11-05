@@ -28,6 +28,7 @@ Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc
 | `wiki-sync.yml` | Push to `main` touching `apps/web/public/wiki/**` | Publishes the wiki source to the GitHub Wiki (needs `WIKI_PUSH_TOKEN`) |
 | `feature-post.yml` | PR merged | Announces `feat(` PRs (or ones labelled `post` / containing `#post`) to the Telegram dev channel |
 | `codeqL.yml` | Schedule / push | CodeQL security scanning |
+| `prod-smoke.yml` | "Cloudflare Pages" check on `main` completes; every 6 h | Runs `apps/web/scripts/smoke-prod.mjs` against gracechords.com (TLS, redirects, headers, routes, sitemap, crash endpoint). See [[Production-Readiness]] |
 
 ## Cloudflare Workers (separate deploy)
 Workers in `workers/` are deployed independently via Wrangler:

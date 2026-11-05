@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+# Account and auth flows have nothing to index and can carry one-time tokens.
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /auth/
+Disallow: /app/
+Disallow: /profile
+Disallow: /admin
+Disallow: /editor
+Disallow: /portal/
 
 Sitemap: https://gracechords.com/sitemap.xml
