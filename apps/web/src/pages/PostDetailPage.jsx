@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import DOMPurify from 'dompurify'
 import { fetchPostBySlug } from '../hooks/usePosts'
+import { cloudinaryUrl } from '../utils/media/cloudinary'
 import '../styles/posts.css'
 
 // TipTap-authored posts may include YouTube/Vimeo embeds. Strip any iframe whose
@@ -135,9 +136,10 @@ export default function PostDetailPage() {
       {post.featured_image_url && (
         <div className="gc-post-detail__hero">
           <img
-            src={post.featured_image_url}
+            src={cloudinaryUrl(post.featured_image_url, 1200)}
             alt=""
             className="gc-post-detail__hero-img"
+            decoding="async"
           />
         </div>
       )}

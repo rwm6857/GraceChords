@@ -18,6 +18,8 @@ export default function SpriteAvatar({ sprite, size = 'md', className = '' }) {
         alt=""
         width={px}
         height={px}
+        loading="lazy"
+        decoding="async"
       />
     </div>
   )
