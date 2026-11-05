@@ -153,6 +153,12 @@
         "projectId": "3be270a3-166a-492a-a4ec-c95f442175d7"
       }
     },
-    "owner": "nohoot23"
+    "owner": "nohoot23",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3be270a3-166a-492a-a4ec-c95f442175d7"
+    }
   }
 }
