@@ -40,3 +40,12 @@ describe('resolveInitialPassageIndex', () => {
     }
   })
 })
+
+describe('one-chapter books in the plan', () => {
+  it('reads all of Philemon on November 5, not just verse 1', () => {
+    const passages = expandReadings(getPlanForDate(new Date(2026, 10, 5)).readings)
+    expect(passages.find((p) => p.bookNumber === 57)).toEqual({
+      bookNumber: 57, book: 'Philemon', chapter: 1, range: null,
+    })
+  })
+})

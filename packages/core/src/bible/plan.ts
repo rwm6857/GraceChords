@@ -4,6 +4,7 @@
 // song library share one book/reference vocabulary.
 
 import { bookNumberToName, parseVerseReference } from '../songs/verseRef'
+import { chaptersInBook } from './chapterCounts'
 import planData from './mcheyne.plan.json'
 import type { Passage, PlanEntry, PlanReading } from './types'
 
@@ -95,6 +96,13 @@ export function expandReading(raw: RawPlanReading): Passage[] {
 
   const book = bookNumberToName(normalized.book)
   if (!book) return []
+  // The verse parser reads a bare number on a one-chapter book as a VERSE
+  // ("Jude 24" in a song's references), so "Philemon 1" would expand to
+  // Philemon 1:1. The plan is chapter-based: a bare "1" there is the whole
+  // book.
+  if (chaptersInBook(normalized.book) === 1 && normalized.ref === '1') {
+    return [{ bookNumber: normalized.book, book, chapter: 1, range: null }]
+  }
   const parsed = parseVerseReference(`${book} ${normalized.ref}`)
   if (parsed.error || !parsed.segments) return []
 
