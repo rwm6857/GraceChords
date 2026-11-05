@@ -50,6 +50,13 @@ export async function onRequest(context) {
     )
   }
 
+  // `HEAD ?probe` is an existence check (Song Viewer, setlist): answer a missing
+  // deck with 204 instead of 404, which browsers log as a console error on
+  // every song that simply has no slides. headOk() reads 204 as "absent".
+  if (r2Response.status === 404 && request.method === 'HEAD' && new URL(request.url).searchParams.has('probe')) {
+    return new Response(null, { status: 204, headers: corsHeaders() })
+  }
+
   if (!r2Response.ok) {
     return new Response(r2Response.body, {
       status: r2Response.status,
