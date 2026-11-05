@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { fetchPersonalSongById } from '@gracechords/core'
+// Subpath, not the package barrel: the barrel drags the ~54 KiB Bible reading
+// plan JSON into the entry chunk.
+import { fetchPersonalSongById } from '@gracechords/core/songs/personalSongsRepo'
 import { supabase } from '../lib/supabase'
 import { useTranslation } from 'react-i18next'
 import StarButton from '../components/song/StarButton'
+import YouTubeFacade from '../components/song/YouTubeFacade'
 import { Helmet } from 'react-helmet-async'
 import { stepsBetween, transposeSymPrefer } from '../utils/chordpro'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
@@ -739,13 +742,7 @@ export default function SongView(){
           <div className="gc-ref-video">
             <div className="media__label">Reference Video</div>
             <div className="media__frame">
-              <iframe
-                title="Reference Video"
-                src={`https://www.youtube.com/embed/${ytId}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
+              <YouTubeFacade videoId={ytId} title="Reference Video" />
             </div>
           </div>
         )

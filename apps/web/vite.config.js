@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
@@ -10,6 +11,18 @@ import { visualizer } from 'rollup-plugin-visualizer'
 // apps/web/ — packages/ and the repo-root .env live two levels up.
 const coreSrc = fileURLToPath(new URL('../../packages/core/src', import.meta.url))
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
+
+// One chunk per non-English UI locale (src/i18n/index.js loads them lazily),
+// so switching language is a single request rather than one per namespace.
+const localesDir = fileURLToPath(new URL('./src/i18n/locales', import.meta.url))
+const lazyLocaleChunks = Object.fromEntries(
+  readdirSync(localesDir, { withFileTypes: true })
+    .filter(d => d.isDirectory() && d.name !== 'en')
+    .map(d => [
+      `i18n-${d.name}`,
+      readdirSync(`${localesDir}/${d.name}`).filter(f => f.endsWith('.json')).map(f => `${localesDir}/${d.name}/${f}`),
+    ])
+)
 
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
 
@@ -105,6 +118,7 @@ export default defineConfig({
           'supabase':     ['@supabase/supabase-js'],
           'i18n':         ['i18next', 'react-i18next'],
           'helmet':       ['react-helmet-async'],
+          ...lazyLocaleChunks,
         },
       },
     },
