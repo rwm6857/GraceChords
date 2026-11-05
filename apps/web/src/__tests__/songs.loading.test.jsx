@@ -7,6 +7,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const songsState = vi.hoisted(() => ({ value: null }))
 
 vi.mock('../hooks/useSongs', () => ({
+  useSongContent: () => true,
+  ensureSongContent: async () => {},
+  songContent: (s) => s?.chordpro_content || '',
+  prefetchSongContentBySlug: () => Promise.resolve(),
   useSongs: () => songsState.value,
 }))
 vi.mock('../hooks/usePersonalSongs', () => ({

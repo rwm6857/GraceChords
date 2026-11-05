@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, ensureSongContent, songContent } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { stepsBetween, transposeSym, transposeSymPrefer, KEYS, keyRoot, formatKey } from '../utils/chordpro'
 import { formatKeyDisplay } from '../utils/chordpro/solfege'
 import { useChordStyle } from '../hooks/useSettings'
 import KeySelector from '../components/KeySelector'
+import Busy from '../components/Busy'
 import { applyTheme, currentTheme, toggleTheme } from '../utils/app/theme'
 import { Sun, Moon, PlusIcon, OneColIcon, TwoColIcon, EyeIcon, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RemoveIcon, SlidersIcon, GearIcon, PlayIcon, PauseIcon, ResetIcon } from '../components/Icons'
 import { ChordLine, InstrumentalRow, VerseView } from '../components/song/ChordRender'
@@ -48,6 +49,9 @@ export default function WorshipMode(){
   )
 
   const [songs, setSongs] = useState([]) // [{ id, title, baseKey, sections, type }]
+  // False until the set has been built once (catalog + lyrics fetched), so the
+  // stage shows a spinner instead of an empty screen while it loads.
+  const [setBuilt, setSetBuilt] = useState(false)
   const [idx, setIdx] = useState(0)
   const [transpose, setTranspose] = useState(0)
   const [songOffsets, setSongOffsets] = useState([]) // per-song current offsets (semitones)
@@ -375,6 +379,10 @@ export default function WorshipMode(){
         return outNums
       }
 
+      // Lyrics are fetched on demand; get the whole set's in one request.
+      await ensureSongContent(ids.map(id => allSongsById.get(String(id))))
+      if (cancelled) return
+
       for (const id of ids) {
         if (isVerseId(id)) {
           const parsed = parseVerseId(id)
@@ -411,7 +419,7 @@ export default function WorshipMode(){
         const s = allSongsById.get(String(id))
         if (!s) continue
         try {
-          const txt = s.chordpro_content || ''
+          const txt = songContent(s)
           const doc = parseChordProOrLegacy(txt)
           const title = doc?.meta?.title || s.title || s.id
           const baseKey = doc?.meta?.key || doc?.meta?.originalkey || s.originalKey || 'C'
@@ -482,6 +490,7 @@ export default function WorshipMode(){
         }
 
         setSongs(out)
+        setSetBuilt(true)
         setBaseOffsets(baseOffs)
         setSongOffsets(offs)
         setIdx(startIdx)
@@ -696,7 +705,8 @@ export default function WorshipMode(){
     try {
       const entry = allSongsById.get(String(idToAdd))
       if (!entry) return
-      const txt = entry.chordpro_content || ''
+      await ensureSongContent([entry])
+      const txt = songContent(entry)
       const doc = parseChordProOrLegacy(txt)
       const title = doc?.meta?.title || entry.title || entry.id
       const baseKey = doc?.meta?.key || doc?.meta?.originalkey || entry.originalKey || 'C'
@@ -1048,7 +1058,7 @@ export default function WorshipMode(){
                 ))}
               </div>
             )
-          ) : null}
+          ) : (catalogLoading || !setBuilt) ? <Busy busy /> : null}
         </div>
 
         {/* Toolbar */}

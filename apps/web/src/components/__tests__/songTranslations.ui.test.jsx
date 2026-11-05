@@ -32,6 +32,10 @@ const songMock = vi.hoisted(() => ({
 }))
 
 vi.mock('../../hooks/useSongs', () => ({
+  useSongContent: () => true,
+  ensureSongContent: async () => {},
+  songContent: (s) => s?.chordpro_content || '',
+  prefetchSongContentBySlug: () => Promise.resolve(),
   useSongs: () => ({ songs: songMock.songs, loading: false }),
 }))
 
