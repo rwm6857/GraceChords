@@ -73,6 +73,15 @@ const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.j
 const template = (await fs.readFile(templatePath, 'utf8'))
   .replace(/\s*<link rel="preload" as="image"[^>]*dashboard-hero[^>]*>/, '')
 
+// Song pages render lyrics in Noto Sans and chords in Noto Sans Mono Bold, but
+// the browser only discovers those fonts once React has fetched the song and
+// rendered it, so the text first paints in a fallback font and then swaps,
+// shifting every block below it (CLS ~0.1). Preloading the Latin subsets (see
+// src/styles/fonts.css) makes them arrive before that first render.
+const SONG_FONT_PRELOADS = ['NotoSans-Regular-latin', 'NotoSansMono-Bold-latin']
+  .map((name) => `<link rel="preload" href="/fonts/${name}.woff2" as="font" type="font/woff2" crossorigin>`)
+  .join('\n    ')
+
 const genericDescription = 'GraceChords provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in GraceChords for the full experience.'
 
 await buildSongPages(songs || [])
@@ -117,6 +126,7 @@ async function buildSongPages(items){
     const ld = buildSongLd(title, canonical, item)
     const body = buildLyricsBody(title, lyrics)
     const html = buildSeoHtml({ title: `${title} – Lyrics & Chords | GraceChords`, description, canonical, ld, body })
+      .replace('</head>', `    ${SONG_FONT_PRELOADS}\n  </head>`)
     const outPath = path.join(docsDir, 'songs', encoded, 'index.html')
     await writeFile(outPath, html)
     count += 1
@@ -165,7 +175,10 @@ async function buildShellPages(routes){
     const canonical = `${SITE_URL}${route.path}`
     const body = `\n      <main>\n        <h1>GraceChords</h1>\n        <p>Loading...</p>\n      </main>\n    `
     const html = buildSeoHtml({ title: pageTitle, description: genericDescription, canonical, ld: null, body })
-    const outPath = path.join(docsDir, route.path.replace(/^\//, ''), 'index.html')
+    // `<route>.html`, not `<route>/index.html`, for the same reason as the legal
+    // pages below: Pages serves it at `/songs` with a 200 instead of a 308 to
+    // `/songs/` (~750 ms on mobile for every visit from search or the sitemap).
+    const outPath = path.join(docsDir, `${route.path.replace(/^\//, '')}.html`)
     await writeFile(outPath, html)
     count += 1
   }
