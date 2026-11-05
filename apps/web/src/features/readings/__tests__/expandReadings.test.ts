@@ -4,6 +4,20 @@ import { expandReading, expandReadings } from '../expandReadings'
 import { normalizePlanReading } from '../planReading'
 
 describe('expandReadings', () => {
+  it('expands a one-chapter book plan reading to the whole chapter, not verse 1', () => {
+    for (const [bookNumber, book] of [[31, 'Obadiah'], [57, 'Philemon'], [63, '2 John'], [64, '3 John'], [65, 'Jude']] as const) {
+      expect(expandReading({ book: bookNumber, ref: '1' })).toEqual([
+        { bookNumber, book, chapter: 1, range: null },
+      ])
+    }
+  })
+
+  it('still treats an explicit verse range on a one-chapter book as verses', () => {
+    expect(expandReading('Jude 3-4')).toEqual([
+      { bookNumber: 65, book: 'Jude', chapter: 1, range: { start: 3, end: 4 } },
+    ])
+  })
+
   it('keeps numbered-book references like 1 Corinthians', () => {
     const passages = expandReading('1 Corinthians 9')
     expect(passages).toEqual([
