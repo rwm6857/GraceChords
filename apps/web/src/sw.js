@@ -3,29 +3,10 @@
 const swUrl = new URL(self.location.href);
 const CACHE_VERSION = swUrl.searchParams.get('v') || 'dev';
 const CACHE_NAME = `gracechords-${CACHE_VERSION}`;
-const STATIC_ASSETS = [
-  '/fonts/NotoSans-Regular.ttf',
-  '/fonts/NotoSans-Bold.ttf',
-  '/fonts/NotoSans-Italic.ttf',
-  '/fonts/NotoSans-BoldItalic.ttf',
-  '/fonts/NotoSansMono-Regular.ttf',
-  '/fonts/NotoSansMono-Bold.ttf'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset))).then(
-        (results) => {
-          results.forEach((result, i) => {
-            if (result.status === 'rejected') {
-              console.error(`Failed to cache ${STATIC_ASSETS[i]}`, result.reason);
-            }
-          });
-        }
-      )
-    )
-  );
+// Nothing is precached on install. The cache name changes every deploy, so a
+// precache list is re-downloaded by every visitor after each release; fonts
+// and other assets are cached on first use by the fetch handler below instead.
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 

@@ -67,7 +67,11 @@ if (songsError) {
 
 const resourcesData = await readJson(path.join(root, 'src', 'data', 'resources.json'))
 
-const template = await fs.readFile(templatePath, 'utf8')
+// The home-hero preload (vite.config.js `inject-lcp-preload`) only helps `/`.
+// Every page generated here is another route, where it would spend ~20-60 KiB
+// of high-priority bandwidth on an image that is never shown.
+const template = (await fs.readFile(templatePath, 'utf8'))
+  .replace(/\s*<link rel="preload" as="image"[^>]*dashboard-hero[^>]*>/, '')
 
 const genericDescription = 'GraceChords provides free worship chord sheets, lyrics, and resources for churches and worship teams. Open this page in GraceChords for the full experience.'
 

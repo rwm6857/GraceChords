@@ -2,17 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
-import heroDarkPng from '../assets/dashboard-hero-worship-angled.png'
-import heroLightPng from '../assets/dashboard-hero-worship-angled-light.png'
-import heroDarkWebp from '../assets/dashboard-hero-worship-angled.webp'
-import heroDarkWebp1200 from '../assets/dashboard-hero-worship-angled-1200.webp'
-import heroDarkWebp960 from '../assets/dashboard-hero-worship-angled-960.webp'
-import heroDarkWebp768 from '../assets/dashboard-hero-worship-angled-768.webp'
-import heroLightWebp from '../assets/dashboard-hero-worship-angled-light.webp'
-import heroLightWebp1200 from '../assets/dashboard-hero-worship-angled-light-1200.webp'
-import heroLightWebp960 from '../assets/dashboard-hero-worship-angled-light-960.webp'
-import heroLightWebp768 from '../assets/dashboard-hero-worship-angled-light-768.webp'
-import heroLightWebp640 from '../assets/dashboard-hero-worship-angled-light-640.webp'
 import { currentTheme } from '../utils/app/theme'
 import { useSongs } from '../hooks/useSongs'
 import { useAuth } from '../hooks/useAuth'
@@ -27,6 +16,26 @@ import {
   resolveInitialSongLanguage,
 } from '../utils/songs/songCatalog'
 import { searchSongs } from '../utils/songs/search'
+
+// Each variant's `w` descriptor comes from its filename, so the srcset can never
+// drift from the real pixel width. vite.config.js preloads the dark set the same way.
+const heroVariants = import.meta.glob('../assets/dashboard-hero-worship-angled*-*.webp', {
+  eager: true,
+  import: 'default',
+})
+function heroImageFor(re){
+  const variants = Object.entries(heroVariants)
+    .map(([file, url]) => ({ w: Number(file.match(re)?.[1]), url }))
+    .filter(v => v.w)
+  return {
+    src: variants.find(v => v.w === 1200).url,
+    srcSet: variants.map(v => `${v.url} ${v.w}w`).join(', '),
+  }
+}
+const HERO_IMAGE = {
+  dark: heroImageFor(/angled-(\d+)\.webp$/),
+  light: heroImageFor(/-light-(\d+)\.webp$/),
+}
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
@@ -131,21 +140,7 @@ export default function HomeDashboard(){
   const [songAction] = useState(() => pickRandom(songViewQuickActions))
   const [setlistAction] = useState(() => pickRandom(setlistQuickActions))
   const [songbookAction] = useState(() => pickRandom(songbookQuickActions))
-  const heroImgPng = theme === 'light' ? heroLightPng : heroDarkPng
-  const heroSrcSet = theme === 'light'
-    ? [
-        `${heroLightWebp640} 640w`,
-        `${heroLightWebp768} 768w`,
-        `${heroLightWebp960} 960w`,
-        `${heroLightWebp1200} 1200w`,
-        `${heroLightWebp} 1318w`,
-      ].join(', ')
-    : [
-        `${heroDarkWebp768} 768w`,
-        `${heroDarkWebp960} 960w`,
-        `${heroDarkWebp1200} 1200w`,
-        `${heroDarkWebp} 1318w`,
-      ].join(', ')
+  const heroImage = HERO_IMAGE[theme === 'light' ? 'light' : 'dark']
 
   function handleSongAction(){
     if (!songAction) return
@@ -317,16 +312,11 @@ export default function HomeDashboard(){
       </Helmet>
 
       <section className="home-hero">
-        {/* Inline picture keeps hero discoverable for LCP/PSI and lets webp be chosen without extra PNG fetch */}
         <picture className="home-hero__bg" aria-hidden="true">
-          {/* Multiple WebP sizes to avoid "image larger than necessary" and improve mobile LCP */}
-          <source
-            type="image/webp"
-            srcSet={heroSrcSet}
-            sizes="100vw"
-          />
           <img
-            src={heroImgPng}
+            src={heroImage.src}
+            srcSet={heroImage.srcSet}
+            sizes="100vw"
             alt=""
             loading="eager"
             fetchPriority="high"

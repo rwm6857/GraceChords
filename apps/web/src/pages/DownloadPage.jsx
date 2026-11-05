@@ -92,6 +92,7 @@ export default function DownloadPage(){
           alt={t('download.qr.alt')}
           width="176"
           height="176"
+          loading="lazy"
         />
       </section>
 

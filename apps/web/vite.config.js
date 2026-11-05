@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
@@ -11,40 +12,48 @@ import { visualizer } from 'rollup-plugin-visualizer'
 const coreSrc = fileURLToPath(new URL('../../packages/core/src', import.meta.url))
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 
+// One chunk per non-English UI locale (src/i18n/index.js loads them lazily),
+// so switching language is a single request rather than one per namespace.
+const localesDir = fileURLToPath(new URL('./src/i18n/locales', import.meta.url))
+const lazyLocaleChunks = Object.fromEntries(
+  readdirSync(localesDir, { withFileTypes: true })
+    .filter(d => d.isDirectory() && d.name !== 'en')
+    .map(d => [
+      `i18n-${d.name}`,
+      readdirSync(`${localesDir}/${d.name}`).filter(f => f.endsWith('.json')).map(f => `${localesDir}/${d.name}/${f}`),
+    ])
+)
+
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
 
 // Inject a <link rel="preload"> for the hashed home-hero WebP variants so the
 // browser can fetch the LCP image before parsing the JS bundle. The hero file
 // names are content-hashed at build time, so the tag must be generated from the
 // emitted bundle rather than written by hand in index.html.
+//
+// The candidate list must match the <img srcset> in HomeDashboardPage exactly
+// (both read the width from the `-<width>.webp` filename), or the browser picks
+// a different file for each and downloads the hero twice. Only the dark set is
+// preloaded because dark is the default theme. The tag goes right after the
+// viewport <meta>: mobile Chrome evaluates `100vw` against a 980px layout
+// viewport until it has parsed that tag, and would choose an oversized file.
 const injectLcpPreload = {
   name: 'inject-lcp-preload',
   apply: 'build',
   enforce: 'post',
   transformIndexHtml(html, ctx) {
-    const wanted = ['768', '960', '1200']
-    const map = {}
+    const variants = []
     for (const fileName of Object.keys(ctx.bundle || {})) {
       const m = fileName.match(/assets\/dashboard-hero-worship-angled-(\d+)-[A-Za-z0-9_-]+\.webp$/)
-      if (m && wanted.includes(m[1])) map[m[1]] = '/' + fileName
+      if (m) variants.push({ w: Number(m[1]), url: '/' + fileName })
     }
-    const parts = wanted.filter(w => map[w]).map(w => `${map[w]} ${w}w`)
-    if (parts.length === 0) return html
-    return {
-      html,
-      tags: [{
-        tag: 'link',
-        attrs: {
-          rel: 'preload',
-          as: 'image',
-          type: 'image/webp',
-          imagesrcset: parts.join(', '),
-          imagesizes: '100vw',
-          fetchpriority: 'high',
-        },
-        injectTo: 'head-prepend',
-      }],
-    }
+    if (variants.length === 0) return html
+    variants.sort((a, b) => a.w - b.w)
+    const srcset = variants.map(v => `${v.url} ${v.w}w`).join(', ')
+    const tag = `<link rel="preload" as="image" type="image/webp" imagesrcset="${srcset}" imagesizes="100vw" fetchpriority="high">`
+    const viewport = /<meta name="viewport"[^>]*>/
+    if (!viewport.test(html)) throw new Error('inject-lcp-preload: viewport meta not found in index.html')
+    return html.replace(viewport, m => `${m}\n    ${tag}`)
   },
 }
 
@@ -109,6 +118,7 @@ export default defineConfig({
           'supabase':     ['@supabase/supabase-js'],
           'i18n':         ['i18next', 'react-i18next'],
           'helmet':       ['react-helmet-async'],
+          ...lazyLocaleChunks,
         },
       },
     },

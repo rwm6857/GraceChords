@@ -322,6 +322,18 @@ select{
 .media__label{ font-size: var(--gc-font-sub); color: var(--gc-text-secondary); margin-bottom: var(--space-2); }
 .media__frame{ position:relative; aspect-ratio:16/9; border-radius:6px; overflow:hidden }
 .media__frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; display:block }
+.media__facade{ position:absolute; inset:0; width:100%; height:100%; padding:0; border:0; cursor:pointer; background: var(--gc-surface-2); display:block }
+.media__facade img{ width:100%; height:100%; object-fit:cover; display:block }
+.media__play{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  display:flex; align-items:center; justify-content:center;
+  width:64px; height:64px; padding-left: var(--space-1); border-radius: var(--radius-pill);
+  background: var(--gc-overlay); color: var(--primary-text);
+  transition: background var(--gc-dur-quick) var(--gc-ease);
+}
+.media__facade:hover .media__play,
+.media__facade:focus-visible .media__play{ background: var(--gc-primary) }
+.media__facade:focus-visible{ outline: 3px solid var(--gc-primary); outline-offset: -3px }
 
 /* ========== Tags & badges ========== */
 .badge{
