@@ -10,7 +10,7 @@ Songs and posts are served directly from Supabase at runtime — there is no loc
 ## Build-time SEO data
 `npm run build` runs two scripts that need Supabase data to generate static HTML:
 
-- `scripts/generate-seo-pages.mjs` — queries songs and posts via the service role key to create static HTML shells for `/songs/:slug` and `/resources/:slug` (so crawlers can index content before JS runs)
+- `scripts/generate-seo-pages.mjs` — queries songs and posts via the service role key to create static HTML shells for `/songs/:slug` and `/posts/:slug` (so crawlers can index content before JS runs)
 - `scripts/generate-sitemap.mjs` — queries songs and posts to write `public/sitemap.xml`
 
 Both scripts require `SUPABASE_SERVICE_ROLE_KEY` set in the environment.

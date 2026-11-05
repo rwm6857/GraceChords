@@ -1,1 +1,14 @@
 /beta  https://testflight.apple.com/join/ppafuckT  302
+
+# The static /resources library became Supabase posts at /posts. The posts were
+# re-created with underscore slugs, so each old slug is mapped explicitly; any
+# other /resources URL falls through to the posts index. First match wins.
+/resources                                       /posts                                      301
+/resources/                                      /posts                                      301
+/resources/guitar-chord-families                 /posts/guitar_chord_families                301
+/resources/guitar-chord-families/                /posts/guitar_chord_families                301
+/resources/philosophy-of-simplicity-in-worship   /posts/philosophy_of_simplicity_in_worship  301
+/resources/philosophy-of-simplicity-in-worship/  /posts/philosophy_of_simplicity_in_worship  301
+/resources/welcome-to-gracechords                /posts/welcome_to_gracechords               301
+/resources/welcome-to-gracechords/               /posts/welcome_to_gracechords               301
+/resources/*                                     /posts                                      301
