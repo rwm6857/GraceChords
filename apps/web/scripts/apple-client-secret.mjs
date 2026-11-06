@@ -70,4 +70,4 @@ const key = createPrivateKey(values.p8 ? readFileSync(values.p8, 'utf8') : p8Fro
 const signature = sign('sha256', Buffer.from(signingInput), { key, dsaEncoding: 'ieee-p1363' })
 
 process.stdout.write(`${signingInput}.${b64url(signature)}\n`)
-console.error(`Expires ${new Date(exp * 1000).toISOString()} — set a reminder to rotate before then.`)
+console.error(`Expires ${new Date(exp * 1000).toISOString()}.`)
