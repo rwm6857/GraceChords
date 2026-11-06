@@ -42,6 +42,7 @@
   },
   "songStats": {
     "title": "Song Stats",
+    "view": "Ver Song Stats",
     "clear": "Borrar mi historial",
     "hint": "Song Stats registra los repertorios que diriges y las canciones que abres en GraceChords. Tus estadísticas son tuyas: ningún otro usuario de GraceChords puede verlas. Los conteos de canciones de todos los usuarios se suman de forma anónima para ayudarnos a decidir qué construir.",
     "offAlert": {

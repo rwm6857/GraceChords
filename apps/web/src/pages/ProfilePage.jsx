@@ -18,6 +18,7 @@ import '../styles/settings.css'
 export default function ProfilePage() {
   const { t } = useTranslation('profile')
   const { t: tc } = useTranslation('common')
+  const { t: ts } = useTranslation('stats')
   const { session, profile, loading, isLoggedIn, refreshProfile, role, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -414,10 +415,12 @@ export default function ProfilePage() {
         )}
       </section>
 
-      {/* Song Stats — collection controls only; the stats themselves come later. */}
+      {/* Song Stats — the controls, plus the secondary way in to the stats
+          (the primary one is the card on the setlists rail). */}
       <section id="song-stats" className="gc-profile-section">
         <h2>{tc('songStats.title')}</h2>
         <p style={{ margin: 0, color: 'var(--gc-text-secondary)' }}>{tc('songStats.hint')}</p>
+        <Link to="/song-stats" style={{ width: 'fit-content' }}>{ts('view')}</Link>
         <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: 'fit-content' }}>
           <input
             type="checkbox"

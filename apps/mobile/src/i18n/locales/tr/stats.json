@@ -1,0 +1,85 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
+  "title": "Song Stats",
+  "window": {
+    "3m": "3 ay",
+    "12m": "12 ay",
+    "all": "Tüm zamanlar"
+  },
+  "windowLabel": {
+    "3m": "SON 3 AY",
+    "12m": "SON 12 AY",
+    "all": "TÜM ZAMANLAR"
+  },
+  "cardWindow": "Son 12 ay",
+  "summary": {
+    "sets": "Yönetilen setler",
+    "songs": "Söylenen ilahiler",
+    "perSet": "Set başına ilahi",
+    "newSongs": "Yeni ilahiler"
+  },
+  "mostSung": {
+    "title": "EN ÇOK SÖYLENENLER",
+    "count_one": "Bir kez",
+    "count_other": "{{count}} kez",
+    "empty": "Bu dönemde set yok."
+  },
+  "mostOpened": {
+    "title": "EN ÇOK AÇILANLAR",
+    "hint": "Okumak için açtığın ilahiler. Bir ilahiyi açmak onu söylemekle aynı şey değil, bu yüzden bu liste ayrı tutulur.",
+    "count_one": "1 kez açıldı",
+    "count_other": "{{count}} kez açıldı",
+    "empty": "Bu dönemde açılan ilahi yok."
+  },
+  "newSongs": {
+    "title": "SETLERİNE YENİ GİRENLER",
+    "hint": "Bu dönemde ilk kez söylediğin ilahiler.",
+    "firstSung": "İlk kez {{date}}"
+  },
+  "rotation": {
+    "title": "SIK SÖYLENENLER",
+    "hint": "Son {{of}} setinin en az {{min}} tanesinde vardı.",
+    "value": "{{of}} setin {{sets}} tanesinde"
+  },
+  "repeat": {
+    "title": "DEVAM EDENLER",
+    "body": "Son {{count}} setindeki ilahilerin %{{percent}} kadarı ondan önceki {{count}} sette de vardı."
+  },
+  "resting": {
+    "title": "BİR SÜREDİR SÖYLENMEYENLER",
+    "hint": "Bunları son {{months}} aydır söylemedin.",
+    "lastSung": "Son kez {{date}}"
+  },
+  "longTime": {
+    "title": "UZUN SÜREDİR SÖYLENENLER",
+    "hint": "Başından beri söylediğin ve hâlâ söylediğin ilahiler.",
+    "since": "{{date}} tarihinden beri"
+  },
+  "removedSong": "Kaldırılmış ilahi",
+  "gate": {
+    "title": "Song Stats {{count}} setten sonra görünür",
+    "body": "Seti başlat'a dokunup birkaç dakika kaldığında bir set sayılır. Şimdiye kadar {{done}} set yönettin."
+  },
+  "off": "Song Stats kapalı, bu yüzden yeni setler kaydedilmiyor.",
+  "loadError": "Song Stats yüklenemedi",
+  "about": {
+    "link": "Song Stats hakkında",
+    "title": "Song Stats",
+    "intro": "Song Stats, GraceChords'ta yönettiğin setlerden ve açtığın ilahilerden oluşur.",
+    "rule": "Seti başlat'a dokunup sette kaldığında bir set sayılır: her ilahi için en az {{perSong}} dakika ve toplamda en az {{min}} dakika. Bir ilahi, ekranda {{seconds}} saniye veya daha uzun kaldığında sayılır.",
+    "private": "İstatistiklerin sana aittir. Başka hiçbir GraceChords kullanıcısı onları göremez. Sırada ne yapılacağına karar vermek için tüm kullanıcıların ilahi sayıları anonim olarak toplanır.",
+    "control": "Geçmişini istediğin zaman temizleyebilir veya Song Stats'i kapatabilirsin.",
+    "privacy": "Gizlilik Politikası",
+    "clear": "Geçmişimi temizle",
+    "turnOff": "Song Stats'i kapat",
+    "turnOn": "Song Stats'i aç"
+  },
+  "preview": {
+    "title": "ÖNİZLEME",
+    "hint": "Bu anahtarları yalnızca yöneticiler ve geliştirme sürümleri görür.",
+    "bypassGate": "{{count}} setten önce göster",
+    "sample": "Örnek veri kullan",
+    "belowGate": "Önizleme: {{count}} setin {{done}} tanesi kaydedildi",
+    "sampleBadge": "Örnek veri gösteriliyor"
+  }
+}

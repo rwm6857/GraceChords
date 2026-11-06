@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import {
   SONG_STATS_RULES,
+  createSongStatsDataSource,
+  createSongStatsPreviewStore,
   createSongStatsRecorder,
   saveSongStatsEnabled,
   songStatsEnabledFromPreferences,
@@ -8,7 +10,7 @@ import {
 import { supabase } from './supabase'
 
 // Song Stats on the web: the one recorder for the tab, plus the hooks that feed
-// it. Collection only (Phase 1) — nothing on screen reads it. The rules,
+// it. The pages that read it back are in src/features/songStats. The rules,
 // buffering and offline queue live in core (packages/core/src/songStats); this
 // file connects them to the browser: localStorage, tab visibility, and the
 // signed-in user published by AuthProvider.
@@ -40,6 +42,12 @@ function uuid() {
 }
 
 export const songStats = createSongStatsRecorder({ client: supabase, storage, uuid })
+
+/** Cached reads for the Song Stats pages; dropped whenever the recorder reports a change. */
+export const songStatsData = createSongStatsDataSource({ client: supabase, storage, recorder: songStats })
+
+/** Dev-build / admin preview switches (bypass the gate, sample history). */
+export const songStatsPreview = createSongStatsPreviewStore(storage)
 
 let currentUserId = null
 let listening = false

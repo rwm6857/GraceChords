@@ -42,6 +42,7 @@
   },
   "songStats": {
     "title": "Song Stats",
+    "view": "Song Stats 보기",
     "clear": "내 기록 지우기",
     "hint": "Song Stats는 GraceChords에서 진행한 셋리스트와 열어 본 곡을 기록합니다. 내 통계는 나만 볼 수 있으며 다른 GraceChords 사용자는 볼 수 없습니다. 무엇을 만들지 결정하는 데 참고하기 위해 전체 사용자의 곡 횟수는 익명으로 합산됩니다.",
     "offAlert": {

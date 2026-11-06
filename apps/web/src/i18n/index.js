@@ -19,6 +19,7 @@ import enAdmin from './locales/en/admin.json'
 import enEditor from './locales/en/editor.json'
 import enErrors from './locales/en/errors.json'
 import enPages from './locales/en/pages.json'
+import enStats from './locales/en/stats.json'
 
 
 
@@ -52,6 +53,7 @@ const resources = {
     editor: enEditor,
     errors: enErrors,
     pages: enPages,
+    stats: enStats,
   },
 }
 

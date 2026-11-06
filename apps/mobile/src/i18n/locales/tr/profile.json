@@ -42,6 +42,7 @@
   },
   "songStats": {
     "title": "Song Stats",
+    "view": "Song Stats'i görüntüle",
     "clear": "Geçmişimi temizle",
     "hint": "Song Stats, GraceChords’ta yönettiğin setleri ve açtığın şarkıları kaydeder. İstatistiklerin sana aittir; başka hiçbir GraceChords kullanıcısı onları göremez. Bundan sonra ne geliştireceğimize karar vermek için tüm kullanıcıların şarkı sayıları anonim olarak toplanır.",
     "offAlert": {

@@ -1,0 +1,208 @@
+/* Song Stats: the setlists-rail card, the detail page and the About dialog. */
+
+.gc-stats-card {
+  margin: 0 var(--space-2) var(--space-3);
+}
+
+.gc-stats-card__link {
+  display: block;
+  padding: var(--space-3);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-lg);
+  background: var(--gc-surface-1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.gc-stats-card__link:hover {
+  background: var(--gc-surface-2);
+}
+
+.gc-stats-card__link:focus-visible {
+  outline: 2px solid var(--gc-primary);
+  outline-offset: 2px;
+}
+
+.gc-stats-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--gc-text-tertiary);
+}
+
+.gc-stats-card__title {
+  display: block;
+  font-weight: 600;
+  color: var(--gc-text);
+}
+
+.gc-stats-card__note {
+  display: block;
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-about-link {
+  margin: var(--space-2) var(--space-1) 0;
+}
+
+.gc-stats-summary {
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.gc-stats-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-stats-summary__row dt {
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-summary__row dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gc-stats-page {
+  max-width: 640px;
+  padding-bottom: var(--space-6);
+}
+
+.gc-stats-page h1 {
+  margin-bottom: var(--space-2);
+}
+
+.gc-stats-page .gc-segmented {
+  margin: var(--space-3) 0;
+}
+
+.gc-stats-section {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--gc-separator);
+}
+
+.gc-stats-section h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--gc-font-cap);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gc-text-tertiary);
+}
+
+.gc-stats-section p {
+  margin: 0;
+}
+
+.gc-stats-section .gc-stats-summary {
+  max-width: 360px;
+}
+
+.gc-stats-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gc-stats-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--gc-separator);
+}
+
+.gc-stats-list li:first-child {
+  border-top: 0;
+}
+
+.gc-stats-list__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gc-stats-list__value {
+  flex-shrink: 0;
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.gc-stats-chip {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--gc-surface-2);
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-section .gc-stats-note,
+.gc-stats-note {
+  margin: var(--space-2) 0 0;
+  font-size: var(--gc-font-sub);
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-empty {
+  margin: var(--space-3) 0;
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-gate {
+  margin: var(--space-6) 0;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.gc-stats-gate h2 {
+  margin: 0;
+  font-size: var(--gc-font-h2);
+}
+
+.gc-stats-gate p {
+  margin: 0;
+  color: var(--gc-text-secondary);
+}
+
+.gc-stats-footer {
+  margin: var(--space-5) 0 0;
+}
+
+.gc-stats-footer .gc-linkbtn {
+  font-size: var(--gc-font-sub);
+}
+
+.gc-stats-preview label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  margin-bottom: var(--space-2);
+}
+
+.gc-stats-about p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.gc-stats-about__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-stats-about__links .gc-linkbtn {
+  font-size: inherit;
+}

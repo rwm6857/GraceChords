@@ -1,0 +1,88 @@
+{
+  "_meta": { "reviewer": "", "reviewedAt": "" },
+  "title": "Song Stats",
+  "view": "View Song Stats",
+  "window": {
+    "3m": "3 months",
+    "12m": "12 months",
+    "all": "All time"
+  },
+  "windowLabel": {
+    "3m": "LAST 3 MONTHS",
+    "12m": "LAST 12 MONTHS",
+    "all": "ALL TIME"
+  },
+  "cardWindow": "Last 12 months",
+  "summary": {
+    "sets": "Sets run",
+    "songs": "Songs sung",
+    "perSet": "Songs per set",
+    "newSongs": "New songs"
+  },
+  "mostSung": {
+    "title": "MOST SUNG",
+    "count_one": "Once",
+    "count_other": "{{count}} times",
+    "empty": "No sets in this period."
+  },
+  "mostOpened": {
+    "title": "MOST OPENED",
+    "hint": "Songs you opened to read. Opening a song isn’t the same as singing it, so this list is kept separate.",
+    "count_one": "1 open",
+    "count_other": "{{count}} opens",
+    "empty": "No songs opened in this period."
+  },
+  "newSongs": {
+    "title": "NEW TO YOUR SETS",
+    "hint": "Songs you sang for the first time in this period.",
+    "firstSung": "First sung {{date}}"
+  },
+  "rotation": {
+    "title": "IN HEAVY ROTATION",
+    "hint": "These were in at least {{min}} of your last {{of}} sets.",
+    "value": "{{sets}} of {{of}}"
+  },
+  "repeat": {
+    "title": "CARRIED OVER",
+    "body": "{{percent}}% of the songs in your last {{count}} sets were also in the {{count}} before."
+  },
+  "resting": {
+    "title": "NOT SUNG IN A WHILE",
+    "hint": "You haven’t sung these in the last {{months}} months.",
+    "lastSung": "Last sung {{date}}"
+  },
+  "longTime": {
+    "title": "LONG-TIME SONGS",
+    "hint": "Songs you’ve sung since early on and still sing today.",
+    "since": "Since {{date}}"
+  },
+  "personal": "Personal",
+  "retry": "Retry",
+  "removedSong": "Removed song",
+  "gate": {
+    "title": "Song Stats appears after {{count}} sets",
+    "body": "A set counts when you run it in Worship Mode for a few minutes while signed in. You’ve run {{done}} so far."
+  },
+  "off": "Song Stats is off, so new sets aren’t being recorded.",
+  "loadError": "Couldn’t load Song Stats",
+  "about": {
+    "link": "About Song Stats",
+    "title": "Song Stats",
+    "intro": "Song Stats is built from the sets you run and the songs you open in GraceChords.",
+    "rule": "A set counts when you run it in Worship Mode while signed in: at least {{perSong}} minutes for each song, and never less than {{min}} minutes. A song counts when it’s on screen for {{seconds}} seconds or more.",
+    "private": "Your stats are yours. No other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
+    "control": "You can clear your history or turn Song Stats off at any time.",
+    "privacy": "Privacy Policy",
+    "clear": "Clear my history",
+    "turnOff": "Turn off Song Stats",
+    "turnOn": "Turn on Song Stats"
+  },
+  "preview": {
+    "title": "PREVIEW",
+    "hint": "Only admins and development builds see these switches.",
+    "bypassGate": "Show before {{count}} sets",
+    "sample": "Use sample data",
+    "belowGate": "Preview: {{done}} of {{count}} sets logged",
+    "sampleBadge": "Showing sample data"
+  }
+}
