@@ -90,10 +90,13 @@ export default function AdminPage() {
     setRefreshing(false)
   }, [loadUsers])
 
-  // Mirrors update_user_role()'s server-side rules exactly: an owner may assign
-  // admin, editor or user; an admin may assign editor or user. Nobody may assign
-  // owner. Keep these in step — the RPC is the authority and will throw if this
-  // list ever offers something it rejects.
+  // Mirrors update_user_role()'s rules on new_role: an owner may assign admin,
+  // editor or user; an admin may assign editor or user. Nobody may assign owner.
+  // The RPC also refuses any caller below admin (this page sits behind
+  // RoleGuard minRole="admin"), self-targeted changes, and non-owners touching
+  // the owner row — the last two are mirrored by canChangeRole below. Keep these
+  // in step — the RPC is the authority and will throw if the UI offers something
+  // it rejects.
   function getAvailableRoles() {
     if (isOwner) return ASSIGNABLE_ROLES
     return ['editor', 'user']
