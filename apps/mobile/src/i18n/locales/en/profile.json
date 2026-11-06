@@ -4,7 +4,8 @@
   "sections": {
     "profile": "PROFILE",
     "security": "SECURITY",
-    "connections": "CONNECTIONS"
+    "connections": "CONNECTIONS",
+    "songStats": "SONG STATS"
   },
   "yourIcon": "Your icon",
   "name": "Name",
@@ -36,6 +37,24 @@
     },
     "unlinkFailedTitle": "Couldn't unlink Telegram",
     "linkFailedTitle": "Couldn't start linking"
+  },
+  "songStats": {
+    "title": "Song Stats",
+    "clear": "Clear my history",
+    "hint": "Song Stats records the sets you run and the songs you open in GraceChords. Your stats are yours — no other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
+    "offAlert": {
+      "title": "Turn off Song Stats?",
+      "message": "GraceChords will stop recording your sets and song opens, and stop counting the tools you use. History already recorded stays until you clear it. Turning Song Stats back on won’t bring back anything you’ve cleared.",
+      "confirm": "Turn off"
+    },
+    "clearAlert": {
+      "title": "Clear your Song Stats history?",
+      "message": "This permanently deletes every set and song open recorded for your account. It can’t be undone.",
+      "confirm": "Clear history"
+    },
+    "cleared": "Your Song Stats history was cleared.",
+    "clearFailedTitle": "Couldn’t clear your history",
+    "toggleFailedTitle": "Couldn’t update Song Stats"
   },
   "logOut": "Log out",
   "logOutHint": "Signs you out of GraceChords on this device.",

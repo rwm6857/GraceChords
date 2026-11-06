@@ -8,6 +8,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { filterDisplayTags } from '../utils/songs/tags'
 import { showToast } from '../utils/app/toast'
+import { countFeatureUse } from '../lib/songStats'
 
 export default function Bundle(){
   const navigate = useNavigate()
@@ -78,6 +79,7 @@ export default function Bundle(){
       if(songs.length){
         const { downloadMultiSongPdf } = await loadPdfLib()
         await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+        countFeatureUse('pdf_export')
       }
     } finally {
       setLoading(false)

@@ -25,6 +25,7 @@ import {
 import { flatChords, progressionById } from '../lib/keyref/progressions'
 import { isDiatonic, numberStyleFor } from '../lib/keyref/render'
 import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/types'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 // Key Reference (Utilities) — a cropped circle-of-fifths dial under the whole
 // progression library. Standalone: the key is chosen here by turning the dial,
@@ -53,6 +54,7 @@ import type { DisplayMode, Progression, ProgressionChord } from '../lib/keyref/t
 const WALK_STEP_MS = 520
 
 export default function KeyReferenceScreen({ embedded }: { embedded?: boolean }) {
+  useFeatureUseOnOpen('key_reference')
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()

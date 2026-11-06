@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, AppState, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { Alert, AppState, Linking, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native'
 import { Image } from 'expo-image'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -28,6 +28,8 @@ import {
   UNLINKED,
   type TelegramLinkState,
 } from '../lib/telegramLink'
+import { countFeatureUse, isSongStatsEnabled, setSongStatsEnabled, songStats } from '../lib/songStats'
+import { fetchSongStatsEnabled } from '@gracechords/core'
 
 // Account — one level under Profile & Settings. Holds the identity, security and
 // connection actions that used to be scattered across the settings screen, plus
@@ -60,6 +62,10 @@ export default function AccountScreen() {
   const [telegram, setTelegram] = useState<TelegramLinkState>(UNLINKED)
   const [telegramBusy, setTelegramBusy] = useState(false)
   const [barH, setBarH] = useState(0)
+  // Song Stats opt-out. Seeded from the on-device cache so the switch is right
+  // offline; refreshed from users.preferences when the screen opens.
+  const [songStatsOn, setSongStatsOn] = useState(isSongStatsEnabled)
+  const [songStatsBusy, setSongStatsBusy] = useState(false)
 
   const email = user?.email ?? ''
   const shownName = displayName ?? tx('settings:yourAccount')
@@ -103,6 +109,71 @@ export default function AccountScreen() {
     return () => sub.remove()
   }, [loadTelegram])
 
+  useEffect(() => {
+    if (!user?.id) return
+    let alive = true
+    fetchSongStatsEnabled(supabase, user.id)
+      .then((enabled) => {
+        songStats.setEnabled(user.id, enabled)
+        if (alive) setSongStatsOn(enabled)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [user?.id])
+
+  async function applySongStats(enabled: boolean) {
+    setSongStatsBusy(true)
+    try {
+      await setSongStatsEnabled(enabled)
+      setSongStatsOn(enabled)
+    } catch (err) {
+      Alert.alert(
+        tx('songStats.toggleFailedTitle'),
+        actionFailureMessage('AccountScreen.setSongStatsEnabled', err, tx),
+      )
+    } finally {
+      setSongStatsBusy(false)
+    }
+  }
+
+  function onToggleSongStats(next: boolean) {
+    if (songStatsBusy) return
+    if (next) {
+      void applySongStats(true)
+      return
+    }
+    Alert.alert(tx('songStats.offAlert.title'), tx('songStats.offAlert.message'), [
+      { text: tx('common:cancel'), style: 'cancel' },
+      { text: tx('songStats.offAlert.confirm'), onPress: () => void applySongStats(false) },
+    ])
+  }
+
+  function onClearSongStats() {
+    Alert.alert(tx('songStats.clearAlert.title'), tx('songStats.clearAlert.message'), [
+      { text: tx('common:cancel'), style: 'cancel' },
+      {
+        text: tx('songStats.clearAlert.confirm'),
+        style: 'destructive',
+        onPress: async () => {
+          setSongStatsBusy(true)
+          try {
+            await songStats.clearHistory()
+            Alert.alert(tx('songStats.cleared'))
+          } catch (err) {
+            Alert.alert(
+              tx('songStats.clearFailedTitle'),
+              actionFailureMessage('AccountScreen.clearSongStats', err, tx),
+            )
+          } finally {
+            setSongStatsBusy(false)
+          }
+        },
+      },
+    ])
+  }
+
   function openNameSheet() {
     setNameDraft(displayName ?? '')
     setSheet('name')
@@ -136,6 +207,7 @@ export default function AccountScreen() {
     setTelegramBusy(true)
     try {
       await Linking.openURL(await startTelegramLink())
+      countFeatureUse('telegram_link')
     } catch (err) {
       Alert.alert(
         tx('telegram.linkFailedTitle'),
@@ -332,6 +404,41 @@ export default function AccountScreen() {
             {tx('telegram.linkHint')}
           </Text>
         ) : null}
+
+        {/* SONG STATS — collection controls only; the stats themselves come later. */}
+        <SectionHeader label={tx('sections.songStats')} />
+        <Card>
+          <ListRow
+            title={tx('songStats.title')}
+            leading={<RowIcon name="music.note.list" />}
+            trailing={
+              <Switch
+                value={songStatsOn}
+                disabled={songStatsBusy}
+                onValueChange={onToggleSongStats}
+                trackColor={{ true: t.colors.accent }}
+                accessibilityLabel={tx('songStats.title')}
+              />
+            }
+          />
+          <ListRow
+            title={tx('songStats.clear')}
+            leading={<RowIcon name="trash" />}
+            isLast
+            onPress={songStatsBusy ? undefined : onClearSongStats}
+          />
+        </Card>
+        <Text
+          style={{
+            paddingHorizontal: t.spacing.md,
+            paddingTop: t.spacing.sm,
+            fontSize: 12.5,
+            lineHeight: 17,
+            color: t.colors.sec,
+          }}
+        >
+          {tx('songStats.hint')}
+        </Text>
 
         <DangerCard label={tx('logOut')} onPress={onSignOut} hint={tx('logOutHint')} />
         <DangerCard
