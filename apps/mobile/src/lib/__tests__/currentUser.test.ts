@@ -107,6 +107,24 @@ describe('setCurrentUserFromSession', () => {
     expect(getCurrentUserSnapshot()).not.toBe(before)
   })
 
+  it('publishes when a password is set on an SSO account', () => {
+    setCurrentUserFromSession(session(user({ id: 'u1', user_metadata: {} })))
+    const before = getCurrentUserSnapshot()
+    setCurrentUserFromSession(session(user({ id: 'u1', user_metadata: { password_set: true } })))
+    expect(getCurrentUserSnapshot()).not.toBe(before)
+  })
+
+  it('publishes when a sign-in method is linked', () => {
+    const apple = { id: 'a', identity_id: 'ia', provider: 'apple' }
+    const google = { id: 'g', identity_id: 'ig', provider: 'google' }
+    setCurrentUserFromSession(session(user({ id: 'u1', identities: [apple] as User['identities'] })))
+    const before = getCurrentUserSnapshot()
+    setCurrentUserFromSession(
+      session(user({ id: 'u1', identities: [apple, google] as User['identities'] })),
+    )
+    expect(getCurrentUserSnapshot()).not.toBe(before)
+  })
+
   it('publishes when the email changes', () => {
     setCurrentUserFromSession(session(user({ id: 'u1', email: 'a@example.test' })))
     const before = getCurrentUserSnapshot()

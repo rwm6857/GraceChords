@@ -75,7 +75,7 @@ function getSnapshot(): CurrentUserState {
  * then would re-render Home, Settings and the Daily Word landing for nothing,
  * and would break the reference stability useSyncExternalStore requires of
  * getSnapshot. Compared fields are exactly the ones read by getDisplayName
- * (greetings.ts) and useProfileSprite.
+ * (greetings.ts), useProfileSprite, and the Account screen's Security rows.
  */
 function sameIdentity(a: User | null, b: User | null): boolean {
   if (a === b) return true
@@ -83,7 +83,22 @@ function sameIdentity(a: User | null, b: User | null): boolean {
   if (a.id !== b.id || a.email !== b.email) return false
   const am = (a.user_metadata ?? {}) as Record<string, unknown>
   const bm = (b.user_metadata ?? {}) as Record<string, unknown>
-  return am.full_name === bm.full_name && am.name === bm.name && am.avatar_url === bm.avatar_url
+  return (
+    am.full_name === bm.full_name &&
+    am.name === bm.name &&
+    am.avatar_url === bm.avatar_url &&
+    // Read by Account → Security: whether the account has a password
+    // (hasPassword) and which sign-in methods are linked.
+    am.password_set === bm.password_set &&
+    identityKey(a) === identityKey(b)
+  )
+}
+
+function identityKey(u: User): string {
+  return (u.identities ?? [])
+    .map((i) => `${i.provider}:${i.identity_id ?? i.id}`)
+    .sort()
+    .join(',')
 }
 
 /**

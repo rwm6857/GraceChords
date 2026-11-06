@@ -29,7 +29,7 @@ import {
   type TelegramLinkState,
 } from '../lib/telegramLink'
 import { countFeatureUse, isSongStatsEnabled, setSongStatsEnabled, songStats } from '../lib/songStats'
-import { fetchSongStatsEnabled } from '@gracechords/core'
+import { fetchSongStatsEnabled, hasPassword } from '@gracechords/core'
 
 // Account — one level under Profile & Settings. Holds the identity, security and
 // connection actions that used to be scattered across the settings screen, plus
@@ -70,12 +70,11 @@ export default function AccountScreen() {
   const email = user?.email ?? ''
   const shownName = displayName ?? tx('settings:yourAccount')
 
-  // Render Change password if and only if this account carries an `email`
-  // identity. Deliberately NOT inferred from the absence of Google/Apple:
+  // Change password when the account can sign in with one, otherwise Set a
+  // password. Deliberately NOT inferred from the absence of Google/Apple:
   // identity linking means one user can hold an email identity AND OAuth
-  // identities at once, and inferring from OAuth would wrongly hide the row for
-  // exactly those accounts.
-  const hasEmailIdentity = (user?.identities ?? []).some((i) => i.provider === 'email')
+  // identities at once, and an SSO account may have set a password since.
+  const canChangePassword = hasPassword(user)
 
   const loadTelegram = useCallback(async () => {
     try {
@@ -359,21 +358,23 @@ export default function AccountScreen() {
           />
         </Card>
 
-        {/* SECURITY — only for accounts that have a password to change. */}
-        {hasEmailIdentity ? (
-          <>
-            <SectionHeader label={tx('sections.security')} />
-            <Card>
-              <ListRow
-                title={tx('changePassword')}
-                leading={<RowIcon name="lock" />}
-                chevron
-                isLast
-                onPress={() => router.push('/account/password')}
-              />
-            </Card>
-          </>
-        ) : null}
+        {/* SECURITY */}
+        <SectionHeader label={tx('sections.security')} />
+        <Card>
+          <ListRow
+            title={canChangePassword ? tx('changePassword') : tx('setPassword')}
+            leading={<RowIcon name="lock" />}
+            chevron
+            onPress={() => router.push('/account/password')}
+          />
+          <ListRow
+            title={tx('signInMethods')}
+            leading={<RowIcon name="link" />}
+            chevron
+            isLast
+            onPress={() => router.push('/account/sign-in-methods')}
+          />
+        </Card>
 
         {/* CONNECTIONS */}
         <SectionHeader label={tx('sections.connections')} />

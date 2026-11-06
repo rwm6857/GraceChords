@@ -10,3 +10,25 @@ export const supabase = createGcSupabase({
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   storage: cookieStorage,
 })
+
+// A password-recovery link signs the user in and fires PASSWORD_RECOVERY once,
+// while the client initialises — usually before the lazy-loaded reset page has
+// mounted to hear it. Record it here, subscribed synchronously at module load,
+// so /reset-password can tell a recovery session from an ordinary one and
+// never lets a plain signed-in session change the password without the
+// current one.
+let recoveryPending =
+  typeof window !== 'undefined' && /(?:^|[#&])type=recovery(?:&|$)/.test(window.location.hash)
+
+supabase.auth.onAuthStateChange(event => {
+  if (event === 'PASSWORD_RECOVERY') recoveryPending = true
+  else if (event === 'SIGNED_OUT') recoveryPending = false
+})
+
+export function isRecoverySession() {
+  return recoveryPending
+}
+
+export function clearRecoverySession() {
+  recoveryPending = false
+}

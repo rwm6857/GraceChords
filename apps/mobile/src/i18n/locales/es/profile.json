@@ -11,6 +11,8 @@
   "name": "Name",
   "email": "Email",
   "changePassword": "Change password",
+  "setPassword": "Crear contraseña",
+  "signInMethods": "Métodos de inicio de sesión",
   "nameSheet": {
     "title": "Your name",
     "placeholder": "Alex Brown",

@@ -9,7 +9,8 @@ import SpriteAvatar from '../components/ui/SpriteAvatar'
 import LanguageSelector from '../components/ui/LanguageSelector'
 import TelegramLoginButton from '../components/TelegramLoginButton'
 import { showToast } from '../utils/app/toast'
-import { songStatsEnabledFromPreferences } from '@gracechords/core'
+import { hasPassword, songStatsEnabledFromPreferences } from '@gracechords/core'
+import SecuritySection from '../components/profile/SecuritySection'
 import { countFeatureUse, setSongStatsEnabled, songStats } from '../lib/songStats'
 import '../styles/settings.css'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
@@ -42,12 +43,9 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false)
 
   // Whether this account can sign in with an email + password. OAuth-only
-  // accounts (Google / Apple) have no password to confirm, so the delete flow
-  // falls back to a typed confirmation for them.
-  const hasPasswordLogin =
-    (session?.user?.identities || []).some(i => i.provider === 'email') ||
-    (session?.user?.app_metadata?.providers || []).includes('email') ||
-    session?.user?.app_metadata?.provider === 'email'
+  // accounts (Google / Apple) that never set a password have none to confirm,
+  // so the delete flow falls back to a typed confirmation for them.
+  const hasPasswordLogin = hasPassword(session?.user)
 
   // Telegram link state
   const [telegramState, setTelegramState] = useState({ linked: false, telegram_user_id: null, telegram_linked_at: null })
@@ -438,6 +436,8 @@ export default function ProfilePage() {
           {tc('songStats.clear')}
         </button>
       </section>
+
+      <SecuritySection user={session.user} />
 
       {/* Account section */}
       <section className="gc-profile-section">

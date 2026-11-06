@@ -1,10 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
+import { authErrorKey, PASSWORD_POLICY, validatePasswordStrength } from '@gracechords/core'
+import { clearRecoverySession, isRecoverySession, supabase } from '../lib/supabase'
 import PasswordStrengthPopover from '../components/auth/PasswordStrengthPopover'
 import '../styles/auth.css'
 
+// Set a new password from a recovery email link. ONLY a recovery session may use
+// this page: the link is the proof of identity here. A user who is simply
+// signed in is sent to Profile → Security, which asks for the current password.
 export default function ResetPasswordPage() {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
 
   const [isDark, setIsDark] = useState(
@@ -22,42 +28,17 @@ export default function ResetPasswordPage() {
   const [sessionState, setSessionState] = useState('checking')
 
   useEffect(() => {
-    let settled = false
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (settled) return
-      if (event === 'PASSWORD_RECOVERY') {
-        settled = true
-        setSessionState('valid')
-      } else if (event === 'SIGNED_IN' && session) {
-        settled = true
-        setSessionState('valid')
-      } else if (event === 'SIGNED_OUT') {
-        settled = true
-        setSessionState('invalid')
-      }
-    })
-
-    // Also check if there's already an active session
+    let cancelled = false
+    // getSession() waits for the client to finish reading the link's tokens
+    // from the URL, so by the time it resolves the recovery flag is settled.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (settled) return
-      if (session) {
-        settled = true
-        setSessionState('valid')
-      } else {
-        // Give Supabase a moment to process the URL hash token
-        const timer = setTimeout(() => {
-          if (!settled) {
-            settled = true
-            setSessionState('invalid')
-          }
-        }, 1500)
-        return () => clearTimeout(timer)
-      }
+      if (cancelled) return
+      if (session && isRecoverySession()) setSessionState('valid')
+      else if (session) navigate('/profile#security', { replace: true })
+      else setSessionState('invalid')
     })
-
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => { cancelled = true }
+  }, [navigate])
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -71,26 +52,37 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError(null)
 
+    const weak = validatePasswordStrength(newPassword)
+    if (weak) {
+      setError(t(weak, { min: PASSWORD_POLICY.minLength }))
+      return
+    }
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.')
+      setError(t('errors.passwordMismatch'))
       return
     }
 
     setSubmitting(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      setError(error.message)
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    if (updateError) {
+      console.error('[auth] password reset failed:', updateError)
+      setError(t(authErrorKey(updateError), { min: PASSWORD_POLICY.minLength }))
       setSubmitting(false)
-    } else {
-      setSuccess(true)
-      setTimeout(() => navigate('/login', { replace: true }), 2000)
+      return
     }
+
+    clearRecoverySession()
+    // Whoever had the old password may still hold a session; end every other one.
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' })
+    if (signOutError) console.error('[auth] signing other sessions out failed:', signOutError)
+    setSuccess(true)
+    setTimeout(() => navigate('/', { replace: true }), 2000)
   }
 
   if (sessionState === 'checking') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--gc-text-secondary)' }}>Verifying link…</p>
+        <p style={{ color: 'var(--gc-text-secondary)' }}>{t('resetPasswordPage.verifying')}</p>
       </div>
     )
   }
@@ -106,28 +98,28 @@ export default function ResetPasswordPage() {
 
         {sessionState === 'invalid' ? (
           <>
-            <h1 className="gc-auth-card__title">Link expired</h1>
+            <h1 className="gc-auth-card__title">{t('resetPasswordPage.expiredTitle')}</h1>
             <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
-              This link has expired or is invalid.{' '}
-              <Link to="/forgot-password">Request a new one</Link>
+              {t('resetPasswordPage.expiredMessage')}{' '}
+              <Link to="/forgot-password">{t('resetPasswordPage.requestNew')}</Link>
             </p>
           </>
         ) : success ? (
           <>
-            <h1 className="gc-auth-card__title">Password updated</h1>
+            <h1 className="gc-auth-card__title">{t('resetPasswordPage.successTitle')}</h1>
             <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
-              Password updated. Redirecting…
+              {t('resetPasswordPage.successMessage')}
             </p>
           </>
         ) : (
           <>
-            <h1 className="gc-auth-card__title">Reset password</h1>
-            <p className="gc-auth-card__subtitle">Choose a new password for your account</p>
+            <h1 className="gc-auth-card__title">{t('resetPasswordPage.title')}</h1>
+            <p className="gc-auth-card__subtitle">{t('resetPasswordPage.subtitle')}</p>
 
             <form onSubmit={handleSubmit} className="gc-auth-form">
-              {error && <div className="gc-auth-error">{error}</div>}
+              {error && <div className="gc-auth-error" role="alert">{error}</div>}
               <div className="gc-form-field gc-pw-field-wrapper">
-                <label htmlFor="new-password">New password</label>
+                <label htmlFor="new-password">{t('security.newPassword')}</label>
                 <input
                   id="new-password"
                   type="password"
@@ -147,7 +139,7 @@ export default function ResetPasswordPage() {
                 {newPasswordFocused && <PasswordStrengthPopover password={newPassword} />}
               </div>
               <div className="gc-form-field">
-                <label htmlFor="confirm-password">Confirm new password</label>
+                <label htmlFor="confirm-password">{t('security.confirmPassword')}</label>
                 <input
                   id="confirm-password"
                   type="password"
@@ -164,14 +156,14 @@ export default function ResetPasswordPage() {
                 disabled={submitting}
                 style={{ width: '100%', justifyContent: 'center' }}
               >
-                {submitting ? 'Updating…' : 'Update Password'}
+                {submitting ? t('security.saving') : t('resetPasswordPage.submit')}
               </button>
             </form>
           </>
         )}
 
         <p className="gc-auth-card__footer">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login">{t('backToSignIn')}</Link>
         </p>
       </div>
     </div>
