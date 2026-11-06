@@ -52,7 +52,10 @@ None of this lives in the repo (there is no `supabase/config.toml`), so it is re
 5. Generate the secret: `node apps/web/scripts/apple-client-secret.mjs --team J7Y8NYZ48Q --key-id <KEY_ID> --services-id com.gracechords.web --p8 <path>`.
 6. Supabase → Authentication → Providers → **Apple**: Client IDs `com.gracechords.web,com.gracechords.app` (Services ID first; the bundle ID keeps native iOS working), Secret Key = the JWT from step 5.
 
-**Rotate the Apple secret before it expires (at most every 6 months).** The script prints the expiry. When the secret lapses, web Apple sign-in and linking fail; iOS keeps working. Re-run step 5 and paste the new value. Keep a calendar reminder a couple of weeks ahead.
+**The Apple secret expires (Apple caps it at 6 months), so it is rotated automatically.** The `Rotate Sign in with Apple secret` workflow (`.github/workflows/rotate-apple-secret.yml`) runs on the 1st of every month, mints a fresh 180-day secret, and writes it to Supabase through the Management API. Because each secret lasts about five months longer than the gap between runs, several failed runs in a row still leave a working secret. A failed run emails you.
+- One-time setup: add the repository secrets `APPLE_P8` (the full `.p8` contents), `APPLE_KEY_ID`, `APPLE_TEAM_ID`, `APPLE_SERVICES_ID`, `SUPABASE_ACCESS_TOKEN` (Supabase → Account → Access Tokens) and `SUPABASE_PROJECT_REF`. Then run the workflow once by hand from the Actions tab.
+- Apple has no way to test a secret short of a real sign-in. After the first run, or after changing any of those secrets, try "Continue with Apple" on the site.
+- If the workflow is ever disabled (GitHub pauses scheduled workflows after 60 days without repository activity), web Apple sign-in and linking fail when the last secret lapses. iOS keeps working. To recover, re-enable the workflow and run it, or run step 5 by hand and paste the value.
 
 **Auth settings** (Authentication → Providers → Email, and Authentication → Sign In / Providers):
 - **Secure password change: ON.** A password change on a session older than 24h needs reauthentication. The apps prove it with the current password, or for Apple/Google-only accounts setting a first password, with an emailed code.
@@ -201,7 +204,7 @@ for i in $(seq 1 30); do curl -s -o /dev/null -w "%{http_code} " -X POST https:/
 - [x] Web Analytics enabled on the Pages project
 - [ ] `client_errors` migration applied in Supabase
 - [ ] Supabase Site URL and Redirect URLs set for gracechords.com
-- [ ] Apple Services ID + client secret set in Supabase (rotation reminder on the calendar)
+- [ ] Apple Services ID set in Supabase, and the `Rotate Sign in with Apple secret` workflow's secrets added and run once
 - [ ] Supabase: Secure password change ON, Allow manual linking ON, custom SMTP registered with Apple's private relay
 - [ ] Google Search Console property verified and sitemap submitted
 

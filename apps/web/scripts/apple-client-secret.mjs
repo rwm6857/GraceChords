@@ -4,9 +4,10 @@
 // Apple does not issue a static secret: it is an ES256-signed JWT made from a
 // Sign in with Apple key (.p8), and Apple caps its lifetime at 6 months. When it
 // expires, web Apple sign-in and linking stop working (native iOS sign-in does
-// not use it). Regenerate and paste it into Supabase → Authentication →
-// Providers → Apple → Secret Key before then — see the wiki's
-// Production-Readiness page, "Sign in with Apple".
+// not use it). The rotate-apple-secret workflow runs this monthly and pushes
+// the result to Supabase; run it by hand only to set things up or recover —
+// see the wiki's Production-Readiness page, "Sign-in providers and account
+// security".
 //
 // Usage:
 //   node apps/web/scripts/apple-client-secret.mjs \
@@ -15,6 +16,10 @@
 //
 // The .p8 is a private key: never commit it. Nothing is written to disk; the JWT
 // goes to stdout and its expiry to stderr.
+//
+// Instead of --p8 <path>, the key's contents can come from the APPLE_P8
+// environment variable. The rotate-apple-secret workflow uses this so the key
+// never touches the runner's disk.
 import { createPrivateKey, sign } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
@@ -31,10 +36,12 @@ const { values } = parseArgs({
   },
 })
 
-const missing = ['team', 'key-id', 'services-id', 'p8'].filter((k) => !values[k])
+const p8FromEnv = process.env.APPLE_P8?.trim()
+const missing = ['team', 'key-id', 'services-id', ...(p8FromEnv ? [] : ['p8'])].filter((k) => !values[k])
 if (missing.length) {
   console.error(`Missing: ${missing.map((k) => `--${k}`).join(', ')}`)
   console.error('Usage: apple-client-secret.mjs --team <TEAM_ID> --key-id <KEY_ID> --services-id <SERVICES_ID> --p8 <path>')
+  console.error('       (or set APPLE_P8 to the key contents instead of --p8)')
   process.exit(1)
 }
 
@@ -58,7 +65,7 @@ const payload = {
 }
 
 const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`
-const key = createPrivateKey(readFileSync(values.p8, 'utf8'))
+const key = createPrivateKey(values.p8 ? readFileSync(values.p8, 'utf8') : p8FromEnv)
 // JWS ES256 wants the raw r||s signature, not DER.
 const signature = sign('sha256', Buffer.from(signingInput), { key, dsaEncoding: 'ieee-p1363' })
 
