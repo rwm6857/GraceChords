@@ -76,9 +76,14 @@ export type AppleDeps = {
   isCancelError: (e: unknown) => boolean
 } & DiagnosticsDeps
 
+type AppleCredential = Awaited<ReturnType<AppleDeps['signInAsync']>> & { identityToken: string }
+
 // Apple requires the SHA-256 of the nonce in the credential request, while
 // Supabase must receive the RAW nonce to verify the token's nonce claim.
-export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
+async function getAppleCredential(
+  deps: AppleDeps,
+  scope: string,
+): Promise<{ credential: AppleCredential; rawNonce: string } | AuthResult> {
   const rawNonce = deps.randomUUID()
   const hashedNonce = await deps.sha256(rawNonce)
 
@@ -90,13 +95,20 @@ export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
     // Dismissing the sheet is a choice, not a failure, so it is excluded above.
     // Everything past it is worth a diagnostic — the friendly copy below is the
     // same string for every cause.
-    logProviderFailure(deps, 'appleSignIn', e)
+    logProviderFailure(deps, scope, e)
     return { ok: false, error: 'errors.appleFailed' }
   }
 
   if (!credential.identityToken) {
     return { ok: false, error: 'errors.appleNoCredential' }
   }
+  return { credential: credential as AppleCredential, rawNonce }
+}
+
+export async function appleSignIn(deps: AppleDeps): Promise<AuthResult> {
+  const got = await getAppleCredential(deps, 'appleSignIn')
+  if (!('credential' in got)) return got
+  const { credential, rawNonce } = got
 
   const { data, error } = await deps.supabase.auth.signInWithIdToken({
     provider: 'apple',
@@ -136,7 +148,10 @@ export type GoogleDeps = {
   isConfigError: (e: unknown) => boolean
 } & DiagnosticsDeps
 
-export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
+async function getGoogleIdToken(
+  deps: GoogleDeps,
+  scope: string,
+): Promise<{ idToken: string } | AuthResult> {
   let result
   try {
     deps.configure()
@@ -146,7 +161,7 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
     // Log BEFORE a friendly string is chosen. From here on the provider's own
     // code is discarded, and it is the only thing that tells these failures
     // apart — QA report Nº 7327 could report the sentence but not the number.
-    const info = logProviderFailure(deps, 'googleSignIn', e)
+    const info = logProviderFailure(deps, scope, e)
     if (deps.isPlayServicesError(e)) {
       return { ok: false, error: 'errors.googlePlayUnavailable' }
     }
@@ -169,6 +184,12 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
   if (!result.idToken) {
     return { ok: false, error: 'errors.googleNoCredential' }
   }
+  return { idToken: result.idToken }
+}
+
+export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
+  const got = await getGoogleIdToken(deps, 'googleSignIn')
+  if (!('idToken' in got)) return got
 
   // No nonce is passed here — unlike Apple. On iOS the native Google SDK embeds
   // its own nonce claim in the id_token, but the FREE @react-native-google-signin
@@ -179,9 +200,57 @@ export async function googleSignIn(deps: GoogleDeps): Promise<AuthResult> {
   // Do not add a `nonce` here expecting parity with appleSignIn — it would not match.
   const { error } = await deps.supabase.auth.signInWithIdToken({
     provider: 'google',
-    token: result.idToken,
+    token: got.idToken,
   })
   if (error) return { ok: false, error: authErrorKey(error) }
+  return { ok: true }
+}
+
+// Linking: connect Apple / Google to the account that is ALREADY signed in, so
+// either can sign in to it. Supabase links matching verified emails on its own;
+// this is for the rest — chiefly Apple "Hide My Email" accounts. Same native
+// token flows as sign-in, handed to linkIdentity instead of signInWithIdToken.
+// Requires "Allow manual linking" in the Supabase dashboard.
+
+export async function appleLink(deps: AppleDeps): Promise<AuthResult> {
+  const got = await getAppleCredential(deps, 'appleLink')
+  if (!('credential' in got)) return got
+  const { error } = await deps.supabase.auth.linkIdentity({
+    provider: 'apple',
+    token: got.credential.identityToken,
+    nonce: got.rawNonce,
+  })
+  if (error) return { ok: false, error: authErrorKey(error) }
+  return { ok: true }
+}
+
+export async function googleLink(deps: GoogleDeps): Promise<AuthResult> {
+  const got = await getGoogleIdToken(deps, 'googleLink')
+  if (!('idToken' in got)) return got
+  // No nonce, for the same reason as googleSignIn.
+  const { error } = await deps.supabase.auth.linkIdentity({
+    provider: 'google',
+    token: got.idToken,
+  })
+  if (error) return { ok: false, error: authErrorKey(error) }
+  return { ok: true }
+}
+
+type UnlinkableIdentity = Parameters<SupabaseAuth['auth']['unlinkIdentity']>[0]
+
+/**
+ * Disconnect a sign-in method. GoTrue refuses to remove an account's last
+ * identity; callers gate the action on canUnlink() so that is never offered.
+ * The session is refreshed afterwards so the stored user — which the Account
+ * screen reads — drops the identity too.
+ */
+export async function unlinkSignInMethod(
+  supabase: SupabaseAuth,
+  identity: UnlinkableIdentity,
+): Promise<AuthResult> {
+  const { error } = await supabase.auth.unlinkIdentity(identity)
+  if (error) return { ok: false, error: authErrorKey(error) }
+  await supabase.auth.refreshSession()
   return { ok: true }
 }
 
@@ -231,9 +300,10 @@ export async function emailSignUp(
  * account-existence oracle. The ONLY failures reported are ones that say nothing
  * about the address: a throttle and a dead network.
  *
- * `redirectTo` is the WEB reset page (apps/web ResetPasswordPage), not an app
- * route — the user requests the reset in the app and completes it in a browser.
- * It must also be on the Supabase dashboard's redirect allow-list.
+ * `redirectTo` is the app's claimed /app/reset-password link (see
+ * passwordResetLink.ts): opened on this device it completes in the app, opened
+ * anywhere else it falls through to the website. It must also be on the
+ * Supabase dashboard's redirect allow-list.
  */
 export async function requestPasswordReset(
   supabase: SupabaseAuth,

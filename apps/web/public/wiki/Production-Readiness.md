@@ -40,6 +40,38 @@ It checks TLS, the HTTP→HTTPS redirect, security headers, asset caching, key r
 - *Build fails at `generate-seo-pages.mjs`:* `SUPABASE_SERVICE_ROLE_KEY` is missing on Production. Previews skip that step automatically.
 - *OAuth returns to the wrong host:* add the exact URL to Supabase Redirect URLs. A trailing slash matters.
 
+### Sign-in providers and account security (Supabase dashboard)
+
+None of this lives in the repo (there is no `supabase/config.toml`), so it is recorded here.
+
+**Sign in with Apple on the web.** Native iOS sign-in uses the app's bundle ID and needs no secret. The web uses Apple's OAuth flow, which needs a Services ID and a client secret.
+1. Apple Developer → Identifiers → **Services IDs** → create `com.gracechords.web` and enable *Sign in with Apple*.
+2. Configure it with **Primary App ID `com.gracechords.app`**. This is what makes Apple return the same user id on the web as on iOS, so an iOS user lands in their existing account. With a different primary App ID they would get a second account.
+3. Domains: `<project>.supabase.co`. Return URL: `https://<project>.supabase.co/auth/v1/callback`.
+4. Keys → create a key with *Sign in with Apple* (primary App ID `com.gracechords.app`) and download the `.p8`. Keep it in the password manager, never in the repo.
+5. Generate the secret: `node apps/web/scripts/apple-client-secret.mjs --team J7Y8NYZ48Q --key-id <KEY_ID> --services-id com.gracechords.web --p8 <path>`.
+6. Supabase → Authentication → Providers → **Apple**: Client IDs `com.gracechords.web,com.gracechords.app` (Services ID first; the bundle ID keeps native iOS working), Secret Key = the JWT from step 5.
+
+**The Apple secret expires (Apple caps it at 6 months), so it is rotated automatically.** The `Rotate Sign in with Apple secret` workflow (`.github/workflows/rotate-apple-secret.yml`) runs on the 1st of every month, mints a fresh 180-day secret, and writes it to Supabase through the Management API. Because each secret lasts about five months longer than the gap between runs, several failed runs in a row still leave a working secret. A failed run emails you.
+- One-time setup: add the repository secrets `APPLE_P8` (the full `.p8` contents), `APPLE_KEY_ID`, `APPLE_TEAM_ID`, `APPLE_SERVICES_ID`, `SUPABASE_ACCESS_TOKEN` (Supabase → Account → Access Tokens, scoped to this one project with only *Application services → Auth: Write*) and `SUPABASE_PROJECT_REF`. Then run the workflow once by hand from the Actions tab.
+- Apple has no way to test a secret short of a real sign-in. After the first run, or after changing any of those secrets, try "Continue with Apple" on the site.
+- If the workflow is ever disabled (GitHub pauses scheduled workflows after 60 days without repository activity), web Apple sign-in and linking fail when the last secret lapses. iOS keeps working. To recover, re-enable the workflow and run it, or run step 5 by hand and paste the value.
+
+**Auth settings** (Authentication → Providers → Email, and Authentication → Sign In / Providers):
+- **Secure password change: ON.** A password change on a session older than 24h needs reauthentication. The apps prove it with the current password, or for Apple/Google-only accounts setting a first password, with an emailed code.
+- **Allow manual linking: ON.** Profile → Security (web) and Account → Sign-in methods (app) connect Apple/Google to an existing account. Supabase still auto-links identities that share a verified email; manual linking covers the rest, chiefly Apple *Hide My Email* addresses.
+- **Password policy:** minimum 8, with lowercase, uppercase, digits and symbols. It must match `PASSWORD_POLICY` in `packages/core/src/auth/passwordPolicy.ts`, which both apps validate against.
+- Leaked-password protection needs a paid plan, so it is off.
+
+**Email delivery.** Reset links, confirmation links and reauthentication codes all go through Supabase's mailer.
+- Use **custom SMTP**. The built-in sender is rate-limited to a handful of emails per hour.
+- Register the SMTP sending domain/address in Apple Developer → *Sign in with Apple for Email Communication* (with SPF). Without it, mail to `@privaterelay.appleid.com` addresses is silently dropped, so Apple users with Hide My Email never get reset or reauthentication emails.
+
+**Test** (on a Preview whose URL is in Redirect URLs):
+- Continue with Apple on `/login` in Safari and in Chrome. It should land in the *same* account you use on iOS.
+- Profile → Security: change your password, then connect and disconnect Google.
+- With an Apple-only test account: set a password, then sign in with email + password.
+
 ---
 
 ## 2. Error handling & UX
@@ -172,6 +204,8 @@ for i in $(seq 1 30); do curl -s -o /dev/null -w "%{http_code} " -X POST https:/
 - [x] Web Analytics enabled on the Pages project
 - [ ] `client_errors` migration applied in Supabase
 - [ ] Supabase Site URL and Redirect URLs set for gracechords.com
+- [ ] Apple Services ID set in Supabase, and the `Rotate Sign in with Apple secret` workflow's secrets added and run once
+- [ ] Supabase: Secure password change ON, Allow manual linking ON, custom SMTP registered with Apple's private relay
 - [ ] Google Search Console property verified and sitemap submitted
 
 **After each deploy**

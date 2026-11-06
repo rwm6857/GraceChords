@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  appleLink,
   appleSignIn,
   emailSignIn,
   emailSignUp,
+  googleLink,
   googleSignIn,
   requestPasswordReset,
+  unlinkSignInMethod,
   type AppleDeps,
   type GoogleDeps,
 } from '../authFlows'
@@ -19,6 +22,9 @@ function fakeSupabase(overrides: Record<string, unknown> = {}): SupabaseAuth {
       signUp: vi.fn().mockResolvedValue({ data: { user: {}, session: {} }, error: null }),
       updateUser: vi.fn().mockResolvedValue({ data: {}, error: null }),
       resetPasswordForEmail: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      linkIdentity: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      unlinkIdentity: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      refreshSession: vi.fn().mockResolvedValue({ data: {}, error: null }),
       ...overrides,
     },
   } as unknown as SupabaseAuth
@@ -385,5 +391,75 @@ describe('requestPasswordReset', () => {
       ok: false,
       error: 'errors.network',
     })
+  })
+})
+
+describe('appleLink', () => {
+  it('links with the RAW nonce, never signing in', async () => {
+    const deps = appleDeps()
+    expect(await appleLink(deps)).toEqual({ ok: true })
+    expect(deps.signInAsync).toHaveBeenCalledWith('sha256(raw-nonce)')
+    expect(deps.supabase.auth.linkIdentity).toHaveBeenCalledWith({
+      provider: 'apple',
+      token: 'apple-jwt',
+      nonce: 'raw-nonce',
+    })
+    expect(deps.supabase.auth.signInWithIdToken).not.toHaveBeenCalled()
+  })
+
+  it('treats a dismissed sheet as a cancel', async () => {
+    const deps = appleDeps({
+      signInAsync: vi.fn().mockRejectedValue({ code: 'ERR_REQUEST_CANCELED' }),
+    })
+    expect(await appleLink(deps)).toEqual({ ok: false, canceled: true })
+    expect(deps.supabase.auth.linkIdentity).not.toHaveBeenCalled()
+  })
+
+  it('reports an Apple ID already on another account', async () => {
+    const deps = appleDeps({
+      supabase: fakeSupabase({
+        linkIdentity: vi.fn().mockResolvedValue({ data: {}, error: { code: 'identity_already_exists' } }),
+      }),
+    })
+    expect(await appleLink(deps)).toEqual({ ok: false, error: 'errors.identityAlreadyLinked' })
+  })
+})
+
+describe('googleLink', () => {
+  it('links the Google id token without a nonce', async () => {
+    const deps = googleDeps()
+    expect(await googleLink(deps)).toEqual({ ok: true })
+    expect(deps.supabase.auth.linkIdentity).toHaveBeenCalledWith({
+      provider: 'google',
+      token: 'google-jwt',
+    })
+  })
+
+  it('reports manual linking being off', async () => {
+    const deps = googleDeps({
+      supabase: fakeSupabase({
+        linkIdentity: vi.fn().mockResolvedValue({ data: {}, error: { code: 'manual_linking_disabled' } }),
+      }),
+    })
+    expect(await googleLink(deps)).toEqual({ ok: false, error: 'errors.linkingUnavailable' })
+  })
+})
+
+describe('unlinkSignInMethod', () => {
+  const identity = { identity_id: 'i1', provider: 'google' } as Parameters<typeof unlinkSignInMethod>[1]
+
+  it('unlinks and refreshes the session', async () => {
+    const supabase = fakeSupabase()
+    expect(await unlinkSignInMethod(supabase, identity)).toEqual({ ok: true })
+    expect(supabase.auth.unlinkIdentity).toHaveBeenCalledWith(identity)
+    expect(supabase.auth.refreshSession).toHaveBeenCalled()
+  })
+
+  it('maps the last-identity refusal and skips the refresh', async () => {
+    const supabase = fakeSupabase({
+      unlinkIdentity: vi.fn().mockResolvedValue({ data: {}, error: { code: 'single_identity_not_deletable' } }),
+    })
+    expect(await unlinkSignInMethod(supabase, identity)).toEqual({ ok: false, error: 'errors.lastSignInMethod' })
+    expect(supabase.auth.refreshSession).not.toHaveBeenCalled()
   })
 })

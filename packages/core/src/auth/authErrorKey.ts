@@ -85,6 +85,13 @@ export function authErrorKey(error: AuthErrorish): string {
   }
   if (code === 'over_email_send_rate_limit') return 'errors.rateLimited'
 
+  // Password self-service and linked sign-in methods.
+  if (code === 'reauthentication_needed') return 'errors.reauthNeeded'
+  if (code === 'reauthentication_not_valid') return 'errors.reauthCodeInvalid'
+  if (code === 'identity_already_exists') return 'errors.identityAlreadyLinked'
+  if (code === 'single_identity_not_deletable') return 'errors.lastSignInMethod'
+  if (code === 'manual_linking_disabled') return 'errors.linkingUnavailable'
+
   // Message fallbacks for responses without a code.
   if (message.includes('invalid login') || message.includes('invalid credentials')) {
     return 'errors.invalidCredentials'

@@ -66,6 +66,8 @@ export * from './reflections/reflectionsRepo'
 // Password policy (single source of truth) + provider-error → i18n key mapper
 export * from './auth/passwordPolicy'
 export * from './auth/authErrorKey'
+export * from './auth/passwordChange'
+export * from './auth/identities'
 
 // Role hierarchy + canonical role read
 export * from './rbac/roles'

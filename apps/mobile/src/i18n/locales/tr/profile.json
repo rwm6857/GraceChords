@@ -11,6 +11,8 @@
   "name": "Name",
   "email": "Email",
   "changePassword": "Change password",
+  "setPassword": "Şifre belirle",
+  "signInMethods": "Giriş yöntemleri",
   "nameSheet": {
     "title": "Your name",
     "placeholder": "Alex Brown",

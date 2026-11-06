@@ -639,3 +639,110 @@
     max-width: 100%;
   }
 }
+
+/* ===== Social sign-in (Apple, Google) ===== */
+.gc-auth-social {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gc-auth-social .gc-btn {
+  width: 100%;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* Apple's guidelines allow a black or white button with the logo in the text
+   colour; using the text/background tokens gives black in light theme and
+   white in dark. Doubled class so it outranks .gc-btn, which loads later. */
+.gc-btn.gc-auth-apple-btn {
+  background: var(--gc-text);
+  color: var(--gc-bg);
+  border: 1px solid var(--gc-text);
+}
+
+.gc-btn.gc-auth-apple-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--gc-text) 88%, var(--gc-bg));
+}
+
+/* ===== Profile → Security ===== */
+.gc-security-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gc-security-panel__title {
+  font-size: var(--gc-font-body);
+  font-weight: 600;
+  margin: 0;
+}
+
+.gc-security-panel__hint {
+  margin: 0;
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-security-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.gc-security-notice {
+  background: color-mix(in srgb, var(--gc-success) 12%, var(--gc-surface-1));
+  border: 1px solid color-mix(in srgb, var(--gc-success) 30%, var(--gc-separator));
+  color: var(--gc-text);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-signin-methods {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gc-signin-method {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  background: var(--gc-surface-1);
+  border: 1px solid var(--gc-separator);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.gc-signin-method__logo {
+  display: inline-flex;
+  color: var(--gc-text);
+}
+
+.gc-signin-method__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gc-signin-method__name {
+  font-weight: 500;
+}
+
+.gc-signin-method__detail {
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+  overflow-wrap: anywhere;
+}
+
+.gc-signin-method__actions {
+  display: flex;
+  gap: var(--space-2);
+}

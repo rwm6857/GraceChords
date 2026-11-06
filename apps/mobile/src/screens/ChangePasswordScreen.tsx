@@ -19,12 +19,21 @@ import ConstrainedContent from '../components/ConstrainedContent'
 import { useTheme } from '../theme/ThemeProvider'
 import { supabase } from '../lib/supabase'
 import { useCurrentUser } from '../lib/currentUser'
-import { changePassword } from '../lib/passwordChange'
+import {
+  changePassword,
+  hasPassword,
+  requestReauthentication,
+  setPassword,
+} from '../lib/passwordChange'
 import { MIN_PASSWORD_LENGTH } from '../lib/authValidation'
 
-// Account → Change password. The orchestration (verify → update → drop other
-// sessions) lives in src/lib/passwordChange.ts so it unit-tests headless; this
-// screen is the form and the error surface.
+// Account → Change password, or Set a password for an account that only signs
+// in with Apple / Google. The orchestration lives in @gracechords/core (via
+// src/lib/passwordChange.ts) so it unit-tests headless and is shared with the
+// web Profile → Security section; this screen is the form and the error surface.
+//
+// "Set" mode has no current password to prove, so a session older than 24h is
+// asked for a code emailed by reauthenticate() ("Secure password change" is on).
 //
 // NOTHING on this screen may be logged or reported: no password values in
 // console output, breadcrumbs or analytics, and no analytics events at all.
@@ -38,6 +47,12 @@ export default function ChangePasswordScreen() {
   const insets = useSafeAreaInsets()
   const user = useCurrentUser()
 
+  // Fixed at mount: setting a password flips hasPassword(), and the form must
+  // not switch modes under the success alert.
+  const [mode] = useState<'change' | 'set'>(() => (hasPassword(user) ? 'change' : 'set'))
+  const [code, setCode] = useState('')
+  const [awaitingCode, setAwaitingCode] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -45,12 +60,53 @@ export default function ChangePasswordScreen() {
   const [busy, setBusy] = useState(false)
   const [barH, setBarH] = useState(0)
 
+  async function sendCode() {
+    setError(null)
+    const res = await requestReauthentication(supabase)
+    if (!res.ok) {
+      setError(res.error ?? 'errors.generic')
+      return
+    }
+    setAwaitingCode(true)
+    setNotice(tx('setPassword.codeSent', { email: user?.email ?? '' }))
+  }
+
+  async function onSubmitSet() {
+    setBusy(true)
+    try {
+      const result = await setPassword(supabase, {
+        newPassword: next,
+        confirmPassword: confirm,
+        nonce: awaitingCode ? code : undefined,
+      })
+      if (result.needsReauth) {
+        await sendCode()
+        return
+      }
+      if (!result.ok) {
+        setError(result.error ?? 'errors.generic')
+        return
+      }
+      Alert.alert(
+        tx('setPassword.successTitle'),
+        tx('setPassword.successMessage', { email: user?.email ?? '' }),
+        [{ text: tx('common:ok'), onPress: () => router.back() }],
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function onSubmit() {
     if (busy) return
     setError(null)
     const email = user?.email
     if (!email) {
       setError('errors.generic')
+      return
+    }
+    if (mode === 'set') {
+      await onSubmitSet()
       return
     }
     setBusy(true)
@@ -78,6 +134,8 @@ export default function ChangePasswordScreen() {
     }
   }
 
+  const submitLabel = mode === 'set' ? tx('setPassword.submit') : tx('changePassword.submit')
+
   return (
     <Screen edges={['left', 'right']}>
       <KeyboardAvoidingView
@@ -103,7 +161,7 @@ export default function ChangePasswordScreen() {
               paddingBottom: t.spacing.md,
             }}
           >
-            {tx('changePassword.title')}
+            {mode === 'set' ? tx('setPassword.title') : tx('changePassword.title')}
           </Text>
 
           <ConstrainedContent tier="form">
@@ -111,15 +169,21 @@ export default function ChangePasswordScreen() {
               {/* autoComplete/textContentType are set so the OS offers the SAVED
                   password for the current field and a NEW one for the others —
                   never autofilling the current password into the new fields. */}
-              <TextField
-                label={tx('changePassword.current')}
-                icon="lock"
-                value={current}
-                onChangeText={setCurrent}
-                secureTextEntry
-                autoComplete="current-password"
-                textContentType="password"
-              />
+              {mode === 'set' ? (
+                <Text style={{ fontSize: 14, lineHeight: 19, color: t.colors.sec }}>
+                  {tx('setPassword.intro', { email: user?.email ?? '' })}
+                </Text>
+              ) : (
+                <TextField
+                  label={tx('changePassword.current')}
+                  icon="lock"
+                  value={current}
+                  onChangeText={setCurrent}
+                  secureTextEntry
+                  autoComplete="current-password"
+                  textContentType="password"
+                />
+              )}
               <TextField
                 label={tx('changePassword.new')}
                 icon="lock"
@@ -140,6 +204,24 @@ export default function ChangePasswordScreen() {
                 textContentType="newPassword"
               />
 
+              {awaitingCode ? (
+                <TextField
+                  label={tx('setPassword.code')}
+                  icon="envelope"
+                  value={code}
+                  onChangeText={setCode}
+                  keyboardType="number-pad"
+                  autoComplete="one-time-code"
+                  textContentType="oneTimeCode"
+                />
+              ) : null}
+
+              {notice && !error ? (
+                <Text accessibilityLiveRegion="polite" style={{ fontSize: 13.5, color: t.colors.sec }}>
+                  {notice}
+                </Text>
+              ) : null}
+
               {error ? (
                 <Text
                   accessibilityLiveRegion="polite"
@@ -153,7 +235,7 @@ export default function ChangePasswordScreen() {
                 onPress={() => void onSubmit()}
                 disabled={busy}
                 accessibilityRole="button"
-                accessibilityLabel={tx('changePassword.submit')}
+                accessibilityLabel={submitLabel}
                 style={({ pressed }) => ({
                   height: 50,
                   borderRadius: t.radii.md,
@@ -166,9 +248,22 @@ export default function ChangePasswordScreen() {
                 })}
               >
                 <Text style={{ fontSize: 16.5, fontWeight: '700', color: t.colors.onAccent }}>
-                  {busy ? tx('pleaseWait') : tx('changePassword.submit')}
+                  {busy ? tx('pleaseWait') : submitLabel}
                 </Text>
               </Pressable>
+
+              {awaitingCode ? (
+                <Pressable
+                  onPress={() => void sendCode()}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                >
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: t.colors.textAccent }}>
+                    {tx('setPassword.resendCode')}
+                  </Text>
+                </Pressable>
+              ) : null}
 
               <Text style={{ fontSize: 12.5, lineHeight: 17, color: t.colors.sec }}>
                 {tx('changePassword.otherDevicesNote')}

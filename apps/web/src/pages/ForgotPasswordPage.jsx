@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { authErrorKey } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
 import '../styles/auth.css'
 
+const RESEND_COOLDOWN_SECONDS = 60
+
+// Only failures that say nothing about the address are shown. Anything else is
+// treated as sent, so this form never reveals whether an account exists.
+const SURFACED_ERRORS = new Set(['errors.rateLimited', 'errors.network'])
+
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation('auth')
+
   const [isDark, setIsDark] = useState(
     () => document.documentElement.dataset.theme === 'dark'
   )
@@ -18,40 +28,35 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState(null)
+  const [cooldown, setCooldown] = useState(0)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  useEffect(() => {
+    if (cooldown <= 0) return undefined
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  async function sendLink(e) {
+    e?.preventDefault()
+    if (cooldown > 0) return
+    setError(null)
     setSubmitting(true)
-    // VITE_SITE_URL should be set in your .env file (e.g. VITE_SITE_URL=https://gracechords.com)
     const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
-    await supabase.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${siteUrl}/reset-password`,
     })
-    // Always show the generic confirmation — do not reveal whether the email exists
-    setSubmitted(true)
     setSubmitting(false)
-  }
-
-  if (submitted) {
-    return (
-      <div className="gc-auth-page">
-        <div className="gc-auth-card">
-          <img
-            src={isDark ? '/gc-brand-wide-dark.svg' : '/gc-brand-wide-light.svg'}
-            alt="GraceChords"
-            className="gc-auth-card__wordmark"
-          />
-          <h1 className="gc-auth-card__title">Check your email</h1>
-          <p className="gc-auth-card__subtitle" style={{ marginBottom: 0 }}>
-            If an account exists with that email, you'll receive a reset link shortly.
-            Check your spam folder if it doesn't arrive within a few minutes.
-          </p>
-          <p className="gc-auth-card__footer">
-            <Link to="/login">Back to sign in</Link>
-          </p>
-        </div>
-      </div>
-    )
+    if (resetError) {
+      const key = authErrorKey(resetError)
+      if (SURFACED_ERRORS.has(key)) {
+        setError(t(key))
+        return
+      }
+      console.error('[auth] resetPasswordForEmail failed:', resetError)
+    }
+    setSubmitted(true)
+    setCooldown(RESEND_COOLDOWN_SECONDS)
   }
 
   return (
@@ -62,36 +67,57 @@ export default function ForgotPasswordPage() {
           alt="GraceChords"
           className="gc-auth-card__wordmark"
         />
-        <h1 className="gc-auth-card__title">Forgot password</h1>
-        <p className="gc-auth-card__subtitle">
-          Enter your email and we'll send you a reset link.
-        </p>
 
-        <form onSubmit={handleSubmit} className="gc-auth-form">
-          <div className="gc-form-field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              disabled={submitting}
-            />
-          </div>
-          <button
-            type="submit"
-            className="gc-btn gc-btn--primary"
-            disabled={submitting}
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            {submitting ? 'Sending…' : 'Send reset link'}
-          </button>
-        </form>
+        {submitted ? (
+          <>
+            <h1 className="gc-auth-card__title">{t('checkYourEmail')}</h1>
+            <p className="gc-auth-card__subtitle">{t('forgotPasswordPage.sentMessage')}</p>
+            {error && <div className="gc-auth-error" role="alert">{error}</div>}
+            <button
+              type="button"
+              className="gc-btn gc-btn--secondary"
+              onClick={sendLink}
+              disabled={submitting || cooldown > 0}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {cooldown > 0
+                ? t('forgotPasswordPage.cooldown', { seconds: cooldown })
+                : t('forgotPasswordPage.resend')}
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 className="gc-auth-card__title">{t('forgotPasswordPage.title')}</h1>
+            <p className="gc-auth-card__subtitle">{t('forgotPasswordPage.subtitle')}</p>
+
+            <form onSubmit={sendLink} className="gc-auth-form">
+              {error && <div className="gc-auth-error" role="alert">{error}</div>}
+              <div className="gc-form-field">
+                <label htmlFor="email">{t('email')}</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  disabled={submitting}
+                />
+              </div>
+              <button
+                type="submit"
+                className="gc-btn gc-btn--primary"
+                disabled={submitting}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                {submitting ? t('forgotPasswordPage.sending') : t('forgotPasswordPage.submit')}
+              </button>
+            </form>
+          </>
+        )}
 
         <p className="gc-auth-card__footer">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login">{t('backToSignIn')}</Link>
         </p>
       </div>
     </div>

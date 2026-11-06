@@ -11,6 +11,8 @@
   "name": "Name",
   "email": "Email",
   "changePassword": "Change password",
+  "setPassword": "비밀번호 설정",
+  "signInMethods": "로그인 방법",
   "nameSheet": {
     "title": "Your name",
     "placeholder": "Alex Brown",

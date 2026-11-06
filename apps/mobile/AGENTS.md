@@ -552,6 +552,18 @@ duplicate logic here and never edit core internals to suit mobile.
   originals, mobile ships PNGs generated from them, because RN's `Image`
   decodes WebP on Android only and a `.webp` avatar renders as nothing on iOS.
   See `assets/README.md` for the regeneration command.
+- **Password + sign-in methods.** Account → Security has **Change password** /
+  **Set a password** (`app/account/password.tsx`; the mode comes from core
+  `hasPassword()`, since an Apple/Google account that sets a password gets
+  `user_metadata.password_set`, not an `email` identity) and **Sign-in methods**
+  (`app/account/sign-in-methods.tsx`). The password logic is shared with web in
+  `packages/core/src/auth/passwordChange.ts`. Supabase "Secure password change"
+  is ON: the current-password check satisfies it for password accounts, while
+  setting a first password on a session older than 24h needs an emailed code
+  (`requestReauthentication` → `nonce`). Linking reuses the native token flows
+  through `appleLink` / `googleLink` → `supabase.auth.linkIdentity` (requires
+  "Allow manual linking"). Apple can only be linked on iOS. Unlinking is gated
+  on core `canUnlink()`, because GoTrue refuses to remove an account's last identity.
 
 ## Song Viewer, Performer & export
 
@@ -930,8 +942,7 @@ The whole-set **Charts ZIP / ChordPro** export backends (whole-set PDF ships via
 `/api/export/setlist`; the ZIP/ChordPro tiles render disabled), **offline
 downloads for songs** (Bible-translation downloads ship — see the downloads
 module above — but on-device song/setlist persistence does not), the Song Library
-**"Add song"** button (a no-op), **password reset / email-confirmation** screens (the login "Forgot?"
-link is an informational alert only), tablet master-detail, GraceTracks, and
+**"Add song"** button (a no-op), tablet master-detail, GraceTracks, and
 migrating web's `features/readings` onto core's `bible` module.
 
 **No longer out of scope:** EAS Build ships iOS today (`eas.json` carries a live
