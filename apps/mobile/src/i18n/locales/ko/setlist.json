@@ -59,10 +59,7 @@
     "deleteSet": "셋리스트 삭제"
   },
   "rowActions": {
-    "closeSongOptions": "찬양곡 옵션 닫기",
-    "changeKey": "키 변경",
-    "duplicate": "복제",
-    "removeFromSet": "셋리스트에서 제거"
+    "duplicate": "복제"
   },
   "remove": "제거",
   "performer": {
