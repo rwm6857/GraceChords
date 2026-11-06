@@ -76,7 +76,10 @@ function buildSongSeo(entry, parsed, id){
     )
   }
   const keywords = keywordParts.join(', ')
-  const url = `${SITE_URL}/songs/${encodeURIComponent(routeSlug)}`
+  // Trailing slash: the pre-rendered page (songs/<slug>/index.html) is served
+  // at /songs/<slug>/ (no-slash 308s there), and it and the sitemap declare
+  // that URL. A different canonical here gave crawlers two conflicting ones.
+  const url = `${SITE_URL}/songs/${encodeURIComponent(routeSlug)}/`
   const authors = Array.isArray(entry?.authors) ? entry.authors.filter(Boolean) : []
   const names = authors.length ? authors.join(', ') : ''
   const ld = {
