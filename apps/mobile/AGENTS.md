@@ -405,11 +405,7 @@ duplicate logic here and never edit core internals to suit mobile.
   time). Phones get a native bottom sheet with grabber/detents, iPads a
   centered narrow form sheet. **There is no longer an exception — all 16 sheets
   go through it**, so a new sheet uses the `useFormSheet` + `FormSheetShell`
-  pattern. (`src/components/BottomSheet.tsx` and
-  `src/components/setlist/RowActionsSheet.tsx` are the hand-rolled `Modal`
-  sheet and its only caller; nothing imports `RowActionsSheet` any more, so both
-  are dead code awaiting deletion. This doc previously described them as the one
-  live exception.)
+  pattern.
   **The bottom safe-area inset belongs to the host, not the sheet.** `app/sheet.tsx`
   pads its surface-painted wrapper by `insets.bottom` for every sheet — a
   `fitToContents` sheet is only as tall as its React content, so content that stops

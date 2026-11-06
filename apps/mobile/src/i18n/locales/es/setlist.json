@@ -59,10 +59,7 @@
     "deleteSet": "Eliminar repertorio"
   },
   "rowActions": {
-    "closeSongOptions": "Cerrar opciones de la canción",
-    "changeKey": "Cambiar tono",
-    "duplicate": "Duplicar",
-    "removeFromSet": "Quitar del repertorio"
+    "duplicate": "Duplicar"
   },
   "remove": "Quitar",
   "performer": {

@@ -3,9 +3,8 @@ import { Platform, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../theme/ThemeProvider'
 
-// Chrome for sheets hosted in the native formSheet route (app/sheet.tsx): the
-// same title/action header as BottomSheet, minus the Modal, backdrop, slide
-// animation, and grabber — presentation, dismissal, and the grabber are native.
+// Chrome for sheets hosted in the native formSheet route (app/sheet.tsx): a
+// title/action header only — presentation, dismissal, and the grabber are native.
 //
 // ANDROID: a trailing "Done" is an iOS idiom. Material dismisses a bottom sheet
 // with the drag handle, the scrim or Back — all three already work here (see

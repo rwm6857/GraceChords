@@ -59,10 +59,7 @@
     "deleteSet": "Delete set"
   },
   "rowActions": {
-    "closeSongOptions": "Close song options",
-    "changeKey": "Change key",
-    "duplicate": "Duplicate",
-    "removeFromSet": "Remove from set"
+    "duplicate": "Duplicate"
   },
   "remove": "Remove",
   "performer": {
