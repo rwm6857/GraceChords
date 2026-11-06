@@ -33,5 +33,10 @@
     "copiedTitle": "복사됨",
     "setLinkCopied": "셋리스트 링크가 클립보드에 복사되었습니다.",
     "couldNotCopyLinkTitle": "링크를 복사할 수 없음"
-  }
+  },
+  "liveTitle": "Have everyone follow along",
+  "liveBody": "Send one link — their screens follow yours as you change songs and keys.",
+  "liveNowTitle": "Live now",
+  "liveNowBody": "Send the link again or end the session.",
+  "orSendCopy": "Or send a copy"
 }

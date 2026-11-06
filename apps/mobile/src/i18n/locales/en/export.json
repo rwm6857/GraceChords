@@ -33,5 +33,10 @@
     "copiedTitle": "Copied",
     "setLinkCopied": "Set link copied to the clipboard.",
     "couldNotCopyLinkTitle": "Could not copy link"
-  }
+  },
+  "liveTitle": "Have everyone follow along",
+  "liveBody": "Send one link — their screens follow yours as you change songs and keys.",
+  "liveNowTitle": "Live now",
+  "liveNowBody": "Send the link again or end the session.",
+  "orSendCopy": "Or send a copy"
 }

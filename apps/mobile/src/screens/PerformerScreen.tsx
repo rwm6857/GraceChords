@@ -55,7 +55,8 @@ import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
 import { useChartAutoFit } from '../lib/useChartAutoFit'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
-import { useSessionController } from '../lib/useSessionController'
+import { parseItemIndex } from '../lib/liveSession'
+import { startOrManageLiveSession, useLiveSessionSource } from '../lib/useLiveSession'
 import {
   pushSetToTelegram,
   pushSongToTelegram,
@@ -70,7 +71,7 @@ const SWIPE_THRESHOLD = 50
 // session-ephemeral here too — it seeds from each entry's setlist key but is
 // never written back). Navigation is Prev/Next, horizontal swipe, and a
 // tappable progress rail, all sliding between songs.
-export default function PerformerScreen({ setlistId }: { setlistId: string }) {
+export default function PerformerScreen({ setlistId, autoLive = false }: { setlistId: string; autoLive?: boolean }) {
   const t = useTheme()
   const { t: tx } = useTranslation(['setlist', 'song', 'export', 'errors', 'common'])
   const router = useRouter()
@@ -79,10 +80,10 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
   // metadata. We never mutate here, so its autosave stays idle.
   const { name, items, loading: setLoading, notFound, error: setError } = useSetlistBuilder(setlistId)
 
-  // Leader-side live session (broadcasts current item + transpose to web
-  // followers). Idle until "Start session" is tapped; adopts an already-running
-  // session for this setlist on mount.
-  const sessionCtl = useSessionController(setlistId)
+  // Leader-side live session (app-level store, src/lib/liveSession.ts). This
+  // screen is attached while the live session's source is this setlist;
+  // leaving it tells followers the leader has nothing open.
+  const live = useLiveSessionSource(setlistId ? { kind: 'set', setlistId } : null)
 
   const [index, setIndex] = useState(0)
   const entry = items[index]
@@ -159,19 +160,45 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))
   }, [nativeKey])
 
+  // Resuming a running session: move to the item + transpose the session last
+  // broadcast before sending anything, so followers aren't pulled back to the
+  // first song. The index lands first; the transpose waits for that song's
+  // chart so `seedSteps` is computed from its real native key.
+  const [restoredToken, setRestoredToken] = useState(0)
+  useEffect(() => {
+    if (live.restoreToken === restoredToken) return
+    const r = live.restore
+    const finish = () => {
+      live.release()
+      setRestoredToken(live.restoreToken)
+    }
+    if (!r) return finish()
+    if (!items.length) return
+    const target = Math.min(Math.max(parseItemIndex(r.itemUid) ?? 0, 0), items.length - 1)
+    if (index !== target) {
+      setIndex(target)
+      setDelta(0)
+      return
+    }
+    if (!songReady && !isVerseEntry && !songError && !parseError) return
+    setDelta(r.transpose - seedSteps)
+    finish()
+  }, [live, restoredToken, items.length, index, songReady, isVerseEntry, songError, parseError, seedSteps])
+
   // Broadcast the leader's current item + transpose whenever they change. The
   // snapshot the session was created from preserves item order, so the current
   // item's stable uid is `i${index}`. `steps` is the net semitone offset from
-  // native, which the follower re-applies to the same song. The controller
+  // native, which the follower re-applies to the same song. The store
   // de-dupes + debounces, so calling this on every relevant change is safe.
+  const { live: isLive, broadcast, restoreToken } = live
   useEffect(() => {
-    if (!sessionCtl.session) return
-    sessionCtl.broadcast({
+    if (!isLive || restoreToken !== restoredToken) return
+    broadcast({
       itemUid: `i${index}`,
       transpose: steps,
       currentKey: effectiveKey || null,
     })
-  }, [sessionCtl, index, steps, effectiveKey])
+  }, [isLive, broadcast, restoreToken, restoredToken, index, steps, effectiveKey])
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.
@@ -275,40 +302,32 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
     } else Alert.alert(title, msg)
   }
 
-  // The live-session menu: pick which link to share (team/chords vs
-  // participant/lyrics) via the native share sheet, or end the session.
-  function showSessionMenu() {
-    Alert.alert(tx('setlist:session.manageTitle'), undefined, [
-      { text: tx('setlist:session.shareTeam'), onPress: () => { void sessionCtl.reshareChords() } },
-      { text: tx('setlist:session.shareEveryone'), onPress: () => { void sessionCtl.reshareLyrics() } },
-      {
-        text: tx('setlist:session.end'),
-        style: 'destructive',
-        onPress: () => {
-          sessionCtl.end().catch((err) => reportError(tx('setlist:session.endFailed'), err))
-        },
-      },
-      { text: tx('common:cancel'), style: 'cancel' },
-    ])
-  }
-
-  // Start / manage the live session from the header. Starting builds the frozen
-  // snapshot from the current entries; both starting and managing surface the
-  // session menu, from which the leader shares a link or ends the session.
+  // Start / manage the live session (header button, share-sheet row, or the
+  // builder's "?live=1" hand-off). Starting builds the frozen snapshot from the
+  // current entries; both starting and managing surface the session menu, from
+  // which the leader shares a link or ends the session.
   function onSessionButton() {
-    if (sessionCtl.session) {
-      showSessionMenu()
-      return
-    }
-    if (!count) {
+    if (!live.live && !count) {
       Alert.alert(tx('setlist:performer.noSongs'))
       return
     }
-    sessionCtl
-      .start(items.map((it) => ({ songId: it.songId, toKey: it.toKey, song: it.song })))
-      .then(() => showSessionMenu())
-      .catch((err) => reportError(tx('setlist:session.startFailed'), err))
+    startOrManageLiveSession(
+      tx,
+      { kind: 'set', setlistId },
+      items.map((it) => ({ songId: it.songId, toKey: it.toKey, song: it.song })),
+      name || null,
+    )
   }
+
+  // Arrived from the builder's "Have everyone follow along" row: go live once the
+  // entries are in (and only if this set isn't live already).
+  const autoLiveDone = useRef(false)
+  useEffect(() => {
+    if (!autoLive || autoLiveDone.current || setLoading || !count) return
+    autoLiveDone.current = true
+    if (!live.live) onSessionButton()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLive, setLoading, count, live.live])
 
   const shareSongFile = async (format: 'pdf' | 'jpg') => {
     if (!entry) return
@@ -441,27 +460,27 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
             <Pressable
               onPress={onSessionButton}
-              disabled={sessionCtl.busy}
+              disabled={live.busy}
               accessibilityRole="button"
-              accessibilityState={{ selected: !!sessionCtl.session }}
+              accessibilityState={{ selected: live.live }}
               accessibilityLabel={
-                sessionCtl.session ? tx('setlist:session.manageTitle') : tx('setlist:session.start')
+                live.live ? tx('setlist:session.manageTitle') : tx('setlist:session.start')
               }
               hitSlop={8}
               style={{
                 width: 40,
                 height: 40,
                 borderRadius: t.radii.pill,
-                backgroundColor: sessionCtl.session ? t.colors.accent : t.colors.surfaceAlt,
+                backgroundColor: live.live ? t.colors.accent : t.colors.surfaceAlt,
                 alignItems: 'center',
                 justifyContent: 'center',
-                opacity: sessionCtl.busy ? 0.5 : 1,
+                opacity: live.busy ? 0.5 : 1,
               }}
             >
               <SymbolIcon
                 name="antenna.radiowaves.left.and.right"
                 size={18}
-                color={sessionCtl.session ? t.colors.onAccent : t.colors.ink}
+                color={live.live ? t.colors.onAccent : t.colors.ink}
               />
             </Pressable>
             <HeaderIconButton icon="ellipsis" label={tx('setlist:performer.viewOptions')} onPress={() => setSheet('options')} />
@@ -699,6 +718,12 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
         songCount={count}
         initialScope={count > 1 ? 'set' : 'song'}
         handlers={shareHandlers}
+        live={live.live}
+        liveBusy={live.busy}
+        onLive={() => {
+          setSheet(null)
+          onSessionButton()
+        }}
       />
     </Screen>
   )

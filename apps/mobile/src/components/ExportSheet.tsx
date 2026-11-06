@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from './FormSheetShell'
+import LiveSessionRow, { LiveSessionDivider } from './LiveSessionRow'
 import SymbolIcon, { type SymbolIconProps } from './SymbolIcon'
 import { useFormSheet } from '../lib/formSheetHost'
 import { useTheme } from '../theme/ThemeProvider'
@@ -22,6 +23,8 @@ type ExportSheetProps = {
   onClose: () => void
   onExport: (format: 'pdf' | 'jpg') => Promise<void>
   onTelegram: () => Promise<void>
+  /** Live-session lead row; omitted where a song can't be led (personal songs). */
+  live?: { active: boolean; busy: boolean; onPress: () => void }
 }
 
 export default function ExportSheet(props: ExportSheetProps) {
@@ -29,7 +32,7 @@ export default function ExportSheet(props: ExportSheetProps) {
   return null
 }
 
-function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
+function ExportContent({ onClose, onExport, onTelegram, live }: ExportSheetProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('export')
   const [busy, setBusy] = useState<Busy>(null)
@@ -47,6 +50,12 @@ function ExportContent({ onClose, onExport, onTelegram }: ExportSheetProps) {
   return (
     <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, gap: t.spacing.md }}>
+        {live ? (
+          <>
+            <LiveSessionRow live={live.active} busy={live.busy} disabled={!!busy} onPress={live.onPress} />
+            <LiveSessionDivider />
+          </>
+        ) : null}
         {/* Format tiles — PDF and JPG as equals; both open the share sheet. */}
         <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
           {(

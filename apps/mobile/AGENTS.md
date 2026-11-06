@@ -590,6 +590,26 @@ duplicate logic here and never edit core internals to suit mobile.
   rendered rather than rendered inert. Its header does not auto-hide (it carries
   LIVE / title / reconnect state), so it passes `headerH: 0` and
   `chromeVisible: true` — the one Viewer option it deliberately skips.
+- **Live session (leader side)** is ONE app-level store, not per-screen state:
+  `src/lib/liveSession.ts` (RN-free, dependency-injected, unit-tested) +
+  `src/lib/useLiveSession.ts` (the Supabase-bound instance, hooks, and the
+  shared share/end menu). A session is led from a **source** — a setlist (the
+  Performer) or a single catalog song (the Song Viewer; its snapshot holds one
+  item, `i0`, so followers can't tell the difference). The source screen
+  attaches while mounted (`useLiveSessionSource`) and **detaches on unmount**,
+  which writes `current_item_uid = null`: followers show "Waiting for the
+  leader…" and the session stays live — leaving never ends it or prompts. The
+  60 s heartbeat re-sends the whole position (nulls included), not just
+  `last_active_at`. On relaunch `app/_layout.tsx` adopts the leader's live row
+  into the store, and re-attaching restores the last position before any
+  broadcast (the store holds broadcasts until `release()`). `end()` keeps state
+  when the write fails so End is retryable. While live, `LiveSessionCapsule`
+  (root overlay, under the status bar) shows on every screen except the
+  source, the follower and auth, and taps back to the source. Entry points:
+  the radio-tower header button (Performer + Song Viewer; hidden for personal
+  songs) and `LiveSessionRow`, which leads every share sheet (Song Viewer,
+  Performer, and the Setlist Builder, which hands off via `/perform/:id?live=1`).
+  Only one session runs at a time; starting another asks to end the current one.
 - **Export/share** is server-side via the web app's Pages Functions (base
   `EXPO_PUBLIC_API_BASE_URL`, `src/lib/api.ts`): `src/lib/exportSong.ts` calls
   `POST /api/export/song` (PDF, or a page-1 PNG for `jpg`) and

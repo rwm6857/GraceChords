@@ -84,7 +84,12 @@
     "shareEveryone": "Share participant link (lyrics)",
     "end": "End session",
     "startFailed": "Could not start session",
-    "endFailed": "Could not end session"
+    "endFailed": "Could not end session",
+    "switchTitle": "End your current live session?",
+    "switchMessage": "Only one live session can run at a time. End the current one and start a new one?",
+    "switchConfirm": "End and start new",
+    "capsuleReturn": "Tap to return",
+    "capsuleA11y": "Live session running. Tap to return to it."
   },
   "verse": {
     "add": "Add verse",
@@ -102,8 +107,10 @@
     "endedBody": "The session has ended.",
     "unavailable": "Not available in this view.",
     "catchUp": "Leader moved on — tap to catch up",
-    "reconnecting": "Reconnecting…",
-    "waiting": "Waiting for the leader…",
+    "offline": "You're offline — reconnecting…",
+    "nothingOpenTitle": "Waiting for the leader…",
+    "nothingOpenBody": "The leader doesn't have a song open right now.",
+    "leaderGone": "Leader disconnected — showing the last song.",
     "live": "LIVE",
     "loadingSong": "Loading song…",
     "home": "Home",

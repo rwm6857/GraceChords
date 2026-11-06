@@ -3,7 +3,7 @@ import { Alert, Platform, ScrollView, Text, View } from 'react-native'
 import * as Font from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { endSession, fetchActiveSessionForController } from '@gracechords/core'
+import { fetchActiveSessionForController } from '@gracechords/core'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -21,6 +21,9 @@ import { resolveInitialSession, INITIAL_SESSION_TIMEOUT_MS } from '../src/lib/au
 import { makeStoredSessionReader } from '../src/lib/storedSession'
 import { startConnectivityWatch } from '../src/lib/connectivity'
 import OfflineBanner from '../src/components/OfflineBanner'
+import LiveSessionCapsule from '../src/components/LiveSessionCapsule'
+import { sourceRoute, type LiveRow } from '../src/lib/liveSession'
+import { liveSession } from '../src/lib/useLiveSession'
 import { setCurrentUserFromSession } from '../src/lib/currentUser'
 import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
@@ -417,6 +420,9 @@ export default function RootLayout() {
       // keyed by user id and so could never be shown to the next account, but
       // the persisted one should not outlive the session that wrote it.
       if (event === 'SIGNED_OUT') clearReflectionDays()
+      // The live session belongs to the account that started it; stop showing
+      // (and heartbeating) it locally. The row itself is left alone.
+      if (event === 'SIGNED_OUT') liveSession.reset()
     })
     return () => {
       sub.subscription.unsubscribe()
@@ -433,27 +439,30 @@ export default function RootLayout() {
     if (session) prefetchToday()
   }, [session])
 
-  // On relaunch, if the leader has a session still marked live, offer to resume
-  // it (jump back into the Performer, which re-adopts the row) or end it now.
-  // Runs once per launch after auth resolves. Best-effort.
+  // On relaunch, if the leader has a session still marked live, adopt it into
+  // the app's live-session store (so the Live capsule shows even after
+  // "Later") and offer to resume it (back to the song/set that leads it, which
+  // restores the last position) or end it now. Runs once per launch after auth
+  // resolves.
   useEffect(() => {
     if (!ready || !session || resumeChecked.current) return
     resumeChecked.current = true
     fetchActiveSessionForController(supabase)
       .then((row) => {
         if (!row) return
+        liveSession.adopt(row as LiveRow)
+        const source = liveSession.getState().active?.source ?? null
         Alert.alert(tx('setlist:resume.title'), tx('setlist:resume.message'), [
-          {
-            text: tx('setlist:resume.resume'),
-            onPress: () => {
-              if (row.setlist_id) router.push(`/perform/${row.setlist_id}`)
-            },
-          },
+          ...(source
+            ? [{ text: tx('setlist:resume.resume'), onPress: () => router.push(sourceRoute(source) as never) }]
+            : []),
           {
             text: tx('setlist:resume.endNow'),
             style: 'destructive',
             onPress: () => {
-              endSession(supabase, row.id).catch(() => {})
+              liveSession.end().catch((err) => {
+                Alert.alert(tx('setlist:session.endFailed'), err instanceof Error ? err.message : String(err))
+              })
             },
           },
           { text: tx('setlist:resume.later'), style: 'cancel' },
@@ -541,6 +550,9 @@ export default function RootLayout() {
               }}
             />
           </Stack>
+          {/* After the navigator so it floats above every screen; it hides
+              itself on the session's own screen, the follower, and auth. */}
+          <LiveSessionCapsule />
           {/* Last sibling so it covers every route: the native splash hands off
               to this, then it zooms the mark out over the mounted app. */}
           {splashPhase === 'handoff' && <SplashOverlay onDone={endHandoff} />}

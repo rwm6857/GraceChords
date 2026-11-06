@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import type { SongDoc } from '@gracechords/core'
-import { fetchSessionByCode, parseChordProOrLegacy, subscribeToSession } from '@gracechords/core'
+import { fetchSessionByCode, followerView, parseChordProOrLegacy, subscribeToSession } from '@gracechords/core'
 import AutoFitChart from '../components/AutoFitChart'
 import type { ChordStyle } from '../components/ChordChart'
 import HeaderIconButton from '../components/HeaderIconButton'
@@ -31,9 +31,14 @@ import { useKeepAwakeWhileFocused } from '../lib/keepAwake'
 import { supabase } from '../lib/supabase'
 import { prefetchSong, useSong } from '../lib/useSong'
 
-// After this long without any realtime signal following a drop, soften the
-// "reconnecting" hint (we still HOLD the last-known state either way).
-const GRACE_MS = 50_000
+// How often to re-evaluate leader staleness (followerView) between updates.
+const TICK_MS = 5_000
+
+// A fetched row's last_active_at, as the last time we know the leader wrote.
+function signalFromRow(row: { last_active_at?: string | null } | null): number | null {
+  const t = row?.last_active_at ? Date.parse(row.last_active_at) : NaN
+  return Number.isFinite(t) ? t : null
+}
 
 type SnapshotItem = {
   uid: string
@@ -53,6 +58,7 @@ type SessionRow = {
   current_item_uid: string | null
   transpose?: number
   current_key?: string | null
+  last_active_at?: string | null
 }
 
 // Native live-session follower. Mirrors the web follower
@@ -83,7 +89,10 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
   const [tier, setTier] = useState<'chord' | 'lyric'>('lyric')
   const [phase, setPhase] = useState<'loading' | 'ready' | 'notfound'>('loading')
   const [connected, setConnected] = useState(true)
-  const [staleReconnect, setStaleReconnect] = useState(false)
+  // Last time we saw the leader write: local receipt time for realtime UPDATEs,
+  // the row's last_active_at for fetches.
+  const [lastSignalAt, setLastSignalAt] = useState<number | null>(null)
+  const [now, setNow] = useState(() => Date.now())
 
   const [displayedUid, setDisplayedUid] = useState<string | null>(null)
   const [autoFollow, setAutoFollow] = useState(true)
@@ -101,7 +110,6 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
   const [chartAreaH, setChartAreaH] = useState(0)
 
   const scrollRef = useRef<ScrollView | null>(null)
-  const graceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Late-join: fetch the row once, then subscribe for live updates. On (re)connect
   // re-fetch so a reconnect resyncs anything missed while disconnected.
@@ -124,19 +132,26 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         return
       }
       setSession(row)
+      setLastSignalAt(signalFromRow(row))
       setTier(row.tier === 'chord' ? 'chord' : 'lyric')
       setPhase('ready')
       unsubscribe = subscribeToSession(supabase, row.id, {
         onChange: (next) => {
-          if (alive) setSession(next as SessionRow)
+          if (!alive) return
+          setSession(next as SessionRow)
+          setLastSignalAt(Date.now())
         },
         onStatus: (status) => {
           if (!alive) return
           if (status === 'SUBSCRIBED') {
             setConnected(true)
-            setStaleReconnect(false)
             fetchSessionByCode(supabase, code)
-              .then((r) => { if (alive && r) setSession(r as SessionRow) })
+              .then((r) => {
+                if (alive && r) {
+                  setSession(r as SessionRow)
+                  setLastSignalAt(signalFromRow(r as SessionRow))
+                }
+              })
               .catch(() => {})
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             setConnected(false)
@@ -157,30 +172,38 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && code) {
         fetchSessionByCode(supabase, code)
-          .then((r) => { if (r) setSession(r as SessionRow) })
+          .then((r) => {
+            if (r) {
+              setSession(r as SessionRow)
+              setLastSignalAt(signalFromRow(r as SessionRow))
+            }
+          })
           .catch(() => {})
       }
     })
     return () => sub.remove()
   }, [code])
 
-  // Grace window: after a drop, soften the hint but keep holding state.
+  // Re-evaluate leader staleness between updates.
   useEffect(() => {
-    if (connected) {
-      setStaleReconnect(false)
-      if (graceTimer.current) clearTimeout(graceTimer.current)
-      return
-    }
-    graceTimer.current = setTimeout(() => setStaleReconnect(true), GRACE_MS)
-    return () => { if (graceTimer.current) clearTimeout(graceTimer.current) }
-  }, [connected])
+    if (phase !== 'ready') return
+    const id = setInterval(() => setNow(Date.now()), TICK_MS)
+    return () => clearInterval(id)
+  }, [phase])
 
   const leaderUid = session?.current_item_uid || null
-  const behind = phase === 'ready' && !!displayedUid && leaderUid !== displayedUid
+  const { content, banner } = followerView({ row: session, connected, lastSignalAt, now })
+  const waiting = content === 'waiting'
+  const behind = phase === 'ready' && !!leaderUid && !!displayedUid && leaderUid !== displayedUid
 
   // Follow the leader: advance the displayed item when auto-following.
   useEffect(() => {
     if (!session) return
+    // Nothing open: the next song the leader opens should land without a tap.
+    if (!session.current_item_uid && !autoFollow) {
+      setAutoFollow(true)
+      return
+    }
     if (autoFollow) {
       setDisplayedUid(session.current_item_uid || null)
       scrollRef.current?.scrollTo({ y: 0, animated: false })
@@ -364,7 +387,7 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
           {tx('setlist:sessionFollower.live')}
         </Text>
         <Text numberOfLines={1} style={{ flex: 1, color: t.colors.sec }}>
-          {displayedItem?.title || ''}
+          {waiting ? '' : displayedItem?.title || ''}
         </Text>
 
         {/* Reader controls — in the follower's own hands: nothing here is
@@ -385,10 +408,14 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
         </View>
       </View>
 
-      {!connected ? (
-        <View style={{ paddingVertical: 6, alignItems: 'center', backgroundColor: t.colors.accentSoft }}>
+      {banner ? (
+        <View
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
+          style={{ paddingVertical: 6, alignItems: 'center', backgroundColor: t.colors.accentSoft }}
+        >
           <Text style={{ fontSize: 13, color: t.colors.textAccent }}>
-            {staleReconnect ? tx('setlist:sessionFollower.waiting') : tx('setlist:sessionFollower.reconnecting')}
+            {banner === 'offline' ? tx('setlist:sessionFollower.offline') : tx('setlist:sessionFollower.leaderGone')}
           </Text>
         </View>
       ) : null}
@@ -407,7 +434,16 @@ export default function SessionFollowerScreen({ code }: { code: string }) {
             paddingBottom: t.spacing.xxl * 2,
           }}
         >
-          {isVerse && displayedItem?.ref ? (
+          {waiting ? (
+            <View style={styles.center}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: t.colors.ink, marginBottom: 6 }}>
+                {tx('setlist:sessionFollower.nothingOpenTitle')}
+              </Text>
+              <Text style={{ color: t.colors.sec, textAlign: 'center' }}>
+                {tx('setlist:sessionFollower.nothingOpenBody')}
+              </Text>
+            </View>
+          ) : isVerse && displayedItem?.ref ? (
             <VerseChart verseRef={displayedItem.ref} fontScale={autoFit.effectiveFontScale} />
           ) : displayedItem && !isSong ? (
             <View style={styles.center}>

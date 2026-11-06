@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, beforeEach, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 // The follower reads its song content from the public catalog via useSongs().
@@ -17,12 +17,16 @@ vi.mock('../../hooks/useSongs', () => ({
   }),
 }))
 
-// Session row + realtime come from @gracechords/core; the viewer only uses these
-// two exports from the barrel, so a focused mock is enough.
-const sessionMock = vi.hoisted(() => ({ row: null }))
-vi.mock('@gracechords/core', () => ({
+// Session row + realtime come from @gracechords/core; the fetch/subscribe pair is
+// mocked, and followerView (pure) is the real implementation.
+const sessionMock = vi.hoisted(() => ({ row: null, handlers: null }))
+vi.mock('@gracechords/core', async (importOriginal) => ({
+  followerView: (await importOriginal()).followerView,
   fetchSessionByCode: vi.fn(async () => sessionMock.row),
-  subscribeToSession: vi.fn(() => () => {}),
+  subscribeToSession: vi.fn((_client, _id, handlers) => {
+    sessionMock.handlers = handlers
+    return () => {}
+  }),
   parseVerseId: (id) => ({
     id, translation: 'esv', bookNumber: 43, refDisplay: 'John 3:16',
     segments: [{ chapter: 3, ranges: [{ start: 16, end: 16 }] }],
@@ -117,6 +121,48 @@ describe('SessionViewer', () => {
     }
     renderAt()
     expect(await screen.findByText(/Not available in this view/i)).toBeInTheDocument()
+  })
+
+  it('shows "Waiting for the leader" with no chart when the leader has nothing open', async () => {
+    sessionMock.row = { ...LIVE_ROW, current_item_uid: null }
+    renderAt()
+    expect(await screen.findByText('Waiting for the leader…')).toBeInTheDocument()
+    expect(screen.queryByText('Father we love You')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Leader disconnected/)).not.toBeInTheDocument()
+  })
+
+  it('keeps the chart and flags a leader who has stopped sending heartbeats', async () => {
+    sessionMock.row = { ...LIVE_ROW, last_active_at: new Date(Date.now() - 10 * 60_000).toISOString() }
+    renderAt()
+    expect(await screen.findByText('Father we love You')).toBeInTheDocument()
+    expect(screen.getByText(/Leader disconnected/)).toBeInTheDocument()
+  })
+
+  it('shows no status band for a leader with a recent heartbeat', async () => {
+    sessionMock.row = { ...LIVE_ROW, last_active_at: new Date().toISOString() }
+    renderAt()
+    await screen.findByText('Father we love You')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('labels a dropped follower connection as offline, not a leader problem', async () => {
+    sessionMock.row = { ...LIVE_ROW, last_active_at: new Date(Date.now() - 10 * 60_000).toISOString() }
+    renderAt()
+    await screen.findByText('Father we love You')
+    act(() => sessionMock.handlers.onStatus('CLOSED'))
+    expect(screen.getByText(/You’re offline/)).toBeInTheDocument()
+    expect(screen.queryByText(/Leader disconnected/)).not.toBeInTheDocument()
+    expect(screen.getByText('Father we love You')).toBeInTheDocument()
+  })
+
+  it('switches to waiting when the leader backs out, and follows the next song', async () => {
+    sessionMock.row = LIVE_ROW
+    renderAt()
+    await screen.findByText('Father we love You')
+    act(() => sessionMock.handlers.onChange({ ...LIVE_ROW, current_item_uid: null }))
+    expect(screen.getByText('Waiting for the leader…')).toBeInTheDocument()
+    act(() => sessionMock.handlers.onChange(LIVE_ROW))
+    expect(await screen.findByText('Father we love You')).toBeInTheDocument()
   })
 
   it('shows a not-found screen for an unknown code', async () => {

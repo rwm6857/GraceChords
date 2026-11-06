@@ -84,7 +84,12 @@
     "shareEveryone": "참가자 링크 공유 (가사)",
     "end": "세션 종료",
     "startFailed": "세션을 시작할 수 없습니다",
-    "endFailed": "세션을 종료할 수 없습니다"
+    "endFailed": "세션을 종료할 수 없습니다",
+    "switchTitle": "End your current live session?",
+    "switchMessage": "Only one live session can run at a time. End the current one and start a new one?",
+    "switchConfirm": "End and start new",
+    "capsuleReturn": "Tap to return",
+    "capsuleA11y": "Live session running. Tap to return to it."
   },
   "verse": {
     "add": "구절 추가",
@@ -102,8 +107,10 @@
     "endedBody": "세션이 종료되었습니다.",
     "unavailable": "이 화면에서는 볼 수 없습니다.",
     "catchUp": "인도자가 다음으로 넘어갔습니다 — 탭하여 따라가기",
-    "reconnecting": "다시 연결하는 중…",
-    "waiting": "인도자를 기다리는 중…",
+    "offline": "You're offline — reconnecting…",
+    "nothingOpenTitle": "인도자를 기다리는 중…",
+    "nothingOpenBody": "The leader doesn't have a song open right now.",
+    "leaderGone": "Leader disconnected — showing the last song.",
     "live": "라이브",
     "loadingSong": "곡을 불러오는 중…",
     "home": "홈",

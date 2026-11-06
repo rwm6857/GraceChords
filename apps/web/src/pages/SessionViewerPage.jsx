@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchSessionByCode, subscribeToSession, parseVerseId, resolveVerseLines } from '@gracechords/core'
+import { fetchSessionByCode, subscribeToSession, parseVerseId, resolveVerseLines, followerView } from '@gracechords/core'
 import { supabase } from '../lib/supabase'
 import { useSongs } from '../hooks/useSongs'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
@@ -19,9 +19,14 @@ import { Sun, Moon } from '../components/Icons'
 // identically in both tiers; personal songs arrive as `unavailable` placeholders.
 // The follower can free-scroll; a "leader moved on" pill catches up on a change.
 
-// After this long without any realtime signal following a drop, soften the
-// "reconnecting" hint (we still HOLD the last-known state either way).
-const GRACE_MS = 50_000
+// How often to re-evaluate leader staleness (followerView) between updates.
+const TICK_MS = 5_000
+
+// A fetched row's last_active_at, as the last time we know the leader wrote.
+function signalFromRow(row) {
+  const t = row && row.last_active_at ? Date.parse(row.last_active_at) : NaN
+  return Number.isFinite(t) ? t : null
+}
 
 // Reader controls. The follower is a full-screen route with no NavBar, so the
 // site's own theme switch is out of reach — the header carries its own. Font
@@ -74,7 +79,10 @@ export default function SessionViewer() {
   const [tier, setTier] = useState('lyric') // 'chord' | 'lyric', from the join code
   const [phase, setPhase] = useState('loading') // loading | ready | notfound
   const [connected, setConnected] = useState(true)
-  const [staleReconnect, setStaleReconnect] = useState(false)
+  // Last time we saw the leader write: local receipt time for realtime UPDATEs,
+  // the row's last_active_at for fetches.
+  const [lastSignalAt, setLastSignalAt] = useState(null)
+  const [now, setNow] = useState(() => Date.now())
 
   const [displayedUid, setDisplayedUid] = useState(null)
   const [autoFollow, setAutoFollow] = useState(true)
@@ -84,7 +92,6 @@ export default function SessionViewer() {
   const [verseByRef, setVerseByRef] = useState({})
 
   const scrollRef = useRef(null)
-  const graceTimer = useRef(null)
   const showChords = tier === 'chord'
 
   // Late-join: fetch the row once (which resolves the tier), then subscribe.
@@ -107,19 +114,26 @@ export default function SessionViewer() {
         return
       }
       setSession(row)
+      setLastSignalAt(signalFromRow(row))
       setTier(row.tier === 'chord' ? 'chord' : 'lyric')
       setPhase('ready')
       unsubscribe = subscribeToSession(supabase, row.id, {
         onChange: (next) => {
-          if (alive) setSession(next)
+          if (!alive) return
+          setSession(next)
+          setLastSignalAt(Date.now())
         },
         onStatus: (status) => {
           if (!alive) return
           if (status === 'SUBSCRIBED') {
             setConnected(true)
-            setStaleReconnect(false)
             fetchSessionByCode(supabase, code)
-              .then((r) => { if (alive && r) setSession(r) })
+              .then((r) => {
+                if (alive && r) {
+                  setSession(r)
+                  setLastSignalAt(signalFromRow(r))
+                }
+              })
               .catch(() => {})
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             setConnected(false)
@@ -134,22 +148,24 @@ export default function SessionViewer() {
     }
   }, [code])
 
-  // Grace window: after a drop, soften the hint but keep holding state.
+  // Re-evaluate leader staleness between updates.
   useEffect(() => {
-    if (connected) {
-      setStaleReconnect(false)
-      if (graceTimer.current) clearTimeout(graceTimer.current)
-      return
-    }
-    graceTimer.current = setTimeout(() => setStaleReconnect(true), GRACE_MS)
-    return () => { if (graceTimer.current) clearTimeout(graceTimer.current) }
-  }, [connected])
+    if (phase !== 'ready') return
+    const id = setInterval(() => setNow(Date.now()), TICK_MS)
+    return () => clearInterval(id)
+  }, [phase])
 
   const leaderUid = session?.current_item_uid || null
-  const behind = phase === 'ready' && !!displayedUid && leaderUid !== displayedUid
+  const { content, banner } = followerView({ row: session, connected, lastSignalAt, now })
+  const behind = phase === 'ready' && !!leaderUid && !!displayedUid && leaderUid !== displayedUid
 
   useEffect(() => {
     if (!session) return
+    // Nothing open: the next song the leader opens should land without a tap.
+    if (!session.current_item_uid && !autoFollow) {
+      setAutoFollow(true)
+      return
+    }
     if (autoFollow) {
       setDisplayedUid(session.current_item_uid || null)
       if (scrollRef.current) scrollRef.current.scrollTop = 0
@@ -246,7 +262,8 @@ export default function SessionViewer() {
     )
   }
 
-  const isVerse = displayedItem?.kind === 'verse'
+  const waiting = content === 'waiting'
+  const isVerse = !waiting && displayedItem?.kind === 'verse'
   const verseLines = isVerse && displayedItem?.ref ? verseByRef[displayedItem.ref] : null
 
   return (
@@ -257,11 +274,11 @@ export default function SessionViewer() {
           <span style={LIVE_DOT} aria-hidden />
           <span style={{ fontWeight: 700, letterSpacing: 0.3 }}>LIVE</span>
           <span style={{ opacity: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {displayedItem?.title || ''}
+            {waiting ? '' : displayedItem?.title || ''}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          {showChords && !isVerse && session?.current_key ? (
+          {showChords && !waiting && !isVerse && session?.current_key ? (
             <span style={{ ...KEY_PILL, marginRight: 4 }}>Key: {session.current_key}</span>
           ) : null}
           <button
@@ -296,15 +313,20 @@ export default function SessionViewer() {
         </div>
       </div>
 
-      {!connected ? (
+      {banner ? (
         <div style={RECONNECT} role="status" aria-live="polite">
-          {staleReconnect ? 'Waiting for the leader…' : 'Reconnecting…'}
+          {banner === 'offline' ? 'You’re offline — reconnecting…' : 'Leader disconnected — showing the last song.'}
         </div>
       ) : null}
 
       {/* Content */}
       <div ref={scrollRef} onScroll={onScroll} style={CONTENT}>
-        {isVerse ? (
+        {waiting ? (
+          <div style={CENTER}>
+            <h2 style={{ fontSize: 20, marginBottom: 8 }}>Waiting for the leader…</h2>
+            <p style={{ opacity: 0.6 }}>The leader doesn’t have a song open right now.</p>
+          </div>
+        ) : isVerse ? (
           verseLines ? (
             <div style={{ maxWidth: 900, margin: '0 auto', fontSize: fontPx }}>
               <VerseView sections={[{ label: '', lines: verseLines }]} />
