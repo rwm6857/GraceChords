@@ -51,6 +51,7 @@ import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
 import { useChartAutoFit } from '../../src/lib/useChartAutoFit'
 import { useTheme } from '../../src/theme/ThemeProvider'
+import { startOrManageLiveSession, useLiveSessionSource } from '../../src/lib/useLiveSession'
 
 // Song Viewer. Pass 1 built the static monospaced chart; pass 2 adds the live
 // view controls (floating transpose bar, View-options sheet) and the Export &
@@ -155,6 +156,37 @@ export default function ViewerScreen() {
   useEffect(() => {
     if (!accidentalTouched.current) setAccidental(defaultAccidental(nativeKey))
   }, [nativeKey])
+
+  // Single-song live session: a session whose snapshot holds just this song
+  // (uid i0). Catalog songs only — a personal song would reach followers as an
+  // "unavailable" placeholder.
+  const live = useLiveSessionSource(!isPersonal && slug ? { kind: 'song', slug } : null)
+  // Resuming: restore the transpose the session last broadcast (once the chart
+  // has loaded, so seedSteps reflects the real native key) before sending.
+  const [restoredToken, setRestoredToken] = useState(0)
+  useEffect(() => {
+    if (live.restoreToken === restoredToken) return
+    const r = live.restore
+    if (r && !song && !error) return
+    if (r) setDelta(r.transpose - seedSteps)
+    live.release()
+    setRestoredToken(live.restoreToken)
+  }, [live, restoredToken, song, error, seedSteps])
+  const { live: isLive, broadcast, restoreToken } = live
+  useEffect(() => {
+    if (!isLive || restoreToken !== restoredToken) return
+    broadcast({ itemUid: 'i0', transpose: steps, currentKey: effectiveKey || null })
+  }, [isLive, broadcast, restoreToken, restoredToken, steps, effectiveKey])
+
+  const onLiveButton = () => {
+    if (!song || isPersonal) return
+    startOrManageLiveSession(
+      tx,
+      { kind: 'song', slug: song.slug },
+      [{ songId: song.id, toKey: null, song: { slug: song.slug, title: song.title, default_key: song.default_key } }],
+      song.title || null,
+    )
+  }
 
   // Chrome auto-hide (persisted preference). Pinned visible while a sheet is
   // open so it can't hide behind one. Tap the chart to bring it back.
@@ -333,6 +365,31 @@ export default function ViewerScreen() {
           <View style={{ flexDirection: 'row', gap: t.spacing.sm }}>
             {isPersonal ? (
               <HeaderIconButton icon="square.and.pencil" label={tx('song:viewer.editSong')} onPress={handleEditPersonal} />
+            ) : null}
+            {!isPersonal ? (
+              <Pressable
+                onPress={onLiveButton}
+                disabled={live.busy || !song}
+                accessibilityRole="button"
+                accessibilityState={{ selected: live.live }}
+                accessibilityLabel={live.live ? tx('setlist:session.manageTitle') : tx('setlist:session.start')}
+                hitSlop={8}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: t.radii.pill,
+                  backgroundColor: live.live ? t.colors.accent : t.colors.surfaceAlt,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: live.busy || !song ? 0.5 : 1,
+                }}
+              >
+                <SymbolIcon
+                  name="antenna.radiowaves.left.and.right"
+                  size={18}
+                  color={live.live ? t.colors.onAccent : t.colors.ink}
+                />
+              </Pressable>
             ) : null}
             <HeaderIconButton icon="ellipsis" label={tx('song:viewer.viewOptions')} onPress={() => setSheet('options')} />
             <HeaderIconButton
@@ -515,6 +572,18 @@ export default function ViewerScreen() {
         onClose={() => setSheet(null)}
         onExport={handleExport}
         onTelegram={handleTelegram}
+        live={
+          isPersonal
+            ? undefined
+            : {
+                active: live.live,
+                busy: live.busy,
+                onPress: () => {
+                  setSheet(null)
+                  onLiveButton()
+                },
+              }
+        }
       />
     </Screen>
   )

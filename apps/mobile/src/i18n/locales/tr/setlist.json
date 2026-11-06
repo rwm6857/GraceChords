@@ -84,7 +84,12 @@
     "shareEveryone": "Katılımcı bağlantısını paylaş (sözler)",
     "end": "Oturumu sonlandır",
     "startFailed": "Oturum başlatılamadı",
-    "endFailed": "Oturum sonlandırılamadı"
+    "endFailed": "Oturum sonlandırılamadı",
+    "switchTitle": "End your current live session?",
+    "switchMessage": "Only one live session can run at a time. End the current one and start a new one?",
+    "switchConfirm": "End and start new",
+    "capsuleReturn": "Tap to return",
+    "capsuleA11y": "Live session running. Tap to return to it."
   },
   "verse": {
     "add": "Ayet ekle",
@@ -102,8 +107,10 @@
     "endedBody": "Oturum sona erdi.",
     "unavailable": "Bu görünümde kullanılamıyor.",
     "catchUp": "Lider ilerledi — yetişmek için dokunun",
-    "reconnecting": "Yeniden bağlanılıyor…",
-    "waiting": "Lider bekleniyor…",
+    "offline": "You're offline — reconnecting…",
+    "nothingOpenTitle": "Lider bekleniyor…",
+    "nothingOpenBody": "The leader doesn't have a song open right now.",
+    "leaderGone": "Leader disconnected — showing the last song.",
     "live": "CANLI",
     "loadingSong": "Şarkı yükleniyor…",
     "home": "Ana sayfa",

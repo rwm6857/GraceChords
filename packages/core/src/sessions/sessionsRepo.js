@@ -19,6 +19,37 @@ import { generateSessionCode } from './sessionCode.js'
 
 const CREATE_MAX_RETRIES = 5 // code-collision retries against the UNIQUE index
 
+// The leader re-writes its position every heartbeat. Followers treat the leader
+// as disconnected after missing more than two consecutive beats.
+export const SESSION_HEARTBEAT_MS = 60_000
+export const LEADER_STALE_MS = SESSION_HEARTBEAT_MS * 2.5
+
+/**
+ * Decide what a follower shows. Pure; both followers (web + native) call it.
+ *
+ * - content 'waiting' when the leader has nothing open (current_item_uid null).
+ * - banner 'offline' when the follower's own channel is down (we can't judge the
+ *   leader then); else 'leaderGone' when a chart is up and no leader write has
+ *   been seen for LEADER_STALE_MS. A missing lastSignalAt counts as fresh.
+ *
+ * @param {{ row: { current_item_uid?: string|null }|null, connected: boolean, lastSignalAt?: number|null, now: number }} input
+ * @returns {{ content: 'waiting'|'chart', banner: 'offline'|'leaderGone'|null }}
+ */
+export function followerView({ row, connected, lastSignalAt, now }) {
+  const content = row && row.current_item_uid ? 'chart' : 'waiting'
+  let banner = null
+  if (!connected) banner = 'offline'
+  else if (
+    content === 'chart' &&
+    typeof lastSignalAt === 'number' &&
+    Number.isFinite(lastSignalAt) &&
+    now - lastSignalAt > LEADER_STALE_MS
+  ) {
+    banner = 'leaderGone'
+  }
+  return { content, banner }
+}
+
 // Session codes are drawn from an unambiguous alphanumeric alphabet. Validate a
 // join code before interpolating it into a PostgREST `.or(...)` filter so an
 // unexpected value can't alter the filter's structure.
@@ -135,7 +166,7 @@ export async function createSession(client, input = {}) {
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {string} sessionId
- * @param {{ itemUid: string, transpose?: number, currentKey?: string|null }} input
+ * @param {{ itemUid: string|null, transpose?: number, currentKey?: string|null }} input  itemUid null = the leader has nothing open
  */
 export async function updateCurrentItem(client, sessionId, input = {}) {
   const { error } = await client

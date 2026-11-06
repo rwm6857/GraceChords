@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
+import LiveSessionRow, { LiveSessionDivider } from '../LiveSessionRow'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -36,6 +37,10 @@ type PerformerShareProps = {
   /** Defaults the toggle: whole set for multi-song, this song otherwise. */
   initialScope: Scope
   handlers: PerformerShareHandlers
+  /** Live-session lead row (always about the whole set, above the scope toggle). */
+  live: boolean
+  liveBusy: boolean
+  onLive: () => void
 }
 
 export default function PerformerShareSheet(props: PerformerShareProps) {
@@ -43,7 +48,7 @@ export default function PerformerShareSheet(props: PerformerShareProps) {
   return null
 }
 
-function PerformerShareContent({ onClose, songCount, initialScope, handlers }: PerformerShareProps) {
+function PerformerShareContent({ onClose, songCount, initialScope, handlers, live, liveBusy, onLive }: PerformerShareProps) {
   const t = useTheme()
   const isAndroid = Platform.OS === 'android'
   const { t: tx } = useTranslation('export')
@@ -223,6 +228,8 @@ function PerformerShareContent({ onClose, songCount, initialScope, handlers }: P
   return (
     <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, gap: t.spacing.md }}>
+        <LiveSessionRow live={live} busy={liveBusy} disabled={!!busy} onPress={onLive} />
+        <LiveSessionDivider />
         {/* Scope toggle — a full-width view-switcher (kept full width by design). */}
         <View
           style={{

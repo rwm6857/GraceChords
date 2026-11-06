@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import FormSheetShell from '../FormSheetShell'
+import LiveSessionRow, { LiveSessionDivider } from '../LiveSessionRow'
 import SymbolIcon, { type SymbolIconProps } from '../SymbolIcon'
 import { useFormSheet } from '../../lib/formSheetHost'
 import { useTheme } from '../../theme/ThemeProvider'
@@ -22,6 +23,9 @@ type ShareSetProps = {
   onExport: () => Promise<void>
   onCopyLink: () => Promise<void>
   onTelegram: () => Promise<void>
+  /** Live-session lead row: opens the Performer and goes live (or manages it). */
+  live: boolean
+  onLive: () => void
 }
 
 export default function ShareSetSheet(props: ShareSetProps) {
@@ -29,7 +33,7 @@ export default function ShareSetSheet(props: ShareSetProps) {
   return null
 }
 
-function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram }: ShareSetProps) {
+function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram, live, onLive }: ShareSetProps) {
   const t = useTheme()
   const { t: tx } = useTranslation('export')
   const [busy, setBusy] = useState<Busy>(null)
@@ -47,6 +51,8 @@ function ShareSetContent({ onClose, songCount, onExport, onCopyLink, onTelegram 
   return (
     <FormSheetShell title={tx('title')} onAction={onClose}>
       <View style={{ padding: t.spacing.lg, gap: t.spacing.md }}>
+        <LiveSessionRow live={live} disabled={!!busy || !songCount} onPress={onLive} />
+        <LiveSessionDivider />
         {/* Primary set-PDF export — combined PDF via /api/export/setlist. */}
         <Pressable
           onPress={run('pdf', onExport)}

@@ -30,6 +30,8 @@ import LibraryPane from '../components/setlist/LibraryPane'
 import KeyPickerSheet from '../components/setlist/KeyPickerSheet'
 import SetOptionsSheet from '../components/setlist/SetOptionsSheet'
 import ShareSetSheet from '../components/setlist/ShareSetSheet'
+import { sameSource } from '../lib/liveSession'
+import { showLiveSessionMenu, useLiveSession } from '../lib/useLiveSession'
 import AddSongsModal from '../components/setlist/AddSongsModal'
 import AddVerseModal from '../components/setlist/AddVerseModal'
 import { useTheme } from '../theme/ThemeProvider'
@@ -54,6 +56,8 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const t = useTheme()
   const { t: tx, i18n } = useTranslation(['setlist', 'common', 'export', 'errors'])
   const router = useRouter()
+  const liveState = useLiveSession()
+  const setIsLive = sameSource(liveState.active?.source, { kind: 'set', setlistId })
   const isTablet = useIsTabletWidth()
   const {
     name,
@@ -84,6 +88,16 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
   const [keyIndex, setKeyIndex] = useState<number | null>(null)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  // "Have everyone follow along" goes live in the Performer. The push has to wait
+  // until the share sheet's own close (router.back() in useFormSheet's effect)
+  // has run — pushing from inside the sheet's tap lands on top of the sheet
+  // route and is then popped by that back(). Child effects run before this one.
+  const [pendingLive, setPendingLive] = useState(false)
+  useEffect(() => {
+    if (!pendingLive || shareOpen) return
+    setPendingLive(false)
+    router.push(`/perform/${setlistId}?live=1`)
+  }, [pendingLive, shareOpen, router, setlistId])
   const [addOpen, setAddOpen] = useState(false)
   const [addVerseOpen, setAddVerseOpen] = useState(false)
 
@@ -611,6 +625,13 @@ export default function SetlistBuilderScreen({ setlistId }: { setlistId: string 
         onExport={exportSet}
         onCopyLink={copyLink}
         onTelegram={sendTelegram}
+        live={setIsLive}
+        onLive={() => {
+          setShareOpen(false)
+          // The Performer is what broadcasts a set, so going live happens there.
+          if (setIsLive) showLiveSessionMenu(tx)
+          else setPendingLive(true)
+        }}
       />
       <AddSongsModal
         visible={addOpen}
