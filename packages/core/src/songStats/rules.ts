@@ -20,6 +20,28 @@ export const SONG_STATS_RULES = {
   checkpointMs: 15_000,
 } as const
 
+/** What the Song Stats screens show, and when. Read by the copy as well as the math. */
+export const SONG_STATS_INSIGHT_RULES = {
+  /** Nothing is shown until the user has logged this many sets. */
+  gateSessions: 10,
+  /** Length of the Most sung / Most opened lists. */
+  topSongs: 10,
+  /** Heavy rotation and repeat rate look at this many most recent sets. */
+  recentSessions: 8,
+  /** Heavy rotation: in at least this many of the recent sets. */
+  heavyRotationMin: 5,
+  /** A song is resting once it hasn't been sung for this many days. */
+  dormantDays: 180,
+  dormantMax: 15,
+  /** Long-time songs must still have been sung within this many days. */
+  activeDays: 90,
+  longTimeMax: 5,
+} as const
+
+export type SongStatsWindow = '3m' | '12m' | 'all'
+export const SONG_STATS_WINDOWS: readonly SongStatsWindow[] = ['3m', '12m', 'all']
+export const SONG_STATS_DEFAULT_WINDOW: SongStatsWindow = '12m'
+
 /** Minimum on-screen time for a set that showed `songCount` qualifying songs. */
 export function requiredSessionMs(songCount: number): number {
   return Math.max(SONG_STATS_RULES.minSessionMs, songCount * SONG_STATS_RULES.perSongSessionMs)

@@ -5,6 +5,7 @@ import { timeAgo } from '@gracechords/core'
 import { Button } from '../../components/ui/layout-kit'
 import { songCountLabel } from './songCountLabel'
 import { DuplicateIcon, EllipsisIcon, PencilIcon, PlusIcon, TrashIcon } from '../../components/Icons'
+import SongStatsCard from '../songStats/SongStatsCard'
 
 // The user's setlists, always on screen at desktop width so switching sets is
 // one click and never a page navigation. Below the split breakpoint the same
@@ -72,6 +73,7 @@ export default function SetlistsRail({
       aria-label={t('setlist.savedSets')}
     >
       <div className="gc-rail-head">{t('setlist.savedSets')}</div>
+      <SongStatsCard />
       <div className="gc-rail-controls">
         <Button variant="primary" size="sm" fullWidth iconLeft={<PlusIcon />} onClick={onCreate}>
           {t('setlist.newSet')}

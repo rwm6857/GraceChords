@@ -58,6 +58,9 @@ export * from './songStats/rules'
 export * from './songStats/performerSession'
 export * from './songStats/songStatsRepo'
 export * from './songStats/recorder'
+export * from './songStats/insights'
+export * from './songStats/insightsSource'
+export * from './songStats/sample'
 
 // Private per-user reading reflections (Daily Word landing + journal)
 export * from './reflections/types'

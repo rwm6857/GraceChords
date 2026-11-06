@@ -537,6 +537,7 @@ export default function RootLayout() {
             <Stack.Screen name="account/password" />
             <Stack.Screen name="account/sign-in-methods" />
             <Stack.Screen name="about" />
+            <Stack.Screen name="song-stats" />
             <Stack.Screen name="offline" />
             <Stack.Screen name="tuner" />
             <Stack.Screen name="metronome" />

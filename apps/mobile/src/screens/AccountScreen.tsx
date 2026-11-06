@@ -28,8 +28,9 @@ import {
   UNLINKED,
   type TelegramLinkState,
 } from '../lib/telegramLink'
-import { countFeatureUse, isSongStatsEnabled, setSongStatsEnabled, songStats } from '../lib/songStats'
-import { fetchSongStatsEnabled, hasPassword } from '@gracechords/core'
+import { countFeatureUse } from '../lib/songStats'
+import { useSongStatsControls } from '../lib/useSongStatsControls'
+import { hasPassword } from '@gracechords/core'
 
 // Account — one level under Profile & Settings. Holds the identity, security and
 // connection actions that used to be scattered across the settings screen, plus
@@ -62,10 +63,7 @@ export default function AccountScreen() {
   const [telegram, setTelegram] = useState<TelegramLinkState>(UNLINKED)
   const [telegramBusy, setTelegramBusy] = useState(false)
   const [barH, setBarH] = useState(0)
-  // Song Stats opt-out. Seeded from the on-device cache so the switch is right
-  // offline; refreshed from users.preferences when the screen opens.
-  const [songStatsOn, setSongStatsOn] = useState(isSongStatsEnabled)
-  const [songStatsBusy, setSongStatsBusy] = useState(false)
+  const songStatsControls = useSongStatsControls()
 
   const email = user?.email ?? ''
   const shownName = displayName ?? tx('settings:yourAccount')
@@ -107,71 +105,6 @@ export default function AccountScreen() {
     })
     return () => sub.remove()
   }, [loadTelegram])
-
-  useEffect(() => {
-    if (!user?.id) return
-    let alive = true
-    fetchSongStatsEnabled(supabase, user.id)
-      .then((enabled) => {
-        songStats.setEnabled(user.id, enabled)
-        if (alive) setSongStatsOn(enabled)
-      })
-      .catch(() => {})
-    return () => {
-      alive = false
-    }
-  }, [user?.id])
-
-  async function applySongStats(enabled: boolean) {
-    setSongStatsBusy(true)
-    try {
-      await setSongStatsEnabled(enabled)
-      setSongStatsOn(enabled)
-    } catch (err) {
-      Alert.alert(
-        tx('songStats.toggleFailedTitle'),
-        actionFailureMessage('AccountScreen.setSongStatsEnabled', err, tx),
-      )
-    } finally {
-      setSongStatsBusy(false)
-    }
-  }
-
-  function onToggleSongStats(next: boolean) {
-    if (songStatsBusy) return
-    if (next) {
-      void applySongStats(true)
-      return
-    }
-    Alert.alert(tx('songStats.offAlert.title'), tx('songStats.offAlert.message'), [
-      { text: tx('common:cancel'), style: 'cancel' },
-      { text: tx('songStats.offAlert.confirm'), onPress: () => void applySongStats(false) },
-    ])
-  }
-
-  function onClearSongStats() {
-    Alert.alert(tx('songStats.clearAlert.title'), tx('songStats.clearAlert.message'), [
-      { text: tx('common:cancel'), style: 'cancel' },
-      {
-        text: tx('songStats.clearAlert.confirm'),
-        style: 'destructive',
-        onPress: async () => {
-          setSongStatsBusy(true)
-          try {
-            await songStats.clearHistory()
-            Alert.alert(tx('songStats.cleared'))
-          } catch (err) {
-            Alert.alert(
-              tx('songStats.clearFailedTitle'),
-              actionFailureMessage('AccountScreen.clearSongStats', err, tx),
-            )
-          } finally {
-            setSongStatsBusy(false)
-          }
-        },
-      },
-    ])
-  }
 
   function openNameSheet() {
     setNameDraft(displayName ?? '')
@@ -406,17 +339,24 @@ export default function AccountScreen() {
           </Text>
         ) : null}
 
-        {/* SONG STATS — collection controls only; the stats themselves come later. */}
+        {/* SONG STATS — the secondary entry point; the primary one is the card
+            on the Setlists tab, which only appears once there are enough sets. */}
         <SectionHeader label={tx('sections.songStats')} />
         <Card>
+          <ListRow
+            title={tx('songStats.view')}
+            leading={<RowIcon name="clock" />}
+            chevron
+            onPress={() => router.push('/song-stats')}
+          />
           <ListRow
             title={tx('songStats.title')}
             leading={<RowIcon name="music.note.list" />}
             trailing={
               <Switch
-                value={songStatsOn}
-                disabled={songStatsBusy}
-                onValueChange={onToggleSongStats}
+                value={songStatsControls.enabled}
+                disabled={songStatsControls.busy}
+                onValueChange={songStatsControls.toggle}
                 trackColor={{ true: t.colors.accent }}
                 accessibilityLabel={tx('songStats.title')}
               />
@@ -426,7 +366,7 @@ export default function AccountScreen() {
             title={tx('songStats.clear')}
             leading={<RowIcon name="trash" />}
             isLast
-            onPress={songStatsBusy ? undefined : onClearSongStats}
+            onPress={songStatsControls.busy ? undefined : songStatsControls.confirmClear}
           />
         </Card>
         <Text

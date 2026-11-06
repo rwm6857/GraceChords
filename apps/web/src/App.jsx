@@ -17,6 +17,7 @@ const DeleteAccountPage = lazyRoute(() => import('./pages/DeleteAccountPage'))
 const LoginPage = lazyRoute(() => import('./pages/LoginPage'))
 const SignupPage = lazyRoute(() => import('./pages/SignupPage'))
 const ProfilePage = lazyRoute(() => import('./pages/ProfilePage'))
+const SongStatsPage = lazyRoute(() => import('./pages/SongStatsPage'))
 const AuthCallbackPage = lazyRoute(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = lazyRoute(() => import('./pages/ResetPasswordPage'))
 const ForgotPasswordPage = lazyRoute(() => import('./pages/ForgotPasswordPage'))
@@ -70,6 +71,7 @@ export default function App(){
             <Route path="/bundle" element={<Bundle />} />
             <Route path="/songbook" element={<Songbook />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/song-stats" element={<SongStatsPage />} />
             <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
             <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
             <Route path="/portal/editor" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />

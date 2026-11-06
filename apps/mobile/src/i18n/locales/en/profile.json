@@ -42,6 +42,7 @@
   },
   "songStats": {
     "title": "Song Stats",
+    "view": "View Song Stats",
     "clear": "Clear my history",
     "hint": "Song Stats records the sets you run and the songs you open in GraceChords. Your stats are yours — no other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
     "offAlert": {

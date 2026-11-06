@@ -11,6 +11,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton'
 import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
 import PruneSetlistsModal from '../components/setlist/PruneSetlistsModal'
+import SongStatsCard from '../components/songStats/SongStatsCard'
 import { useTheme } from '../theme/ThemeProvider'
 import { duplicateSetlist, nextCopyName, timeAgo } from '@gracechords/core'
 import { defaultSetlistName } from '../lib/setlistName'
@@ -198,6 +199,7 @@ export default function SetlistsScreen() {
         data={setlists}
         keyExtractor={(item) => item.id}
         refreshControl={refreshControl()}
+        ListHeaderComponent={<SongStatsCard />}
         renderItem={({ item }) => (
           <SwipeToDelete
             onDelete={() => onDeleteSetlist(item)}

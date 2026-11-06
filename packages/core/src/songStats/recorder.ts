@@ -139,6 +139,20 @@ export function createSongStatsRecorder(deps: SongStatsDeps) {
   let active: PerformerBuffer | null = null
   let flushing: Promise<void> | null = null
 
+  // Told whenever this user's play history may have changed: a set queued, a
+  // set uploaded, or history cleared. The Song Stats screens use it to drop a
+  // cached fetch.
+  const listeners = new Set<() => void>()
+  function notify() {
+    for (const fn of listeners) {
+      try {
+        fn()
+      } catch {
+        // A listener must never break recording.
+      }
+    }
+  }
+
   // Serialize storage writes so a slow write can never land after a newer one.
   let writeChain: Promise<unknown> = Promise.resolve()
   function persist(key: string, value: unknown | null) {
@@ -203,6 +217,7 @@ export function createSongStatsRecorder(deps: SongStatsDeps) {
     outbox.plays.push({ queuedAt: now(), rows })
     trimOutbox()
     void saveOutbox()
+    notify()
   }
 
   /** Close a buffer recovered from storage (the app died mid-set). */
@@ -236,6 +251,7 @@ export function createSongStatsRecorder(deps: SongStatsDeps) {
       if (outcome === 'keep') break
       box.plays.shift()
       changed = true
+      notify()
     }
 
     if (box.opens.length > 0) {
@@ -305,16 +321,33 @@ export function createSongStatsRecorder(deps: SongStatsDeps) {
     void persist(SONG_STATS_STORAGE_KEYS.performer, null)
     // Empty it again once storage has been read, so hydrate() can't merge the
     // old queue back in.
-    return hydrate().then(() => {
+    const done = hydrate().then(() => {
       outbox = emptyOutbox()
       return persist(SONG_STATS_STORAGE_KEYS.outbox, outbox).then(() => {})
     })
+    notify()
+    return done
   }
 
   /** Clear my history: drop local data, then delete server rows. Throws on failure. */
   async function clearHistory(): Promise<{ plays: number; opens: number }> {
     await clearLocal()
-    return clearMySongStats(client)
+    const result = await clearMySongStats(client)
+    notify()
+    return result
+  }
+
+  /** Plays for this user still waiting to upload (a set run offline). */
+  async function pendingPlays(userId: string): Promise<PlayRow[]> {
+    await hydrate()
+    return outbox.plays.flatMap((b) => b.rows).filter((r) => r.user_id === userId)
+  }
+
+  function subscribe(fn: () => void): () => void {
+    listeners.add(fn)
+    return () => {
+      listeners.delete(fn)
+    }
   }
 
   /**
@@ -437,6 +470,8 @@ export function createSongStatsRecorder(deps: SongStatsDeps) {
     startPerformer,
     recordOpen,
     countFeature,
+    pendingPlays,
+    subscribe,
   }
 }
 

@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useIsFocused } from '@react-navigation/native'
 import {
   SONG_STATS_RULES,
+  createSongStatsDataSource,
+  createSongStatsPreviewStore,
   createSongStatsRecorder,
   fetchSongStatsEnabled,
   saveSongStatsEnabled,
@@ -17,7 +19,7 @@ import { getCurrentUserSnapshot } from './currentUser'
 import { uuidv4 } from './uuid'
 
 // Song Stats on mobile: the one recorder for the app, plus the hooks that feed
-// it. Collection only (Phase 1) — nothing on screen reads it. All the rules,
+// it. The screens that read it back are in useSongStatsInsights.ts. All the rules,
 // buffering and offline queueing live in core (packages/core/src/songStats);
 // this file only connects them to React Native lifecycles: screen focus,
 // AppState, and the signed-in user.
@@ -31,6 +33,16 @@ export const songStats = createSongStatsRecorder({
   storage: AsyncStorage,
   uuid: uuidv4,
 })
+
+/** Cached reads for the Song Stats screens; dropped whenever the recorder reports a change. */
+export const songStatsData = createSongStatsDataSource({
+  client: supabase,
+  storage: AsyncStorage,
+  recorder: songStats,
+})
+
+/** Dev-build / admin preview switches (bypass the gate, sample history). */
+export const songStatsPreview = createSongStatsPreviewStore(AsyncStorage)
 
 const currentUserId = () => getCurrentUserSnapshot().user?.id ?? null
 

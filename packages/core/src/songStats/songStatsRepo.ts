@@ -112,3 +112,100 @@ export async function saveSongStatsEnabled(
   if (error) throw error
   if (!updated || updated.length === 0) throw new Error('Profile row not found or not writable.')
 }
+
+// ── Reads for the Song Stats screens. These throw, like the other repos. ──
+
+export type FetchedPlay = {
+  performer_session_id: string
+  entry_index: number
+  song_id: string
+  song_source: SongSource
+  song_title: string
+  played_at: string
+  utc_offset_minutes: number
+}
+
+export type FetchedOpen = { song_id: string; song_source: SongSource; opened_at: string }
+
+// PostgREST caps a response at 1000 rows by default; page until a short page.
+const PAGE = 1000
+
+async function fetchAllPages<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1)
+    if (error) throw error
+    const rows = (data as T[] | null) ?? []
+    out.push(...rows)
+    if (rows.length < PAGE) return out
+  }
+}
+
+/** Every play row this user has (RLS allows only their own). */
+export function fetchMySongPlays(client: SupabaseClient, userId: string): Promise<FetchedPlay[]> {
+  return fetchAllPages<FetchedPlay>((from, to) =>
+    client
+      .from('song_plays')
+      .select('performer_session_id, entry_index, song_id, song_source, song_title, played_at, utc_offset_minutes')
+      .eq('user_id', userId)
+      .order('played_at', { ascending: false })
+      .order('performer_session_id', { ascending: true })
+      .order('entry_index', { ascending: true })
+      .range(from, to),
+  )
+}
+
+/** This user's song-viewer opens since `sinceIso` (all of them when null). */
+export function fetchMySongOpens(
+  client: SupabaseClient,
+  userId: string,
+  sinceIso: string | null,
+): Promise<FetchedOpen[]> {
+  return fetchAllPages<FetchedOpen>((from, to) => {
+    let q = client.from('song_opens').select('song_id, song_source, opened_at').eq('user_id', userId)
+    if (sinceIso) q = q.gte('opened_at', sinceIso)
+    return q
+      .order('opened_at', { ascending: false })
+      .order('song_id', { ascending: true })
+      .range(from, to)
+  })
+}
+
+const TITLE_CHUNK = 100
+
+/**
+ * Current titles for songs that still exist, keyed `${source}:${id}`. A song
+ * that was deleted (or a personal song that isn't the caller's) is simply
+ * absent, and the screens fall back to the title stored on the play row.
+ * Best-effort: a failed chunk is skipped rather than failing the screen.
+ */
+export async function fetchSongTitles(
+  client: SupabaseClient,
+  refs: Array<{ songId: string; source: SongSource }>,
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  const tables: Array<[SongSource, string]> = [
+    ['catalog', 'songs'],
+    ['personal', 'personal_songs'],
+  ]
+  for (const [source, table] of tables) {
+    const ids = [...new Set(refs.filter((r) => r.source === source).map((r) => r.songId))]
+    for (let i = 0; i < ids.length; i += TITLE_CHUNK) {
+      try {
+        const { data, error } = await client
+          .from(table)
+          .select('id, title')
+          .in('id', ids.slice(i, i + TITLE_CHUNK))
+        if (error) continue
+        for (const row of (data as Array<{ id: string; title: string | null }> | null) ?? []) {
+          if (row.title) out[`${source}:${row.id}`] = row.title
+        }
+      } catch {
+        // Offline mid-way: keep what we have.
+      }
+    }
+  }
+  return out
+}
