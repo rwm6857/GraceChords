@@ -38,8 +38,8 @@ export const SONG_STATS_INSIGHT_RULES = {
   longTimeMax: 5,
 } as const
 
-export type SongStatsWindow = '3m' | '12m' | 'all'
-export const SONG_STATS_WINDOWS: readonly SongStatsWindow[] = ['3m', '12m', 'all']
+export type SongStatsWindow = '1m' | '3m' | '12m' | 'all'
+export const SONG_STATS_WINDOWS: readonly SongStatsWindow[] = ['1m', '3m', '12m', 'all']
 export const SONG_STATS_DEFAULT_WINDOW: SongStatsWindow = '12m'
 
 /** Minimum on-screen time for a set that showed `songCount` qualifying songs. */

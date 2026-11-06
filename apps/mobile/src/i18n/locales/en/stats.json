@@ -1,78 +1,55 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "" },
-  "title": "Song Stats",
+  "title": "Setlist Stats",
   "window": {
-    "3m": "3 months",
-    "12m": "12 months",
-    "all": "All time"
+    "1m": "1 Month",
+    "3m": "3 Months",
+    "12m": "1 Year",
+    "all": "All Time"
   },
-  "windowLabel": {
-    "3m": "LAST 3 MONTHS",
-    "12m": "LAST 12 MONTHS",
-    "all": "ALL TIME"
-  },
-  "cardWindow": "Last 12 months",
+  "overview": "OVERVIEW",
   "summary": {
-    "sets": "Sets run",
-    "songs": "Songs sung",
-    "perSet": "Songs per set",
-    "newSongs": "New songs"
+    "sets": "Setlists run",
+    "songs": "Unique songs sung",
+    "perSet": "Avg. songs per set",
+    "newSongs": "New songs introduced"
   },
   "mostSung": {
-    "title": "MOST SUNG",
+    "title": "SONGS YOU SANG THE MOST",
     "count_one": "Once",
     "count_other": "{{count}} times",
     "empty": "No sets in this period."
   },
-  "mostOpened": {
-    "title": "MOST OPENED",
-    "hint": "Songs you opened to read. Opening a song isn’t the same as singing it, so this list is kept separate.",
-    "count_one": "1 open",
-    "count_other": "{{count}} opens",
-    "empty": "No songs opened in this period."
-  },
   "newSongs": {
-    "title": "NEW TO YOUR SETS",
-    "hint": "Songs you sang for the first time in this period.",
-    "firstSung": "First sung {{date}}"
+    "title": "NEW TO YOUR SETS"
   },
   "rotation": {
     "title": "IN HEAVY ROTATION",
     "hint": "These were in at least {{min}} of your last {{of}} sets.",
     "value": "{{sets}} of {{of}}"
   },
-  "repeat": {
-    "title": "CARRIED OVER",
-    "body": "{{percent}}% of the songs in your last {{count}} sets were also in the {{count}} before."
-  },
   "resting": {
     "title": "NOT SUNG IN A WHILE",
-    "hint": "You haven’t sung these in the last {{months}} months.",
-    "lastSung": "Last sung {{date}}"
-  },
-  "longTime": {
-    "title": "LONG-TIME SONGS",
-    "hint": "Songs you’ve sung since early on and still sing today.",
-    "since": "Since {{date}}"
+    "hint": "You haven’t sung these in the last {{months}} months."
   },
   "removedSong": "Removed song",
   "gate": {
-    "title": "Song Stats appears after {{count}} sets",
+    "title": "Setlist Stats appears after {{count}} sets",
     "body": "A set counts when you tap Start set and stay with it for a few minutes. You’ve run {{done}} so far."
   },
-  "off": "Song Stats is off, so new sets aren’t being recorded.",
-  "loadError": "Couldn’t load Song Stats",
+  "off": "Setlist Stats is off, so new sets aren’t being recorded.",
+  "loadError": "Couldn’t load Setlist Stats",
   "about": {
-    "link": "About Song Stats",
-    "title": "Song Stats",
-    "intro": "Song Stats is built from the sets you run and the songs you open in GraceChords.",
+    "link": "About Setlist Stats",
+    "title": "Setlist Stats",
+    "intro": "Setlist Stats is built from the sets you run and the songs you open in GraceChords.",
     "rule": "A set counts when you tap Start set and stay with it: at least {{perSong}} minutes for each song, and never less than {{min}} minutes. A song counts when it’s on screen for {{seconds}} seconds or more.",
     "private": "Your stats are yours. No other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
-    "control": "You can clear your history or turn Song Stats off at any time.",
+    "control": "You can clear your history or turn Setlist Stats off at any time.",
     "privacy": "Privacy Policy",
     "clear": "Clear my history",
-    "turnOff": "Turn off Song Stats",
-    "turnOn": "Turn on Song Stats"
+    "turnOff": "Turn off Setlist Stats",
+    "turnOn": "Turn on Setlist Stats"
   },
   "preview": {
     "title": "PREVIEW",

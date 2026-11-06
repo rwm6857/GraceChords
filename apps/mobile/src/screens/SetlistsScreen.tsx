@@ -11,7 +11,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton'
 import SwipeToDelete from '../components/SwipeToDelete'
 import SymbolIcon from '../components/SymbolIcon'
 import PruneSetlistsModal from '../components/setlist/PruneSetlistsModal'
-import SongStatsCard from '../components/songStats/SongStatsCard'
+import HeaderIconButton from '../components/HeaderIconButton'
 import { useTheme } from '../theme/ThemeProvider'
 import { duplicateSetlist, nextCopyName, timeAgo } from '@gracechords/core'
 import { defaultSetlistName } from '../lib/setlistName'
@@ -199,7 +199,6 @@ export default function SetlistsScreen() {
         data={setlists}
         keyExtractor={(item) => item.id}
         refreshControl={refreshControl()}
-        ListHeaderComponent={<SongStatsCard />}
         renderItem={({ item }) => (
           <SwipeToDelete
             onDelete={() => onDeleteSetlist(item)}
@@ -250,24 +249,33 @@ export default function SetlistsScreen() {
         >
           {tx('title')}
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={tx('newSet')}
-          hitSlop={8}
-          onPress={onCreate}
-          disabled={creating}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: t.radii.pill,
-            backgroundColor: t.colors.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: creating ? 0.5 : 1,
-          }}
-        >
-          <SymbolIcon name="plus" size={20} color={t.colors.onAccent} weight="semibold" />
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm }}>
+          {/* Song Stats lives here, beside New set, where the planning happens.
+              Always shown: below the 10-set gate the screen explains itself. */}
+          <HeaderIconButton
+            icon="chart.bar"
+            label={tx('stats:title')}
+            onPress={() => router.push('/song-stats')}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={tx('newSet')}
+            hitSlop={8}
+            onPress={onCreate}
+            disabled={creating}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: t.radii.pill,
+              backgroundColor: t.colors.accent,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: creating ? 0.5 : 1,
+            }}
+          >
+            <SymbolIcon name="plus" size={20} color={t.colors.onAccent} weight="semibold" />
+          </Pressable>
+        </View>
       </View>
       {renderBody()}
       </ConstrainedContent>

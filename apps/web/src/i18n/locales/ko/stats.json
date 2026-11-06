@@ -1,23 +1,20 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "title": "Song Stats",
-  "view": "Song Stats 보기",
+  "title": "Setlist Stats",
+  "view": "Setlist Stats 보기",
   "window": {
+    "1m": "1개월",
     "3m": "3개월",
-    "12m": "12개월",
+    "12m": "1년",
     "all": "전체"
   },
-  "windowLabel": {
-    "3m": "최근 3개월",
-    "12m": "최근 12개월",
-    "all": "전체 기간"
-  },
   "cardWindow": "최근 12개월",
+  "overview": "개요",
   "summary": {
-    "sets": "진행한 셋",
-    "songs": "부른 곡",
-    "perSet": "셋당 곡 수",
-    "newSongs": "새로 부른 곡"
+    "sets": "진행한 셋리스트",
+    "songs": "부른 곡 수(중복 제외)",
+    "perSet": "셋당 평균 곡 수",
+    "newSongs": "새로 도입한 곡"
   },
   "mostSung": {
     "title": "가장 많이 부른 곡",
@@ -25,57 +22,38 @@
     "count_other": "{{count}}회",
     "empty": "이 기간에 진행한 셋이 없습니다."
   },
-  "mostOpened": {
-    "title": "가장 많이 연 곡",
-    "hint": "읽으려고 열어 본 곡입니다. 곡을 여는 것과 부르는 것은 다르기 때문에 이 목록은 따로 보여 줍니다.",
-    "count_one": "1회 열람",
-    "count_other": "{{count}}회 열람",
-    "empty": "이 기간에 연 곡이 없습니다."
-  },
   "newSongs": {
-    "title": "셋에 새로 들어온 곡",
-    "hint": "이 기간에 처음 부른 곡입니다.",
-    "firstSung": "{{date}}에 처음 부름"
+    "title": "셋에 새로 들어온 곡"
   },
   "rotation": {
     "title": "자주 부르는 곡",
     "hint": "최근 {{of}}개 셋 중 {{min}}개 이상에 들어 있었습니다.",
     "value": "{{of}}개 중 {{sets}}개"
   },
-  "repeat": {
-    "title": "이어서 부른 곡",
-    "body": "최근 {{count}}개 셋에 있던 곡 중 {{percent}}%가 그 이전 {{count}}개 셋에도 있었습니다."
-  },
   "resting": {
     "title": "한동안 부르지 않은 곡",
-    "hint": "최근 {{months}}개월 동안 부르지 않은 곡입니다.",
-    "lastSung": "마지막으로 부른 때: {{date}}"
-  },
-  "longTime": {
-    "title": "오래 함께한 곡",
-    "hint": "처음부터 불러 왔고 지금도 부르는 곡입니다.",
-    "since": "{{date}}부터"
+    "hint": "최근 {{months}}개월 동안 부르지 않은 곡입니다."
   },
   "personal": "개인",
   "retry": "다시 시도",
   "removedSong": "삭제된 곡",
   "gate": {
-    "title": "셋을 {{count}}개 진행하면 Song Stats가 나타납니다",
+    "title": "셋을 {{count}}개 진행하면 Setlist Stats가 나타납니다",
     "body": "로그인한 상태에서 예배 모드로 몇 분 동안 진행하면 셋 하나로 기록됩니다. 지금까지 {{done}}개를 진행했습니다."
   },
-  "off": "Song Stats가 꺼져 있어 새 셋이 기록되지 않습니다.",
-  "loadError": "Song Stats를 불러오지 못했습니다",
+  "off": "Setlist Stats가 꺼져 있어 새 셋이 기록되지 않습니다.",
+  "loadError": "Setlist Stats를 불러오지 못했습니다",
   "about": {
-    "link": "Song Stats 정보",
-    "title": "Song Stats",
-    "intro": "Song Stats는 GraceChords에서 진행한 셋과 연 곡을 바탕으로 만들어집니다.",
+    "link": "Setlist Stats 정보",
+    "title": "Setlist Stats",
+    "intro": "Setlist Stats는 GraceChords에서 진행한 셋과 연 곡을 바탕으로 만들어집니다.",
     "rule": "로그인한 상태에서 예배 모드로 진행하면 셋으로 기록됩니다. 곡마다 최소 {{perSong}}분, 전체로는 최소 {{min}}분이 필요합니다. 곡은 화면에 {{seconds}}초 이상 표시되면 기록됩니다.",
     "private": "내 통계는 나만 볼 수 있습니다. 다른 GraceChords 사용자는 볼 수 없습니다. 다음에 무엇을 만들지 정하기 위해 모든 사용자의 곡 횟수를 익명으로 합산합니다.",
-    "control": "언제든지 기록을 지우거나 Song Stats를 끌 수 있습니다.",
+    "control": "언제든지 기록을 지우거나 Setlist Stats를 끌 수 있습니다.",
     "privacy": "개인정보 처리방침",
     "clear": "내 기록 지우기",
-    "turnOff": "Song Stats 끄기",
-    "turnOn": "Song Stats 켜기"
+    "turnOff": "Setlist Stats 끄기",
+    "turnOn": "Setlist Stats 켜기"
   },
   "preview": {
     "title": "미리 보기",

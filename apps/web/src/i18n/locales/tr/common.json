@@ -47,14 +47,14 @@
   },
   "offline": "Çevrimdışısınız. Daha önce açtığınız sayfalar çalışmaya devam eder; yeni içerik bağlantı geri geldiğinde yüklenir.",
   "songStats": {
-    "title": "Song Stats",
+    "title": "Setlist Stats",
     "collect": "Setlerimi ve açtığım şarkıları kaydet",
     "clear": "Geçmişimi temizle",
-    "hint": "Song Stats, oturum açıkken Tapınma Modu’nda yönettiğin setleri ve açtığın şarkıları kaydeder. İstatistiklerin sana aittir; başka hiçbir GraceChords kullanıcısı onları göremez. Bundan sonra ne geliştireceğimize karar vermek için tüm kullanıcıların şarkı sayıları anonim olarak toplanır.",
-    "offConfirm": "Song Stats kapatılsın mı? GraceChords setlerini ve açtığın şarkıları kaydetmeyi, kullandığın araçları saymayı bırakacak. Zaten kaydedilmiş geçmiş, sen temizleyene kadar kalır. Song Stats’i yeniden açmak temizlediğin hiçbir şeyi geri getirmez.",
-    "clearConfirm": "Song Stats geçmişin temizlensin mi? Bu, hesabın için kaydedilen tüm setleri ve şarkı açılışlarını kalıcı olarak siler. Geri alınamaz.",
-    "cleared": "Song Stats geçmişin temizlendi.",
+    "hint": "Setlist Stats, oturum açıkken Tapınma Modu’nda yönettiğin setleri ve açtığın şarkıları kaydeder. İstatistiklerin sana aittir; başka hiçbir GraceChords kullanıcısı onları göremez. Bundan sonra ne geliştireceğimize karar vermek için tüm kullanıcıların şarkı sayıları anonim olarak toplanır.",
+    "offConfirm": "Setlist Stats kapatılsın mı? GraceChords setlerini ve açtığın şarkıları kaydetmeyi, kullandığın araçları saymayı bırakacak. Zaten kaydedilmiş geçmiş, sen temizleyene kadar kalır. Setlist Stats’i yeniden açmak temizlediğin hiçbir şeyi geri getirmez.",
+    "clearConfirm": "Setlist Stats geçmişin temizlensin mi? Bu, hesabın için kaydedilen tüm setleri ve şarkı açılışlarını kalıcı olarak siler. Geri alınamaz.",
+    "cleared": "Setlist Stats geçmişin temizlendi.",
     "clearFailed": "Geçmişin temizlenemedi. Lütfen tekrar dene.",
-    "toggleFailed": "Song Stats güncellenemedi. Lütfen tekrar dene."
+    "toggleFailed": "Setlist Stats güncellenemedi. Lütfen tekrar dene."
   }
 }

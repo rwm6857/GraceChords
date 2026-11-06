@@ -44,10 +44,6 @@
   color: var(--gc-text-secondary);
 }
 
-.gc-stats-about-link {
-  margin: var(--space-2) var(--space-1) 0;
-}
-
 .gc-stats-summary {
   margin: 0;
   display: grid;

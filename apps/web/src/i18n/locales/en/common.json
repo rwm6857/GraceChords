@@ -47,14 +47,14 @@
   },
   "offline": "You're offline. Pages you've already opened still work; anything new will load when you reconnect.",
   "songStats": {
-    "title": "Song Stats",
+    "title": "Setlist Stats",
     "collect": "Record my sets and song opens",
     "clear": "Clear my history",
-    "hint": "Song Stats records the sets you run in Worship Mode and the songs you open while signed in. Your stats are yours — no other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
-    "offConfirm": "Turn off Song Stats? GraceChords will stop recording your sets and song opens, and stop counting the tools you use. History already recorded stays until you clear it. Turning Song Stats back on won’t bring back anything you’ve cleared.",
-    "clearConfirm": "Clear your Song Stats history? This permanently deletes every set and song open recorded for your account. It can’t be undone.",
-    "cleared": "Your Song Stats history was cleared.",
+    "hint": "Setlist Stats records the sets you run in Worship Mode and the songs you open while signed in. Your stats are yours — no other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
+    "offConfirm": "Turn off Setlist Stats? GraceChords will stop recording your sets and song opens, and stop counting the tools you use. History already recorded stays until you clear it. Turning Setlist Stats back on won’t bring back anything you’ve cleared.",
+    "clearConfirm": "Clear your Setlist Stats history? This permanently deletes every set and song open recorded for your account. It can’t be undone.",
+    "cleared": "Your Setlist Stats history was cleared.",
     "clearFailed": "Couldn’t clear your history. Please try again.",
-    "toggleFailed": "Couldn’t update Song Stats. Please try again."
+    "toggleFailed": "Couldn’t update Setlist Stats. Please try again."
   }
 }

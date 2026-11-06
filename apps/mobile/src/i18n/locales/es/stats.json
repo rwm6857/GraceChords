@@ -1,78 +1,55 @@
 {
   "_meta": { "reviewer": "", "reviewedAt": "", "needsReview": true },
-  "title": "Song Stats",
+  "title": "Setlist Stats",
   "window": {
+    "1m": "1 mes",
     "3m": "3 meses",
-    "12m": "12 meses",
+    "12m": "1 año",
     "all": "Siempre"
   },
-  "windowLabel": {
-    "3m": "ÚLTIMOS 3 MESES",
-    "12m": "ÚLTIMOS 12 MESES",
-    "all": "DESDE EL PRINCIPIO"
-  },
-  "cardWindow": "Últimos 12 meses",
+  "overview": "RESUMEN",
   "summary": {
     "sets": "Repertorios dirigidos",
-    "songs": "Canciones cantadas",
-    "perSet": "Canciones por repertorio",
-    "newSongs": "Canciones nuevas"
+    "songs": "Canciones distintas cantadas",
+    "perSet": "Promedio de canciones por repertorio",
+    "newSongs": "Canciones nuevas introducidas"
   },
   "mostSung": {
-    "title": "MÁS CANTADAS",
+    "title": "LAS CANCIONES QUE MÁS CANTASTE",
     "count_one": "Una vez",
     "count_other": "{{count}} veces",
     "empty": "No hay repertorios en este período."
   },
-  "mostOpened": {
-    "title": "MÁS ABIERTAS",
-    "hint": "Canciones que abriste para leer. Abrir una canción no es lo mismo que cantarla, por eso esta lista va aparte.",
-    "count_one": "1 vez abierta",
-    "count_other": "{{count}} veces abierta",
-    "empty": "No abriste canciones en este período."
-  },
   "newSongs": {
-    "title": "NUEVAS EN TUS REPERTORIOS",
-    "hint": "Canciones que cantaste por primera vez en este período.",
-    "firstSung": "Cantada por primera vez en {{date}}"
+    "title": "NUEVAS EN TUS REPERTORIOS"
   },
   "rotation": {
     "title": "EN ROTACIÓN FRECUENTE",
     "hint": "Estuvieron en al menos {{min}} de tus últimos {{of}} repertorios.",
     "value": "{{sets}} de {{of}}"
   },
-  "repeat": {
-    "title": "SE REPITEN",
-    "body": "El {{percent}} % de las canciones de tus últimos {{count}} repertorios también estuvo en los {{count}} anteriores."
-  },
   "resting": {
     "title": "SIN CANTAR DESDE HACE TIEMPO",
-    "hint": "No has cantado estas en los últimos {{months}} meses.",
-    "lastSung": "Última vez: {{date}}"
-  },
-  "longTime": {
-    "title": "CANCIONES DE SIEMPRE",
-    "hint": "Canciones que cantas desde el principio y sigues cantando.",
-    "since": "Desde {{date}}"
+    "hint": "No has cantado estas en los últimos {{months}} meses."
   },
   "removedSong": "Canción eliminada",
   "gate": {
-    "title": "Song Stats aparece después de {{count}} repertorios",
+    "title": "Setlist Stats aparece después de {{count}} repertorios",
     "body": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él unos minutos. Llevas {{done}} hasta ahora."
   },
-  "off": "Song Stats está desactivado, así que los nuevos repertorios no se registran.",
-  "loadError": "No se pudo cargar Song Stats",
+  "off": "Setlist Stats está desactivado, así que los nuevos repertorios no se registran.",
+  "loadError": "No se pudo cargar Setlist Stats",
   "about": {
-    "link": "Acerca de Song Stats",
-    "title": "Song Stats",
-    "intro": "Song Stats se basa en los repertorios que diriges y las canciones que abres en GraceChords.",
+    "link": "Acerca de Setlist Stats",
+    "title": "Setlist Stats",
+    "intro": "Setlist Stats se basa en los repertorios que diriges y las canciones que abres en GraceChords.",
     "rule": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él: al menos {{perSong}} minutos por canción y nunca menos de {{min}} minutos. Una canción cuenta cuando está en pantalla {{seconds}} segundos o más.",
     "private": "Tus estadísticas son tuyas. Ningún otro usuario de GraceChords puede verlas. Las cifras de canciones de todos los usuarios se suman de forma anónima para decidir qué construir después.",
-    "control": "Puedes borrar tu historial o desactivar Song Stats en cualquier momento.",
+    "control": "Puedes borrar tu historial o desactivar Setlist Stats en cualquier momento.",
     "privacy": "Política de privacidad",
     "clear": "Borrar mi historial",
-    "turnOff": "Desactivar Song Stats",
-    "turnOn": "Activar Song Stats"
+    "turnOff": "Desactivar Setlist Stats",
+    "turnOn": "Activar Setlist Stats"
   },
   "preview": {
     "title": "VISTA PREVIA",

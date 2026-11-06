@@ -14,6 +14,7 @@ export type MaterialGlyph = { md: string; filled: boolean }
 export const MATERIAL_CODEPOINTS: Record<string, number> = {
   add: 0xe145,
   arrow_circle_down: 0xf181,
+  bar_chart: 0xe26b,
   book: 0xe86e,
   calendar_today: 0xe935,
   cancel: 0xe888,
@@ -86,6 +87,7 @@ export const SF_TO_MATERIAL: Record<string, MaterialGlyph> = {
   'book': { md: 'menu_book', filled: false },
   'book.closed': { md: 'book', filled: false },
   'calendar': { md: 'calendar_today', filled: false },
+  'chart.bar': { md: 'bar_chart', filled: false },
   'checkmark': { md: 'check', filled: false },
   'checkmark.circle.fill': { md: 'check_circle', filled: true },
   'chevron.down': { md: 'expand_more', filled: false },

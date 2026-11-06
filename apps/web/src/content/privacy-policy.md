@@ -20,16 +20,16 @@ You may create an account directly (email + password) or through **Sign in with 
 
 **Content you create.** To provide the Service, we store the content you make within it — for example, your setlists, song key preferences, view settings, and reading-plan progress. This is stored so it's available to you across your devices.
 
-**Song Stats (how you use GraceChords).** When you are signed in, GraceChords keeps a record of the worship sets you run and the songs you open, so it can show you your own worship-planning insights (for example, which songs you have not sung in a while). It records:
+**Setlist Stats (how you use GraceChords).** When you are signed in, GraceChords keeps a record of the worship sets you run and the songs you open, so it can show you your own worship-planning insights (for example, which songs you have not sung in a while). It records:
 
 - **Sets you run** in performer mode (the app's "Start set", or Worship Mode on the website): for each song shown long enough to count — 30 seconds or more, in a set long enough to count — the song, its title and tags as they read at the time, the key it was shown in, which setlist it came from, when it was shown, and your device's time-zone offset (so a Sunday service is counted on Sunday).
 - **Songs you open** in a song viewer and keep on screen for at least 15 seconds: the song and when you opened it, at most once per song per hour.
 
-Song Stats is linked to your account. Only you can see your own Song Stats; no other GraceChords user can. We may look at totals across all users (for example, how many people sang a song) to decide what to build next, but we never view or report one person's activity, and any total drawn from fewer than five people is hidden. Nothing is recorded while you are signed out.
+Setlist Stats is linked to your account. Only you can see your own Setlist Stats; no other GraceChords user can. We may look at totals across all users (for example, how many people sang a song) to decide what to build next, but we never view or report one person's activity, and any total drawn from fewer than five people is hidden. Nothing is recorded while you are signed out.
 
 **Anonymous feature counts.** To decide which tools are worth maintaining, the app and website add one to a daily counter when you open certain features (the tuner, metronome, pitch pipe, key reference, capo calculator, performer mode, PDF or image export, Daily Word, or Telegram linking). The counter stores only the feature name, the day, and a running total — no account, device, or session identifier — so it cannot be linked back to you.
 
-**Turning it off.** You can turn Song Stats off at any time in the app (Settings → Account) or on the website (Profile). While it is off, nothing is recorded or counted for you, including the anonymous feature counts. You can also **clear your Song Stats history** at any time from the same place, which permanently deletes everything recorded for your account.
+**Turning it off.** You can turn Setlist Stats off at any time in the app (Settings → Account) or on the website (Profile). While it is off, nothing is recorded or counted for you, including the anonymous feature counts. You can also **clear your Setlist Stats history** at any time from the same place, which permanently deletes everything recorded for your account.
 
 **Technical information (infrastructure).** Like any online service, our hosting and infrastructure providers automatically process limited technical data — such as your IP address and standard request logs — to deliver content, keep the Service secure, and prevent abuse. This is not used to profile or track you, and we do not build advertising or behavioral profiles from it.
 
@@ -52,7 +52,7 @@ We do not use analytics cookies, advertising cookies, or third-party tracking co
 
 To be clear about our practices, we do **not**:
 
-- Track you across other websites or apps, or build an advertising or behavioral profile of you (Song Stats is a record kept for you and shown only to you)
+- Track you across other websites or apps, or build an advertising or behavioral profile of you (Setlist Stats is a record kept for you and shown only to you)
 - Show advertising of any kind
 - Use remarketing or retargeting services
 - Sell, rent, or share your personal information
@@ -71,7 +71,7 @@ We use the limited information above only to:
 - Create and maintain your account
 - Authenticate you and keep you signed in
 - Save and sync the content you create in the Service
-- Record your Song Stats and show them to you, and look at anonymous, aggregate totals to decide what to build and maintain
+- Record your Setlist Stats and show them to you, and look at anonymous, aggregate totals to decide what to build and maintain
 - Send account-related emails (e.g., email verification)
 - Keep the Service secure and operational
 
@@ -82,7 +82,7 @@ We use the limited information above only to:
 If you are in the European Economic Area (EEA) or the United Kingdom, we process your personal data on these legal bases:
 
 - **Performance of a contract** — to create your account and provide the Service you requested.
-- **Legitimate interests** — to keep the Service secure and prevent abuse, and to record Song Stats and the anonymous feature counts so we can show you your own history and improve the Service, balanced against your rights. You can turn Song Stats off at any time.
+- **Legitimate interests** — to keep the Service secure and prevent abuse, and to record Setlist Stats and the anonymous feature counts so we can show you your own history and improve the Service, balanced against your rights. You can turn Setlist Stats off at any time.
 - **Consent** — where consent is required (for example, certain uses of storage/cookies), which you may withdraw at any time.
 
 ---
@@ -113,10 +113,10 @@ Our providers store and process data primarily in the **United States**. If you 
 
 We keep your account information and content for as long as your account is active. If you delete your account, we delete your associated personal information and content, except where we are legally required to retain limited records.
 
-- **Song Stats** records are kept for **24 months** and then deleted automatically. You can delete them sooner at any time with "Clear my history", and they are deleted when you delete your account.
+- **Setlist Stats** records are kept for **24 months** and then deleted automatically. You can delete them sooner at any time with "Clear my history", and they are deleted when you delete your account.
 - **Anonymous feature counts** are kept indefinitely, because they contain nothing that identifies anyone.
 
-**Backups.** Our database is backed up nightly, and backup copies are deleted automatically on a fixed schedule. Anything you delete — your account, your content, or your Song Stats history — is removed from the live Service right away, and disappears from backups when those backup copies expire.
+**Backups.** Our database is backed up nightly, and backup copies are deleted automatically on a fixed schedule. Anything you delete — your account, your content, or your Setlist Stats history — is removed from the live Service right away, and disappears from backups when those backup copies expire.
 
 ---
 
@@ -152,7 +152,7 @@ You have the right to:
 - **Limit the use of sensitive personal information** — we do not collect sensitive personal information for such purposes
 - **Non-discrimination** — we will never treat you differently for exercising your rights
 
-For reference, the categories of personal information we collect under the CCPA are **identifiers** (name and email address) and **internet or other electronic network activity information** limited to your use of the Service (Song Stats). We collect them to provide the Service, retain them as described above, and do not disclose them for any commercial purpose.
+For reference, the categories of personal information we collect under the CCPA are **identifiers** (name and email address) and **internet or other electronic network activity information** limited to your use of the Service (Setlist Stats). We collect them to provide the Service, retain them as described above, and do not disclose them for any commercial purpose.
 
 ### Exercising your rights
 
@@ -167,7 +167,7 @@ You may delete your account and associated data at any time:
 - **In the app:** through the in-app account deletion option in Settings.
 - **By email:** contact **ryan@gracechords.com** and we will delete your account.
 
-Deleting your account removes your personal information, content, and Song Stats from the active Service, subject to the retention exceptions in Section 7.
+Deleting your account removes your personal information, content, and Setlist Stats from the active Service, subject to the retention exceptions in Section 7.
 
 ---
 

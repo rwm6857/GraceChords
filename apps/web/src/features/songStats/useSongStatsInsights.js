@@ -19,17 +19,13 @@ export function useSongStatsPreview() {
   }
 }
 
-/**
- * Load and compute the signed-in user's Song Stats (mirrors the mobile hook).
- * `withOpens` loads song opens too — only the detail page needs them.
- */
-export function useSongStatsInsights(range, { withOpens = false } = {}) {
+/** Load and compute the signed-in user's Song Stats (mirrors the mobile hook). */
+export function useSongStatsInsights(range) {
   const { user } = useAuth()
   const userId = user?.id ?? null
   const preview = useSongStatsPreview()
 
   const [plays, setPlays] = useState({ status: 'loading', data: null })
-  const [opens, setOpens] = useState(null)
   const [now, setNow] = useState(() => Date.now())
   const [token, setToken] = useState(0)
 
@@ -57,47 +53,22 @@ export function useSongStatsInsights(range, { withOpens = false } = {}) {
     }
   }, [userId, preview.sample, token])
 
-  useEffect(() => {
-    if (!withOpens) return undefined
-    let alive = true
-    if (preview.sample) {
-      setOpens(buildSampleSongStats(Date.now()).opens)
-      return undefined
-    }
-    if (!userId) {
-      setOpens([])
-      return undefined
-    }
-    songStatsData
-      .loadOpens(userId, range)
-      .then((rows) => alive && setOpens(rows))
-      .catch(() => alive && setOpens(null))
-    return () => {
-      alive = false
-    }
-  }, [userId, range, withOpens, preview.sample, token])
-
   const insights = useMemo(() => {
     if (!plays.data) return null
     return computeSongStats({
       plays: plays.data.plays,
-      opens: withOpens ? opens : null,
       titles: plays.data.titles,
       window: range,
       now,
     })
-  }, [plays.data, opens, withOpens, range, now])
+  }, [plays.data, range, now])
 
   const reload = useCallback(async () => {
     setNow(Date.now())
     if (preview.sample || !userId) return
-    const [data, rows] = await Promise.all([
-      songStatsData.loadPlays(userId, { force: true }).catch(() => null),
-      withOpens ? songStatsData.loadOpens(userId, range, { force: true }).catch(() => null) : null,
-    ])
+    const data = await songStatsData.loadPlays(userId, { force: true }).catch(() => null)
     if (data) setPlays({ status: 'ready', data })
-    if (withOpens) setOpens(rows)
-  }, [preview.sample, userId, withOpens, range])
+  }, [preview.sample, userId])
 
   return {
     status: plays.status,

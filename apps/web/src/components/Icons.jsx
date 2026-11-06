@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  ChartNoAxesColumn,
   Download,
   RefreshCw,
   Image as LucideImage,
@@ -142,6 +143,7 @@ export const BellIcon = wrap(Bell) // SF: bell
 export const BookOpenIcon = wrap(BookOpen) // SF: book, book.fill
 export const BookIcon = wrap(Book) // SF: book.closed
 export const CalendarIcon = wrap(Calendar) // SF: calendar
+export const StatsIcon = wrap(ChartNoAxesColumn) // SF: chart.bar
 export const CheckIcon = wrap(Check) // SF: checkmark
 export const CheckCircleIcon = wrap(CircleCheck) // SF: checkmark.circle.fill
 export const ChevronDownIcon = wrap(ChevronDown) // SF: chevron.down

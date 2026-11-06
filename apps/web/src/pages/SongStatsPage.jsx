@@ -24,7 +24,7 @@ export default function SongStatsPage() {
   const navigate = useNavigate()
   const [range, setRange] = useState(SONG_STATS_DEFAULT_WINDOW)
   const [aboutOpen, setAboutOpen] = useState(false)
-  const { status, insights, visible, preview, reload } = useSongStatsInsights(range, { withOpens: true })
+  const { status, insights, visible, preview, reload } = useSongStatsInsights(range)
 
   useEffect(() => {
     if (!loading && !isLoggedIn) navigate('/login')
@@ -63,28 +63,15 @@ export default function SongStatsPage() {
     const s = insights
     return (
       <>
-        {section(t(`windowLabel.${range}`), <SongStatsSummary summary={s.summary} />)}
+        {section(t('overview'), <SongStatsSummary summary={s.summary} />)}
         {section(
           t('mostSung.title'),
           s.mostSung.length
             ? songList(s.mostSung, (x) => t('mostSung.count', { count: x.count }))
             : <p className="gc-stats-empty">{t('mostSung.empty')}</p>,
         )}
-        {s.mostOpened
-          ? section(
-              t('mostOpened.title'),
-              s.mostOpened.length
-                ? songList(s.mostOpened, (x) => t('mostOpened.count', { count: x.count }))
-                : <p className="gc-stats-empty">{t('mostOpened.empty')}</p>,
-              t('mostOpened.hint'),
-            )
-          : null}
         {s.newThisPeriod.length
-          ? section(
-              t('newSongs.title'),
-              songList(s.newThisPeriod, (x) => t('newSongs.firstSung', { date: date(x.firstSung) })),
-              t('newSongs.hint'),
-            )
+          ? section(t('newSongs.title'), songList(s.newThisPeriod, (x) => date(x.firstSung)))
           : null}
         {s.heavyRotation.length
           ? section(
@@ -93,21 +80,11 @@ export default function SongStatsPage() {
               t('rotation.hint', { min: R.heavyRotationMin, of: R.recentSessions }),
             )
           : null}
-        {s.repeatRate != null
-          ? section(t('repeat.title'), <p>{t('repeat.body', { percent: s.repeatRate, count: R.recentSessions })}</p>)
-          : null}
         {s.resting.length
           ? section(
               t('resting.title'),
-              songList(s.resting, (x) => t('resting.lastSung', { date: date(x.lastSung) })),
+              songList(s.resting, (x) => date(x.lastSung)),
               t('resting.hint', { months: Math.round(R.dormantDays / 30) }),
-            )
-          : null}
-        {s.longTime.length
-          ? section(
-              t('longTime.title'),
-              songList(s.longTime, (x) => t('longTime.since', { date: date(x.firstSung) })),
-              t('longTime.hint'),
             )
           : null}
       </>
@@ -161,12 +138,6 @@ export default function SongStatsPage() {
 
       {renderBody()}
 
-      <p className="gc-stats-footer">
-        <button type="button" className="gc-linkbtn" onClick={() => setAboutOpen(true)}>
-          {t('about.link')}
-        </button>
-      </p>
-
       {preview.canPreview ? (
         <section className="gc-stats-section gc-stats-preview">
           <h2>{t('preview.title')}</h2>
@@ -189,6 +160,12 @@ export default function SongStatsPage() {
           <p className="gc-stats-note">{t('preview.hint')}</p>
         </section>
       ) : null}
+
+      <p className="gc-stats-footer">
+        <button type="button" className="gc-linkbtn" onClick={() => setAboutOpen(true)}>
+          {t('about.link')}
+        </button>
+      </p>
 
       <SongStatsAboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>

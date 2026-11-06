@@ -78,6 +78,11 @@ describe('computeSongStats — summary', () => {
     expect(computeSongStats({ plays, window: '12m', now: NOW }).summary.avgSongsPerSet).toBe(1.3)
   })
 
+  it('has a one-month window', () => {
+    const plays = [play('a', '1', 10), play('b', '2', 40)]
+    expect(computeSongStats({ plays, window: '1m', now: NOW }).summary.sessions).toBe(1)
+  })
+
   it('returns a null average with nothing in the window', () => {
     const s = computeSongStats({ plays: sets(2, ['a'], 7, 200), window: '3m', now: NOW })
     expect(s.summary.avgSongsPerSet).toBeNull()
@@ -201,8 +206,8 @@ describe('local dates', () => {
     const p = { played_at: '2026-11-01T23:00:00Z', utc_offset_minutes: -300 }
     expect(playLocalDate(p)).toBe('2026-11-01')
     expect(new Date('2026-11-01T00:00:00Z').getUTCDay()).toBe(0)
-    expect(formatSongStatsDate('2026-11-01', 'en', 'day')).toBe('Nov 1, 2026')
-    expect(formatSongStatsDate('2026-03-31', 'en')).toBe('March 2026')
+    expect(formatSongStatsDate('2026-11-01', 'en', NOW)).toBe('Nov 1')
+    expect(formatSongStatsDate('2025-08-02', 'en', NOW)).toBe('Aug 2, 2025')
   })
 })
 
