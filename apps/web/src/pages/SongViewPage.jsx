@@ -287,7 +287,7 @@ export default function SongView(){
     setPptxUrl(url)
     let cancelled = false
     async function check(){
-      const ok = await headOk(`${url}?probe`, entry.id)
+      const ok = await headOk(`${url}?exists`, entry.id)
       if (cancelled || !ok) return
       setHasPptx(true)
     }
