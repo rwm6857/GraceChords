@@ -416,3 +416,123 @@
     display: none;
   }
 }
+
+/* ===== Setlist Stats (admin) ===== */
+.gc-admin-stats-back {
+  margin: 0 0 var(--space-2);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-admin-stats-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: var(--gc-text-secondary);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-admin-stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.gc-admin-stats-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gc-surface-2);
+  border-radius: var(--radius-md);
+}
+
+.gc-admin-stats-tile__value {
+  font-size: var(--gc-font-h2);
+  font-weight: 700;
+  color: var(--gc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.gc-admin-stats-tile__value small {
+  font-size: var(--gc-font-sub);
+  font-weight: 500;
+  color: var(--gc-text-secondary);
+}
+
+.gc-admin-stats-tile__label {
+  font-size: var(--gc-font-cap);
+  color: var(--gc-text-secondary);
+}
+
+.gc-admin-stats-songlist {
+  margin-top: var(--space-2);
+  font-size: var(--gc-font-sub);
+}
+
+.gc-admin-stats-songlist summary {
+  cursor: pointer;
+  color: var(--gc-text);
+  padding: var(--space-1) 0;
+}
+
+.gc-admin-stats-songlist ul {
+  columns: 2 220px;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--gc-text-secondary);
+}
+
+.gc-admin-stats-period {
+  margin-bottom: var(--space-3);
+}
+
+.gc-admin-stats-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+
+.gc-admin-stats-split h3 {
+  font-size: var(--gc-font-sub);
+  font-weight: 600;
+  color: var(--gc-text-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.gc-admin-stats-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gc-admin-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gc-font-sub);
+}
+
+.gc-admin-stats-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  color: var(--gc-text-secondary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--gc-separator);
+  white-space: nowrap;
+}
+
+.gc-admin-stats-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gc-separator);
+  color: var(--gc-text);
+}
+
+.gc-admin-stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gc-admin-stats-table .is-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

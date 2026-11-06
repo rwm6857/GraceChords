@@ -22,6 +22,7 @@ const AuthCallbackPage = lazyRoute(() => import('./pages/AuthCallbackPage'))
 const ResetPasswordPage = lazyRoute(() => import('./pages/ResetPasswordPage'))
 const ForgotPasswordPage = lazyRoute(() => import('./pages/ForgotPasswordPage'))
 const AdminPage = lazyRoute(() => import('./pages/AdminPage'))
+const AdminStatsPage = lazyRoute(() => import('./pages/AdminStatsPage'))
 const EditorPage = lazyRoute(() => import('./pages/EditorPage'))
 const PortalEditorPage = lazyRoute(() => import('./pages/portal/EditorPage'))
 const AuditLogPage = lazyRoute(() => import('./components/editor/AuditLogPanel'))
@@ -73,6 +74,7 @@ export default function App(){
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/song-stats" element={<SongStatsPage />} />
             <Route path="/admin" element={<RoleGuard minRole="admin"><AdminPage /></RoleGuard>} />
+            <Route path="/admin/stats" element={<RoleGuard minRole="admin"><AdminStatsPage /></RoleGuard>} />
             <Route path="/editor" element={<RoleGuard minRole="editor"><EditorPage /></RoleGuard>} />
             <Route path="/portal/editor" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
             <Route path="/portal/editor/:slug" element={<RoleGuard minRole="user"><PortalEditorPage /></RoleGuard>} />
