@@ -532,6 +532,7 @@ export default function SongView(){
           baseKey={baseKey}
           valueKey={toKey}
           onChange={(full) => setToKey(full)}
+          aria-label={t('pages:setlist.keyFor', { title })}
         />
         <IconButton
           variant={twoColsView ? 'primary' : 'secondary'}
@@ -766,6 +767,7 @@ export default function SongView(){
             valueKey={toKey}
             onChange={(full) => setToKey(full)}
             title="Key"
+            aria-label={t('pages:setlist.keyFor', { title })}
             style={{ minWidth: 76, padding:'6px 8px', borderRadius:6 }}
           />
           <IconButton label={t('toggleChords')} onClick={()=> setShowChords(v=>!v)} title={t('toggleChords')}><EyeIcon /></IconButton>

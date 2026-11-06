@@ -71,6 +71,12 @@
   /* ===== Colors (Light) - Signal Blue palette ===== */
   --gc-primary: #1F84C9;
   --gc-primary-hover: #1A72B0;
+  /* Solid accent fills that carry text (primary buttons, active nav pill).
+     --gc-primary is too light for 4.5:1 against either text color, so the
+     fill is one step deeper in light mode; --gc-on-primary mirrors native onAccent. */
+  --gc-primary-fill: #1A72B0;
+  --gc-primary-fill-hover: #15619A;
+  --gc-on-primary: #FFFFFF;
   --gc-success: #34C759;
   --gc-warning: #FF9500;
   --gc-danger: #FF3B30;
@@ -81,9 +87,10 @@
   --gc-teal: #5AC8FA;
   --gc-yellow: #FFCC00;
 
-  /* Telegram brand (matches the official Login Widget button) */
-  --gc-telegram: #54a9eb;
-  --gc-telegram-hover: #3d9adb;
+  /* Telegram brand blue, deepened from the Login Widget's #54a9eb so white
+     label text meets WCAG AA (4.5:1). Same in both themes. */
+  --gc-telegram: #2775B3;
+  --gc-telegram-hover: #1F659D;
 
   /* Neutrals / surfaces */
   --gc-bg: #F5F7F9;
@@ -119,6 +126,9 @@
 [data-theme="dark"] {
   --gc-primary: #4EA6E6;
   --gc-primary-hover: #66B4EA;
+  --gc-primary-fill: #4EA6E6;
+  --gc-primary-fill-hover: #66B4EA;
+  --gc-on-primary: #14171A;
   --gc-text-accent: #6FB6EA;
   --gc-success: #30D158;
   --gc-warning: #FF9F0A;
@@ -128,9 +138,6 @@
   --gc-purple: #BF5AF2;
   --gc-teal: #64D2FF;
   --gc-yellow: #FFD60A;
-
-  --gc-telegram: #54a9eb;
-  --gc-telegram-hover: #6cb3ed;
 
   --gc-bg: #14171A;
   --gc-surface-1: #1E2227;

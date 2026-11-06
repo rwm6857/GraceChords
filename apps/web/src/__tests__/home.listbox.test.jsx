@@ -39,11 +39,13 @@ describe('Home search accessibility', () => {
     )
 
     const user = userEvent.setup()
-    const search = await screen.findByLabelText(/search worship songs/i)
+    const search = await screen.findByRole('combobox', { name: /search worship songs/i })
+    expect(search).toHaveAttribute('aria-expanded', 'false')
     await user.click(search)
     await user.type(search, 'Al')
     const listbox = await screen.findByRole('listbox')
     expect(listbox).toBeInTheDocument()
+    expect(search).toHaveAttribute('aria-expanded', 'true')
 
     await user.keyboard('{ArrowDown}')
     let options = screen.getAllByRole('option')

@@ -78,10 +78,10 @@ input, select, textarea,
 .gc-navbar .gc-navlink.active,
 .gc-navbar .gc-navlink.active:link,
 .gc-navbar .gc-navlink.active:visited{
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: var(--primary-text) !important;
-  -webkit-text-fill-color: var(--primary-text) !important;
+  background: var(--gc-primary-fill) !important;
+  border-color: var(--gc-primary-fill) !important;
+  color: var(--gc-on-primary) !important;
+  -webkit-text-fill-color: var(--gc-on-primary) !important;
 }
 
 .container{ padding: var(--space-4); width:100%; max-width:1200px; margin:0 auto }
@@ -135,9 +135,9 @@ select{
   transition: background-color var(--gc-dur-quick) var(--gc-ease), border-color var(--gc-dur-quick) var(--gc-ease), color var(--gc-dur-quick) var(--gc-ease), transform var(--gc-dur-quick) var(--gc-ease);
 }
 .btn.primary{
-  background: var(--gc-primary);
-  color: var(--primary-text);
-  border: 1px solid var(--gc-primary);
+  background: var(--gc-primary-fill);
+  color: var(--gc-on-primary);
+  border: 1px solid var(--gc-primary-fill);
 }
 .btn.primary:hover{ filter:brightness(.98) }
 .btn:hover{ background: var(--gc-surface-3); }
@@ -158,9 +158,9 @@ select{
 .iconbtn:hover{ background: var(--gc-surface-3); }
 
 .btn.primary.iconbtn{
-  background: var(--gc-primary);
-  border-color: var(--gc-primary);
-  color: var(--primary-text);
+  background: var(--gc-primary-fill);
+  border-color: var(--gc-primary-fill);
+  color: var(--gc-on-primary);
 }
 
 /* Label helpers across mobile/tablet */
@@ -863,14 +863,14 @@ html, body, #root { height: 100%; }
 /* Telegram-brand button (used in mobile action sheet) */
 .gc-btn--telegram,
 .gc-btn--telegram.gc-btn--primary{
-  background: #229ED9;
-  border-color: #229ED9;
+  background: var(--gc-telegram);
+  border-color: var(--gc-telegram);
   color: #ffffff;
 }
 .gc-btn--telegram:hover,
 .gc-btn--telegram.gc-btn--primary:hover{
-  background: #1e8ec3;
-  border-color: #1e8ec3;
+  background: var(--gc-telegram-hover);
+  border-color: var(--gc-telegram-hover);
 }
 
 /* Inline PPT chooser inside the mobile action sheet */
@@ -985,10 +985,10 @@ a.gc-navlink, .gc-navlink{
 a.gc-navlink.active, .gc-navlink.active,
 a.gc-navlink.active:link, .gc-navlink.active:link,
 a.gc-navlink.active:visited, .gc-navlink.active:visited{
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: var(--primary-text) !important;
-  -webkit-text-fill-color: var(--primary-text) !important;
+  background: var(--gc-primary-fill) !important;
+  border-color: var(--gc-primary-fill) !important;
+  color: var(--gc-on-primary) !important;
+  -webkit-text-fill-color: var(--gc-on-primary) !important;
 }
 
 /* ========== Home Dashboard enhancements ========== */

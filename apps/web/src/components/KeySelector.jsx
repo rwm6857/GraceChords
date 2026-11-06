@@ -21,6 +21,7 @@ export default function KeySelector({
   disabled = false,
   accidentalPref = 'auto', // 'auto' | 'sharp' | 'flat'
   title,
+  'aria-label': ariaLabel,
   style,
   className,
 }){
@@ -43,7 +44,7 @@ export default function KeySelector({
   }
 
   return (
-    <select value={valueRoot} onChange={handleChange} disabled={disabled} title={title} style={style} className={className}>
+    <select value={valueRoot} onChange={handleChange} disabled={disabled} title={title} aria-label={ariaLabel} style={style} className={className}>
       {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
     </select>
   )

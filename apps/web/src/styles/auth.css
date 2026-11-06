@@ -573,8 +573,8 @@
   padding: 5px 12px;
   font-size: var(--gc-btn-font-size-sm);
   font-weight: 600;
-  color: #ffffff;
-  background: var(--gc-primary);
+  color: var(--gc-on-primary);
+  background: var(--gc-primary-fill);
   border: none;
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -584,7 +584,7 @@
 }
 
 .gc-nav-signin:hover {
-  background: var(--gc-primary-hover);
+  background: var(--gc-primary-fill-hover);
 }
 
 /* ===== Mobile responsive ===== */
