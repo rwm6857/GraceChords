@@ -77,7 +77,7 @@ export type SongStatsInsights = {
 export function songStatsWindowStart(window: SongStatsWindow, now: number): number | null {
   if (window === 'all') return null
   const d = new Date(now)
-  d.setMonth(d.getMonth() - (window === '3m' ? 3 : 12))
+  d.setMonth(d.getMonth() - (window === '1m' ? 1 : window === '3m' ? 3 : 12))
   return d.getTime()
 }
 
@@ -88,20 +88,15 @@ export function playLocalDate(play: Pick<StatsPlay, 'played_at' | 'utc_offset_mi
 }
 
 /**
- * Format a YYYY-MM-DD local date for display. Formatted as UTC on purpose:
- * the date is already local to where the set was sung, and re-applying the
- * reader's timezone could move it a day.
+ * Format a YYYY-MM-DD local date for display, short: "Aug 2", with the year
+ * only when it isn't the current one ("Aug 2, 2025"). Formatted as UTC on
+ * purpose: the date is already local to where the set was sung, and
+ * re-applying the reader's timezone could move it a day.
  */
-export function formatSongStatsDate(
-  localDate: string,
-  language: string,
-  style: 'month' | 'day' = 'month',
-): string {
+export function formatSongStatsDate(localDate: string, language: string, now: number = Date.now()): string {
   const [y, m, d] = localDate.split('-').map(Number)
-  const opts: Intl.DateTimeFormatOptions =
-    style === 'month'
-      ? { month: 'long', year: 'numeric', timeZone: 'UTC' }
-      : { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', timeZone: 'UTC' }
+  if (y !== new Date(now).getFullYear()) opts.year = 'numeric'
   try {
     return new Intl.DateTimeFormat(language, opts).format(Date.UTC(y, (m || 1) - 1, d || 1))
   } catch {

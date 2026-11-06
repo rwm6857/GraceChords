@@ -41,23 +41,23 @@
     "linkFailedTitle": "Couldn't start linking"
   },
   "songStats": {
-    "title": "Song Stats",
-    "view": "Ver Song Stats",
+    "title": "Setlist Stats",
+    "view": "Ver Setlist Stats",
     "clear": "Borrar mi historial",
-    "hint": "Song Stats registra los repertorios que diriges y las canciones que abres en GraceChords. Tus estadísticas son tuyas: ningún otro usuario de GraceChords puede verlas. Los conteos de canciones de todos los usuarios se suman de forma anónima para ayudarnos a decidir qué construir.",
+    "hint": "Setlist Stats registra los repertorios que diriges y las canciones que abres en GraceChords. Tus estadísticas son tuyas: ningún otro usuario de GraceChords puede verlas. Los conteos de canciones de todos los usuarios se suman de forma anónima para ayudarnos a decidir qué construir.",
     "offAlert": {
-      "title": "¿Desactivar Song Stats?",
-      "message": "GraceChords dejará de registrar tus repertorios y las canciones que abres, y dejará de contar las herramientas que usas. El historial ya registrado se conserva hasta que lo borres. Volver a activar Song Stats no recupera nada de lo que hayas borrado.",
+      "title": "¿Desactivar Setlist Stats?",
+      "message": "GraceChords dejará de registrar tus repertorios y las canciones que abres, y dejará de contar las herramientas que usas. El historial ya registrado se conserva hasta que lo borres. Volver a activar Setlist Stats no recupera nada de lo que hayas borrado.",
       "confirm": "Desactivar"
     },
     "clearAlert": {
-      "title": "¿Borrar tu historial de Song Stats?",
+      "title": "¿Borrar tu historial de Setlist Stats?",
       "message": "Esto elimina de forma permanente todos los repertorios y canciones abiertas registrados en tu cuenta. No se puede deshacer.",
       "confirm": "Borrar historial"
     },
-    "cleared": "Se borró tu historial de Song Stats.",
+    "cleared": "Se borró tu historial de Setlist Stats.",
     "clearFailedTitle": "No se pudo borrar tu historial",
-    "toggleFailedTitle": "No se pudo actualizar Song Stats"
+    "toggleFailedTitle": "No se pudo actualizar Setlist Stats"
   },
   "logOut": "Log out",
   "logOutHint": "Signs you out of GraceChords on this device.",

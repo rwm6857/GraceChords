@@ -41,7 +41,7 @@ export default function SongStatsScreen() {
   const [range, setRange] = useState<SongStatsWindow>(SONG_STATS_DEFAULT_WINDOW)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const { status, insights, visible, preview, reload } = useSongStatsInsights(range, { withOpens: true })
+  const { status, insights, visible, preview, reload } = useSongStatsInsights(range)
   const collecting = isSongStatsEnabled()
 
   const date = (d: string) => formatSongStatsDate(d, i18n.language)
@@ -95,7 +95,7 @@ export default function SongStatsScreen() {
     return (
       <>
         {section(
-          tx(`windowLabel.${range}`),
+          tx('overview'),
           <Card>
             <SongStatsSummaryRows summary={s.summary} />
           </Card>,
@@ -108,21 +108,10 @@ export default function SongStatsScreen() {
             : emptyLine(tx('mostSung.empty')),
         )}
 
-        {s.mostOpened
-          ? section(
-              tx('mostOpened.title'),
-              s.mostOpened.length
-                ? songRows(s.mostOpened, (x) => tx('mostOpened.count', { count: x.count }))
-                : emptyLine(tx('mostOpened.empty')),
-              tx('mostOpened.hint'),
-            )
-          : null}
-
         {s.newThisPeriod.length
           ? section(
               tx('newSongs.title'),
-              songRows(s.newThisPeriod, (x) => tx('newSongs.firstSung', { date: date(x.firstSung) })),
-              tx('newSongs.hint'),
+              songRows(s.newThisPeriod, (x) => date(x.firstSung)),
             )
           : null}
 
@@ -134,30 +123,11 @@ export default function SongStatsScreen() {
             )
           : null}
 
-        {s.repeatRate != null
-          ? section(
-              tx('repeat.title'),
-              <Card>
-                <Text style={{ padding: t.spacing.md, fontSize: 15, lineHeight: 21, color: t.colors.ink }}>
-                  {tx('repeat.body', { percent: s.repeatRate, count: R.recentSessions })}
-                </Text>
-              </Card>,
-            )
-          : null}
-
         {s.resting.length
           ? section(
               tx('resting.title'),
-              songRows(s.resting, (x) => tx('resting.lastSung', { date: date(x.lastSung) })),
+              songRows(s.resting, (x) => date(x.lastSung)),
               tx('resting.hint', { months: Math.round(R.dormantDays / 30) }),
-            )
-          : null}
-
-        {s.longTime.length
-          ? section(
-              tx('longTime.title'),
-              songRows(s.longTime, (x) => tx('longTime.since', { date: date(x.firstSung) })),
-              tx('longTime.hint'),
             )
           : null}
       </>
@@ -209,11 +179,13 @@ export default function SongStatsScreen() {
         }
         contentContainerStyle={{
           flexGrow: 1,
+          // On phones ConstrainedContent is a pass-through, so the gutter lives here.
+          paddingHorizontal: t.spacing.lg,
           paddingTop: barH + t.spacing.sm,
           paddingBottom: insets.bottom + t.spacing.xxl,
         }}
       >
-        <ConstrainedContent tier="content" style={{ paddingHorizontal: t.spacing.lg }}>
+        <ConstrainedContent tier="content">
           <Text
             style={{
               fontSize: t.typography.largeTitle.fontSize,
@@ -248,15 +220,6 @@ export default function SongStatsScreen() {
 
           {renderBody()}
 
-          <Pressable
-            onPress={() => setAboutOpen(true)}
-            accessibilityRole="link"
-            hitSlop={8}
-            style={{ alignSelf: 'center', paddingTop: t.spacing.xl }}
-          >
-            <Text style={{ fontSize: 14, color: t.colors.textAccent }}>{tx('about.link')}</Text>
-          </Pressable>
-
           {preview.canPreview ? (
             <>
               <SectionHeader label={tx('preview.title')} />
@@ -290,6 +253,15 @@ export default function SongStatsScreen() {
               </Text>
             </>
           ) : null}
+
+          <Pressable
+            onPress={() => setAboutOpen(true)}
+            accessibilityRole="link"
+            hitSlop={8}
+            style={{ alignSelf: 'center', paddingTop: t.spacing.xl }}
+          >
+            <Text style={{ fontSize: 14, color: t.colors.textAccent }}>{tx('about.link')}</Text>
+          </Pressable>
         </ConstrainedContent>
       </ScrollView>
 

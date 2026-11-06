@@ -24,6 +24,7 @@ export const ICON_MAP = {
   'book.fill':                       { concept: 'Daily Word (tab)', lucide: 'BookOpen',      web: 'BookOpenIcon' },
   'book.closed':                     { concept: 'Song book',        lucide: 'Book',          web: 'BookIcon' },
   'calendar':                        { concept: 'Date',             lucide: 'Calendar',      web: 'CalendarIcon' },
+  'chart.bar':                       { concept: 'Setlist Stats',    lucide: 'ChartNoAxesColumn', web: 'StatsIcon' },
   'checkmark':                       { concept: 'Confirm',          lucide: 'Check',         web: 'CheckIcon' },
   'checkmark.circle.fill':           { concept: 'Confirmed',        lucide: 'CircleCheck',   web: 'CheckCircleIcon' },
   'chevron.down':                    { concept: 'Disclosure down',  lucide: 'ChevronDown',   web: 'ChevronDownIcon' },

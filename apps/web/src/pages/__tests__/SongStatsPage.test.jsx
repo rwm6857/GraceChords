@@ -80,36 +80,36 @@ describe('SongStatsPage', () => {
   it('shows the empty state below 10 sets', async () => {
     rows = setsOf(9, ['a'])
     await renderPage()
-    expect(await screen.findByRole('heading', { name: 'Song Stats appears after 10 sets' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Setlist Stats appears after 10 sets' })).toBeTruthy()
     expect(screen.getByText(/You’ve run 9 so far/)).toBeTruthy()
-    expect(screen.queryByText('MOST SUNG')).toBeNull()
+    expect(screen.queryByText('SONGS YOU SANG THE MOST')).toBeNull()
   })
 
   it('shows the stats at 10 sets, with current titles and the snapshot for a deleted song', async () => {
     rows = setsOf(10, ['live', 'gone'])
     titles = [{ id: 'live', title: 'Current Title' }]
     await renderPage()
-    expect(await screen.findByText('MOST SUNG')).toBeTruthy()
+    expect(await screen.findByText('SONGS YOU SANG THE MOST')).toBeTruthy()
     // Both songs are in all of the last 8 sets, so they appear under heavy rotation too.
-    const mostSung = screen.getByRole('heading', { name: 'MOST SUNG' }).closest('section')
+    const mostSung = screen.getByRole('heading', { name: 'SONGS YOU SANG THE MOST' }).closest('section')
     expect(within(mostSung).getByText('Current Title')).toBeTruthy()
     expect(within(mostSung).getByText('Snapshot gone')).toBeTruthy()
     expect(within(mostSung).getAllByText('10 times')).toHaveLength(2)
-    expect(screen.getByRole('button', { name: 'About Song Stats' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'About Setlist Stats' })).toBeTruthy()
   })
 
   it('previews below the gate in dev builds and admin accounts', async () => {
     rows = setsOf(3, ['a'])
     await renderPage({ bypassGate: true })
     expect(await screen.findByText('Preview: 3 of 10 sets logged')).toBeTruthy()
-    expect(screen.getByText('MOST SUNG')).toBeTruthy()
+    expect(screen.getByText('SONGS YOU SANG THE MOST')).toBeTruthy()
     expect(screen.getByText('PREVIEW')).toBeTruthy()
   })
 
   it('fills every section from sample data', async () => {
     await renderPage({ sample: true })
     expect(await screen.findByText('Showing sample data')).toBeTruthy()
-    for (const heading of ['MOST SUNG', 'MOST OPENED', 'IN HEAVY ROTATION', 'CARRIED OVER', 'NOT SUNG IN A WHILE', 'LONG-TIME SONGS']) {
+    for (const heading of ['OVERVIEW', 'SONGS YOU SANG THE MOST', 'NEW TO YOUR SETS', 'IN HEAVY ROTATION', 'NOT SUNG IN A WHILE']) {
       expect(screen.getByRole('heading', { name: heading })).toBeTruthy()
     }
   })

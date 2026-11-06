@@ -41,23 +41,23 @@
     "linkFailedTitle": "Couldn't start linking"
   },
   "songStats": {
-    "title": "Song Stats",
-    "view": "Song Stats'i görüntüle",
+    "title": "Setlist Stats",
+    "view": "Setlist Stats'i görüntüle",
     "clear": "Geçmişimi temizle",
-    "hint": "Song Stats, GraceChords’ta yönettiğin setleri ve açtığın şarkıları kaydeder. İstatistiklerin sana aittir; başka hiçbir GraceChords kullanıcısı onları göremez. Bundan sonra ne geliştireceğimize karar vermek için tüm kullanıcıların şarkı sayıları anonim olarak toplanır.",
+    "hint": "Setlist Stats, GraceChords’ta yönettiğin setleri ve açtığın şarkıları kaydeder. İstatistiklerin sana aittir; başka hiçbir GraceChords kullanıcısı onları göremez. Bundan sonra ne geliştireceğimize karar vermek için tüm kullanıcıların şarkı sayıları anonim olarak toplanır.",
     "offAlert": {
-      "title": "Song Stats kapatılsın mı?",
-      "message": "GraceChords setlerini ve açtığın şarkıları kaydetmeyi, kullandığın araçları saymayı bırakacak. Zaten kaydedilmiş geçmiş, sen temizleyene kadar kalır. Song Stats’i yeniden açmak temizlediğin hiçbir şeyi geri getirmez.",
+      "title": "Setlist Stats kapatılsın mı?",
+      "message": "GraceChords setlerini ve açtığın şarkıları kaydetmeyi, kullandığın araçları saymayı bırakacak. Zaten kaydedilmiş geçmiş, sen temizleyene kadar kalır. Setlist Stats’i yeniden açmak temizlediğin hiçbir şeyi geri getirmez.",
       "confirm": "Kapat"
     },
     "clearAlert": {
-      "title": "Song Stats geçmişin temizlensin mi?",
+      "title": "Setlist Stats geçmişin temizlensin mi?",
       "message": "Bu, hesabın için kaydedilen tüm setleri ve şarkı açılışlarını kalıcı olarak siler. Geri alınamaz.",
       "confirm": "Geçmişi temizle"
     },
-    "cleared": "Song Stats geçmişin temizlendi.",
+    "cleared": "Setlist Stats geçmişin temizlendi.",
     "clearFailedTitle": "Geçmişin temizlenemedi",
-    "toggleFailedTitle": "Song Stats güncellenemedi"
+    "toggleFailedTitle": "Setlist Stats güncellenemedi"
   },
   "logOut": "Log out",
   "logOutHint": "Signs you out of GraceChords on this device.",

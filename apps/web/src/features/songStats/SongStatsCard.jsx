@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SONG_STATS_DEFAULT_WINDOW, SONG_STATS_INSIGHT_RULES } from '@gracechords/core'
 import { ChevronRightIcon } from '../../components/Icons'
 import SongStatsSummary from './SongStatsSummary'
-import SongStatsAboutDialog from './SongStatsAboutDialog'
 import { useSongStatsInsights } from './useSongStatsInsights'
 import '../../styles/song-stats.css'
 
@@ -14,7 +13,6 @@ import '../../styles/song-stats.css'
  */
 export default function SongStatsCard() {
   const { t } = useTranslation('stats')
-  const [aboutOpen, setAboutOpen] = useState(false)
   const { insights, visible, preview } = useSongStatsInsights(SONG_STATS_DEFAULT_WINDOW)
   if (!insights || !visible) return null
 
@@ -36,10 +34,6 @@ export default function SongStatsCard() {
         </span>
         <SongStatsSummary summary={insights.summary} />
       </Link>
-      <button type="button" className="gc-linkbtn gc-stats-about-link" onClick={() => setAboutOpen(true)}>
-        {t('about.link')}
-      </button>
-      <SongStatsAboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   )
 }

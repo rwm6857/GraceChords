@@ -3,7 +3,6 @@ import {
   buildSampleSongStats,
   computeSongStats,
   hasMinRole,
-  type FetchedOpen,
   type SongStatsPlayData,
   type SongStatsWindow,
 } from '@gracechords/core'
@@ -29,21 +28,15 @@ export function useSongStatsPreview() {
   }
 }
 
-/**
- * Load and compute the signed-in user's Song Stats. `withOpens` loads song
- * opens too — only the detail view needs them, so the Setlists card never
- * pays for that fetch.
- */
-export function useSongStatsInsights(window: SongStatsWindow, opts: { withOpens?: boolean } = {}) {
+/** Load and compute the signed-in user's Song Stats from their play log. */
+export function useSongStatsInsights(window: SongStatsWindow) {
   const userId = useCurrentUser()?.id ?? null
   const preview = useSongStatsPreview()
-  const withOpens = !!opts.withOpens
 
   const [plays, setPlays] = useState<{ status: Status; data: SongStatsPlayData | null }>({
     status: 'loading',
     data: null,
   })
-  const [opens, setOpens] = useState<FetchedOpen[] | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [token, setToken] = useState(0)
 
@@ -72,49 +65,23 @@ export function useSongStatsInsights(window: SongStatsWindow, opts: { withOpens?
     }
   }, [userId, preview.sample, token])
 
-  useEffect(() => {
-    if (!withOpens) return
-    let alive = true
-    if (preview.sample) {
-      setOpens(buildSampleSongStats(Date.now()).opens)
-      return
-    }
-    if (!userId) {
-      setOpens([])
-      return
-    }
-    songStatsData
-      .loadOpens(userId, window)
-      .then((rows) => alive && setOpens(rows))
-      // Opens are one section of the detail view; a failure hides that section only.
-      .catch(() => alive && setOpens(null))
-    return () => {
-      alive = false
-    }
-  }, [userId, window, withOpens, preview.sample, token])
-
   const insights = useMemo(() => {
     if (!plays.data) return null
     return computeSongStats({
       plays: plays.data.plays,
-      opens: withOpens ? opens : null,
       titles: plays.data.titles,
       window,
       now,
     })
-  }, [plays.data, opens, withOpens, window, now])
+  }, [plays.data, window, now])
 
   /** Pull-to-refresh: bypass the day-long cache. Resolves when done; never throws. */
   const reload = useCallback(async () => {
     setNow(Date.now())
     if (preview.sample || !userId) return
-    const [data, rows] = await Promise.all([
-      songStatsData.loadPlays(userId, { force: true }).catch(() => null),
-      withOpens ? songStatsData.loadOpens(userId, window, { force: true }).catch(() => null) : null,
-    ])
+    const data = await songStatsData.loadPlays(userId, { force: true }).catch(() => null)
     if (data) setPlays({ status: 'ready', data })
-    if (withOpens) setOpens(rows)
-  }, [preview.sample, userId, withOpens, window])
+  }, [preview.sample, userId])
 
   return {
     status: plays.status,
