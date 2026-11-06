@@ -21,12 +21,14 @@ import {
 import { buildBibleTranslationGroups } from '../utils/bible/translationMenu'
 import BibleTranslationPicker from '../components/BibleTranslationPicker'
 import { isRtlBibleLanguage } from '../utils/bible/direction'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 const SITE_URL = 'https://gracechords.com'
 const OG_IMAGE_URL = `${SITE_URL}/favicon.ico`
 
 export default function ReadingsPage(){
   const { t } = useTranslation('pages')
+  useFeatureUseOnOpen('daily_word')
   const [date, setDate] = useState(() => new Date())
   const [passageIndex, setPassageIndex] = useState(0)
   const [selectionsByPassage, setSelectionsByPassage] = useState<Record<string, Set<number>>>(() => ({}))

@@ -38,6 +38,7 @@ import {
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
 import { filterDisplayTags } from '../utils/songs/tags'
+import { countFeatureUse, useSongOpenStats } from '../lib/songStats'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -148,6 +149,8 @@ export default function SongView(){
 
   const entry = personalEntry || catalogEntry
   const isPersonal = !!personalEntry
+  // Song Stats: a song kept on screen 15s+ counts as an open (invisible).
+  useSongOpenStats(isPersonal ? personalRow?.id : entry?.dbId, isPersonal ? 'personal' : 'catalog')
   const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
@@ -437,6 +440,7 @@ export default function SongView(){
     try {
       const { downloadSingleSongPdf } = await loadPdfLib()
       const res = await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16 })
+      countFeatureUse('pdf_export')
       lastPlan.current = res?.plan || null
     } finally {
       setBusy(false)
@@ -458,6 +462,7 @@ export default function SongView(){
       }
       if (res?.blob) {
         await smartPreviewAndShareJPG(res.blob, res.filename || `${slug}.jpg`)
+        countFeatureUse('image_export')
       }
     } catch (err) {
       console.error(err)

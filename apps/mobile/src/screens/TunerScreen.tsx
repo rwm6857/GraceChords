@@ -18,6 +18,7 @@ import { useAccessibilityFlags } from '../lib/accessibilityFlags'
 import type { Tokens } from '@gracechords/tokens/native'
 import { STANDARD_TUNING, type TunerString } from '../lib/tuner/notes'
 import { useTuner, type TunerFrame, type TunerReading } from '../lib/tuner/useTuner'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 // The guitar tuner (Utilities → Tuner). Auto-detects the nearest
 // standard-tuning string; tapping a string in the row locks detection to it
@@ -111,6 +112,7 @@ function StringKey({
 // safe-area padding for regular spacing (the pane already sits below the
 // tab's top inset).
 export default function TunerScreen({ embedded }: { embedded?: boolean }) {
+  useFeatureUseOnOpen('tuner')
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const { differentiateWithoutColor } = useAccessibilityFlags()

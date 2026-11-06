@@ -4,7 +4,8 @@
   "sections": {
     "profile": "PROFILE",
     "security": "SECURITY",
-    "connections": "CONNECTIONS"
+    "connections": "CONNECTIONS",
+    "songStats": "SONG STATS"
   },
   "yourIcon": "Your icon",
   "name": "Name",
@@ -36,6 +37,24 @@
     },
     "unlinkFailedTitle": "Couldn't unlink Telegram",
     "linkFailedTitle": "Couldn't start linking"
+  },
+  "songStats": {
+    "title": "Song Stats",
+    "clear": "Borrar mi historial",
+    "hint": "Song Stats registra los repertorios que diriges y las canciones que abres en GraceChords. Tus estadísticas son tuyas: ningún otro usuario de GraceChords puede verlas. Los conteos de canciones de todos los usuarios se suman de forma anónima para ayudarnos a decidir qué construir.",
+    "offAlert": {
+      "title": "¿Desactivar Song Stats?",
+      "message": "GraceChords dejará de registrar tus repertorios y las canciones que abres, y dejará de contar las herramientas que usas. El historial ya registrado se conserva hasta que lo borres. Volver a activar Song Stats no recupera nada de lo que hayas borrado.",
+      "confirm": "Desactivar"
+    },
+    "clearAlert": {
+      "title": "¿Borrar tu historial de Song Stats?",
+      "message": "Esto elimina de forma permanente todos los repertorios y canciones abiertas registrados en tu cuenta. No se puede deshacer.",
+      "confirm": "Borrar historial"
+    },
+    "cleared": "Se borró tu historial de Song Stats.",
+    "clearFailedTitle": "No se pudo borrar tu historial",
+    "toggleFailedTitle": "No se pudo actualizar Song Stats"
   },
   "logOut": "Log out",
   "logOutHint": "Signs you out of GraceChords on this device.",

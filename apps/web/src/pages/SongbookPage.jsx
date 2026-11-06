@@ -26,6 +26,7 @@ import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import '../styles/songbook.css'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom } from '../utils/songs/quickActions'
+import { countFeatureUse } from '../lib/songStats'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -261,6 +262,7 @@ export default function Songbook() {
       }
       if (songs.length) {
         await downloadSongbookPdf(songs, { includeTOC: true, coverImageDataUrl: cover })
+        countFeatureUse('pdf_export')
       }
     } finally {
       setBusy(false)

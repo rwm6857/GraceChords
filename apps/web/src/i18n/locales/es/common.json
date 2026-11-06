@@ -44,5 +44,16 @@
       "cta": "Obtener la app"
     }
   },
-  "offline": "Estás sin conexión. Las páginas que ya abriste siguen funcionando; lo nuevo se cargará cuando vuelvas a conectarte."
+  "offline": "Estás sin conexión. Las páginas que ya abriste siguen funcionando; lo nuevo se cargará cuando vuelvas a conectarte.",
+  "songStats": {
+    "title": "Song Stats",
+    "collect": "Registrar mis repertorios y las canciones que abro",
+    "clear": "Borrar mi historial",
+    "hint": "Song Stats registra los repertorios que diriges en el Modo adoración y las canciones que abres con tu sesión iniciada. Tus estadísticas son tuyas: ningún otro usuario de GraceChords puede verlas. Los conteos de canciones de todos los usuarios se suman de forma anónima para ayudarnos a decidir qué construir.",
+    "offConfirm": "¿Desactivar Song Stats? GraceChords dejará de registrar tus repertorios y las canciones que abres, y dejará de contar las herramientas que usas. El historial ya registrado se conserva hasta que lo borres. Volver a activar Song Stats no recupera nada de lo que hayas borrado.",
+    "clearConfirm": "¿Borrar tu historial de Song Stats? Esto elimina de forma permanente todos los repertorios y canciones abiertas registrados en tu cuenta. No se puede deshacer.",
+    "cleared": "Se borró tu historial de Song Stats.",
+    "clearFailed": "No se pudo borrar tu historial. Inténtalo de nuevo.",
+    "toggleFailed": "No se pudo actualizar Song Stats. Inténtalo de nuevo."
+  }
 }

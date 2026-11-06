@@ -52,6 +52,13 @@ export * from './setlists/limits'
 export * from './sessions/sessionCode'
 export * from './sessions/sessionsRepo'
 
+// Song Stats collection: capture rule, performer-session buffer, offline
+// recorder, and the play/open/counter writes (Phase 1 — nothing reads yet)
+export * from './songStats/rules'
+export * from './songStats/performerSession'
+export * from './songStats/songStatsRepo'
+export * from './songStats/recorder'
+
 // Private per-user reading reflections (Daily Word landing + journal)
 export * from './reflections/types'
 export * from './reflections/reflectionsRepo'

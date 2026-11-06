@@ -56,6 +56,7 @@ import { useChartAutoFit } from '../lib/useChartAutoFit'
 import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { useSessionController } from '../lib/useSessionController'
+import { usePerformerStats } from '../lib/songStats'
 import {
   pushSetToTelegram,
   pushSongToTelegram,
@@ -172,6 +173,25 @@ export default function PerformerScreen({ setlistId }: { setlistId: string }) {
       currentKey: effectiveKey || null,
     })
   }, [sessionCtl, index, steps, effectiveKey])
+
+  // Song Stats — invisible instrumentation, no UI. Which entry is on screen,
+  // for how long, and in what key; written to device storage as it changes.
+  usePerformerStats({
+    setlistId,
+    index,
+    isVerse: isVerseEntry,
+    meta:
+      songReady && song && !isVerseEntry
+        ? {
+            songId: isPersonalEntry ? personalEntryId! : song.id,
+            source: isPersonalEntry ? 'personal' : 'catalog',
+            title: song.title,
+            tags: song.tags ?? [],
+          }
+        : null,
+    songKey: songReady ? effectiveKey || null : null,
+    liveSessionId: sessionCtl.session?.id ?? null,
+  })
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.

@@ -16,6 +16,7 @@ import { fetchBibleChapter } from '../utils/bible/chapters'
 import { listBibleTranslations } from '../utils/bible/translations'
 import { isRtlBibleLanguage } from '../utils/bible/direction'
 import MobileActionSheet from '../components/ui/mobile/MobileActionSheet'
+import { useWorshipStats } from '../lib/songStats'
 import MobileDock from '../components/ui/mobile/MobileDock'
 import {
   buildSongCatalog,
@@ -306,6 +307,8 @@ export default function WorshipMode(){
     return {
       toKey: qs.get('toKey') || '',
       toKeys: (qs.get('toKeys') || '').split(',').map(s => safeDecodeURIComponent(s)),
+      // Setlist id, appended by buildWorshipPath. Only Song Stats reads it.
+      set: qs.get('set') || '',
     }
   }, [location.search])
 
@@ -448,7 +451,7 @@ export default function WorshipMode(){
               };
             }),
           }))
-          out.push({ id: s.id, title, baseKey, sections, type: 'song' })
+          out.push({ id: s.id, dbId: s.dbId, tags: s.tags, title, baseKey, sections, type: 'song' })
           // offsets computed after load
         } catch (err) {
           console.error(err)
@@ -752,6 +755,17 @@ export default function WorshipMode(){
   const steps = useMemo(() => (!isVerse && cur ? stepsBetween(cur.baseKey, toKey) : 0), [cur, toKey, isVerse])
   const displayCols = (isVerse || isMobile) ? 1 : cols
   const chromeDimmed = isMobile && !mobileControlsPinned && !chromeAwake && !openSettings && !mobileMoreOpen
+
+  // Song Stats — invisible instrumentation, no UI. Signed-in users only.
+  useWorshipStats({
+    setlistId: /^[0-9a-f-]{36}$/i.test(query.set) ? query.set : null,
+    index: idx,
+    isVerse,
+    meta: cur && !isVerse && cur.dbId
+      ? { songId: cur.dbId, source: 'catalog', title: cur.title, tags: cur.tags || [] }
+      : null,
+    songKey: cur && !isVerse ? toKey || null : null,
+  })
 
   useEffect(() => {
     if (!isMobile && mobileMoreOpen) setMobileMoreOpen(false)

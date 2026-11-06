@@ -9,11 +9,14 @@ import SpriteAvatar from '../components/ui/SpriteAvatar'
 import LanguageSelector from '../components/ui/LanguageSelector'
 import TelegramLoginButton from '../components/TelegramLoginButton'
 import { showToast } from '../utils/app/toast'
+import { songStatsEnabledFromPreferences } from '@gracechords/core'
+import { countFeatureUse, setSongStatsEnabled, songStats } from '../lib/songStats'
 import '../styles/settings.css'
 // src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {
   const { t } = useTranslation('profile')
+  const { t: tc } = useTranslation('common')
   const { session, profile, loading, isLoggedIn, refreshProfile, role, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -26,6 +29,11 @@ export default function ProfilePage() {
   const [starredItems, setStarredItems] = useState([])
   const [starsLoading, setStarsLoading] = useState(true)
 
+
+  // Song Stats opt-out lives in users.preferences; null = follow the profile.
+  const [songStatsOverride, setSongStatsOverride] = useState(null)
+  const [songStatsBusy, setSongStatsBusy] = useState(false)
+  const songStatsOn = songStatsOverride ?? songStatsEnabledFromPreferences(profile?.preferences)
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
@@ -183,6 +191,7 @@ export default function ProfilePage() {
         telegram_linked_at: data.telegram_linked_at,
       })
       showToast('Telegram linked.')
+      countFeatureUse('telegram_link')
     } catch {
       showToast('Could not link Telegram. Try again.')
     } finally {
@@ -208,6 +217,36 @@ export default function ProfilePage() {
       showToast('Could not unlink. Try again.')
     } finally {
       setTelegramBusy(false)
+    }
+  }
+
+  async function onToggleSongStats(enabled) {
+    if (songStatsBusy) return
+    if (!enabled && !window.confirm(tc('songStats.offConfirm'))) return
+    setSongStatsBusy(true)
+    try {
+      await setSongStatsEnabled(enabled)
+      setSongStatsOverride(enabled)
+      refreshProfile?.()
+    } catch (err) {
+      console.error('[ProfilePage] song stats toggle:', err)
+      showToast(tc('songStats.toggleFailed'))
+    } finally {
+      setSongStatsBusy(false)
+    }
+  }
+
+  async function onClearSongStats() {
+    if (songStatsBusy || !window.confirm(tc('songStats.clearConfirm'))) return
+    setSongStatsBusy(true)
+    try {
+      await songStats.clearHistory()
+      showToast(tc('songStats.cleared'))
+    } catch (err) {
+      console.error('[ProfilePage] clear song stats:', err)
+      showToast(tc('songStats.clearFailed'))
+    } finally {
+      setSongStatsBusy(false)
     }
   }
 
@@ -375,6 +414,29 @@ export default function ProfilePage() {
             )}
           </div>
         )}
+      </section>
+
+      {/* Song Stats — collection controls only; the stats themselves come later. */}
+      <section id="song-stats" className="gc-profile-section">
+        <h2>{tc('songStats.title')}</h2>
+        <p style={{ margin: 0, color: 'var(--gc-text-secondary)' }}>{tc('songStats.hint')}</p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: 'fit-content' }}>
+          <input
+            type="checkbox"
+            checked={songStatsOn}
+            disabled={songStatsBusy}
+            onChange={(e) => onToggleSongStats(e.target.checked)}
+          />
+          {tc('songStats.collect')}
+        </label>
+        <button
+          className="gc-btn gc-btn--ghost gc-btn--sm"
+          onClick={onClearSongStats}
+          disabled={songStatsBusy}
+          style={{ width: 'fit-content' }}
+        >
+          {tc('songStats.clear')}
+        </button>
       </section>
 
       {/* Account section */}

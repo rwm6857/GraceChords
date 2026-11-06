@@ -12,6 +12,7 @@ import SectionHeader from '../components/SectionHeader'
 import SymbolIcon from '../components/SymbolIcon'
 import { useAppDefaults } from '../lib/defaults'
 import { useTheme } from '../theme/ThemeProvider'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 // Capo Calculator (Utilities) — pick the key a song sounds in and the open-chord
 // key you'd rather play; the readout gives the capo fret that raises those
@@ -49,6 +50,7 @@ function KeyGrid({
 }
 
 export default function CapoCalculatorScreen({ embedded }: { embedded?: boolean }) {
+  useFeatureUseOnOpen('capo')
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()

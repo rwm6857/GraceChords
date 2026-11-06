@@ -15,6 +15,7 @@ import type { Tokens } from '@gracechords/tokens/native'
 import { createTapTempo } from '../lib/tapTempo'
 import { beatEmphasis, beatsInMeasure, TIME_SIGNATURES } from '../lib/metronome/pattern'
 import { useMetronome } from '../lib/metronome/useMetronome'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 // Tap Tempo + Metronome (Utilities) — one tool: the tap pad sets the
 // metronome's tempo directly. Clicks are scheduled on the audio clock in
@@ -74,6 +75,7 @@ function StepButton({
 // hides the back link and swaps the bar's safe-area padding for regular
 // spacing (see TunerScreen).
 export default function MetronomeScreen({ embedded }: { embedded?: boolean }) {
+  useFeatureUseOnOpen('metronome')
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()

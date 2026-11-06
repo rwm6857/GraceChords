@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { hasMinRole as checkHasMinRole } from '../lib/roles'
+import { setSongStatsUser } from '../lib/songStats'
 
 const AuthContext = createContext(null)
 
@@ -38,6 +39,8 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (ignore) return
+      // Song Stats records signed-in users only; signing out drops its queue.
+      setSongStatsUser(newSession?.user?.id ?? null)
       if (newSession) {
         // Keep the existing (cached) profile while re-fetching so the navbar
         // avatar doesn't vanish on tab refocus / token refresh.
@@ -71,6 +74,7 @@ export function AuthProvider({ children }) {
 
     if (isStale()) return
     const newProfile = (!userError && userData) ? userData : null
+    if (newProfile) setSongStatsUser(userId, newProfile.preferences ?? null)
     // Persist the freshly-fetched profile so the next page load / tab refocus
     // can render it immediately without waiting for this round-trip.
     writeCachedProfile(newProfile)

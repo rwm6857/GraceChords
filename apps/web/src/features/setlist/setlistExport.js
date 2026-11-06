@@ -13,6 +13,7 @@ import { fetchBibleChapter } from '../../utils/bible/chapters'
 import { ensureSongContent, songContent } from '../../hooks/useSongs'
 import { downloadSetlistAsPptx } from '../../utils/export/downloadSetlist'
 import { publicUrl } from '../../utils/network/publicUrl'
+import { countFeatureUse } from '../../lib/songStats'
 
 let pdfLibPromise
 export const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../../utils/pdf_mvp'))
@@ -184,7 +185,10 @@ export async function exportSetPdf(items, catalog, { chordStyle, t, onMessage, v
     if (built) songs.push(built)
   }
 
-  if (songs.length) await downloadMultiSongPdf(songs)
+  if (songs.length) {
+    await downloadMultiSongPdf(songs)
+    countFeatureUse('pdf_export')
+  }
   return songs.length
 }
 
