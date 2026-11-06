@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { showToast } from '../utils/app/toast'
 import Button from '../components/ui/layout-kit/Button'
-import { DownloadIcon } from '../components/Icons'
+import { DownloadIcon, StatsIcon } from '../components/Icons'
 import { ROLES_BY_RANK_DESC } from '../lib/roles'
 import { buildChordProArchiveFiles, chordProArchiveName } from '../utils/export/chordproArchive'
 import '../styles/admin-portal.css'
@@ -171,6 +172,11 @@ export default function AdminPage() {
       <p className="gc-portal-page__subtitle">
         Manage users and roles, and export the song library.
       </p>
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <Button as={Link} to="/admin/stats" size="sm" variant="secondary" leftIcon={<StatsIcon />}>
+          Setlist Stats
+        </Button>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gc-space-3)', marginBottom: 'var(--gc-space-4)' }}>
         <Button
           size="sm"
