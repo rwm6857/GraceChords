@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import SpritePicker from '../components/ui/SpritePicker'
 import SpriteAvatar from '../components/ui/SpriteAvatar'
-import LanguageSelector from '../components/ui/LanguageSelector'
 import TelegramLoginButton from '../components/TelegramLoginButton'
 import { showToast } from '../utils/app/toast'
 import { hasPassword, songStatsEnabledFromPreferences } from '@gracechords/core'
 import SecuritySection from '../components/profile/SecuritySection'
+import IconPickerModal from '../components/profile/IconPickerModal'
+import { LogOutIcon, PencilIcon } from '../components/Icons'
 import { countFeatureUse, setSongStatsEnabled, songStats } from '../lib/songStats'
 import '../styles/settings.css'
-// src/data/index.json is deprecated as a songs source; starred songs are now joined from Supabase.
 
 export default function ProfilePage() {
   const { t } = useTranslation('profile')
@@ -25,11 +24,8 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('')
   const [sprite, setSprite] = useState(null)
   const [saving, setSaving] = useState(false)
-
-  // Each item: { song_id: UUID, songs: { slug, title, default_key, artist } }
-  const [starredItems, setStarredItems] = useState([])
-  const [starsLoading, setStarsLoading] = useState(true)
-
+  const [showIconPicker, setShowIconPicker] = useState(false)
+  const [savingIcon, setSavingIcon] = useState(false)
 
   // Song Stats opt-out lives in users.preferences; null = follow the profile.
   const [songStatsOverride, setSongStatsOverride] = useState(null)
@@ -77,35 +73,11 @@ export default function ProfilePage() {
     }
   }, [profile])
 
-  // Fetch starred songs
-  useEffect(() => {
-    if (!session) return
-    let cancelled = false
-
-    // Join with songs to get slug, title, key, artist in one query.
-    supabase
-      .from('user_starred_songs')
-      .select('song_id, songs!inner(slug, title, default_key, artist)')
-      .eq('user_id', session.user.id)
-      .order('songs(title)')
-      .then(({ data, error }) => {
-        if (cancelled) return
-        if (error) console.error('[ProfilePage] Failed to load starred songs:', error)
-        setStarredItems(data || [])
-        setStarsLoading(false)
-      })
-
-    return () => { cancelled = true }
-  }, [session])
-
   async function saveProfile() {
     setSaving(true)
     const { error } = await supabase
       .from('users')
-      .update({
-        display_name: displayName,
-        preferences: { ...(profile?.preferences || {}), sprite },
-      })
+      .update({ display_name: displayName })
       .eq('id', session.user.id)
     if (error) showToast(t('saveFailed'))
     else {
@@ -115,21 +87,23 @@ export default function ProfilePage() {
     setSaving(false)
   }
 
-  async function unstarSong(songId) {
-    // songId is the UUID from songs.id
-    const removed = starredItems.find(item => item.song_id === songId)
-    setStarredItems(prev => prev.filter(item => item.song_id !== songId))
+  async function saveIcon(id) {
+    setSavingIcon(true)
     const { error } = await supabase
-      .from('user_starred_songs')
-      .delete()
-      .eq('user_id', session.user.id)
-      .eq('song_id', songId)
+      .from('users')
+      .update({ preferences: { ...(profile?.preferences || {}), sprite: id } })
+      .eq('id', session.user.id)
+    setSavingIcon(false)
     if (error) {
-      console.error('[ProfilePage] Failed to unstar song:', error)
-      showToast('Could not remove star. Please try again.')
-      if (removed) setStarredItems(prev => [...prev, removed]) // revert on error
+      showToast('Could not update your icon. Please try again.')
+      return
     }
+    setSprite(id)
+    setShowIconPicker(false)
+    await refreshProfile()
   }
+
+  const closeIconPicker = useCallback(() => setShowIconPicker(false), [])
 
   async function signOut() {
     await supabase.auth.signOut()
@@ -283,8 +257,7 @@ export default function ProfilePage() {
     )
   }
 
-  const currentSprite = sprite || 'music-note'
-  const roleBadge = role !== 'user' ? role : null
+  const roleBadge = role && role !== 'user' ? role : null
 
   return (
     <div className="container">
@@ -292,12 +265,27 @@ export default function ProfilePage() {
 
       {/* Profile header */}
       <div className="gc-profile-header">
-        <SpriteAvatar sprite={currentSprite} size="lg" />
-        <div>
-          <h1 style={{ margin: 0 }}>{profile.display_name || 'Your Profile'}</h1>
-          <p style={{ margin: '4px 0 0', color: 'var(--gc-text-secondary)', fontSize: 'var(--gc-font-sub)' }}>
-            {session.user.email}
-          </p>
+        <button
+          type="button"
+          className="gc-profile-avatar"
+          onClick={() => setShowIconPicker(true)}
+          aria-label="Change your icon"
+        >
+          <SpriteAvatar sprite={sprite} size="lg" />
+          <span className="gc-profile-avatar__edit" aria-hidden="true">
+            <PencilIcon />
+          </span>
+        </button>
+        <div className="gc-profile-header__info">
+          <div className="gc-profile-header__name">
+            <h1>{profile.display_name || 'Your Profile'}</h1>
+            {roleBadge && (
+              <span className="gc-role-badge">
+                {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
+              </span>
+            )}
+          </div>
+          <p className="gc-profile-header__email">{session.user.email}</p>
         </div>
       </div>
 
@@ -313,14 +301,6 @@ export default function ProfilePage() {
             onChange={e => setDisplayName(e.target.value)}
           />
         </div>
-        <div className="gc-form-field">
-          <label>Email</label>
-          <input type="email" value={session.user.email} disabled readOnly />
-        </div>
-        <div className="gc-form-field">
-          <label>Your icon</label>
-          <SpritePicker value={sprite} onChange={setSprite} />
-        </div>
         <button
           className="gc-btn gc-btn--primary"
           onClick={saveProfile}
@@ -331,51 +311,7 @@ export default function ProfilePage() {
         </button>
       </section>
 
-      {/* Preferences section */}
-      <section className="gc-profile-section">
-        <h2>{t('preferences')}</h2>
-        <div className="gc-form-field">
-          <label htmlFor="ui-language">{t('uiLanguage')}</label>
-          <LanguageSelector id="ui-language" style={{ maxWidth: 240 }} />
-          <p style={{ fontSize: 13, color: 'var(--gc-text-secondary)', marginTop: 4 }}>
-            {t('uiLanguageHelper')}
-          </p>
-        </div>
-      </section>
-
-      {/* Starred songs section */}
-      <section className="gc-profile-section">
-        <h2>Starred Songs</h2>
-        {starsLoading ? (
-          <p style={{ color: 'var(--gc-text-secondary)' }}>Loading…</p>
-        ) : starredItems.length === 0 ? (
-          <p style={{ color: 'var(--gc-text-secondary)' }}>
-            No starred songs yet. Star songs from the song page to find them here.
-          </p>
-        ) : (
-          <div className="gc-starred-list">
-            {starredItems.map(item => {
-              const { song_id, songs: song } = item
-              return (
-                <div key={song_id} className="gc-starred-row">
-                  <Link to={`/songs/${song?.slug || song_id}`} className="gc-starred-row__info">
-                    <span className="gc-starred-row__title">{song?.title || song_id}</span>
-                    {song?.default_key && <span className="gc-starred-row__key">{song.default_key}</span>}
-                    {song?.artist && <span className="gc-starred-row__artist">{song.artist}</span>}
-                  </Link>
-                  <button
-                    className="gc-btn gc-btn--ghost gc-btn--sm"
-                    onClick={() => unstarSong(song_id)}
-                    aria-label={`Unstar ${song?.title || song_id}`}
-                  >
-                    Unstar
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
+      <SecuritySection user={session.user} />
 
       {/* Telegram section */}
       <section id="telegram" className="gc-profile-section">
@@ -437,30 +373,20 @@ export default function ProfilePage() {
         </button>
       </section>
 
-      <SecuritySection user={session.user} />
-
       {/* Account section */}
       <section className="gc-profile-section">
         <h2>Account</h2>
-        {roleBadge && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <div className="gc-role-badge">
-              {roleBadge.charAt(0).toUpperCase() + roleBadge.slice(1)}
-            </div>
-            {isAdmin && (
-              <Link to="/admin" className="gc-btn gc-btn--ghost gc-btn--sm">
-                Admin Portal →
-              </Link>
-            )}
-          </div>
-        )}
-        <button
-          className="gc-btn gc-btn--ghost"
-          onClick={signOut}
-          style={{ width: 'fit-content', marginTop: 8 }}
-        >
-          Sign out
-        </button>
+        <div className="gc-profile-account-actions">
+          <button className="gc-btn gc-btn--secondary gc-profile-signout" onClick={signOut}>
+            <LogOutIcon />
+            Sign out
+          </button>
+          {isAdmin && (
+            <Link to="/admin" className="gc-btn gc-btn--ghost">
+              Admin Portal →
+            </Link>
+          )}
+        </div>
 
         <div className="gc-danger-zone">
           <div>
@@ -478,6 +404,14 @@ export default function ProfilePage() {
           </button>
         </div>
       </section>
+
+      <IconPickerModal
+        open={showIconPicker}
+        value={sprite}
+        saving={savingIcon}
+        onSelect={saveIcon}
+        onClose={closeIconPicker}
+      />
 
       {/* Delete account modal */}
       {showDeleteModal && (
