@@ -40,9 +40,17 @@ export async function onRequest(context) {
 
   const targetUrl = `${cdnBase}/pptx/${filePath}`
 
+  // `?exists` is an existence check (Song Viewer, setlist), answered without a
+  // body: 200 if the deck exists, 204 if not. A missing deck must not be a 404,
+  // which browsers log as a console error on every song that has no slides;
+  // headOk() reads 204 as "absent". Keyed off the query, not the method:
+  // Cloudflare's cache turns the browser's HEAD into a GET to this function.
+  // (Renamed from `?probe`, whose 404s are still in the edge cache.)
+  const isProbe = new URL(request.url).searchParams.has('exists')
+
   let r2Response
   try {
-    r2Response = await fetch(targetUrl, { method: request.method })
+    r2Response = await fetch(targetUrl, { method: isProbe ? 'HEAD' : request.method })
   } catch {
     return new Response(
       JSON.stringify({ error: 'Failed to reach PPTX CDN' }),
@@ -50,11 +58,11 @@ export async function onRequest(context) {
     )
   }
 
-  // `HEAD ?probe` is an existence check (Song Viewer, setlist): answer a missing
-  // deck with 204 instead of 404, which browsers log as a console error on
-  // every song that simply has no slides. headOk() reads 204 as "absent".
-  if (r2Response.status === 404 && request.method === 'HEAD' && new URL(request.url).searchParams.has('probe')) {
-    return new Response(null, { status: 204, headers: corsHeaders() })
+  if (isProbe) {
+    return new Response(null, {
+      status: r2Response.ok ? 200 : 204,
+      headers: { 'Cache-Control': 'public, max-age=300', ...corsHeaders() },
+    })
   }
 
   if (!r2Response.ok) {

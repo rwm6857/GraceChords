@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 // Subpath, not the package barrel: the barrel drags the ~54 KiB Bible reading
 // plan JSON into the entry chunk.
@@ -287,7 +287,7 @@ export default function SongView(){
     setPptxUrl(url)
     let cancelled = false
     async function check(){
-      const ok = await headOk(`${url}?probe`, entry.id)
+      const ok = await headOk(`${url}?exists`, entry.id)
       if (cancelled || !ok) return
       setHasPptx(true)
     }
@@ -900,7 +900,10 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
-  useEffect(()=>{
+  // Layout effect, not a passive one: until this runs the line renders as one
+  // row without chord padding. A passive effect can let that frame paint, then
+  // every line grows and pushes the blocks below it (CLS ~0.12 on song pages).
+  useLayoutEffect(()=>{
     if(!hostRef.current) return
 
     // Ensure canvas

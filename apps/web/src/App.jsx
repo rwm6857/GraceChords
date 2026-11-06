@@ -48,7 +48,7 @@ export default function App(){
       {/* Pages without their own <title> fall back to this instead of keeping
           the previous route's title. */}
       <Helmet defaultTitle="GraceChords" />
-      <React.Suspense fallback={<div className="container"><h3>Loading...</h3></div>}>
+      <React.Suspense fallback={<RouteLoading fullHeight />}>
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomeDashboard />} />
@@ -110,6 +110,17 @@ export default function App(){
   )
 }
 
+// Fills the viewport when it stands in for the whole layout (the outer boundary,
+// before a lazy page outside the layout loads): otherwise the footer renders
+// right under it and jumps down when the page arrives (CLS ~0.18 on /posts).
+function RouteLoading({ fullHeight = false }){
+  return (
+    <div className={`container${fullHeight ? ' gc-route-loading--full' : ''}`}>
+      <h3>Loading...</h3>
+    </div>
+  )
+}
+
 function Layout(){
   const { pathname } = useLocation()
   return (
@@ -123,7 +134,11 @@ function Layout(){
         {/* Route-level boundary: a crashing page keeps the nav usable, and
             navigating elsewhere clears the error. */}
         <ErrorBoundary resetKey={pathname}>
-          <Outlet />
+          {/* Lazy pages suspend here, inside the layout, so the nav stays and
+              the footer stays below the fold while their code loads. */}
+          <React.Suspense fallback={<RouteLoading />}>
+            <Outlet />
+          </React.Suspense>
         </ErrorBoundary>
       </main>
     </div>

@@ -7,7 +7,7 @@ export async function headOk(url, key) {
   if (headCache.has(k)) return headCache.get(k)
   try {
     const res = await fetch(url, { method: 'HEAD' })
-    // 204 = "no such file" from a `?probe` existence check (functions/pptx).
+    // 204 = "no such file" from an `?exists` check (functions/pptx).
     if (!res.ok || res.status === 204) { headCache.set(k, false); return false }
     headCache.set(k, true)
     return true
