@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { transposeSymPrefer } from '../../utils/chordpro'
 import { formatChord } from '../../utils/chordpro/solfege'
 import { transposeInstrumental, formatInstrumental } from '../../utils/songs/instrumental'
@@ -40,7 +40,9 @@ export function ChordLine({ plain, chords, steps, showChords, preferFlat, chordS
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
-  useEffect(() => {
+  // Measure before paint so the unmeasured single-row state never shows and
+  // lines don't jump when chord rows appear (same as SongViewPage MeasuredLine).
+  useLayoutEffect(() => {
     if (!hostRef.current) return
     if (!canvasRef.current) {
       const cv = document.createElement('canvas')
