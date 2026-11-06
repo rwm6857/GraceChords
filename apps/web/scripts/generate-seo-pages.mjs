@@ -252,13 +252,14 @@ function insertHeadTags(html, { description, canonical, ld }){
   return html.replace(/<\/head>/i, `    ${tags.join('\n    ')}\n  </head>`)
 }
 
-// Greedy on purpose: #root is the last element in the built body (Vite hoists
-// the entry script into <head>), so its closing tag is the last </div> in the
-// file. A non-greedy match stopped inside #root's own comment and left broken
-// markup (a stray visible "-->") on every generated page.
-const ROOT_RE = /<div id="root">[\s\S]*<\/div>/i
-
 function replaceRoot(html, body){
+  // Greedy on purpose: #root is the last element in the built body (Vite
+  // hoists the entry script into <head>), so its closing tag is the last
+  // </div> in the file. A non-greedy match stopped inside #root's own comment
+  // and left broken markup (a stray visible "-->") on every generated page.
+  // Declared in here, not at module level: the top-level awaits above run the
+  // page builders before a module-level const below them is initialised.
+  const ROOT_RE = /<div id="root">[\s\S]*<\/div>/i
   const content = body || ''
   if (ROOT_RE.test(html)) {
     // Function replacement so a literal "$" in page content isn't read as a
