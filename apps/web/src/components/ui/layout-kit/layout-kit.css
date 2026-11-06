@@ -88,13 +88,13 @@
 }
 
 .gc-btn--primary{
-  background: var(--gc-primary);
-  border-color: var(--gc-primary);
-  color: var(--primary-text);
+  background: var(--gc-primary-fill);
+  border-color: var(--gc-primary-fill);
+  color: var(--gc-on-primary);
 }
 .gc-btn--primary:hover{
-  background: color-mix(in srgb, var(--gc-primary) 88%, #000);
-  border-color: color-mix(in srgb, var(--gc-primary) 88%, #000);
+  background: var(--gc-primary-fill-hover);
+  border-color: var(--gc-primary-fill-hover);
 }
 .gc-btn--secondary{
   background: var(--gc-surface-2);
@@ -312,7 +312,7 @@
   gap: 0;
 }
 .gc-iconbtn svg{ width: var(--gc-btn-icon-size); height: var(--gc-btn-icon-size); }
-.gc-iconbtn--primary{ color: var(--primary-text); }
+.gc-iconbtn--primary{ color: var(--gc-on-primary); }
 .gc-iconbtn--destructive,
 .gc-iconbtn--danger{ color: var(--gc-danger); }
 .gc-iconbtn--ghost{ color: var(--gc-primary); }

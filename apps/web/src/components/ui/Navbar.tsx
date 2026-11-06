@@ -155,14 +155,14 @@ export default function Navbar(){
           <span aria-hidden="true" style={{display:'inline-block', width:18, height:2, background:'currentColor', boxShadow:'0 6px 0 currentColor, 0 -6px 0 currentColor'}} />
         </button>
         <div className="gc-navlinks">
-          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`} style={isActive('/') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('home')}</Link>
-          <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`} style={isActive('/songs') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songs')}</Link>
-          <Link to={setlistHome} className={`gc-navlink ${isSetlistActive ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistWorkspacePage')} style={isSetlistActive ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('setlist')}</Link>
-          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')} style={isActive('/songbook') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('songbook')}</Link>
-          <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')} style={isActive('/reading') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('dailyWord')}</Link>
-          <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`} style={isActive('/posts') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('blog')}</Link>
+          <Link to="/" className={`gc-navlink ${isActive('/') ? 'active':''}`}>{t('home')}</Link>
+          <Link to="/songs" className={`gc-navlink ${isActive('/songs') ? 'active':''}`}>{t('songs')}</Link>
+          <Link to={setlistHome} className={`gc-navlink ${isSetlistActive ? 'active':''}`} onMouseEnter={() => import('../../pages/SetlistWorkspacePage')}>{t('setlist')}</Link>
+          <Link to="/songbook" className={`gc-navlink ${isActive('/songbook') ? 'active':''}`} onMouseEnter={() => import('../../pages/SongbookPage')}>{t('songbook')}</Link>
+          <Link to="/reading" className={`gc-navlink ${isActive('/reading') ? 'active':''}`} onMouseEnter={() => import('../../pages/ReadingsPage')}>{t('dailyWord')}</Link>
+          <Link to="/posts" className={`gc-navlink ${isActive('/posts') ? 'active':''}`}>{t('blog')}</Link>
           {isLoggedIn && !hasMinRole('admin') && role === 'editor' && (
-            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`} style={isActive('/editor') ? ({ color:'#ffffff', WebkitTextFillColor:'#ffffff' } as any) : undefined}>{t('editorPortal')}</Link>
+            <Link to="/editor" className={`gc-navlink ${isActive('/editor') ? 'active':''}`}>{t('editorPortal')}</Link>
           )}
           {/* Settings tray — gear icon opens a small panel with theme/locale/chord style */}
           <div className="gc-settings-tray-host" ref={settingsRef}>

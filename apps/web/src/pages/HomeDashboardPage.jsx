@@ -350,6 +350,7 @@ export default function HomeDashboard(){
                 onBlur={onBlur}
                 onKeyDown={handleKeyDown}
                 placeholder={t('searchPlaceholder')}
+                role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={showSuggestions && suggestions.length > 0}
                 aria-controls="home-search-suggestions"
