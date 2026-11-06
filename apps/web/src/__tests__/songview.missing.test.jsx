@@ -6,6 +6,10 @@ import { describe, test, expect, vi, afterEach } from 'vitest'
 // Song data now comes from useSongs (Supabase), not a static file fetch.
 // An unknown id resolves to no catalog entry, so SongView renders "Song not found".
 vi.mock('../hooks/useSongs', () => ({
+  useSongContent: () => true,
+  ensureSongContent: async () => {},
+  songContent: (s) => s?.chordpro_content || '',
+  prefetchSongContentBySlug: () => Promise.resolve(),
   useSongs: () => ({ songs: [], loading: false }),
 }))
 

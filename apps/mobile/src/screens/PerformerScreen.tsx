@@ -57,6 +57,7 @@ import { exportSetlist, exportSong } from '../lib/exportSong'
 import { buildSetlistShareUrl } from '../lib/setlistShare'
 import { parseItemIndex } from '../lib/liveSession'
 import { startOrManageLiveSession, useLiveSessionSource } from '../lib/useLiveSession'
+import { usePerformerStats } from '../lib/songStats'
 import {
   pushSetToTelegram,
   pushSongToTelegram,
@@ -199,6 +200,26 @@ export default function PerformerScreen({ setlistId, autoLive = false }: { setli
       currentKey: effectiveKey || null,
     })
   }, [isLive, broadcast, restoreToken, restoredToken, index, steps, effectiveKey])
+
+  // Song Stats — invisible instrumentation, no UI. Which entry is on screen,
+  // for how long, and in what key; written to device storage as it changes.
+  usePerformerStats({
+    setlistId,
+    index,
+    isVerse: isVerseEntry,
+    meta:
+      songReady && song && !isVerseEntry
+        ? {
+            songId: isPersonalEntry ? personalEntryId! : song.id,
+            source: isPersonalEntry ? 'personal' : 'catalog',
+            title: song.title,
+            tags: song.tags ?? [],
+          }
+        : null,
+    songKey: songReady ? effectiveKey || null : null,
+    // Only while this set is the one leading the live session.
+    liveSessionId: live.live ? live.active?.id ?? null : null,
+  })
 
   // Chrome auto-hide (persisted). Pinned visible while a sheet is open; tap the
   // chart, change songs, or use the transpose bar to bring it back.

@@ -1,6 +1,7 @@
 import { File, Paths } from 'expo-file-system'
 import { apiError, apiPost } from './api'
 import { markSessionError } from './sessionError'
+import { countFeatureUse } from './songStats'
 
 // Server-side song export. Calls the web app's Pages Function
 // POST /api/export/song, which renders with the same pure pdf_mvp engine the
@@ -41,6 +42,7 @@ export async function exportSong(opts: {
   const file = new File(Paths.cache, filename)
   if (file.exists) file.delete()
   file.write(new Uint8Array(await res.arrayBuffer()))
+  countFeatureUse(format === 'jpg' ? 'image_export' : 'pdf_export')
   return file.uri
 }
 
@@ -73,6 +75,7 @@ export async function exportSongbook(opts: {
   const file = new File(Paths.cache, filename)
   if (file.exists) file.delete()
   file.write(new Uint8Array(await res.arrayBuffer()))
+  countFeatureUse('pdf_export')
   return file.uri
 }
 
@@ -96,5 +99,6 @@ export async function exportSetlist(
   const file = new File(Paths.cache, filename)
   if (file.exists) file.delete()
   file.write(new Uint8Array(await res.arrayBuffer()))
+  countFeatureUse('pdf_export')
   return file.uri
 }

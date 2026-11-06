@@ -610,6 +610,9 @@ duplicate logic here and never edit core internals to suit mobile.
   songs) and `LiveSessionRow`, which leads every share sheet (Song Viewer,
   Performer, and the Setlist Builder, which hands off via `/perform/:id?live=1`).
   Only one session runs at a time; starting another asks to end the current one.
+  Song Stats: the Performer passes the live session's id to `usePerformerStats`
+  only while that set is the one leading it (`song_plays.live_session_id`);
+  single-song sessions log nothing beyond the Song Viewer's normal open.
 - **Export/share** is server-side via the web app's Pages Functions (base
   `EXPO_PUBLIC_API_BASE_URL`, `src/lib/api.ts`): `src/lib/exportSong.ts` calls
   `POST /api/export/song` (PDF, or a page-1 PNG for `jpg`) and

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 // Subpath, not the package barrel: the barrel drags the ~54 KiB Bible reading
 // plan JSON into the entry chunk.
@@ -17,7 +17,7 @@ import { transposeInstrumental, formatInstrumental } from '../utils/songs/instru
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { normalizeSongInput } from '../utils/media/jpgPlanner'
 // src/data/index.json is deprecated as a songs source; data now comes from Supabase via useSongs.
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, useSongContent, prefetchSongContentBySlug } from '../hooks/useSongs'
 import { DownloadIcon, MediaIcon, EyeIcon, OneColIcon, TwoColIcon } from '../components/Icons'
 import PushToTelegramButton from '../components/PushToTelegramButton'
 import { showToast } from '../utils/app/toast'
@@ -38,6 +38,7 @@ import {
   writeSongLanguagePreference,
 } from '../utils/songs/songCatalog'
 import { filterDisplayTags } from '../utils/songs/tags'
+import { countFeatureUse, useSongOpenStats } from '../lib/songStats'
 
 // Lazy-loaded heavy modules
 let pdfLibPromise
@@ -107,10 +108,14 @@ export default function SongView(){
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const personalParam = searchParams.get('p')
-  const { songs } = useSongs()
+  const { songs, loading: songsLoading } = useSongs()
   const chordStyle = useChordStyle()
   const SONG_CATALOG = useMemo(() => buildSongCatalog(songs), [songs])
   const catalogEntry = useMemo(() => getEntryById(SONG_CATALOG, id), [SONG_CATALOG, id])
+  // Lyrics aren't in the song list. Start fetching this song's by its URL slug
+  // right away, in parallel with the list, then make sure by dbId once known.
+  useEffect(() => { prefetchSongContentBySlug(id) }, [id])
+  useSongContent(catalogEntry ? [catalogEntry] : [])
 
   // Read-only personal draft mode: /song/...?p=<personal_songs.id>. Fetched
   // per-view (owner-scoped by RLS); synthesized into the same entry shape the
@@ -144,6 +149,8 @@ export default function SongView(){
 
   const entry = personalEntry || catalogEntry
   const isPersonal = !!personalEntry
+  // Song Stats: a song kept on screen 15s+ counts as an open (invisible).
+  useSongOpenStats(isPersonal ? personalRow?.id : entry?.dbId, isPersonal ? 'personal' : 'catalog')
   const translationGroup = useMemo(() => getGroupByEntryId(SONG_CATALOG, id), [SONG_CATALOG, id])
   const translationLanguages = translationGroup?.languages || []
   const [parsed, setParsed] = useState(null)
@@ -274,8 +281,6 @@ export default function SongView(){
     }
   }, [entry?.chordpro_content, entry?.title, entry?.originalKey])
 
-  // Neighbor-song content is already in the useSongs() cache — no HTTP prefetch needed.
-
   // check for PPTX slides
   useEffect(() => {
     if (!entry) return
@@ -285,7 +290,7 @@ export default function SongView(){
     setPptxUrl(url)
     let cancelled = false
     async function check(){
-      const ok = await headOk(url, entry.id)
+      const ok = await headOk(`${url}?exists`, entry.id)
       if (cancelled || !ok) return
       setHasPptx(true)
     }
@@ -340,8 +345,9 @@ export default function SongView(){
   )
 
   if(!entry){
-    // Don't flash "not found" while a personal draft is still being fetched.
-    if (personalParam && !personalRow) {
+    // Don't flash "not found" while the catalog or a personal draft is still
+    // being fetched.
+    if (songsLoading || (personalParam && !personalRow)) {
       return (
         <div className="container">
           {helmet}
@@ -434,6 +440,7 @@ export default function SongView(){
     try {
       const { downloadSingleSongPdf } = await loadPdfLib()
       const res = await downloadSingleSongPdf(buildSong(), { lyricSizePt: 16 })
+      countFeatureUse('pdf_export')
       lastPlan.current = res?.plan || null
     } finally {
       setBusy(false)
@@ -455,6 +462,7 @@ export default function SongView(){
       }
       if (res?.blob) {
         await smartPreviewAndShareJPG(res.blob, res.filename || `${slug}.jpg`)
+        countFeatureUse('image_export')
       }
     } catch (err) {
       console.error(err)
@@ -897,7 +905,10 @@ function MeasuredLine({ plain, chords, steps, showChords, preferFlat, chordStyle
   const [state, setState] = useState({ rows: [{ text: '', offsets: [] }], padTop: 0 })
   const [measureKey, setMeasureKey] = useState(0)
 
-  useEffect(()=>{
+  // Layout effect, not a passive one: until this runs the line renders as one
+  // row without chord padding. A passive effect can let that frame paint, then
+  // every line grows and pushes the blocks below it (CLS ~0.12 on song pages).
+  useLayoutEffect(()=>{
     if(!hostRef.current) return
 
     // Ensure canvas

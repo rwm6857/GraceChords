@@ -52,6 +52,7 @@ import {
   useReaderSettings,
 } from '../lib/readerSettings'
 import { usePassageChapter } from '../lib/useReader'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 type Sheet = 'none' | 'translations' | 'settings' | 'date'
 
@@ -96,6 +97,7 @@ export default function DailyWordScreen({
   showBackToLanding = false,
   initialPassageId,
 }: { showBackToLanding?: boolean; initialPassageId?: string } = {}) {
+  useFeatureUseOnOpen('daily_word')
   const t = useTheme()
   const router = useRouter()
   const { t: tx, i18n } = useTranslation('reader')

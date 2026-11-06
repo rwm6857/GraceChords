@@ -25,6 +25,7 @@ import LiveSessionCapsule from '../src/components/LiveSessionCapsule'
 import { sourceRoute, type LiveRow } from '../src/lib/liveSession'
 import { liveSession } from '../src/lib/useLiveSession'
 import { setCurrentUserFromSession } from '../src/lib/currentUser'
+import { registerSongStatsLifecycle, songStats, startSongStats } from '../src/lib/songStats'
 import { flushPendingSprite } from '../src/lib/profile'
 import { primeLaunchStorage } from '../src/lib/launchStorage'
 import { hydrateDefaults } from '../src/lib/defaults'
@@ -384,6 +385,9 @@ export default function RootLayout() {
         // only source of user identity in the app — see src/lib/currentUser.ts.
         setCurrentUserFromSession(session)
         setReady(true)
+        // Song Stats: settle a set the app died during, refresh the opt-out,
+        // send anything queued offline. Best-effort, never blocks launch.
+        startSongStats(session?.user?.id ?? null)
         // Reconcile the OS-scheduled Daily Word reminder with the stored
         // preference now that it (and the language) are loaded. Best-effort.
         void syncReaderReminderOnLaunch()
@@ -405,6 +409,7 @@ export default function RootLayout() {
     // Connectivity tracking for the offline banner. Starts here so there is one
     // poll for the whole app, and stops with this effect.
     const stopConnectivityWatch = startConnectivityWatch()
+    const stopSongStats = registerSongStatsLifecycle()
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next)
@@ -414,20 +419,27 @@ export default function RootLayout() {
       // a preference must never block auth.
       if (event === 'SIGNED_IN' && next?.user) {
         void flushPendingSprite(supabase, AsyncStorage, next.user.id)
+        startSongStats(next.user.id)
       }
       // A reflection is private journal text, and caching it to disk is only
       // defensible if signing out takes it back off again. The in-memory copy is
       // keyed by user id and so could never be shown to the next account, but
       // the persisted one should not outlive the session that wrote it.
-      if (event === 'SIGNED_OUT') clearReflectionDays()
-      // The live session belongs to the account that started it; stop showing
-      // (and heartbeating) it locally. The row itself is left alone.
-      if (event === 'SIGNED_OUT') liveSession.reset()
+      if (event === 'SIGNED_OUT') {
+        clearReflectionDays()
+        // Same reasoning for Song Stats: a queued set belongs to the account
+        // that ran it and is not kept on the device after it signs out.
+        void songStats.clearLocal()
+        // The live session belongs to the account that started it too; stop
+        // showing (and heartbeating) it locally. The row itself is left alone.
+        liveSession.reset()
+      }
     })
     return () => {
       sub.subscription.unsubscribe()
       stopAutoRefresh?.()
       stopConnectivityWatch()
+      stopSongStats()
       a11y.stop()
     }
   }, [])

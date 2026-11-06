@@ -36,7 +36,8 @@ function bootstrapRouteFromQuery(){
   const view = params.get('view') || params.get('page')
   let target = ''
   if (song) target = `/songs/${encodeURIComponent(song)}`
-  else if (resource) target = `/posts/${encodeURIComponent(resource)}`
+  // Legacy /resources slugs were kebab-case; the posts that replaced them use underscores.
+  else if (resource) target = `/posts/${encodeURIComponent(resource.replace(/-/g, '_'))}`
   else if (view) {
     const v = view.toLowerCase()
     const allowed = new Set(['about','songs','setlist','songbook','posts','bundle'])

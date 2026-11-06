@@ -14,7 +14,13 @@ export type SongDetail = {
   time_signature: string | null
   tempo: number | null
   chordpro_content: string | null
+  /** Snapshotted onto Song Stats play rows. */
+  tags?: string[] | null
 }
+
+// fetchSongBySlug's default columns plus tags (for the Song Stats snapshot).
+const SONG_DETAIL_COLUMNS =
+  'id, slug, title, artist, default_key, time_signature, tempo, chordpro_content, tags'
 
 // Process-lifetime cache of fetched song bodies, keyed by slug. Lets the
 // performer prefetch the whole set so page turns are instant. Song bodies are
@@ -50,7 +56,7 @@ function writeSongCache(slug: string, value: SongDetail | null): void {
 const inFlight = new Map<string, Promise<SongDetail | null>>()
 export function prefetchSong(slug: string | undefined): void {
   if (!slug || songCache.has(slug) || inFlight.has(slug)) return
-  const p = fetchSongBySlug(supabase, slug)
+  const p = fetchSongBySlug(supabase, slug, { columns: SONG_DETAIL_COLUMNS })
     .then((row: unknown) => {
       const detail = (row as SongDetail | null) ?? null
       writeSongCache(slug, detail)
@@ -85,7 +91,7 @@ export function useSong(slug: string | undefined) {
     }
     let alive = true
     setLoading(true)
-    fetchSongBySlug(supabase, slug)
+    fetchSongBySlug(supabase, slug, { columns: SONG_DETAIL_COLUMNS })
       .then((row: unknown) => {
         const detail = (row as SongDetail | null) ?? null
         writeSongCache(slug, detail)

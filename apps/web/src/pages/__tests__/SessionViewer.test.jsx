@@ -5,6 +5,10 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 // The follower reads its song content from the public catalog via useSongs().
 vi.mock('../../hooks/useSongs', () => ({
+  useSongContent: () => true,
+  ensureSongContent: async () => {},
+  songContent: (s) => s?.chordpro_content || '',
+  prefetchSongContentBySlug: () => Promise.resolve(),
   useSongs: () => ({
     songs: [
       {

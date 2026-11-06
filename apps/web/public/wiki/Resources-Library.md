@@ -3,13 +3,13 @@
 GraceChords hosts a resource library for guides, tutorials, and blog-style posts. Content is stored in the Supabase `posts` table.
 
 ## Index page
-- URL: `/resources`
+- URL: `/posts` (the old `/resources` URLs 301 here via `public/_redirects`)
 - Sorting: newest → oldest by `published_at`.
 - Tag chips: click a tag to filter; click **All** to clear.
 - Search: Fuse.js searches titles and excerpts.
 
 ## Post pages
-- URL pattern: `/resources/:slug`
+- URL pattern: `/posts/:slug`
 - Metadata: title, excerpt, author display name, date, and tags render above the article body.
 - Related reading: up to three related posts selected by tag intersection.
 - Canonical links and OG tags for SEO.

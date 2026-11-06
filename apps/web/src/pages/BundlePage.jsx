@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, ensureSongContent, songContent } from '../hooks/useSongs'
 import { stepsBetween, transposeSymPrefer, KEYS } from '../utils/chordpro'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
 import { useChordStyle } from '../hooks/useSettings'
@@ -8,6 +8,7 @@ import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { transposeInstrumental } from '../utils/songs/instrumental'
 import { filterDisplayTags } from '../utils/songs/tags'
 import { showToast } from '../utils/app/toast'
+import { countFeatureUse } from '../lib/songStats'
 
 export default function Bundle(){
   const navigate = useNavigate()
@@ -34,10 +35,11 @@ export default function Bundle(){
     setLoading(true)
     setProgress(0)
     try{
+      await ensureSongContent(entries)
       const promises = entries.map(it =>
         (async () => {
           const toKey = selection[it.id]?.toKey || it.originalKey || 'C'
-          const doc = parseChordProOrLegacy(it.chordpro_content || '')
+          const doc = parseChordProOrLegacy(songContent(it))
           const baseKey = doc.meta?.key || doc.meta?.originalkey || it.originalKey || 'C'
           const steps = stepsBetween(baseKey, toKey)
           const baseRootRaw = (String(baseKey).match(/^([A-G][#b]?)/) || [,''])[1]
@@ -77,6 +79,7 @@ export default function Bundle(){
       if(songs.length){
         const { downloadMultiSongPdf } = await loadPdfLib()
         await downloadMultiSongPdf(songs, { lyricSizePt: 16, chordSizePt: 16 })
+        countFeatureUse('pdf_export')
       }
     } finally {
       setLoading(false)

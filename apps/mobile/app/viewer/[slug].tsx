@@ -45,6 +45,7 @@ import { upsertDraft } from '../../src/lib/drafts/draftsStore'
 import { actionFailureMessage } from '../../src/lib/errors'
 import { PersonalChip } from '../../src/components/PersonalChip'
 import { recordSongOpened, updateRecentKey } from '../../src/lib/recents'
+import { useSongOpenStats } from '../../src/lib/songStats'
 import { useAutoHideChrome, useAutoHidePref } from '../../src/lib/autoHideChrome'
 import { getDefaultsSnapshot, setDefaultKeepAwake, useAppDefaults } from '../../src/lib/defaults'
 import { useKeepAwakeWhileFocused } from '../../src/lib/keepAwake'
@@ -99,6 +100,11 @@ export default function ViewerScreen() {
       tempo: song.tempo,
     })
   }, [song])
+
+  // Song Stats: a song kept on screen 15s+ counts as an open (invisible).
+  useSongOpenStats(
+    song ? { songId: isPersonal ? personalId || song.id : song.id, source: isPersonal ? 'personal' : 'catalog' } : null,
+  )
 
   const { doc, parseError } = useMemo<{ doc: SongDoc | null; parseError: boolean }>(() => {
     if (!song?.chordpro_content) return { doc: null, parseError: false }

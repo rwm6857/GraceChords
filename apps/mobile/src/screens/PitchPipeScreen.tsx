@@ -17,6 +17,7 @@ import {
   clampOctave,
 } from '../lib/pitchpipe/notes'
 import { usePitchPipe } from '../lib/pitchpipe/usePitchPipe'
+import { useFeatureUseOnOpen } from '../lib/songStats'
 
 // Pitch Pipe (Utilities) — a circular ring of the 12 chromatic notes; tapping
 // a note sounds a clean sine at its equal-temperament frequency (A4 = 440,
@@ -90,6 +91,7 @@ function NoteButton({
 // hides the back link and swaps the bar's safe-area padding for regular
 // spacing (see TunerScreen).
 export default function PitchPipeScreen({ embedded }: { embedded?: boolean }) {
+  useFeatureUseOnOpen('pitch_pipe')
   const t = useTheme()
   const { t: tx } = useTranslation(['utilities', 'common', 'nav'])
   const insets = useSafeAreaInsets()

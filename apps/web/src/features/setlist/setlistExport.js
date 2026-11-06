@@ -10,8 +10,10 @@ import { formatChord, formatKeyDisplay } from '../../utils/chordpro/solfege'
 import { transposeInstrumental } from '../../utils/songs/instrumental'
 import { parseChordProOrLegacy } from '../../utils/chordpro/parser'
 import { fetchBibleChapter } from '../../utils/bible/chapters'
+import { ensureSongContent, songContent } from '../../hooks/useSongs'
 import { downloadSetlistAsPptx } from '../../utils/export/downloadSetlist'
 import { publicUrl } from '../../utils/network/publicUrl'
+import { countFeatureUse } from '../../lib/songStats'
 
 let pdfLibPromise
 export const loadPdfLib = () => pdfLibPromise || (pdfLibPromise = import('../../utils/pdf_mvp'))
@@ -114,7 +116,7 @@ async function verseToPdfSong(item, { chapterCache, onMessage, t }) {
 // Parse, transpose and shape one catalog song for the PDF engine.
 function songToPdfSong(item, song, { chordStyle, onMessage, t }) {
   try {
-    const doc = parseChordProOrLegacy(song.chordpro_content || '')
+    const doc = parseChordProOrLegacy(songContent(song))
     const baseKey = doc.meta?.key || doc.meta?.originalkey || song.originalKey || 'C'
     const toKey = item.toKey || baseKey
     const steps = stepsBetween(baseKey, toKey)
@@ -164,7 +166,10 @@ function songToPdfSong(item, song, { chordStyle, onMessage, t }) {
  * @param {object} catalog  buildSongCatalog() result
  */
 export async function exportSetPdf(items, catalog, { chordStyle, t, onMessage, verseCache }) {
-  const { downloadMultiSongPdf } = await loadPdfLib()
+  const [{ downloadMultiSongPdf }] = await Promise.all([
+    loadPdfLib(),
+    ensureSongContent(items.map(item => catalogSongFor(item, catalog))),
+  ])
   const chapterCache = verseCache || new Map()
   const songs = []
 
@@ -180,7 +185,10 @@ export async function exportSetPdf(items, catalog, { chordStyle, t, onMessage, v
     if (built) songs.push(built)
   }
 
-  if (songs.length) await downloadMultiSongPdf(songs)
+  if (songs.length) {
+    await downloadMultiSongPdf(songs)
+    countFeatureUse('pdf_export')
+  }
   return songs.length
 }
 

@@ -169,7 +169,13 @@ const supabase = {
 }
 
 vi.mock('../../lib/supabase', () => ({ supabase }))
-vi.mock('../../hooks/useSongs', () => ({ useSongs: () => ({ songs: SONGS, loading: false }) }))
+vi.mock('../../hooks/useSongs', () => ({
+  useSongs: () => ({ songs: SONGS, loading: false }),
+  useSongContent: () => true,
+  ensureSongContent: async () => {},
+  songContent: (s) => s?.chordpro_content || '',
+  prefetchSongContentBySlug: () => Promise.resolve(),
+}))
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({ isLoggedIn: true, role, session: { user: { id: 'user-1' } }, user: { id: 'user-1' }, profile: null, hasMinRole: () => false, loading: false }),
 }))

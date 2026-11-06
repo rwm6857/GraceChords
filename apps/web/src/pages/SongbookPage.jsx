@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Helmet } from 'react-helmet-async'
-import { useSongs } from '../hooks/useSongs'
+import { useSongs, ensureSongContent, songContent } from '../hooks/useSongs'
 import { searchSongs } from '../utils/songs/search'
 import { parseChordProOrLegacy } from '../utils/chordpro/parser'
 import { formatChord, formatKeyDisplay } from '../utils/chordpro/solfege'
@@ -26,6 +26,7 @@ import MobilePaneTabs from '../components/ui/mobile/MobilePaneTabs'
 import '../styles/songbook.css'
 import PageContainer from '../components/layout/PageContainer'
 import { filterByTag, pickManyRandom } from '../utils/songs/quickActions'
+import { countFeatureUse } from '../lib/songStats'
 
 // Lazy pdf exporters
 let pdfLibPromise
@@ -216,11 +217,11 @@ export default function Songbook() {
     if (!selectedEntries.length) return
     setBusy(true)
     try {
-      const { downloadSongbookPdf } = await loadPdfLib()
+      const [{ downloadSongbookPdf }] = await Promise.all([loadPdfLib(), ensureSongContent(selectedEntries)])
       const songs = []
       for (const it of selectedEntries) {
         try {
-          const doc = parseChordProOrLegacy(it.chordpro_content || '')
+          const doc = parseChordProOrLegacy(songContent(it))
           const blocks = (doc.sections || []).map((sec) => ({
             section: sec.label,
             lines: (sec.lines || []).map((ln) => {
@@ -261,6 +262,7 @@ export default function Songbook() {
       }
       if (songs.length) {
         await downloadSongbookPdf(songs, { includeTOC: true, coverImageDataUrl: cover })
+        countFeatureUse('pdf_export')
       }
     } finally {
       setBusy(false)

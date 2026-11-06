@@ -22,10 +22,9 @@ Paths in this file are relative to `apps/web/` unless prefixed. `src/` means
   - `src/utils/` — pure utilities grouped by domain (`app`, `network`, `songs`, `setlists`, `media`, `content`, `archive`, `chordpro`, `pdf`, `pdf_mvp`).
   - `src/utils/chordpro/` — re-export **shims**; the real parser/serializer/normalization live in `../../packages/core/src/chordpro/`. `disclaimer.ts` stays here (depends on web config).
   - `src/i18n/` — UI translations (see [i18n](#internationalization-i18n)).
-  - `src/data/resources.json` — generated posts index (legacy static fallback); do not hand-edit.
   - `src/assets/fonts/` — PDF fonts (Noto Sans/Mono). Must exist locally for PDF export.
   - `src/styles/index.css` — global style entry; imports `@gracechords/tokens/tokens.css`.
-- `public/` — static assets: `wiki/` (wiki source), `bible/` (translation manifest + chapter JSON), `fonts/` (UI fonts), `resources/`, `pptx/`.
+- `public/` — static assets: `wiki/` (wiki source), `bible/` (translation manifest + chapter JSON), `fonts/` (UI fonts), `pptx/`.
 - `functions/` — Cloudflare Pages Functions (`bible/[[path]].js`, `pptx/[[path]].js`, `api/*`). They run server-side at the CF root directory (`apps/web`).
 - `scripts/` — maintenance tasks (SEO/sitemap generation, Bible ingest, wiki sync, i18n check, ChordPro conversion).
 - `index.html` / `404.html` — SPA entry + deep-link fallback.
@@ -82,7 +81,7 @@ Pass `VITE_COMMIT_SHA=$(git rev-parse HEAD)` on production builds to bust the se
 
 ## Data flow & search
 - Songs and posts are served directly from Supabase at runtime (`useSongs.jsx`, `usePosts.jsx`), cached per session; `SongsPage` feeds results to Fuse.js for in-memory fuzzy search. There is no required local JSON index.
-- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id` and `/resources/:slug`, plus fully pre-rendered `/privacy`, `/terms` and `/delete-account` (from `src/content/*.md`). Any route **without** a file in `dist/` is served by Pages as `404.html` with HTTP 404 (the SPA still renders it via the redirect script), so a URL that external systems check — e.g. the Google Play privacy-policy and account-deletion links — must be emitted here. `generate-sitemap.mjs` writes `public/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`.
+- Build-time SEO: `generate-seo-pages.mjs` emits static HTML shells for `/songs/:id` and `/posts/:slug` (published rows of the `posts` table), plus fully pre-rendered `/privacy`, `/terms` and `/delete-account` (from `src/content/*.md`). Any route **without** a file in `dist/` is served by Pages as `404.html` with HTTP 404 (the SPA still renders it via the redirect script), so a URL that external systems check — e.g. the Google Play privacy-policy and account-deletion links — must be emitted here. `generate-sitemap.mjs` writes `dist/sitemap.xml`. Both need `SUPABASE_SERVICE_ROLE_KEY`. The retired `/resources` URLs are 301'd to `/posts` in `public/_redirects`.
 - Sorting: numeric titles first; otherwise case-insensitive, ignoring leading punctuation (`'Tis` sorts under `T`); translation-aware (selected-language variants first). Songs group by `song_id`.
 
 ## PDF engine
