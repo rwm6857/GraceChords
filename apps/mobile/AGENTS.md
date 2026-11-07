@@ -74,8 +74,10 @@ an authenticated-only route gate.
   (`registerAuthAutoRefresh`).
 - Env: `EXPO_PUBLIC_*` in `.env` (anon key only); mirror new vars into `.env.example`.
 - Queries live in core (e.g. `fetchSongList`, `setlistsRepo`, `reflectionsRepo`).
-  **The one sanctioned exception** is the stars queries in `useStarredSongs` /
-  `useSongStar` (`user_starred_songs`) — promote them to core if stars grow.
+  **The sanctioned exceptions** are the stars queries in `useStarredSongs` /
+  `useSongStar` (`user_starred_songs`) — promote them to core if stars grow — and
+  the own-row `users` reads/writes (`role` in `useSetlists.ts`, `preferences.sprite`
+  in `profile.ts`, plus the `delete_user` RPC in `AccountScreen`).
 - **Device-local state** (preferences, recents, streak, etc.) follows the
   `defaults.ts` pattern: injected `KVStorage`, hydrated at splash via
   `LAUNCH_STORAGE_KEYS`, then synchronous reads + `useSyncExternalStore`. New
@@ -91,8 +93,8 @@ an authenticated-only route gate.
 - Primitives in `src/components/`: `Screen`, `Button`, `Card`, `ListRow`, `Chip`,
   `SectionHeader`, `ConstrainedContent`, `GlassSurface`, `SymbolIcon`, etc. Prefer
   them over bespoke views.
-- Tablet: wrap content in `ConstrainedContent` (`tier="form"` / `"content"`); it
-  is a pass-through on phones. Tablet layouts never change phone layouts.
+- Tablet: wrap content in `ConstrainedContent` (`tier="form"` / `"content"` /
+  `"dashboard"`); it is a pass-through on phones. Tablet layouts never change phone layouts.
 - Screens live in `src/screens/`; route files in `app/` are thin wrappers.
 - **Sheets:** every sheet uses the native `formSheet` route (`app/sheet.tsx` +
   `src/lib/formSheetHost.ts`) via `useFormSheet` + `FormSheetShell`. The host pads
@@ -104,8 +106,9 @@ an authenticated-only route gate.
   mapping and run `python3 scripts/build-symbol-fonts.py`** (needs `fonttools`),
   then commit the two regenerated `.ttf` files. Use the `md` prop only to override
   an ambiguous mapping. Tab icons (`app/(tabs)/_layout.tsx`) set `sf`/`md` directly.
-- **Gradients:** the Home hero (`expo-linear-gradient` + `heroGradient`/`heroGlow`
-  tokens) is the only sanctioned gradient — never on UI surfaces.
+- **Gradients:** the hero band on Home and the Auth screen (`expo-linear-gradient`
+  + `heroGradient`/`heroGlow` tokens) is the only sanctioned gradient — never on
+  UI surfaces.
 
 ## Routing & auth gate
 - `app/_layout.tsx` gates every route on the Supabase session (signed out →
@@ -113,8 +116,12 @@ an authenticated-only route gate.
   off to `SplashOverlay`, which owns the only `hideAsync()` on the normal launch
   path. Sessions persist until uninstall — **don't add proactive sign-outs.**
 - Public routes: `session/[code]` (anonymous follower) and `sheet` (the form-sheet
-  host). `choose-icon` works with or without a session.
-- **Known gap:** a deep link arriving while signed out is discarded after login.
+  host). The auth-flow routes (`login`, `forgot-password`, `auth-link`,
+  `reset-password`, `choose-icon`) are also ungated; `choose-icon` works with or
+  without a session.
+- A deep link arriving while signed out is held in memory
+  (`src/lib/pendingRoute.ts`) and resumed after sign-in or the post-signup
+  avatar step.
 - **Deep links:** add a claim in **three places at once** — the AASA file and
   `assetlinks.json` (`../web/public/.well-known/`, whose README holds the claim
   table), `app.json` (`ios.associatedDomains` / `android.intentFilters`), and

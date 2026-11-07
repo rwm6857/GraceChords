@@ -19,12 +19,13 @@ hook. None of these sync to Supabase.
 | `readerReminder.ts` | `gc.readerReminder.v1` | Daily Word reminder (below) |
 | `readerSettings.ts` | `gc.reader.settings.v1` | reader typography (see `components/reader/README.md`) |
 | `introSeen.ts` | `gc.intro.seen.v1` | first-launch intro seen flag |
-| `viewerPrefs.ts` | `gc.viewer.columns.v2` | per-song column mode |
-| `autoHideChrome.ts` | `gc.viewer.autoHideChrome` | "hide controls when idle" |
+| `viewerPrefs.ts` | `gc.viewer.columns.v2` | global chart-column ceiling (1–3; migrates the old per-song `gc.viewer.columnMode.v1` once) |
+| `autoHideChrome.ts` | `gc.viewer.autoHideChrome` | "hide controls when idle" (screen-scoped; not in `LAUNCH_STORAGE_KEYS`) |
 | `reviewState.ts` | `gc.review.v1` | in-app review bookkeeping |
 
 Viewer/Performer read the chord-style default on open; in-session changes don't
-write back. Home's editable greeting phrases are `SUB_GREETINGS` in `greetings.ts`.
+write back. Home's editable greeting phrases are the `subGreetings` array in
+`src/i18n/locales/<lng>/home.json` (`greetings.ts` only picks an index).
 
 ## Daily Word reminder
 Opt-in local notification via `expo-notifications`. Stored default is **off at
@@ -82,7 +83,8 @@ spent, unverifiable attempt: gates are conservative and the attempt is banked
   120+ days since the last.
 - `reviewState.ts` — bounded by construction (open days = count + one date).
 - `sessionError.ts` — in-memory; `markSessionError` from `errors.ts` (after the
-  `isAbortError` check), `api.ts`, `exportSong.ts`, `AuthScreen.tsx`.
+  `isAbortError` check), `api.ts`, `exportSong.ts`, and the auth screens
+  (`AuthScreen`, `ForgotPasswordScreen`, `AuthLinkScreen`, `ResetPasswordScreen`).
 - `reviewService.ts` — native half, mounted once as `useReviewObserver()`.
   **It derives everything from navigation state**; Viewer/Performer/reader must
   not know about it.
@@ -122,5 +124,5 @@ spent, unverifiable attempt: gates are conservative and the attempt is banked
   `appleLink`/`googleLink` → `linkIdentity` (Apple only on iOS); unlinking is gated
   on core `canUnlink()`.
 - Sprites: written to `users.preferences.sprite` (`profile.ts`), same JSON shape as
-  web. Ids in `sprites.ts` must match web's `SpritePicker.jsx`. Mobile ships PNGs
-  generated from web's WebP (see `assets/README.md`).
+  web. Ids in `sprites.ts` must match web's `SpritePicker.jsx`. Mobile ships resized
+  WebP copies of web's sprites (see `assets/README.md`).

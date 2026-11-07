@@ -9,7 +9,9 @@ Surfaces:
 |---|---|
 | Direct messages | Telegram webhook → `POST /webhook` (`chat.type === 'private'`) |
 | Group / guest-chat mentions | Same webhook, when the bot is `@`-mentioned in a group/supergroup |
-| Feature announcements | **Paused** — the GitHub Action's merge trigger is commented out in `.github/workflows/feature-post.yml` (too many posts); nothing calls `/internal/feature` until it's uncommented. When live: user-facing `feat(` merge, PR labelled `post`, or `#post` in PR title/body → `POST /internal/feature`. Backend-only scopes (`feat(cli)`, `feat(worker)`, …) are dropped unless `post`/`#post` forces them. |
+| Feature announcements | **Paused** — the GitHub Action's merge trigger is commented out in `.github/workflows/feature-post.yml` (too many posts); nothing calls `/internal/feature` until it's uncommented. When live: user-facing `feat(`/`feat:` merge, PR labelled `post`, or `#post` in PR title/body → `POST /internal/feature`. Backend-only scopes (`feat(cli)`, `feat(worker)`, …) are dropped unless `post`/`#post` forces them. |
+| Web "Push to Telegram" | Pages Function `/api/telegram/push` → `POST /internal/push` |
+| Account linking (mobile) | Pages Function `/api/telegram/link-token` → `POST /internal/link-token`, then `/start <token>` via the webhook |
 | Mon/Fri digest | Cloudflare cron → `scheduled()` |
 
 ## Group chat behaviour
@@ -66,12 +68,12 @@ npm install
 npx wrangler kv:namespace create BOT_KV
 
 # 3. Upload the six Noto TTFs to R2 (one-time; only needed when fonts change)
-for f in ../../src/assets/fonts/NotoSans-Regular.ttf \
-         ../../src/assets/fonts/NotoSans-Bold.ttf \
-         ../../src/assets/fonts/NotoSans-Italic.ttf \
-         ../../src/assets/fonts/NotoSans-BoldItalic.ttf \
-         ../../src/assets/fonts/NotoSansMono-Regular.ttf \
-         ../../src/assets/fonts/NotoSansMono-Bold.ttf; do
+for f in ../../apps/web/src/assets/fonts/NotoSans-Regular.ttf \
+         ../../apps/web/src/assets/fonts/NotoSans-Bold.ttf \
+         ../../apps/web/src/assets/fonts/NotoSans-Italic.ttf \
+         ../../apps/web/src/assets/fonts/NotoSans-BoldItalic.ttf \
+         ../../apps/web/src/assets/fonts/NotoSansMono-Regular.ttf \
+         ../../apps/web/src/assets/fonts/NotoSansMono-Bold.ttf; do
   npx wrangler r2 object put \
     "gracechords-bible/fonts/$(basename "$f")" \
     --file="$f" \
@@ -87,7 +89,7 @@ npx wrangler secret put GRACECHORDS_API_TOKEN     # shared with site's BOT_API_T
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put BOT_WEBHOOK_TOKEN         # shared with GitHub Action
-npx wrangler secret put MEDIA_STAGING_CHAT_ID     # private chat ID; see "Guest chat behaviour"
+npx wrangler secret put MEDIA_STAGING_CHAT_ID     # private chat ID; see "Guest-chat photo delivery"
 
 # 5. Deploy
 npx wrangler deploy
@@ -167,14 +169,20 @@ curl -X POST http://127.0.0.1:8787/internal/feature \
 | `src/index.js` | HTTP router + `scheduled()` |
 | `src/telegram.js` | Telegram Bot API helpers |
 | `src/auth.js` | webhook secret + internal bearer auth |
-| `src/supabase.js` | direct DB reads for digest + user lookup |
+| `src/supabase.js` | direct DB reads for digest + user lookup; the one write (`linkTelegramAccount`) |
 | `src/ratelimit.js` | KV-backed per-user limiter (30/hr) |
 | `src/parseRequest.js` | DM body → setlist items |
+| `src/resolver.js` | multi-song resolution state machine (disambiguation resume) |
 | `src/searchClient.js` | calls `/api/bot/*` on gracechords.com |
 | `src/pdfRender.js` | PDF (always) + JPG (best-effort, pdfium WASM) |
+| `src/fontsWorker.js` | lazy R2 fetch of the Noto TTFs for the PDF engine |
+| `src/sendChart.js` | shared JPG-or-PDF / setlist delivery helpers |
+| `src/push.js` | `/internal/push` handler (web "Push to Telegram") |
+| `src/linkToken.js` | mint/redeem account-link tokens in BOT_KV |
+| `src/reportAlert.js` | `/internal/report-alert` admin alert (retired reflections feature; inert) |
 | `src/digest.js` | scheduled digest builder |
 | `src/feature.js` | feature post handler |
 | `src/aiSummary.js` | Workers AI rewrite for feature posts (with fallback) |
-| `src/groupRateLimit.js` | per-chat cooldown for group/guest-chat traffic |
+| `src/groupRateLimit.js` | per-chat cooldown for group traffic |
 | `src/mediaCache.js` | stage-then-delete helper for guest-mode photo replies |
 | `src/webhook.js` | DM + group + guest router (messages + callback queries) |

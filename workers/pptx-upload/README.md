@@ -53,5 +53,5 @@ Runs the Worker locally via Wrangler. R2 bindings use a local simulation. You wi
 - Role is fetched from `public.users` via service role key — not trusted from the JWT claims
 - Slug is validated against `/^[a-z0-9_]+$/` before use as an R2 key
 - File type and size are validated before upload (`.pptx` only, 20MB max)
-- CORS is enforced against the `ALLOWED_ORIGINS` secret — requests from unlisted origins receive no `Access-Control-Allow-Origin` header
+- CORS is enforced against the `ALLOWED_ORIGINS` secret — requests from unlisted origins are rejected with `403` and receive no `Access-Control-Allow-Origin` header (requests with no `Origin` header pass through)
 - Per-user upload rate limit: 10 uploads / 5 min sliding window, enforced via the `RATE_LIMIT_KV` binding. Exceeding the limit returns `429` with a `Retry-After` header. If the binding is unset (e.g. local dev without KV) the limit is bypassed.

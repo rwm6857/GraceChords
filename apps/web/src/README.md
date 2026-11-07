@@ -24,7 +24,8 @@ This repository uses a route-first layout with shared UI and feature modules sep
     - `utils/media`: image/JPG rendering and sharing helpers
     - `utils/content`: markdown/frontmatter helpers
     - `utils/archive`: zip creation helpers
-    - `utils/chordpro`, `utils/pdf`, `utils/pdf_mvp`, `utils/export`: existing specialized engines/tooling
+    - `utils/bible`: Bible translation/chapter helpers
+    - `utils/chordpro`, `utils/pdf_mvp`, `utils/export`: existing specialized engines/tooling
 - `styles/`
   - Global style entry and token/theme layers.
   - Use `styles/index.css` as the global import surface.

@@ -28,7 +28,7 @@ Most numbers and behaviours below are deliberate and locked by tests in
   under the tonic — each minor sits between two majors (the classic offset ring).
 - Outer radius 172, inner 116. At a smaller inner radius the 44pt bubbles nearly
   touch; **don't widen the angle to compensate — grow the radii.** The outer
-  radius is capped by width: at 375pt the widest bubbles reach ±175.2 of a 187.5pt
+  radius is capped by width: at 375pt the widest bubbles reach ±179.0 of a 187.5pt
   half-width. Tune numbers here, not in the component. Tests assert the 44pt
   floor, non-overlap, true spacing, and the 375pt fit.
 - **Two stroked rings make it read as a wheel.** They are bordered `View`s wider

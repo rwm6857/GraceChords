@@ -9,20 +9,26 @@ logic lives in `src/lib` (see its README).
   nothing.
 - Controls: floating `TransposeBar` (±1 semitone, haptic); `ViewOptionsSheet`
   (chords/lyrics, section labels, font 80–160%, Letters/Solfège, sharp/flat,
-  columns 1│2 on tablets, "Hide controls when idle"); `StarButton`; `ExportSheet`.
+  a 1–3 column ceiling on tablets, "Hide controls when idle"); `StarButton`;
+  `ExportSheet`.
 - Transpose, accidentals and chord style are **ephemeral** per open. "Hide controls
-  when idle" persists (`autoHideChrome.ts`); column mode persists **per song**
-  (`viewerPrefs.ts`). A setlist open seeds transpose via the `initialKey` param.
-- **Two-column mode** (`TwoColumnChart.tsx`, `src/lib/columnLayout.ts`): tablets
-  only (`useIsTabletWidth`, min dimension ≥ 600). Fill-first packing (never
-  balanced), sections atomic, and it engages only when one column would overflow.
-  Section heights are measured offscreen and memoized per layout input; the
-  partition and persistence logic is unit-tested.
+  when idle" persists (`autoHideChrome.ts`); the column ceiling persists
+  **globally**, Viewer and Performer alike (`viewerPrefs.ts`). A setlist open
+  seeds transpose via the `initialKey` param.
+- **Auto-fit columns** (`AutoFitChart` + `useChartAutoFit`, `src/lib/columnLayout.ts`,
+  `src/lib/columnCapacity.ts`): multiple columns on tablets only (min dimension
+  ≥ 600; 3 columns from ≥ 800 and when the width allows). The stored value is a
+  **ceiling**: the planner picks the largest font that fits on one screen (chrome
+  visible, then chrome hidden), tie-broken by fewest columns, and otherwise
+  scrolls. Packing is ordered and **balanced** (minimizes the tallest column),
+  sections atomic. Section heights are measured offscreen and cached per layout
+  input; the planner, capacity and persistence logic are unit-tested.
 
 ## Performer (`app/perform/[id].tsx`)
 Plays a set one song at a time (Prev/Next, swipe, progress rail), prefetches every
 song body, and reuses the Viewer's chart and options. `PerformerShareSheet` has a
-This-song / Whole-set scope toggle — whole-set PDF lives here.
+This-song / Whole-set scope toggle — whole-set PDF lives here (and in the
+builder's `ShareSetSheet`).
 
 ## Live-session follower (`app/session/[code].tsx`)
 The third consumer of the chart (`AutoFitChart` + `useChartAutoFit` +
@@ -76,9 +82,13 @@ on Home; **"Get started" is the only place notification permission is requested*
 Settings → Support → "See onboarding again" replays it.
 
 ## Settings
-Grouped: profile (→ sprite picker), theme, chord style, Language (`OptionSheet`:
-Automatic + supported locales), Offline & downloads, Reader (reminder, streak,
-"Daily Word opens"), library shortcuts, Help/Feedback, About, sign-out, and Delete
+Grouped: profile card (→ Account), theme, Language (`OptionSheet`: Automatic +
+supported locales), chord style, Offline & downloads, Reader ("Daily Word opens",
+reminder, streak), library shortcuts, and Support (Help/Feedback, About,
+"See onboarding again").
+
+Account (`app/account/index.tsx` → `AccountScreen`) holds the sprite picker,
+Security (password, sign-in methods), Telegram, Song Stats, sign-out, and Delete
 account (`supabase.rpc('delete_user')`).
 
 ## Daily Word landing (`DailyWordLandingScreen`)

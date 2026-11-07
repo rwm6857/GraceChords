@@ -29,8 +29,8 @@ banner at all.
 | `/about` | `about` |
 | `/profile` | `settings` (the app has no `/profile` route) |
 | `/posts`, `/posts/*` | home tab (blog — no app parallel) |
-| `/app/reset-password` | `reset-password` (app-requested recovery only) |
-| `/app/auth/callback` | `auth/callback` (app-requested sign-up confirmation only) |
+| `/app/reset-password` | `auth-link` → `reset-password` (app-requested recovery only) |
+| `/app/auth/callback` | `auth-link` → signs in, home tab (app-requested sign-up confirmation only) |
 
 Paths are **enumerated, never wildcarded across the domain**: Android App Links
 have no exclusion mechanism, so enumerating is the only way the two platforms
@@ -41,8 +41,8 @@ app.
 `/forgot-password`, `/reset-password` (claiming these would pull Supabase OAuth
 redirects and password-reset emails out of the browser mid-flow). This still
 holds, and is why the two app auth paths live under `/app/` instead: web's
-`signInWithOAuth` redirects to `/auth/callback` (`LoginPage.jsx`,
-`SignupPage.jsx`), so claiming that path would yank a browser Google sign-in
+`signInWithOAuth` redirects to `/auth/callback` (`SocialSignInButtons.jsx` on
+`LoginPage.jsx`/`SignupPage.jsx`, via `lib/postAuthRedirect.js`), so claiming that path would yank a browser Google sign-in
 into the app mid-handshake on any phone with the app installed. The `/app/…`
 twins are only ever requested BY the app, as the `redirectTo` it sends with its
 own recovery and sign-up calls, so a browser-initiated flow never touches them;
@@ -54,8 +54,9 @@ these, so claiming them would bounce a user app → Safari → app home);
 `/bundle`; `/beta`; `/api/*`; `/.well-known/*`; static assets.
 
 ## `apple-app-site-association` (iOS — active)
-App ID `J7Y8NYZ48Q.com.gracechords.app`. One `components` entry per row above;
-patterns are exact unless they end in `*`.
+App ID `J7Y8NYZ48Q.com.gracechords.app`. One `components` entry per path above
+(`/worship/set/*` is covered by `/worship/*`); patterns are exact unless they
+end in `*`.
 
 Shared setlists have no direct app parallel — the web link is an ephemeral
 payload, so every form lands on the import preview (`setlist/import`), which
@@ -87,12 +88,14 @@ page); keep them in sync with the keys actually used to sign shipping builds.
 
 Every path in the claim table must also be present in `android.intentFilters`
 in `apps/mobile/app.json` — `path` for exact routes, `pathPrefix` for the `*`
-rows. The home row carries both `path: "/"` and `pathPattern: "/*"` because
-Android's `Uri.getPath()` returns `""` (not `"/"`) for a bare
-`https://gracechords.com`. Unlike iOS, **Android needs a fresh native build**
+rows. The home row is `path: "/"` only — there is no `pathPattern: "/*"`
+catch-all (with `autoVerify` it claimed every gracechords.com path, including
+the browser's `/reset-password`). Unlike iOS, **Android needs a fresh native build**
 (`npx expo prebuild` + EAS) for an intent-filter change — the filters are
 compiled into `AndroidManifest.xml`.
 
 The web→route mapping both platforms feed into lives in
 `apps/mobile/src/lib/deepLinks.ts` (unit-tested; `apps/mobile/app/+native-intent.tsx`
-is a thin wrapper over it).
+is a thin wrapper over it). The two `/app/…` auth paths are intercepted first by
+`apps/mobile/src/lib/authLink.ts` and routed to `auth-link`, never through
+`deepLinks.ts`.

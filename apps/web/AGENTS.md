@@ -67,8 +67,8 @@ CI (`.github/workflows/pr-checks.yml`) runs lint/test/build with
 - JPG export: `src/utils/media/image.js` (Canvas2D) + `jpgPlanner.js` (JPG-only layout).
 
 ## Service worker
-`src/sw.js`: network-first for navigations, stale-while-revalidate for static
-assets; never touches song data. The cache name includes `VITE_COMMIT_SHA`.
+`src/sw.js`: network-first for navigations (and the legacy `/src/data/index.json`),
+cache-first for other static assets; never touches song data. The cache name includes `VITE_COMMIT_SHA`.
 
 ## Cloudflare
 - **Pages** root directory is `apps/web`. `VITE_*` production vars are coordinated with deploys — don't change them.
