@@ -27,7 +27,7 @@ Solve common issues when running or using GraceChords.
 
 **Chapter fails to load**
 - Ensure `VITE_R2_PUBLIC_URL` is set to the correct R2 public URL (e.g. `https://assets.gracechords.com`).
-- In development, Vite proxies `/bible/*` to this URL; it is read from the shell environment, not `.env` (`VITE_R2_PUBLIC_URL=… npm run dev`). In production, the CF Pages Function (`apps/web/functions/bible/[[path]].js`) proxies it server-side (it also accepts `BIBLE_CDN_URL`).
+- In development, Vite proxies `/bible/*` to this URL; it is read from the repo-root `.env` (restart `npm run dev` after changing it). In production, the CF Pages Function (`apps/web/functions/bible/[[path]].js`) proxies it server-side (it also accepts `BIBLE_CDN_URL`).
 - Confirm the R2 bucket is public or the Pages Function has read access.
 
 ## PDF & Fonts

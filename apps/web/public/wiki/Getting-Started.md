@@ -43,7 +43,7 @@ VITE_CONTACT_EMAIL=you@example.com
 
 `SUPABASE_SERVICE_ROLE_KEY` is only needed when running `npm run build` (SEO page + sitemap generation). It is never bundled into the frontend.
 
-`VITE_R2_PUBLIC_URL` enables the Daily Word and PPTX features locally. In dev, Vite proxies `/bible/*` and `/pptx/*` to this URL, but `vite.config.js` reads it from the shell environment rather than `.env`, so start the dev server with it set (`VITE_R2_PUBLIC_URL=https://assets.gracechords.com npm run dev`). In production the Cloudflare Pages Functions handle the proxy.
+`VITE_R2_PUBLIC_URL` enables the Daily Word and PPTX features locally. In dev, Vite proxies `/bible/*` and `/pptx/*` to this URL. In production the Cloudflare Pages Functions handle the proxy.
 
 ## Supabase setup
 

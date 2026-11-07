@@ -31,7 +31,7 @@ VITE_R2_PUBLIC_URL=https://assets.gracechords.com
 BIBLE_CDN_URL=https://pub-xxxx.r2.dev
 ```
 
-In **local dev**, Vite proxies `/bible/*` and `/pptx/*` to `VITE_R2_PUBLIC_URL`. `vite.config.js` reads it from the shell environment (`process.env`), not from `.env` files, so start the dev server with it set, e.g. `VITE_R2_PUBLIC_URL=https://assets.gracechords.com npm run dev`.
+In **local dev**, Vite proxies `/bible/*` and `/pptx/*` to `VITE_R2_PUBLIC_URL`, read from the repo-root `.env` / `.env.local` (a value set in the shell takes precedence).
 
 ---
 
@@ -120,7 +120,7 @@ A cron Worker (`*/15 * * * *`) that deletes ended live sessions and sessions ina
 
 | Variable | Used by | Where to set |
 |----------|---------|-------------|
-| `VITE_R2_PUBLIC_URL` | Dev proxy + Pages Functions | shell env for `npm run dev` / CF Pages env |
+| `VITE_R2_PUBLIC_URL` | Dev proxy + Pages Functions | repo-root `.env` for `npm run dev` / CF Pages env |
 | `BIBLE_CDN_URL` | Pages Functions (fallback) | CF Pages env |
 | `VITE_PPTX_WORKER_URL` | SPA frontend | `.env` / CF Pages env |
 | Worker secrets | each Worker in `workers/` | `wrangler secret put` |
