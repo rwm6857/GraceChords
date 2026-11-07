@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   SONG_STATS_DEFAULT_WINDOW,
   SONG_STATS_INSIGHT_RULES as R,
+  SONG_STATS_RULES,
   SONG_STATS_WINDOWS,
   formatSongStatsDate,
   type SongStatsWindow,
@@ -152,7 +153,7 @@ export default function SongStatsScreen() {
         <EmptyState
           icon="music.note.list"
           title={tx('gate.title', { count: R.gateSessions })}
-          subtitle={tx('gate.body', { done: insights?.totalSessions ?? 0 })}
+          subtitle={tx('gate.body', { done: insights?.totalSessions ?? 0, perSong: SONG_STATS_RULES.perSongSessionMs / 1000 })}
         />
       )
     }

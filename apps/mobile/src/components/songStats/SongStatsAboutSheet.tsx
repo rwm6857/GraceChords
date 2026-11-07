@@ -40,7 +40,7 @@ function AboutContent({ onClose }: Props) {
         <Text style={para}>{tx('about.intro')}</Text>
         <Text style={para}>
           {tx('about.rule', {
-            perSong: num(SONG_STATS_RULES.perSongSessionMs / 60_000),
+            perSong: num(SONG_STATS_RULES.perSongSessionMs / 1000),
             min: num(SONG_STATS_RULES.minSessionMs / 60_000),
             seconds: num(SONG_STATS_RULES.minSongDisplayMs / 1000),
           })}

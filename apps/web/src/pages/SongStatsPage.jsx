@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import {
   SONG_STATS_DEFAULT_WINDOW,
   SONG_STATS_INSIGHT_RULES as R,
+  SONG_STATS_RULES,
   SONG_STATS_WINDOWS,
   formatSongStatsDate,
 } from '@gracechords/core'
@@ -107,7 +108,7 @@ export default function SongStatsPage() {
       return (
         <div className="gc-stats-gate">
           <h2>{t('gate.title', { count: R.gateSessions })}</h2>
-          <p>{t('gate.body', { done: insights?.totalSessions ?? 0 })}</p>
+          <p>{t('gate.body', { done: insights?.totalSessions ?? 0, perSong: SONG_STATS_RULES.perSongSessionMs / 1000 })}</p>
         </div>
       )
     }

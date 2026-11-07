@@ -9,7 +9,7 @@ export const SONG_STATS_RULES = {
   /** A song counts toward a set once it has been on screen this long in total. */
   minSongDisplayMs: 30_000,
   /** A set qualifies when its on-screen time is at least this × counted songs… */
-  perSongSessionMs: 150_000,
+  perSongSessionMs: 60_000,
   /** …and never less than this, whatever the song count. */
   minSessionMs: 120_000,
   /** A song-viewer open counts once the song has been on screen this long. */

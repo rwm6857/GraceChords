@@ -35,7 +35,7 @@
   "removedSong": "Canción eliminada",
   "gate": {
     "title": "Setlist Stats aparece después de {{count}} repertorios",
-    "body": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él unos minutos. Llevas {{done}} hasta ahora."
+    "body": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él al menos {{perSong}} segundos por canción. Llevas {{done}} hasta ahora."
   },
   "off": "Setlist Stats está desactivado, así que los nuevos repertorios no se registran.",
   "loadError": "No se pudo cargar Setlist Stats",
@@ -43,7 +43,7 @@
     "link": "Acerca de Setlist Stats",
     "title": "Setlist Stats",
     "intro": "Setlist Stats se basa en los repertorios que diriges y las canciones que abres en GraceChords.",
-    "rule": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él: al menos {{perSong}} minutos por canción y nunca menos de {{min}} minutos. Una canción cuenta cuando está en pantalla {{seconds}} segundos o más.",
+    "rule": "Un repertorio cuenta cuando tocas Iniciar repertorio y te quedas en él: al menos {{perSong}} segundos por canción y nunca menos de {{min}} minutos. Una canción cuenta cuando está en pantalla {{seconds}} segundos o más.",
     "private": "Tus estadísticas son tuyas. Ningún otro usuario de GraceChords puede verlas. Las cifras de canciones de todos los usuarios se suman de forma anónima para decidir qué construir después.",
     "control": "Puedes borrar tu historial o desactivar Setlist Stats en cualquier momento.",
     "privacy": "Política de privacidad",

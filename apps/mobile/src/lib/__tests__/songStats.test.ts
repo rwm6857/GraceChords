@@ -36,21 +36,26 @@ function run(durations: number[]) {
 }
 
 describe('capture rule', () => {
-  it('scales with the number of counted songs, with a 2 minute floor', () => {
-    expect(requiredSessionMs(1)).toBe(2.5 * MIN)
-    expect(requiredSessionMs(2)).toBe(5 * MIN)
-    expect(requiredSessionMs(4)).toBe(10 * MIN)
+  it('needs a minute per counted song, with a 2 minute floor', () => {
+    expect(requiredSessionMs(1)).toBe(2 * MIN)
+    expect(requiredSessionMs(2)).toBe(2 * MIN)
+    expect(requiredSessionMs(3)).toBe(3 * MIN)
+    expect(requiredSessionMs(4)).toBe(4 * MIN)
     expect(requiredSessionMs(0)).toBe(2 * MIN)
   })
 
-  it('logs a single-song set of 2.5 minutes, and not one of 1 minute', () => {
-    expect(run([2.5 * MIN]).rows).toHaveLength(1)
+  it('logs a single-song set of 2 minutes, and not one of 1 minute', () => {
+    expect(run([2 * MIN]).rows).toHaveLength(1)
     expect(run([1 * MIN]).rows).toHaveLength(0)
   })
 
+  it('logs a four-song set of 4 minutes', () => {
+    expect(run([1 * MIN, 1 * MIN, 1 * MIN, 1 * MIN]).rows).toHaveLength(4)
+  })
+
   it('writes nothing for a set below its scaled threshold', () => {
-    // Four songs counted → needs 10 minutes; 4 × 2 min = 8.
-    const s = run([2 * MIN, 2 * MIN, 2 * MIN, 2 * MIN])
+    // Four songs counted → needs 4 minutes; 4 × 50 s is under that.
+    const s = run([50 * SEC, 50 * SEC, 50 * SEC, 50 * SEC])
     expect(s.songCount).toBe(4)
     expect(s.qualifies).toBe(false)
     expect(s.rows).toEqual([])
@@ -75,8 +80,8 @@ describe('capture rule', () => {
     let b = describeEntry(showEntry(buffer(), 0, 0), 0, song(0))
     b = pauseBuffer(b, 1 * MIN)
     b = resumeBuffer(b, 60 * MIN)
-    const s = summarizePerformerBuffer(b, 61 * MIN)
-    expect(s.activeMs).toBe(2 * MIN)
+    const s = summarizePerformerBuffer(b, 60 * MIN + 30 * SEC)
+    expect(s.activeMs).toBe(90 * SEC)
     expect(s.qualifies).toBe(false)
   })
 
