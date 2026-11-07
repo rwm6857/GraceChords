@@ -15,7 +15,6 @@ packages/
   tokens/         @gracechords/tokens — design tokens (web CSS + native TS map)
 workers/          Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot)
 supabase/         SQL migrations
-gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
 ```
 
 Run web tasks from the repo root (`npm run dev`, `build`, `test`, `lint` delegate

@@ -10,9 +10,8 @@ conventions (theme/primitives, SF Symbols, auth gating, Metro resolution).
 
 ## What it is today
 
-A real, feature-complete-enough-to-use native client, built from the
-[`gc-ios-design-reference/`](../../gc-ios-design-reference/) design bundle. The
-core worship-team flows all ship:
+A real, feature-complete-enough-to-use native client. The core worship-team
+flows all ship:
 
 - a themed **four-tab shell** — Home · Songs · Setlists · Daily Word,
 - a **Song Viewer** with a real chord chart: live transpose, key change,

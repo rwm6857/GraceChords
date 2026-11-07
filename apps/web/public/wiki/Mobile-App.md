@@ -2,8 +2,7 @@ The GraceChords native iOS app — an Expo / React Native client that shares the
 same `@gracechords/core` logic and Supabase backend as the web app.
 
 ## What it is today
-Built from the `gc-ios-design-reference/` design bundle, the app now covers the
-core worship-team flows end to end:
+The app covers the core worship-team flows end to end:
 - a themed **four-tab shell** — Home · Songs · Setlists · Daily Word,
 - a **Song Viewer** with a real chord chart — live transpose, key change,
   sharp/flat accidentals, view options (chords/lyrics, section labels, font

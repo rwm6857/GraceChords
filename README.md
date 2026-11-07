@@ -30,8 +30,7 @@ GraceChords/
 │   │                                         transposition, RBAC, setlist codec, Supabase factory)
 │   └── tokens/         @gracechords/tokens — design tokens (web CSS + native TS map)
 ├── workers/            Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot)
-├── supabase/           SQL migrations (songs, users, posts, saved sets, …)
-└── gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
+└── supabase/           SQL migrations (songs, users, posts, saved sets, …)
 ```
 
 | Workspace | Package | What it is |
