@@ -13,6 +13,8 @@ Visit the in-app [Song Library](/songs) to browse, search, and filter all availa
 - Song language preference is saved in `localStorage` (`pref:songLanguage`) and reused in SongView, Setlist, Songbook, Worship Mode, and Home suggestions.
 
 ## Translation behavior
+> Translation grouping is not yet wired to the Supabase catalog: every song currently appears as its own English entry, so language chips do not show. The rules below describe how the UI behaves once songs are grouped.
+
 - Language chips appear only when at least one translation exists in that language.
 - Songs are grouped by translation `song_id`.
 - If a translation exists in the selected language, the card title uses that translated title.
@@ -24,4 +26,4 @@ Visit the in-app [Song Library](/songs) to browse, search, and filter all availa
 - A divider labeled **No Translation in Selected Language** appears above fallback songs.
 
 ## Deep Search
-> **Deep Search:** Turn on the lyrics search toggle when you need to scan full lyrics, not just titles, tags, or authors. This issues an extra network request, so expect more data use and a brief delay, but it also expands your results to include songs where the lyrics contain your query.
+> **Deep Search:** Turn on the **Lyrics contain** toggle when you need to scan full lyrics, not just titles, tags, or authors. This issues an extra network request, so expect more data use and a brief delay, but it also expands your results to include songs where the lyrics contain your query.

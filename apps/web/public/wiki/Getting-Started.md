@@ -1,7 +1,7 @@
 Set up a local environment to develop or preview GraceChords.
 
 ## Prerequisites
-- [Node.js LTS](https://nodejs.org/) (20+)
+- [Node.js LTS](https://nodejs.org/) (20.19+ or 22.12+, Vite 7's minimum)
 - Git
 - A Supabase project (for auth, songs, and posts)
 
@@ -43,15 +43,15 @@ VITE_CONTACT_EMAIL=you@example.com
 
 `SUPABASE_SERVICE_ROLE_KEY` is only needed when running `npm run build` (SEO page + sitemap generation). It is never bundled into the frontend.
 
-`VITE_R2_PUBLIC_URL` enables the Daily Word and PPTX features locally. In dev, Vite proxies `/bible/*` to this URL. In production the Cloudflare Pages Function handles the proxy.
+`VITE_R2_PUBLIC_URL` enables the Daily Word and PPTX features locally. In dev, Vite proxies `/bible/*` and `/pptx/*` to this URL. In production the Cloudflare Pages Functions handle the proxy.
 
 ## Supabase setup
 
-Apply all migrations under `supabase/migrations/` in order. Key tables:
+Migrations live under `supabase/migrations/`. They are applied by hand, one file at a time (`supabase db query --linked -f <file>` or the dashboard SQL editor), never with `supabase db push`, and they cannot rebuild the schema from scratch. Key tables:
 - `public.users` — user profiles with `role`
 - `public.songs` — ChordPro song catalog
 - `public.posts` — blog-style posts
-- `public.user_starred_songs`, `public.saved_sets`
+- `public.user_starred_songs`, `public.setlists`, `public.setlist_songs`
 
 ## Build for production
 ```bash

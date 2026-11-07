@@ -1,23 +1,22 @@
 // Where every bubble on the cropped circle-of-fifths arc sits.
 //
-// Both rings run at TRUE 30° circle-of-fifths spacing, perfectly concentric,
-// with each relative minor exactly beneath its parent. An earlier revision had
-// to widen the inner ring to 36° because at a 97pt inner radius the true chord
-// between adjacent minors is 50pt, which leaves 44pt bubbles a 6pt gap and
-// breaks their tap targets. Growing the outer radius to 170 lets the inner ring
-// grow to 110, where the true chord is 56.9pt — so the fudge is gone and the
-// geometry is now the real thing.
+// Both rings run at TRUE 30° circle-of-fifths spacing and are concentric; the
+// inner ring is rotated half a step (`minorAngleOffset`) so each minor sits
+// between two majors. An earlier revision had to widen the inner ring to 36°
+// because at a 97pt inner radius the true chord between adjacent minors is 50pt,
+// which leaves 44pt bubbles a 6pt gap and breaks their tap targets. At an outer
+// radius of 172 and an inner of 116 the true chord is 60pt — so the fudge is gone
+// and the geometry is the real thing.
 //
 // The outer radius is fixed by WIDTH, not by taste: at 375pt the widest bubbles
-// reach ±175.2 against a 187.5pt half-width, leaving 12.3pt of margin. 170 is
-// the largest round radius that still clears the edge, so the arc is the element
-// that flexes if the rows above it grow — not the other way round.
+// reach ±179.0 against a 187.5pt half-width, leaving 8.5pt of margin, so the arc
+// is the element that flexes if the rows above it grow — not the other way round.
 //
 // A NOTE ON THE ARC RUNNING OFF THE SCREEN. A circle through the bubble centres
 // is widest at ±R, so reaching the 187.5pt screen edge needs R > 187.5 — which
-// the bubble-margin constraint above forbids. Rather than flatten the arc to
-// ~62pt of drop for a literal edge overrun, the circle keeps its 85pt drop and
-// its ends are cropped by the container's BOTTOM edge, at ±168.8 — 18.7pt from
+// the bubble-margin constraint above forbids. Rather than flatten the arc for a
+// literal edge overrun, the circle keeps its ~86pt drop and
+// its ends are cropped by the container's BOTTOM edge, at ±170.8 — 16.7pt from
 // each corner, on a near-vertical tangent, so they read as plunging off rather
 // than curling back. Curvature was the problem; curvature wins.
 //

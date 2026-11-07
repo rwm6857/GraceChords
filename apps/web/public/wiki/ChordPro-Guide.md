@@ -3,67 +3,31 @@ Write songs in the ChordPro format used by GraceChords.
 ## At a glance
 - Section headers can be natural (e.g., `Verse 1`) or emitted via directives; rendering normalizes styles
 - Chords go in brackets on lyric lines (e.g., `[C]Amazing [F]grace`)
-- Directives capture metadata like `{title:}`, `{key:}`, `{capo:}`, `{tags:}`, `{authors:}`, `{country:}` and media links
-- Translation groups are linked by `{song_id: ...}` and language is set with `{lang: ...}` (`en` if omitted)
+- Song metadata (title, key, artist, tags, country, language, tempo, time signature, YouTube) is entered in the song editor's form fields at `/portal/editor`, not as directives in the song body
+- Lines starting with `#` are comments and are not rendered
 
 ```chordpro
-{title: Glorious King}
-{song_id: glorify-your-name}
-{lang: en}
-{key: A}
-{tags: praise, fast}
-{authors: Jane Smith}
-{country: US}
-{youtube: https://www.youtube.com/watch?v=...}
-{mp3: https://example.com/track.mp3}
-{pptx: glorious_king.pptx}
+{capo: 2}
 
-# Verse 1
+Verse 1
 [A]Amazing [D]grace
 ```
 
-### Recommended metadata
-- `{title: ...}` — required; used across the app and for sorting
-- `{key: ...}` — original key (e.g., `C`, `Am`, `F#m`)
-- `{capo: N}` — optional numeric capo value
-- `{tags: ...}` — comma‑separated list (e.g., `worship, slow, chorus-only`)
-- `{authors: ...}` — author/composer details
-- `{country: ...}` — optional origin
-- `{youtube: ...}`, `{mp3: ...}` — optional media URLs
-- `{pptx: ...}` — optional slide deck filename under `public/pptx/`
+### Metadata
+Use the editor's **Metadata** panel:
+- **Title** — required; used across the app and for sorting
+- **Key** — required; original key (e.g., `C`, `Am`, `F#m`)
+- **Tags** — at least one required (e.g., `worship, slow, chorus-only`)
+- **Artist**, **Country**, **Language**, **Time Signature**, **Tempo (BPM)**, **YouTube ID or URL** — optional
+- `{capo: N}` — optional numeric capo value, written in the song body
 
-### Translation metadata
-- `{song_id: ...}` — required for linking translations of the same song
-- `{lang: ...}` — canonical language field (`en`, `tr`, `ar`, `es`); if omitted, GraceChords assumes `en`
-- Titles can differ across translations (for example, `Send Us Lord` vs `Rab Bizi Gonder`)
-- Legacy aliases are still accepted during migration (`songid`, `translation_group`, `translation_of`, `language`, `locale`)
+**Import ChordPro** in the editor reads `{title}`, `{artist}`/`{author}`/`{composer}`, `{key}`, `{tempo}`, `{time}`, `{tags}`, `{country}`, `{lang}` and `{youtube}` directives from an imported file into the form fields.
 
-Example translation pair:
-```chordpro
-{title: Send Us Lord}
-{song_id: send-us-lord}
-{lang: en}
-{key: A}
-...
-```
-
-```chordpro
-{title: Rab Bizi Gonder}
-{song_id: send-us-lord}
-{lang: tr}
-...
-```
-
-### Metadata inheritance rules
-For each translation group, GraceChords treats the English file as master/source of truth when present.
-
-- Inherited unless overridden: `key`, `tags`, `authors`, `country`, `youtube`, `mp3`, `pptx`
-- Translation values override only when the translation file sets a non-empty value
-- Missing or blank values in translation files inherit from English
-- If no English variant exists, the first complete variant becomes fallback master
+### Translations
+The editor has a **Language** field, but translation grouping is not yet wired to the Supabase catalog, so translations are not linked in the app.
 
 ### Sections
-You can use plain headers (`Verse`, `Verse 1`, `Chorus`, `Bridge`, `Tag`, `Intro`, `Instrumental`) or ChordPro‑style directives. The Admin tool can emit either mode.
+You can use plain headers (`Verse`, `Verse 1`, `Chorus`, `Bridge`, `Tag`, `Intro`, `Outro`) or ChordPro‑style directives. The editor's **Section** buttons wrap selected text with `{start_of_…}`/`{end_of_…}` directives.
 
 Directive examples
 ```chordpro
@@ -82,7 +46,7 @@ Directive examples
 
 ### Tips
 - Keep lines as concise as practical to improve PDF fit
-- Save from the Editor Portal (`/editor`) to write directly to Supabase — there is no separate index build step
+- Save from the song editor (`/portal/editor`) to write directly to Supabase — there is no separate index build step
 - Use UTF-8 text in song files; Turkish characters (`ıüşiçöğ` and `IÜŞİÇÖĞ`) are supported in app rendering and PDF/JPG exports
 
 [[Adding-and-Editing-Songs]] [[Index-Building]]

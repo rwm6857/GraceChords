@@ -18,7 +18,7 @@ two scheduled or workflow-driven flows that used to live in
 `notify_telegram.yml`: feature post announcements (rewritten via
 Workers AI for the dev-channel audience) and the Mon/Fri digest.
 
-Replaces the old GitHub Action; that workflow can be deleted.
+Replaces the old GitHub Action; that workflow has been deleted.
 
 ## Surfaces
 
@@ -27,8 +27,9 @@ Replaces the old GitHub Action; that workflow can be deleted.
 | Direct messages | Telegram webhook POST (`chat.type === 'private'`) | `POST /webhook` |
 | Group / supergroup mentions | Same webhook, when the bot is `@`-mentioned in a group it's a member of | `POST /webhook` |
 | Guest-chat mentions | Same webhook, payload arrives under `update.guest_message` (BotFather → Guest Chat Mode → On) | `POST /webhook` |
-| Feature announcements | **Paused** — `feature-post.yml`'s `pull_request` trigger is commented out, so no merge posts to the dev channel until it's restored. The worker route and its rules are untouched. When live: fires on `feat(` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
+| Feature announcements | **Paused** — `feature-post.yml`'s `pull_request` trigger is commented out, so no merge posts to the dev channel until it's restored. The worker route and its rules are untouched. When live: fires on `feat(`/`feat:` prefix OR `post` label OR `#post` in title/body. The worker then drops backend-only scopes (`feat(cli)`, `feat(worker)`, …) unless the `post`/`#post` override forced it. Body is rewritten through Workers AI into a warm, end-user tone before posting; the post links to the app, not GitHub. | `POST /internal/feature` |
 | Account linking (mobile) | App taps "Link Telegram" → web `POST /api/telegram/link-token` → this worker mints a token → app opens `t.me/<bot>?start=<token>` → user taps START | `POST /internal/link-token`, then `POST /webhook` |
+| Web "Push to Telegram" | Web `POST /api/telegram/push` (verifies the user's JWT, resolves their linked Telegram id) → this worker | `POST /internal/push` |
 | Mon + Fri digest | Cloudflare cron `0 22 * * 1,5` | `scheduled()` handler |
 
 `src/index.js` is the HTTP router; auth lives in `src/auth.js`. Each
@@ -41,18 +42,21 @@ flows based on chat type and the presence of `update.guest_message`.
 | File | Responsibility |
 |---|---|
 | `src/index.js` | HTTP router + `scheduled()`. Verifies webhook secret, dispatches. |
-| `src/auth.js` | `verifyTelegramWebhook()` and internal bearer auth for `/internal/feature`. |
+| `src/auth.js` | `verifyTelegramWebhookSecret()` and `verifyInternalBearer()` (bearer auth for every `/internal/*` route). |
 | `src/webhook.js` | Router for DM, group, and guest-chat flows. Handles `/start` (bare **and** `/start <link-token>`), `/help`, free-text song queries, callback queries from inline buttons, and the dedicated `handleGuestMessage` path. Owns the JPG-vs-PDF UX. |
 | `src/linkToken.js` | Mint/redeem short-lived account-link tokens in BOT_KV (`linktok:<token>`, 10-min TTL, deleted on read). The encoding is load-bearing — see the header comment on Telegram's 64-char / `[A-Za-z0-9_-]` start-payload limit. |
 | `src/parseRequest.js` | Message text → list of `{ title, key? }` items. Handles "Song A in G, Song B" syntax. Same parser is used by all three message flows. |
+| `src/resolver.js` | Multi-song resolution state machine: `advanceResolution`, `applyChoice`, and the `resolve:<scope>` KV save/load/clear. |
 | `src/searchClient.js` | Calls the site's `/api/bot/*` Pages Functions. Talks to `songs/search`, `song/[id]`, `setlist`. Also classifies match quality (auto vs disambiguate vs no-match); `classifyMatch(results, query)` short-circuits to `auto` when any candidate's title exactly equals the parsed query. |
 | `src/supabase.js` | Direct DB reads via PostgREST (`findUserByTelegramId`, digest queries) plus the ONE write: `linkTelegramAccount` sets `telegram_user_id` + `telegram_linked_at` and nothing else. service_role bypasses RLS, so that narrowness is the only guard. |
 | `src/ratelimit.js` | KV-backed per-user limiter for DM — 30 requests / hour. |
-| `src/groupRateLimit.js` | KV-backed per-chat cooldown for group + guest traffic — 6 renders / minute. Independent of the DM limiter. |
+| `src/groupRateLimit.js` | KV-backed per-chat cooldown for group traffic — 6 renders / minute. Independent of the DM limiter. (The guest flow does not call it.) |
 | `src/pdfRender.js` | PDF generation (always) and JPG rasterization (best-effort). Imports the shared `pdf_mvp/pure.js` engine + jsPDF; uses bundled pdfium WASM to rasterize the resulting PDF to PNG bytes for `sendPhoto`. |
 | `src/fontsWorker.js` | Lazy R2 fetch + base64 of Noto TTFs for the PDF engine. Cached in module scope. |
+| `src/sendChart.js` | Shared delivery helpers (`sendSongJpgOrPdf`, `sendSetlistResponse`) used by both `webhook.js` and `push.js`: JPG with PDF fallback, setlist photos, `pdf:`/`slpdf:` callback data. |
+| `src/push.js` | `POST /internal/push` handler — hydrates the requested songs and delivers them via `sendChart.js` to the linked user's DM. |
 | `src/digest.js` | Builds the Mon/Fri digest message from recent Supabase rows. |
-| `src/reportAlert.js` | Handles `POST /internal/report-alert` from the web Pages Function `/api/reflections/report`. Sends an admin alert to `DEV_CHANNEL_ID` with the reported reflection's id, author user_id, date, reason, and body preview — enough to hide the post + ban the author from the Supabase dashboard. |
+| `src/reportAlert.js` | Handles `POST /internal/report-alert` from the web Pages Function `/api/reflections/report`. Sends an admin alert to `DEV_CHANNEL_ID` with the reported reflection's id, author user_id, date, reason, and body preview — enough to hide the post + ban the author from the Supabase dashboard. Inert while public reflections are retired: the report endpoint refuses (`public_reflections_disabled`) before alerting. |
 | `src/feature.js` | Handles `POST /internal/feature` from the GitHub Action. Skips backend-only scopes (unless `force`), strips the conventional-commit prefix, skips posting when the PR body is empty, otherwise pipes title+body through Workers AI before sending. Appends a "Check it out" link to the app (never GitHub). |
 | `src/aiSummary.js` | Workers AI wrapper. Calls `@cf/meta/llama-3.3-70b-instruct-fp8-fast` with a worship-leader-friendly system prompt; returns HTML-escaped text or `null` (the model can self-veto by returning `SKIP`). Caller falls back to the raw body on null. |
 | `src/mediaCache.js` | `stagePhoto(env, …)` — upload a JPG to `MEDIA_STAGING_CHAT_ID`, return `{ fileId, chatId, messageId }`. Used by the guest-message flow; the caller deletes the staging message after `answerGuestQuery` ships. No cache — every call re-stages. |
@@ -60,12 +64,12 @@ flows based on chat type and the presence of `update.guest_message`.
 
 `src/pdfRender.js` is the most consequential file — it touches the
 WASM, jsPDF, transposition, and the chord-chart engine in
-`../../src/utils/pdf_mvp/pure.js` (shared with the site).
+`../../apps/web/src/utils/pdf_mvp/pure.js` (shared with the site).
 
 ## Request lifecycle — DM with a song title
 
 1. Telegram POSTs the update to `/webhook` with the secret header.
-2. `auth.verifyTelegramWebhook` checks `X-Telegram-Bot-Api-Secret-Token`
+2. `auth.verifyTelegramWebhookSecret` checks `X-Telegram-Bot-Api-Secret-Token`
    against `TELEGRAM_WEBHOOK_SECRET`.
 3. `handleTelegramUpdate` in `webhook.js` inspects the update:
    - `update.message` with `chat.type === 'private'` → DM flow (this section).
@@ -83,8 +87,8 @@ WASM, jsPDF, transposition, and the chord-chart engine in
      answers for 5 minutes, so without the purge the next message after a
      successful link would still get the onboarding text. An already-linked
      Telegram account is REFUSED, never transferred.
-5. `parseRequest(text)` produces `[{ title, key }]` items.
-6. `checkRateLimit` consumes one slot from the per-user KV bucket.
+5. `checkRateLimit` consumes one slot from the per-user KV bucket.
+6. `parseRequest(text)` produces `[{ title, key }]` items.
 7. `advanceResolution` (`resolver.js`) walks the items, calling
    `searchSongs` → `classifyMatch(results, item.title)` for each. The
    second arg is the original parsed query; if any candidate's title
@@ -230,8 +234,9 @@ configured at all.
   `https://gracechords.com/api/bot`.
 
 ### Supabase
-- Worker reads only — `findUserByTelegramId`, digest queries.
-- All reads use `SUPABASE_SERVICE_ROLE_KEY`. Treat as root credentials.
+- Worker reads — `findUserByTelegramId`, digest queries — plus the one
+  narrow write, `linkTelegramAccount` (see Code map).
+- All calls use `SUPABASE_SERVICE_ROLE_KEY`. Treat as root credentials.
 - The site's `/api/telegram/link` endpoint (Pages Function) verifies the
   user's auth JWT by calling Supabase's `/auth/v1/user` rather than
   HMAC-verifying locally — works across legacy HS256 and the newer
@@ -245,7 +250,8 @@ configured at all.
 
 ### Cloudflare KV (`BOT_KV`)
 - `rl:dm:<user_id>:<bucket>` — DM rate limit, 30/hr sliding window.
-- `rl:grp:<chat_id>:<bucket>` — group + guest cooldown, 6/min per chat.
+- `rl:grp:<chat_id>:<bucket>` — group cooldown, 6/min per chat.
+- `linktok:<token>` — account-link token (10-min TTL, deleted on redeem).
 - `userlookup:<tg_id>` — user row cache; 5-minute TTL.
 - `setlist:<token>` — short-lived ID for combined-PDF callback (24h TTL).
 - `resolve:<scope>` — in-flight multi-song resolution (parsed items, picks so
@@ -314,10 +320,11 @@ changes.
 | pdfium init fails | `_pdfiumFailedUntil` set 60s out. `renderSongJpg` returns null. Caller sends PDF via `sendDocument`. After TTL, next request retries init. |
 | R2 fonts unreachable | PDF engine falls back to jsPDF's built-in Helvetica/Courier. Output is still legible. |
 | Site API 401 / token mismatch | `searchSongs` throws "search failed: 401" → generic "Something went wrong" reply. |
-| Telegram webhook secret mismatch | 401 from `verifyTelegramWebhook`. Visible in `getWebhookInfo` as `last_error_message`. |
-| DM rate limit hit | "Whoa, slow down — try again in N min" reply. |
-| Group rate limit hit | "Busy chat — try again in N s" reply, threaded to the mention. |
-| Setlist with no matches | "I couldn't read that. Try a title like ..." |
+| Telegram webhook secret mismatch | 401 from `verifyTelegramWebhookSecret`. Visible in `getWebhookInfo` as `last_error_message`. |
+| DM rate limit hit | "Whoa, slow down — try again in Nm" reply (`Ns` under a minute). |
+| Group rate limit hit | "Busy chat — try again in Ns" reply, threaded to the mention. |
+| Request parses to no items | "I couldn't read that. Try a title like ..." |
+| A title has no match | "I couldn't find "…". Try a different spelling?" — aborts the request. |
 | pdfium loadDocument / render throws | Warn to log, return null, fall back to PDF. |
 | Workers AI binding missing / call fails | `feature.js` posts the raw (escaped, truncated) PR body instead of an AI rewrite. Never silently drops an announcement. |
 | AI returns `SKIP` | Treated as "source too thin" — falls back to raw body (which is already gated on non-empty by the workflow). |
@@ -336,7 +343,7 @@ document is always preferable to a silent failure.
 - **jsPDF default vs named import**: in the shared `pure.js`, use
   `import { jsPDF } from 'jspdf'`. The default import resolves to a
   namespace under esbuild + nodejs_compat and breaks the constructor.
-- **Sibling vs nested `_shared.js` imports**: `functions/api/bot/setlist.js`
+- **Sibling vs nested `_shared.js` imports**: `apps/web/functions/api/bot/setlist.js`
   is a sibling of `_shared.js`. `songs/search.js` and `song/[id].js`
   are one level deeper. Verify import paths against the actual file
   depth — wrong relative paths fail Pages Functions bundling silently
@@ -389,10 +396,10 @@ document is always preferable to a silent failure.
 |---|---|
 | New text command (e.g., `/about`) | `src/webhook.js`, before the free-text handler. Mirror the DM/group/guest split if the command should respond differently per surface. |
 | New inline button | `src/webhook.js` callback handler + the place that sends the button. Keep `callback_data` under 64 bytes; stash via BOT_KV if longer. |
-| New site API endpoint | `src/searchClient.js` (worker side) + `functions/api/bot/<name>.js` (site side) |
+| New site API endpoint | `src/searchClient.js` (worker side) + `apps/web/functions/api/bot/<name>.js` (site side) |
 | Change rendering output | `src/pdfRender.js` |
 | Change DM rate limit | `src/ratelimit.js` |
-| Change group/guest cooldown | `src/groupRateLimit.js` |
+| Change group cooldown | `src/groupRateLimit.js` |
 | Tweak AI feature-post tone | `src/aiSummary.js` system prompt (banned phrases list). |
 | Change feature-post trigger logic | `.github/workflows/feature-post.yml` `if:` clause + the title cleaning sed line (coarse gate). Backend-scope skip + `force` override live in `src/feature.js` (`BACKEND_SCOPES`, `isBackendOnly`). |
 | Adjust guest-chat reply copy | `src/webhook.js` `handleGuestMessage`. Photo path always tries first; text fallback ships otherwise. |
@@ -403,13 +410,13 @@ document is always preferable to a silent failure.
 ## Related references
 
 - `README.md` — provisioning, secrets, local dev, guest-chat setup.
-- `../../src/utils/pdf_mvp/pure.js` — shared PDF engine.
-- `../../src/utils/chordpro/parser.ts` — ChordPro parser (used by site
-  and bot).
-- `../../src/utils/chordpro/index.js` — `stepsBetween`,
-  `transposeSymPrefer`.
-- `../../functions/api/bot/*` — site-side bot API.
-- `../../functions/api/telegram/link.js` — Telegram Login Widget linking.
+- `../../apps/web/src/utils/pdf_mvp/pure.js` — shared PDF engine.
+- `../../apps/web/src/utils/chordpro/parser.ts` — ChordPro parser (used by site
+  and bot; shim over `packages/core/src/chordpro/parser.ts`).
+- `../../apps/web/src/utils/chordpro/index.js` — `stepsBetween`,
+  `transposeSymPrefer` (shim over `packages/core/src/chordpro/index.js`).
+- `../../apps/web/functions/api/bot/*` — site-side bot API.
+- `../../apps/web/functions/api/telegram/link.js` — Telegram Login Widget linking.
 - `../../.github/workflows/feature-post.yml` — feature post trigger
   (`feat(` prefix / `post` label / `#post` marker).
 - [Telegram Bot API changelog](https://core.telegram.org/bots/api-changelog)

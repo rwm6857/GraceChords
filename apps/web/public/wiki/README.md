@@ -9,9 +9,9 @@ automatically when you push changes under `apps/web/public/wiki/**` to `main`
 (requires the `WIKI_PUSH_TOKEN` repo secret).
 
 Tips
-- Place images under `apps/web/public/wiki-assets/` and reference them as `![](../wiki-assets/your-image.png)`.
+- The sync copies everything under `apps/web/public/wiki/` (including images) — `apps/web/public/wiki-assets/` is not synced. Put images in a subfolder here (e.g. `images/`) and reference them relatively, e.g. `![](images/your-image.png)`.
 - To sync manually, run the `wiki-sync.yml` workflow from the Actions tab, or locally:
   ```bash
-  cd apps/web && WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
+  cd apps/web && GITHUB_REPOSITORY=rwm6857/GraceChords WIKI_PUSH_TOKEN=<your_PAT> node scripts/syncWiki.mjs
   ```
 - To diagnose setup issues: `cd apps/web && node scripts/verifyWikiSetup.mjs`

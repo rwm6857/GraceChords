@@ -1,5 +1,11 @@
 # Monorepo migration — status & remaining steps
 
+> **Status: complete.** This file is kept as a record of the cutover. The
+> Cloudflare Pages settings below (build settings, preview variables, build watch
+> paths) are still the live configuration. `apps/mobile/` has since become the
+> full Expo app for iOS and Android, and `apps/studio/` (macOS SwiftUI, not an npm
+> workspace) was added; see the root [`README.md`](README.md).
+
 This repo is being restructured into an npm-workspaces monorepo so a future Expo
 (React Native) iOS app can share core logic with the web app. The web app still
 builds and deploys to Cloudflare Pages unchanged.
@@ -89,7 +95,7 @@ paths are available. Apply these in **Pages → Settings → Builds & deployment
 | **Build output directory** | `dist`  *(relative to root directory → `apps/web/dist`)* |
 | **Functions** | auto-detected at `apps/web/functions/` (it sits at the root directory) |
 | **Env vars** | Production is unchanged — already set in Pages → Variables (`VITE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_R2_PUBLIC_URL`/`BIBLE_CDN_URL`, bot tokens). **Preview is a separate set and is not inherited** — see [Preview environment variables](#preview-environment-variables) below. |
-| **Node version** | ensure 18+ (Vite 7). CF V3 default is fine; pin via `NODE_VERSION` env or a `.node-version` file if a build picks an older Node. |
+| **Node version** | ensure 20.19+ or 22.12+ (Vite 7's `engines`). CF V3 default is fine; pin via `NODE_VERSION` env or a `.node-version` file if a build picks an older Node. |
 
 **Why this build command.** Root directory must be `apps/web` so CF finds
 `functions/` and the `dist/` output there. But the npm **lockfile and the

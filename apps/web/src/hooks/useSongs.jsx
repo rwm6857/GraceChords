@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { pptxKeyStem } from '../utils/songs/pptxKey'
 
 const STALE_MS = 5 * 60 * 1000  // revalidate after 5 minutes
 
@@ -103,9 +104,7 @@ function normaliseSong(song) {
     chordpro_content: _content.get(song.id),
 
     // Source filename for pptx/JPG URL construction (may differ from slug)
-    filename: song.source_filename
-      ? `${song.source_filename}.chordpro`
-      : `${song.slug.replace(/-/g, '_')}.chordpro`,
+    filename: `${pptxKeyStem(song)}.chordpro`,
 
     // Stats
     star_count: song.star_count || 0,

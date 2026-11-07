@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
@@ -25,6 +25,11 @@ const lazyLocaleChunks = Object.fromEntries(
 )
 
 const SW_VERSION = process.env.VITE_COMMIT_SHA || new Date().toISOString()
+
+// Vite does not load .env files into process.env while evaluating this config,
+// so read the dev proxy target from them explicitly (a shell value still wins).
+const R2_DEV_TARGET = process.env.VITE_R2_PUBLIC_URL ||
+  loadEnv('development', repoRoot, 'VITE_R2_').VITE_R2_PUBLIC_URL
 
 // Inject a <link rel="preload"> for the hashed home-hero WebP variants so the
 // browser can fetch the LCP image before parsing the JS bundle. The hero file
@@ -109,16 +114,16 @@ export default defineConfig({
     process.env.ANALYZE ? visualizer({ filename: 'dist/stats.html', template: 'treemap' }) : null
   ],
   // In local dev, proxy /bible/* and /pptx/* to the R2 CDN so the Pages Function path is simulated.
-  // Set VITE_R2_PUBLIC_URL in .env.local to enable this (e.g. https://assets.gracechords.com).
-  server: process.env.VITE_R2_PUBLIC_URL
+  // Set VITE_R2_PUBLIC_URL in the repo-root .env / .env.local to enable this (e.g. https://assets.gracechords.com).
+  server: R2_DEV_TARGET
     ? {
         proxy: {
           '/bible': {
-            target: process.env.VITE_R2_PUBLIC_URL,
+            target: R2_DEV_TARGET,
             changeOrigin: true,
           },
           '/pptx': {
-            target: process.env.VITE_R2_PUBLIC_URL,
+            target: R2_DEV_TARGET,
             changeOrigin: true,
           },
         },

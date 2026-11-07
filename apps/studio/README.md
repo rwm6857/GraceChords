@@ -24,10 +24,9 @@ Phase 2 covers the live view controls (transpose bar, key picker, capo hint, vie
 options, two-column chart), favorites, server-rendered PDF/JPG export and Telegram
 push, and the library's filter & sort, result counts and lettered sections.
 
-Phase 3 adds the editor: a syntax-highlighted ChordPro editor with a live preview
-that reuses the Viewer's own renderer, draft/published state on `public.songs`, hard
-delete, draft recovery across a quit, and the bridged ChordPro linter surfaced as a
-warnings strip. See [Editing songs](#editing-songs).
+Phase 3 adds the editor: a ChordPro editor with a live preview that reuses the
+Viewer's own renderer, draft/published state on `public.songs`, hard delete, and the
+bridged ChordPro linter. See [Editing songs](#editing-songs).
 
 Phase 4 is the editor's remaining rough edges plus the means to ship it: ChordPro
 [syntax highlighting](#editing-songs), unsaved work that survives a quit, warnings you
@@ -104,8 +103,6 @@ Design/DesignTokens.generated.swift  GENERATED palette/spacing/radii/layout/type
 Design/Theme.swift             how those resolve on macOS (dynamic colors, type scale)
 Config/StudioConfig.swift      URL + anon key + API base resolution, config-error text
 Config/StudioDefaults.swift    app-wide prefs (chord style, keep-awake, auto-hide)
-Design/Theme.swift             SwiftUI layer over the generated tokens
-Design/DesignTokens.generated.swift  generated from packages/tokens — do not edit
 Services/AppServices.swift     one SupabaseClient, one SongsRepository, one CoreBridge
 Auth/AuthController.swift      session phase + role, Keychain-persisted via supabase-swift
 Auth/SignInView.swift          email + password only
@@ -126,7 +123,7 @@ Viewer/TwoColumnChartView.swift fill-first column partition, port of columnLayou
 Viewer/TransposeBar.swift      floating key-down / key / key-up pill + capo chip
 Viewer/ViewOptionsView.swift   chords, sections, font size, style, accidentals, columns
 Viewer/KeyPickerView.swift     4×3 key grid + ♯/♭ toggle
-Viewer/ExportView.swift        PDF / JPG / share / Telegram
+Viewer/ExportController.swift  PDF / JPG / share / Telegram, shared by toolbar and File menu
 Viewer/StarButton.swift        favorite toggle (optimistic)
 Viewer/ViewerPrefs.swift       per-song column mode
 Viewer/KeepScreenAwake.swift   display-sleep assertion, scoped to the view
@@ -139,7 +136,7 @@ Editor/TagField.swift           tag entry with a type-ahead over the catalog's t
 Manage/EditorSession.swift      what is open in the editor, shared with the shell
 Navigation/ShellNavigation.swift  which section is showing, reachable from the View menu
 Core/CoreBridge.swift          JSContext wrapper: transpose, parse, render, key helpers,
-                               lint, hasMinRole, slugify
+                               lint, hasMinRole, slugify, editing helpers, PDF draft
 Core/LintWarning.swift         one finding from core's lint.ts (warnings only)
 Core/ChordStyle.swift          ChordStyle, Accidental, Capo.fret
 Core/SongDoc.swift             Swift mirrors of chordpro/types.ts
@@ -289,10 +286,10 @@ name the shortcut, from the same lookup the commands use, so the two cannot drif
 
 Section buttons **wrap the selection** when there is one and insert an empty block with
 the caret on its content line when there is not; the tooltip says which you will get,
-because silently doing the other one is confusing. This needs the caret, which is why
-the body is `TextEditor(text:selection:)` — and the offsets crossing the bridge are
-UTF-16, not Character, counts (see `Core/ChordProEditing.swift`): a JS string index is
-a UTF-16 offset, and the two disagree on any Turkish or Korean lyric.
+because silently doing the other one is confusing. This needs the caret — an `NSRange`
+from the body's text view (see [Syntax highlighting](#editing-songs)) — and the offsets
+crossing the bridge are UTF-16, not Character, counts: a JS string index is a UTF-16
+offset, and the two disagree on any Turkish or Korean lyric.
 
 Both rows use `FlowLayout` rather than `HStack`. Eight section buttons plus a menu do
 not fit one row in a split pane, and an `HStack` answers that by truncating every label
@@ -356,8 +353,7 @@ warning.
 case-sensitively by the library filter and the web app's tag pages, and the live data
 is Title Case (`Slow`, `Praise`, `Worship`), so typing "worship" must not mint a
 second tag beside "Worship". `SongForm.addTag` reuses an existing tag when one matches
-case-insensitively and otherwise keeps what was typed; the ⋯ button beside the field
-lists the catalog's tags to pick from.
+case-insensitively and otherwise keeps what was typed.
 
 **Saving never changes publication state.** `SongWritePayload` omits `status` on an
 update, so editing a published song and saving keeps it live — silently
@@ -494,14 +490,10 @@ code units — exactly what a JS string index means — so the `TextSelection` �
 `String.Index` → UTF-16 conversion that used to live in `Core/ChordProEditing.swift`
 is gone rather than reimplemented.
 
-Clicking a lint warning to jump to its line is now unblocked, but still needs
-`LintWarning.lineIndex` fixed first: it is inconsistent (section-relative for most
-codes, body-relative for `warn:section_mismatch`).
-
 ### Importing a PDF
 
 Drop a text-based chord sheet on the editor's import sheet (⇧⌘I, the toolbar's
-`document.badge.arrow.down`, or File ▸ Import from PDF) and its title, key, artist,
+`arrow.down.document`, or File ▸ Import from PDF…) and its title, key, artist,
 sections, lyrics and inline chords land in the form as unsaved work.
 
 The split is: **extraction is native, every judgement is core's.**

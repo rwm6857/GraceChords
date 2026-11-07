@@ -8,14 +8,14 @@ lives in `packages/`; the web and mobile apps consume it.
 ```
 apps/
   web/            @gracechords/web    — React + Vite SPA (the production site)
-  mobile/         @gracechords/mobile — Expo / React Native iOS app
+  mobile/         @gracechords/mobile — Expo / React Native app (iOS + Android)
+  studio/         macOS SwiftUI app (not an npm workspace)
 packages/
   core/           @gracechords/core   — shared, DOM-free logic (ChordPro parser,
                                          transposition, RBAC, setlist codec, Supabase factory)
-  tokens/         @gracechords/tokens — design tokens (web CSS + native TS map)
-workers/          Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot)
+  tokens/         @gracechords/tokens — design tokens (web CSS + native TS map + generated Swift)
+workers/          Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot, session cleanup)
 supabase/         SQL migrations
-gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
 ```
 
 Run web tasks from the repo root (`npm run dev`, `build`, `test`, `lint` delegate
@@ -24,21 +24,21 @@ to `-w @gracechords/web`) or from inside `apps/web/`.
 ## `apps/web/`
 The production single-page app.
 
-- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Posts, Worship Mode, Editor Portal, Admin Portal, Daily Word)
+- `src/pages/` — route-level screens (Home, SongView, Setlist builder, Songbook builder, Posts, Worship Mode, Editor Portal, Admin Portal, Daily Word, Profile, Setlist Stats, live-session viewer)
 - `src/components/auth/RoleGuard.jsx` — route guard; redirects users lacking the required role
 - `src/hooks/useAuth.jsx` — auth context (`role`, `hasMinRole`, `isOwner`, …)
 - `src/hooks/useSongs.jsx` — fetches the song catalog from Supabase (session cache)
 - `src/hooks/usePosts.jsx` — CRUD helpers for the Supabase `posts` table
 - `src/lib/supabase.js` — web Supabase client (thin wrapper over `@gracechords/core`'s factory)
-- `src/utils/setlists/supabaseSets.js` — Supabase-backed saved-set operations
-- `src/utils/pdf_mvp/` — single-song PDF engine with tests and font registrar
+- `src/hooks/usePersonalSetlists.js`, `src/hooks/useSetlistBuilder.js` — Supabase-backed setlists (via `@gracechords/core`'s setlist repo)
+- `src/utils/pdf_mvp/` — PDF engine and font registrar (tests in `src/__tests__/pdf_mvp.*`)
 - `src/utils/media/` — Canvas2D JPG exporter
 - `src/utils/chordpro/` — re-export shims; the real parser lives in `packages/core`
 - `src/components/ui/layout-kit/` — reusable UI primitives (Card, Toolbar, Chip, …)
 - `src/features/readings/` — Daily Word (M'Cheyne plan + Bible loader)
-- `src/i18n/` — UI translations (en, tr, ar, es)
-- `public/` — static assets: `wiki/` (this wiki's source), `bible/` (translations manifest + chapter JSON), `fonts/` (UI fonts), `pptx/`, `sitemap.xml`, `robots.txt`
-- `functions/` — Cloudflare Pages Functions (`bible/`, `pptx/`, `api/` proxies)
+- `src/i18n/` — UI translations (en, es, ko, tr)
+- `public/` — static assets: `wiki/` (this wiki's source), `fonts/` (UI fonts), `.well-known/` (deep-link claims), `_headers`, `sitemap.xml`, `robots.txt`. Bible JSON and PPTX decks live in R2, not here.
+- `functions/` — Cloudflare Pages Functions (`bible/`, `pptx/` R2 proxies; `api/` endpoints)
 - `scripts/` — SEO/sitemap generation, Bible ingest, wiki sync, i18n check, ChordPro conversion
 - `dist/` — Vite build output for Cloudflare Pages (gitignored, generated)
 
@@ -46,10 +46,16 @@ The production single-page app.
 tokens from `packages/tokens/tokens.css` (imported via `src/styles/index.css`).
 
 ## `apps/mobile/`
-The native iOS client — a themed four-tab shell (Home · Songs · Setlists · Daily
-Word) with a chord-chart Song Viewer, Performer mode, the setlist builder, the
-Daily Word reader, and native Google/Apple auth, built on the shared core. See
+The native iOS and Android client — a themed five-tab shell (Home · Songs ·
+Setlists · Daily Word · Utilities) with a chord-chart Song Viewer, Performer mode,
+the setlist builder, a song editor, live sessions, the Daily Word landing and
+reader, and native Google/Apple auth, built on the shared core. See
 [[Mobile-App]] for details.
+
+## `apps/studio/`
+A native macOS SwiftUI companion app for song creation and content management.
+Not an npm workspace; it reuses `packages/core` through JavaScriptCore. See
+`apps/studio/README.md`.
 
 ## `packages/core/` (`@gracechords/core`)
 Pure TypeScript/JS shared by both apps, consumed as source with no build step:
@@ -58,17 +64,21 @@ metadata/sort, the setlist codec, the role hierarchy (`rbac/roles.js` — the si
 source of truth for `hasMinRole()`), and the Supabase client **factory**.
 
 ## `packages/tokens/` (`@gracechords/tokens`)
-Design tokens for both platforms — web imports `tokens.css`; React Native imports
-the typed map from `@gracechords/tokens/native`.
+Design tokens for every platform — web imports `tokens.css`; React Native imports
+the typed map from `@gracechords/tokens/native`; `apps/studio` uses a committed
+Swift mirror generated from `native.ts` (`npm run tokens:swift`).
 
 ## `supabase/`
-SQL migrations applied in order — `users`, `songs`, `posts`, `user_starred_songs`,
-`saved_sets`. Every table has row-level security.
+SQL migrations — `users`, `songs`, `posts`, `user_starred_songs`, `setlists`,
+`sessions`, `reflections`, and more. They are applied by hand (`supabase db query
+--linked -f <file>` or the dashboard SQL editor), never with `supabase db push`.
+Every table has row-level security.
 
 ## `workers/`
 Standalone Cloudflare Workers, each deployed with `wrangler deploy`:
 - `pptx-upload/` — authenticated PPTX upload/delete to R2 (validates Supabase JWT + role)
 - `sitemap-rebuild/` — weekly cron to rebuild the sitemap
 - `telegram-bot/` — powers `@gracechords_bot` (see `workers/telegram-bot/ARCHITECTURE.md`)
+- `session-cleanup/` — 15-minute cron that deletes ended and abandoned live sessions
 
 [[Index-Building]] [[UI-Design-System]] [[Roles-and-Access]] [[Cloudflare-Infrastructure]] [[Mobile-App]]

@@ -19,6 +19,8 @@ import { useAuth } from '../../hooks/useAuth'
 import { useRole } from '../../hooks/useRole'
 import { showToast } from '../../utils/app/toast'
 import SongEditorForm from '../../components/editor/SongEditorForm'
+import { pptxKeyStem } from '../../utils/songs/pptxKey'
+import { isBodyDirective } from '../../utils/songs/chordproImport'
 import ChordProEditor from '../../components/editor/ChordProEditor'
 import LivePreviewModal from '../../components/editor/LivePreviewModal'
 import ChordProGuideDrawer from '../../components/editor/ChordProGuideDrawer'
@@ -248,7 +250,7 @@ function DesktopEditorPage() {
         'lang', 'language',
       ])
       const IGNORE_SILENTLY = new Set([
-        'album', 'year', 'ccli', 'capo', 'subtitle', 'copyright',
+        'album', 'year', 'ccli', 'subtitle', 'copyright',
         'sorttitle', 'duration', 'lyricist',
       ])
       const DIRECTIVE_RE = /^\{([^:}]+?)(?::\s*(.*?))?\s*\}$/
@@ -271,6 +273,12 @@ function DesktopEditorPage() {
 
         // Strip comment lines
         if (trimmed.startsWith('#')) continue
+
+        // Section markers, {c:} comments and {capo:} are body content
+        if (isBodyDirective(trimmed)) {
+          bodyLines.push(line)
+          continue
+        }
 
         const match = trimmed.match(DIRECTIVE_RE)
         if (match) {
@@ -296,9 +304,6 @@ function DesktopEditorPage() {
             meta.country = val
           } else if (['lang', 'language'].includes(key)) {
             meta.language = val
-          } else if (key.startsWith('start_of_') || key.startsWith('end_of_')) {
-            // Section directives go to body as-is
-            bodyLines.push(line)
           } else if (IGNORE_SILENTLY.has(key) || METADATA_KEYS.has(key)) {
             // handled above or silently ignored
           } else {
@@ -750,7 +755,7 @@ function DesktopEditorPage() {
                 onChange={handleFormChange}
                 disabled={saving}
                 validationErrors={validationErrors}
-                slug={song?.slug || ''}
+                slug={pptxKeyStem(song)}
                 onPptxSaved={handlePptxSaved}
               />
             </div>

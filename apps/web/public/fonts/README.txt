@@ -1,4 +1,4 @@
-Place the following font files here before building PDFs:
+Place the following font files here for JPG image export (src/utils/media/canvasFonts.js); PDF export uses src/assets/fonts/:
 - NotoSans-Regular.ttf
 - NotoSans-Bold.ttf
 - NotoSans-Italic.ttf

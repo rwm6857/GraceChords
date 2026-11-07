@@ -1,9 +1,8 @@
-Developer notes for the minimal, reliable single‑song PDF exporter.
+Developer notes for the minimal, reliable PDF exporter (the app's only PDF engine).
 
 ## Location & Entry Points
-- Code: `src/utils/pdf_mvp/`
-- Entry: `downloadSingleSongPdf(song)` and `planSingleSong(song)`
-- Facade: `src/utils/pdf/` integrates single/multi‑song exports
+- Code: `src/utils/pdf_mvp/` (browser entry `index.js`, layout in `pure.js`)
+- Entry: `downloadSingleSongPdf(song)`, `downloadMultiSongPdf(songs)`, `downloadSongbookPdf(songs, opts)`, and `planSingleSong(song)`
 
 ## Decision Ladder
 1) 1‑column, single page at sizes 16 → 12 pt
@@ -35,7 +34,7 @@ Developer notes for the minimal, reliable single‑song PDF exporter.
 
 ## Tests
 - Run: `npm run test:mvp`
-- Suites: `pdf_mvp.plan.test.js`, `pdf_mvp.chords.test.js`, `pdf_mvp.sections.test.js`
+- Suites: `src/__tests__/pdf_mvp.*.test.js` (`plan`, `chords`, `sections`, `pure`, `songbook`)
 
 ## Do Not Regress
 - Title 26 pt; Key 16 pt gray; lyric/chord 12–16 pt; line‑height ≈ 1.2×
