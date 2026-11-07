@@ -39,7 +39,7 @@
   "removedSong": "삭제된 곡",
   "gate": {
     "title": "셋을 {{count}}개 진행하면 Setlist Stats가 나타납니다",
-    "body": "로그인한 상태에서 예배 모드로 몇 분 동안 진행하면 셋 하나로 기록됩니다. 지금까지 {{done}}개를 진행했습니다."
+    "body": "로그인한 상태에서 예배 모드로 곡마다 최소 {{perSong}}초 동안 진행하면 셋 하나로 기록됩니다. 지금까지 {{done}}개를 진행했습니다."
   },
   "off": "Setlist Stats가 꺼져 있어 새 셋이 기록되지 않습니다.",
   "loadError": "Setlist Stats를 불러오지 못했습니다",
@@ -47,7 +47,7 @@
     "link": "Setlist Stats 정보",
     "title": "Setlist Stats",
     "intro": "Setlist Stats는 GraceChords에서 진행한 셋과 연 곡을 바탕으로 만들어집니다.",
-    "rule": "로그인한 상태에서 예배 모드로 진행하면 셋으로 기록됩니다. 곡마다 최소 {{perSong}}분, 전체로는 최소 {{min}}분이 필요합니다. 곡은 화면에 {{seconds}}초 이상 표시되면 기록됩니다.",
+    "rule": "로그인한 상태에서 예배 모드로 진행하면 셋으로 기록됩니다. 곡마다 최소 {{perSong}}초, 전체로는 최소 {{min}}분이 필요합니다. 곡은 화면에 {{seconds}}초 이상 표시되면 기록됩니다.",
     "private": "내 통계는 나만 볼 수 있습니다. 다른 GraceChords 사용자는 볼 수 없습니다. 다음에 무엇을 만들지 정하기 위해 모든 사용자의 곡 횟수를 익명으로 합산합니다.",
     "control": "언제든지 기록을 지우거나 Setlist Stats를 끌 수 있습니다.",
     "privacy": "개인정보 처리방침",

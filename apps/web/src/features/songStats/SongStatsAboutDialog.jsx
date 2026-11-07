@@ -43,7 +43,7 @@ function AboutContent({ onClose }) {
         <p>{t('about.intro')}</p>
         <p>
           {t('about.rule', {
-            perSong: num(SONG_STATS_RULES.perSongSessionMs / 60_000),
+            perSong: num(SONG_STATS_RULES.perSongSessionMs / 1000),
             min: num(SONG_STATS_RULES.minSessionMs / 60_000),
             seconds: num(SONG_STATS_RULES.minSongDisplayMs / 1000),
           })}

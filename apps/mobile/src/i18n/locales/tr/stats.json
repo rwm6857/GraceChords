@@ -35,7 +35,7 @@
   "removedSong": "Kaldırılmış ilahi",
   "gate": {
     "title": "Setlist Stats {{count}} setten sonra görünür",
-    "body": "Seti başlat'a dokunup birkaç dakika kaldığında bir set sayılır. Şimdiye kadar {{done}} set yönettin."
+    "body": "Seti başlat'a dokunup her ilahi için en az {{perSong}} saniye kaldığında bir set sayılır. Şimdiye kadar {{done}} set yönettin."
   },
   "off": "Setlist Stats kapalı, bu yüzden yeni setler kaydedilmiyor.",
   "loadError": "Setlist Stats yüklenemedi",
@@ -43,7 +43,7 @@
     "link": "Setlist Stats hakkında",
     "title": "Setlist Stats",
     "intro": "Setlist Stats, GraceChords'ta yönettiğin setlerden ve açtığın ilahilerden oluşur.",
-    "rule": "Seti başlat'a dokunup sette kaldığında bir set sayılır: her ilahi için en az {{perSong}} dakika ve toplamda en az {{min}} dakika. Bir ilahi, ekranda {{seconds}} saniye veya daha uzun kaldığında sayılır.",
+    "rule": "Seti başlat'a dokunup sette kaldığında bir set sayılır: her ilahi için en az {{perSong}} saniye ve toplamda en az {{min}} dakika. Bir ilahi, ekranda {{seconds}} saniye veya daha uzun kaldığında sayılır.",
     "private": "İstatistiklerin sana aittir. Başka hiçbir GraceChords kullanıcısı onları göremez. Sırada ne yapılacağına karar vermek için tüm kullanıcıların ilahi sayıları anonim olarak toplanır.",
     "control": "Geçmişini istediğin zaman temizleyebilir veya Setlist Stats'i kapatabilirsin.",
     "privacy": "Gizlilik Politikası",

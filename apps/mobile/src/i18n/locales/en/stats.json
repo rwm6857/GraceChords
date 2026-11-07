@@ -35,7 +35,7 @@
   "removedSong": "Removed song",
   "gate": {
     "title": "Setlist Stats appears after {{count}} sets",
-    "body": "A set counts when you tap Start set and stay with it for a few minutes. You’ve run {{done}} so far."
+    "body": "A set counts when you tap Start set and stay with it for at least {{perSong}} seconds per song. You’ve run {{done}} so far."
   },
   "off": "Setlist Stats is off, so new sets aren’t being recorded.",
   "loadError": "Couldn’t load Setlist Stats",
@@ -43,7 +43,7 @@
     "link": "About Setlist Stats",
     "title": "Setlist Stats",
     "intro": "Setlist Stats is built from the sets you run and the songs you open in GraceChords.",
-    "rule": "A set counts when you tap Start set and stay with it: at least {{perSong}} minutes for each song, and never less than {{min}} minutes. A song counts when it’s on screen for {{seconds}} seconds or more.",
+    "rule": "A set counts when you tap Start set and stay with it: at least {{perSong}} seconds for each song, and never less than {{min}} minutes. A song counts when it’s on screen for {{seconds}} seconds or more.",
     "private": "Your stats are yours. No other GraceChords user can see them. Song counts across all users are added up anonymously to help decide what to build next.",
     "control": "You can clear your history or turn Setlist Stats off at any time.",
     "privacy": "Privacy Policy",
