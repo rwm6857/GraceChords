@@ -12,6 +12,7 @@ JavaScriptCore `JSContext`.
 | `entry.mjs` | Bridge entry. Imports core **subpaths** (never the barrel), validates arguments, exports the functions in the table below. |
 | `build-core-bundle.mjs` | esbuild build → `GraceChords Studio/GraceChords Studio/Resources/GraceChordsCore.js` |
 | `verify-bundle.mjs` | Parity harness: bundle vs. the core modules `apps/mobile` resolves. |
+| `pdf-draft.mjs` | Replays a PDF import's "Copy Diagnostics" JSON through core's `pdfImport.ts`, without Xcode. |
 
 Exposed to Swift:
 
@@ -32,18 +33,21 @@ Exposed to Swift:
 | `GraceChordsCore.diatonicChordsJSON(key)` | `CoreBridge.diatonicChords(for:)` | `chordpro/diatonicChords.js` → `getDiatonicChords` |
 | `GraceChordsCore.chordVariantsJSON()` | `CoreBridge.chordVariants()` | `chordpro/editing.ts` → `CHORD_VARIANTS` |
 | `GraceChordsCore.chordToken(symbol)` | `CoreBridge.chordToken(_:)` | `chordpro/editing.ts` → `chordInsertToken` |
+| `GraceChordsCore.pdfDraftJSON(extractionJSON)` | `CoreBridge.pdfDraft(from:) -> SongDraft` | `songs/pdfImport.ts` → `buildSongDraft` |
 
 The editing helpers take and return **UTF-16 offsets**, because that is what a JS
 string index is. Swift's native `String.Index` arithmetic counts *Characters*, so the
 two disagree the moment a lyric leaves ASCII — and the catalog has Turkish and Korean
-songs. `Core/ChordProEditing.swift` does the conversion at the boundary and the parity
-harness covers Turkish, Korean and an emoji surrogate pair specifically.
+songs. The editor's caret is an `NSRange` (`Editor/ChordProTextView.swift`), whose
+offsets are already UTF-16, so no conversion is needed; the parity harness covers
+Turkish, Korean and an emoji surrogate pair specifically.
 
 Adding `lint.ts` and `slug.ts` cost the bundle nothing transitively: `lint.ts`'s only
 runtime import is `./parser`, which was already bundled, and `slug.ts` imports
-nothing, and `editing.ts` / `diatonicChords.js` / `rbac/roles.js` likewise. The build
-script prints its module list — **ten** files as of Phase 3 — so a dependency creeping
-in is visible on every rebuild.
+nothing, and `editing.ts` / `diatonicChords.js` / `rbac/roles.js` likewise; nor did
+`songs/pdfImport.ts`, whose only imports (`editing.ts`, `parser.ts`) were already in.
+The build script prints its module list — **eleven** files now, `entry.mjs` included —
+so a dependency creeping in is visible on every rebuild.
 
 `hasMinRole` and `slugify` are bridged rather than ported for the same reason as the
 parser: both have outputs that must match another client exactly. A Swift copy of
@@ -63,8 +67,8 @@ Swift side: `GraceChords Studio/GraceChords Studio/Core/CoreBridge.swift`.
 
 ## Rebuilding the bundle
 
-Run from the repo root, after any change to `entry.mjs` or to
-`packages/core/src/chordpro/`:
+Run from the repo root, after any change to `entry.mjs` or to a core module it
+bundles (`packages/core/src/chordpro/`, plus the `songs/` and `rbac/` files above):
 
 ```sh
 node "apps/studio/js/build-core-bundle.mjs"
@@ -80,9 +84,8 @@ The output is committed, so a clean checkout builds in Xcode without running npm
    obvious missing-tool one.
 2. The output is committed, so regenerating it on every build would dirty the
    working tree constantly.
-3. Fewer moving parts while the spike is being diagnosed.
 
-When this graduates past the spike, the switch is: gitignore
+If this ever moves into the build, the switch is: gitignore
 `Resources/GraceChordsCore.js`, add a Run Script phase with an absolute `node`
 path (declaring `entry.mjs` + the core sources as Input Files and the bundle as
 an Output File so Xcode can skip unchanged builds).
@@ -100,9 +103,9 @@ ls -l "$(xcodebuild -project "apps/studio/GraceChords Studio/GraceChords Studio.
   )/GraceChords Studio.app/Contents/Resources/GraceChordsCore.js"
 ```
 
-The app also reports this itself: the spike window prints the path the bundle was
-loaded from, and `CoreBridge` throws `bundleMissing` with remediation text rather
-than crashing if it is absent.
+The app also reports this itself: `CoreBridge` throws `bundleMissing` with
+remediation text rather than crashing if it is absent, and the Viewer and editor
+surface that text where the chart would be.
 
 **If it did not land:** select `GraceChordsCore.js` in Xcode → File Inspector →
 set Target Membership for "GraceChords Studio". If a synchronized group blocks
@@ -127,7 +130,7 @@ IIFE that self-assigns is the format that needs no shim.
 `@supabase/supabase-js` and its `fetch`/WebSocket/storage expectations — none of
 which exist in a bare `JSContext`. Always import the narrowest subpath
 (`@gracechords/core/<dir>/<file>`, which the package's `"./*": "./src/*"` exports
-pattern resolves). The current bundle is 10 modules / ~27 KB with no dependencies;
+pattern resolves). The current bundle is 11 modules / ~55 KB with no dependencies;
 `build-core-bundle.mjs` prints the module list so unexpected growth is visible.
 
 ## How parity is checked
@@ -142,8 +145,9 @@ themselves:
   type-only import of `./types` is written as a value import, which Node's
   type-stripping keeps and then fails to link), so the reference side runs the same
   source through `esbuild.transform` — the same erasure Metro and Vite perform.
-  Comparison is the full `SongDoc` as JSON, over 12 hand-written cases plus the six
-  real fixtures in `apps/web/src/__tests__/fixtures/chordpro/` (read-only).
+  Comparison is the full `SongDoc` as JSON, over 12 hand-written cases plus six
+  real fixtures — the five in `apps/web/src/__tests__/fixtures/chordpro/` and
+  `fixtures/sample.chordpro` (read-only).
 - **lint:** against `chordpro/lint.ts`. Same problem as the parser plus a real
   extensionless runtime import, so the reference goes through `esbuild.build`
   (bundling, not just transforming). Comparison is the full `LintWarning[]` as JSON
@@ -172,6 +176,9 @@ themselves:
 - **slugify:** against `songs/slug.ts` over 16 titles including non-ASCII and
   punctuation-only, plus the contract Swift depends on — an unslugifiable title must
   return `''` so the caller refuses the insert rather than writing an empty `slug`.
+- **pdfDraft:** the bundled `pdfDraftJSON` on a small synthetic chart (title, key,
+  section, inline chords), whose draft must parse back through the bundle's own parser
+  into one section, plus its malformed-input error paths.
 
 ## Adding another core function later
 
