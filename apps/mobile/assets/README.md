@@ -41,7 +41,8 @@ backgrounds) are the traced GC mark on a **square, centred, transparent** canvas
 `viewBox="-51 -68 1620 1620"`, chosen so the mark's real bounding box (1368×1370,
 centred at 759,742 in the original trace) sits centred *and* inside the canvas's
 inscribed circle — which is what Android 12+ clips a splash icon to. Colors are the
-`@gracechords/tokens` values (`#1E2227` ink, `#1F84C9` / `#4EA6E6` accents).
+`@gracechords/tokens` values (`#1E2227` ink on light, `#EEF1F4` on dark;
+`#1F84C9` / `#4EA6E6` accents).
 
 Regenerate the PNGs after editing either SVG (reproduces the committed files
 byte-for-byte):

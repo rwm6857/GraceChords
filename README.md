@@ -24,27 +24,28 @@ transposition, RBAC, and Supabase wiring.
 GraceChords/
 ├── apps/
 │   ├── web/            @gracechords/web    — React + Vite SPA (production site)
-│   └── mobile/         @gracechords/mobile — Expo / React Native iOS app
+│   ├── mobile/         @gracechords/mobile — Expo / React Native app (iOS + Android)
+│   └── studio/         macOS SwiftUI app (not an npm workspace)
 ├── packages/
 │   ├── core/           @gracechords/core   — shared, DOM-free logic (ChordPro parser,
 │   │                                         transposition, RBAC, setlist codec, Supabase factory)
-│   └── tokens/         @gracechords/tokens — design tokens (web CSS + native TS map)
-├── workers/            Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot)
-├── supabase/           SQL migrations (songs, users, posts, saved sets, …)
-└── gc-ios-design-reference/   iOS design handoff bundle (mobile UI source of truth)
+│   └── tokens/         @gracechords/tokens — design tokens (web CSS + native TS map + generated Swift)
+├── workers/            Cloudflare Workers (PPTX upload, sitemap rebuild, Telegram bot, session cleanup)
+└── supabase/           SQL migrations (songs, users, posts, setlists, …)
 ```
 
 | Workspace | Package | What it is |
 |-----------|---------|------------|
-| `apps/web` | `@gracechords/web` | The production single-page app: full song catalog, setlists, worship mode, admin/editor portals, Daily Word, resources. Deployed to Cloudflare Pages. |
-| `apps/mobile` | `@gracechords/mobile` | Native iOS client (Expo SDK 55, Expo Router v7). A themed four-tab shell (Home · Songs · Setlists · Daily Word) with a real chord-chart Song Viewer, Performer mode, the setlist builder, the Daily Word landing + reader (M'Cheyne reading, private journal reflections, an opt-in reading streak, and an anonymous, moderated public "Shared Reflections" feed behind a kill switch), and native Google/Apple auth. |
+| `apps/web` | `@gracechords/web` | The production single-page app: full song catalog, setlists, worship mode, admin/editor portals, Daily Word, posts. Deployed to Cloudflare Pages. |
+| `apps/mobile` | `@gracechords/mobile` | Native iOS and Android client (Expo SDK 55, Expo Router v7). A themed five-tab shell (Home · Songs · Setlists · Daily Word · Utilities) with a real chord-chart Song Viewer, Performer mode, the setlist builder (with import), a song editor, live sessions, the Daily Word landing + reader (M'Cheyne reading, devotionals, private journal reflections, an opt-in reading streak, offline Bible downloads), musician utilities (tuner, metronome, pitch pipe, songbook, capo, key reference), Setlist Stats, and native Google/Apple auth. |
+| `apps/studio` | — | Native macOS SwiftUI companion app for song creation and content management. Not an npm workspace; reuses `packages/core` through JavaScriptCore. |
 | `packages/core` | `@gracechords/core` | Pure TypeScript/JS shared by both apps — ChordPro **parser** (not the renderer), transposition, chord placement, song metadata/sort, the setlist codec, the role hierarchy, and the Supabase client **factory**. Consumed as source, no build step. |
-| `packages/tokens` | `@gracechords/tokens` | The single home for design tokens. Web imports `tokens.css`; native imports the typed map from `@gracechords/tokens/native`. |
-| `workers/*` | — | Cloudflare Workers deployed independently: authenticated PPTX upload/delete, weekly sitemap rebuild, and the `@gracechords_bot` Telegram bot. |
+| `packages/tokens` | `@gracechords/tokens` | The single home for design tokens. Web imports `tokens.css`; native imports the typed map from `@gracechords/tokens/native`; `apps/studio` uses a committed Swift mirror generated from it (`npm run tokens:swift`). |
+| `workers/*` | — | Cloudflare Workers deployed independently: authenticated PPTX upload/delete, weekly sitemap rebuild, the `@gracechords_bot` Telegram bot, and live-session cleanup. |
 
 ## Quick start
 
-Use **Node.js 20 LTS**. Install all workspaces from the repo root:
+Use **Node.js 20 LTS** (20.19+, Vite 7's minimum). Install all workspaces from the repo root:
 
 ```bash
 npm ci
@@ -60,18 +61,18 @@ npm run build    # production web build → apps/web/dist/
 
 The root `package.json` delegates these scripts to `@gracechords/web`. For the
 full web setup (environment variables, Supabase, deployment) see
-**[apps/web/README.md](apps/web/README.md)**. For the iOS app (Expo, simulator,
+**[apps/web/README.md](apps/web/README.md)**. For the mobile app (Expo, simulator,
 env) see **[apps/mobile/README.md](apps/mobile/README.md)**.
 
 ## Infrastructure at a glance
 
 | Service | Role |
 |---------|------|
-| **Supabase** | Auth + Postgres — song catalog, users/roles, posts, starred songs, saved sets. Row-level security on every table. |
+| **Supabase** | Auth + Postgres — song catalog, users/roles, posts, starred songs, setlists, live sessions, reflections. Row-level security on every table. |
 | **Cloudflare Pages** | Hosts the web SPA. Builds from the `apps/web` root directory to `apps/web/dist/` on every push to `main`. |
-| **Cloudflare Pages Functions** | Server-side proxies at `apps/web/functions/` (`bible/`, `pptx/`, `api/`) that avoid CORS for R2 assets. |
+| **Cloudflare Pages Functions** | Server-side code at `apps/web/functions/`: same-origin R2 proxies (`bible/`, `pptx/`) that avoid CORS, plus `api/` endpoints (export, Telegram, bot, crash reports). |
 | **Cloudflare R2** (`gracechords-bible`) | Stores PPTX slide decks (`pptx/`) and Bible chapter JSON (`bible/`). |
-| **Cloudflare Workers** | `gracechords-pptx-upload` (authenticated PPTX writes), `gracechords-sitemap-rebuild` (weekly cron), `gracechords-telegram-bot`. |
+| **Cloudflare Workers** | `gracechords-pptx-upload` (authenticated PPTX writes), `gracechords-sitemap-rebuild` (weekly cron), `gracechords-telegram-bot`, `gracechords-session-cleanup` (15-min cron). |
 | **Cloudinary** | Browser-side image hosting for song/post cover images. |
 | **Resend** | Transactional email (server-side only). |
 
@@ -90,8 +91,7 @@ permission matrix and the admin/editor portals.
 Current focus and planned work:
 
 - **Tablet-responsive web layout** — a proper master-detail experience on larger screens.
-- **Mobile app polish** — the iOS client's core flows ship (Song Viewer, Performer, Setlists, Daily Word with offline Bible downloads, recent-song history, auth); next up are password reset, offline song persistence, and EAS Build / TestFlight.
-- **Android** — extend the Expo app to Android once the iOS surface stabilizes (Android OAuth config still to set up).
+- **Mobile app** — the iOS and Android app ships through EAS Build (see [`apps/mobile/RELEASING.md`](apps/mobile/RELEASING.md)); next up is offline song/setlist persistence.
 - **GraceTracks integration** — surface practice stem tracks (`has_stems` / `stem_slug` / `gracetracks_url`) across web and mobile.
 - **Shared-core growth** — migrate more query/util logic into `@gracechords/core` as the mobile app needs it, keeping web and native in lockstep.
 

@@ -10,39 +10,55 @@ conventions (theme/primitives, SF Symbols, auth gating, Metro resolution).
 
 ## What it is today
 
-A real, feature-complete-enough-to-use native client, built from the
-[`gc-ios-design-reference/`](../../gc-ios-design-reference/) design bundle. The
-core worship-team flows all ship:
+A real, feature-complete-enough-to-use native client. The core worship-team
+flows all ship:
 
-- a themed **four-tab shell** — Home · Songs · Setlists · Daily Word,
+- a themed **five-tab shell** — Home · Songs · Setlists · Daily Word · Utilities,
 - a **Song Viewer** with a real chord chart: live transpose, key change,
   sharp/flat accidentals toggle, view options (chords/lyrics, section labels,
-  font scale, letters/solfège), favorite star, and export/share,
+  font scale, letters/solfège, tablet auto-fit columns), favorite star, and
+  export/share (PDF/JPG, Telegram — no ChordPro export, by design),
+- a **song editor** (`app/editor/[draftId].tsx`) at parity with web: metadata,
+  ChordPro body with chord/section insert bars and live preview; save a personal
+  draft, submit for review, or publish (editor+),
 - a **Performer** (setlist play-through) screen — the native worship-mode analog,
+- **live sessions**: lead a setlist or a single song; followers (including
+  signed-out ones) join by code at `app/session/[code].tsx`,
 - **Setlists**: list, builder with debounced autosave and drag reorder,
-  swipe-to-delete, per-song key overrides, sharing, and whole-set PDF export,
+  swipe-to-delete, per-song key overrides, sharing and shared-link import, and
+  whole-set PDF export,
+- **Song Stats** (`app/song-stats.tsx`) — song open/play stats recorded from
+  the Song Viewer and Performer,
+- **Utilities** tools: tuner, metronome, pitch pipe, songbook PDF builder, capo
+  calculator, and Key Reference,
 - a **Daily Word** — a landing hub (default) leading to the **M'Cheyne Reader**
   (translation picker, reader settings, day-scoped highlights, and **offline
   downloads** — save a whole Bible translation and read offline-first). The
-  landing carries a private **reflection** journal (one per day, no-edit) and an
-  opt-in **reading streak**. (An anonymous, moderated **Shared Reflections** feed
+  landing carries today's **devotionals**, a private **reflection** journal (one
+  per day, editable) and an opt-in **reading streak**, plus an opt-in daily
+  reminder notification. (An anonymous, moderated **Shared Reflections** feed
   once shipped behind a kill switch; PR 469 removed every client surface for App
   Review Guideline 1.2, and the backend was retired in
   `20260805000000_retire_public_reflections_age_gate.sql` and
   `20260806000400_retire_ugc_acceptance.sql`. Reflections are private-only —
   `ReflectionVisibility` is the literal type `'private'`.) A Settings toggle
   can bypass the landing straight to the Reader,
-- **auth** with email/password plus native **Google** and **Apple** sign-in, a
-  post-signup sprite avatar picker, and an **authenticated-only** route gate,
-- a grouped **Settings** screen with app-wide theme and chord-style defaults, an
-  **About** screen, sign-out, and account deletion.
+- **auth** with email/password plus native **Google** and **Apple** sign-in,
+  password reset via emailed link, a post-signup sprite avatar picker, and an
+  **authenticated-only** route gate,
+- a grouped **Settings** screen with app-wide theme, language and chord-style
+  defaults, and an **About** screen; an **Account** screen with password and
+  sign-in-method linking, Telegram, sign-out, and account deletion,
+- **tablet** layouts (constrained content widths, Home dashboard grid, list-detail
+  splits in the Setlist Builder and Utilities),
+- a first-launch **intro** and UI localized in en, es, ko and tr.
 
-A few things are still stubs or later stages — see [Roadmap](#roadmap).
+A few things are still later stages — see [Roadmap](#roadmap).
 
 - **Stack:** Expo SDK 55, Expo Router v7, TypeScript, React 19.2 / React Native 0.83.
 - **Native dirs:** `ios/` and `android/` use Continuous Native Generation — they are gitignored and regenerated via `npx expo prebuild`. Never commit them; treat `app.json` (+ config plugins) as the source of truth for native config.
 - **Theme:** the typed token map from `@gracechords/tokens/native` (light/dark palette), consumed via `useTheme()`. Icons go through `SymbolIcon` — **SF Symbols on iOS, Material Symbols on Android**; never hand-drawn SVGs.
-- **Backends:** Supabase (auth, stars, setlists, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist **export**, **Telegram** push, and the moderated public-reflection **submit/report** endpoints; Cloudflare R2 for **Daily Word** Bible JSON.
+- **Backends:** Supabase (auth, stars, setlists, personal songs, live sessions, song stats, reflections) via core's `createGcSupabase`; the web app's Pages Functions for song/setlist/songbook **export** and **Telegram** linking + push; Cloudflare R2 for **Daily Word** Bible JSON and devotionals.
 
 ## Run it (macOS + Xcode required for the iOS simulator)
 
@@ -60,7 +76,7 @@ TS core) and the RN-free logic on any OS:
 npm run export:ios          # expo export --platform ios (Metro only, no Xcode)
 npm run export:android      # same for Android
 npm run typecheck           # tsc --noEmit
-npm run test                # vitest over src/lib logic (auth, defaults, profile)
+npm run test                # vitest over the RN-free logic (mostly src/lib)
 npm run start               # Metro dev server
 ```
 
@@ -73,8 +89,9 @@ var into `.env.example` in the same commit.
 
 - `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` — auth + data.
 - `EXPO_PUBLIC_API_BASE_URL` — deployed web app; mobile calls its Pages
-  Functions for export (`/api/export/song`, `/api/export/setlist`) and Telegram
-  push (`/api/telegram/push`). Use the canonical (non-redirecting) domain.
+  Functions for export (`/api/export/song`, `/api/export/setlist`,
+  `/api/export/songbook`) and Telegram (`/api/telegram/push`,
+  `/api/telegram/link`). Use the canonical (non-redirecting) domain.
 - `EXPO_PUBLIC_R2_PUBLIC_URL` — Cloudflare R2 base for Daily Word Bible JSON
   (defaults to `https://assets.gracechords.com`).
 - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` —
@@ -86,8 +103,6 @@ Not yet in the build, in rough priority order:
 
 - **Offline downloads for songs/setlists** — on-device persistence beyond Bible
   translations (Daily Word translation downloads already ship).
-- **Password reset / email-confirmation** screens (login "Forgot?" is an alert).
-- **Tablet** master-detail layout.
 - **GraceTracks** practice-stem integration.
 
 See [`AGENTS.md`](./AGENTS.md) for the conventions that keep new screens

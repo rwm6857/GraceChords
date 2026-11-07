@@ -1,14 +1,14 @@
 Build a quick PDF bundle from selected songs.
 
-## At a glance
-- Pick songs from the catalog and adjust each key
-- Selections persist in the browser using `localStorage`
-- Export merges songs into a single PDF
-- Use **Clear** to remove stored selections
+> **Note:** `/bundle` only reads a selection already stored in the browser's `localStorage` (`bundleSelection`). No page in the current app adds songs to that selection, so `/bundle` normally shows "No songs selected." To export several songs as one PDF, use [[Setlists]] (**PDF** export, with per-song keys) or the [[Songbook-Builder]].
 
-1. Search or browse for songs and mark them for the bundle.
-2. Open `/bundle` to review your list and choose target keys.
-3. Click **Download PDF** to create a combined chart.
-4. Press **Clear** to delete the bundle selection (clears `localStorage`).
+## At a glance
+- Lists the stored selection and lets you adjust each song's key
+- Export merges songs into a single PDF
+- Use **Clear** to remove the stored selection
+
+1. Open `/bundle` to review the stored list and choose target keys.
+2. Click **Download PDF** to create a combined chart.
+3. Press **Clear** to delete the bundle selection (clears `localStorage`).
 
 [[Song-Library]] [[PDF-and-Printing]]

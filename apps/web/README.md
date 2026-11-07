@@ -20,7 +20,7 @@ development conventions, see [`AGENTS.md`](AGENTS.md) in this directory.
 - **Admin & Editor portals** — user/role management and content editing.
 - **Roles** — user → editor → admin → owner, enforced by `RoleGuard`.
 - **Offline support** — a service worker caches core assets; cache is busted per deploy.
-- **Theming & i18n** — light/dark toggle, keyboard shortcuts (`c`, `[`, `]`), and multi-language UI (en, tr, ar, es).
+- **Theming & i18n** — light/dark toggle, keyboard shortcuts (`[`, `]`), and multi-language UI (en, es, ko, tr).
 
 See the [wiki](../../../../wiki) for full user and feature guides.
 
@@ -84,7 +84,7 @@ VITE_CONTACT_EMAIL=you@example.com
 
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are required for all song loading and auth.
 - `SUPABASE_SERVICE_ROLE_KEY` is used **only** by the Node build scripts and the server-side Pages Functions (including the moderated public-reflection endpoints). It is never bundled into the frontend.
-- `OPENAI_API_KEY` powers the second (AI) layer of reflection moderation in the `POST /api/reflections/submit` Pages Function. Server-side only — never `VITE_`-prefixed.
+- `OPENAI_API_KEY` powers the second (AI) layer of reflection moderation in the `POST /api/reflections/submit` Pages Function (a retired feature — the endpoint stays deployed but inert; see Supabase setup below). Server-side only — never `VITE_`-prefixed.
 - Production values are configured in **Cloudflare Pages → Settings → Variables**. Any new `VITE_*` variable must be added to `.env.example` in the same commit.
 
 ## Supabase setup
@@ -137,7 +137,7 @@ VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
 ```
 apps/web/
 ├── src/            React app — pages, components, hooks, utils, styles, tests
-├── public/         static assets — wiki source, bible JSON, fonts, resources
+├── public/         static assets — wiki source, bible JSON, fonts, .well-known/
 ├── functions/      Cloudflare Pages Functions (bible/, pptx/, api/ proxies)
 ├── scripts/        maintenance scripts (SEO, sitemap, bible ingest, wiki sync, i18n check)
 ├── index.html      SPA entry

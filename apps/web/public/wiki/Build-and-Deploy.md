@@ -11,9 +11,9 @@ Understand how the site builds, deploys, and keeps the wiki in sync.
 `npm run build` runs three steps:
 1. `vite build` → `dist/`
 2. `node scripts/generate-seo-pages.mjs` → static HTML shells for every song and post
-3. `node scripts/generate-sitemap.mjs` → `public/sitemap.xml`
+3. `node scripts/generate-sitemap.mjs` → `dist/sitemap.xml` (replaces the committed `public/sitemap.xml` copy)
 
-Steps 2 and 3 require `SUPABASE_SERVICE_ROLE_KEY` to be set (they query songs and posts from Supabase).
+Steps 2 and 3 require `SUPABASE_SERVICE_ROLE_KEY` to be set (they query songs and posts from Supabase). On Cloudflare Preview builds (`CF_PAGES_BRANCH` other than `main`) both steps skip themselves.
 
 ## Deployment
 Cloudflare Pages is connected to this repository and triggers a build on every push to `main`. This is a monorepo, so the Pages **root directory** is `apps/web`, the build command installs from the repo root and builds the web workspace, and the output directory is `dist/` (→ `apps/web/dist`). The exact CF settings and rationale are in [`MONOREPO_MIGRATION.md`](https://github.com/rwm6857/GraceChords/blob/main/MONOREPO_MIGRATION.md). No GitHub Actions workflow is needed for deployment.
@@ -24,10 +24,11 @@ Environment variables (Supabase URL, anon key, service role key, Cloudinary, etc
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `pr-checks.yml` | Pull request to `main` | Lint + test + Vite build. Non-blocking (`continue-on-error`) — signal, not a gate |
+| `pr-checks.yml` | Pull request to `main` | Web lint + test + Vite build; mobile typecheck + test + i18n parity; design-token Swift drift check. Non-blocking (`continue-on-error`) — signal, not a gate |
 | `wiki-sync.yml` | Push to `main` touching `apps/web/public/wiki/**` | Publishes the wiki source to the GitHub Wiki (needs `WIKI_PUSH_TOKEN`) |
-| `feature-post.yml` | PR merged | Announces `feat(` PRs (or ones labelled `post` / containing `#post`) to the Telegram dev channel |
-| `codeqL.yml` | Schedule / push | CodeQL security scanning |
+| `feature-post.yml` | Manual only (merge trigger paused) | When re-enabled: announces merged `feat(` PRs (or ones labelled `post` / containing `#post`) to the Telegram dev channel |
+| `db-backup.yml` | Nightly / manual | Dumps the Supabase database to a private R2 bucket |
+| `rotate-apple-secret.yml` | Monthly / manual | Regenerates the Sign in with Apple client secret and writes it to Supabase. See [[Production-Readiness]] |
 | `prod-smoke.yml` | "Cloudflare Pages" check on `main` completes; every 6 h | Runs `apps/web/scripts/smoke-prod.mjs` against gracechords.com (TLS, redirects, headers, routes, sitemap, crash endpoint). See [[Production-Readiness]] |
 
 ## Cloudflare Workers (separate deploy)
@@ -40,8 +41,8 @@ They are not part of the Pages build. See [[Cloudflare-Infrastructure]] for deta
 ## Local Build & Preview
 ```bash
 npm ci
-# Optional: import Bible XML translations first
-npm run build:bible -- --xml ./BIBLE_XML/EnglishESVBible.xml
+# Optional: import Bible XML translations first (paths resolve from apps/web)
+npm run build:bible -w @gracechords/web -- --xml ./BIBLE_XML/EnglishESVBible.xml
 
 VITE_COMMIT_SHA=$(git rev-parse HEAD) npm run build
 npm run preview  # http://localhost:4173
@@ -53,12 +54,13 @@ npm run preview  # http://localhost:4173
 |----------|-----------|---------|
 | `VITE_SUPABASE_URL` | CF Pages env, local `.env` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | CF Pages env, local `.env` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | CF Pages env (build only), local `.env` | SEO build scripts |
+| `SUPABASE_SERVICE_ROLE_KEY` | CF Pages env, local `.env` | SEO build scripts and Pages Functions |
+| `SUPABASE_URL` | CF Pages env, local `.env` | Supabase URL read by Pages Functions (unprefixed) |
 | `VITE_R2_PUBLIC_URL` | CF Pages env, local `.env` | R2 base URL for Bible JSON and PPTX assets |
 | `VITE_PPTX_WORKER_URL` | CF Pages env, local `.env` | PPTX upload Worker URL |
 | `VITE_CLOUDINARY_CLOUD_NAME` | CF Pages env, local `.env` | Cloudinary cloud name |
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | CF Pages env, local `.env` | Cloudinary upload preset |
-| `VITE_COMMIT_SHA` | CF Pages (auto) / CI | Service worker cache busting |
+| `VITE_COMMIT_SHA` | CF Pages build env (not set automatically; falls back to a build timestamp) / CI | Service worker cache busting and crash-report release tag |
 | `WIKI_PUSH_TOKEN` | GitHub repo secret | Wiki sync (classic PAT, repo scope) |
 
 [[Project-Structure]] [[Release-Checklist]] [[Cloudflare-Infrastructure]]

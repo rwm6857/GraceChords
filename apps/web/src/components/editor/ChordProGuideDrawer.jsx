@@ -66,8 +66,10 @@ export default function ChordProGuideDrawer({ open, onClose }) {
 {end_of_chorus}`}</pre>
             <p className="gc-guide-drawer__text" style={{ marginTop: 'var(--space-2)' }}>
               <strong>Available sections:</strong>{' '}
-              <code>verse</code>, <code>chorus</code>, <code>bridge</code>, <code>pre_chorus</code>,{' '}
-              <code>intro</code>, <code>outro</code>, <code>tag</code>, <code>interlude</code>
+              <code>verse</code>, <code>chorus</code>, <code>bridge</code>,{' '}
+              <code>intro</code>, <code>outro</code>, <code>tag</code>. The short forms{' '}
+              <code>{'{sov}'}</code>/<code>{'{eov}'}</code>, <code>{'{soc}'}</code>/<code>{'{eoc}'}</code> and{' '}
+              <code>{'{sob}'}</code>/<code>{'{eob}'}</code> also work.
             </p>
           </section>
 
@@ -78,6 +80,9 @@ export default function ChordProGuideDrawer({ open, onClose }) {
             </p>
             <pre className="gc-guide-drawer__code">{`# This section is optional
 [Am]Some lyric here`}</pre>
+            <p className="gc-guide-drawer__text" style={{ marginTop: 'var(--space-2)' }}>
+              <code>{'{c: Repeat x2}'}</code> shows a performance note, and <code>{'{capo: 2}'}</code> shows the capo next to the key.
+            </p>
           </section>
 
           <section className="gc-guide-drawer__section gc-guide-drawer__section--warning">
@@ -86,7 +91,7 @@ export default function ChordProGuideDrawer({ open, onClose }) {
               The following standard ChordPro features are <strong>not rendered</strong> and should not be placed in the body field:
             </p>
             <ul className="gc-guide-drawer__list">
-              <li><code>{'{capo}'}</code>, <code>{'{tempo}'}</code>, <code>{'{key}'}</code>, <code>{'{title}'}</code> — use the metadata fields instead</li>
+              <li><code>{'{tempo}'}</code>, <code>{'{key}'}</code>, <code>{'{title}'}</code> — use the metadata fields instead</li>
               <li>Grid / tab notation</li>
               <li><code>{'{define}'}</code> directives</li>
               <li><code>{'{chord}'}</code> inline definitions</li>

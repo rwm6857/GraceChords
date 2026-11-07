@@ -1,8 +1,8 @@
 **PDF Export (MVP Engine)**
 
-- **Scope:** Single-song PDF export with clean, legible lead sheets. Setlist/songbook can adopt this later.
+- **Scope:** Single-song, setlist (multi-song), and songbook PDF export with clean, legible lead sheets.
 - **Location:** `src/utils/pdf_mvp/`
-- **Entry:** `downloadSingleSongPdf(song)` exported from `src/utils/pdf_mvp/index.js`.
+- **Entry:** `downloadSingleSongPdf(song)`, `downloadMultiSongPdf(songs)`, `downloadSongbookPdf(songs, { includeTOC, coverImageDataUrl })` exported from `src/utils/pdf_mvp/index.js` (browser shim). The DOM-free renderer lives in `pure.js` and is shared with the `/api/export/*` Pages Functions and `workers/telegram-bot`.
 
 **Design Goals**
 - **Readability-first:** Keep lyrics/chords large; fit on one page whenever possible.
@@ -34,21 +34,23 @@
 - **Fallback:** When single-page can’t fit (1-col or 2-col), render multiple pages at 15 pt, keeping sections intact.
 
 **Fonts**
-- **Preferred:** `NotoSans` (Regular/Italic/Bold), `NotoSansMono` (Regular/Bold) bundled under `src/assets/fonts/`.
+- **Preferred:** `NotoSans` (Regular/Italic/Bold/BoldItalic), `NotoSansMono` (Regular/Bold) bundled under `src/assets/fonts/`.
 - **Fallback:** jsPDF built-ins (`helvetica`/`courier`) if Noto registration isn’t available.
 
 **Service Worker**
-- **Fresh edits:** `/songs/**` and `/src/data/index.json` use network-first in `src/sw.js` so changed songs show after deploy.
+- **Fresh edits:** navigations and the legacy `/src/data/index.json` use network-first in `src/sw.js`; songs themselves load from Supabase and are not fetched from `/songs/`.
 - **Cache busting:** Build with `VITE_COMMIT_SHA=$(git rev-parse HEAD)` to invalidate old caches per release.
 
 **Tests**
 - **Planner:** `src/__tests__/pdf_mvp.plan.test.js` guards columns/font-size/page-count decisions.
 - **Chords:** `src/__tests__/pdf_mvp.chords.test.js` guards alignment invariants and trailing chords.
 - **Sections:** `src/__tests__/pdf_mvp.sections.test.js` guards section integrity and header spacing.
+- **Pure renderer:** `src/__tests__/pdf_mvp.pure.test.js` guards the DOM-free single/multi-song buffers.
+- **Songbook:** `src/__tests__/pdf_mvp.songbook.test.js` guards cover/TOC/page-count math.
 - **Run:** `npm run test:mvp`
 
-**Extending to Setlists/Songbook**
-- Reuse the section builder and per-song render; add per-song page starts, numbering, and optional TOC.
+**Setlists/Songbook**
+- `renderMultiSongPdfDoc` and `renderSongbookPdfDoc` (`pure.js`) reuse the section builder and per-song render: each song starts a new page; the songbook adds a cover, an optional numbered TOC, and sorts songs alphabetically.
 
 **Do Not Regress**
 - Keep the approved constants and spacing unless explicitly updated with tests:

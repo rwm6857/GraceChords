@@ -19,7 +19,7 @@ Changes to PDF formatting should keep `npm run test:mvp` passing to preserve the
 
 ### Commits & PRs
 - Use conventional commits when possible: `type(scope): summary` (e.g., `fix(pdf): prevent orphan lines`).
-- Before opening a PR: run `npm test` and `npm run build`.
+- Before opening a PR: run `npm test`, `npm run lint`, and `npm run build` (mobile changes: the checks in `apps/mobile/AGENTS.md`).
 - Song or post changes are made directly in Supabase (no file-based index to rebuild).
 
 [[Getting-Started]] [[Project-Structure]] [[UI-Design-System]]

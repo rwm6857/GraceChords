@@ -4,7 +4,7 @@ GraceChords uses a four-level role system to control who can view, edit, and man
 
 | Role | Description |
 |------|-------------|
-| **user** | Default for all signed-in accounts. Can star songs, use personal features, create personal songs, and submit songs for review. |
+| **user** | Default for all signed-in accounts. Can star songs, use personal features, create personal songs, and submit songs for review (via the song editor at `/portal/editor`). |
 | **editor** | Can add/edit songs and blog posts directly, approve/reject song suggestions, and request deletions. Access to the Editor Portal (`/editor`). |
 | **admin** | Full site management — all editor permissions plus deleting content, promoting users up to editor, and access to the Admin Portal (`/admin`). |
 | **owner** | Unrestricted access. Can promote users to admin and delete accounts. There is exactly one owner, and the role cannot be granted through the app — see below. |
@@ -35,7 +35,7 @@ so an owner cannot accidentally demote themselves into a state no RPC can undo.
 
 ## Role Enforcement
 
-Routes `/admin` and `/editor` are protected by `RoleGuard` (`src/components/auth/RoleGuard.jsx`). Users without the required minimum role are redirected to `/` with a toast notification.
+Routes such as `/admin`, `/editor`, and the `/portal/*` pages (song editor, posts, audit log) are protected by `RoleGuard` (`src/components/auth/RoleGuard.jsx`). Users without the required minimum role are redirected to `/` with a toast notification.
 
 The `useAuth` hook (`src/hooks/useAuth.jsx`) exposes:
 - `role` — the user's current role string

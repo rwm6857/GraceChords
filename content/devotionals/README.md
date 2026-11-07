@@ -55,7 +55,8 @@ through the **same block parser**, so authored and imported content render
 identically by construction rather than by two implementations agreeing:
 
 - blank line separates blocks
-- a block whose every line is indented is a verse stanza; its lines stay discrete
+- a block whose every line is indented (2+ spaces; a single-line block needs 5+)
+  is a verse stanza; its lines stay discrete
 - prose lines are unwrapped onto one line
 - a line ending in `-` joins the next with no space (a hyphenated compound broken
   across lines)

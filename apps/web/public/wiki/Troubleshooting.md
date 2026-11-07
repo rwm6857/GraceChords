@@ -11,7 +11,7 @@ Solve common issues when running or using GraceChords.
 - Same as above but for `public.posts`.
 
 **Search returns no results**
-- Confirm songs exist in the `public.songs` Supabase table with `is_deleted = false`.
+- Confirm songs exist in the `public.songs` Supabase table with `is_deleted = false` and `status = 'published'` (drafts are visible only to editors and above).
 
 ## PPTX Slides
 
@@ -27,7 +27,7 @@ Solve common issues when running or using GraceChords.
 
 **Chapter fails to load**
 - Ensure `VITE_R2_PUBLIC_URL` is set to the correct R2 public URL (e.g. `https://assets.gracechords.com`).
-- In development, Vite proxies `/bible/*` to this URL. In production, the CF Pages Function (`functions/bible/[[path]].js`) proxies it server-side.
+- In development, Vite proxies `/bible/*` to this URL; it is read from the repo-root `.env` (restart `npm run dev` after changing it). In production, the CF Pages Function (`apps/web/functions/bible/[[path]].js`) proxies it server-side (it also accepts `BIBLE_CDN_URL`).
 - Confirm the R2 bucket is public or the Pages Function has read access.
 
 ## PDF & Fonts
@@ -44,7 +44,7 @@ Solve common issues when running or using GraceChords.
 ## Deployment
 
 **CF Pages build fails**
-- Check that all required environment variables are set in the Cloudflare Pages dashboard (especially `SUPABASE_SERVICE_ROLE_KEY` for build scripts).
+- Check that all required environment variables are set in the Cloudflare Pages dashboard (especially `SUPABASE_SERVICE_ROLE_KEY` on Production for the SEO build scripts; Preview builds skip them).
 - Review build logs in Cloudflare Pages → Deployments.
 
 **Site shows stale content after deploy**

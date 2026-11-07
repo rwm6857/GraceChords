@@ -1,4 +1,4 @@
-Daily Word is the Bible reading view at `/reading`. It follows Robert Murray M'Cheyne's plan and uses local Bible text (no external API).
+Daily Word is the Bible reading view at `/reading`. It follows Robert Murray M'Cheyne's plan and uses GraceChords-hosted Bible text (no third-party API).
 
 ## Using Daily Word
 - Open `/reading` from the navbar ("Daily Word").
@@ -18,8 +18,8 @@ Selections are saved per calendar date in local storage and persist across passa
 - Selections reset automatically when the date changes.
 
 ## Data & Build
-Daily Word uses local chapter JSON generated from XML files in `BIBLE_XML/`.
-- Import a translation with `npm run build:bible -- --xml ./BIBLE_XML/FILE.xml` (run once per XML file)
+Daily Word uses chapter JSON generated from XML files in `BIBLE_XML/` and served from Cloudflare R2 (under `bible/`) through the `/bible/*` Pages Function proxy.
+- Import a translation with `npm run build:bible -- --xml ./BIBLE_XML/FILE.xml` (run once per XML file; writes chapter JSON and the `translations.json` manifest under `apps/web/public/bible/`)
 - `npm run build` does not run Bible ingestion automatically
 
 Related:

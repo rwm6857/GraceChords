@@ -1,9 +1,9 @@
 # Release Checklist
 
-Use this checklist to ship changes to GraceChords confidently and avoid stale assets.
+Use this checklist to ship changes to GraceChords confidently and avoid stale assets. It covers the website; mobile app releases follow `apps/mobile/RELEASING.md`.
 
 ## Before You Start
-- Node.js 20 LTS installed
+- Node.js 20 LTS (20.19+) installed
 - PDF fonts present under `apps/web/src/assets/fonts/` (Noto Sans + Noto Mono)
 - `.env` file configured with Supabase credentials and service role key
 
@@ -27,7 +27,7 @@ npm run preview
 This embeds the commit in the service worker cache name for clean updates.
 
 ## 4) Deploy
-Push to `main`. **Cloudflare Pages** automatically builds from `dist/` and deploys.
+Push to `main`. **Cloudflare Pages** automatically builds the web workspace and deploys `apps/web/dist/`.
 
 No manual deploy step is required. Watch the build status in the Cloudflare Pages dashboard.
 
@@ -58,4 +58,4 @@ Then reload.
 ## Troubleshooting
 - Song changes not visible? Ensure Supabase data is correct; check browser console for query errors
 - Stale JS/CSS? Ensure `VITE_COMMIT_SHA` was set during the build and the CF Pages build completed
-- Missing sitemap entries? Run `npm run generate:sitemap` locally, commit `public/sitemap.xml`, and push
+- Missing sitemap entries? The sitemap is regenerated into `dist/sitemap.xml` on every production build (and weekly by the `sitemap-rebuild` Worker); retry the latest deployment in Cloudflare Pages
