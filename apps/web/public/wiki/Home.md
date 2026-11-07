@@ -5,9 +5,9 @@ full-screen worship mode, and daily Bible readings.
 ## At a glance
 - Live site: [gracechords.com](https://gracechords.com)
 - Repository: [github.com/rwm6857/GraceChords](https://github.com/rwm6857/GraceChords)
-- **Web** (React + Vite) and **iOS** (Expo / React Native) apps share a common core in an npm-workspaces monorepo
-- Songs stored in Supabase — searchable, translatable, and star-able
-- Setlist and songbook builders output PDF/PPTX bundles
+- **Web** (React + Vite) and **iOS/Android** (Expo / React Native) apps share a common core in an npm-workspaces monorepo
+- Songs stored in Supabase — searchable and star-able
+- Setlist builder exports PDF/PPTX; songbook builder exports PDF
 - Role-based access: user → editor → admin → owner
 
 ## User Guide

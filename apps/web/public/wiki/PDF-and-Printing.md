@@ -2,13 +2,12 @@ Learn how GraceChords renders charts and songbooks for print.
 
 ## At a glance
 - Sections never split across pages
-- Widow and orphan lines are tightened
 - Supports single or multi-column layouts
 - Embedded PDF fonts live in `apps/web/src/assets/fonts/`
 - Songbook TOC lists entries as "#. Title" (no page numbers); defaults to one column and switches to two columns before spilling to a second page
 
 ### Layout rules
-Charts keep whole sections on one page. The engine adjusts spacing to avoid lonely first or last lines.
+Charts keep whole sections on one page. If a song doesn't fit one column on a single page, the engine tries two columns, then falls back to multiple pages.
 
 ### Fonts
 Place Noto Sans and Noto Sans Mono files in `apps/web/src/assets/fonts/` to embed them in PDFs.
@@ -18,7 +17,7 @@ If a section still splits, shorten lines or reduce font size.
 
 [[Songbook-Builder]] [[Setlists]]
 
-## MVP PDF Engine (Single Song)
+## MVP PDF Engine
 
 - Engine location: `src/utils/pdf_mvp/` (export entry: `src/utils/pdf_mvp/index.js`).
 - Decision ladder:
@@ -44,7 +43,7 @@ If a section still splits, shorten lines or reduce font size.
 ### Tests
 
 - Run: `npm run test:mvp`
-- Suites: `pdf_mvp.plan.test.js`, `pdf_mvp.chords.test.js`, `pdf_mvp.sections.test.js`
+- Suites: `src/__tests__/pdf_mvp.*.test.js` (`plan`, `chords`, `sections`, `pure`, `songbook`)
 
 ### Fonts & Caching
 

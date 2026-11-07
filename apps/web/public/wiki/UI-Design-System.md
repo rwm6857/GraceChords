@@ -2,7 +2,7 @@ UIKit-inspired design system for GraceChords.
 
 ## Tokens
 - Source of truth: `packages/tokens/tokens.css` (the `@gracechords/tokens` package), imported into the web app via `apps/web/src/styles/index.css`.
-- Light and dark palettes use Apple system colors.
+- Light and dark palettes share the Signal Blue accent (`--gc-primary`: `#1F84C9` light / `#4EA6E6` dark).
 - Spacing, radii, typography, and motion are tokenized.
 - Use `--gc-*` tokens in CSS instead of hardcoded hex values.
 
@@ -14,10 +14,10 @@ Reusable primitives live in `apps/web/src/components/ui/layout-kit/` and are sty
 - SegmentedControl: accessible segmented buttons.
 - Chip: filter and tag variants.
 - Field: label, control, help, and error text.
-- IconButton: 44px minimum hit targets.
+- IconButton: 36px minimum hit targets on desktop, 44px on narrow (≤640px) screens.
 
 ## Back-compat bridge
-Legacy classes are kept stable and mapped to tokens in `apps/web/src/styles.css`.
+Legacy classes are kept stable and mapped to tokens in `apps/web/src/styles/base.css`.
 - `.btn` and `.btn.primary` follow the kit styling.
 - `.card` matches the Card surface.
 - `.iconbtn` matches IconButton.

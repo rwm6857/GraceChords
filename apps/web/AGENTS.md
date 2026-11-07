@@ -44,7 +44,7 @@ CI (`.github/workflows/pr-checks.yml`) runs lint/test/build with
 ## Design system
 - Use `--gc-*` tokens (`../../packages/tokens/tokens.css`, Signal Blue palette) for color, spacing, radii, type, and motion. **No** hardcoded hex, `px`, or timing literals.
 - Dark mode overrides live under `[data-theme="dark"]`, set by `src/utils/app/theme.js`.
-- Build new UI from the layout kit (`Button`, `Card`, `InsetCard`, `Chip`, `Field`, `IconButton`, `PageHeader`, `Panel`, `SegmentedControl`, `Toolbar`, `Input`, `SongCard`). Keep the legacy `.btn`/`.card`/`.iconbtn`/`.container` aliases in `src/styles.css`.
+- Build new UI from the layout kit (`Button`, `Card`, `InsetCard`, `Chip`, `Field`, `IconButton`, `PageHeader`, `Panel`, `SegmentedControl`, `Toolbar`, `Input`, `SongCard`). Keep the legacy `.btn`/`.card`/`.iconbtn`/`.container` aliases in `src/styles/base.css`.
 - Icons go in `src/components/Icons.jsx`; never inline `<svg>` elsewhere.
 - Responsive behavior branches on `useIsMobile()`, not CSS-only breakpoints. On mobile, export/download actions go in `MobileActionSheet`.
 
@@ -56,8 +56,8 @@ CI (`.github/workflows/pr-checks.yml`) runs lint/test/build with
 - **GraceTracks:** check `songs.has_stems` before showing any affordance (`stem_slug`, `gracetracks_url`).
 
 ## Data, SEO & build output
-- Songs and posts load from Supabase at runtime (`useSongs`, `usePosts`); search is in-memory Fuse.js.
-- Sorting: numeric titles first, then case-insensitive ignoring leading punctuation (`'Tis` → T), selected-language variants first; songs group by `song_id`.
+- Songs and posts load from Supabase at runtime (`useSongs`, `usePosts`); search is an in-memory word-prefix match (`src/utils/songs/search.js`).
+- Sorting: numeric titles first, then case-insensitive ignoring leading punctuation (`'Tis` → T). Translation grouping (`song_group_id`, language variants) exists in code but is not wired to data yet.
 - `generate-seo-pages.mjs` emits static shells for `/songs/:id`, `/posts/:slug`, and pre-renders `/privacy`, `/terms`, `/delete-account`. **A route with no file in `dist/` is served as `404.html` with HTTP 404**, so any URL external systems check (e.g. Google Play's privacy/deletion links) must be emitted here. Both generators need `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## PDF & image export
