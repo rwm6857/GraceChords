@@ -59,10 +59,7 @@
     "deleteSet": "Seti sil"
   },
   "rowActions": {
-    "closeSongOptions": "İlahi seçeneklerini kapat",
-    "changeKey": "Tonu değiştir",
-    "duplicate": "Çoğalt",
-    "removeFromSet": "Setten kaldır"
+    "duplicate": "Çoğalt"
   },
   "remove": "Kaldır",
   "performer": {
