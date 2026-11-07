@@ -35,8 +35,9 @@ Please give us a reasonable window to investigate and release a fix before any p
 ## Scope
 
 In scope:
-- Application code under `src/`
-- Build and maintenance scripts under `scripts/`
+- Application code under `apps/` (web, mobile, studio) and `packages/`
+- Server-side code: Pages Functions (`apps/web/functions/`), Cloudflare Workers (`workers/`), and Supabase migrations and RLS policies (`supabase/`)
+- Build and maintenance scripts under `apps/web/scripts/` and `scripts/`
 - Static site configuration used by the app
 
 Out of scope (non‑exhaustive):
@@ -49,11 +50,11 @@ Out of scope (non‑exhaustive):
 ## Handling Sensitive Data
 
 - Do not include real secrets or personal data in reports.
-- Never commit `.env` files or credentials; follow the repo guidance (e.g., local `VITE_ADMIN_PW`).
+- Never commit `.env` files or credentials; follow the repo guidance (`.env.example`, `apps/mobile/.env.example`).
 
 ## Remediation and Updates
 
-Fixes are delivered through normal pull requests and included in the next release/deploy. If a change affects generated data (e.g., song index), maintainers will run the documented build scripts as part of release.
+Fixes are delivered through normal pull requests and included in the next release/deploy. If a change affects generated data (e.g., SEO pages or the sitemap), maintainers will run the documented build scripts as part of release.
 
 ## Safe Harbor
 

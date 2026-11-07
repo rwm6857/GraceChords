@@ -28,7 +28,7 @@ It checks TLS, the HTTP→HTTPS redirect, security headers, asset caching, key r
 | Build output | `dist` |
 | Production branch | `main` |
 | Variables (Production **and** Preview) | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_R2_PUBLIC_URL`, `VITE_PPTX_WORKER_URL`, `VITE_CLOUDINARY_*`, `VITE_ENABLE_DISCLAIMER`, `VITE_CONTACT_EMAIL` |
-| Variables (Production only) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `BOT_INTERNAL_URL`, `BOT_WEBHOOK_TOKEN`, `OPENAI_API_KEY`, `BIBLE_CDN_URL` |
+| Variables (Production only) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `BOT_INTERNAL_URL`, `BOT_WEBHOOK_TOKEN`, `BOT_API_TOKEN`, `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, `BIBLE_CDN_URL` |
 | `VITE_COMMIT_SHA` | Set it to the commit (`$CF_PAGES_COMMIT_SHA`) so each deploy gets a fresh service-worker cache. Without it the build falls back to a timestamp, which also busts the cache but can't be traced to a commit. |
 
 **Supabase → Authentication → URL Configuration**: Site URL `https://gracechords.com`. Redirect URLs include `https://gracechords.com/auth/callback`, `https://gracechords.com/reset-password`, the `/app/...` variants used by the mobile app, and `https://*.gracechords.pages.dev/**` if you sign in on previews.
